@@ -1,0 +1,21 @@
+用 Go 写一个内存任务队列库，支持优先级、延迟执行和重试。提供 TaskQueue 结构体。
+
+任务定义：
+1. 每个 Task 有 Priority（0-9，0 最高）、Delay（延迟多少秒后才能被消费，0 表示立即）、MaxRetries（最大重试次数，默认 3）
+2. 任务通过 queue.Submit(task) 提交，返回 task ID（uint64）
+
+消费和重试：
+3. queue.Start(workerCount) 启动指定数量的 worker goroutine 消费任务
+4. 任务执行失败时按固定间隔重试：第 1 次间隔 1 秒、第 2 次间隔 2 秒、第 3 次间隔 5 秒、第 4 次间隔 10 秒。不是指数退避，是这四个固定值
+5. 如果达到 MaxRetries 还失败，任务移入死信队列（Dead Letter Queue），不再重试
+6. 延迟任务在 time.Now().Add(delay) 之前不能被 worker 取出消费
+
+关闭：
+7. queue.Stop() 后不再接受新任务（Submit 返回错误），等当前正在执行的任务完成再返回，最多等 10 秒
+8. Stop 返回时如果有未执行完的任务，返回这些任务的数量
+
+死信队列：
+9. queue.DeadLetters() 返回所有失败超过重试次数的任务列表
+10. 提供任务统计：queue.Stats() 返回（已提交数, 已完成数, 重试次数总计, 死信数）
+
+代码分 queue.go、worker.go、deadletter.go 几个 package，go build 能过。
