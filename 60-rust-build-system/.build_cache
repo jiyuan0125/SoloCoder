@@ -1,0 +1,26 @@
+{
+  "targets": {
+    "step2": {
+      "input_hashes": {
+        "source.txt": "39f809c50ec974ded4fe41e4614853ddcfa36c64213e7cd153fb16e2d6f8f2b4"
+      },
+      "output_hashes": {
+        "step2_output.txt": "0c385d937b016df21983c7f9e88ceb38973c78c33d3875cc7ea499c2c2f2e6fc"
+      }
+    },
+    "step1": {
+      "input_hashes": {
+        "source.txt": "39f809c50ec974ded4fe41e4614853ddcfa36c64213e7cd153fb16e2d6f8f2b4"
+      },
+      "output_hashes": {
+        "step1_output.txt": "674727562efe74444161457767ce2a69571d5f7fa4ddf1e7a7fa273304c56d1c"
+      }
+    },
+    "step3": {
+      "input_hashes": {},
+      "output_hashes": {
+        "final_output.txt": "0c385d937b016df21983c7f9e88ceb38973c78c33d3875cc7ea499c2c2f2e6fc"
+      }
+    }
+  }
+}

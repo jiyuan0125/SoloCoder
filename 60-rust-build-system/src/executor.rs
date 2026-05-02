@@ -75,6 +75,44 @@ impl ParallelExecutor {
         Self::new(4)
     }
 
+    fn has_blocked_dep(
+        name: &str,
+        dag: &BuildDAG,
+        blocked: &HashSet<String>,
+    ) -> bool {
+        if let Some(node) = dag.nodes.get(name) {
+            node.dependencies.iter().any(|dep| blocked.contains(dep))
+        } else {
+            false
+        }
+    }
+
+    fn find_skippable_nodes(
+        dag: &BuildDAG,
+        completed: &HashSet<String>,
+        blocked: &HashSet<String>,
+        in_flight: &HashSet<String>,
+    ) -> Vec<String> {
+        let mut skippable = Vec::new();
+        
+        for node_name in dag.nodes.keys() {
+            if completed.contains(node_name) || in_flight.contains(node_name) || blocked.contains(node_name) {
+                continue;
+            }
+            
+            let node = dag.nodes.get(node_name).unwrap();
+            let all_deps_done = node.dependencies.iter().all(|dep| {
+                completed.contains(dep) || blocked.contains(dep)
+            });
+            
+            if all_deps_done && Self::has_blocked_dep(node_name, dag, blocked) {
+                skippable.push(node_name.clone());
+            }
+        }
+        
+        skippable
+    }
+
     pub fn execute<F>(
         &self,
         dag: &BuildDAG,
@@ -88,7 +126,8 @@ impl ParallelExecutor {
         let topological_order = dag.topological_order();
         let results: Arc<Mutex<HashMap<String, TargetResult>>> = Arc::new(Mutex::new(HashMap::new()));
         let completed: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
-        let failed: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
+        let blocked: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
+        let in_flight: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
 
         let semaphore = Arc::new(Semaphore::new(self.parallelism));
         let (tx, rx) = std::sync::mpsc::channel();
@@ -103,12 +142,15 @@ impl ParallelExecutor {
 
             let ready_nodes = {
                 let completed_lock = completed.lock().unwrap();
-                let failed_lock = failed.lock().unwrap();
+                let blocked_lock = blocked.lock().unwrap();
+                let in_flight_lock = in_flight.lock().unwrap();
                 
                 let mut ready = dag.get_ready_nodes(&completed_lock);
+                ready.retain(|name| !in_flight_lock.contains(name));
+                ready.retain(|name| !blocked_lock.contains(name));
                 ready.retain(|name| {
                     if let Some(node) = dag.nodes.get(name) {
-                        !node.dependencies.iter().any(|dep| failed_lock.contains(dep))
+                        !node.dependencies.iter().any(|dep| blocked_lock.contains(dep))
                     } else {
                         false
                     }
@@ -123,8 +165,14 @@ impl ParallelExecutor {
                     let tx_clone = tx.clone();
                     let results_clone = results.clone();
                     let completed_clone = completed.clone();
-                    let failed_clone = failed.clone();
+                    let blocked_clone = blocked.clone();
+                    let in_flight_clone = in_flight.clone();
                     let semaphore_clone = semaphore.clone();
+
+                    {
+                        let mut in_flight_lock = in_flight_clone.lock().unwrap();
+                        in_flight_lock.insert(node_name.clone());
+                    }
 
                     semaphore_clone.acquire();
 
@@ -164,15 +212,56 @@ impl ParallelExecutor {
                             completed_lock.insert(node.name.clone());
                         }
 
+                        {
+                            let mut in_flight_lock = in_flight_clone.lock().unwrap();
+                            in_flight_lock.remove(&node.name);
+                        }
+
                         if !success {
-                            let mut failed_lock = failed_clone.lock().unwrap();
-                            failed_lock.insert(node.name.clone());
+                            let mut blocked_lock = blocked_clone.lock().unwrap();
+                            blocked_lock.insert(node.name.clone());
                         }
 
                         semaphore_clone.release();
 
                         let _ = tx_clone.send(());
                     });
+                }
+            } else {
+                let skippable = {
+                    let completed_lock = completed.lock().unwrap();
+                    let blocked_lock = blocked.lock().unwrap();
+                    let in_flight_lock = in_flight.lock().unwrap();
+                    
+                    Self::find_skippable_nodes(dag, &completed_lock, &blocked_lock, &in_flight_lock)
+                };
+
+                if !skippable.is_empty() {
+                    for node_name in skippable {
+                        let result = TargetResult {
+                            name: node_name.clone(),
+                            status: TargetStatus::Skipped,
+                            duration_ms: 0,
+                        };
+
+                        {
+                            let mut results_lock = results.lock().unwrap();
+                            results_lock.insert(node_name.clone(), result);
+                        }
+
+                        {
+                            let mut completed_lock = completed.lock().unwrap();
+                            completed_lock.insert(node_name.clone());
+                        }
+
+                        {
+                            let mut blocked_lock = blocked.lock().unwrap();
+                            blocked_lock.insert(node_name.clone());
+                        }
+
+                        let _ = tx.send(());
+                    }
+                    continue;
                 }
             }
 
@@ -186,16 +275,14 @@ impl ParallelExecutor {
             if let Some(result) = results_map.get(name) {
                 results_vec.push(result.clone());
             } else {
-                let deps_failed = {
-                    let failed_lock = failed.lock().unwrap();
-                    dag.nodes.get(name).map_or(false, |node| {
-                        node.dependencies.iter().any(|dep| failed_lock.contains(dep))
-                    })
-                };
+                let blocked_lock = blocked.lock().unwrap();
+                let deps_blocked = dag.nodes.get(name).map_or(false, |node| {
+                    node.dependencies.iter().any(|dep| blocked_lock.contains(dep))
+                });
 
                 results_vec.push(TargetResult {
                     name: name.clone(),
-                    status: if deps_failed { TargetStatus::Skipped } else { TargetStatus::Failed },
+                    status: if deps_blocked { TargetStatus::Skipped } else { TargetStatus::Failed },
                     duration_ms: 0,
                 });
             }

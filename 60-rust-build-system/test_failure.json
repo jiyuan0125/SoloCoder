@@ -1,0 +1,22 @@
+{
+  "targets": [
+    {
+      "name": "step1",
+      "command": "exit 1",
+      "inputs": ["source.txt"],
+      "outputs": ["step1_output.txt"]
+    },
+    {
+      "name": "step2",
+      "command": "echo 'step2' > step2_output.txt",
+      "inputs": ["step1_output.txt"],
+      "outputs": ["step2_output.txt"]
+    },
+    {
+      "name": "step3",
+      "command": "echo 'step3' > step3_output.txt",
+      "inputs": ["step2_output.txt"],
+      "outputs": ["step3_output.txt"]
+    }
+  ]
+}
