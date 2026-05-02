@@ -350,13 +350,16 @@ int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms)
         task_queue_clear_internal(&pool->queue);
     }
 
-    int threads_to_cancel[64];
+    pthread_t threads_to_cancel[64];
+    int thread_indices[64];
     int cancel_count = 0;
     for (int i = 0; i < pool->max_threads && cancel_count < 64; i++)
     {
         if (pool->threads[i] != 0)
         {
-            threads_to_cancel[cancel_count++] = i;
+            threads_to_cancel[cancel_count] = pool->threads[i];
+            thread_indices[cancel_count] = i;
+            cancel_count++;
         }
     }
 
@@ -364,10 +367,13 @@ int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms)
 
     for (int i = 0; i < cancel_count; i++)
     {
-        int idx = threads_to_cancel[i];
-        pthread_cancel(pool->threads[idx]);
-        pthread_join(pool->threads[idx], NULL);
+        pthread_t tid = threads_to_cancel[i];
+        int idx = thread_indices[i];
+        pthread_cancel(tid);
+        pthread_join(tid, NULL);
+        pthread_mutex_lock(&pool->mutex);
         pool->threads[idx] = 0;
+        pthread_mutex_unlock(&pool->mutex);
     }
 
     pthread_mutex_lock(&pool->mutex);
