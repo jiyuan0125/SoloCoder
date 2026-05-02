@@ -1,4 +1,6 @@
-use crate::debug_check::{CanaryError, DebugAllocator};
+#[cfg(feature = "debug")]
+use crate::debug_check::CanaryError;
+use crate::debug_check::DebugAllocator;
 use crate::slab::{SlabAllocator, SlabSize};
 use std::collections::HashMap;
 
@@ -9,6 +11,7 @@ pub struct MemoryPool {
     pool: Vec<u8>,
     slab_allocators: [Option<SlabAllocator>; 5],
     large_allocations: HashMap<usize, Vec<u8>>,
+    #[cfg_attr(not(feature = "debug"), allow(dead_code))]
     debug_allocator: DebugAllocator,
     allocation_sizes: HashMap<usize, (usize, SlabSize)>,
     next_large_id: usize,
@@ -121,7 +124,6 @@ impl MemoryPool {
             if let Some(offset) = allocator.alloc() {
                 #[cfg(feature = "debug")]
                 {
-                    let user_offset = self.debug_allocator.user_offset();
                     let slab_size_val = slab_size.to_size();
 
                     if offset + slab_size_val <= self.pool.len() {
@@ -415,7 +417,7 @@ impl MemoryPool {
         println!();
         println!("Slab Allocators:");
 
-        for (i, allocator) in self.slab_allocators.iter().enumerate() {
+        for allocator in &self.slab_allocators {
             if let Some(ref a) = allocator {
                 let slab_size = a.slab_size().to_size();
                 println!(

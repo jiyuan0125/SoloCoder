@@ -48,7 +48,7 @@ fn main() {
 
     println!("\n=== Testing fragmentation ===");
     let mut pointers = Vec::new();
-    for i in 0..10 {
+    for _ in 0..10 {
         let ptr = pool.alloc(64).expect("Allocation failed");
         pointers.push(ptr);
         println!("Allocated 64 bytes at ptr: 0x{:x}", ptr);

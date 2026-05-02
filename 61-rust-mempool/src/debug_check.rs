@@ -1,11 +1,12 @@
 const CANARY_VALUE: u32 = 0xDEADBEEF;
-const CANARY_SIZE: usize = std::mem::size_of::<u32>();
-const PADDING_SIZE: usize = 8;
+const CANARY_COUNT: usize = 2;
+const SINGLE_CANARY_SIZE: usize = std::mem::size_of::<u32>();
+pub const CANARY_SIZE: usize = CANARY_COUNT * SINGLE_CANARY_SIZE;
 
 #[derive(Debug, Clone)]
 pub struct DebugAllocator {
-    canary_prefix: [u8; CANARY_SIZE],
-    canary_suffix: [u8; CANARY_SIZE],
+    #[cfg_attr(not(feature = "debug"), allow(dead_code))]
+    canary_bytes: [u8; CANARY_SIZE],
 }
 
 impl Default for DebugAllocator {
@@ -16,17 +17,22 @@ impl Default for DebugAllocator {
 
 impl DebugAllocator {
     pub fn new() -> Self {
-        let canary = CANARY_VALUE.to_ne_bytes();
-        DebugAllocator {
-            canary_prefix: canary,
-            canary_suffix: canary,
+        let mut canary_bytes = [0u8; CANARY_SIZE];
+        let canary_u32 = CANARY_VALUE.to_ne_bytes();
+
+        for i in 0..CANARY_COUNT {
+            let start = i * SINGLE_CANARY_SIZE;
+            let end = start + SINGLE_CANARY_SIZE;
+            canary_bytes[start..end].copy_from_slice(&canary_u32);
         }
+
+        DebugAllocator { canary_bytes }
     }
 
     pub fn actual_size(&self, requested_size: usize) -> usize {
         #[cfg(feature = "debug")]
         {
-            requested_size + PADDING_SIZE
+            requested_size + 2 * CANARY_SIZE
         }
         #[cfg(not(feature = "debug"))]
         {
@@ -48,23 +54,20 @@ impl DebugAllocator {
     pub fn write_canaries(&self, buffer: &mut [u8], user_size: usize) {
         #[cfg(feature = "debug")]
         {
-            if buffer.len() < self.actual_size(user_size) {
+            let total_needed = self.actual_size(user_size);
+            if buffer.len() < total_needed {
                 return;
             }
 
-            for i in 0..CANARY_SIZE {
-                if i < buffer.len() {
-                    buffer[i] = self.canary_prefix[i];
-                }
-            }
+            buffer[..CANARY_SIZE].copy_from_slice(&self.canary_bytes);
 
             let suffix_offset = CANARY_SIZE + user_size;
-            for i in 0..CANARY_SIZE {
-                let idx = suffix_offset + i;
-                if idx < buffer.len() {
-                    buffer[idx] = self.canary_suffix[i];
-                }
-            }
+            buffer[suffix_offset..suffix_offset + CANARY_SIZE].copy_from_slice(&self.canary_bytes);
+        }
+        #[cfg(not(feature = "debug"))]
+        {
+            let _ = buffer;
+            let _ = user_size;
         }
     }
 
@@ -72,18 +75,19 @@ impl DebugAllocator {
         &self,
         buffer: &[u8],
         user_size: usize,
-        offset: usize,
+        base_offset: usize,
     ) -> Result<(), CanaryError> {
         #[cfg(feature = "debug")]
         {
-            if buffer.len() < self.actual_size(user_size) {
+            let total_needed = self.actual_size(user_size);
+            if buffer.len() < total_needed {
                 return Err(CanaryError::BufferTooSmall);
             }
 
             for i in 0..CANARY_SIZE {
-                if i < buffer.len() && buffer[i] != self.canary_prefix[i] {
+                if buffer[i] != self.canary_bytes[i] {
                     return Err(CanaryError::PrefixCorrupted {
-                        offset_from_start: offset + i,
+                        offset_from_start: base_offset + i,
                         byte_offset: i,
                     });
                 }
@@ -92,9 +96,9 @@ impl DebugAllocator {
             let suffix_offset = CANARY_SIZE + user_size;
             for i in 0..CANARY_SIZE {
                 let idx = suffix_offset + i;
-                if idx < buffer.len() && buffer[idx] != self.canary_suffix[i] {
+                if buffer[idx] != self.canary_bytes[i] {
                     return Err(CanaryError::SuffixCorrupted {
-                        offset_from_start: offset + idx,
+                        offset_from_start: base_offset + idx,
                         byte_offset: i,
                         user_size,
                     });
@@ -107,7 +111,7 @@ impl DebugAllocator {
         {
             let _ = buffer;
             let _ = user_size;
-            let _ = offset;
+            let _ = base_offset;
             Ok(())
         }
     }
