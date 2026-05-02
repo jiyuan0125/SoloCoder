@@ -1,0 +1,23 @@
+用 C 写一个哈希表，开放寻址 + Robin Hood 探测。提供 hashmap_t 结构体和完整 API。
+
+核心 API：
+1. hm_create(capacity) 创建哈希表。capacity 是初始桶数量（自动取最近的素数）
+2. hm_put(map, key, value) 插入键值对。如果 key 已存在则更新 value
+3. hm_get(map, key, out_value) 查找，找到返回 0，没找到返回 -1
+4. hm_delete(map, key) 删除，用 tombstone 标记（不是真的清空该位置）
+5. hm_contains(map, key) 检查 key 是否存在（tombstone 标记的算不存在）
+
+Robin Hood 探测：
+6. 每个元素记录 probe distance（从理想位置到当前位置的距离）
+7. 插入时：如果新元素的 probe distance 大于当前位置元素的 probe distance，交换两者位置（富者让位给穷者）
+8. 查找时：遇到 tombstone 继续探测（不能停在 tombstone 上），遇到空桶才停止
+
+动态扩缩容：
+9. 负载因子超过 0.70 时扩容到下一个素数（约 2 倍），低于 0.20 时缩容到上一个素数
+10. 扩容和缩容时 tombstone 全部清除（不是保留 tombstone）
+
+内存管理：
+11. hm_destroy(map) 释放所有内存，包括桶数组、key/value 字符串的拷贝
+12. 内部存储 key 和 value 的深拷贝（调用者传入 const char*，内部用 strdup）
+
+代码分 hashmap.c、hashmap.h 两个文件，gcc 编译能过。
