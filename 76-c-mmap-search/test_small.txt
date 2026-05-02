@@ -1,0 +1,6 @@
+Hello world
+This is a test file
+Search for hello world
+Hello again
+HELLO in uppercase
+Goodbye world
