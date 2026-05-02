@@ -1,0 +1,23 @@
+用 C 写一个 SMTP 客户端库，用于发送邮件。基于 socket 连接 SMTP 服务器。
+
+SMTP 协议交互：
+1. 连接服务器后发送 EHLO，根据服务器响应判断是否支持 STARTTLS 和 AUTH
+2. 支持 STARTTLS 升级到 TLS（用 OpenSSL）。如果服务器不支持 STARTTLS 就用明文继续
+3. 支持 AUTH LOGIN 认证：发送用户名和密码的 base64 编码
+4. 邮件格式：支持 From、To、Cc、Bcc、Subject、Date、Content-Type header。Bcc 收件人不出现在邮件 header 中
+5. 邮件正文和附件用 MIME 编码，正文用 7bit 或 base64，附件用 base64 编码。Content-Transfer-Encoding: base64
+
+BASE64 编码：
+6. 自行实现 base64 编码函数（不用外部库），编码后每行 76 个字符（RFC 标准），最后一行可能不足 76 个
+7. 自行实现 base64 解码函数（SMTP AUTH LOGIN 时需要解码响应）
+
+连接管理：
+8. 连接池：同一个域名的连接复用，空闲超过 60 秒自动关闭
+9. 发送失败如果服务器返回 5xx 状态码，重试最多 2 次（共发 3 次），间隔 1 秒。4xx 状态码不重试直接报错
+10. 所有 socket 操作设置 10 秒超时
+
+API：
+11. smtp_send邮件(to_list, subject, body, attachment_paths) 发送邮件，返回 0 成功 / 错误码
+12. smtp_quit() 发送 QUIT 命令并关闭连接
+
+代码分 smtp_client.c、base64.c、smtp_client.h 几个文件，gcc 编译能过（不需要 -lssl，TLS 部分可以模拟跳过）。
