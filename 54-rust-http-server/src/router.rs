@@ -58,11 +58,18 @@ impl Router {
             path_prefix: path_prefix.to_string(),
             handler: Box::new(handler),
         });
+        self.routes.sort_by(|a, b| {
+            b.path_prefix.len().cmp(&a.path_prefix.len())
+        });
     }
 
     pub fn match_route(&self, method: Method, path: &str) -> Option<&dyn Handler> {
         for route in &self.routes {
-            if route.method == method && path.starts_with(&route.path_prefix) {
+            if route.method != method {
+                continue;
+            }
+            
+            if path_matches_prefix(path, &route.path_prefix) {
                 return Some(&*route.handler);
             }
         }
@@ -82,4 +89,17 @@ impl Default for Router {
     fn default() -> Self {
         Router::new()
     }
+}
+
+fn path_matches_prefix(path: &str, prefix: &str) -> bool {
+    if path == prefix {
+        return true;
+    }
+    
+    if path.starts_with(prefix) {
+        let next_char = path.chars().nth(prefix.len());
+        return next_char == Some('/');
+    }
+    
+    false
 }
