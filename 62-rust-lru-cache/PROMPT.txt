@@ -1,0 +1,15 @@
+用 Rust 写一个并发 LRU 缓存库，支持 TTL 过期和淘汰回调。提供 Cache<K, V> 泛型结构体。
+
+核心功能：
+1. get(&self, key) -> Option<V>：命中时刷新该 key 的 TTL（滑动过期），get 的瞬间重置过期倒计时
+2. put(&self, key, value, ttl)：如果 key 已存在则更新值并刷新 TTL；如果不存在且缓存已满，先淘汰一个条目再插入
+3. LRU 淘汰策略：淘汰最近最少访问的条目（get 和 put 都算一次访问）
+4. TTL 检查：get 时如果 key 已过期则删除并返回 None，不返回过期数据
+5. 淘汰回调：on_evict(key, value) 函数，在 key 被淘汰（无论是 LRU 还是 TTL 过期）时同步调用。回调函数内部不能再调用该缓存的 get/put，否则死锁
+6. size() 返回当前缓存中的条目数（不包括已过期但还没被清理的）
+7. 线程安全：get 操作用 RwLock 读锁（多个 get 可以并发），put 操作用写锁
+
+统计：
+8. stats() 返回（命中数, 未命中数, 淘汰数, 当前条目数），未命中包括 key 不存在和 key 已过期两种情况
+
+代码分缓存核心、LRU 链表、TTL 管理、统计几个模块，cargo build 能过。
