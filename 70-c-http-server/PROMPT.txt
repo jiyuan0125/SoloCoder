@@ -1,0 +1,21 @@
+用 C 写一个 HTTP 服务器，基于 socket 编程，不用第三方库。监听指定端口，支持静态文件服务和简单的 REST API。
+
+HTTP 解析：
+1. 支持 GET / POST / DELETE 方法。请求行 + headers 总大小不超过 8KB，超过返回 431
+2. POST body 按 Content-Length 读取指定长度。如果 Content-Length 超过 1MB 返回 413
+3. 支持 Connection: keep-alive，一个 TCP 连接处理多个请求。读取下一个请求前先检查连接是否还有数据可读
+4. 正确解析 URL 中的 query string：/api/search?q=hello&page=2，path 为 /api/search，query string 为 q=hello&page=2
+
+静态文件服务：
+5. 根据 URL 路径在指定的根目录下查找文件。如果路径指向目录，查找该目录下的 index.html
+6. 根据 Content-Type：.html → text/html, .css → text/css, .js → application/javascript, .json → application/json, .png → image/png
+7. 如果文件不存在返回 404，如果路径尝试目录遍历（包含 ..）返回 403
+
+REST API（可选）：
+8. GET /api/status 返回 JSON 格式的服务器状态（运行时间、请求数、活跃连接数）
+
+通用：
+9. 每个请求处理完后打印一行日志到 stderr：[时间] METHOD /path 状态码 耗时us
+10. 响应必须包含 Server 和 Date header。Date 格式为 RFC 1123（如 Fri, 31 Dec 1999 23:59:59 GMT）
+
+代码分 http_parse.c、response.c、file_handler.c、server.c 几个文件，gcc 编译能过。

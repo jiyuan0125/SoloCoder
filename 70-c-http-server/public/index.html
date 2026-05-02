@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1 { color: #333; }
+        .info { background: white; padding: 20px; border-radius: 8px; }
+        .endpoints { margin-top: 20px; }
+        .endpoint { background: #e8e8e8; padding: 10px; margin: 5px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Simple HTTP Server</h1>
+    <div class="info">
+        <p>This is a test page served by the C HTTP server.</p>
+        <p>Available endpoints:</p>
+        <div class="endpoints">
+            <div class="endpoint">GET /api/status - Server status JSON</div>
+            <div class="endpoint">GET / - This page (index.html)</div>
+            <div class="endpoint">POST /api/test - Test POST (returns body)</div>
+        </div>
+    </div>
+</body>
+</html>
