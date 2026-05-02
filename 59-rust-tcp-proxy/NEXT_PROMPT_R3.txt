@@ -1,0 +1,3 @@
+又测了一下，这次能看到日志里确实走了 grace period 然后打印 "Returning connection to pool" 了，但连接还是没被复用，下一个请求还是 "Creating new connection"。
+
+查了下 put() 里面的 is_connected() 用的是 stream.peek()，后端是 keep-alive 的不关连接也不发数据，peek 就一直阻塞在那里了。结果就是 handle_connection 永远卡在 put() 上不返回，连接也没真正放进池子里
