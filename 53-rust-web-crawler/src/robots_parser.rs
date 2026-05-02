@@ -1,133 +1,125 @@
 use url::Url;
-use std::collections::HashSet;
-use reqwest::blocking::Client;
-use thiserror::Error;
 
-#[derive(Debug, Error)]
-pub enum RobotsError {
-    #[error("HTTP request failed: {0}")]
-    HttpError(#[from] reqwest::Error),
-    
-    #[error("Invalid URL: {0}")]
-    UrlError(#[from] url::ParseError),
-    
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-}
-
+#[derive(Debug, Clone)]
 pub struct RobotsTxt {
-    base_url: Url,
-    disallow_paths: HashSet<String>,
-    allow_paths: HashSet<String>,
+    disallow_patterns: Vec<String>,
+    allow_patterns: Vec<String>,
 }
 
 impl RobotsTxt {
-    pub fn new(base_url: &Url) -> Self {
-        RobotsTxt {
-            base_url: base_url.clone(),
-            disallow_paths: HashSet::new(),
-            allow_paths: HashSet::new(),
+    pub fn new() -> Self {
+        Self {
+            disallow_patterns: Vec::new(),
+            allow_patterns: Vec::new(),
         }
     }
 
-    pub fn fetch(&mut self, client: &Client) -> Result<(), RobotsError> {
-        let robots_url = self.get_robots_url()?;
-        
-        let response = match client.get(robots_url.as_str()).send() {
-            Ok(resp) => resp,
-            Err(_) => return Ok(()),
-        };
-        
-        if !response.status().is_success() {
-            return Ok(());
-        }
-        
-        let content = response.text()?;
-        self.parse(&content);
-        
-        Ok(())
-    }
+    pub fn parse(content: &str) -> Self {
+        let mut disallow_patterns = Vec::new();
+        let mut allow_patterns = Vec::new();
 
-    fn get_robots_url(&self) -> Result<Url, url::ParseError> {
-        let mut robots_url = self.base_url.clone();
-        robots_url.set_path("/robots.txt");
-        robots_url.set_query(None);
-        robots_url.set_fragment(None);
-        Ok(robots_url)
-    }
+        let mut in_our_agent = false;
 
-    fn parse(&mut self, content: &str) {
-        let mut in_user_agent_section = false;
-        
         for line in content.lines() {
-            let trimmed = line.trim();
-            
-            if trimmed.is_empty() || trimmed.starts_with('#') {
+            let line = line.trim();
+            if line.is_empty() || line.starts_with('#') {
                 continue;
             }
-            
-            let lower = trimmed.to_lowercase();
-            
-            if lower.starts_with("user-agent:") {
-                let user_agent = trimmed["user-agent:".len()..].trim();
-                in_user_agent_section = user_agent == "*" || 
-                    user_agent.to_lowercase().contains("web_crawler");
+
+            let lower_line = line.to_lowercase();
+            if lower_line.starts_with("user-agent:") {
+                let agent = line["user-agent:".len()..].trim();
+                in_our_agent = agent == "*" || agent.to_lowercase().contains("webmirror");
                 continue;
             }
-            
-            if !in_user_agent_section {
+
+            if !in_our_agent {
                 continue;
             }
-            
-            if lower.starts_with("disallow:") {
-                let path = trimmed["disallow:".len()..].trim();
-                if !path.is_empty() {
-                    self.disallow_paths.insert(path.to_string());
+
+            if lower_line.starts_with("disallow:") {
+                let pattern = line["disallow:".len()..].trim();
+                if !pattern.is_empty() {
+                    disallow_patterns.push(pattern.to_string());
                 }
-                continue;
-            }
-            
-            if lower.starts_with("allow:") {
-                let path = trimmed["allow:".len()..].trim();
-                if !path.is_empty() {
-                    self.allow_paths.insert(path.to_string());
+            } else if lower_line.starts_with("allow:") {
+                let pattern = line["allow:".len()..].trim();
+                if !pattern.is_empty() {
+                    allow_patterns.push(pattern.to_string());
                 }
             }
+        }
+
+        Self {
+            disallow_patterns,
+            allow_patterns,
         }
     }
 
     pub fn is_allowed(&self, url: &Url) -> bool {
-        if self.disallow_paths.is_empty() && self.allow_paths.is_empty() {
-            return true;
-        }
-        
         let path = url.path();
-        
-        for allow_path in &self.allow_paths {
-            if path.starts_with(allow_path) {
+
+        for allow in &self.allow_patterns {
+            if self.matches_pattern(path, allow) {
                 return true;
             }
         }
-        
-        for disallow_path in &self.disallow_paths {
-            if path.starts_with(disallow_path) {
+
+        for disallow in &self.disallow_patterns {
+            if self.matches_pattern(path, disallow) {
                 return false;
             }
         }
-        
+
         true
     }
 
-    pub fn get_base_url(&self) -> &Url {
-        &self.base_url
+    fn matches_pattern(&self, path: &str, pattern: &str) -> bool {
+        if pattern == "/" {
+            return true;
+        }
+
+        let pattern = if pattern.ends_with('$') {
+            &pattern[..pattern.len() - 1]
+        } else {
+            pattern
+        };
+
+        if pattern.contains('*') {
+            self.wildcard_match(path, pattern)
+        } else {
+            path.starts_with(pattern)
+        }
     }
 
-    pub fn get_disallow_paths(&self) -> &HashSet<String> {
-        &self.disallow_paths
-    }
+    fn wildcard_match(&self, path: &str, pattern: &str) -> bool {
+        let pattern_parts: Vec<&str> = pattern.split('*').collect();
+        let mut current_pos = 0;
 
-    pub fn get_allow_paths(&self) -> &HashSet<String> {
-        &self.allow_paths
+        for (i, part) in pattern_parts.iter().enumerate() {
+            if part.is_empty() {
+                continue;
+            }
+
+            let rest = &path[current_pos..];
+            match rest.find(part) {
+                Some(pos) => {
+                    if i == 0 && pos != 0 {
+                        return false;
+                    }
+                    current_pos += pos + part.len();
+                }
+                None => return false,
+            }
+        }
+
+        true
+    }
+}
+
+impl Default for RobotsTxt {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -136,95 +128,40 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_robots_txt() {
-        let base_url = Url::parse("https://example.com/").unwrap();
-        let mut robots = RobotsTxt::new(&base_url);
-        
+    fn test_parse_disallow() {
         let content = r#"
 User-agent: *
+Disallow: /private/
 Disallow: /admin
-Disallow: /private
-Allow: /public
+Allow: /admin/public
 "#;
-        
-        robots.parse(content);
-        
-        assert!(robots.disallow_paths.contains("/admin"));
-        assert!(robots.disallow_paths.contains("/private"));
-        assert!(robots.allow_paths.contains("/public"));
+        let robots = RobotsTxt::parse(content);
+        assert_eq!(robots.disallow_patterns, vec!["/private/", "/admin"]);
+        assert_eq!(robots.allow_patterns, vec!["/admin/public"]);
     }
 
     #[test]
     fn test_is_allowed() {
-        let base_url = Url::parse("https://example.com/").unwrap();
-        let mut robots = RobotsTxt::new(&base_url);
-        
         let content = r#"
 User-agent: *
+Disallow: /private/
 Disallow: /admin
-Disallow: /private
-Allow: /public
+Allow: /admin/public
 "#;
-        
-        robots.parse(content);
-        
-        let public_url = Url::parse("https://example.com/public/page").unwrap();
-        let admin_url = Url::parse("https://example.com/admin/dashboard").unwrap();
-        let allowed_url = Url::parse("https://example.com/about").unwrap();
-        
-        assert!(robots.is_allowed(&public_url));
-        assert!(!robots.is_allowed(&admin_url));
-        assert!(robots.is_allowed(&allowed_url));
+        let robots = RobotsTxt::parse(content);
+
+        assert!(robots.is_allowed(&Url::parse("https://example.com/").unwrap()));
+        assert!(robots.is_allowed(&Url::parse("https://example.com/page.html").unwrap()));
+        assert!(!robots.is_allowed(&Url::parse("https://example.com/private/secret").unwrap()));
+        assert!(!robots.is_allowed(&Url::parse("https://example.com/admin").unwrap()));
+        assert!(!robots.is_allowed(&Url::parse("https://example.com/admin/secret").unwrap()));
+        assert!(robots.is_allowed(&Url::parse("https://example.com/admin/public").unwrap()));
     }
 
     #[test]
-    fn test_empty_robots_allows_everything() {
-        let base_url = Url::parse("https://example.com/").unwrap();
-        let robots = RobotsTxt::new(&base_url);
-        
-        let url = Url::parse("https://example.com/any/path").unwrap();
-        assert!(robots.is_allowed(&url));
-    }
-
-    #[test]
-    fn test_allow_overrides_disallow() {
-        let base_url = Url::parse("https://example.com/").unwrap();
-        let mut robots = RobotsTxt::new(&base_url);
-        
-        let content = r#"
-User-agent: *
-Disallow: /api
-Allow: /api/public
-"#;
-        
-        robots.parse(content);
-        
-        let public_api_url = Url::parse("https://example.com/api/public/data").unwrap();
-        let private_api_url = Url::parse("https://example.com/api/private").unwrap();
-        
-        assert!(robots.is_allowed(&public_api_url));
-        assert!(!robots.is_allowed(&private_api_url));
-    }
-
-    #[test]
-    fn test_specific_user_agent() {
-        let base_url = Url::parse("https://example.com/").unwrap();
-        let mut robots = RobotsTxt::new(&base_url);
-        
-        let content = r#"
-User-agent: Googlebot
-Disallow: /
-
-User-agent: *
-Disallow: /admin
-"#;
-        
-        robots.parse(content);
-        
-        let admin_url = Url::parse("https://example.com/admin").unwrap();
-        let home_url = Url::parse("https://example.com/").unwrap();
-        
-        assert!(!robots.is_allowed(&admin_url));
-        assert!(robots.is_allowed(&home_url));
+    fn test_wildcard_match() {
+        let robots = RobotsTxt::new();
+        assert!(robots.wildcard_match("/images/test.jpg", "/*.jpg$"));
+        assert!(robots.wildcard_match("/files/test.txt", "/*"));
     }
 }

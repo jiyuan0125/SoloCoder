@@ -1,16 +1,13 @@
 [package]
-name = "web_crawler"
+name = "web_mirror"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.11", default-features = false, features = ["blocking", "rustls-tls-native-roots"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "cookies", "gzip", "brotli"] }
+scraper = { version = "0.19", default-features = false }
 url = "2.5"
-html5ever = "0.26"
-markup5ever_rcdom = "0.2"
-tendril = "0.4"
-tokio = { version = "1", default-features = false, features = ["rt", "rt-multi-thread", "sync", "time"] }
-thiserror = "1.0"
-anyhow = "1.0"
-hashbrown = "0.14"
-lazy_static = "1.4"
+tokio = { version = "1", features = ["full"] }
+thiserror = "2.0"
+
+[dev-dependencies]
