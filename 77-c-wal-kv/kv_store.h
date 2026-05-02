@@ -11,6 +11,8 @@
 #define SKIPLIST_MAX_LEVEL 12
 #define COMPACTION_INTERVAL_SECONDS 30
 
+#define SSTABLE_TOMBSTONE ((uint32_t)0xFFFFFFFF)
+
 typedef enum {
     RECORD_PUT = 0,
     RECORD_DELETE = 1

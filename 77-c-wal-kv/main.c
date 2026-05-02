@@ -174,6 +174,72 @@ static void test_memtable_flush() {
     printf("=== Memtable Flush Test Done ===\n\n");
 }
 
+static void test_delete_tombstone_flush() {
+    printf("=== Test: Delete Tombstone After Flush ===\n");
+    
+    {
+        DB* db = db_open("./test_db_tombstone");
+        if (!db) {
+            printf("FAIL: Cannot open database\n");
+            return;
+        }
+        
+        db_put(db, "test_key", 8, "test_value", 10);
+        printf("Put test_key: OK\n");
+        
+        db_delete(db, "test_key", 8);
+        printf("Delete test_key: OK\n");
+        
+        KVEntry* entry = db_get(db, "test_key", 8);
+        if (entry == NULL) {
+            printf("Get test_key after delete: OK (NULL as expected)\n");
+        } else {
+            printf("Get test_key after delete: FAIL (should be NULL)\n");
+            kv_entry_free(entry);
+        }
+        
+        printf("Writing many keys to trigger flush...\n");
+        char key[64];
+        char value[256];
+        for (int i = 0; i < 200; i++) {
+            snprintf(key, sizeof(key), "bulk_key_%04d", i);
+            snprintf(value, sizeof(value), "This is a bulk value for key %04d with some padding data to trigger memtable flush more quickly.", i);
+            db_put(db, key, strlen(key), value, strlen(value));
+        }
+        
+        entry = db_get(db, "test_key", 8);
+        if (entry == NULL) {
+            printf("Get test_key after flush (before close): OK (NULL as expected)\n");
+        } else {
+            printf("Get test_key after flush (before close): FAIL (should be NULL, got value=%s)\n", entry->value);
+            kv_entry_free(entry);
+        }
+        
+        db_close(db);
+        printf("Database closed\n");
+    }
+    
+    {
+        DB* db = db_open("./test_db_tombstone");
+        if (!db) {
+            printf("FAIL: Cannot reopen database\n");
+            return;
+        }
+        
+        KVEntry* entry = db_get(db, "test_key", 8);
+        if (entry == NULL) {
+            printf("Get test_key after reopen: OK (NULL as expected)\n");
+        } else {
+            printf("Get test_key after reopen: FAIL (should be NULL, got value=%s)\n", entry->value);
+            kv_entry_free(entry);
+        }
+        
+        db_close(db);
+    }
+    
+    printf("=== Delete Tombstone Test Done ===\n\n");
+}
+
 int main() {
     printf("========================================\n");
     printf("  KV Store Engine Tests\n");
@@ -183,6 +249,7 @@ int main() {
     test_scan();
     test_persistence();
     test_memtable_flush();
+    test_delete_tombstone_flush();
     
     printf("========================================\n");
     printf("  All Tests Completed\n");

@@ -367,7 +367,9 @@ KVEntry** db_scan(DB* db, const char* prefix, size_t prefix_len, size_t* out_cou
                     free(key);
                     break;
                 }
-                fseek(table->file, value_len, SEEK_CUR);
+                if (value_len != SSTABLE_TOMBSTONE) {
+                    fseek(table->file, value_len, SEEK_CUR);
+                }
                 free(key);
                 continue;
             }
@@ -381,6 +383,11 @@ KVEntry** db_scan(DB* db, const char* prefix, size_t prefix_len, size_t* out_cou
             if (fread(&value_len, sizeof(uint32_t), 1, table->file) != 1) {
                 free(key);
                 break;
+            }
+            
+            if (value_len == SSTABLE_TOMBSTONE) {
+                free(key);
+                continue;
             }
             
             char* value = NULL;

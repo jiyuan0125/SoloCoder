@@ -88,14 +88,19 @@ SSTable* sstable_create_from_memtable(const char* dir, uint64_t id, SkipList* me
     
     while (node) {
         uint32_t key_len = (uint32_t)node->key_len;
-        uint32_t value_len = (uint32_t)node->value_len;
         
         fwrite(&key_len, sizeof(uint32_t), 1, file);
         fwrite(node->key, 1, key_len, file);
         
-        fwrite(&value_len, sizeof(uint32_t), 1, file);
-        if (value_len > 0 && node->value) {
-            fwrite(node->value, 1, value_len, file);
+        if (node->deleted) {
+            uint32_t tombstone = SSTABLE_TOMBSTONE;
+            fwrite(&tombstone, sizeof(uint32_t), 1, file);
+        } else {
+            uint32_t value_len = (uint32_t)node->value_len;
+            fwrite(&value_len, sizeof(uint32_t), 1, file);
+            if (value_len > 0 && node->value) {
+                fwrite(node->value, 1, value_len, file);
+            }
         }
         
         entry_count++;
@@ -188,6 +193,11 @@ KVEntry* sstable_get(SSTable* table, const char* key, size_t key_len) {
                 break;
             }
             
+            if (value_len == SSTABLE_TOMBSTONE) {
+                free(current_key);
+                return NULL;
+            }
+            
             char* value = NULL;
             if (value_len > 0) {
                 value = (char*)malloc(value_len + 1);
@@ -216,7 +226,7 @@ KVEntry* sstable_get(SSTable* table, const char* key, size_t key_len) {
                 free(current_key);
                 break;
             }
-            if (fseek(table->file, value_len, SEEK_CUR) != 0) {
+            if (value_len != SSTABLE_TOMBSTONE && fseek(table->file, value_len, SEEK_CUR) != 0) {
                 free(current_key);
                 break;
             }

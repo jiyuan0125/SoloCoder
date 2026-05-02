@@ -92,6 +92,12 @@ static SkipList* load_sstable_to_memtable(SSTable* table) {
             break;
         }
         
+        if (value_len == SSTABLE_TOMBSTONE) {
+            skiplist_delete(sl, key, key_len);
+            free(key);
+            continue;
+        }
+        
         char* value = NULL;
         if (value_len > 0) {
             value = (char*)malloc(value_len + 1);
