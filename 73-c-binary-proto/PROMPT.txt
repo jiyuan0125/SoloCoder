@@ -1,0 +1,22 @@
+用 C 写一个二进制协议编解码库。支持变长整数、嵌套消息和 CRC 校验。
+
+变长整数（varint）：
+1. 编码：每个字节最高位是 continuation bit（1=还有后续字节，0=最后一个），低 7 位存数据，小端序
+2. 解码：最多读 5 个字节（i32 范围），超过 5 字节还没结束返回错误
+3. 最大支持 i32 范围的有符号整数
+
+消息格式：
+4. 每个字段是 key-value 结构：key 用 varint 编码，value 类型由 key 的低 3 位决定（0=varint, 1=length-delimited, 2=32-bit fixed, 5=64-bit fixed）
+5. length-delimited value：4 字节大端长度 + 原始数据。支持嵌套消息（value 本身也是 key-value 结构）
+6. 所有 fixed 类型的数值用大端序（网络字节序）
+
+API：
+7. proto_encode(msg, buf, buf_size) 将消息编码到 buffer，返回写入的字节数。buf_size 不够返回 -1
+8. proto_decode(buf, len, msg) 从 buffer 解码消息，返回消耗的字节数。数据不完整或格式错误返回 -1
+9. 每条消息末尾自动附加 4 字节 CRC32 校验（IEEE 标准），解码时校验失败返回 -2
+
+要求：
+10. 所有 API 返回 int，>=0 表示成功（字节数），<0 表示不同类型的错误
+11. 不要使用任何外部库（CRC32 自己实现）
+
+代码分 varint.c、proto.c、crc32.c、proto.h 几个文件，gcc 编译能过。
