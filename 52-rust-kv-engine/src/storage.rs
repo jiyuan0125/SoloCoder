@@ -13,7 +13,7 @@ const CRC32: Crc<u32> = Crc::<u32>::new(&CRC_32_ISCSI);
 pub const OP_PUT: u8 = 0;
 pub const OP_DELETE: u8 = 1;
 
-const HEADER_SIZE: usize = 4 + 4 + 1 + 2;
+const FIXED_HEADER_SIZE: usize = 8;
 
 #[derive(Debug, Clone)]
 pub struct Record {
@@ -45,8 +45,9 @@ impl Record {
         let value_len = self.value.as_ref().map(|v| v.len()).unwrap_or(0);
         
         let total_len = (1 + 2 + key_bytes.len() + value_len) as u32;
+        let record_size = FIXED_HEADER_SIZE + total_len as usize;
         
-        let mut buffer = Vec::with_capacity((HEADER_SIZE + value_len) as usize);
+        let mut buffer = Vec::with_capacity(record_size);
         buffer.extend_from_slice(&[0u8; 4]);
         buffer.extend_from_slice(&total_len.to_le_bytes());
         buffer.push(self.op_type);
@@ -63,7 +64,7 @@ impl Record {
     }
 
     pub fn from_bytes(data: &[u8]) -> Option<Self> {
-        if data.len() < 7 {
+        if data.len() < FIXED_HEADER_SIZE + 3 {
             return None;
         }
         
@@ -75,23 +76,27 @@ impl Record {
         }
         
         let total_len = u32::from_le_bytes([data[4], data[5], data[6], data[7]]) as usize;
-        if data.len() != HEADER_SIZE + total_len {
+        let expected_size = FIXED_HEADER_SIZE + total_len;
+        
+        if data.len() != expected_size {
             return None;
         }
         
         let op_type = data[8];
         let key_len = u16::from_le_bytes([data[9], data[10]]) as usize;
         
-        if HEADER_SIZE + key_len > data.len() {
+        let key_start = 11;
+        let key_end = key_start + key_len;
+        
+        if key_end > data.len() {
             return None;
         }
         
-        let key_bytes = &data[HEADER_SIZE..HEADER_SIZE + key_len];
+        let key_bytes = &data[key_start..key_end];
         let key = String::from_utf8_lossy(key_bytes).to_string();
         
         let value = if op_type == OP_PUT {
-            let value_start = HEADER_SIZE + key_len;
-            Some(data[value_start..].to_vec())
+            Some(data[key_end..].to_vec())
         } else {
             None
         };
@@ -132,24 +137,29 @@ impl StorageEngine {
 
     fn build_index(&mut self) -> std::io::Result<()> {
         let mut offset: u64 = 0;
-        let mut temp_records: Vec<(String, u64, usize, u8)> = Vec::new();
+        let file_size = self.file.metadata()?.len();
         
-        loop {
+        while offset < file_size {
             self.file.seek(SeekFrom::Start(offset))?;
             
-            let mut header = [0u8; HEADER_SIZE];
-            match self.file.read_exact(&mut header) {
+            let mut fixed_header = [0u8; FIXED_HEADER_SIZE];
+            match self.file.read_exact(&mut fixed_header) {
                 Ok(_) => {}
                 Err(_) => break,
             }
             
-            let total_len = u32::from_le_bytes([header[4], header[5], header[6], header[7]]) as usize;
-            let record_size = HEADER_SIZE + total_len;
+            let total_len = u32::from_le_bytes([
+                fixed_header[4], fixed_header[5], fixed_header[6], fixed_header[7]
+            ]) as usize;
+            let record_size = FIXED_HEADER_SIZE + total_len;
             
+            if offset + record_size as u64 > file_size {
+                break;
+            }
+            
+            self.file.seek(SeekFrom::Start(offset))?;
             let mut record_buf = vec![0u8; record_size];
-            record_buf[0..HEADER_SIZE].copy_from_slice(&header);
-            
-            match self.file.read_exact(&mut record_buf[HEADER_SIZE..]) {
+            match self.file.read_exact(&mut record_buf) {
                 Ok(_) => {}
                 Err(_) => break,
             }
@@ -164,24 +174,23 @@ impl StorageEngine {
             let op_type = record_buf[8];
             let key_len = u16::from_le_bytes([record_buf[9], record_buf[10]]) as usize;
             
-            if HEADER_SIZE + key_len > record_buf.len() {
+            let key_start = 11;
+            let key_end = key_start + key_len;
+            
+            if key_end > record_buf.len() {
                 break;
             }
             
-            let key_bytes = &record_buf[HEADER_SIZE..HEADER_SIZE + key_len];
+            let key_bytes = &record_buf[key_start..key_end];
             let key = String::from_utf8_lossy(key_bytes).to_string();
             
-            temp_records.push((key, offset, record_size, op_type));
-            
-            offset += record_size as u64;
-        }
-        
-        for (key, offset, length, op_type) in temp_records {
             if op_type == OP_DELETE {
                 self.index.remove(&key);
             } else {
-                self.index.put(key, offset, length);
+                self.index.put(key, offset, record_size);
             }
+            
+            offset += record_size as u64;
         }
         
         Ok(())
@@ -261,14 +270,10 @@ impl StorageEngine {
     pub fn compact(&mut self) -> std::io::Result<()> {
         let temp_path = format!("{}.tmp", self.file_path);
         
-        let all_records = self.read_all_records_backward()?;
+        let all_records = self.read_all_records_forward()?;
         let mut active_keys = std::collections::HashMap::new();
         
         for (record, offset, length) in all_records {
-            if active_keys.contains_key(&record.key) {
-                continue;
-            }
-            
             if record.op_type == OP_DELETE {
                 active_keys.insert(record.key.clone(), None);
             } else {
@@ -318,57 +323,43 @@ impl StorageEngine {
         Ok(())
     }
 
-    fn read_all_records_backward(&mut self) -> std::io::Result<Vec<(Record, u64, usize)>> {
-        let file_size = self.file.metadata()?.len();
+    fn read_all_records_forward(&mut self) -> std::io::Result<Vec<(Record, u64, usize)>> {
         let mut records = Vec::new();
-        let mut position = file_size;
+        let mut offset: u64 = 0;
+        let file_size = self.file.metadata()?.len();
         
-        while position > 0 {
-            let mut header = [0u8; HEADER_SIZE];
-            if position < HEADER_SIZE as u64 {
-                break;
-            }
+        while offset < file_size {
+            self.file.seek(SeekFrom::Start(offset))?;
             
-            position -= HEADER_SIZE as u64;
-            self.file.seek(SeekFrom::Start(position))?;
-            
-            match self.file.read_exact(&mut header) {
+            let mut fixed_header = [0u8; FIXED_HEADER_SIZE];
+            match self.file.read_exact(&mut fixed_header) {
                 Ok(_) => {}
                 Err(_) => break,
             }
             
-            let total_len = u32::from_le_bytes([header[4], header[5], header[6], header[7]]) as usize;
-            let record_size = HEADER_SIZE + total_len;
+            let total_len = u32::from_le_bytes([
+                fixed_header[4], fixed_header[5], fixed_header[6], fixed_header[7]
+            ]) as usize;
+            let record_size = FIXED_HEADER_SIZE + total_len;
             
-            if position < record_size as u64 {
+            if offset + record_size as u64 > file_size {
                 break;
             }
             
-            let record_offset = position - total_len as u64;
-            self.file.seek(SeekFrom::Start(record_offset))?;
-            
+            self.file.seek(SeekFrom::Start(offset))?;
             let mut record_buf = vec![0u8; record_size];
             match self.file.read_exact(&mut record_buf) {
                 Ok(_) => {}
-                Err(_) => {
-                    position = record_offset;
-                    continue;
-                }
-            }
-            
-            let stored_crc = u32::from_le_bytes([record_buf[0], record_buf[1], record_buf[2], record_buf[3]]);
-            let computed_crc = CRC32.checksum(&record_buf[4..]);
-            
-            if stored_crc != computed_crc {
-                position = record_offset;
-                continue;
+                Err(_) => break,
             }
             
             if let Some(record) = Record::from_bytes(&record_buf) {
-                records.push((record, record_offset, record_size));
+                records.push((record, offset, record_size));
+            } else {
+                break;
             }
             
-            position = record_offset;
+            offset += record_size as u64;
         }
         
         Ok(records)
