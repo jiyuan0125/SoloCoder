@@ -18,3 +18,22 @@
 | 分支/文件夹 | 59-rust-tcp-proxy |
 
 ---
+
+## 59-rust-tcp-proxy — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | .335769888099319:e530391e1ec3d452ddc3d1600fc23b1e_69f58d2dd0eab67395271c55.69f59b0ed0eab67395271eb4.69f59b0c99b6b158a8edf27f:Trae CN.T(2026/5/2 14:34:54) |
+| 第一轮Session ID | .335769888099319:023d1859cd18b36ce9d1518237f8f424_69f58d2dd0eab67395271c55.69f58d91d0eab67395271cbe.69f58d9199b6b158a8edf27e:Trae CN.T(2026/5/2 13:37:21) |
+| 轮次 | 2 |
+| User Prompt | 我刚跑了一下这个 TCP 代理，发现几个严重问题：1. 连接池根本没有复用功能。虽然 ConnectionPool 有 get() 和 put() 方法，但 handle_connection() 结束后连接直接丢弃，put() 从来没被调用过，每次请求都是新建后端连接 2. acquire_permit() 用的 try_acquire_owned()，返回的是 Option，但调用方没检查这个返回值 3. 空闲超时逻辑有问题：每次 select! 循环里都创建新的 tokio::time::sleep，timer 从创建时开始计时不是从上次活动开始 4. 优雅关闭不完整：shutdown_task 完成后 main 函数直接返回，tokio runtime 销毁时把还在运行的 tokio::spawn 任务全杀了 5. cleanup_idle() 方法写了但没地方调用 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1的5个bug全部修复（put()调用、acquire_permit阻塞化、remaining_timeout、JoinSet优雅关闭、cleanup后台任务），但连接池复用在实测中完全不工作——用keep-alive后端测试3个请求，日志全部显示"Creating new connection"，从未出现"Reusing connection from pool"。原因是TCP代理架构下客户端关闭后transfer_bidirectional的backend_to_client端阻塞在后端read上直到空闲超时，最终走TransferResult::Timeout路径不归还连接。代码put()/get()调用链正确但架构导致复用永远无法生效。过程满意：R1反馈的5个问题全部修复，0 warning，代码质量好 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 59-rust-tcp-proxy |
+
+---
