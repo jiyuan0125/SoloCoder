@@ -14,7 +14,8 @@ pub enum ParseResult {
     Complete(Request),
     Partial,
     Error(ParseError),
-    TooLarge,
+    HeaderTooLarge,
+    BodyTooLarge,
 }
 
 #[derive(Debug, Clone)]
@@ -89,14 +90,14 @@ impl RequestParser {
             let headers_end = self.find_headers_end();
             if headers_end.is_none() {
                 if self.buffer.len() > MAX_HEADER_SIZE {
-                    return ParseResult::TooLarge;
+                    return ParseResult::HeaderTooLarge;
                 }
                 return ParseResult::Partial;
             }
             let headers_end = headers_end.unwrap();
             
             if headers_end > MAX_HEADER_SIZE {
-                return ParseResult::TooLarge;
+                return ParseResult::HeaderTooLarge;
             }
 
             let headers_data = &self.buffer[..headers_end];
@@ -109,7 +110,7 @@ impl RequestParser {
                         .unwrap_or(0);
 
                     if content_length > MAX_BODY_SIZE {
-                        return ParseResult::TooLarge;
+                        return ParseResult::BodyTooLarge;
                     }
 
                     self.body_remaining = content_length;

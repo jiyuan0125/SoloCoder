@@ -5,7 +5,8 @@ use std::sync::mpsc::{self, Sender, Receiver};
 use std::sync::{Arc, Mutex};
 use std::time::{Instant, Duration, SystemTime};
 
-use crate::http::{Request, RequestParser, Response, StatusCode, ParseResult, Method, MAX_BODY_SIZE, MAX_HEADER_SIZE};
+use crate::context::Context;
+use crate::http::{Request, RequestParser, Response, StatusCode, ParseResult, Method};
 use crate::websocket::{Frame, FrameParser, OpCode, ParseFrameResult, encode_frame, compute_accept_key, MAX_PAYLOAD_SIZE, PING_INTERVAL_SECS, PONG_TIMEOUT_SECS};
 use crate::router::Router;
 
@@ -27,6 +28,10 @@ impl ConnectionManager {
         }
     }
 
+    pub fn context(&self) -> Context {
+        Context::new(Arc::clone(&self.ws_connections))
+    }
+
     pub fn broadcast(&self, message: Vec<u8>) {
         let connections = self.ws_connections.lock().unwrap();
         for sender in connections.values() {
@@ -38,6 +43,7 @@ impl ConnectionManager {
         let _ = stream.set_read_timeout(Some(Duration::from_secs(1)));
         let _ = stream.set_nodelay(true);
 
+        let ctx = self.context();
         let mut parser = RequestParser::new();
         let mut buffer = [0u8; 8192];
         let mut keep_alive = true;
@@ -73,7 +79,7 @@ impl ConnectionManager {
                                     parser.reset();
                                     break;
                                 } else {
-                                    let resp = self.handle_http_request(&req);
+                                    let resp = self.handle_http_request(&req, &ctx);
                                     let status = resp.status;
                                     let _ = stream.write_all(&resp.into_bytes());
                                     let _ = stream.flush();
@@ -86,7 +92,7 @@ impl ConnectionManager {
                                 }
                             }
                             ParseResult::Partial => break,
-                            ParseResult::TooLarge => {
+                            ParseResult::HeaderTooLarge => {
                                 let start = Instant::now();
                                 let resp = Response::new(StatusCode::RequestHeaderFieldsTooLarge)
                                     .header("Content-Type", "text/plain")
@@ -98,6 +104,22 @@ impl ConnectionManager {
                                 
                                 let duration = start.elapsed();
                                 log_request(Method::Get, "", status, duration);
+                                
+                                keep_alive = false;
+                                break;
+                            }
+                            ParseResult::BodyTooLarge => {
+                                let start = Instant::now();
+                                let resp = Response::new(StatusCode::PayloadTooLarge)
+                                    .header("Content-Type", "text/plain")
+                                    .header("Content-Length", "17")
+                                    .body("Payload Too Large");
+                                let status = resp.status;
+                                let _ = stream.write_all(&resp.into_bytes());
+                                let _ = stream.flush();
+                                
+                                let duration = start.elapsed();
+                                log_request(Method::Post, "", status, duration);
                                 
                                 keep_alive = false;
                                 break;
@@ -129,17 +151,8 @@ impl ConnectionManager {
         }
     }
 
-    fn handle_http_request(&self, req: &Request) -> Response {
-        if let Some(content_len) = req.content_length() {
-            if content_len > MAX_BODY_SIZE {
-                return Response::new(StatusCode::PayloadTooLarge)
-                    .header("Content-Type", "text/plain")
-                    .header("Content-Length", "17")
-                    .body("Payload Too Large");
-            }
-        }
-
-        match self.router.route(req) {
+    fn handle_http_request(&self, req: &Request, ctx: &Context) -> Response {
+        match self.router.route(req, ctx) {
             Some(resp) => resp,
             None => Response::not_found()
                 .header("Content-Type", "text/plain")
@@ -171,7 +184,7 @@ impl ConnectionManager {
         }
     }
 
-    fn handle_websocket(&mut self, mut stream: TcpStream) {
+    fn handle_websocket(&mut self, stream: TcpStream) {
         let conn_id = self.next_id;
         self.next_id += 1;
 
@@ -330,7 +343,7 @@ fn format_system_time(time: SystemTime) -> String {
     let micros = duration.subsec_micros();
     
     let years = secs / 31536000;
-    let leap_years = (years + 1968) / 4 - (years + 1968) / 100 + (years + 1968) / 400 - 477;
+    let _leap_years = (years + 1968) / 4 - (years + 1968) / 100 + (years + 1968) / 400 - 477;
     let mut days = (secs % 31536000) / 86400;
     
     if (years + 1970) % 4 == 0 && ((years + 1970) % 100 != 0 || (years + 1970) % 400 == 0) {

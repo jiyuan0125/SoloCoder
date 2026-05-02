@@ -1,15 +1,16 @@
+use crate::context::Context;
 use crate::http::{Method, Request, Response};
 
 pub trait Handler: Send + Sync + 'static {
-    fn handle(&self, req: &Request) -> Response;
+    fn handle(&self, req: &Request, ctx: &Context) -> Response;
 }
 
 impl<F> Handler for F
 where
-    F: Fn(&Request) -> Response + Send + Sync + 'static,
+    F: Fn(&Request, &Context) -> Response + Send + Sync + 'static,
 {
-    fn handle(&self, req: &Request) -> Response {
-        self(req)
+    fn handle(&self, req: &Request, ctx: &Context) -> Response {
+        self(req, ctx)
     }
 }
 
@@ -17,6 +18,20 @@ struct RouteEntry {
     method: Method,
     prefix: String,
     handler: Box<dyn Handler>,
+}
+
+impl RouteEntry {
+    fn matches(&self, method: Method, path: &str) -> bool {
+        if self.method != method {
+            return false;
+        }
+        
+        if self.prefix == "/" {
+            return path == "/";
+        }
+        
+        path == &self.prefix || path.starts_with(&format!("{}/", self.prefix))
+    }
 }
 
 pub struct Router {
@@ -46,12 +61,14 @@ impl Router {
             prefix: prefix.into(),
             handler: Box::new(handler),
         });
+        
+        self.routes.sort_by(|a, b| b.prefix.len().cmp(&a.prefix.len()));
     }
 
-    pub fn route(&self, req: &Request) -> Option<Response> {
+    pub fn route(&self, req: &Request, ctx: &Context) -> Option<Response> {
         for entry in &self.routes {
-            if entry.method == req.method && req.path.starts_with(&entry.prefix) {
-                return Some(entry.handler.handle(req));
+            if entry.matches(req.method, &req.path) {
+                return Some(entry.handler.handle(req, ctx));
             }
         }
         None
