@@ -104,6 +104,14 @@ impl<K: Eq + Hash + Clone + Ord> TtlManager<K> {
         self.key_to_expiry.is_empty()
     }
 
+    pub fn count_active(&self) -> usize {
+        let now = Instant::now();
+        self.expiry_to_keys
+            .range(now..)
+            .map(|(_, keys)| keys.len())
+            .sum()
+    }
+
     fn remove_from_expiry_map(&mut self, expiry: &Instant, key: &K) {
         if let Some(keys) = self.expiry_to_keys.get_mut(expiry) {
             keys.retain(|k| k != key);

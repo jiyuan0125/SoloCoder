@@ -137,6 +137,10 @@ where
 
     pub fn put(&self, key: K, value: V, ttl: Duration) {
         let mut inner = self.inner.write().unwrap();
+        
+        // 先清理所有过期条目
+        self.cleanup_expired(&mut inner);
+        
         let key_clone = key.clone();
 
         if inner.map.contains_key(&key) {
@@ -148,7 +152,8 @@ where
             return;
         }
 
-        if inner.active_count >= inner.capacity {
+        // 使用 count_active() 检查容量，确保不包括过期条目
+        if inner.ttl.count_active() >= inner.capacity {
             self.evict_lru(&mut inner);
         }
 
@@ -158,9 +163,24 @@ where
         inner.active_count += 1;
     }
 
+    fn cleanup_expired(&self, inner: &mut RwLockWriteGuard<CacheInner<K, V>>) {
+        let expired_keys = inner.ttl.collect_expired();
+        for key in expired_keys {
+            // 双重检查：key 可能已被其他操作移除
+            if inner.map.contains_key(&key) {
+                let (k, v) = self.remove_inner(inner, &key);
+                self.stats.increment_eviction();
+                
+                if let Some(ref callback) = self.on_evict {
+                    callback(k, v);
+                }
+            }
+        }
+    }
+
     pub fn size(&self) -> usize {
         let inner = self.inner.read().unwrap();
-        inner.active_count
+        inner.ttl.count_active()
     }
 
     pub fn stats(&self) -> (usize, usize, usize, usize) {
