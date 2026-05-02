@@ -11,22 +11,23 @@ pub enum InlineElement {
 pub fn parse_inline(text: &str) -> Vec<InlineElement> {
     let mut elements = Vec::new();
     let mut current_text = String::new();
-    let mut chars = text.chars().peekable();
+    let chars: Vec<char> = text.chars().collect();
+    let mut i = 0;
 
-    while let Some(c) = chars.peek() {
-        match *c {
+    while i < chars.len() {
+        match chars[i] {
             '`' => {
                 if !current_text.is_empty() {
                     elements.push(InlineElement::Text(std::mem::take(&mut current_text)));
                 }
-                chars.next();
-                match parse_inline_code(&mut chars) {
-                    Ok(code) => {
+                match parse_inline_code(&chars, i + 1) {
+                    Some((code, end_idx)) => {
                         elements.push(InlineElement::Code(code));
+                        i = end_idx;
                     }
-                    Err(consumed) => {
+                    None => {
                         current_text.push('`');
-                        current_text.push_str(&consumed);
+                        i += 1;
                     }
                 }
             }
@@ -34,26 +35,29 @@ pub fn parse_inline(text: &str) -> Vec<InlineElement> {
                 if !current_text.is_empty() {
                     elements.push(InlineElement::Text(std::mem::take(&mut current_text)));
                 }
-                chars.next();
-                if chars.peek() == Some(&'*') {
-                    chars.next();
-                    match parse_bold(&mut chars) {
-                        Ok(bold) => {
-                            elements.push(InlineElement::Bold(bold));
+
+                let is_bold = i + 1 < chars.len() && chars[i + 1] == '*';
+
+                if is_bold {
+                    match parse_bold_content(&chars, i + 2) {
+                        Some((content, end_idx)) => {
+                            elements.push(InlineElement::Bold(content));
+                            i = end_idx;
                         }
-                        Err(consumed) => {
+                        None => {
                             current_text.push_str("**");
-                            current_text.push_str(&consumed);
+                            i += 2;
                         }
                     }
                 } else {
-                    match parse_italic(&mut chars) {
-                        Ok(italic) => {
-                            elements.push(InlineElement::Italic(italic));
+                    match parse_italic_content(&chars, i + 1) {
+                        Some((content, end_idx)) => {
+                            elements.push(InlineElement::Italic(content));
+                            i = end_idx;
                         }
-                        Err(consumed) => {
+                        None => {
                             current_text.push('*');
-                            current_text.push_str(&consumed);
+                            i += 1;
                         }
                     }
                 }
@@ -62,44 +66,45 @@ pub fn parse_inline(text: &str) -> Vec<InlineElement> {
                 if !current_text.is_empty() {
                     elements.push(InlineElement::Text(std::mem::take(&mut current_text)));
                 }
-                chars.next();
-                match parse_link_or_image(&mut chars) {
-                    Ok(link) => {
+                match parse_link_or_image(&chars, i + 1, false) {
+                    Some((link, end_idx)) => {
                         elements.push(link);
+                        i = end_idx;
                     }
-                    Err(consumed) => {
+                    None => {
                         current_text.push('[');
-                        current_text.push_str(&consumed);
+                        i += 1;
                     }
                 }
             }
             '!' => {
-                chars.next();
-                if chars.peek() == Some(&'[') {
+                if i + 1 < chars.len() && chars[i + 1] == '[' {
                     if !current_text.is_empty() {
                         elements.push(InlineElement::Text(std::mem::take(&mut current_text)));
                     }
-                    chars.next();
-                    match parse_link_or_image(&mut chars) {
-                        Ok(link) => {
+                    match parse_link_or_image(&chars, i + 2, true) {
+                        Some((link, end_idx)) => {
                             match link {
                                 InlineElement::Link { text, url } => {
                                     elements.push(InlineElement::Image { alt: text, url });
                                 }
                                 _ => unreachable!(),
                             }
+                            i = end_idx;
                         }
-                        Err(consumed) => {
+                        None => {
                             current_text.push_str("![");
-                            current_text.push_str(&consumed);
+                            i += 2;
                         }
                     }
                 } else {
                     current_text.push('!');
+                    i += 1;
                 }
             }
             _ => {
-                current_text.push(chars.next().unwrap());
+                current_text.push(chars[i]);
+                i += 1;
             }
         }
     }
@@ -111,130 +116,137 @@ pub fn parse_inline(text: &str) -> Vec<InlineElement> {
     elements
 }
 
-fn parse_inline_code<I: Iterator<Item = char>>(
-    chars: &mut std::iter::Peekable<I>,
-) -> Result<String, String> {
+fn parse_inline_code(chars: &[char], start_idx: usize) -> Option<(String, usize)> {
     let mut code = String::new();
-    while let Some(c) = chars.next() {
-        if c == '`' {
-            return Ok(code);
+    let mut i = start_idx;
+
+    while i < chars.len() {
+        if chars[i] == '`' {
+            return Some((code, i + 1));
         }
-        code.push(c);
+        code.push(chars[i]);
+        i += 1;
     }
-    Err(code)
+
+    None
 }
 
-fn parse_bold<I: Iterator<Item = char>>(
-    chars: &mut std::iter::Peekable<I>,
-) -> Result<Vec<InlineElement>, String> {
-    let mut content = String::new();
-    let mut asterisk_count = 0;
+fn parse_bold_content(chars: &[char], start_idx: usize) -> Option<(Vec<InlineElement>, usize)> {
+    let mut i = start_idx;
 
-    while let Some(c) = chars.peek() {
-        match *c {
-            '*' => {
-                asterisk_count += 1;
-                chars.next();
-                if asterisk_count >= 2 {
-                    let inner = parse_inline(&content);
-                    return Ok(inner);
-                }
-            }
-            _ => {
-                if asterisk_count > 0 {
-                    content.push_str(&"*".repeat(asterisk_count));
-                    asterisk_count = 0;
-                }
-                content.push(chars.next().unwrap());
-            }
+    while i < chars.len() {
+        if chars[i] == '*' && i + 1 < chars.len() && chars[i + 1] == '*' {
+            let content: String = chars[start_idx..i].iter().collect();
+            let parsed = parse_inline(&content);
+            return Some((parsed, i + 2));
         }
+        i += 1;
     }
 
-    if asterisk_count > 0 {
-        content.push_str(&"*".repeat(asterisk_count));
-    }
-    Err(content)
+    None
 }
 
-fn parse_italic<I: Iterator<Item = char>>(
-    chars: &mut std::iter::Peekable<I>,
-) -> Result<Vec<InlineElement>, String> {
-    let mut content = String::new();
+fn parse_italic_content(chars: &[char], start_idx: usize) -> Option<(Vec<InlineElement>, usize)> {
+    let mut i = start_idx;
 
-    while let Some(c) = chars.peek() {
-        match *c {
-            '*' => {
-                chars.next();
-                let inner = parse_inline(&content);
-                return Ok(inner);
+    while i < chars.len() {
+        if chars[i] == '*' {
+            let is_double_star = i + 1 < chars.len() && chars[i + 1] == '*';
+            let is_prev_star = i > 0 && chars[i - 1] == '*';
+
+            if !is_double_star && !is_prev_star {
+                let content: String = chars[start_idx..i].iter().collect();
+                let parsed = parse_inline(&content);
+                return Some((parsed, i + 1));
             }
-            _ => {
-                content.push(chars.next().unwrap());
+
+            if is_double_star {
+                i += 2;
+                continue;
             }
         }
+        i += 1;
     }
 
-    Err(content)
+    None
 }
 
-fn parse_link_or_image<I: Iterator<Item = char>>(
-    chars: &mut std::iter::Peekable<I>,
-) -> Result<InlineElement, String> {
-    let mut consumed = String::new();
-    let mut text = String::new();
+fn parse_link_or_image(chars: &[char], start_idx: usize, _is_image: bool) -> Option<(InlineElement, usize)> {
+    let mut i = start_idx;
     let mut bracket_count = 0;
+    let mut text = String::new();
 
-    while let Some(c) = chars.peek() {
-        match *c {
+    while i < chars.len() {
+        match chars[i] {
             '[' => {
                 bracket_count += 1;
-                let c = chars.next().unwrap();
-                text.push(c);
-                consumed.push(c);
+                text.push('[');
+                i += 1;
             }
             ']' => {
                 if bracket_count == 0 {
-                    let c = chars.next().unwrap();
-                    consumed.push(c);
+                    i += 1;
                     break;
                 } else {
                     bracket_count -= 1;
-                    let c = chars.next().unwrap();
-                    text.push(c);
-                    consumed.push(c);
+                    text.push(']');
+                    i += 1;
                 }
             }
             _ => {
-                let c = chars.next().unwrap();
-                text.push(c);
-                consumed.push(c);
+                text.push(chars[i]);
+                i += 1;
             }
         }
     }
 
-    if chars.peek() != Some(&'(') {
-        return Err(consumed);
+    if i >= chars.len() || chars[i - 1] != ']' {
+        return None;
     }
-    consumed.push('(');
-    chars.next();
+
+    while i < chars.len() && chars[i].is_whitespace() {
+        i += 1;
+    }
+
+    if i >= chars.len() || chars[i] != '(' {
+        return None;
+    }
+    i += 1;
+
+    while i < chars.len() && chars[i].is_whitespace() {
+        i += 1;
+    }
 
     let mut url = String::new();
-    while let Some(c) = chars.peek() {
-        match *c {
+    let mut paren_count = 0;
+
+    while i < chars.len() {
+        match chars[i] {
+            '(' => {
+                paren_count += 1;
+                url.push('(');
+                i += 1;
+            }
             ')' => {
-                let c = chars.next().unwrap();
-                consumed.push(c);
-                return Ok(InlineElement::Link { text, url });
+                if paren_count == 0 {
+                    i += 1;
+                    break;
+                } else {
+                    paren_count -= 1;
+                    url.push(')');
+                    i += 1;
+                }
             }
             _ => {
-                let c = chars.next().unwrap();
-                url.push(c);
-                consumed.push(c);
+                url.push(chars[i]);
+                i += 1;
             }
         }
     }
 
-    Err(consumed)
+    url = url.trim_end().to_string();
+
+    Some((InlineElement::Link { text, url }, i))
 }
 
 #[cfg(test)]
@@ -311,5 +323,44 @@ mod tests {
     fn test_link_without_url() {
         let result = parse_inline("[text]");
         assert_eq!(result, vec![InlineElement::Text("[text]".to_string())]);
+    }
+
+    #[test]
+    fn test_nested_bold_in_italic() {
+        let result = parse_inline("*italic with **bold** inside*");
+        assert_eq!(
+            result,
+            vec![InlineElement::Italic(vec![
+                InlineElement::Text("italic with ".to_string()),
+                InlineElement::Bold(vec![InlineElement::Text("bold".to_string())]),
+                InlineElement::Text(" inside".to_string()),
+            ])]
+        );
+    }
+
+    #[test]
+    fn test_nested_italic_in_bold() {
+        let result = parse_inline("**bold with *italic* inside**");
+        assert_eq!(
+            result,
+            vec![InlineElement::Bold(vec![
+                InlineElement::Text("bold with ".to_string()),
+                InlineElement::Italic(vec![InlineElement::Text("italic".to_string())]),
+                InlineElement::Text(" inside".to_string()),
+            ])]
+        );
+    }
+
+    #[test]
+    fn test_multiple_stars() {
+        let result = parse_inline("*test **inner** test*");
+        assert_eq!(
+            result,
+            vec![InlineElement::Italic(vec![
+                InlineElement::Text("test ".to_string()),
+                InlineElement::Bold(vec![InlineElement::Text("inner".to_string())]),
+                InlineElement::Text(" test".to_string()),
+            ])]
+        );
     }
 }

@@ -162,7 +162,7 @@ fn parse_code_block<'a, I: Iterator<Item = &'a String>>(
     };
 
     let mut content = String::new();
-    while let Some(line) = lines.next() {
+    for line in lines.by_ref() {
         if line.trim() == "```" {
             return Some((language, content.trim_end_matches('\n').to_string()));
         }
@@ -188,19 +188,14 @@ fn parse_table<'a, I: Iterator<Item = &'a String>>(
         return None;
     }
 
-    let separator_line = match lines.peek() {
-        Some(line) if is_table_separator(line) => {
-            let line = line.to_string();
+    let column_count = headers.len();
+
+    match lines.peek() {
+        Some(line) if is_table_separator(line, column_count) => {
             lines.next();
-            line
         }
         _ => return None,
     };
-
-    let separator_cells = parse_table_separator(&separator_line);
-    if separator_cells.len() != headers.len() {
-        return None;
-    }
 
     let mut rows = Vec::new();
     while let Some(line) = lines.peek() {
@@ -210,7 +205,7 @@ fn parse_table<'a, I: Iterator<Item = &'a String>>(
         if !line.contains('|') {
             break;
         }
-        let row = parse_table_row(line);
+        let row = parse_table_row_with_columns(line, column_count);
         rows.push(row);
         lines.next();
     }
@@ -232,7 +227,37 @@ fn parse_table_row(line: &str) -> Vec<Vec<InlineElement>> {
         .collect()
 }
 
-fn is_table_separator(line: &str) -> bool {
+fn parse_table_row_with_columns(line: &str, column_count: usize) -> Vec<Vec<InlineElement>> {
+    let trimmed = line.trim();
+    let without_borders = if trimmed.starts_with('|') && trimmed.ends_with('|') {
+        &trimmed[1..trimmed.len() - 1]
+    } else {
+        trimmed
+    };
+
+    if column_count <= 1 {
+        return vec![parse_inline(without_borders.trim())];
+    }
+
+    let mut cells = Vec::new();
+    let mut remaining = without_borders;
+
+    for _ in 0..column_count - 1 {
+        if let Some(pipe_pos) = remaining.find('|') {
+            let cell = &remaining[..pipe_pos];
+            cells.push(parse_inline(cell.trim()));
+            remaining = &remaining[pipe_pos + 1..];
+        } else {
+            cells.push(Vec::new());
+        }
+    }
+
+    cells.push(parse_inline(remaining.trim()));
+
+    cells
+}
+
+fn is_table_separator(line: &str, expected_columns: usize) -> bool {
     let trimmed = line.trim();
     if !trimmed.contains('|') {
         return false;
@@ -244,7 +269,12 @@ fn is_table_separator(line: &str) -> bool {
         trimmed
     };
 
-    for cell in without_borders.split('|') {
+    let cells: Vec<&str> = without_borders.split('|').collect();
+    if cells.len() != expected_columns {
+        return false;
+    }
+
+    for cell in &cells {
         let cell_trimmed = cell.trim();
         if !cell_trimmed.chars().all(|c| c == '-' || c == ':') {
             return false;
@@ -255,17 +285,6 @@ fn is_table_separator(line: &str) -> bool {
     }
 
     true
-}
-
-fn parse_table_separator(line: &str) -> Vec<()> {
-    let trimmed = line.trim();
-    let without_borders = if trimmed.starts_with('|') && trimmed.ends_with('|') {
-        &trimmed[1..trimmed.len() - 1]
-    } else {
-        trimmed
-    };
-
-    without_borders.split('|').map(|_| ()).collect()
 }
 
 fn is_list_item(line: &str) -> bool {
@@ -468,6 +487,22 @@ mod tests {
                 assert_eq!(headers.len(), 2);
                 assert_eq!(rows.len(), 1);
                 assert_eq!(rows[0].len(), 2);
+            }
+            _ => panic!("Expected table"),
+        }
+    }
+
+    #[test]
+    fn test_table_with_pipe_in_cell() {
+        let input = "| Name | Age | Info |\n|------|-----|------|\n| Alice | 30 | First | Second |";
+        let result = parse_blocks(input);
+        assert_eq!(result.len(), 1);
+        match &result[0] {
+            BlockElement::Table { headers, rows } => {
+                assert_eq!(headers.len(), 3);
+                assert_eq!(rows.len(), 1);
+                assert_eq!(rows[0].len(), 3);
+                assert_eq!(rows[0][2], vec![InlineElement::Text("First | Second".to_string())]);
             }
             _ => panic!("Expected table"),
         }
