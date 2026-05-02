@@ -1,22 +1,33 @@
-use kv_engine::{StorageEngine, Repl};
+mod storage;
+mod index;
+mod compaction;
+mod repl;
 
-const DEFAULT_DATA_FILE: &str = "kv_data.dat";
+use repl::{KVEngine, run_repl};
+use std::env;
+use std::path::PathBuf;
 
 fn main() {
-    let data_file = std::env::args().nth(1).unwrap_or_else(|| DEFAULT_DATA_FILE.to_string());
+    let args: Vec<String> = env::args().collect();
     
-    println!("KV Storage Engine");
-    println!("Data file: {}", data_file);
-    println!();
-
-    let engine = match StorageEngine::new(&data_file) {
-        Ok(e) => e,
-        Err(e) => {
-            eprintln!("Failed to initialize storage engine: {}", e);
-            std::process::exit(1);
-        }
+    let data_path = if args.len() > 1 {
+        PathBuf::from(&args[1])
+    } else {
+        PathBuf::from("data.db")
     };
 
-    let mut repl = Repl::new(engine);
-    repl.run();
+    println!("Data file: {:?}", data_path);
+
+    match KVEngine::new(data_path) {
+        Ok(mut engine) => {
+            if let Err(e) = run_repl(&mut engine) {
+                eprintln!("Error running REPL: {}", e);
+                std::process::exit(1);
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to initialize KV engine: {}", e);
+            std::process::exit(1);
+        }
+    }
 }

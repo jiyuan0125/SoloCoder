@@ -1,51 +1,94 @@
+use crate::storage::{read_record, Record, RecordType};
 use std::collections::HashMap;
+use std::fs::File;
+use std::io;
 
 #[derive(Debug, Clone)]
 pub struct IndexEntry {
     pub offset: u64,
-    pub length: usize,
+    pub length: u64,
+    pub is_alive: bool,
 }
 
-pub struct IndexManager {
-    index: HashMap<String, IndexEntry>,
+#[derive(Debug, Default)]
+pub struct Index {
+    entries: HashMap<String, IndexEntry>,
 }
 
-impl IndexManager {
+impl Index {
     pub fn new() -> Self {
-        IndexManager {
-            index: HashMap::new(),
+        Index {
+            entries: HashMap::new(),
         }
     }
 
-    pub fn put(&mut self, key: String, offset: u64, length: usize) {
-        self.index.insert(key, IndexEntry { offset, length });
+    pub fn build_from_file(file: &mut File) -> io::Result<Self> {
+        let mut index = Index::new();
+        let mut offset = 0u64;
+
+        loop {
+            match read_record(file, offset) {
+                Ok(Some((record, record_size))) => {
+                    index.update(&record, offset, record_size);
+                    offset += record_size;
+                }
+                Ok(None) => break,
+                Err(e) => {
+                    if e.kind() == io::ErrorKind::InvalidData {
+                        eprintln!("Warning: Corrupted record at offset {}, skipping (simulating crash recovery)", offset);
+                        break;
+                    }
+                    return Err(e);
+                }
+            }
+        }
+
+        Ok(index)
     }
 
-    pub fn get(&self, key: &str) -> Option<(u64, usize)> {
-        self.index.get(key).map(|entry| (entry.offset, entry.length))
+    pub fn update(&mut self, record: &Record, offset: u64, length: u64) {
+        let is_alive = match record.op_type {
+            RecordType::Put => true,
+            RecordType::Delete => false,
+        };
+
+        let entry = IndexEntry {
+            offset,
+            length,
+            is_alive,
+        };
+
+        self.entries.insert(record.key.clone(), entry);
     }
 
-    pub fn remove(&mut self, key: &str) {
-        self.index.remove(key);
+    pub fn get(&self, key: &str) -> Option<&IndexEntry> {
+        self.entries.get(key)
     }
 
     pub fn scan_prefix(&self, prefix: &str) -> Vec<String> {
-        let mut result: Vec<String> = self.index
-            .keys()
-            .filter(|key| key.starts_with(prefix))
-            .cloned()
+        let mut keys: Vec<String> = self
+            .entries
+            .iter()
+            .filter(|(key, entry)| key.starts_with(prefix) && entry.is_alive)
+            .map(|(key, _)| key.clone())
             .collect();
-        result.sort();
-        result
+        
+        keys.sort();
+        keys
     }
 
     pub fn count(&self) -> usize {
-        self.index.len()
+        self.entries.values().filter(|e| e.is_alive).count()
     }
-}
 
-impl Default for IndexManager {
-    fn default() -> Self {
-        Self::new()
+    pub fn keys(&self) -> Vec<(String, IndexEntry)> {
+        self.entries
+            .iter()
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect()
+    }
+
+    pub fn clear(&mut self) {
+        self.entries.clear();
     }
 }
