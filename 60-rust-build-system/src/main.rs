@@ -38,18 +38,32 @@ fn determine_needs_rebuild(
     cache: &BuildCache,
 ) -> Result<HashMap<String, bool>, String> {
     let mut needs_rebuild = HashMap::new();
-    let mut input_hashes_map = HashMap::new();
+    let mut source_input_hashes_map = HashMap::new();
+
+    let all_outputs: std::collections::HashSet<_> = dag
+        .output_to_target
+        .keys()
+        .cloned()
+        .collect();
 
     for node in dag.nodes.values() {
-        let input_hashes = FileHasher::compute_target_inputs_hash(&node.config.inputs)?;
-        input_hashes_map.insert(node.name.clone(), input_hashes);
+        let source_inputs: Vec<_> = node
+            .config
+            .inputs
+            .iter()
+            .filter(|input| !all_outputs.contains(*input))
+            .cloned()
+            .collect();
+
+        let source_hashes = FileHasher::compute_files_hash(&source_inputs)?;
+        source_input_hashes_map.insert(node.name.clone(), source_hashes);
     }
 
-    for node_name in dag.topological_order().iter().rev() {
+    for node_name in dag.topological_order().iter() {
         let node = dag.nodes.get(node_name).unwrap();
-        let input_hashes = input_hashes_map.get(node_name).unwrap();
+        let source_hashes = source_input_hashes_map.get(node_name).unwrap();
         
-        let is_cached = cache.is_target_cached(node_name, input_hashes);
+        let is_cached = cache.is_target_cached(node_name, source_hashes);
         
         let dep_changed = node.dependencies.iter().any(|dep| {
             needs_rebuild.get(dep).copied().unwrap_or(false)
@@ -67,11 +81,25 @@ fn update_cache(
     dag: &BuildDAG,
     results: &[TargetResult],
 ) -> Result<(), String> {
+    let all_outputs: std::collections::HashSet<_> = dag
+        .output_to_target
+        .keys()
+        .cloned()
+        .collect();
+
     for result in results {
         if result.status == TargetStatus::Built || result.status == TargetStatus::Cached {
             let node = dag.nodes.get(&result.name).unwrap();
             
-            let input_hashes = FileHasher::compute_target_inputs_hash(&node.config.inputs)?;
+            let source_inputs: Vec<_> = node
+                .config
+                .inputs
+                .iter()
+                .filter(|input| !all_outputs.contains(*input))
+                .cloned()
+                .collect();
+
+            let input_hashes = FileHasher::compute_files_hash(&source_inputs)?;
             let output_hashes = FileHasher::compute_files_hash(&node.config.outputs).unwrap_or_default();
             
             let entry = TargetCacheEntry {

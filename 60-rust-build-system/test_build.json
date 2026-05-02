@@ -1,0 +1,22 @@
+{
+  "targets": [
+    {
+      "name": "step1",
+      "command": "echo 'step1' > step1_output.txt",
+      "inputs": ["source.txt"],
+      "outputs": ["step1_output.txt"]
+    },
+    {
+      "name": "step2",
+      "command": "cat step1_output.txt source.txt > step2_output.txt",
+      "inputs": ["step1_output.txt", "source.txt"],
+      "outputs": ["step2_output.txt"]
+    },
+    {
+      "name": "step3",
+      "command": "cp step2_output.txt final_output.txt",
+      "inputs": ["step2_output.txt"],
+      "outputs": ["final_output.txt"]
+    }
+  ]
+}

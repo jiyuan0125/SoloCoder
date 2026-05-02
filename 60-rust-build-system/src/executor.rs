@@ -1,6 +1,6 @@
 use crate::dag::BuildDAG;
 use std::collections::{HashMap, HashSet};
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, Mutex, Condvar};
 use std::time::{Duration, Instant};
 use std::process::Command;
 
@@ -28,6 +28,36 @@ pub struct TargetResult {
     pub name: String,
     pub status: TargetStatus,
     pub duration_ms: u64,
+}
+
+struct Semaphore {
+    count: Mutex<usize>,
+    cond: Condvar,
+    max: usize,
+}
+
+impl Semaphore {
+    fn new(max: usize) -> Self {
+        Semaphore {
+            count: Mutex::new(0),
+            cond: Condvar::new(),
+            max,
+        }
+    }
+
+    fn acquire(&self) {
+        let mut count = self.count.lock().unwrap();
+        while *count >= self.max {
+            count = self.cond.wait(count).unwrap();
+        }
+        *count += 1;
+    }
+
+    fn release(&self) {
+        let mut count = self.count.lock().unwrap();
+        *count -= 1;
+        self.cond.notify_one();
+    }
 }
 
 pub struct ParallelExecutor {
@@ -58,9 +88,9 @@ impl ParallelExecutor {
         let topological_order = dag.topological_order();
         let results: Arc<Mutex<HashMap<String, TargetResult>>> = Arc::new(Mutex::new(HashMap::new()));
         let completed: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
-        let in_flight: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
         let failed: Arc<Mutex<HashSet<String>>> = Arc::new(Mutex::new(HashSet::new()));
 
+        let semaphore = Arc::new(Semaphore::new(self.parallelism));
         let (tx, rx) = std::sync::mpsc::channel();
 
         loop {
@@ -73,11 +103,9 @@ impl ParallelExecutor {
 
             let ready_nodes = {
                 let completed_lock = completed.lock().unwrap();
-                let in_flight_lock = in_flight.lock().unwrap();
                 let failed_lock = failed.lock().unwrap();
                 
                 let mut ready = dag.get_ready_nodes(&completed_lock);
-                ready.retain(|name| !in_flight_lock.contains(name));
                 ready.retain(|name| {
                     if let Some(node) = dag.nodes.get(name) {
                         !node.dependencies.iter().any(|dep| failed_lock.contains(dep))
@@ -88,76 +116,63 @@ impl ParallelExecutor {
                 ready
             };
 
-            {
-                let in_flight_lock = in_flight.lock().unwrap();
-                let slots_available = self.parallelism.saturating_sub(in_flight_lock.len());
-                
-                if slots_available > 0 && !ready_nodes.is_empty() {
-                    let nodes_to_spawn: Vec<_> = ready_nodes.into_iter().take(slots_available).collect();
-                    
-                    for node_name in nodes_to_spawn {
+            if !ready_nodes.is_empty() {
+                for node_name in ready_nodes {
+                    let node = dag.nodes.get(&node_name).unwrap().clone();
+                    let should_rebuild_clone = should_rebuild.clone();
+                    let tx_clone = tx.clone();
+                    let results_clone = results.clone();
+                    let completed_clone = completed.clone();
+                    let failed_clone = failed.clone();
+                    let semaphore_clone = semaphore.clone();
+
+                    semaphore_clone.acquire();
+
+                    std::thread::spawn(move || {
+                        let start = Instant::now();
+                        let needs_rebuild = should_rebuild_clone(&node.name);
+                        
+                        let (status, success) = if needs_rebuild {
+                            let output = Command::new("sh")
+                                .arg("-c")
+                                .arg(&node.config.command)
+                                .output();
+
+                            match output {
+                                Ok(o) if o.status.success() => (TargetStatus::Built, true),
+                                _ => (TargetStatus::Failed, false),
+                            }
+                        } else {
+                            (TargetStatus::Cached, true)
+                        };
+
+                        let duration_ms = start.elapsed().as_millis() as u64;
+
+                        let result = TargetResult {
+                            name: node.name.clone(),
+                            status: status.clone(),
+                            duration_ms,
+                        };
+
                         {
-                            let mut in_flight_lock = in_flight.lock().unwrap();
-                            in_flight_lock.insert(node_name.clone());
+                            let mut results_lock = results_clone.lock().unwrap();
+                            results_lock.insert(node.name.clone(), result);
                         }
 
-                        let node = dag.nodes.get(&node_name).unwrap().clone();
-                        let should_rebuild_clone = should_rebuild.clone();
-                        let tx_clone = tx.clone();
-                        let results_clone = results.clone();
-                        let completed_clone = completed.clone();
-                        let in_flight_clone = in_flight.clone();
-                        let failed_clone = failed.clone();
+                        {
+                            let mut completed_lock = completed_clone.lock().unwrap();
+                            completed_lock.insert(node.name.clone());
+                        }
 
-                        rayon::spawn(move || {
-                            let start = Instant::now();
-                            let needs_rebuild = should_rebuild_clone(&node.name);
-                            
-                            let (status, success) = if needs_rebuild {
-                                let output = Command::new("sh")
-                                    .arg("-c")
-                                    .arg(&node.config.command)
-                                    .output();
+                        if !success {
+                            let mut failed_lock = failed_clone.lock().unwrap();
+                            failed_lock.insert(node.name.clone());
+                        }
 
-                                match output {
-                                    Ok(o) if o.status.success() => (TargetStatus::Built, true),
-                                    _ => (TargetStatus::Failed, false),
-                                }
-                            } else {
-                                (TargetStatus::Cached, true)
-                            };
+                        semaphore_clone.release();
 
-                            let duration_ms = start.elapsed().as_millis() as u64;
-
-                            let result = TargetResult {
-                                name: node.name.clone(),
-                                status: status.clone(),
-                                duration_ms,
-                            };
-
-                            {
-                                let mut results_lock = results_clone.lock().unwrap();
-                                results_lock.insert(node.name.clone(), result);
-                            }
-
-                            {
-                                let mut completed_lock = completed_clone.lock().unwrap();
-                                completed_lock.insert(node.name.clone());
-                            }
-
-                            {
-                                let mut in_flight_lock = in_flight_clone.lock().unwrap();
-                                in_flight_lock.remove(&node.name);
-                            }
-
-                            if !success {
-                                let mut failed_lock = failed_clone.lock().unwrap();
-                                failed_lock.insert(node.name.clone());
-                            }
-
-                            let _ = tx_clone.send(());
-                        });
-                    }
+                        let _ = tx_clone.send(());
+                    });
                 }
             }
 
