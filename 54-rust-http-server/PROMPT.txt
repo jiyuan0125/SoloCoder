@@ -1,0 +1,20 @@
+用 Rust 从零写一个 HTTP/1.1 服务器，不用任何框架，直接 std::net::TcpListener。同时支持 HTTP 和 WebSocket 协议。
+
+HTTP 部分：
+1. 支持 GET / POST / DELETE 方法，路由基于路径前缀匹配，注册格式如 get("/api/users", handler)
+2. 支持 Connection: keep-alive，一个连接处理多个请求
+3. POST body 按 Content-Length 读取，body 超过 1MB 返回 413 Payload Too Large
+4. 请求行 + 所有 headers 总大小超过 8KB 返回 431 Request Header Fields Too Large
+5. 解析查询参数：路径 /api/users?page=2&size=10 中的参数通过 query() 方法返回 HashMap<String, String>，注意同名的 key 只保留最后一个值
+
+WebSocket 升级：
+6. 客户端发送 Upgrade: websocket + Sec-WebSocket-Key 时完成握手升级协议
+7. 支持 ping/pong：服务端每 30 秒发送 ping 帧，如果 60 秒内没收到客户端的 pong 则断开连接
+8. 接收到的帧 payload 超过 4MB 时发送 close 帧（code 1009）并断开
+9. 广播功能：服务端可以调用 broadcast() 向所有已连接的 WebSocket 客户端发送消息
+
+通用：
+10. 每个请求处理完后打印一行日志：[时间] METHOD /path 状态码 耗时ms
+11. 优雅关闭：收到 SIGTERM 后停止 accept 新连接，等现有请求处理完再退出，最多等 5 秒后强制退出
+
+代码分 HTTP 解析、WebSocket 帧处理、路由、连接管理几个模块，cargo build 能过。
