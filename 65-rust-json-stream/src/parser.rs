@@ -150,7 +150,7 @@ impl<R: Read, F: FnMut(Event)> Parser<R, F> {
     }
 
     fn parse_object(&mut self) -> Result<()> {
-        let mut has_trailing_comma = false;
+        let mut expecting_key = true;
         
         loop {
             match self.current() {
@@ -160,18 +160,48 @@ impl<R: Read, F: FnMut(Event)> Parser<R, F> {
                     (self.callback)(Event::ObjectEnd(pos));
                     return Ok(());
                 }
-                Some((Token::Comma, _)) if has_trailing_comma => {
-                    let pos = self.position();
-                    if self.config.allow_trailing_comma {
-                        self.advance_token()?;
-                        continue;
-                    } else {
-                        return Err(Error::new(ErrorKind::TrailingComma)
-                            .with_position(pos));
+                Some((Token::Comma, _)) => {
+                    let comma_pos = self.position();
+                    
+                    if expecting_key {
+                        return Err(Error::new(ErrorKind::ExpectedValue)
+                            .with_position(comma_pos));
+                    }
+                    
+                    self.advance_token()?;
+                    
+                    match self.current() {
+                        Some((Token::ObjectEnd, _)) => {
+                            if self.config.allow_trailing_comma {
+                                continue;
+                            } else {
+                                return Err(Error::new(ErrorKind::TrailingComma)
+                                    .with_position(comma_pos));
+                            }
+                        }
+                        Some((Token::Comma, _)) => {
+                            return Err(Error::new(ErrorKind::ExpectedValue)
+                                .with_position(self.position()));
+                        }
+                        Some((Token::String(_), _)) => {
+                            expecting_key = true;
+                            continue;
+                        }
+                        Some((_, pos)) => {
+                            return Err(Error::new(ErrorKind::ExpectedValue)
+                                .with_position(*pos));
+                        }
+                        None => {
+                            return Err(Error::new(ErrorKind::UnexpectedEnd));
+                        }
                     }
                 }
                 Some((Token::String(key), pos)) => {
-                    has_trailing_comma = false;
+                    if !expecting_key {
+                        return Err(Error::new(ErrorKind::ExpectedCommaOrBracket)
+                            .with_position(*pos));
+                    }
+                    
                     let key_pos = *pos;
                     let key = key.clone();
                     self.advance_token()?;
@@ -191,21 +221,7 @@ impl<R: Read, F: FnMut(Event)> Parser<R, F> {
                     }
                     
                     self.parse_value()?;
-                    
-                    match self.current() {
-                        Some((Token::Comma, _)) => {
-                            has_trailing_comma = true;
-                            self.advance_token()?;
-                        }
-                        Some((Token::ObjectEnd, _)) => {}
-                        Some((_, pos)) => {
-                            return Err(Error::new(ErrorKind::ExpectedCommaOrBracket)
-                                .with_position(*pos));
-                        }
-                        None => {
-                            return Err(Error::new(ErrorKind::UnexpectedEnd));
-                        }
-                    }
+                    expecting_key = false;
                 }
                 Some((_, pos)) => {
                     return Err(Error::new(ErrorKind::ExpectedValue)
@@ -219,8 +235,7 @@ impl<R: Read, F: FnMut(Event)> Parser<R, F> {
     }
 
     fn parse_array(&mut self) -> Result<()> {
-        let mut has_trailing_comma = false;
-        let mut first = true;
+        let mut expecting_value = true;
         
         loop {
             match self.current() {
@@ -230,35 +245,46 @@ impl<R: Read, F: FnMut(Event)> Parser<R, F> {
                     (self.callback)(Event::ArrayEnd(pos));
                     return Ok(());
                 }
-                Some((Token::Comma, _)) if has_trailing_comma || first => {
-                    let pos = self.position();
-                    if self.config.allow_trailing_comma {
-                        self.advance_token()?;
-                        continue;
-                    } else {
-                        return Err(Error::new(ErrorKind::TrailingComma)
-                            .with_position(pos));
+                Some((Token::Comma, _)) => {
+                    let comma_pos = self.position();
+                    
+                    if expecting_value {
+                        return Err(Error::new(ErrorKind::ExpectedValue)
+                            .with_position(comma_pos));
                     }
-                }
-                Some(_) => {
-                    first = false;
-                    has_trailing_comma = false;
-                    self.parse_value()?;
+                    
+                    self.advance_token()?;
                     
                     match self.current() {
-                        Some((Token::Comma, _)) => {
-                            has_trailing_comma = true;
-                            self.advance_token()?;
+                        Some((Token::ArrayEnd, _)) => {
+                            if self.config.allow_trailing_comma {
+                                continue;
+                            } else {
+                                return Err(Error::new(ErrorKind::TrailingComma)
+                                    .with_position(comma_pos));
+                            }
                         }
-                        Some((Token::ArrayEnd, _)) => {}
-                        Some((_, pos)) => {
-                            return Err(Error::new(ErrorKind::ExpectedCommaOrBracket)
-                                .with_position(*pos));
+                        Some((Token::Comma, _)) => {
+                            return Err(Error::new(ErrorKind::ExpectedValue)
+                                .with_position(self.position()));
+                        }
+                        Some(_) => {
+                            expecting_value = true;
+                            continue;
                         }
                         None => {
                             return Err(Error::new(ErrorKind::UnexpectedEnd));
                         }
                     }
+                }
+                Some(_) => {
+                    if !expecting_value {
+                        return Err(Error::new(ErrorKind::ExpectedCommaOrBracket)
+                            .with_position(self.position()));
+                    }
+                    
+                    self.parse_value()?;
+                    expecting_value = false;
                 }
                 None => {
                     return Err(Error::new(ErrorKind::UnexpectedEnd));

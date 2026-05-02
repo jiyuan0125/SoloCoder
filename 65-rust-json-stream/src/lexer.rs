@@ -47,7 +47,7 @@ impl<R: Read> Lexer<R> {
                 self.current_byte = None;
                 None
             }
-            Ok(n) if n == 1 => {
+            Ok(1) => {
                 let byte = buf[0];
                 if let Some(current) = self.current_byte {
                     if current == b'\n' {
