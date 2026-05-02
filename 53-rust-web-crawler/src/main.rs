@@ -1,93 +1,97 @@
-use std::sync::Arc;
+mod path_mapper;
+mod robots_parser;
+mod html_link_rewriter;
+mod downloader;
+
 use url::Url;
+use std::path::Path;
+use std::env;
+use anyhow::{Result, anyhow};
+use crate::downloader::Downloader;
 
-use web_crawler::scheduler::{setup_signal_handler, CrawlerConfig, CrawlerScheduler};
+fn print_usage() {
+    println!("用法: web_crawler <种子 URL> [输出目录] [深度限制]");
+    println!();
+    println!("参数:");
+    println!("  <种子 URL>       要下载的网站起始 URL（必需）");
+    println!("  [输出目录]         保存文件的本地目录（默认: ./output）");
+    println!("  [深度限制]         爬取深度限制（默认: 3）");
+    println!();
+    println!("示例:");
+    println!("  web_crawler https://example.com/");
+    println!("  web_crawler https://example.com/ ./my_site 5");
+}
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    let args: Vec<String> = std::env::args().collect();
+fn main() -> Result<()> {
+    let args: Vec<String> = env::args().collect();
     
     if args.len() < 2 {
-        println!("Usage: {} <seed_url> [max_depth] [max_concurrent_per_domain] [output_file]", args[0]);
-        println!("Example: {} https://example.com 3 2 results.json", args[0]);
-        std::process::exit(1);
+        print_usage();
+        return Err(anyhow!("缺少种子 URL 是必需的参数"));
+    }
+    
+    if args[1] == "--help" || args[1] == "-h" {
+        print_usage();
+        return Ok(());
     }
     
     let seed_url_str = &args[1];
-    let seed_url = match Url::parse(seed_url_str) {
-        Ok(url) => url,
-        Err(e) => {
-            eprintln!("Invalid URL: {}", e);
-            std::process::exit(1);
-        }
+    let seed_url = Url::parse(seed_url_str)
+        .map_err(|e| anyhow!("无效的 URL: {}", e))?;
+    
+    let output_dir = if args.len() >= 3 {
+        Path::new(&args[2])
+    } else {
+        Path::new("./output")
     };
     
-    let max_depth = args.get(2)
-        .and_then(|s| s.parse::<usize>().ok())
-        .unwrap_or(3);
+    let max_depth: u32 = if args.len() >= 4 {
+        args[3].parse().unwrap_or(3)
+    } else {
+        3
+    };
     
-    let max_concurrent_per_domain = args.get(3)
-        .and_then(|s| s.parse::<usize>().ok())
-        .unwrap_or(2);
-    
-    let output_file = args.get(4)
-        .cloned()
-        .unwrap_or_else(|| "crawl_results.json".to_string());
+    let max_concurrent = 3;
     
     println!("========================================");
-    println!("Web Crawler Configuration");
+    println!("站点镜像工具启动");
     println!("========================================");
-    println!("Seed URL: {}", seed_url);
-    println!("Max Depth: {}", max_depth);
-    println!("Max Concurrent per Domain: {}", max_concurrent_per_domain);
-    println!("Output File: {}", output_file);
-    println!("User Agent: WebCrawler/1.0");
+    println!("种子 URL: {}", seed_url);
+    println!("输出目录: {:?}", output_dir);
+    println!("深度限制: {}", max_depth);
+    println!("并发限制: {}", max_concurrent);
     println!("========================================");
-    println!("Press Ctrl+C to gracefully stop");
     println!();
     
-    let config = CrawlerConfig {
-        seed_urls: vec![seed_url],
+    let mut downloader = Downloader::new(
+        &seed_url,
+        output_dir,
         max_depth,
-        max_concurrent_per_domain,
-        max_total_concurrent: 10,
-        user_agent: "WebCrawler/1.0".to_string(),
-        output_file,
-    };
+        max_concurrent,
+    )?;
     
-    let scheduler = Arc::new(CrawlerScheduler::new(config));
+    let stats = downloader.download(&seed_url);
     
-    setup_signal_handler(scheduler.clone()).await;
-    
-    println!("Starting crawl...");
-    
-    match scheduler.run().await {
-        Ok(_) => {
-            let results = scheduler.get_results().await;
-            println!();
-            println!("========================================");
-            println!("Crawl Completed");
-            println!("========================================");
-            println!("Total pages crawled: {}", results.len());
-            
-            let success_count = results.iter().filter(|r| r.status_code == 200).count();
-            println!("Successful (200 OK): {}", success_count);
-            
-            let error_count = results.iter().filter(|r| r.status_code != 200 && r.status_code != 0).count();
-            if error_count > 0 {
-                println!("HTTP errors: {}", error_count);
-            }
-            
-            let fail_count = results.iter().filter(|r| r.status_code == 0).count();
-            if fail_count > 0 {
-                println!("Network errors: {}", fail_count);
-            }
-        }
-        Err(e) => {
-            eprintln!("Crawl failed with error: {}", e);
-            std::process::exit(1);
-        }
-    }
+    stats.print_summary();
     
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use url::Url;
+    use std::path::Path;
+
+    #[test]
+    fn test_url_parsing() {
+        let url = Url::parse("https://example.com/about/team").unwrap();
+        assert_eq!(url.domain(), Some("example.com"));
+    }
+
+    #[test]
+    fn test_output_dir_creation() {
+        let output_dir = Path::new("/tmp/test_crawler_output");
+        assert!(!output_dir.exists());
+    }
 }

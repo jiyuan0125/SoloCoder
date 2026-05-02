@@ -1,1 +1,21 @@
-用 Rust 写一个并发爬虫。从种子 URL 开始抓取网页，解析出页面里的链接继续爬。支持深度限制，比如指定最大深度 3 就只爬前 3 层链接。同一个域名最多同时 2 个请求在跑，超过的排队等着。URL 去重用 HashSet，已经爬过的不再爬。每个域名先请求 /robots.txt 看有没有 Disallow 规则，有的话遵守。收到 SIGINT 或者调用 shutdown 的时候，已经发出去的请求等它返回，但不再发新的请求。爬到的结果（URL、标题、状态码）输出到一个文件里。代码分爬虫调度、URL 队列、页面解析、robots.txt 解析几个模块，cargo build 能过。
+用 Rust 写一个站点镜像工具，把目标网站下载到本地目录，保持原始的目录结构。从种子 URL 开始，只爬取同域名下的资源。
+
+路径映射：
+1. URL 路径映射到本地文件路径：https://example.com/about/team → about/team.html，如果 URL 末尾没有文件扩展名则自动加 .html
+2. URL 中的 query string 和 fragment 在映射文件路径时要去掉：/search?q=test → search.html（不是 search?q=test.html）
+3. 如果路径包含 .. 要先规范化再映射（/a/../b → /b → b.html）
+
+HTML 处理：
+4. 下载的 HTML 中所有同域名的链接改写为相对路径：<a href="https://example.com/contact"> 改成 <a href="../contact.html">，外部链接保持原样不改动
+5. 静态资源（CSS/JS/图片）也下载并改写路径
+
+爬取控制：
+6. 遵守 robots.txt 的 Disallow 规则
+7. 并发限制：同一个域名最多 3 个并发连接
+8. URL 去重，已下载的不重复请求
+9. 支持深度限制，默认 3 层
+
+输出：
+10. 完成后打印统计：页面数、资源数（CSS/JS/图片）、失败数、总耗时秒数
+
+代码分下载调度、路径映射、HTML 链接改写、robots 解析几个模块，cargo build 能过。
