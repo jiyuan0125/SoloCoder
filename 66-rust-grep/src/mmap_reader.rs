@@ -6,10 +6,6 @@ use std::path::Path;
 pub const LARGE_FILE_THRESHOLD: u64 = 1024 * 1024;
 pub const CHUNK_SIZE: usize = 4 * 1024 * 1024;
 
-pub struct FileContent {
-    pub data: Vec<u8>,
-}
-
 pub enum FileReader {
     Mmap(MmapReader),
     InMemory(InMemoryReader),
@@ -26,7 +22,6 @@ pub struct InMemoryReader {
 
 pub struct ChunkInfo {
     pub start: usize,
-    pub end: usize,
     pub data: Vec<u8>,
     pub line_offset: usize,
 }
@@ -51,21 +46,10 @@ impl FileReader {
         }
     }
 
-    pub fn is_large_file(&self) -> bool {
-        matches!(self, FileReader::Mmap(_))
-    }
-
     pub fn get_chunks(&self) -> Vec<ChunkInfo> {
         match self {
             FileReader::Mmap(reader) => reader.get_chunks(),
             FileReader::InMemory(reader) => reader.get_chunks(),
-        }
-    }
-
-    pub fn get_full_content(&self) -> &[u8] {
-        match self {
-            FileReader::Mmap(reader) => &reader.mmap,
-            FileReader::InMemory(reader) => &reader.data,
         }
     }
 }
@@ -92,7 +76,6 @@ impl MmapReader {
             
             chunks.push(ChunkInfo {
                 start: current_start,
-                end,
                 data: chunk_data,
                 line_offset,
             });
@@ -109,7 +92,6 @@ impl InMemoryReader {
     pub fn get_chunks(&self) -> Vec<ChunkInfo> {
         vec![ChunkInfo {
             start: 0,
-            end: self.data.len(),
             data: self.data.clone(),
             line_offset: 0,
         }]

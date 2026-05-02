@@ -62,6 +62,14 @@ impl GitignoreMatcher {
         let normalized_pattern = pattern.replace("\\\\", "/");
         let normalized_path = path_str.replace("\\\\", "/");
         
+        if !normalized_pattern.contains('/') {
+            let mut components = normalized_path.split('/');
+            if let Some(file_name) = components.next_back() {
+                return self.fnmatch(&normalized_pattern, file_name);
+            }
+            return false;
+        }
+        
         let pattern_components: Vec<&str> = normalized_pattern.split('/').collect();
         let path_components: Vec<&str> = normalized_path.split('/').collect();
         

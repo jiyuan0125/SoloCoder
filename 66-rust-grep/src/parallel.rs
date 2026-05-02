@@ -19,16 +19,6 @@ pub struct LineMatch {
     pub content: String,
 }
 
-pub struct SearchResult {
-    pub path: PathBuf,
-    pub chunk_results: Vec<ChunkResult>,
-    pub has_matches: bool,
-}
-
-pub struct ChunkResult {
-    pub matches: Vec<(usize, String)>,
-}
-
 pub struct ThreadPool {
     workers: Vec<Worker>,
     sender: Option<mpsc::Sender<Job>>,
@@ -37,12 +27,11 @@ pub struct ThreadPool {
 type Job = Box<dyn FnOnce() + Send + 'static>;
 
 struct Worker {
-    id: usize,
     thread: Option<thread::JoinHandle<()>>,
 }
 
 impl Worker {
-    fn new(id: usize, receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
+    fn new(receiver: Arc<Mutex<mpsc::Receiver<Job>>>) -> Worker {
         let thread = thread::spawn(move || loop {
             let job = receiver.lock().unwrap().recv();
             
@@ -55,7 +44,6 @@ impl Worker {
         });
         
         Worker {
-            id,
             thread: Some(thread),
         }
     }
@@ -70,8 +58,8 @@ impl ThreadPool {
         
         let mut workers = Vec::with_capacity(size);
         
-        for id in 0..size {
-            workers.push(Worker::new(id, Arc::clone(&receiver)));
+        for _ in 0..size {
+            workers.push(Worker::new(Arc::clone(&receiver)));
         }
         
         ThreadPool {
@@ -102,9 +90,9 @@ impl Drop for ThreadPool {
 }
 
 pub fn search_file_parallel(
-    path: &PathBuf,
+    path: &std::path::Path,
     matcher: Arc<Matcher>,
-    config: Arc<Config>,
+    _config: Arc<Config>,
 ) -> Option<FileMatch> {
     if is_binary_file(path).unwrap_or(false) {
         return None;
@@ -124,7 +112,6 @@ pub fn search_file_parallel(
     for (chunk_idx, chunk) in chunks.into_iter().enumerate() {
         let matcher = Arc::clone(&matcher);
         let result_sender = result_sender.clone();
-        let _path = path.clone();
         
         pool.execute(move || {
             let matches = matcher.find_matches_in_buffer(&chunk.data, chunk.start);
@@ -158,9 +145,9 @@ pub fn search_file_parallel(
     
     let total_matches = line_matches.len();
     
-    if total_matches > 0 || config.count {
+    if total_matches > 0 {
         Some(FileMatch {
-            path: path.clone(),
+            path: path.to_path_buf(),
             matches: line_matches,
             total_matches,
         })
@@ -183,14 +170,10 @@ pub fn collect_files(
             }
         } else if path.is_dir() {
             let walker = walkdir::WalkDir::new(path);
-            for entry in walker {
-                if let Ok(entry) = entry {
-                    let entry_path = entry.path();
-                    if entry_path.is_file() {
-                        if should_include_file(entry_path, exclude_patterns, gitignore_matchers) {
-                            files.push(entry_path.to_path_buf());
-                        }
-                    }
+            for entry in walker.into_iter().flatten() {
+                let entry_path = entry.path();
+                if entry_path.is_file() && should_include_file(entry_path, exclude_patterns, gitignore_matchers) {
+                    files.push(entry_path.to_path_buf());
                 }
             }
         }
