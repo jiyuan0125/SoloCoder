@@ -1,10 +1,8 @@
 [package]
-name = "http-server"
+name = "http_server"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 sha1 = "0.10"
-base64 = "0.21"
-chrono = "0.4"
-ctrlc = "3.4"
+libc = "0.2"
