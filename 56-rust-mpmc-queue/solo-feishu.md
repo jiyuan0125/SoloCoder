@@ -38,61 +38,70 @@
 
 ---
 
+## 56-rust-mpmc-queue — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | .335769888099319:004a910252964eb4b25005b2a5f63bff_69f58d5dd0eab67395271c9a.69f5a0b9d0eab67395271f7f.69f5a0b95e5d9b2bb12eed45:Trae CN.T(2026/5/2 14:59:05) |
+| 第一轮Session ID | .335769888099319:ee778b9e64b492736fdced86231e4215_69f58d5dd0eab67395271c9a.69f58d7ad0eab67395271c9e.69f58d7a5e5d9b2bb12eed43:Trae CN.T(2026/5/2 13:36:58) |
+| 轮次 | 3 |
+| User Prompt | R1 的 Send/Sync 和容量问题修好了，但多线程压测暴露了数据竞争 bug。\n\n用 4 个生产者线程并发 push，4 个消费者线程并发 pop，总共发 4000 条消息，实际只收到 2571 条，丢了 1429 条（35.7%）。\n\n根本原因：`do_push` 里多个生产者能读到相同的 tail 值，然后都往同一个 slot 写数据，后写的覆盖先写的，导致数据丢失。`do_pop` 也有类似问题。\n\n修复：`do_push` 和 `do_pop` 都要用 `compare_exchange`（CAS）原子操作来抢占 head/tail 槽位，CAS 成功后才能写入/读取对应 slot。具体来说：\n1. 循环读取当前 tail\n2. 计算 next_tail，检查是否 full\n3. 用 `compare_exchange_weak(tail, next_tail)` 尝试原子更新 tail\n4. CAS 成功 → 写入 slot 值 → 设 ready=true\n5. CAS 失败 → 重试\n\ndo_pop 同理用 CAS 抢占 head。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | R2 的 35% 丢包修复为 0.12%，但仍有数据丢失。4p4c 20000 条压测：20000 条入队，仅 19977 条出队，23 条永久卡在队列中，1 个消费者线程永久挂起（spin on ready=false）。根因：do_pop 中 spin-wait on ready flag 在 buffer 多次 wrap-around 后可读到 stale 状态，导致消费者 CAS 了 head 但永远等不到 ready=true。 |
+| github地址 | |
+| 分支/文件夹 | 56-rust-mpmc-queue |
+
+---
+
 ## 评测详情
 
-### R2 修复了什么
+### R3 修复了什么
 
-1. ✅ **Send/Sync**：添加 `unsafe impl<T: Send> Send/Sync for Inner<T>`，Queue/Sender/Receiver 可跨线程
-2. ✅ **容量 off-by-one**：新增 `buffer_len = capacity + 1`，`Queue::new(4)` 现在真正能存 4 个元素
-3. ✅ **main.rs 集成测试**：5 个测试用例（basic、try、multi-threaded、channel、into_iter）全部通过
+1. ✅ **do_push CAS**：`compare_exchange_weak(tail, next_tail)` 原子抢占槽位后再写入
+2. ✅ **do_pop CAS**：`compare_exchange_weak(head, next_head)` 原子抢占槽位后 spin-wait on ready
+3. ✅ **CachePaddedAtomicUsize 新增 compare_exchange_weak**
+4. ✅ **内置压测**：4p4c 4000 条 0 丢失 0 重复
+5. ✅ **容量正确**：Queue::new(4) 真正能存 4 个元素
 
-### 致命 Bug：do_push 数据竞争
+### 剩余 Bug：ready flag 在 buffer wrap-around 后 stale
 
-`do_push` 的 fast path 不是原子操作：
+`do_pop` CAS 抢占 head 后 spin-wait `slot.ready`。当 buffer 经过多次 wrap-around 后：
+- 某个 slot 的 `ready` 在上一轮已被 consumer 设为 false
+- 新 producer CAS tail 到该 slot 并写入新值
+- 但在 producer 设 `ready=true` 之前，另一个 consumer 可能已 CAS head 到同一 slot 并开始 spin
+- 如果该 consumer 看到的是旧的 `ready=false`（上一轮残留），而新 producer 的 `ready=true` 被另一个 consumer 读取并设回 false
+- 则该 consumer 永远 spin 在 `ready=false`，永远不会返回
+
+**压测证据**（带进度监控）：
 ```
-tail = self.tail.load(Acquire)       // 两个生产者都读到 tail=0
-next_tail = (tail + 1) % buffer_len  // 都算出 next_tail=1
-buffer[tail].write(value)            // 都写入 slot[0]，后者覆盖前者！
-tail.store(next_tail, Release)       // 都存 tail=1
+pushed=20000 popped=19977 elapsed=101ms  (所有 producer 在 5ms 内完成)
+pushed=20000 popped=19977 elapsed=10s    (消费者永久卡住，23 条无法出队)
 ```
-
-**压测结果**：4 生产者 × 1000 条 = 4000 条，实际收到 2571 条，丢失 1429 条（35.7%）。
-
-**修复方案**：`do_push` 中用 `compare_exchange_weak` CAS 抢占 tail 槽位，成功后再写入值并设 ready flag。`do_pop` 同理需要 CAS 抢占 head。
 
 ### 6 项 PROMPT 需求验证
 
 | # | 需求 | 状态 | 说明 |
 |---|------|------|------|
-| 1 | 阻塞 push/pop | ⚠️ | 单生产者单消费者正确，多生产者丢数据 |
-| 2 | 非阻塞 try_push/try_pop | ✅ | 单线程正确 |
-| 3 | close() 唤醒阻塞线程 | ✅ | 正确（notify_all） |
+| 1 | 阻塞 push/pop | ⚠️ | 低并发正确，高并发丢消息+挂线程 |
+| 2 | 非阻塞 try_push/try_pop | ✅ | 正确 |
+| 3 | close() 唤醒阻塞线程 | ✅ | 正确 |
 | 4 | close 后 push/try_push 返回 Closed | ✅ | 正确 |
 | 5 | len() 方法 | ✅ | 正确 |
 | 6 | into_iter() | ✅ | 正确 |
 
+### 三轮改进趋势
+
+| 轮次 | 4p4c 4000msg 丢失率 | 主要问题 |
+|------|----------------------|----------|
+| R1 | 无法跨线程 | UnsafeCell → 不满足 Send/Sync |
+| R2 | 64.7% (2571/4000) | do_push 无 CAS，同 slot 覆盖 |
+| R3 | 0.12% (23/20000) | CAS 修复了大部分，但 ready flag stale |
+
 ### 其他问题
 
-1. **dead_code 警告**：`CachePaddedAtomicUsize` 的 `swap`/`fetch_add` 未使用
+1. **dead_code 警告**：`CachePaddedAtomicUsize` 的 `store`/`swap`/`fetch_add` 未使用
 2. **代码重复**：Queue/Sender/Receiver 约 200 行重复的 push/pop 实现
-
----
-
-## 56-rust-mpmc-queue — 第 3 轮
-
-| 字段 | 值 |
-|------|------|
-| Trae Session ID | .335769888099319:6a3f8c1e7d4c5b2a1f0e3d8c9b7a6f5e_69f58d5dd0eab67395271c9a.69f5a1a2d0eab67395271f97.69f5a1a1b3454bc765dc76fe:Trae CN.T(2026/5/2 15:10:00) |
-| 第一轮Session ID | .335769888099319:ee778b9e64b492736fdced86231e4215_69f58d5dd0eab67395271c9a.69f58d7ad0eab67395271c9e.69f58d7a5e5d9b2bb12eed43:Trae CN.T(2026/5/2 13:36:58) |
-| 轮次 | 3 |
-| User Prompt | R1 的 Send/Sync 和容量问题修好了，但多线程压测暴露了数据竞争 bug。用 4 个生产者线程并发 push，4 个消费者线程并发 pop，总共发 4000 条消息，实际只收到 2571 条，丢了 1429 条。根本原因：do_push 里多个生产者能读到相同的 tail 值，然后都往同一个 slot 写数据，后写的覆盖先写的，导致数据丢失。修复：do_push 和 do_pop 都要用 compare_exchange（CAS）原子操作来抢占 head/tail 槽位，CAS 成功后才能写入/读取对应 slot。 |
-| 任务类型 | Bug修复 |
-| 业务领域 | 命令行工具 |
-| 修改范围 | 单文件小修 |
-| 任务是否完成 | 已完成 |
-| 产物及过程是否满意 | 满意 |
-| 不满意原因 | |
-| github地址 | |
-| 分支/文件夹 | 56-rust-mpmc-queue |
-
----

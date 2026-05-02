@@ -1,4 +1,7 @@
 use mpmc_queue::{channel, Queue};
+use std::collections::HashSet;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use std::thread;
 use std::time::Duration;
 
@@ -39,7 +42,7 @@ fn test_try_push_try_pop() {
 }
 
 fn test_multithreaded() {
-    println!("\n=== Test 3: Multi-threaded ===");
+    println!("\n=== Test 3: Multi-threaded producer/consumer ===");
     
     let q = Queue::new(10);
     
@@ -124,6 +127,76 @@ fn test_into_iter() {
     println!("PASSED");
 }
 
+fn test_stress_4p4c() {
+    println!("\n=== Test 6: STRESS - 4 producers, 4 consumers, 4000 messages ===");
+    
+    const NUM_PRODUCERS: usize = 4;
+    const NUM_CONSUMERS: usize = 4;
+    const MESSAGES_PER_PRODUCER: usize = 1000;
+    const TOTAL_MESSAGES: usize = NUM_PRODUCERS * MESSAGES_PER_PRODUCER;
+    
+    let q = Queue::new(100);
+    
+    let counter = Arc::new(AtomicUsize::new(0));
+    let received_set = Arc::new(std::sync::Mutex::new(HashSet::new()));
+    
+    let mut producers = Vec::with_capacity(NUM_PRODUCERS);
+    for p in 0..NUM_PRODUCERS {
+        let q = q.clone();
+        producers.push(thread::spawn(move || {
+            for m in 0..MESSAGES_PER_PRODUCER {
+                let value = p * MESSAGES_PER_PRODUCER + m;
+                q.push(value).unwrap();
+            }
+            println!("Producer {} finished", p);
+        }));
+    }
+    
+    let mut consumers = Vec::with_capacity(NUM_CONSUMERS);
+    for _c in 0..NUM_CONSUMERS {
+        let q = q.clone();
+        let counter = counter.clone();
+        let received_set = received_set.clone();
+        consumers.push(thread::spawn(move || {
+            loop {
+                match q.pop() {
+                    Ok(v) => {
+                        counter.fetch_add(1, Ordering::SeqCst);
+                        let mut set = received_set.lock().unwrap();
+                        if !set.insert(v) {
+                            panic!("Duplicate value received: {}", v);
+                        }
+                    }
+                    Err(_) => break,
+                }
+            }
+        }));
+    }
+    
+    for p in producers {
+        p.join().unwrap();
+    }
+    
+    println!("All producers finished, closing queue...");
+    q.close();
+    
+    for c in consumers {
+        c.join().unwrap();
+    }
+    
+    let received_count = counter.load(Ordering::SeqCst);
+    let set_size = received_set.lock().unwrap().len();
+    
+    println!("TOTAL_MESSAGES:  {}", TOTAL_MESSAGES);
+    println!("Received count:  {}", received_count);
+    println!("Unique in set:   {}", set_size);
+    
+    assert_eq!(received_count, TOTAL_MESSAGES, "Lost {} messages!", TOTAL_MESSAGES - received_count);
+    assert_eq!(set_size, TOTAL_MESSAGES, "Set size mismatch!");
+    
+    println!("PASSED - No data loss!");
+}
+
 fn main() {
     println!("Running MPMC Queue tests...\n");
     
@@ -132,6 +205,8 @@ fn main() {
     test_multithreaded();
     test_channel();
     test_into_iter();
+    
+    test_stress_4p4c();
     
     println!("\n=== All tests passed! ===");
 }

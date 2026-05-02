@@ -2,8 +2,9 @@ use crate::atomic::{CachePadded, CachePaddedAtomicBool, CachePaddedAtomicUsize};
 use std::error::Error;
 use std::fmt;
 use std::mem::MaybeUninit;
-use std::sync::atomic::Ordering::{Acquire, Release, SeqCst};
+use std::sync::atomic::Ordering::{Acquire, Relaxed, Release, SeqCst};
 use std::sync::{Arc, Condvar, Mutex};
+use std::thread;
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum PushError<T> {
@@ -110,43 +111,66 @@ impl<T> Inner<T> {
     }
 
     unsafe fn do_push(&self, value: T) -> Result<(), T> {
-        if self.is_closed() {
-            return Err(value);
+        loop {
+            if self.is_closed() {
+                return Err(value);
+            }
+
+            let tail = self.tail.load(Acquire);
+            let next_tail = (tail + 1) % self.buffer_len;
+            let head = self.head.load(Acquire);
+
+            if next_tail == head {
+                return Err(value);
+            }
+
+            if self
+                .tail
+                .compare_exchange_weak(tail, next_tail, Release, Relaxed)
+                .is_ok()
+            {
+                let slot = &self.buffer[tail];
+                unsafe {
+                    slot.value.write(MaybeUninit::new(value));
+                }
+                slot.ready.store(true, Release);
+                return Ok(());
+            }
+
+            thread::yield_now();
         }
-
-        let tail = self.tail.load(Acquire);
-        let next_tail = (tail + 1) % self.buffer_len;
-
-        if next_tail == self.head.load(Acquire) {
-            return Err(value);
-        }
-
-        let slot = &self.buffer[tail];
-        unsafe {
-            slot.value.write(MaybeUninit::new(value));
-        }
-        slot.ready.store(true, Release);
-
-        self.tail.store(next_tail, Release);
-        Ok(())
     }
 
     unsafe fn do_pop(&self) -> Option<T> {
-        if self.is_empty() {
-            return None;
+        loop {
+            let head = self.head.load(Acquire);
+            let tail = self.tail.load(Acquire);
+
+            if head == tail {
+                return None;
+            }
+
+            let next_head = (head + 1) % self.buffer_len;
+
+            if self
+                .head
+                .compare_exchange_weak(head, next_head, Release, Relaxed)
+                .is_ok()
+            {
+                let slot = &self.buffer[head];
+
+                while !slot.ready.load(Acquire) {
+                    thread::yield_now();
+                }
+
+                let value = unsafe { slot.value.read().assume_init() };
+                slot.ready.store(false, Release);
+
+                return Some(value);
+            }
+
+            thread::yield_now();
         }
-
-        let head = self.head.load(Acquire);
-        let slot = &self.buffer[head];
-
-        if !slot.ready.swap(false, Acquire) {
-            return None;
-        }
-
-        let value = unsafe { slot.value.read().assume_init() };
-        self.head.store((head + 1) % self.buffer_len, Release);
-
-        Some(value)
     }
 }
 
@@ -192,7 +216,9 @@ impl<T> Queue<T> {
                     let _guard = self
                         .inner
                         .not_full
-                        .wait_while(guard, |_| !self.inner.is_closed() && self.inner.is_full())
+                        .wait_while(guard, |_| {
+                            !self.inner.is_closed() && self.inner.is_full()
+                        })
                         .unwrap();
                     if self.inner.is_closed() {
                         return Err(PushError::Closed(value));
@@ -237,7 +263,9 @@ impl<T> Queue<T> {
                     let _guard = self
                         .inner
                         .not_empty
-                        .wait_while(guard, |_| !self.inner.is_closed() && self.inner.is_empty())
+                        .wait_while(guard, |_| {
+                            !self.inner.is_closed() && self.inner.is_empty()
+                        })
                         .unwrap();
                     if self.inner.is_closed() && self.inner.is_empty() {
                         return Err(PopError::Closed);
@@ -346,7 +374,9 @@ impl<T> Sender<T> {
                     let _guard = self
                         .inner
                         .not_full
-                        .wait_while(guard, |_| !self.inner.is_closed() && self.inner.is_full())
+                        .wait_while(guard, |_| {
+                            !self.inner.is_closed() && self.inner.is_full()
+                        })
                         .unwrap();
                     if self.inner.is_closed() {
                         return Err(PushError::Closed(value));
@@ -424,7 +454,9 @@ impl<T> Receiver<T> {
                     let _guard = self
                         .inner
                         .not_empty
-                        .wait_while(guard, |_| !self.inner.is_closed() && self.inner.is_empty())
+                        .wait_while(guard, |_| {
+                            !self.inner.is_closed() && self.inner.is_empty()
+                        })
                         .unwrap();
                     if self.inner.is_closed() && self.inner.is_empty() {
                         return Err(PopError::Closed);

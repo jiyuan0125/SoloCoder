@@ -52,6 +52,16 @@ impl CachePaddedAtomicUsize {
     pub fn fetch_add(&self, value: usize, order: Ordering) -> usize {
         self.inner.fetch_add(value, order)
     }
+
+    pub fn compare_exchange_weak(
+        &self,
+        current: usize,
+        new: usize,
+        success: Ordering,
+        failure: Ordering,
+    ) -> Result<usize, usize> {
+        self.inner.compare_exchange_weak(current, new, success, failure)
+    }
 }
 
 #[repr(align(64))]
