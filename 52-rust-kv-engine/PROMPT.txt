@@ -1,0 +1,15 @@
+用 Rust 写一个持久化 KV 存储引擎，REPL 交互模式。支持 put key value / get key / delete key / scan prefix / count / quit 命令。
+
+存储层：
+1. 数据文件追加写入，每条记录格式：CRC32 校验和(4B) + 记录总长度(4B) + 操作类型(1B: 0=PUT, 1=DELETE) + key 长度(2B) + key + value
+2. get 的时候从文件末尾往前扫描，找到最新一条该 key 的 PUT 记录就返回值，如果最新一条是 DELETE 则返回 key not found
+3. 数据文件超过 16MB 触发 compaction：扫描全文件，把所有活跃的 PUT 记录写到新文件，丢弃被覆盖的旧记录和 DELETE 记录，然后替换旧文件
+4. 启动时构建内存索引（HashMap<String, (offset, length)>），如果文件最后一条记录 CRC 校验失败则丢弃该条（模拟崩溃恢复）
+
+REPL 交互：
+5. scan prefix 命令返回所有匹配前缀的 key 列表，按字典序排列
+6. count 命令返回当前存活的 key 总数，被 delete 过的不计入
+7. put 的 value 如果超过 4MB 返回错误提示，不写入文件
+8. 输入空行忽略，输入未知命令返回提示
+
+代码分存储引擎、REPL、索引管理、compaction 几个模块，cargo build 能过。
