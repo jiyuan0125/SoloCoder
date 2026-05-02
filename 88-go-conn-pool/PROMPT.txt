@@ -1,0 +1,23 @@
+用 Go 写一个通用 TCP 连接池。支持配置最大连接数、最大空闲连接数、连接最大存活时间。提供 Pool 结构体。
+
+核心 API：
+1. pool.Get(ctx) 获取一个连接。优先从空闲列表取，空闲列表为空且未达 MaxOpen 则创建新连接。已达 MaxOpen 则阻塞等待直到有连接归还或 ctx 超时
+2. pool.Put(conn) 归还连接。如果连接存活时间超过 MaxLifetime 或空闲列表已满则丢弃（直接 close）
+3. pool.Close() 优雅关闭：标记为 closing 不再创建新连接，等待所有借出的连接归还后再关闭。最多等 5 秒，超时后丢弃未归还的连接
+
+连接创建：
+4. 通过 NewFunc 传入连接创建函数：pool.New(func() (net.Conn, error) { return net.Dial("tcp", addr) })
+5. 通过 HealthCheck 可选传入健康检查函数：每 30 秒对空闲连接执行一次检查，不健康的关闭
+6. 连接是懒创建的（不是在 pool 创建时就创建 MaxOpen 个）
+
+配置：
+7. MaxOpen：最大连接数（包括空闲和借出的）
+8. MaxIdle：最大空闲连接数（超出则关闭多余的）
+9. MaxLifetime：连接最大存活时间，到了即使连接健康也关闭重建
+10. MaxIdleTime：连接最大空闲时间（不设置则不超时）
+
+统计：
+11. pool.Stats() 返回 PoolStats 结构体：Active（借出中）、Idle（空闲中）、WaitCount（等待队列当前长度）、WaitTotal（历史等待总数）
+12. Active + Idle = 当前池中实际存在的连接数（不包含被丢弃的）
+
+代码分 pool.go、conn.go 几个 package，go build 能过。
