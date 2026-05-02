@@ -1,0 +1,10 @@
+[package]
+name = "parallel_grep"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1.10"
+memmap2 = "0.9"
+walkdir = "2"
+num_cpus = "1.16"
