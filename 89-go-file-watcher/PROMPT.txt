@@ -1,0 +1,25 @@
+用 Go 写一个文件监控系统。递归监控指定目录下的所有文件和子目录，通过 channel 发送事件。
+
+事件类型：
+1. Create：文件被创建
+2. Write：文件内容被修改
+3. Remove：文件被删除
+4. Rename：文件被重命名（发送一条 Rename 事件，包含旧路径和新路径）
+5. Chmod：文件权限被修改
+
+事件合并和防抖：
+6. 防抖 200ms：同一个文件在 200ms 内的多次变更事件合并为一次，只发送最后一个事件的类型
+7. 编辑器保存文件通常会触发 Create + Write + Chmod 多个事件，合并成一次 Write 事件（不是 Create）
+8. 一个文件快速创建后又被删除（200ms 内），不发送任何事件（不发送 Create 再发 Remove）
+
+排除规则：
+9. 自动读取监控目录及所有父目录中的 .gitignore 文件，匹配的路径不监控
+10. .gitignore 规则支持 * 通配符和目录匹配（如 node_modules/ 匹配整个目录）
+11. 隐藏文件（以 . 开头）默认不监控，除非在配置中显式包含
+
+接口：
+12. watcher.Watch(dir) 开始监控目录
+13. watcher.Events() 返回 <-chan Event，调用者从这个 channel 读取事件
+14. watcher.Close() 停止监控，关闭 events channel。调用 Close 后 events channel 应该被关闭（range 循环自然退出）
+
+代码分 watcher.go、debounce.go、ignore.go 几个 package，go build 能过。

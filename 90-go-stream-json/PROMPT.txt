@@ -1,0 +1,26 @@
+用 Go 写一个流式 JSON 处理命令行工具。不把整个 JSON 加载到内存，流式处理。
+
+命令行接口：
+1. ./streamjson [command] [flags]
+2. 命令：query（查询路径值）、count（统计匹配数量）、sum（对数值求和）、keys（列出所有 key）
+3. 标志：-f 输入文件路径（不指定则从 stdin 读取）、-p JSONPath 查询路径、-m 统计模式
+
+JSONPath 语法：
+4. 支持：$.store.book[*].author（访问数组所有元素的 author 字段）
+5. 支持：$.users[0].name（访问数组指定索引）
+6. [*] 表示数组所有元素，不支持递归下降（..）
+
+流式处理：
+7. 从文件或 stdin 流式读取，每次读 4KB 缓冲区
+8. 如果输入文件是 gzip 压缩的（前两个字节是 0x1f 0x8b）自动透明解压
+9. 大文件（>100MB）处理时打印进度到 stderr：每处理 10MB 打印一次百分比
+
+统计模式：
+10. count：统计匹配路径的值出现的总次数（如果值是数组则计每个元素 1 次）
+11. sum：对所有匹配到的数值求和（跳过非数值类型，不报错）
+12. avg：对数值求平均值（sum / count，count 为 0 时返回 0）
+
+输出：
+13. 默认输出 JSON 格式。--format csv 时输出 CSV（第一行 header，后续数据行）
+
+代码分 jsonpath.go、stream.go、stats.go、main.go 几个 package，go build 能过。
