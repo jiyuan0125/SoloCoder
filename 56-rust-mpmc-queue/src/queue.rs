@@ -56,6 +56,7 @@ impl<T> Slot<T> {
 struct Inner<T> {
     buffer: Box<[Slot<T>]>,
     capacity: usize,
+    buffer_len: usize,
     head: CachePaddedAtomicUsize,
     tail: CachePaddedAtomicUsize,
     closed: CachePaddedAtomicBool,
@@ -66,13 +67,15 @@ struct Inner<T> {
 
 impl<T> Inner<T> {
     fn new(capacity: usize) -> Self {
-        let mut buffer = Vec::with_capacity(capacity);
-        for _ in 0..capacity {
+        let buffer_len = capacity + 1;
+        let mut buffer = Vec::with_capacity(buffer_len);
+        for _ in 0..buffer_len {
             buffer.push(Slot::new());
         }
         Inner {
             buffer: buffer.into_boxed_slice(),
             capacity,
+            buffer_len,
             head: CachePaddedAtomicUsize::new(0),
             tail: CachePaddedAtomicUsize::new(0),
             closed: CachePaddedAtomicBool::new(false),
@@ -92,7 +95,7 @@ impl<T> Inner<T> {
         if tail >= head {
             tail - head
         } else {
-            self.capacity - head + tail
+            self.buffer_len - head + tail
         }
     }
 
@@ -103,7 +106,7 @@ impl<T> Inner<T> {
     fn is_full(&self) -> bool {
         let head = self.head.load(Acquire);
         let tail = self.tail.load(Acquire);
-        (tail + 1) % self.capacity == head
+        (tail + 1) % self.buffer_len == head
     }
 
     unsafe fn do_push(&self, value: T) -> Result<(), T> {
@@ -112,7 +115,7 @@ impl<T> Inner<T> {
         }
 
         let tail = self.tail.load(Acquire);
-        let next_tail = (tail + 1) % self.capacity;
+        let next_tail = (tail + 1) % self.buffer_len;
 
         if next_tail == self.head.load(Acquire) {
             return Err(value);
@@ -141,7 +144,7 @@ impl<T> Inner<T> {
         }
 
         let value = unsafe { slot.value.read().assume_init() };
-        self.head.store((head + 1) % self.capacity, Release);
+        self.head.store((head + 1) % self.buffer_len, Release);
 
         Some(value)
     }
@@ -152,6 +155,9 @@ impl<T> Drop for Inner<T> {
         while let Some(_) = unsafe { self.do_pop() } {}
     }
 }
+
+unsafe impl<T: Send> Send for Inner<T> {}
+unsafe impl<T: Send> Sync for Inner<T> {}
 
 pub struct Queue<T> {
     inner: Arc<Inner<T>>,
