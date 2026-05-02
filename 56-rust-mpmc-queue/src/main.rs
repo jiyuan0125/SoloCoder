@@ -128,11 +128,11 @@ fn test_into_iter() {
 }
 
 fn test_stress_4p4c() {
-    println!("\n=== Test 6: STRESS - 4 producers, 4 consumers, 4000 messages ===");
+    println!("\n=== Test 6: STRESS - 4 producers, 4 consumers, 20000 messages ===");
     
     const NUM_PRODUCERS: usize = 4;
     const NUM_CONSUMERS: usize = 4;
-    const MESSAGES_PER_PRODUCER: usize = 1000;
+    const MESSAGES_PER_PRODUCER: usize = 5000;
     const TOTAL_MESSAGES: usize = NUM_PRODUCERS * MESSAGES_PER_PRODUCER;
     
     let q = Queue::new(100);
@@ -153,7 +153,7 @@ fn test_stress_4p4c() {
     }
     
     let mut consumers = Vec::with_capacity(NUM_CONSUMERS);
-    for _c in 0..NUM_CONSUMERS {
+    for c_id in 0..NUM_CONSUMERS {
         let q = q.clone();
         let counter = counter.clone();
         let received_set = received_set.clone();
@@ -164,10 +164,13 @@ fn test_stress_4p4c() {
                         counter.fetch_add(1, Ordering::SeqCst);
                         let mut set = received_set.lock().unwrap();
                         if !set.insert(v) {
-                            panic!("Duplicate value received: {}", v);
+                            panic!("Consumer {}: Duplicate value received: {}", c_id, v);
                         }
                     }
-                    Err(_) => break,
+                    Err(_) => {
+                        println!("Consumer {} exiting", c_id);
+                        break;
+                    }
                 }
             }
         }));

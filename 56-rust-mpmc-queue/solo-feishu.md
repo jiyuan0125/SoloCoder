@@ -101,7 +101,75 @@ pushed=20000 popped=19977 elapsed=10s    (消费者永久卡住，23 条无法�
 | R2 | 64.7% (2571/4000) | do_push 无 CAS，同 slot 覆盖 |
 | R3 | 0.12% (23/20000) | CAS 修复了大部分，但 ready flag stale |
 
+---
+
+## 56-rust-mpmc-queue — 第 4 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | .335769888099319:2796acd463617aad5d8e48a918791060_69f58d5dd0eab67395271c9a.69f5af92d0eab6739527201c.69f5af925e5d9b2bb12eed46:Trae CN.T(2026/5/2 16:02:26) |
+| 第一轮Session ID | .335769888099319:ee778b9e64b492736fdced86231e4215_69f58d5dd0eab67395271c9a.69f58d7ad0eab67395271c9e.69f58d7a5e5d9b2bb12eed43:Trae CN.T(2026/5/2 13:36:58) |
+| 轮次 | 4 |
+| User Prompt | CAS 修复后丢包率从 64% 降到了 0.12%，进步很大，但还有问题。\n\n我做了个带进度监控的压测：4p4c 发 20000 条消息到 cap=100 的队列，所有 producer 在 5ms 内就完成了，但 10 秒后消费者只收到 19977 条，23 条卡在队列里出不来，1 个消费者线程永久挂起（在 spin-wait ready=false）。\n\n问题在 do_pop 里：consumer CAS 抢占了 head 后 spin-wait `slot.ready`。当 buffer 经历很多次 wrap-around，某个 slot 的 ready flag 可能处于 stale 状态。consumer CAS head 到这个 slot 后，看到的 ready=false 可能是上一轮 consumer 残留的 false，而不是当前 producer 还没来得及设的 true。producer 设了 true 但被另一个 consumer 读了并设回 false，那这个 spin 就永远等不到 true 了。\n\n修复思路：在 do_push 里，CAS tail 成功后先设 `ready = false`，再写 value，最后设 `ready = true`。这样 consumer 不会看到上一轮残留的 true。或者考虑换个同步机制，比如用 epoch/seqlock 来避免 ready flag 的 stale 问题。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | |
+| 分支/文件夹 | 56-rust-mpmc-queue |
+
+---
+
+## 评测详情（R4 最终）
+
+### R4 核心变更：ready flag → seqlock
+
+R4 彻底重写了槽位同步机制，用 **sequence counter**（seqlock）替代了原来的 `ready: AtomicBool`：
+
+- 每个 `Slot<T>` 新增 `seq: CachePaddedAtomicUsize`，初始值 0
+- Producer CAS tail 成功后，等待 `seq == epoch * 2`（偶数=可写），写入后设 `seq = epoch * 2 + 1`（奇数=可读）
+- Consumer CAS head 成功后，等待 `seq == epoch * 2 + 1`（奇数=可读），读取后设 `seq = (epoch + 1) * 2`（偶数=可写）
+- seq 单调递增，每个 epoch 递增 2，天然防止 stale read
+
+这是经典的 Dmitry Vyukov bounded MPMC queue 设计，经过学术界和工业界充分验证。
+
+### 压测结果
+
+| 测试 | 配置 | 结果 |
+|------|------|------|
+| 内置 4p4c | 20000 msg, cap=100 | ✅ 0 丢失 0 重复 |
+| EXT1 4p4c | 20000 msg, cap=100 | ✅ 0 丢失 0 重复 |
+| EXT2 4p4c | 100000 msg, cap=50 | ✅ 0 丢失 0 重复 |
+| EXT3 close-while-push | 4p, cap=10, close mid-flight | ✅ 10 push 10 pop, 70µs |
+| EXT4 close-empty | consumer waits on empty queue | ✅ Closed in 102µs |
+| EXT5 8p8c | 50000 msg, cap=32 | ✅ 0 丢失 0 重复 |
+| EXT6 2p2c | 10000 msg, cap=3 | ✅ 0 丢失 0 重复 |
+| EXT7 into_iter | push then iterate | ✅ 正确 |
+| EXT8 Send/Sync | compile-time bounds check | ✅ 全部通过 |
+
+### 6 项 PROMPT 需求验证
+
+| # | 需求 | 状态 | 说明 |
+|---|------|------|------|
+| 1 | 阻塞 push/pop | ✅ | 8p8c 5万条零丢失 |
+| 2 | 非阻塞 try_push/try_pop | ✅ | 正确 |
+| 3 | close() 唤醒阻塞线程 | ✅ | 空队列等待也能唤醒 |
+| 4 | close 后 push/try_push 返回 Closed | ✅ | 正确 |
+| 5 | len() 方法 | ✅ | 正确 |
+| 6 | into_iter() | ✅ | 正确 |
+
+### 四轮改进趋势
+
+| 轮次 | 4p4c 20K 丢失率 | 主要问题 |
+|------|------------------|----------|
+| R1 | 无法跨线程 | UnsafeCell → 不满足 Send/Sync |
+| R2 | 64.7% (2571/4000) | do_push 无 CAS，同 slot 覆盖 |
+| R3 | 0.12% (23/20000) | CAS 修复了大部分，但 ready flag stale |
+| R4 | 0% (0/200000+) | seqlock 彻底解决 |
+
 ### 其他问题
 
-1. **dead_code 警告**：`CachePaddedAtomicUsize` 的 `store`/`swap`/`fetch_add` 未使用
+1. **dead_code 警告**：`CachePaddedAtomicBool` 整个类型未使用，`CachePaddedAtomicUsize` 的 `store`/`swap`/`fetch_add` 未使用
 2. **代码重复**：Queue/Sender/Receiver 约 200 行重复的 push/pop 实现

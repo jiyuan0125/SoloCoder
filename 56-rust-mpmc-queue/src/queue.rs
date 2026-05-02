@@ -1,4 +1,4 @@
-use crate::atomic::{CachePadded, CachePaddedAtomicBool, CachePaddedAtomicUsize};
+use crate::atomic::{CachePadded, CachePaddedAtomicUsize};
 use std::error::Error;
 use std::fmt;
 use std::mem::MaybeUninit;
@@ -42,14 +42,14 @@ impl Error for PopError {}
 
 struct Slot<T> {
     value: CachePadded<MaybeUninit<T>>,
-    ready: CachePaddedAtomicBool,
+    seq: CachePaddedAtomicUsize,
 }
 
 impl<T> Slot<T> {
     fn new() -> Self {
         Slot {
             value: CachePadded::new(),
-            ready: CachePaddedAtomicBool::new(false),
+            seq: CachePaddedAtomicUsize::new(0),
         }
     }
 }
@@ -60,7 +60,7 @@ struct Inner<T> {
     buffer_len: usize,
     head: CachePaddedAtomicUsize,
     tail: CachePaddedAtomicUsize,
-    closed: CachePaddedAtomicBool,
+    closed: CachePaddedAtomicUsize,
     mutex: Mutex<()>,
     not_empty: Condvar,
     not_full: Condvar,
@@ -79,7 +79,7 @@ impl<T> Inner<T> {
             buffer_len,
             head: CachePaddedAtomicUsize::new(0),
             tail: CachePaddedAtomicUsize::new(0),
-            closed: CachePaddedAtomicBool::new(false),
+            closed: CachePaddedAtomicUsize::new(0),
             mutex: Mutex::new(()),
             not_empty: Condvar::new(),
             not_full: Condvar::new(),
@@ -87,27 +87,25 @@ impl<T> Inner<T> {
     }
 
     fn is_closed(&self) -> bool {
-        self.closed.load(Acquire)
+        self.closed.load(Acquire) != 0
     }
 
     fn len(&self) -> usize {
         let head = self.head.load(Acquire);
         let tail = self.tail.load(Acquire);
-        if tail >= head {
-            tail - head
-        } else {
-            self.buffer_len - head + tail
-        }
+        tail.saturating_sub(head)
     }
 
     fn is_empty(&self) -> bool {
-        self.head.load(Acquire) == self.tail.load(Acquire)
+        let head = self.head.load(Acquire);
+        let tail = self.tail.load(Acquire);
+        head == tail
     }
 
     fn is_full(&self) -> bool {
         let head = self.head.load(Acquire);
         let tail = self.tail.load(Acquire);
-        (tail + 1) % self.buffer_len == head
+        tail.wrapping_sub(head) >= self.capacity
     }
 
     unsafe fn do_push(&self, value: T) -> Result<(), T> {
@@ -117,23 +115,32 @@ impl<T> Inner<T> {
             }
 
             let tail = self.tail.load(Acquire);
-            let next_tail = (tail + 1) % self.buffer_len;
             let head = self.head.load(Acquire);
 
-            if next_tail == head {
+            if tail.wrapping_sub(head) >= self.capacity {
                 return Err(value);
             }
 
             if self
                 .tail
-                .compare_exchange_weak(tail, next_tail, Release, Relaxed)
+                .compare_exchange_weak(tail, tail + 1, Release, Relaxed)
                 .is_ok()
             {
-                let slot = &self.buffer[tail];
+                let slot_idx = tail % self.buffer_len;
+                let epoch = tail / self.buffer_len;
+                let expected_seq = epoch * 2;
+
+                let slot = &self.buffer[slot_idx];
+                
+                while slot.seq.load(Acquire) != expected_seq {
+                    thread::yield_now();
+                }
+                
                 unsafe {
                     slot.value.write(MaybeUninit::new(value));
                 }
-                slot.ready.store(true, Release);
+                slot.seq.store(expected_seq + 1, Release);
+                
                 return Ok(());
             }
 
@@ -150,22 +157,35 @@ impl<T> Inner<T> {
                 return None;
             }
 
-            let next_head = (head + 1) % self.buffer_len;
-
             if self
                 .head
-                .compare_exchange_weak(head, next_head, Release, Relaxed)
+                .compare_exchange_weak(head, head + 1, Release, Relaxed)
                 .is_ok()
             {
-                let slot = &self.buffer[head];
+                let slot_idx = head % self.buffer_len;
+                let epoch = head / self.buffer_len;
+                let expected_seq = epoch * 2 + 1;
 
-                while !slot.ready.load(Acquire) {
+                let slot = &self.buffer[slot_idx];
+                
+                loop {
+                    let seq = slot.seq.load(Acquire);
+                    if seq == expected_seq {
+                        break;
+                    }
+                    if self.is_closed() {
+                        if seq == expected_seq - 1 {
+                            thread::yield_now();
+                            continue;
+                        }
+                        return None;
+                    }
                     thread::yield_now();
                 }
 
                 let value = unsafe { slot.value.read().assume_init() };
-                slot.ready.store(false, Release);
-
+                slot.seq.store((epoch + 1) * 2, Release);
+                
                 return Some(value);
             }
 
@@ -292,7 +312,7 @@ impl<T> Queue<T> {
     }
 
     pub fn close(&self) {
-        if !self.inner.closed.swap(true, SeqCst) {
+        if self.inner.closed.swap(1, SeqCst) == 0 {
             self.inner.not_empty.notify_all();
             self.inner.not_full.notify_all();
         }
@@ -407,7 +427,7 @@ impl<T> Sender<T> {
     }
 
     pub fn close(&self) {
-        if !self.inner.closed.swap(true, SeqCst) {
+        if self.inner.closed.swap(1, SeqCst) == 0 {
             self.inner.not_empty.notify_all();
             self.inner.not_full.notify_all();
         }
@@ -483,7 +503,7 @@ impl<T> Receiver<T> {
     }
 
     pub fn close(&self) {
-        if !self.inner.closed.swap(true, SeqCst) {
+        if self.inner.closed.swap(1, SeqCst) == 0 {
             self.inner.not_empty.notify_all();
             self.inner.not_full.notify_all();
         }
