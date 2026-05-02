@@ -1,0 +1,25 @@
+用 C 写一个并发跳表。支持 insert、search、delete 和范围查询。
+
+跳表结构：
+1. 每个节点存储 key（int）、value（void*）、forward 指针数组（层级数量随机决定）
+2. 插入时随机决定层数：每次有 50% 概率提升一层，最多 MAX_LEVEL=16 层
+3. 头节点有 MAX_LEVEL 个 forward 指针，所有新节点的层数不能超过已有节点的最大层数 + 1
+
+并发控制：
+4. 写操作（insert/delete）加写锁（pthread_rwlock_t 的写锁），同一时间只有一个写操作
+5. 读操作（search/range_query）不加锁（无锁读取）。说明：跳表的节点一旦插入就不再移动或修改，所以不加锁也是安全的
+6. 不需要 RCU 或 copy-on-write，简单的读写锁即可
+
+范围查询：
+7. range(low, high) 返回所有 key 在 [low, high) 范围内的 key-value 对（注意左闭右开，high 不包含）
+8. 返回结果按 key 升序排列，通过一个回调函数逐个访问：range(low, high, callback(key, value))
+
+统计：
+9. skiplist_count(sl) 返回当前元素总数（O(1) 时间，维护一个原子计数器）
+10. skiplist_level_stats(sl) 打印各层的节点数（第 1 层节点数最多，逐层递减）
+
+内存管理：
+11. delete 时立即释放节点内存
+12. skiplist_destroy(sl) 释放所有节点和跳表结构本身
+
+代码分 skiplist.c、skiplist.h 两个文件，gcc -lpthread 编译能过。
