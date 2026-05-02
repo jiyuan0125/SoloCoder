@@ -1,0 +1,12 @@
+用 Rust 写一个简易构建系统，用 JSON 文件定义构建规则。类似 Make 但用文件内容 hash 判断是否需要重新构建。
+
+功能要求：
+1. 配置文件格式（JSON）：targets 数组，每个 target 有 name、command、inputs（依赖的文件列表）、outputs（产出的文件列表）
+2. 构建 DAG：根据 outputs 和 inputs 的重叠关系自动推导依赖（target B 的 inputs 包含 target A 的 outputs，则 B 依赖 A）
+3. 增量构建：对每个 input 文件计算 SHA256 hash，与上次构建记录（存在 .build_cache 文件中）比较，只有 hash 变化的 target 及其下游才重新构建，没变化的跳过并标记为 cached
+4. 并行执行：无依赖关系的 target 并行运行（用线程池），并行度可配置（默认 4）
+5. 循环依赖检测：发现循环依赖时输出错误信息并列出形成环的 target 名称链，退出码非 0
+6. 构建完成后输出每个 target 的状态和耗时：name | status (built/cached/failed/skipped) | duration_ms
+7. 最后一行输出总耗时，是从第一个 target 开始执行到最后一个结束的 wall time
+
+代码分 DAG 构建、依赖推导、文件 hash、并行执行器几个模块，cargo build 能过。
