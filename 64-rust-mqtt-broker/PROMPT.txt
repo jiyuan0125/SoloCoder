@@ -1,0 +1,17 @@
+用 Rust 写一个 MQTT v3.1.1 消息代理，支持发布订阅和 QoS。用 std::net::TcpListener 实现不走 TCP 库。
+
+连接管理：
+1. 客户端连接后发送 CONNECT 报文，服务端回复 CONNACK。支持 Client ID 和 Clean Session 标志
+2. 心跳：客户端发 PINGREQ，服务端回 PINGRESP。如果 90 秒没收到客户端任何报文则断开连接
+
+发布订阅：
+3. SUBSCRIBE 订阅一个或多个 topic filter，返回 SUBACK 确认每个 filter 的 QoS
+4. PUBLISH 发布消息到 topic，QoS 0 直接转发，QoS 1 回复 PUBACK 确认
+5. Topic 匹配：sensor/+/temperature 匹配 sensor/kitchen/temperature（+ 匹配单层），sensor/# 匹配 sensor/kitchen/temperature/humidity（# 匹配后续所有层）。a/b 不匹配 a/b/c（层数不同）
+6. 保留消息：Broker 为每个 topic 保存最后一条 retain 消息，新订阅者上线时立即收到
+
+会话：
+7. Clean Session = false 时保存订阅关系，客户端重连后自动恢复订阅
+8. 遗嘱消息：CONNECT 时可设置 LWT topic 和 payload，客户端异常断开时发布遗嘱，正常 DISCONNECT 不发布
+
+代码分报文解析、topic 匹配、会话管理、消息分发几个模块，cargo build 能过。
