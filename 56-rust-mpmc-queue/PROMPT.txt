@@ -1,0 +1,11 @@
+用 Rust 写一个多生产者多消费者（MPMC）的有界队列。支持阻塞的 push/pop 和非阻塞的 try_push/try_pop。队列容量在创建时指定。内部用固定大小的数组和两个原子索引（head/tail）实现，每个槽位用 cache line 对齐（#[repr(align(64))]）避免 false sharing。
+
+功能要求：
+1. push 如果队列满则阻塞等待直到有空位，pop 如果队列空则阻塞等待直到有数据
+2. try_push/try_pop 对应的非阻塞版本，满了/空了立即返回错误不阻塞
+3. 关闭队列时（调用 close），所有阻塞在 push/pop 上的线程被唤醒：push 返回 Closed 错误，pop 返回 Closed 错误，队列中还没被消费的数据丢弃
+4. close 后再调用 push 或 try_push 都返回 Closed 错误
+5. 提供一个 len() 方法返回当前队列中的元素数量
+6. 支持 Iterator：调用 into_iter() 消费队列中所有剩余元素，迭代过程中不能再 push
+
+代码分队列核心、原子操作封装几个模块，cargo build 能过。

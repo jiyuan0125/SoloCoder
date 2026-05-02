@@ -1,6 +1,4 @@
-pub mod atomic;
-pub mod queue;
-pub mod error;
+mod atomic;
+mod queue;
 
-pub use queue::MpmcQueue;
-pub use error::{QueueError, QueueResult};
+pub use queue::{channel, PopError, PushError, Queue, Receiver, Sender, IntoIter};
