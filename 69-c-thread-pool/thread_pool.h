@@ -43,8 +43,6 @@ typedef struct {
     task_node_t *front;
     task_node_t *rear;
     int count;
-    pthread_mutex_t mutex;
-    pthread_cond_t not_empty;
 } task_queue_t;
 
 typedef struct {
@@ -58,6 +56,7 @@ typedef struct {
     bool is_shutting_down;
     bool is_shutdown;
     pthread_mutex_t mutex;
+    pthread_cond_t queue_not_empty;
     pthread_cond_t all_idle;
 } thread_pool_t;
 
@@ -66,12 +65,6 @@ int thread_pool_submit(thread_pool_t *pool, task_func_t func, void *arg, task_fu
 int task_future_get(task_future_t *future, int timeout_ms);
 int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms);
 void thread_pool_destroy(thread_pool_t *pool);
-
-int task_queue_init(task_queue_t *queue);
-int task_queue_push(task_queue_t *queue, task_func_t func, void *arg, task_future_t *future);
-int task_queue_pop(task_queue_t *queue, task_func_t *func, void **arg, task_future_t **future);
-int task_queue_size(task_queue_t *queue);
-void task_queue_destroy(task_queue_t *queue);
 
 int future_init(task_future_t *future);
 int future_set_result(task_future_t *future, void *result);

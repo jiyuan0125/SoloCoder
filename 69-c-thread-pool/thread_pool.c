@@ -6,11 +6,38 @@
 
 static void *worker_thread(void *arg);
 static int create_worker(thread_pool_t *pool, int index);
+static void mutex_cleanup_handler(void *arg);
+static void task_cleanup_handler(void *arg);
 
 typedef struct {
     thread_pool_t *pool;
     int index;
 } worker_arg_t;
+
+typedef struct {
+    task_future_t *future;
+} task_cleanup_ctx_t;
+
+void task_queue_init_internal(task_queue_t *queue);
+int task_queue_push_internal(task_queue_t *queue, task_func_t func, void *arg, task_future_t *future);
+int task_queue_pop_internal(task_queue_t *queue, task_func_t *func, void **arg, task_future_t **future);
+int task_queue_size_internal(task_queue_t *queue);
+void task_queue_clear_internal(task_queue_t *queue);
+
+static void mutex_cleanup_handler(void *arg)
+{
+    pthread_mutex_t *mutex = (pthread_mutex_t *)arg;
+    pthread_mutex_unlock(mutex);
+}
+
+static void task_cleanup_handler(void *arg)
+{
+    task_cleanup_ctx_t *ctx = (task_cleanup_ctx_t *)arg;
+    if (ctx->future)
+    {
+        future_set_canceled(ctx->future);
+    }
+}
 
 int thread_pool_create(thread_pool_t *pool, int min_threads, int max_threads)
 {
@@ -31,26 +58,28 @@ int thread_pool_create(thread_pool_t *pool, int min_threads, int max_threads)
     if (ret != 0)
         return ret;
 
-    ret = pthread_cond_init(&pool->all_idle, NULL);
+    ret = pthread_cond_init(&pool->queue_not_empty, NULL);
     if (ret != 0)
     {
         pthread_mutex_destroy(&pool->mutex);
         return ret;
     }
 
-    ret = task_queue_init(&pool->queue);
+    ret = pthread_cond_init(&pool->all_idle, NULL);
     if (ret != 0)
     {
-        pthread_cond_destroy(&pool->all_idle);
+        pthread_cond_destroy(&pool->queue_not_empty);
         pthread_mutex_destroy(&pool->mutex);
         return ret;
     }
+
+    task_queue_init_internal(&pool->queue);
 
     pool->threads = (pthread_t *)calloc(max_threads, sizeof(pthread_t));
     if (!pool->threads)
     {
-        task_queue_destroy(&pool->queue);
         pthread_cond_destroy(&pool->all_idle);
+        pthread_cond_destroy(&pool->queue_not_empty);
         pthread_mutex_destroy(&pool->mutex);
         return ENOMEM;
     }
@@ -60,20 +89,23 @@ int thread_pool_create(thread_pool_t *pool, int min_threads, int max_threads)
         ret = create_worker(pool, i);
         if (ret != 0)
         {
+            pthread_mutex_lock(&pool->mutex);
             pool->is_shutting_down = true;
-            pthread_cond_broadcast(&pool->queue.not_empty);
-            
+            pthread_cond_broadcast(&pool->queue_not_empty);
+            pthread_mutex_unlock(&pool->mutex);
+
             for (int j = 0; j < pool->current_threads; j++)
             {
                 if (pool->threads[j] != 0)
                 {
+                    pthread_cancel(pool->threads[j]);
                     pthread_join(pool->threads[j], NULL);
                 }
             }
-            
+
             free(pool->threads);
-            task_queue_destroy(&pool->queue);
             pthread_cond_destroy(&pool->all_idle);
+            pthread_cond_destroy(&pool->queue_not_empty);
             pthread_mutex_destroy(&pool->mutex);
             return ret;
         }
@@ -104,9 +136,6 @@ static int create_worker(thread_pool_t *pool, int index)
     }
 
     pthread_attr_destroy(&attr);
-    pool->current_threads++;
-    pool->idle_threads++;
-
     return 0;
 }
 
@@ -117,9 +146,22 @@ static void *worker_thread(void *arg)
     int index = worker_arg->index;
     free(arg);
 
+    pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+
+    pthread_mutex_lock(&pool->mutex);
+    pool->current_threads++;
+    pool->idle_threads++;
+    pthread_mutex_unlock(&pool->mutex);
+
     while (true)
     {
+        task_func_t func = NULL;
+        void *task_arg = NULL;
+        task_future_t *future = NULL;
+        int should_exit = 0;
+
         pthread_mutex_lock(&pool->mutex);
+        pthread_cleanup_push(mutex_cleanup_handler, &pool->mutex);
 
         while (pool->queue.count == 0 && !pool->is_shutting_down)
         {
@@ -129,67 +171,66 @@ static void *worker_thread(void *arg)
             ts.tv_sec = tv.tv_sec + IDLE_TIMEOUT_SECONDS;
             ts.tv_nsec = tv.tv_usec * 1000;
 
-            int ret = pthread_cond_timedwait(&pool->queue.not_empty, &pool->mutex, &ts);
+            int ret = pthread_cond_timedwait(&pool->queue_not_empty, &pool->mutex, &ts);
 
             if (ret == ETIMEDOUT && !pool->is_shutting_down)
             {
                 if (pool->current_threads > pool->min_threads)
                 {
+                    should_exit = 1;
                     pool->current_threads--;
                     pool->idle_threads--;
                     pool->threads[index] = 0;
 
-                    if (pool->active_threads == 0 && pool->idle_threads == 0)
+                    if (pool->active_threads == 0 && pool->current_threads == 0)
                     {
                         pthread_cond_broadcast(&pool->all_idle);
                     }
-
-                    pthread_mutex_unlock(&pool->mutex);
-                    return NULL;
+                    break;
                 }
             }
         }
 
-        if (pool->is_shutting_down && pool->queue.count == 0)
+        if (!should_exit)
         {
-            pool->current_threads--;
-            pool->idle_threads--;
-            pool->threads[index] = 0;
-
-            if (pool->active_threads == 0 && pool->current_threads == 0)
+            if (pool->is_shutting_down && pool->queue.count == 0)
             {
-                pthread_cond_broadcast(&pool->all_idle);
-            }
+                should_exit = 1;
+                pool->current_threads--;
+                pool->idle_threads--;
+                pool->threads[index] = 0;
 
-            pthread_mutex_unlock(&pool->mutex);
+                if (pool->active_threads == 0 && pool->current_threads == 0)
+                {
+                    pthread_cond_broadcast(&pool->all_idle);
+                }
+            }
+            else if (pool->queue.count > 0)
+            {
+                task_queue_pop_internal(&pool->queue, &func, &task_arg, &future);
+                pool->idle_threads--;
+                pool->active_threads++;
+            }
+        }
+
+        pthread_cleanup_pop(1);
+
+        if (should_exit)
+        {
             return NULL;
         }
 
-        task_func_t func = NULL;
-        void *task_arg = NULL;
-        task_future_t *future = NULL;
-
-        task_node_t *node = pool->queue.front;
-        pool->queue.front = node->next;
-        if (pool->queue.front == NULL)
-            pool->queue.rear = NULL;
-        pool->queue.count--;
-
-        func = node->func;
-        task_arg = node->arg;
-        future = node->future;
-        free(node);
-
-        pool->idle_threads--;
-        pool->active_threads++;
-
-        pthread_mutex_unlock(&pool->mutex);
-
         void *result = NULL;
+        task_cleanup_ctx_t tc;
+        tc.future = future;
+        pthread_cleanup_push(task_cleanup_handler, &tc);
+
         if (func)
         {
             result = func(task_arg);
         }
+
+        pthread_cleanup_pop(0);
 
         if (future)
         {
@@ -204,7 +245,6 @@ static void *worker_thread(void *arg)
         {
             pthread_cond_broadcast(&pool->all_idle);
         }
-
         pthread_mutex_unlock(&pool->mutex);
     }
 
@@ -244,9 +284,14 @@ int thread_pool_submit(thread_pool_t *pool, task_func_t func, void *arg, task_fu
         }
     }
 
-    pthread_mutex_unlock(&pool->mutex);
+    int ret = task_queue_push_internal(&pool->queue, func, arg, future);
+    if (ret == 0)
+    {
+        pthread_cond_signal(&pool->queue_not_empty);
+    }
 
-    return task_queue_push(&pool->queue, func, arg, future);
+    pthread_mutex_unlock(&pool->mutex);
+    return ret;
 }
 
 int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms)
@@ -263,7 +308,7 @@ int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms)
     }
 
     pool->is_shutting_down = true;
-    pthread_cond_broadcast(&pool->queue.not_empty);
+    pthread_cond_broadcast(&pool->queue_not_empty);
 
     int unfinished = 0;
 
@@ -302,27 +347,27 @@ int thread_pool_shutdown(thread_pool_t *pool, int timeout_ms)
         }
 
         unfinished = pool->queue.count;
+        task_queue_clear_internal(&pool->queue);
+    }
 
-        task_node_t *node = pool->queue.front;
-        while (node != NULL)
+    int threads_to_cancel[64];
+    int cancel_count = 0;
+    for (int i = 0; i < pool->max_threads && cancel_count < 64; i++)
+    {
+        if (pool->threads[i] != 0)
         {
-            if (node->future)
-            {
-                future_set_canceled(node->future);
-            }
-            node = node->next;
+            threads_to_cancel[cancel_count++] = i;
         }
     }
 
     pthread_mutex_unlock(&pool->mutex);
 
-    for (int i = 0; i < pool->max_threads; i++)
+    for (int i = 0; i < cancel_count; i++)
     {
-        if (pool->threads[i] != 0)
-        {
-            pthread_join(pool->threads[i], NULL);
-            pool->threads[i] = 0;
-        }
+        int idx = threads_to_cancel[i];
+        pthread_cancel(pool->threads[idx]);
+        pthread_join(pool->threads[idx], NULL);
+        pool->threads[idx] = 0;
     }
 
     pthread_mutex_lock(&pool->mutex);
@@ -345,7 +390,9 @@ void thread_pool_destroy(thread_pool_t *pool)
         thread_pool_shutdown(pool, -1);
     }
 
-    task_queue_destroy(&pool->queue);
+    pthread_mutex_lock(&pool->mutex);
+    task_queue_clear_internal(&pool->queue);
+    pthread_mutex_unlock(&pool->mutex);
 
     if (pool->threads)
     {
@@ -353,6 +400,7 @@ void thread_pool_destroy(thread_pool_t *pool)
         pool->threads = NULL;
     }
 
+    pthread_cond_destroy(&pool->queue_not_empty);
     pthread_cond_destroy(&pool->all_idle);
     pthread_mutex_destroy(&pool->mutex);
 }
