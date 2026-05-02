@@ -1,0 +1,22 @@
+用 Go 实现一个简化版 Raft 共识算法。5 个节点组成集群（端口 5001-5005），用 HTTP RPC 模拟网络通信。
+
+角色和选举：
+1. 三个角色：Follower、Candidate、Leader。初始全部是 Follower
+2. Follower 在 election timeout 内没收到 Leader 心跳就变成 Candidate，发起选举
+3. election timeout 范围 150-300ms，每个节点启动时随机固定一个值（不是每次选举都随机），节点间不能一样
+4. Candidate 获得 majority（>= N/2+1）票数成为 Leader
+
+日志复制：
+5. Leader 接收客户端的 Set(key, value) 请求，追加到本地日志后向所有 Follower 发 AppendEntries RPC
+6. 日志条目包含 term、index、command（SET key value）和已提交标记
+7. 日志提交：Leader 的日志条目被 majority 确认后标记为 committed，然后 apply 到状态机
+
+Leader 切换：
+8. 新 Leader 上任后，旧 Leader 上未提交的日志条目要被截断（以新 Leader 的日志为准）
+9. Leader 定期（心跳间隔 50ms）向所有 Follower 发 AppendEntries（即使没有新日志也发心跳）
+
+快照：
+10. 日志条目超过 100 条时可以创建快照（保存当前状态），快照后的日志可以截断
+11. 快照创建过程中不能阻塞正常的 AppendEntries 处理
+
+代码分 raft.go、rpc.go、state_machine.go 几个 package，go build 能过。
