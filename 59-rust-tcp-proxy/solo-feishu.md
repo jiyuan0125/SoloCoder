@@ -61,16 +61,15 @@
 
 | 字段 | 值 |
 |------|------|
-| Trae Session ID | .335769888099319:6a3f8c1e7d4c5b2a1f0e3d8c9b7a6f5e_69f58d2dd0eab67395271c55.69f5a1a2d0eab67395271f97.69f5a1a1b3454bc765dc76fe:Trae CN.T(2026/5/2 15:10:00) |
+| Trae Session ID | Pa.335769888099319:d1ce3562da435a989ea9e91831707a25_69f58d2dd0eab67395271c55.69f5af67d0eab6739527200f.69f5af6599b6b158a8edf281:Trae CN.T(2026/5/2 16:01:43) |
 | 第一轮Session ID | .335769888099319:023d1859cd18b36ce9d1518237f8f424_69f58d2dd0eab67395271c55.69f58d91d0eab67395271cbe.69f58d9199b6b158a8edf27e:Trae CN.T(2026/5/2 13:37:21) |
 | 轮次 | 4 |
-| User Prompt | 又测了一下，这次能看到日志里确实走了 grace period 然后打印 "Returning connection to pool" 了，但连接还是没被复用，下一个请求还是 "Creating new connection"。查了下 put() 里面的 is_connected() 用的是 stream.peek()，后端是 keep-alive 的不关连接也不发数据，peek 就一直阻塞在那里了。结果就是 handle_connection 永远卡在 put() 上不返回，连接也没真正放进池子里 |
+| User Prompt | 上一轮提的 peek 阻塞问题修了吗？实测一下连接池复用能不能用。把 is_connected() 的 peek 加个超时，或者 put() 里不调 is_connected()，直接归还。然后实测确认连接池确实能复用 |
 | 任务类型 | Bug修复 |
 | 业务领域 | 纯后端API服务 |
 | 修改范围 | 单文件小修 |
-| 任务是否完成 | 未完成 |
-| 产物及过程是否满意 | 不满意 |
-| 不满意原因 | 产物不满意：R3 NEXT_PROMPT 明确指出 put() 中 is_connected() 的 peek() 对 keep-alive 后端永久阻塞导致连接无法归还，但 R4 代码 connection.rs 第 87 行 put() 和第 77 行 get() 的 is_connected() 仍使用 stream.peek()，完全未修改。实测 put() 路径仍被 peek 阻塞。过程不满意：核心问题未修复 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
 | github地址 | https://github.com/jiyuan0125/SoloCoder |
 | 分支/文件夹 | 59-rust-tcp-proxy |
 
