@@ -1,0 +1,22 @@
+用 C 写一个简单的 shell 解释器。REPL 模式，循环读取用户输入并执行。内置命令 + 外部命令 + 管道 + 重定向。
+
+命令解析：
+1. 管道：cmd1 | cmd2 | cmd3，每个命令用 fork+exec 执行，管道用 pipe() 创建。管道的退出码取最后一个命令的退出码
+2. 重定向：> file 截断写入，>> file 追加写入。只支持输出重定向到文件，不支持输入重定向
+3. 后台运行：命令末尾加 &，shell 不等待其完成，打印其 PID
+4. 环境变量展开：$HOME、$USER 等在解析命令行时展开。如果变量不存在则展开为空字符串（不报错）
+
+内置命令：
+5. cd [dir]：改变工作目录。cd 不带参数回到 $HOME。cd 后面的管道和重定向被忽略
+6. exit [code]：退出 shell，默认退出码 0
+7. export VAR=value：设置环境变量。export VAR=value cmd 形式不要求支持
+
+信号处理：
+8. Ctrl+C（SIGINT）只杀前台进程组（用 killpg(getpgrp(), SIGINT)），不杀 shell 自己
+9. 后台进程不受 SIGINT 影响
+
+错误处理：
+10. 命令不存在时输出 "{cmd}: command not found\n" 到 stderr，退出码 127
+11. execvp 失败时输出 "{cmd}: {strerror(errno)}\n" 到 stderr，退出码 126
+
+代码分 shell.c、parser.c、executor.c 几个文件，gcc 编译能过。
