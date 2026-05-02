@@ -1,0 +1,21 @@
+用 Go 写一个 HTTP 限流中间件库，支持滑动窗口和令牌桶两种模式。实现 net/http.Handler 接口。
+
+两种模式：
+1. 滑动窗口模式（SlidingWindow）：统计最近 1 秒内的请求数（不是固定 1 秒窗口），超过 rate 则返回 429
+2. 令牌桶模式（TokenBucket）：按固定速率（每秒 rate 个）往桶里放令牌，桶容量为 burst。请求消耗一个令牌，没有就返回 429
+3. 通过 limiter.New(mode, rate, burst) 创建限流器，mode 为 "sliding_window" 或 "token_bucket"
+
+按 Key 限流：
+4. limiter.WithKey(key) 返回针对特定 key 的限流器。每个 key 独立计数，互不影响
+5. 常见用法：按客户端 IP 限流，从请求的 RemoteAddr 提取 IP
+6. 全局最大并发数：当所有 key 的总请求数超过 globalMax 时也返回 429
+
+中间件行为：
+7. 被限流的请求返回 HTTP 429 状态码，响应体为 JSON：{"error": "too many requests", "retry_after": 1}（retry_after 是建议客户端等待的秒数）
+8. 限流计数和令牌桶的状态在内存中维护，进程重启后重置
+
+统计：
+9. limiter.Stats() 返回（总请求数, 通过数, 被限流数）
+10. Stats() 是线程安全的，可以被多个 goroutine 并发调用
+
+代码分 limiter.go、sliding_window.go、token_bucket.go 几个 package，go build 能过。
