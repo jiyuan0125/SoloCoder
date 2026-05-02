@@ -120,9 +120,6 @@ int bq_batch_put(blocking_queue_t* queue, void** items, int count) {
         return 0;
     }
     pthread_mutex_lock(&queue->mutex);
-    while ((queue->capacity - queue->size) < count && !queue->closed) {
-        pthread_cond_wait(&queue->not_full, &queue->mutex);
-    }
     if (queue->closed) {
         pthread_mutex_unlock(&queue->mutex);
         return -1;
@@ -146,12 +143,13 @@ int bq_batch_take(blocking_queue_t* queue, void** items, int max_count) {
         return 0;
     }
     pthread_mutex_lock(&queue->mutex);
-    while (queue->size == 0 && !queue->closed) {
-        pthread_cond_wait(&queue->not_empty, &queue->mutex);
-    }
     if (queue->size == 0 && queue->closed) {
         pthread_mutex_unlock(&queue->mutex);
         return -1;
+    }
+    if (queue->size == 0) {
+        pthread_mutex_unlock(&queue->mutex);
+        return 0;
     }
     int take_count = (queue->size < max_count) ? queue->size : max_count;
     for (int i = 0; i < take_count; i++) {
