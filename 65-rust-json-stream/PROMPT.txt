@@ -1,0 +1,19 @@
+用 Rust 写一个流式 JSON 解析器，SAX 风格，通过回调事件通知。支持从文件或 BufReader 读取，不把整个 JSON 加载到内存。
+
+事件类型：
+1. ObjectStart / ObjectEnd、ArrayStart / ArrayEnd
+2. Key(&str)、String(&str)、Number(f64)、Bool(bool)、Null
+3. 每个事件携带在文件中的位置（行号:列号，都从 1 开始）
+
+要求：
+4. 数值处理：整数没有小数点的输出为 i64，有小数点的输出为 f64。不要统一用 f64（会导致 9223372036854775807 丢精度）
+5. 字符串转义：正确处理 \n \t \\ \" \/ 和 Unicode 转义 \uXXXX（转为 UTF-8 字节序列）
+6. UTF-8 验证：字符串值中出现非法 UTF-8 字节序列时报错并指出位置
+7. 嵌套深度超过 128 层时报错（防止栈溢出，不是 1024）
+8. 遇到尾随逗号（{"a":1,}）视为合法（宽松模式）
+
+便捷函数：
+9. 提供 json_keys(path) 函数：从文件解析 JSON 并收集所有 key，返回 Vec<String>，按出现顺序排列（去重）
+10. 提供 json_sum_numbers(path) 函数：递归收集所有数值并求和，返回 f64
+
+代码分 lexer、事件类型定义、解析器几个模块，cargo build 能过。
