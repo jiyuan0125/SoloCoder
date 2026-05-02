@@ -4,8 +4,10 @@ mod router;
 mod connection;
 mod context;
 
+use std::collections::HashMap;
 use std::net::TcpListener;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::Duration;
@@ -14,7 +16,7 @@ use std::io;
 use crate::context::Context;
 use crate::http::{Request, Response, StatusCode};
 use crate::router::Router;
-use crate::connection::ConnectionManager;
+use crate::connection::{handle_connection, ConnectionIdGenerator};
 
 static SHUTDOWN: AtomicBool = AtomicBool::new(false);
 
@@ -99,7 +101,9 @@ fn main() -> io::Result<()> {
     println!("  GET  /ws            - WebSocket endpoint");
     println!("Press Ctrl+C to shutdown");
 
-    let manager = Arc::new(Mutex::new(ConnectionManager::new(router)));
+    let router_arc = Arc::new(router);
+    let ws_connections = Arc::new(Mutex::new(HashMap::new()));
+    let id_generator = Arc::new(Mutex::new(ConnectionIdGenerator::new()));
     let mut threads = Vec::new();
 
     loop {
@@ -111,11 +115,12 @@ fn main() -> io::Result<()> {
         match listener.accept() {
             Ok((stream, addr)) => {
                 println!("New connection from: {}", addr);
-                let manager_clone = Arc::clone(&manager);
+                let router_clone = Arc::clone(&router_arc);
+                let ws_conn_clone = Arc::clone(&ws_connections);
+                let id_gen_clone = Arc::clone(&id_generator);
                 
                 let handle = thread::spawn(move || {
-                    let mut manager = manager_clone.lock().unwrap();
-                    manager.handle_connection(stream);
+                    handle_connection(stream, router_clone, ws_conn_clone, id_gen_clone);
                 });
                 threads.push(handle);
             }

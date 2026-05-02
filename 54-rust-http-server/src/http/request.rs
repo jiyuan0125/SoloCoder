@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::io::{self, Read};
 
 use super::method::Method;
 
@@ -70,6 +69,7 @@ pub struct RequestParser {
     buffer: Vec<u8>,
     headers_complete: bool,
     body_remaining: usize,
+    partial_request: Option<Request>,
 }
 
 impl RequestParser {
@@ -78,6 +78,7 @@ impl RequestParser {
             buffer: Vec::new(),
             headers_complete: false,
             body_remaining: 0,
+            partial_request: None,
         }
     }
 
@@ -116,7 +117,7 @@ impl RequestParser {
                     self.body_remaining = content_length;
                     self.headers_complete = true;
 
-                    let request = Request {
+                    let mut request = Request {
                         method,
                         path,
                         query_params,
@@ -133,15 +134,16 @@ impl RequestParser {
                         let to_read = std::cmp::min(available, self.body_remaining);
                         
                         if to_read > 0 {
-                            let mut req = request;
-                            req.body.extend_from_slice(&self.buffer[body_start..body_start + to_read]);
+                            request.body.extend_from_slice(&self.buffer[body_start..body_start + to_read]);
                             self.buffer.drain(..body_start + to_read);
                             self.body_remaining -= to_read;
                             
                             if self.body_remaining == 0 {
-                                return ParseResult::Complete(req);
+                                return ParseResult::Complete(request);
                             }
                         }
+                        
+                        self.partial_request = Some(request);
                         return ParseResult::Partial;
                     }
                 }
@@ -154,11 +156,17 @@ impl RequestParser {
                 self.body_remaining -= to_read;
                 
                 if self.body_remaining == 0 {
-                    let mut req = Request::new();
-                    req.body = body_data;
-                    ParseResult::Complete(req)
+                    if let Some(mut req) = self.partial_request.take() {
+                        req.body.extend_from_slice(&body_data);
+                        return ParseResult::Complete(req);
+                    } else {
+                        return ParseResult::Error(ParseError);
+                    }
                 } else {
-                    ParseResult::Partial
+                    if let Some(ref mut req) = self.partial_request {
+                        req.body.extend_from_slice(&body_data);
+                    }
+                    return ParseResult::Partial;
                 }
             } else {
                 ParseResult::Partial
@@ -228,5 +236,6 @@ impl RequestParser {
         self.buffer.clear();
         self.headers_complete = false;
         self.body_remaining = 0;
+        self.partial_request = None;
     }
 }

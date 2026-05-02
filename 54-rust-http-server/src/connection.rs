@@ -13,195 +13,198 @@ use crate::router::Router;
 pub type BroadcastSender = Sender<Vec<u8>>;
 pub type BroadcastReceiver = Receiver<Vec<u8>>;
 
-pub struct ConnectionManager {
-    pub router: Arc<Router>,
-    pub ws_connections: Arc<Mutex<HashMap<usize, BroadcastSender>>>,
+pub struct ConnectionIdGenerator {
     next_id: usize,
 }
 
-impl ConnectionManager {
-    pub fn new(router: Router) -> Self {
-        ConnectionManager {
-            router: Arc::new(router),
-            ws_connections: Arc::new(Mutex::new(HashMap::new())),
-            next_id: 1,
-        }
+impl ConnectionIdGenerator {
+    pub fn new() -> Self {
+        ConnectionIdGenerator { next_id: 1 }
     }
 
-    pub fn context(&self) -> Context {
-        Context::new(Arc::clone(&self.ws_connections))
+    fn next(&mut self) -> usize {
+        let id = self.next_id;
+        self.next_id += 1;
+        id
     }
+}
 
-    pub fn broadcast(&self, message: Vec<u8>) {
-        let connections = self.ws_connections.lock().unwrap();
-        for sender in connections.values() {
-            let _ = sender.send(message.clone());
-        }
-    }
+pub fn handle_connection(
+    mut stream: TcpStream,
+    router: Arc<Router>,
+    ws_connections: Arc<Mutex<HashMap<usize, BroadcastSender>>>,
+    id_generator: Arc<Mutex<ConnectionIdGenerator>>,
+) {
+    let _ = stream.set_read_timeout(Some(Duration::from_secs(1)));
+    let _ = stream.set_nodelay(true);
 
-    pub fn handle_connection(&mut self, mut stream: TcpStream) {
-        let _ = stream.set_read_timeout(Some(Duration::from_secs(1)));
-        let _ = stream.set_nodelay(true);
+    let ctx = Context::new(Arc::clone(&ws_connections));
+    let mut parser = RequestParser::new();
+    let mut buffer = [0u8; 8192];
+    let mut keep_alive = true;
 
-        let ctx = self.context();
-        let mut parser = RequestParser::new();
-        let mut buffer = [0u8; 8192];
-        let mut keep_alive = true;
-
-        while keep_alive {
-            match stream.read(&mut buffer) {
-                Ok(0) => break,
-                Ok(n) => {
-                    parser.consume(&buffer[..n]);
-                    
-                    loop {
-                        match parser.parse() {
-                            ParseResult::Complete(req) => {
-                                let start = Instant::now();
-                                let method = req.method.clone();
-                                let path = req.path.clone();
+    while keep_alive {
+        match stream.read(&mut buffer) {
+            Ok(0) => break,
+            Ok(n) => {
+                parser.consume(&buffer[..n]);
+                
+                loop {
+                    match parser.parse() {
+                        ParseResult::Complete(req) => {
+                            let start = Instant::now();
+                            let method = req.method.clone();
+                            let path = req.path.clone();
+                            
+                            if req.is_websocket_upgrade() {
+                                let resp = handle_websocket_upgrade(&req);
+                                let status = resp.status;
+                                let _ = stream.write_all(&resp.into_bytes());
+                                let _ = stream.flush();
                                 
-                                if req.is_websocket_upgrade() {
-                                    let resp = self.handle_websocket_upgrade(&req);
-                                    let status = resp.status;
-                                    let _ = stream.write_all(&resp.into_bytes());
-                                    let _ = stream.flush();
-                                    
-                                    let duration = start.elapsed();
-                                    log_request(method, &path, status, duration);
-                                    
-                                    if status == StatusCode::SwitchingProtocols {
-                                        self.handle_websocket(stream);
-                                        return;
-                                    }
-                                    
-                                    keep_alive = req.connection_keep_alive();
-                                    parser.reset();
-                                    break;
-                                } else {
-                                    let resp = self.handle_http_request(&req, &ctx);
-                                    let status = resp.status;
-                                    let _ = stream.write_all(&resp.into_bytes());
-                                    let _ = stream.flush();
-                                    
-                                    let duration = start.elapsed();
-                                    log_request(method, &path, status, duration);
-                                    
-                                    keep_alive = req.connection_keep_alive();
-                                    parser.reset();
+                                let duration = start.elapsed();
+                                log_request(method, &path, status, duration);
+                                
+                                if status == StatusCode::SwitchingProtocols {
+                                    let conn_id = {
+                                        let mut id_gen = id_generator.lock().unwrap();
+                                        id_gen.next()
+                                    };
+                                    handle_websocket(
+                                        stream,
+                                        conn_id,
+                                        Arc::clone(&ws_connections),
+                                    );
+                                    return;
                                 }
-                            }
-                            ParseResult::Partial => break,
-                            ParseResult::HeaderTooLarge => {
-                                let start = Instant::now();
-                                let resp = Response::new(StatusCode::RequestHeaderFieldsTooLarge)
-                                    .header("Content-Type", "text/plain")
-                                    .header("Content-Length", "31")
-                                    .body("Request Header Fields Too Large");
+                                
+                                keep_alive = req.connection_keep_alive();
+                                parser.reset();
+                                break;
+                            } else {
+                                let resp = handle_http_request(&req, &ctx, &router);
                                 let status = resp.status;
                                 let _ = stream.write_all(&resp.into_bytes());
                                 let _ = stream.flush();
                                 
                                 let duration = start.elapsed();
-                                log_request(Method::Get, "", status, duration);
+                                log_request(method, &path, status, duration);
                                 
-                                keep_alive = false;
-                                break;
+                                keep_alive = req.connection_keep_alive();
+                                parser.reset();
                             }
-                            ParseResult::BodyTooLarge => {
-                                let start = Instant::now();
-                                let resp = Response::new(StatusCode::PayloadTooLarge)
-                                    .header("Content-Type", "text/plain")
-                                    .header("Content-Length", "17")
-                                    .body("Payload Too Large");
-                                let status = resp.status;
-                                let _ = stream.write_all(&resp.into_bytes());
-                                let _ = stream.flush();
-                                
-                                let duration = start.elapsed();
-                                log_request(Method::Post, "", status, duration);
-                                
-                                keep_alive = false;
-                                break;
-                            }
-                            ParseResult::Error(_) => {
-                                let start = Instant::now();
-                                let resp = Response::bad_request()
-                                    .header("Content-Type", "text/plain")
-                                    .header("Content-Length", "11")
-                                    .body("Bad Request");
-                                let status = resp.status;
-                                let _ = stream.write_all(&resp.into_bytes());
-                                let _ = stream.flush();
-                                
-                                let duration = start.elapsed();
-                                log_request(Method::Get, "", status, duration);
-                                
-                                keep_alive = false;
-                                break;
-                            }
+                        }
+                        ParseResult::Partial => break,
+                        ParseResult::HeaderTooLarge => {
+                            let start = Instant::now();
+                            let resp = Response::new(StatusCode::RequestHeaderFieldsTooLarge)
+                                .header("Content-Type", "text/plain")
+                                .header("Content-Length", "31")
+                                .body("Request Header Fields Too Large");
+                            let status = resp.status;
+                            let _ = stream.write_all(&resp.into_bytes());
+                            let _ = stream.flush();
+                            
+                            let duration = start.elapsed();
+                            log_request(Method::Get, "", status, duration);
+                            
+                            keep_alive = false;
+                            break;
+                        }
+                        ParseResult::BodyTooLarge => {
+                            let start = Instant::now();
+                            let resp = Response::new(StatusCode::PayloadTooLarge)
+                                .header("Content-Type", "text/plain")
+                                .header("Content-Length", "17")
+                                .body("Payload Too Large");
+                            let status = resp.status;
+                            let _ = stream.write_all(&resp.into_bytes());
+                            let _ = stream.flush();
+                            
+                            let duration = start.elapsed();
+                            log_request(Method::Post, "", status, duration);
+                            
+                            keep_alive = false;
+                            break;
+                        }
+                        ParseResult::Error(_) => {
+                            let start = Instant::now();
+                            let resp = Response::bad_request()
+                                .header("Content-Type", "text/plain")
+                                .header("Content-Length", "11")
+                                .body("Bad Request");
+                            let status = resp.status;
+                            let _ = stream.write_all(&resp.into_bytes());
+                            let _ = stream.flush();
+                            
+                            let duration = start.elapsed();
+                            log_request(Method::Get, "", status, duration);
+                            
+                            keep_alive = false;
+                            break;
                         }
                     }
                 }
-                Err(ref e) if e.kind() == io::ErrorKind::WouldBlock || e.kind() == io::ErrorKind::TimedOut => {
-                    continue;
-                }
-                Err(_) => break,
             }
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock || e.kind() == io::ErrorKind::TimedOut => {
+                continue;
+            }
+            Err(_) => break,
         }
     }
+}
 
-    fn handle_http_request(&self, req: &Request, ctx: &Context) -> Response {
-        match self.router.route(req, ctx) {
-            Some(resp) => resp,
-            None => Response::not_found()
+fn handle_http_request(req: &Request, ctx: &Context, router: &Router) -> Response {
+    match router.route(req, ctx) {
+        Some(resp) => resp,
+        None => Response::not_found()
+            .header("Content-Type", "text/plain")
+            .header("Content-Length", "9")
+            .body("Not Found"),
+    }
+}
+
+fn handle_websocket_upgrade(req: &Request) -> Response {
+    let sec_ws_key = match req.header("sec-websocket-key") {
+        Some(key) => key,
+        None => {
+            return Response::bad_request()
                 .header("Content-Type", "text/plain")
-                .header("Content-Length", "9")
-                .body("Not Found"),
+                .body("Missing Sec-WebSocket-Key");
         }
+    };
+
+    let accept_key = compute_accept_key(sec_ws_key);
+
+    Response {
+        status: StatusCode::SwitchingProtocols,
+        headers: [
+            ("Upgrade".to_string(), "websocket".to_string()),
+            ("Connection".to_string(), "Upgrade".to_string()),
+            ("Sec-WebSocket-Accept".to_string(), accept_key),
+        ].iter().cloned().collect(),
+        body: Vec::new(),
+    }
+}
+
+fn handle_websocket(
+    stream: TcpStream,
+    conn_id: usize,
+    ws_connections: Arc<Mutex<HashMap<usize, BroadcastSender>>>,
+) {
+    let (tx, rx): (BroadcastSender, BroadcastReceiver) = mpsc::channel();
+    
+    {
+        let mut connections = ws_connections.lock().unwrap();
+        connections.insert(conn_id, tx);
     }
 
-    fn handle_websocket_upgrade(&self, req: &Request) -> Response {
-        let sec_ws_key = match req.header("sec-websocket-key") {
-            Some(key) => key,
-            None => {
-                return Response::bad_request()
-                    .header("Content-Type", "text/plain")
-                    .body("Missing Sec-WebSocket-Key");
-            }
-        };
+    let mut ws_stream = WebSocketStream::new(stream, rx);
+    let _ = ws_stream.run();
 
-        let accept_key = compute_accept_key(sec_ws_key);
-
-        Response {
-            status: StatusCode::SwitchingProtocols,
-            headers: [
-                ("Upgrade".to_string(), "websocket".to_string()),
-                ("Connection".to_string(), "Upgrade".to_string()),
-                ("Sec-WebSocket-Accept".to_string(), accept_key),
-            ].iter().cloned().collect(),
-            body: Vec::new(),
-        }
-    }
-
-    fn handle_websocket(&mut self, stream: TcpStream) {
-        let conn_id = self.next_id;
-        self.next_id += 1;
-
-        let (tx, rx): (BroadcastSender, BroadcastReceiver) = mpsc::channel();
-        
-        {
-            let mut connections = self.ws_connections.lock().unwrap();
-            connections.insert(conn_id, tx);
-        }
-
-        let mut ws_stream = WebSocketStream::new(stream, rx);
-        let _ = ws_stream.run();
-
-        {
-            let mut connections = self.ws_connections.lock().unwrap();
-            connections.remove(&conn_id);
-        }
+    {
+        let mut connections = ws_connections.lock().unwrap();
+        connections.remove(&conn_id);
     }
 }
 
@@ -349,7 +352,6 @@ fn format_system_time(time: SystemTime) -> String {
     if (years + 1970) % 4 == 0 && ((years + 1970) % 100 != 0 || (years + 1970) % 400 == 0) {
         if days > 31 + 28 {
             days -= 1;
-        } else if days == 31 + 28 {
         }
     }
     
