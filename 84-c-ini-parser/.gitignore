@@ -1,0 +1,13 @@
+*.o
+*.out
+*.a
+*.so
+*.d
+*.swp
+ini_check
+test_ini
+test_include
+NEXT_PROMPT_R*.txt
+CHECK_R*.md
+*.db
+test_config_saved.ini
