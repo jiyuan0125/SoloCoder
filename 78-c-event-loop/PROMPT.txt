@@ -1,0 +1,21 @@
+用 C 写一个事件驱动框架，基于 epoll 实现多路复用 + 定时器。
+
+事件注册：
+1. loop_add_fd(loop, fd, events, callback, data)：注册文件描述符和回调。events 是 EPOLLIN | EPOLLOUT 的组合
+2. loop_remove_fd(loop, fd)：移除注册。如果当前正在 epoll_wait 返回的事件中包含该 fd，不能立即删除（会破坏迭代器），要标记为 pending_remove，在当前这轮回调执行完后统一清理
+3. loop_modify_fd(loop, fd, events)：修改监听的事件类型
+
+定时器：
+4. loop_add_timer(loop, delay_ms, callback, data, is_repeat)：添加定时器。delay_ms 是首次触发的延迟。is_repeat=1 时每隔 delay_ms 重复触发
+5. loop_remove_timer(loop, timer_id)：取消定时器。如果定时器已在待触发列表中则从中移除
+6. 定时器用最小堆管理，插入和删除 O(log n)
+
+事件循环：
+7. loop_run(loop) 进入事件循环：计算最近的定时器超时时间，传给 epoll_wait 作为 timeout。epoll_wait 返回后先处理到期的定时器回调，再处理文件事件回调
+8. loop_stop(loop) 停止事件循环。当前正在执行的回调要跑完再退出（不是立即中断）
+
+要求：
+9. loop_run 返回已经处理的总事件数（定时器 + 文件事件）
+10. 所有回调在主线程中执行（不是开新线程），回调函数签名：void (*)(int events, void *data)
+
+代码分 event_loop.c、timer_heap.c、event_loop.h 几个文件，gcc 编译能过。
