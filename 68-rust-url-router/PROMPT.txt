@@ -1,0 +1,19 @@
+用 Rust 写一个 HTTP 路由匹配器库，支持路径参数、通配符和中间件。
+
+路径匹配：
+1. 路径参数：/users/:id/posts/:post_id 匹配 /users/42/posts/10 并提取 id=42, post_id=10。参数值只能是非 / 的字符
+2. 通配符 *：/files/* 匹配 /files/a.txt（* 匹配一段，不含 /），但不匹配 /files/a/b.txt（跨层了）。* 只能在路径末尾出现一次
+3. 通配符 **：/static/** 匹配 /static/css/style.css 和 /static/js/app.js（** 匹配剩余所有层级含 /）。** 只能在路径末尾出现一次
+4. 路径参数和通配符冲突时，精确匹配优先级最高，然后路径参数，通配符最低
+5. 相同路径不同 HTTP 方法（GET /users 和 POST /users）分别匹配，不冲突
+
+中间件：
+6. 中间件链：每个中间件是一个 Fn(&mut Request, &mut Next) 函数。调用 next.run() 传递给下一个中间件或最终 handler
+7. 中间件可以在 handler 之前和之后执行逻辑（next.run() 前后都可以写代码）
+8. 如果中间件不调用 next.run()，请求不会到达 handler，直接返回中间件设置的响应
+
+要求：
+9. 注册路由时如果路径格式非法（连续的 /、: 后面紧跟 / 等）返回错误
+10. 提供 routes() 方法列出所有已注册的路由（方法、路径、handler 名称）
+
+代码分 radix tree、参数提取、中间件链几个模块，cargo build 能过。

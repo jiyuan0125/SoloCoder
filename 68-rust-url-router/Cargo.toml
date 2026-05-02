@@ -1,0 +1,9 @@
+[package]
+name = "url-router"
+version = "0.1.0"
+edition = "2021"
+authors = ["Developer"]
+description = "A flexible HTTP router with path parameters, wildcards, and middleware support"
+
+[dependencies]
+thiserror = "1.0"
