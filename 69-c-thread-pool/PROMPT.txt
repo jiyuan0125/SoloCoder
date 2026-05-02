@@ -1,0 +1,19 @@
+用 C 写一个线程池库，基于 pthreads。提供 thread_pool_t 结构体和相关 API。
+
+核心 API：
+1. thread_pool_create(min_threads, max_threads) 创建线程池。初始创建 min_threads 个工作线程
+2. thread_pool_submit(pool, task_func, arg, result) 提交任务，返回一个 task_future_t 结构体
+3. task_future_get(future, timeout_ms) 阻塞等待任务结果。timeout_ms 为 -1 表示无限等待，超时返回 ETIMEDOUT
+4. thread_pool_shutdown(pool, timeout_ms) 优雅关闭：不再接受新任务，等待已提交的任务完成。timeout_ms 毫秒后强制返回，返回未完成的任务数。返回 0 表示全部完成
+
+自动扩缩容：
+5. 当任务队列积压超过 max_threads * 10 时自动创建新线程（不超过 max_threads）
+6. 空闲超过 5 秒的额外线程（超出 min_threads 的部分）自动退出
+7. 扩缩容时工作线程不能在持有锁的情况下被取消
+
+错误处理：
+8. shutdown 后再 submit 返回 ESHUTDOWN
+9. future_get 如果任务被取消（shutdown 超时）返回 ECANCELED
+10. 所有 API 返回 int 类型的错误码，0 表示成功，非 0 表示错误（用 errno 风格）
+
+代码分 thread_pool.c、task_queue.c、future.c、thread_pool.h 几个文件，gcc -lpthread 编译能过。
