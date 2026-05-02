@@ -201,9 +201,6 @@ KVEntry* sstable_get(SSTable* table, const char* key, size_t key_len) {
                     break;
                 }
                 value[value_len] = '\0';
-            } else {
-                if (fseek(table->file, sizeof(uint32_t), SEEK_CUR) == 0) {
-                }
             }
             
             KVEntry* entry = kv_entry_create(current_key, current_key_len, value, value_len, false);

@@ -14,7 +14,7 @@ static int random_level(void) {
 
 static SkipListNode* skiplist_node_create(int level, const char* key, size_t key_len, 
                                             const char* value, size_t value_len, bool deleted) {
-    SkipListNode* node = (SkipListNode*)malloc(sizeof(SkipListNode) + level * sizeof(SkipListNode*));
+    SkipListNode* node = (SkipListNode*)malloc(sizeof(SkipListNode) + (level + 1) * sizeof(SkipListNode*));
     if (!node) return NULL;
     
     node->key = (char*)malloc(key_len + 1);
@@ -133,18 +133,18 @@ int skiplist_put(SkipList* sl, const char* key, size_t key_len, const char* valu
     
     if (current != NULL && key_compare(current->key, current->key_len, key, key_len) == 0) {
         size_t old_size = current->size;
+        char* new_value = NULL;
+        
+        if (value && value_len > 0) {
+            new_value = (char*)malloc(value_len + 1);
+            if (!new_value) return -1;
+            memcpy(new_value, value, value_len);
+            new_value[value_len] = '\0';
+        }
         
         free(current->value);
-        if (value && value_len > 0) {
-            current->value = (char*)malloc(value_len + 1);
-            if (!current->value) return -1;
-            memcpy(current->value, value, value_len);
-            current->value[value_len] = '\0';
-            current->value_len = value_len;
-        } else {
-            current->value = NULL;
-            current->value_len = 0;
-        }
+        current->value = new_value;
+        current->value_len = new_value ? value_len : 0;
         
         current->deleted = false;
         current->size = key_len + current->value_len + sizeof(SkipListNode);
