@@ -108,14 +108,19 @@ int execute_builtin(const Command *cmd) {
 int execute_pipeline(Pipeline *pipeline) {
     if (pipeline->num_commands == 0) return 0;
     
+    Command *first_cmd = &pipeline->commands[0];
+    BuiltinType first_builtin = check_builtin(first_cmd);
+    
+    if (first_builtin == BUILTIN_CD) {
+        return execute_builtin(first_cmd);
+    }
+    
     int is_background = pipeline->commands[pipeline->num_commands - 1].background;
     
     if (pipeline->num_commands == 1) {
-        Command *cmd = &pipeline->commands[0];
-        
-        BuiltinType builtin = check_builtin(cmd);
+        BuiltinType builtin = check_builtin(first_cmd);
         if (builtin != BUILTIN_NONE) {
-            return execute_builtin(cmd);
+            return execute_builtin(first_cmd);
         }
     }
     
