@@ -1,0 +1,22 @@
+用 Go 写一个反向代理服务。监听本地端口，根据路径前缀转发到不同后端服务。
+
+路由规则：
+1. 配置文件（JSON）：定义路径前缀到后端地址列表的映射。如 {"/api": ["localhost:8081", "localhost:8082"], "/static": ["localhost:8083"]}
+2. 请求路径匹配最长的前缀规则（/api/users 匹配 /api 规则，不匹配 /a 开头的规则）
+3. 未匹配任何规则的请求返回 404
+
+负载均衡：
+4. 同一路由下多个后端实例用加权轮询（weighted round-robin）分发
+5. weight 越大分到的流量越多。权重比例：weight=3 的实例分到的请求数是 weight=1 的 3 倍
+6. 加权轮询算法：每个后端维护 currentWeight，选中后 currentWeight += effectiveWeight，选中 totalWeight 最大的。选中的后端 currentWeight -= totalWeight
+
+熔断：
+7. 某个后端连续 3 次请求失败（连接失败或返回 5xx）开启熔断，30 秒后进入 half-open 状态
+8. half-open 状态放 1 个请求探测，成功则关闭熔断，失败则重新开始 30 秒等待
+9. 熔断期间该后端的请求直接返回 503，不尝试连接
+
+超时和取消：
+10. 请求有 30 秒超时（可配置），超时后取消转发，向客户端返回 504
+11. 客户端断开连接时（ctx.Done()）取消转发，后端不应继续处理
+
+代码分 proxy.go、router.go、balancer.go、breaker.go 几个 package，go build 能过。
