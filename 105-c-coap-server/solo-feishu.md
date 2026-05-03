@@ -13,7 +13,7 @@
 | 修改范围 | 跨模块多文件 |
 | 任务是否完成 | 未完成 |
 | 产物及过程是否满意 | 不满意 |
-| 不满意原因 | 产物不满意：handle_request 中路由匹配 /sensor/{id}/latest 和 /sensor/{id}/history 时要求 seg_count >= 4（第 411 行），但这两个 URI 实际只有 3 段（sensor/id/latest 或 sensor/id/history），导致所有查询最新读数和历史记录的请求都返回 404。实际运行中 simulate_queries 线程发出的 GET /sensor/temp_001/latest 收到的是 "Endpoint not found"。过程不满意：query simulation 线程已经实现了发送这些查询并打印响应，但从输出日志能明显看到查询返回了 404，写完后没有验证查询是否正常工作 |
+| 不满意原因 | 产物不满意：handle_request 中路由匹配 /sensor/{id}/latest 和 /sensor/{id}/history 时要求 seg_count >= 4（main.c 第 411 行），但这两个 URI 实际只有 3 段（sensor、id、latest），导致所有查询单个传感器最新读数和历史记录的请求都返回 404 "Endpoint not found"。实际运行中 simulate_queries 线程发出的 GET /sensor/temp_001/latest 和 GET /sensor/hum_001/history?n=5 均收到 404。过程不满意：simulate_queries 线程已实现发送查询并打印响应，从输出日志能明显看到查询返回了 404，写完后没有验证查询接口是否正常工作 |
 | github地址 | https://github.com/jiyuan0125/SoloCoder |
 | 分支/文件夹 | 105-c-coap-server |
 

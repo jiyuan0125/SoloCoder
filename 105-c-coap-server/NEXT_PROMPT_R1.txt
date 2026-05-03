@@ -1,1 +1,1 @@
-跑了一下程序，传感器上报数据没问题，但查询接口全部 404。GET /sensor/temp_001/latest 和 GET /sensor/hum_001/history 都返回 "Endpoint not found"。看起来是路由解析的问题，这些 URI 只有 3 段但代码里好像要求 4 段才匹配。另外 /sensors/temperature/top5 这个是能正常返回数据的。
+跑了一下程序，传感器上报数据没问题，温度告警也能正常触发。但查询接口有问题——GET /sensor/temp_001/latest 和 GET /sensor/hum_001/history?n=5 都返回了 404 "Endpoint not found"。看了一下代码，main.c 里面 handle_request 路由匹配那块，/sensor/{id}/latest 和 /sensor/{id}/history 走的是 seg_count >= 4 的分支，但这两个路径实际只有 3 段，所以永远不会匹配到。/sensors/temperature/top5 这个是能正常返回数据的。
