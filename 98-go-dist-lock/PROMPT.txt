@@ -1,0 +1,25 @@
+用 Go 写一个分布式锁实现（内存模拟，不依赖外部存储）。基于租约（lease）和看门狗（watchdog）。
+
+核心 API：
+1. lock.Lock(key, lease) error：获取锁，lease 是租约时间。如果 key 已被其他 goroutine 锁住则阻塞等待。返回 nil 表示成功
+2. lock.Unlock(key)：释放锁。只能释放当前 goroutine 自己持有的锁（非持有者调用返回 error）
+3. lock.TryLock(key, lease) (bool, error)：非阻塞尝试获取锁，获取成功返回 (true, nil)
+
+租约和看门狗：
+4. 获取锁后启动一个看门狗 goroutine，每隔 lease/3 的时间续期一次（重置租约倒计时）
+5. 如果看门狗 连续 2 次续期失败（网络抖动等原因），停止续期并释放锁
+6. 如果客户端 goroutine 崩溃（没有调用 Unlock），看门狗 在租约到期后自动释放锁
+
+可重入：
+7. 同一个 goroutine 可以多次 Lock 同一个 key，不会死锁。必须调用对应次数的 Unlock 才真正释放
+8. 不同 goroutine Lock 同一个 key 会阻塞等待
+9. 用 goroutine ID 区分持有者（不需要客户端传入）
+
+等待队列：
+10. 多个 goroutine 竞争同一个 key 时按请求顺序排队，避免饥饿（FIFO）
+11. 锁释放后只唤醒等待队列中的第一个 goroutine，不是广播唤醒所有
+
+API：
+12. lock.Stats() 返回（当前持有者 goroutine ID、等待队列长度）
+
+代码分 lock.go、lease.go、watchdog.go 几个 package，go build 能过。
