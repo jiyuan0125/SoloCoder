@@ -1,0 +1,23 @@
+用 Go 写一个熔断器库。三种状态：Closed（正常）、Open（熔断中）、HalfOpen（探测中）。
+
+状态转换：
+1. Closed：请求正常通过。连续失败达到阈值（默认 5 次）切到 Open
+2. Open：所有请求直接返回错误，不转发到后端。持续 open_duration（固定 30 秒，不随探测重置）后切到 HalfOpen
+3. HalfOpen：只放 1 个请求通过探测。如果多个并发请求同时进来，只有第一个通过，其他等待。探测成功切回 Closed 并重置失败计数。探测失败不重置等待时间，继续保持在 HalfOpen 等下一个 30 秒周期
+4. 关键：探测失败时不是直接回到 Open，是继续在 HalfOpen 等
+
+API：
+5. cb.Allow() (bool, error)：判断是否允许请求通过。返回 (allowed, lastError)
+6. cb.RecordSuccess()：记录一次成功
+7. cb.RecordFailure(err)：记录一次失败
+8. cb.State() string：返回当前状态名称
+
+事件回调：
+9. 支持 OnStateChange(callback func(from, to string)) 注册状态变化回调
+10. 支持 OnRequest(callback func(allowed bool, duration time.Duration)) 注册每次请求的回调（记录允许/拒绝和耗时）
+
+要求：
+11. 所有方法线程安全，多个 goroutine 可以并发调用
+12. HalfOpen 状态的并发请求等待队列用 channel 实现，FIFO 顺序
+
+代码分 circuit_breaker.go 几个 package，go build 能过。
