@@ -110,7 +110,7 @@ func (w *worker) executeTask(t *task) {
 		case <-done:
 			t.future.complete(resultErr)
 		case <-time.After(t.timeout):
-			t.future.complete(nil)
+			t.future.completeWithTimeout(t.timeout)
 			go func() {
 				<-done
 			}()

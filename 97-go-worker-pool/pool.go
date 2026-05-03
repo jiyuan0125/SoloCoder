@@ -121,8 +121,8 @@ func (p *Pool) workerExit(w *worker) {
 func (p *Pool) replaceWorker(w *worker) {
 	p.workersMu.Lock()
 	delete(p.workers, w.id)
-	p.createWorker(w.isExtra)
 	p.workersMu.Unlock()
+	p.createWorker(w.isExtra)
 }
 
 func (p *Pool) Submit(task func() error) (Future, error) {

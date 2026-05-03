@@ -37,11 +37,12 @@ type Future interface {
 }
 
 type future struct {
-	mu        sync.Mutex
-	done      chan struct{}
-	resultErr error
-	panicErr  error
-	read      bool
+	mu         sync.Mutex
+	done       chan struct{}
+	resultErr  error
+	panicErr   error
+	timeoutErr error
+	read       bool
 }
 
 func newFuture() *future {
@@ -77,6 +78,18 @@ func (f *future) completeWithPanic(panicVal interface{}) {
 	}
 }
 
+func (f *future) completeWithTimeout(timeout time.Duration) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	select {
+	case <-f.done:
+		return
+	default:
+		f.timeoutErr = &TimeoutError{Timeout: timeout}
+		close(f.done)
+	}
+}
+
 func (f *future) Result() (error, error) {
 	f.mu.Lock()
 	if f.read {
@@ -94,7 +107,13 @@ func (f *future) Result() (error, error) {
 		return nil, ErrFutureRead
 	}
 	f.read = true
-	return f.resultErr, f.panicErr
+	if f.timeoutErr != nil {
+		return nil, f.timeoutErr
+	}
+	if f.panicErr != nil {
+		return nil, f.panicErr
+	}
+	return f.resultErr, nil
 }
 
 func (f *future) ResultWithTimeout(timeout time.Duration) (error, error) {
@@ -114,7 +133,13 @@ func (f *future) ResultWithTimeout(timeout time.Duration) (error, error) {
 			return nil, ErrFutureRead
 		}
 		f.read = true
-		return f.resultErr, f.panicErr
+		if f.timeoutErr != nil {
+			return nil, f.timeoutErr
+		}
+		if f.panicErr != nil {
+			return nil, f.panicErr
+		}
+		return f.resultErr, nil
 	case <-time.After(timeout):
 		return nil, &TimeoutError{Timeout: timeout}
 	}
