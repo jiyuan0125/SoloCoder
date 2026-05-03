@@ -56,3 +56,22 @@
 | 分支/文件夹 | 94-go-circuit-breaker |
 
 ---
+
+## 94-go-circuit-breaker — 第 4 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 4 |
+| User Prompt | |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R3 指出的 nextProbeTime 双重计算 openDuration 的 bug 未修复。circuit_breaker.go line 104 在 Open→HalfOpen 转换时设置 `nextProbeTime = now.Add(openDuration)`，line 255 在 RecordFailure 中又执行 `nextProbeTime = cb.nextProbeTime.Add(openDuration)`，导致第一次探测失败后的重试间隔为 2×openDuration（60秒）而非 PROMPT 要求的 30 秒。正确修复方案（R3 已给出）：将 line 104 改为 `cb.nextProbeTime = now`（因为第一个探测通过 probeInProgress 立即放行不需要时间偏移），或在 line 255 改为 `cb.nextProbeTime = time.Now().Add(cb.openDuration)`。测试 TestHalfOpenProbeIntervalAfterLongOpen 断言不够精确——sleep openDuration/2 + openDuration = 1.5×openDuration 后检查允许通过，而 2×openDuration = 200ms > 150ms，所以测试实际上会失败但未被注意到。过程不满意：R3 已明确指出双重计算问题并给出了具体修复方案，代码未做任何修改 |
+| github地址 | |
+| 分支/文件夹 | 94-go-circuit-breaker |
+
+---
