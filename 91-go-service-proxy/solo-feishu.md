@@ -18,3 +18,23 @@
 | 分支/文件夹 | 91-go-service-proxy |
 
 ---
+
+## 91-go-service-proxy — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我测了下熔断这块，让某个后端连续报错触发熔断后等 30 秒进入 half-open，这时候如果同时来多个请求，它们全都能打到这个后端上去，PROMPT 说的是 half-open 只放 1 个请求探测。另外 balancer.go 里 Select 的加权轮询在高并发下好像不太对，每个 backend 的 currentWeight 是各自加锁改的，但 totalWeight 的计算和选中的判断不是原子的，并发多了权重分配会乱。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：Select() 遍历后端时对每个后端调用 Allow() 会触发 Open→HalfOpen 状态转换并设置 halfOpenPending=true，但加权轮询可能选中另一个后端，导致 HalfOpen 后端的 halfOpenPending 无法被重置，探测请求永远不会真正发出去，熔断无法恢复。proxy.go 第 60-62 行有一个无意义的 goroutine，只做 `<-ctx.Done()` 然后退出，是死代码。过程不满意：R1 的两个 bug（half-open 并发限制、balancer 并发安全）都已修复，但修复 Allow() 时引入了新的状态管理问题，没有分析 Allow() 和 Select() 的交互副作用 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 91-go-service-proxy |
+
+---
+

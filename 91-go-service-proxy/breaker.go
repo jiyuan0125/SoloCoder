@@ -22,6 +22,7 @@ type Breaker struct {
 	state           BreakerState
 	failureCount    int
 	lastFailureTime time.Time
+	halfOpenPending bool
 	mu              sync.Mutex
 }
 
@@ -42,10 +43,15 @@ func (b *Breaker) Allow() bool {
 		if time.Since(b.lastFailureTime) >= Timeout {
 			b.state = StateHalfOpen
 			b.failureCount = 0
+			b.halfOpenPending = true
 			return true
 		}
 		return false
 	case StateHalfOpen:
+		if b.halfOpenPending {
+			return false
+		}
+		b.halfOpenPending = true
 		return true
 	default:
 		return true
@@ -57,6 +63,7 @@ func (b *Breaker) RecordSuccess() {
 	defer b.mu.Unlock()
 
 	b.failureCount = 0
+	b.halfOpenPending = false
 	if b.state == StateHalfOpen {
 		b.state = StateClosed
 	}
@@ -68,6 +75,7 @@ func (b *Breaker) RecordFailure() {
 
 	b.failureCount++
 	b.lastFailureTime = time.Now()
+	b.halfOpenPending = false
 
 	if b.state == StateClosed {
 		if b.failureCount >= FailureThreshold {

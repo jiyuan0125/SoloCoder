@@ -9,16 +9,20 @@ type Backend struct {
 	Weight        int
 	CurrentWeight int
 	Breaker       *Breaker
-	mu            sync.Mutex
 }
 
-type Balancer struct{}
+type Balancer struct {
+	mu sync.Mutex
+}
 
 func NewBalancer() *Balancer {
 	return &Balancer{}
 }
 
 func (b *Balancer) Select(backends []*Backend) *Backend {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
 	var availableBackends []*Backend
 	totalWeight := 0
 
@@ -41,19 +45,15 @@ func (b *Balancer) Select(backends []*Backend) *Backend {
 	maxWeight := -1
 
 	for _, backend := range availableBackends {
-		backend.mu.Lock()
 		backend.CurrentWeight += backend.Weight
 		if backend.CurrentWeight > maxWeight {
 			maxWeight = backend.CurrentWeight
 			selected = backend
 		}
-		backend.mu.Unlock()
 	}
 
 	if selected != nil {
-		selected.mu.Lock()
 		selected.CurrentWeight -= totalWeight
-		selected.mu.Unlock()
 	}
 
 	return selected
