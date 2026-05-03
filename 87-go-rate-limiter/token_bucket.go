@@ -1,6 +1,7 @@
 package limiter
 
 import (
+	"math"
 	"net/http"
 	"sync"
 	"time"
@@ -30,7 +31,7 @@ func (tb *TokenBucketLimiter) refill() {
 	
 	if elapsed > 0 {
 		newTokens := float64(elapsed.Seconds()) * float64(tb.rate)
-		tb.tokens = min(tb.tokens+newTokens, float64(tb.burst))
+		tb.tokens = math.Min(tb.tokens+newTokens, float64(tb.burst))
 		tb.lastRefill = now
 	}
 }
@@ -60,11 +61,4 @@ func (tb *TokenBucketLimiter) SetGlobalMax(max int64) {
 }
 
 func (tb *TokenBucketLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-}
-
-func min(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
 }

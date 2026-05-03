@@ -85,25 +85,25 @@ func (rl *RateLimiter) SetGlobalMax(max int64) {
 	rl.globalMu.Unlock()
 }
 
-func (rl *RateLimiter) checkGlobalLimit() bool {
+func (rl *RateLimiter) tryAcquireGlobal() bool {
 	if rl.globalMax <= 0 {
 		return true
 	}
 	rl.globalMu.Lock()
 	defer rl.globalMu.Unlock()
-	return rl.globalActive < rl.globalMax
+	if rl.globalActive < rl.globalMax {
+		rl.globalActive++
+		return true
+	}
+	return false
 }
 
-func (rl *RateLimiter) incGlobalActive() {
+func (rl *RateLimiter) releaseGlobal() {
 	rl.globalMu.Lock()
-	rl.globalActive++
-	rl.globalMu.Unlock()
-}
-
-func (rl *RateLimiter) decGlobalActive() {
-	rl.globalMu.Lock()
-	rl.globalActive--
-	rl.globalMu.Unlock()
+	defer rl.globalMu.Unlock()
+	if rl.globalActive > 0 {
+		rl.globalActive--
+	}
 }
 
 func (rl *RateLimiter) Allow() bool {
@@ -111,7 +111,7 @@ func (rl *RateLimiter) Allow() bool {
 	rl.total++
 	rl.statsMu.Unlock()
 
-	if !rl.checkGlobalLimit() {
+	if !rl.tryAcquireGlobal() {
 		rl.statsMu.Lock()
 		rl.blocked++
 		rl.statsMu.Unlock()
@@ -123,11 +123,11 @@ func (rl *RateLimiter) Allow() bool {
 		rl.statsMu.Lock()
 		rl.allowed++
 		rl.statsMu.Unlock()
-		rl.incGlobalActive()
 	} else {
 		rl.statsMu.Lock()
 		rl.blocked++
 		rl.statsMu.Unlock()
+		rl.releaseGlobal()
 	}
 	return allowed
 }
@@ -147,7 +147,7 @@ func (rl *RateLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
-	defer rl.decGlobalActive()
+	defer rl.releaseGlobal()
 	
 	if rl.next != nil {
 		rl.next.ServeHTTP(w, r)
@@ -161,7 +161,11 @@ type KeyedLimiter struct {
 }
 
 func (kl *KeyedLimiter) Allow() bool {
-	if !kl.parent.checkGlobalLimit() {
+	kl.parent.statsMu.Lock()
+	kl.parent.total++
+	kl.parent.statsMu.Unlock()
+
+	if !kl.parent.tryAcquireGlobal() {
 		kl.parent.statsMu.Lock()
 		kl.parent.blocked++
 		kl.parent.statsMu.Unlock()
@@ -173,11 +177,11 @@ func (kl *KeyedLimiter) Allow() bool {
 		kl.parent.statsMu.Lock()
 		kl.parent.allowed++
 		kl.parent.statsMu.Unlock()
-		kl.parent.incGlobalActive()
 	} else {
 		kl.parent.statsMu.Lock()
 		kl.parent.blocked++
 		kl.parent.statsMu.Unlock()
+		kl.parent.releaseGlobal()
 	}
 	return allowed
 }
