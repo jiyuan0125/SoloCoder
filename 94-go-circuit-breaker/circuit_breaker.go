@@ -70,19 +70,6 @@ func New(options ...Option) *CircuitBreaker {
 	return cb
 }
 
-func (cb *CircuitBreaker) transitionTo(newState string) {
-	oldState := cb.state
-	if oldState == newState {
-		return
-	}
-
-	cb.state = newState
-
-	if cb.onStateChange != nil {
-		cb.onStateChange(oldState, newState)
-	}
-}
-
 func (cb *CircuitBreaker) State() string {
 	cb.mu.RLock()
 	defer cb.mu.RUnlock()
@@ -93,9 +80,13 @@ func (cb *CircuitBreaker) Allow() (bool, error) {
 	start := time.Now()
 	allowed, err := cb.allowInternal()
 
-	if cb.onRequest != nil {
+	cb.mu.RLock()
+	callback := cb.onRequest
+	cb.mu.RUnlock()
+
+	if callback != nil {
 		duration := time.Since(start)
-		cb.onRequest(allowed, duration)
+		callback(allowed, duration)
 	}
 
 	return allowed, err
@@ -106,11 +97,20 @@ func (cb *CircuitBreaker) allowInternal() (bool, error) {
 
 	if cb.state == StateOpen {
 		if time.Since(cb.lastOpenTime) >= cb.openDuration {
-			cb.transitionTo(StateHalfOpen)
+			oldState := cb.state
+			newState := StateHalfOpen
+			cb.state = newState
 			cb.nextProbeTime = cb.lastOpenTime.Add(cb.openDuration)
 			cb.probeInProgress = true
 			cb.failureCount = 0
 			cb.mu.Unlock()
+
+			cb.mu.RLock()
+			stateCallback := cb.onStateChange
+			cb.mu.RUnlock()
+			if stateCallback != nil {
+				stateCallback(oldState, newState)
+			}
 			return true, nil
 		}
 		lastErr := cb.lastError
@@ -151,11 +151,20 @@ func (cb *CircuitBreaker) waitInQueue() (bool, error) {
 
 			if cb.state == StateOpen {
 				if time.Since(cb.lastOpenTime) >= cb.openDuration {
-					cb.transitionTo(StateHalfOpen)
+					oldState := cb.state
+					newState := StateHalfOpen
+					cb.state = newState
 					cb.nextProbeTime = cb.lastOpenTime.Add(cb.openDuration)
 					cb.probeInProgress = true
 					cb.failureCount = 0
 					cb.mu.Unlock()
+
+					cb.mu.RLock()
+					stateCallback := cb.onStateChange
+					cb.mu.RUnlock()
+					if stateCallback != nil {
+						stateCallback(oldState, newState)
+					}
 					return true, nil
 				}
 				lastErr := cb.lastError
@@ -189,20 +198,31 @@ func (cb *CircuitBreaker) waitInQueue() (bool, error) {
 
 func (cb *CircuitBreaker) RecordSuccess() {
 	cb.mu.Lock()
-	defer cb.mu.Unlock()
 
 	cb.failureCount = 0
 	cb.lastError = nil
 
 	if cb.state == StateHalfOpen {
 		cb.probeInProgress = false
-		cb.transitionTo(StateClosed)
+		oldState := cb.state
+		newState := StateClosed
+		cb.state = newState
+		cb.mu.Unlock()
+
+		cb.mu.RLock()
+		stateCallback := cb.onStateChange
+		cb.mu.RUnlock()
+		if stateCallback != nil {
+			stateCallback(oldState, newState)
+		}
+		return
 	}
+
+	cb.mu.Unlock()
 }
 
 func (cb *CircuitBreaker) RecordFailure(err error) {
 	cb.mu.Lock()
-	defer cb.mu.Unlock()
 
 	cb.lastError = err
 
@@ -211,8 +231,20 @@ func (cb *CircuitBreaker) RecordFailure(err error) {
 		if cb.failureCount >= cb.failureThreshold {
 			now := time.Now()
 			cb.lastOpenTime = now
-			cb.transitionTo(StateOpen)
+			oldState := cb.state
+			newState := StateOpen
+			cb.state = newState
+			cb.mu.Unlock()
+
+			cb.mu.RLock()
+			stateCallback := cb.onStateChange
+			cb.mu.RUnlock()
+			if stateCallback != nil {
+				stateCallback(oldState, newState)
+			}
+			return
 		}
+		cb.mu.Unlock()
 		return
 	}
 
@@ -220,6 +252,8 @@ func (cb *CircuitBreaker) RecordFailure(err error) {
 		cb.probeInProgress = false
 		cb.nextProbeTime = cb.nextProbeTime.Add(cb.openDuration)
 	}
+
+	cb.mu.Unlock()
 }
 
 func (cb *CircuitBreaker) OnStateChange(callback func(from, to string)) {

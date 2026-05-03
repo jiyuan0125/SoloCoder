@@ -300,3 +300,96 @@ func TestLastErrorReturned(t *testing.T) {
 		t.Errorf("Expected latest error to be returned after probe failure, got %v", err)
 	}
 }
+
+func TestStateChangeCallbackCallsStateNoDeadlock(t *testing.T) {
+	done := make(chan struct{})
+	timeout := time.After(1 * time.Second)
+	
+	cb := New(WithFailureThreshold(1))
+	cb.OnStateChange(func(from, to string) {
+		_ = cb.State()
+	})
+	
+	go func() {
+		cb.Allow()
+		cb.RecordFailure(testErr)
+		close(done)
+	}()
+	
+	select {
+	case <-done:
+	case <-timeout:
+		t.Error("Test timed out - possible deadlock in StateChange callback")
+	}
+}
+
+func TestRequestCallbackCallsStateNoDeadlock(t *testing.T) {
+	done := make(chan struct{})
+	timeout := time.After(1 * time.Second)
+	
+	cb := New()
+	cb.OnRequest(func(allowed bool, duration time.Duration) {
+		_ = cb.State()
+	})
+	
+	go func() {
+		cb.Allow()
+		close(done)
+	}()
+	
+	select {
+	case <-done:
+	case <-timeout:
+		t.Error("Test timed out - possible deadlock in Request callback")
+	}
+}
+
+func TestConcurrentOnRequestAndAllowNoDataRace(t *testing.T) {
+	cb := New()
+	
+	var wg sync.WaitGroup
+	
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			cb.OnRequest(func(allowed bool, duration time.Duration) {})
+		}(i)
+		
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			cb.Allow()
+		}(i)
+	}
+	
+	wg.Wait()
+}
+
+func TestConcurrentOnStateChangeAndStateTransitionNoDataRace(t *testing.T) {
+	cb := New(WithFailureThreshold(1), WithOpenDuration(10*time.Millisecond))
+	
+	var wg sync.WaitGroup
+	
+	for i := 0; i < 5; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			cb.OnStateChange(func(from, to string) {})
+		}(i)
+	}
+	
+	for i := 0; i < 3; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			cb.Allow()
+			cb.RecordFailure(testErr)
+			time.Sleep(20 * time.Millisecond)
+			cb.Allow()
+			cb.RecordSuccess()
+		}()
+	}
+	
+	wg.Wait()
+}
