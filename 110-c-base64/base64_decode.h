@@ -9,6 +9,8 @@ extern "C" {
 
 size_t base64_decode_size(size_t input_len);
 
+size_t base64_decode_size_exact(const char *input, size_t input_len);
+
 int base64_decode(const char *input, size_t input_len,
                   uint8_t *output, size_t output_size,
                   size_t *output_len);

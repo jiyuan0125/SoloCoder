@@ -19,6 +19,7 @@
 #define HTTP_ALERT_ERR_OVERALL_TIMEOUT     -12
 #define HTTP_ALERT_ERR_ALL_RETRIES_FAILED  -13
 #define HTTP_ALERT_ERR_RESOLVE             -14
+#define HTTP_ALERT_ERR_HTTP_STATUS         -15
 
 typedef enum {
     HTTP_METHOD_GET,

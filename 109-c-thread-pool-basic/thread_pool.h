@@ -11,7 +11,19 @@
 typedef struct tp_worker_info tp_worker_info_t;
 
 typedef struct {
+    tp_completion_t *buffer;
+    size_t capacity;
+    size_t head;
+    size_t tail;
+    size_t count;
+    pthread_mutex_t mutex;
+    pthread_cond_t not_empty;
+    int closed;
+} tp_completion_queue_t;
+
+typedef struct {
     tp_task_queue_t task_queue;
+    tp_completion_queue_t completion_queue;
     tp_stats_t stats;
     tp_worker_info_t *workers;
     size_t num_workers;
@@ -39,5 +51,8 @@ tp_status_t tp_thread_pool_shutdown(tp_thread_pool_t *pool, tp_shutdown_mode_t m
 tp_status_t tp_thread_pool_get_stats(tp_thread_pool_t *pool, tp_stats_snapshot_t *snapshot);
 tp_state_t tp_thread_pool_get_state(tp_thread_pool_t *pool);
 size_t tp_thread_pool_get_queue_size(tp_thread_pool_t *pool);
+
+tp_status_t tp_thread_pool_poll_completion(tp_thread_pool_t *pool, tp_completion_t *completion, int block);
+size_t tp_thread_pool_completion_count(tp_thread_pool_t *pool);
 
 #endif

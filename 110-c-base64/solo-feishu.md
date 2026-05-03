@@ -18,3 +18,22 @@
 | 分支/文件夹 | 110-c-base64 |
 
 ---
+
+## 110-c-base64 — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 跑了一下你的代码，gcc -Wall -Wextra 编译没警告，测试也全过了。但我用 AddressSanitizer 编译跑了一遍，test_stream_decode 那个测试里 expected 数组写越界了，堆溢出。另外 base64_decode_size 算出来的大小对带换行的输入偏大不少。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 110-c-base64 |
+
+---

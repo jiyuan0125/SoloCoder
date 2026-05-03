@@ -222,14 +222,14 @@ static int test_stream_decode(void)
     size_t encoded_len = strlen(encoded);
     
     size_t decode_size = base64_decode_size(encoded_len);
-    uint8_t *expected = (uint8_t *)malloc(decode_size);
+    uint8_t *expected = (uint8_t *)malloc(decode_size + 1);
     size_t expected_len;
     base64_decode(encoded, encoded_len, expected, decode_size, &expected_len);
     
     base64_decode_stream_t stream;
     base64_decode_stream_init(&stream);
     
-    uint8_t *stream_decoded = (uint8_t *)malloc(decode_size + 100);
+    uint8_t *stream_decoded = (uint8_t *)malloc(decode_size + 1 + 100);
     size_t stream_idx = 0;
     
     const size_t chunk_size = 5;
@@ -306,7 +306,7 @@ static int test_buffer_size_check(void)
     
     const char *encoded = "SGVsbG8sIFdvcmxkIQ==";
     size_t encoded_len = strlen(encoded);
-    size_t decode_required = base64_decode_size(encoded_len);
+    size_t decode_required = base64_decode_size_exact(encoded, encoded_len);
     
     uint8_t *small_decode_buf = (uint8_t *)malloc(decode_required - 1);
     ret = base64_decode(encoded, encoded_len, small_decode_buf, decode_required - 1, &out_len);

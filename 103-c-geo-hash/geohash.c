@@ -148,10 +148,27 @@ static void get_adjacent(const char *hash, int dir_lat, int dir_lon, char *resul
     double new_lat = lat_center + dir_lat * lat_step;
     double new_lon = lon_center + dir_lon * lon_step;
     
-    if (new_lat > GEOHASH_LAT_MAX) new_lat = GEOHASH_LAT_MAX;
-    if (new_lat < GEOHASH_LAT_MIN) new_lat = GEOHASH_LAT_MIN;
-    if (new_lon > GEOHASH_LON_MAX) new_lon = GEOHASH_LON_MAX;
-    if (new_lon < GEOHASH_LON_MIN) new_lon = GEOHASH_LON_MIN;
+    if (new_lat > GEOHASH_LAT_MAX) {
+        new_lat = GEOHASH_LAT_MAX - (new_lat - GEOHASH_LAT_MAX);
+        new_lon = new_lon + 180.0;
+        if (new_lon > GEOHASH_LON_MAX) {
+            new_lon = new_lon - 360.0;
+        }
+    }
+    if (new_lat < GEOHASH_LAT_MIN) {
+        new_lat = GEOHASH_LAT_MIN + (GEOHASH_LAT_MIN - new_lat);
+        new_lon = new_lon + 180.0;
+        if (new_lon > GEOHASH_LON_MAX) {
+            new_lon = new_lon - 360.0;
+        }
+    }
+    
+    if (new_lon > GEOHASH_LON_MAX) {
+        new_lon = new_lon - 360.0;
+    }
+    if (new_lon < GEOHASH_LON_MIN) {
+        new_lon = new_lon + 360.0;
+    }
     
     geohash_encode(new_lat, new_lon, precision, result);
 }

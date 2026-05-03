@@ -43,11 +43,6 @@ static void setup_signal_handlers(void) {
         perror("sigaction SIGTERM");
         exit(1);
     }
-    
-    sa.sa_handler = SIG_IGN;
-    if (sigaction(SIGCHLD, &sa, NULL) == -1) {
-        perror("sigaction SIGCHLD");
-    }
 }
 
 static void on_file_event(const FileEvent *event, void *user_data) {

@@ -263,6 +263,8 @@ const char *http_alert_strerror(int err_code) {
             return "All retries failed";
         case HTTP_ALERT_ERR_RESOLVE:
             return "Host resolution failed";
+        case HTTP_ALERT_ERR_HTTP_STATUS:
+            return "Non-success HTTP status code";
         default:
             return "Unknown error";
     }

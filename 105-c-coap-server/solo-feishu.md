@@ -18,3 +18,23 @@
 | 分支/文件夹 | 105-c-coap-server |
 
 ---
+
+## 105-c-coap-server — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下你的代码，模拟查询线程发 GET /sensor/temp_001/latest 返回了 4.04 Endpoint not found，查了一下发现 main.c 里的 handle_request 函数路由匹配那里 seg_count >= 4 写错了，/sensor/{id}/latest 解析出来只有 3 段所以永远匹配不上，history 那个也一样。另外 g_next_msg_id 好几个线程在同时调 get_next_msg_id 递增，没加锁吧 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 105-c-coap-server |
+
+---
+

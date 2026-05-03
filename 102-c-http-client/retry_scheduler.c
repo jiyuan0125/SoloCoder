@@ -47,7 +47,8 @@ static void sleep_seconds(int seconds) {
 
 RetryResult retry_scheduler_execute(const HttpRequest *req, 
                                      const TimeoutConfig *timeout,
-                                     const RetryConfig *retry_config) {
+                                     const RetryConfig *retry_config,
+                                     AlertContext *ctx) {
     RetryResult result = {0};
     result.success = 0;
     result.last_error = HTTP_ALERT_ERR_INVALID_ARG;
@@ -60,6 +61,7 @@ RetryResult retry_scheduler_execute(const HttpRequest *req,
     
     time_t overall_start = time(NULL);
     int max_retries = retry_config->max_retries > 0 ? retry_config->max_retries : 3;
+    int total_attempts = max_retries + 1;
     int delay = retry_config->initial_delay_sec > 0 ? retry_config->initial_delay_sec : 1;
     
     for (int attempt = 0; attempt <= max_retries; attempt++) {
@@ -71,6 +73,16 @@ RetryResult retry_scheduler_execute(const HttpRequest *req,
                 http_alert_log("WARN", "Overall timeout exceeded after %d seconds, giving up",
                               (int)elapsed);
                 result.last_error = HTTP_ALERT_ERR_OVERALL_TIMEOUT;
+                
+                if (ctx != NULL && ctx->callback != NULL) {
+                    ctx->callback(ctx->webhook_url,
+                                  ctx->alert,
+                                  result.attempt_count,
+                                  total_attempts,
+                                  0,
+                                  result.last_error,
+                                  NULL);
+                }
                 break;
             }
         }
@@ -84,6 +96,16 @@ RetryResult retry_scheduler_execute(const HttpRequest *req,
         if (result.response == NULL) {
             result.last_error = HTTP_ALERT_ERR_MEMORY;
             http_alert_log("ERROR", "Failed to create response object");
+            
+            if (ctx != NULL && ctx->callback != NULL) {
+                ctx->callback(ctx->webhook_url,
+                              ctx->alert,
+                              result.attempt_count,
+                              total_attempts,
+                              0,
+                              result.last_error,
+                              NULL);
+            }
             break;
         }
         
@@ -102,17 +124,34 @@ RetryResult retry_scheduler_execute(const HttpRequest *req,
         int ret = http_request_execute(req, result.response, timeout);
         result.last_error = ret;
         
+        int attempt_success = 0;
         if (ret == HTTP_ALERT_OK) {
             http_alert_log("INFO", "Attempt %d: HTTP %d",
                           result.attempt_count, result.response->status_code);
             
             if (is_success_response(result.response)) {
                 result.success = 1;
-                break;
+                attempt_success = 1;
+            } else {
+                result.last_error = HTTP_ALERT_ERR_HTTP_STATUS;
             }
         } else {
             http_alert_log("ERROR", "Attempt %d failed: %s",
                           result.attempt_count, http_alert_strerror(ret));
+        }
+        
+        if (ctx != NULL && ctx->callback != NULL) {
+            ctx->callback(ctx->webhook_url,
+                          ctx->alert,
+                          result.attempt_count,
+                          total_attempts,
+                          attempt_success,
+                          result.last_error,
+                          result.response);
+        }
+        
+        if (result.success) {
+            break;
         }
         
         if (attempt < max_retries && should_retry(ret, result.response)) {
@@ -145,6 +184,8 @@ int push_alert_with_retry(const char *webhook_url,
                            size_t body_len,
                            const TimeoutConfig *timeout,
                            const RetryConfig *retry_config,
+                           AlertCallback callback,
+                           void *user_data,
                            HttpResponse **out_response) {
     if (webhook_url == NULL || timeout == NULL || retry_config == NULL) {
         return HTTP_ALERT_ERR_INVALID_ARG;
@@ -175,7 +216,13 @@ int push_alert_with_retry(const char *webhook_url,
         }
     }
     
-    RetryResult result = retry_scheduler_execute(req, timeout, retry_config);
+    AlertContext ctx = {0};
+    ctx.webhook_url = webhook_url;
+    ctx.alert = NULL;
+    ctx.callback = callback;
+    ctx.user_data = user_data;
+    
+    RetryResult result = retry_scheduler_execute(req, timeout, retry_config, &ctx);
     
     if (out_response != NULL) {
         *out_response = result.response;
@@ -192,6 +239,8 @@ int push_alert_json(const char *webhook_url,
                      const AlertData *alert,
                      const TimeoutConfig *timeout,
                      const RetryConfig *retry_config,
+                     AlertCallback callback,
+                     void *user_data,
                      HttpResponse **out_response) {
     if (webhook_url == NULL || alert == NULL || timeout == NULL || retry_config == NULL) {
         return HTTP_ALERT_ERR_INVALID_ARG;
@@ -231,17 +280,50 @@ int push_alert_json(const char *webhook_url,
     h1->next = h2;
     headers = h1;
     
-    int ret = push_alert_with_retry(webhook_url,
-                                     HTTP_METHOD_POST,
-                                     headers,
-                                     json_body,
-                                     strlen(json_body),
-                                     timeout,
-                                     retry_config,
-                                     out_response);
+    AlertContext ctx = {0};
+    ctx.webhook_url = webhook_url;
+    ctx.alert = alert;
+    ctx.callback = callback;
+    ctx.user_data = user_data;
     
+    HttpRequest *req = http_alert_create_request();
+    if (req == NULL) {
+        http_alert_free_headers(headers);
+        free(json_body);
+        return HTTP_ALERT_ERR_MEMORY;
+    }
+    
+    req->method = HTTP_METHOD_POST;
+    
+    int ret = http_alert_parse_url(webhook_url, req);
+    if (ret != HTTP_ALERT_OK) {
+        http_alert_free_request(req);
+        http_alert_free_headers(headers);
+        free(json_body);
+        return ret;
+    }
+    
+    req->headers = http_alert_copy_headers(headers);
+    
+    ret = http_alert_set_body(req, json_body, strlen(json_body));
+    if (ret != HTTP_ALERT_OK) {
+        http_alert_free_request(req);
+        http_alert_free_headers(headers);
+        free(json_body);
+        return ret;
+    }
+    
+    RetryResult result = retry_scheduler_execute(req, timeout, retry_config, &ctx);
+    
+    if (out_response != NULL) {
+        *out_response = result.response;
+        result.response = NULL;
+    }
+    
+    http_alert_free_request(req);
     http_alert_free_headers(headers);
     free(json_body);
+    retry_result_free(&result);
     
-    return ret;
+    return result.success ? HTTP_ALERT_OK : result.last_error;
 }

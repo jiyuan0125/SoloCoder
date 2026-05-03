@@ -18,3 +18,22 @@
 | 分支/文件夹 | 107-c-dir-watcher |
 
 ---
+
+## 107-c-dir-watcher — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我刚跑了一下这个 dir watcher，加了个 -c 参数指定构建脚本，结果每次检测到文件变动触发构建的时候，stderr 都会打印一行 "waitpid: No child processes"，构建命令本身是能执行的，但每次都报这个错，你看看怎么回事 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 自动化与工具脚本 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 107-c-dir-watcher |
+
+---

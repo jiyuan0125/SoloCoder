@@ -1,0 +1,1 @@
+我测了一下，往一个返回 500 的地址发告警，重试完之后日志里打印 "Last error: Success"，然后 main 里输出 "Alert pushed successfully!"，但实际上服务器返回的是 500。你们 push_alert_json 返回的值好像不太对，所有重试都失败了但返回的还是 0（成功），调用方根本分不清到底推没推成功。

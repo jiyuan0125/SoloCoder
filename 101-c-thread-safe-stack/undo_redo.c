@@ -8,6 +8,7 @@ static HistoryNode *node_create(OperationGroup *group) {
     node->group = group;
     node->next = NULL;
     node->prev = NULL;
+    node->refcount = 1;
     return node;
 }
 
@@ -17,12 +18,25 @@ static void node_destroy(HistoryNode *node) {
     free(node);
 }
 
+static void node_release(HistoryNode *node) {
+    if (!node) return;
+    node->refcount--;
+    if (node->refcount == 0) {
+        node_destroy(node);
+    }
+}
+
 static void clear_redo_stack(UndoRedoManager *manager) {
-    while (manager->redo_stack) {
-        HistoryNode *next = manager->redo_stack->next;
-        node_destroy(manager->redo_stack);
-        manager->redo_stack = next;
-        manager->redo_count--;
+    HistoryNode *current = manager->redo_stack;
+    manager->redo_stack = NULL;
+    manager->redo_count = 0;
+    
+    while (current) {
+        HistoryNode *next = current->next;
+        current->next = NULL;
+        current->prev = NULL;
+        node_release(current);
+        current = next;
     }
 }
 
@@ -38,7 +52,9 @@ static void trim_undo_history(UndoRedoManager *manager) {
             manager->undo_tail = NULL;
         }
         
-        node_destroy(old_head);
+        old_head->next = NULL;
+        old_head->prev = NULL;
+        node_release(old_head);
         manager->undo_count--;
     }
 }
@@ -68,7 +84,11 @@ void undo_redo_destroy(UndoRedoManager *manager) {
         node_destroy(manager->undo_head);
         manager->undo_head = next;
     }
-    clear_redo_stack(manager);
+    while (manager->redo_stack) {
+        HistoryNode *next = manager->redo_stack->next;
+        node_destroy(manager->redo_stack);
+        manager->redo_stack = next;
+    }
     pthread_mutex_unlock(&manager->stack_lock);
     
     pthread_mutex_destroy(&manager->stack_lock);
@@ -159,14 +179,25 @@ int undo_redo_undo(UndoRedoManager *manager) {
     manager->redo_stack = node;
     manager->redo_count++;
     
+    node->refcount++;
+    
     OperationGroup *inv_group = operation_group_inverse(node->group);
     
     pthread_mutex_unlock(&manager->stack_lock);
     
-    if (!inv_group) return 0;
+    if (!inv_group) {
+        pthread_mutex_lock(&manager->stack_lock);
+        node_release(node);
+        pthread_mutex_unlock(&manager->stack_lock);
+        return 0;
+    }
     
     int result = document_apply_group(manager->doc, inv_group);
     operation_group_destroy(inv_group);
+    
+    pthread_mutex_lock(&manager->stack_lock);
+    node_release(node);
+    pthread_mutex_unlock(&manager->stack_lock);
     
     return result;
 }
@@ -185,6 +216,8 @@ int undo_redo_redo(UndoRedoManager *manager) {
     manager->redo_stack = node->next;
     manager->redo_count--;
     
+    node->refcount++;
+    
     if (!manager->undo_tail) {
         manager->undo_head = node;
         manager->undo_tail = node;
@@ -202,7 +235,13 @@ int undo_redo_redo(UndoRedoManager *manager) {
     
     pthread_mutex_unlock(&manager->stack_lock);
     
-    return document_apply_group(manager->doc, group);
+    int result = document_apply_group(manager->doc, group);
+    
+    pthread_mutex_lock(&manager->stack_lock);
+    node_release(node);
+    pthread_mutex_unlock(&manager->stack_lock);
+    
+    return result;
 }
 
 size_t undo_redo_undo_count(UndoRedoManager *manager) {

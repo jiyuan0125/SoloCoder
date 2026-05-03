@@ -12,6 +12,7 @@ typedef struct HistoryNode {
     OperationGroup *group;
     struct HistoryNode *next;
     struct HistoryNode *prev;
+    int refcount;
 } HistoryNode;
 
 typedef struct {

@@ -18,3 +18,22 @@
 | 分支/文件夹 | 101-c-thread-safe-stack |
 
 ---
+
+## 101-c-thread-safe-stack — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我看了下并发这块的代码，undo_redo_undo 和 undo_redo_record 都抢同一把 stack_lock，根本没法并发。PROMPT 里说的"撤销和记录新操作应该能并发进行"没做到。而且 undo 函数释放 stack_lock 之后、拿到 doc 的写锁之前，record 函数可以插进来把 redo 栈清掉，刚才移过去那个节点就被销毁了，栈结构直接坏了。你再想想怎么让这两个操作真的能并发跑起来，还有两把锁之间的竞态窗口也得处理好。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1 指出的两个核心问题完全未修复。（1）undo_redo_undo()（第162行）和 undo_redo_record()（第101行）仍然使用同一把 stack_lock 互斥锁，PROMPT 明确要求"撤销操作和记录新操作应该能并发进行，而不是互相阻塞"未实现。（2）undo_redo_undo() 在第186行释放 stack_lock 后、第195行调用 document_apply_group() 获取 doc->lock 前，竞态窗口依然存在：并发 undo_redo_record() 可执行 clear_redo_stack() 将刚移入 redo 栈的节点清除，虽然 refcount 机制（第182行）防止了 crash，但 redo 条目功能丢失，重做操作无法恢复该记录。undo_redo_redo()（第236行）存在同样的释放-重获取间隙问题。过程不满意：测试 4（test_concurrent_access）仍然只启动了只读渲染线程，没有任何测试验证多线程同时执行 undo 和 record 的场景，R1 反馈的并发测试缺失问题未改进。代码整体与 R1 相比无实质改动。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 101-c-thread-safe-stack |
+
+---

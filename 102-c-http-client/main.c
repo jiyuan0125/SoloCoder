@@ -6,6 +6,41 @@
 #include "http_request.h"
 #include "retry_scheduler.h"
 
+static int g_total_attempts = 0;
+
+static void alert_callback(const char *webhook_url, 
+                            const AlertData *alert, 
+                            int attempt,
+                            int total_attempts,
+                            int success, 
+                            int error_code,
+                            HttpResponse *response) {
+    g_total_attempts = attempt;
+    
+    printf("\n>>> [Callback] Attempt %d/%d <<<\n", attempt, total_attempts);
+    printf("    URL: %s\n", webhook_url ? webhook_url : "(none)");
+    
+    if (alert) {
+        printf("    Alert: [%s] %s\n", alert->level ? alert->level : "info", 
+               alert->title ? alert->title : "(none)");
+    }
+    
+    if (success) {
+        printf("    Status: SUCCESS\n");
+        if (response) {
+            printf("    HTTP Status: %d\n", response->status_code);
+        }
+    } else {
+        printf("    Status: FAILED\n");
+        printf("    Error: %s (code: %d)\n", http_alert_strerror(error_code), error_code);
+        if (response && response->status_code > 0) {
+            printf("    HTTP Status: %d\n", response->status_code);
+        }
+    }
+    
+    printf("----------------------------------------\n");
+}
+
 static void print_help(const char *program_name) {
     printf("HTTP Alert Push Module - Demo Program\n");
     printf("Usage: %s [options]\n", program_name);
@@ -20,9 +55,17 @@ static void print_help(const char *program_name) {
     printf("  -R <retries>   Max retry count (default: 3)\n");
     printf("  -o <timeout>   Overall timeout in seconds (default: 30)\n");
     printf("  -h             Show this help message\n");
+    printf("\nFeatures:\n");
+    printf("  - HTTP/HTTPS support (built with OpenSSL)\n");
+    printf("  - GET/POST/PUT methods\n");
+    printf("  - Custom HTTP headers\n");
+    printf("  - Connection and read timeouts\n");
+    printf("  - Exponential backoff retry (1s, 2s, 4s...)\n");
+    printf("  - Overall timeout limit\n");
+    printf("  - Progress callback support\n");
     printf("\nExamples:\n");
     printf("  %s\n", program_name);
-    printf("  %s -u http://example.com/webhook -t \"Server Down\" -m \"Web server not responding\" -l error\n", program_name);
+    printf("  %s -u https://httpbin.org/post -t \"Server Alert\"\n", program_name);
     printf("  %s -u https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=xxx ...\n", program_name);
 }
 
@@ -113,17 +156,23 @@ int main(int argc, char *argv[]) {
     
     printf("Configuration:\n");
     printf("  URL: %s\n", url);
+    printf("  Protocol: %s\n", strncmp(url, "https", 5) == 0 ? "HTTPS (SSL)" : "HTTP");
     printf("  Alert Title: %s\n", title);
     printf("  Alert Level: %s\n", level);
     printf("  Connection Timeout: %d sec\n", connect_timeout);
     printf("  Read Timeout: %d sec\n", read_timeout);
     printf("  Max Retries: %d\n", max_retries);
-    printf("  Overall Timeout: %d sec\n\n", overall_timeout);
+    printf("  Overall Timeout: %d sec\n", overall_timeout);
+    printf("\nCallbacks are enabled - progress will be reported after each attempt.\n\n");
     
     printf("Sending alert...\n");
     
     HttpResponse *response = NULL;
-    int ret = push_alert_json(url, &alert, &timeout_cfg, &retry_cfg, &response);
+    int ret = push_alert_json(url, &alert, &timeout_cfg, &retry_cfg, 
+                               alert_callback, NULL, &response);
+    
+    printf("\n=== Final Result ===\n");
+    printf("Total attempts made: %d\n", g_total_attempts);
     
     if (ret == HTTP_ALERT_OK && response != NULL) {
         printf("\n*** Alert pushed successfully! ***\n");

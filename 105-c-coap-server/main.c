@@ -24,6 +24,7 @@ static alarm_manager_t g_alarm_mgr;
 static int g_running = 1;
 static int g_sockfd = -1;
 static uint16_t g_next_msg_id = 1;
+static pthread_mutex_t g_msg_id_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void print_timestamp(time_t t, char *buf, size_t len) {
     struct tm *tm_info = localtime(&t);
@@ -408,7 +409,7 @@ static int handle_request(const coap_message_t *request, coap_message_t *respons
     if (seg_count >= 2 && strcmp(segments[0], "sensor") == 0) {
         if (strcmp(segments[1], "report") == 0) {
             result = handle_sensor_report(request, response);
-        } else if (seg_count >= 4) {
+        } else if (seg_count >= 3) {
             const char *sensor_id = segments[1];
             if (strcmp(segments[2], "latest") == 0) {
                 result = handle_sensor_latest(request, response, sensor_id);
@@ -441,7 +442,11 @@ static void signal_handler(int sig) {
 }
 
 static uint16_t get_next_msg_id(void) {
-    return g_next_msg_id++;
+    uint16_t id;
+    pthread_mutex_lock(&g_msg_id_mutex);
+    id = g_next_msg_id++;
+    pthread_mutex_unlock(&g_msg_id_mutex);
+    return id;
 }
 
 static int create_coap_message(coap_message_t *msg, coap_type_t type, coap_code_t code,

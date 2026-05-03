@@ -43,6 +43,12 @@ typedef struct {
     tp_callback_exec_t callback_mode;
 } tp_task_t;
 
+typedef struct {
+    void *arg;
+    tp_completion_func_t completion;
+    int success;
+} tp_completion_t;
+
 #define TP_TASK_INIT(func_, arg_, comp_, mode_) \
     { (func_), (arg_), (comp_), (mode_) }
 

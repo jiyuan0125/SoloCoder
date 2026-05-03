@@ -1,6 +1,17 @@
 CC = gcc
 CFLAGS = -Wall -Wextra -g -O2
-LDFLAGS =
+
+PKG_CONFIG := pkg-config
+HAVE_OPENSSL := $(shell $(PKG_CONFIG) --exists openssl && echo yes || echo no)
+
+ifeq ($(HAVE_OPENSSL),yes)
+    CFLAGS += -DWITH_SSL
+    LDFLAGS += $(shell $(PKG_CONFIG) --libs openssl)
+    $(info OpenSSL found: HTTPS support enabled)
+else
+    $(info WARNING: OpenSSL not found. HTTPS support will be disabled.)
+    $(info Install libssl-dev to enable HTTPS: sudo apt-get install libssl-dev)
+endif
 
 TARGET = http_alert_demo
 
@@ -22,9 +33,13 @@ $(TARGET): $(OBJS)
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-ssl: CFLAGS += -DWITH_SSL
-ssl: LDFLAGS += -lssl -lcrypto
-ssl: clean $(TARGET)
+ssl:
+	@if [ "$(HAVE_OPENSSL)" != "yes" ]; then \
+	    echo "Error: OpenSSL development files not found."; \
+	    echo "Please install: sudo apt-get install libssl-dev"; \
+	    exit 1; \
+	fi
+	$(MAKE) all
 
 clean:
 	rm -f $(OBJS) $(TARGET)

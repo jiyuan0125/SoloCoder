@@ -27,15 +27,52 @@ size_t base64_decode_size(size_t input_len)
     return ((input_len + 3) / 4) * 3;
 }
 
+size_t base64_decode_size_exact(const char *input, size_t input_len)
+{
+    if (input_len == 0)
+        return 0;
+    
+    size_t valid_chars = 0;
+    size_t padding = 0;
+    
+    size_t i;
+    for (i = 0; i < input_len; i++) {
+        unsigned char c = (unsigned char)input[i];
+        
+        if (c == '=') {
+            padding++;
+            continue;
+        }
+        
+        uint8_t val = decode_table[c];
+        if (val == BASE64_INVALID)
+            continue;
+        
+        padding = 0;
+        valid_chars++;
+    }
+    
+    size_t full_groups = valid_chars / 4;
+    size_t rem = valid_chars % 4;
+    
+    size_t result = full_groups * 3;
+    if (rem == 2)
+        result += 1;
+    else if (rem == 3)
+        result += 2;
+    
+    return result;
+}
+
 int base64_decode(const char *input, size_t input_len,
                   uint8_t *output, size_t output_size,
                   size_t *output_len)
 {
-    size_t max_required = base64_decode_size(input_len);
+    size_t exact_required = base64_decode_size_exact(input, input_len);
     
-    if (output_size < max_required) {
+    if (output_size < exact_required) {
         if (output_len)
-            *output_len = max_required;
+            *output_len = exact_required;
         return BASE64_BUFFER_SMALL;
     }
     

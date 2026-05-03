@@ -17,11 +17,11 @@ int geohash_precision_for_radius(double radius_meters)
     if (radius_meters <= 5) return 9;
     if (radius_meters <= 20) return 8;
     if (radius_meters <= 150) return 7;
-    if (radius_meters <= 1200) return 6;
-    if (radius_meters <= 5000) return 5;
-    if (radius_meters <= 39000) return 4;
-    if (radius_meters <= 156000) return 3;
-    if (radius_meters <= 1250000) return 2;
+    if (radius_meters <= 800) return 6;
+    if (radius_meters <= 3000) return 5;
+    if (radius_meters <= 24000) return 4;
+    if (radius_meters <= 100000) return 3;
+    if (radius_meters <= 800000) return 2;
     return 1;
 }
 

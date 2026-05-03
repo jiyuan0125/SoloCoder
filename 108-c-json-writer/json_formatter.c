@@ -1,4 +1,5 @@
 #include "json_formatter.h"
+#include "json_allocator.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -18,7 +19,7 @@ static void string_buffer_init(StringBuffer *buf) {
 
 static void string_buffer_free(StringBuffer *buf) {
     if (buf->data) {
-        free(buf->data);
+        json_free_ptr(buf->data);
         buf->data = NULL;
     }
     buf->size = 0;
@@ -32,7 +33,7 @@ static int string_buffer_ensure_capacity(StringBuffer *buf, size_t needed) {
         while (new_cap < buf->size + needed + 1) {
             new_cap *= 2;
         }
-        char *new_data = (char *)realloc(buf->data, new_cap);
+        char *new_data = (char *)json_realloc(buf->data, new_cap);
         if (new_data == NULL) return -1;
         buf->data = new_data;
         buf->capacity = new_cap;
@@ -61,28 +62,6 @@ static int string_buffer_append_indent(StringBuffer *buf, int count) {
         if (string_buffer_append_char(buf, ' ') != 0) return -1;
     }
     return 0;
-}
-
-static size_t escaped_length(const char *str) {
-    if (str == NULL) return 4;
-    size_t len = 0;
-    for (const char *p = str; *p != '\0'; p++) {
-        switch (*p) {
-            case '\"':
-            case '\\':
-            case '\b':
-            case '\f':
-            case '\n':
-            case '\r':
-            case '\t':
-                len += 2;
-                break;
-            default:
-                len += 1;
-                break;
-        }
-    }
-    return len;
 }
 
 static int append_escaped_string(StringBuffer *buf, const char *str) {

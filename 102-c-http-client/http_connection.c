@@ -81,7 +81,8 @@ int http_connection_init(HttpConnection *conn, int is_https) {
     }
 #else
     if (is_https) {
-        http_alert_log("ERROR", "HTTPS support not compiled in. Use -DWITH_SSL and link with OpenSSL.");
+        http_alert_log("ERROR", "HTTPS support not compiled in.");
+        http_alert_log("ERROR", "Install libssl-dev (sudo apt-get install libssl-dev) and rebuild.");
         return HTTP_ALERT_ERR_SSL_INIT;
     }
 #endif

@@ -18,3 +18,22 @@
 | 分支/文件夹 | 102-c-http-client |
 
 ---
+
+## 102-c-http-client — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我拿代码跑了一下，默认 make 编出来的二进制，传一个 https 的 webhook 地址进去直接报错说 HTTPS 没编译进去。看了下 Makefile，要 make ssl 才行，还得装 libssl-dev。PROMPT 里说"有些 webhook 地址是 HTTPS 的，模块要能处理"，默认编译都不支持 HTTPS 这不合适吧？另外 retry_scheduler.h 里定义了一个 AlertCallback 类型但代码里根本没用过，是死代码。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：push_alert_json 和 push_alert_with_retry 在服务器返回非 2xx 状态码（如 500、405）时仍然返回 HTTP_ALERT_OK，导致调用方误判告警推送成功。实际测试：对 httpbin.org/status/500 发请求，重试全部失败后日志显示"Last error: Success"，main 程序输出"Alert pushed successfully!"，但 HTTP 状态码是 500。PROMPT 要求"方便调用方判断推送是否成功"，当前返回值无法准确反映推送结果。过程不满意：R2 提到的两个问题（HTTPS 默认编译、AlertCallback 死代码）均已修复，但修改后未做充分测试——如果用非 2xx 的 URL 测试一下就能发现返回值逻辑问题 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 102-c-http-client |
+
+---
