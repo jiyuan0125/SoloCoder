@@ -1,0 +1,1 @@
+我拿代码跑了下，gcc 编译有 8 个 warning，其中有几个函数和变量定义了但没用（buf_is_full、convert_sem_error、total_len 之类的），你看看能清一下吗。另外我打算在多 writer 并发场景下压测一下，empty 信号量的计数跟变长消息的容量对不上，高负载下应该会有不少无效的 mutex 竞争，你那边评估一下需不需要改
