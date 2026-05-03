@@ -1,0 +1,25 @@
+用 Go 写一个 CRDT OR-Set（Observed-Remove Set）实现。支持 add、remove、merge 和持久化。
+
+核心语义：
+1. add(element)：添加元素。每次 add 生成一个唯一的 tag（用 uint64 计数器递增）
+2. remove(element)：删除元素。记录被删除的 tag 集合（remove-tags）
+3. 元素存在条件：元素的 add-tags 中至少有一个 tag 不在任何 remove-tags 中（即存在一次未被删除的 add）
+4. 关键语义：节点 A 先 add("x", tag=1)，remove("x", tags={1})，再 add("x", tag=2)。对于没看到 tag=1 的节点 B，它只看到 remove(tags={1}) 和 add(tag=2)，所以 B 的 remove 包含 tag=2，add 也只有 tag=2，结果 B 看不到 "x"
+
+Merge 规则：
+5. merge(otherSet)：两个集合的元素取并集，add-tags 和 remove-tags 分别合并
+6. 并发 add 同一个元素后 merge，集合中该元素只有一个实例
+
+API：
+7. set.Add(element) / set.Remove(element) / set.Contains(element) bool / set.Elements() []string
+8. set.Merge(other *ORSet) / set.Clone() *ORSet
+9. set.MarshalJSON() ([]byte, error) / set.UnmarshalJSON(data []byte) error
+
+序列化：
+10. JSON 格式：{"elements": [{"value": "x", "add_tags": [1,3], "remove_tags": [2]}]}
+11. merge 时如果 value 相同则合并 add_tags 和 remove_tags 数组
+
+测试：
+12. 提供 MergeSimulator 函数：模拟 A、B 两个节点各自操作后再 merge，验证结果符合 CRDT OR-Set 语义
+
+代码分 crdt.go 几个 package，go build 能过。
