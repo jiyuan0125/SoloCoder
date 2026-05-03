@@ -37,3 +37,22 @@
 | 分支/文件夹 | 114-c-signal-handler |
 
 ---
+
+## 114-c-signal-handler — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 3 |
+| User Prompt | R2 修了主循环条件，现在 shutdown_execute() 确实能被调用了，无活跃请求时优雅停机也正常。但有活跃请求时 kill -TERM 程序卡死了。我看了 shutdown.c 的代码，shutdown_execute() 在第 63 行用 pthread_mutex_trylock 拿住 g_shutdown_mutex，然后在第 93 行的 while 循环里等 g_active_request_count 变成 0。但 worker 线程处理完请求后调 shutdown_decrement_active_requests()（第 145 行），这个函数要用 pthread_mutex_lock 去拿同一把 g_shutdown_mutex 才能递减计数。shutdown_execute 持着锁等计数归零，worker 线程等着锁才能递减计数，互相死等。修一下这个持锁等待的问题，保证有活跃请求时 kill -TERM 也能正常走完 Step 2 再继续后面的步骤。修完之后在后台模拟一个处理时间长的请求，然后发 kill -TERM，确认能看到 Step 1 到 Step 6 全部输出且程序正常退出。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 114-c-signal-handler |
+
+---

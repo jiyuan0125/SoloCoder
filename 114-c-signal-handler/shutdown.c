@@ -15,6 +15,7 @@ static ShutdownConfig g_shutdown_config;
 static volatile sig_atomic_t g_shutdown_in_progress = 0;
 static volatile sig_atomic_t g_shutdown_completed = 0;
 static pthread_mutex_t g_shutdown_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_request_count_mutex = PTHREAD_MUTEX_INITIALIZER;
 static uint64_t g_active_request_count = 0;
 
 static uint64_t get_current_time_ms(void) {
@@ -40,6 +41,7 @@ void shutdown_init(const ShutdownConfig *config) {
 
 void shutdown_cleanup(void) {
     pthread_mutex_destroy(&g_shutdown_mutex);
+    pthread_mutex_destroy(&g_request_count_mutex);
     memset(&g_shutdown_config, 0, sizeof(g_shutdown_config));
 }
 
@@ -59,6 +61,14 @@ uint32_t shutdown_get_timeout(void) {
     return g_shutdown_config.timeout_sec;
 }
 
+static uint64_t get_active_request_count_locked(void) {
+    uint64_t count;
+    pthread_mutex_lock(&g_request_count_mutex);
+    count = g_active_request_count;
+    pthread_mutex_unlock(&g_request_count_mutex);
+    return count;
+}
+
 ShutdownResult shutdown_execute(void) {
     int lock_result = pthread_mutex_trylock(&g_shutdown_mutex);
     
@@ -66,12 +76,13 @@ ShutdownResult shutdown_execute(void) {
         return SHUTDOWN_ALREADY_IN_PROGRESS;
     }
     
-    if (g_shutdown_completed) {
+    if (g_shutdown_in_progress || g_shutdown_completed) {
         pthread_mutex_unlock(&g_shutdown_mutex);
         return SHUTDOWN_ALREADY_IN_PROGRESS;
     }
     
     g_shutdown_in_progress = 1;
+    pthread_mutex_unlock(&g_shutdown_mutex);
     
     uint64_t start_time = get_current_time_ms();
     uint64_t timeout_ms = (uint64_t)g_shutdown_config.timeout_sec * 1000;
@@ -90,11 +101,11 @@ ShutdownResult shutdown_execute(void) {
             g_shutdown_config.timeout_sec);
     fflush(stderr);
     
-    while (g_active_request_count > 0) {
+    while (get_active_request_count_locked() > 0) {
         uint64_t elapsed = get_current_time_ms() - start_time;
         if (elapsed >= timeout_ms) {
             fprintf(stderr, "[WARNING] Shutdown timeout! Forcing exit with %lu active requests.\n",
-                    (unsigned long)g_active_request_count);
+                    (unsigned long)get_active_request_count_locked());
             fflush(stderr);
             result = SHUTDOWN_TIMEOUT;
             break;
@@ -134,6 +145,7 @@ ShutdownResult shutdown_execute(void) {
             result == SHUTDOWN_OK ? "SUCCESS" : "TIMEOUT/FORCED");
     fflush(stderr);
     
+    pthread_mutex_lock(&g_shutdown_mutex);
     g_shutdown_completed = 1;
     g_shutdown_in_progress = 0;
     pthread_mutex_unlock(&g_shutdown_mutex);
@@ -142,23 +154,19 @@ ShutdownResult shutdown_execute(void) {
 }
 
 void shutdown_increment_active_requests(void) {
-    pthread_mutex_lock(&g_shutdown_mutex);
+    pthread_mutex_lock(&g_request_count_mutex);
     g_active_request_count++;
-    pthread_mutex_unlock(&g_shutdown_mutex);
+    pthread_mutex_unlock(&g_request_count_mutex);
 }
 
 void shutdown_decrement_active_requests(void) {
-    pthread_mutex_lock(&g_shutdown_mutex);
+    pthread_mutex_lock(&g_request_count_mutex);
     if (g_active_request_count > 0) {
         g_active_request_count--;
     }
-    pthread_mutex_unlock(&g_shutdown_mutex);
+    pthread_mutex_unlock(&g_request_count_mutex);
 }
 
 uint64_t shutdown_get_active_requests(void) {
-    uint64_t count;
-    pthread_mutex_lock(&g_shutdown_mutex);
-    count = g_active_request_count;
-    pthread_mutex_unlock(&g_shutdown_mutex);
-    return count;
+    return get_active_request_count_locked();
 }
