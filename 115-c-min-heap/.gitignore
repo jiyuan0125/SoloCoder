@@ -1,0 +1,10 @@
+*.o
+*.out
+*.exe
+*.d
+compile_commands.json
+.cache/
+emergency_triage
+NEXT_PROMPT_R*.txt
+CHECK_R*.md
+solo-feishu.md
