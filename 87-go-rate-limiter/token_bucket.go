@@ -8,7 +8,6 @@ import (
 )
 
 type TokenBucketLimiter struct {
-	baseLimiter
 	rate       int
 	burst      int
 	tokens     float64
@@ -40,16 +39,13 @@ func (tb *TokenBucketLimiter) Allow() bool {
 	tb.mu.Lock()
 	defer tb.mu.Unlock()
 
-	tb.incTotal()
 	tb.refill()
 
 	if tb.tokens >= 1 {
 		tb.tokens--
-		tb.incAllowed()
 		return true
 	}
 
-	tb.incBlocked()
 	return false
 }
 
@@ -57,7 +53,15 @@ func (tb *TokenBucketLimiter) WithKey(key string) Limiter {
 	return tb
 }
 
+func (tb *TokenBucketLimiter) Stats() (total, allowed, blocked int64) {
+	return 0, 0, 0
+}
+
 func (tb *TokenBucketLimiter) SetGlobalMax(max int64) {
+}
+
+func (tb *TokenBucketLimiter) Use(next http.Handler) Limiter {
+	return tb
 }
 
 func (tb *TokenBucketLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {

@@ -7,7 +7,6 @@ import (
 )
 
 type SlidingWindowLimiter struct {
-	baseLimiter
 	rate       int
 	windowSize time.Duration
 	requests   []time.Time
@@ -25,8 +24,6 @@ func NewSlidingWindowLimiter(rate int) *SlidingWindowLimiter {
 func (sw *SlidingWindowLimiter) Allow() bool {
 	sw.mu.Lock()
 	defer sw.mu.Unlock()
-
-	sw.incTotal()
 
 	now := time.Now()
 	cutoff := now.Add(-sw.windowSize)
@@ -46,12 +43,10 @@ func (sw *SlidingWindowLimiter) Allow() bool {
 	}
 
 	if len(sw.requests) >= sw.rate {
-		sw.incBlocked()
 		return false
 	}
 
 	sw.requests = append(sw.requests, now)
-	sw.incAllowed()
 	return true
 }
 
@@ -59,7 +54,15 @@ func (sw *SlidingWindowLimiter) WithKey(key string) Limiter {
 	return sw
 }
 
+func (sw *SlidingWindowLimiter) Stats() (total, allowed, blocked int64) {
+	return 0, 0, 0
+}
+
 func (sw *SlidingWindowLimiter) SetGlobalMax(max int64) {
+}
+
+func (sw *SlidingWindowLimiter) Use(next http.Handler) Limiter {
+	return sw
 }
 
 func (sw *SlidingWindowLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {

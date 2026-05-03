@@ -19,6 +19,7 @@ type Limiter interface {
 	WithKey(key string) Limiter
 	Stats() (total, allowed, blocked int64)
 	SetGlobalMax(max int64)
+	Use(next http.Handler) Limiter
 }
 
 type RateLimiter struct {
@@ -83,6 +84,11 @@ func (rl *RateLimiter) SetGlobalMax(max int64) {
 	rl.globalMu.Lock()
 	rl.globalMax = max
 	rl.globalMu.Unlock()
+}
+
+func (rl *RateLimiter) Use(next http.Handler) Limiter {
+	rl.next = next
+	return rl
 }
 
 func (rl *RateLimiter) tryAcquireGlobal() bool {
@@ -196,6 +202,11 @@ func (kl *KeyedLimiter) Stats() (total, allowed, blocked int64) {
 
 func (kl *KeyedLimiter) SetGlobalMax(max int64) {
 	kl.parent.SetGlobalMax(max)
+}
+
+func (kl *KeyedLimiter) Use(next http.Handler) Limiter {
+	kl.parent.Use(next)
+	return kl
 }
 
 func (kl *KeyedLimiter) ServeHTTP(w http.ResponseWriter, r *http.Request) {

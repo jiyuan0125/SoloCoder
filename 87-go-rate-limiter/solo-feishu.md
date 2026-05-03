@@ -37,3 +37,22 @@
 | 分支/文件夹 | 87-go-rate-limiter |
 
 ---
+
+## 87-go-rate-limiter — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 3 |
+| User Prompt | 我试了下把 limiter 当中间件用，发现 ServeHTTP 里调了 next.ServeHTTP 但 next 永远是 nil，被允许的请求返回空 200，根本没有转发到我的 handler。PROMPT 说"实现 net/http.Handler 接口"和"中间件库"，你得提供一个公开方法让用户设置下一个 handler（比如 Use(next http.Handler) 或 Middleware(next http.Handler) http.Handler），不然 ServeHTTP 就是个空壳。另外 SlidingWindowLimiter 和 TokenBucketLimiter 的 Allow() 里调了 baseLimiter 的 incTotal/incAllowed/incBlocked 加锁递增，但通过 KeyedLimiter 用的时候 KeyedLimiter.Allow() 也对 parent 递增了一次，inner 的 baseLimiter 计数根本没人读（Stats 返回 parent 的），这些多余的锁操作可以去掉 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 87-go-rate-limiter |
+
+---
