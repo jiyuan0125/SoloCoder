@@ -249,18 +249,20 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
             }
             
             ap_parsed_arg_t *res = NULL;
-            for (size_t i = 0; i < result->global_result_count; i++) {
-                if (result->global_results[i].def->name && found->name &&
-                    strcmp(result->global_results[i].def->name, found->name) == 0) {
-                    res = &result->global_results[i];
-                    break;
-                }
-            }
-            if (!res && current_subcmd) {
+            if (current_subcmd) {
                 for (size_t i = 0; i < result->current_result_count; i++) {
                     if (result->current_results[i].def->name && found->name &&
                         strcmp(result->current_results[i].def->name, found->name) == 0) {
                         res = &result->current_results[i];
+                        break;
+                    }
+                }
+            }
+            if (!res) {
+                for (size_t i = 0; i < result->global_result_count; i++) {
+                    if (result->global_results[i].def->name && found->name &&
+                        strcmp(result->global_results[i].def->name, found->name) == 0) {
+                        res = &result->global_results[i];
                         break;
                     }
                 }
@@ -312,18 +314,20 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                 
                 if (found) {
                     ap_parsed_arg_t *res = NULL;
-                    for (size_t i = 0; i < result->global_result_count; i++) {
-                        if (result->global_results[i].def->name && found->name &&
-                            strcmp(result->global_results[i].def->name, found->name) == 0) {
-                            res = &result->global_results[i];
-                            break;
-                        }
-                    }
-                    if (!res && current_subcmd) {
+                    if (current_subcmd) {
                         for (size_t i = 0; i < result->current_result_count; i++) {
                             if (result->current_results[i].def->name && found->name &&
                                 strcmp(result->current_results[i].def->name, found->name) == 0) {
                                 res = &result->current_results[i];
+                                break;
+                            }
+                        }
+                    }
+                    if (!res) {
+                        for (size_t i = 0; i < result->global_result_count; i++) {
+                            if (result->global_results[i].def->name && found->name &&
+                                strcmp(result->global_results[i].def->name, found->name) == 0) {
+                                res = &result->global_results[i];
                                 break;
                             }
                         }
@@ -336,9 +340,11 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                             res->numeric.bool_value = true;
                         } else {
                             const char *value = NULL;
+                            bool value_from_same_arg = false;
+                            
                             if (current_arg[char_idx + 1] != '\0') {
                                 value = &current_arg[char_idx + 1];
-                                char_idx = strlen(current_arg);
+                                value_from_same_arg = true;
                             } else if (arg_idx + 1 < argc) {
                                 arg_idx++;
                                 value = argv[arg_idx];
@@ -358,6 +364,10 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                                 } else if (found->type == AP_TYPE_FLOAT) {
                                     res->numeric.float_value = atof(value);
                                 }
+                            }
+                            
+                            if (value_from_same_arg) {
+                                break;
                             }
                         }
                     }
@@ -412,18 +422,20 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                     const ap_arg_def_t *def = &positional_defs[positional_idx];
                     ap_parsed_arg_t *res = NULL;
                     
-                    for (size_t i = 0; i < result->global_result_count; i++) {
-                        if (result->global_results[i].def->name && def->name &&
-                            strcmp(result->global_results[i].def->name, def->name) == 0) {
-                            res = &result->global_results[i];
-                            break;
-                        }
-                    }
-                    if (!res && current_subcmd) {
+                    if (current_subcmd) {
                         for (size_t i = 0; i < result->current_result_count; i++) {
                             if (result->current_results[i].def->name && def->name &&
                                 strcmp(result->current_results[i].def->name, def->name) == 0) {
                                 res = &result->current_results[i];
+                                break;
+                            }
+                        }
+                    }
+                    if (!res) {
+                        for (size_t i = 0; i < result->global_result_count; i++) {
+                            if (result->global_results[i].def->name && def->name &&
+                                strcmp(result->global_results[i].def->name, def->name) == 0) {
+                                res = &result->global_results[i];
                                 break;
                             }
                         }
