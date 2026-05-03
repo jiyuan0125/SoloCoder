@@ -1,0 +1,1 @@
+跑了一下程序，传感器上报数据没问题，但查询接口全部 404。GET /sensor/temp_001/latest 和 GET /sensor/hum_001/history 都返回 "Endpoint not found"。看起来是路由解析的问题，这些 URI 只有 3 段但代码里好像要求 4 段才匹配。另外 /sensors/temperature/top5 这个是能正常返回数据的。
