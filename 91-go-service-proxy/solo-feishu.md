@@ -38,3 +38,22 @@
 
 ---
 
+## 91-go-service-proxy — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 3 |
+| User Prompt | 我测了一下熔断恢复的场景，让某个后端连续失败触发熔断，等了 30 秒后它应该进入 half-open 放一个探测请求过去。但我发现有时候它一直卡在 half-open 状态恢复不了，请求都打到别的后端上了。另外 proxy.go 里有个 goroutine 就写了个 `<-ctx.Done()` 什么也没做，不知道是不是忘删的。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R2 反馈的两个 bug 均未修复。（1）balancer.go Select() 遍历所有后端调用 Allow()，当 Open 状态超时后 Allow() 内部触发 Open→HalfOpen 转换并设置 halfOpenPending=true，但加权轮询可能选中另一个后端，导致 HalfOpen 后端的 halfOpenPending 无法被 RecordSuccess/RecordFailure 重置，熔断永久卡在 HalfOpen 无法恢复。（2）proxy.go 第 60-62 行的无意义 goroutine 仍然存在。过程不满意：R2 已明确描述了 half-open 卡住的现象和死代码位置，本轮未做任何修改 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 91-go-service-proxy |
+
+---
+
