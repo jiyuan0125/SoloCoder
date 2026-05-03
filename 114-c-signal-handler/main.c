@@ -21,7 +21,6 @@
 #define SHUTDOWN_TIMEOUT_SEC 10
 
 static volatile sig_atomic_t g_accepting_requests = 1;
-static pthread_mutex_t g_request_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 typedef struct {
     int request_id;
@@ -196,7 +195,10 @@ int main(int argc, char *argv[]) {
         }
         
         umask(0);
-        chdir("/");
+        {
+            int ret = chdir("/");
+            (void)ret;
+        }
         
         close(STDIN_FILENO);
         close(STDOUT_FILENO);
@@ -227,8 +229,9 @@ int main(int argc, char *argv[]) {
     fflush(stderr);
     
     int tick_count = 0;
-    while (!signal_handler_is_stop_requested() && !shutdown_is_completed()) {
+    while (!shutdown_is_completed()) {
         SignalFlags flags = signal_handler_get_flags();
+        bool stop_requested = signal_handler_is_stop_requested();
         
         if ((flags & SIGNAL_FLAG_RELOAD) != 0) {
             handle_reload_config();
@@ -238,7 +241,7 @@ int main(int argc, char *argv[]) {
             handle_rotate_log();
         }
         
-        if ((flags & (SIGNAL_FLAG_TERMINATE | SIGNAL_FLAG_INTERRUPT)) != 0) {
+        if (stop_requested && !shutdown_is_in_progress()) {
             fprintf(stderr, "\n[INFO] Stop signal received. Initiating graceful shutdown...\n");
             fflush(stderr);
             
@@ -249,7 +252,12 @@ int main(int argc, char *argv[]) {
                 fflush(stderr);
             }
             
-            break;
+            continue;
+        }
+        
+        if (shutdown_is_in_progress() || shutdown_is_completed()) {
+            usleep(100000);
+            continue;
         }
         
         tick_count++;
@@ -274,8 +282,6 @@ int main(int argc, char *argv[]) {
     
     fprintf(stderr, "[INFO] Service stopped. Exit.\n");
     fflush(stderr);
-    
-    pthread_mutex_destroy(&g_request_mutex);
     
     return EXIT_SUCCESS;
 }

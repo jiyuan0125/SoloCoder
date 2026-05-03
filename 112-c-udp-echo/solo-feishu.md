@@ -18,3 +18,22 @@
 | 分支/文件夹 | 112-c-udp-echo |
 
 ---
+
+## 112-c-udp-echo — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 跑了一下模拟客户端，配置1秒发一次心跳但实际30多秒才发第二个，服务端10秒就把它踢掉了。看了下代码，client_sim.c里wait_loops每次调receive_ack，receive_ack里面recvfrom的超时设了3秒，循环10次就是30秒，跟配置的间隔完全对不上。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 网络服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：client_sim.c仍然重复定义了heartbeat_protocol.h中已有的heartbeat_packet_t结构体、htonll/ntohll宏和HEARTBEAT_MAGIC等常量，未复用服务端头文件违反DRY原则。.gitignore未排除编译产物heartbeat_server和heartbeat_client二进制文件。过程不满意：R1已明确指出DRY违反和.gitignore缺失两个问题，本轮仅修复了心跳间隔核心bug，未一并处理这两个已知的代码质量问题。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 112-c-udp-echo |
+
+---
