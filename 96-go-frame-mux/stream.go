@@ -64,25 +64,33 @@ func (s *stream) StreamID() uint32 {
 
 func (s *stream) Read(p []byte) (n int, err error) {
 	s.recvLock.Lock()
-	defer s.recvLock.Unlock()
 
 	for s.recvBuf.Len() == 0 && !s.finRecv && !s.rstRecv && !s.closed {
 		s.recvCond.Wait()
 	}
 
 	if s.rstRecv || s.closed {
+		s.recvLock.Unlock()
 		return 0, ErrStreamReset
 	}
 
 	if s.recvBuf.Len() == 0 && s.finRecv {
+		s.recvLock.Unlock()
 		return 0, io.EOF
 	}
 
 	n, _ = s.recvBuf.Read(p)
 
+	var window uint32
 	if n > 0 {
 		s.recvWindow += uint32(n)
-		s.sendWindowUpdate()
+		window = s.recvWindow
+	}
+
+	s.recvLock.Unlock()
+
+	if n > 0 {
+		s.sendWindowUpdateImpl(window)
 	}
 
 	return n, nil
@@ -228,6 +236,10 @@ func (s *stream) sendWindowUpdate() {
 	window := s.recvWindow
 	s.recvLock.Unlock()
 
+	s.sendWindowUpdateImpl(window)
+}
+
+func (s *stream) sendWindowUpdateImpl(window uint32) {
 	windowBytes := make([]byte, 4)
 	binary.BigEndian.PutUint32(windowBytes, window)
 
