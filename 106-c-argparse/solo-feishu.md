@@ -18,3 +18,22 @@
 | 分支/文件夹 | 106-c-argparse |
 
 ---
+
+## 106-c-argparse — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我刚测了下这个 argparse 模块，发现几个问题：1. `--max-count=10` 这种等号写法好像完全没生效，解析出来 max-count 还是默认值 0，`--message=hello` 也是，传了但 commit 说 message 缺失 2. `commit -mhello`（不加空格直接跟值）居然打印了 version 信息而不是执行 commit，这个很奇怪 3. `git remote add --help` 显示的 Usage 行是 "git add" 而不是 "git remote add"，路径不对 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：commit -mhello 仍然触发 version 输出而非执行 commit。根本原因是 argparse.c 第341行 char_idx = strlen(current_arg) 试图终止循环，但 while 循环末尾的 char_idx++（第365行）使其越过 null 终止符，读取相邻内存垃圾字节作为短选项处理，属于未定义行为。R1 已报告此 bug（缓冲区越界读取），本轮仅在赋值上做了表面修改，off-by-one 未消除。产物不满意：全局与子命令同短选项名冲突未修复（git remote list -v 匹配到全局 verbose 而非子命令 verbose，输出 Verbose: no）。产物不满意：AP_DUP_ERROR 策略仍然无效（--oneline --oneline 不报错）。产物不满意：ap_help_generate 函数仍然是空壳直接返回 NULL。产物不满意：max-count 默认值 "0" 违反自身 min=1 范围约束（验证只检查 is_set=true 的参数，默认值绕过范围检查）。过程不满意：R1 明确报告了 -mhello 的缓冲区越界问题，本轮代码确实修改了该区域但引入了 off-by-one，说明修改后没有实际运行 -mhello 测试用例验证。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 106-c-argparse |
+
+---

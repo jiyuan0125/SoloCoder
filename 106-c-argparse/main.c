@@ -443,8 +443,8 @@ int main(int argc, char *argv[]) {
     ap_parse_result_t *result = ap_parse(parser, argc, argv);
     
     if (result->help_requested) {
-        if (result->help_subcommand) {
-            ap_help_print_subcommand(parser, result->help_subcommand);
+        if (result->command_path_length > 0) {
+            ap_help_print_subcommand(parser, result->command_path, result->command_path_length);
         } else {
             ap_help_print_global(parser);
         }
@@ -467,8 +467,7 @@ int main(int argc, char *argv[]) {
     if (status != AP_VALID_OK) {
         fprintf(stderr, "Error: %s\n", error.message);
         if (result->command_path_length > 0) {
-            const ap_subcommand_t *last = result->command_path[result->command_path_length - 1];
-            ap_help_print_subcommand(parser, last);
+            ap_help_print_subcommand(parser, result->command_path, result->command_path_length);
         } else {
             ap_help_print_global(parser);
         }

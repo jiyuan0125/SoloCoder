@@ -86,13 +86,20 @@ static void ap_help_print_arg(const ap_arg_def_t *arg, int is_positional) {
     printf("\n");
 }
 
-void ap_help_print_subcommand(const ap_parser_t *parser, const ap_subcommand_t *subcmd) {
+void ap_help_print_subcommand(const ap_parser_t *parser, const ap_subcommand_t **command_path, size_t path_length) {
     if (!parser) return;
     
     printf("Usage: %s", parser->program_name ? parser->program_name : "program");
     
-    if (subcmd) {
-        printf(" %s", subcmd->name ? subcmd->name : "");
+    const ap_subcommand_t *subcmd = NULL;
+    for (size_t i = 0; i < path_length; i++) {
+        if (command_path[i]) {
+            printf(" %s", command_path[i]->name ? command_path[i]->name : "");
+        }
+    }
+    
+    if (path_length > 0) {
+        subcmd = command_path[path_length - 1];
     }
     
     bool has_options = false;
@@ -238,16 +245,17 @@ void ap_help_print_subcommand(const ap_parser_t *parser, const ap_subcommand_t *
 }
 
 void ap_help_print_global(const ap_parser_t *parser) {
-    ap_help_print_subcommand(parser, NULL);
+    ap_help_print_subcommand(parser, NULL, 0);
 }
 
-void ap_help_print(const ap_parser_t *parser, const ap_subcommand_t *subcmd) {
-    ap_help_print_subcommand(parser, subcmd);
+void ap_help_print(const ap_parser_t *parser, const ap_subcommand_t **command_path, size_t path_length) {
+    ap_help_print_subcommand(parser, command_path, path_length);
 }
 
-char* ap_help_generate(const ap_parser_t *parser, const ap_subcommand_t *subcmd) {
+char* ap_help_generate(const ap_parser_t *parser, const ap_subcommand_t **command_path, size_t path_length) {
     (void)parser;
-    (void)subcmd;
+    (void)command_path;
+    (void)path_length;
     return NULL;
 }
 

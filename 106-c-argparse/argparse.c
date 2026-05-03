@@ -216,10 +216,28 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
         }
         
         if (strncmp(current_arg, "--", 2) == 0) {
-            const char *arg_name = current_arg + 2;
+            const char *arg_name_start = current_arg + 2;
+            char arg_name_buf[256];
+            const char *eq_pos = strchr(current_arg, '=');
+            size_t name_len;
+            
+            if (eq_pos) {
+                name_len = eq_pos - arg_name_start;
+            } else {
+                name_len = strlen(arg_name_start);
+            }
+            
+            if (name_len >= sizeof(arg_name_buf)) {
+                arg_idx++;
+                continue;
+            }
+            
+            strncpy(arg_name_buf, arg_name_start, name_len);
+            arg_name_buf[name_len] = '\0';
+            
             const ap_arg_def_t *found = NULL;
             for (size_t i = 0; i < all_arg_count; i++) {
-                if (all_args[i]->name && strcmp(all_args[i]->name, arg_name) == 0) {
+                if (all_args[i]->name && strcmp(all_args[i]->name, arg_name_buf) == 0) {
                     found = all_args[i];
                     break;
                 }
@@ -231,21 +249,24 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
             }
             
             ap_parsed_arg_t *res = NULL;
-            if (found->type == AP_TYPE_BOOL) {
-                for (size_t i = 0; i < result->global_result_count; i++) {
-                    if (result->global_results[i].def == found) {
-                        res = &result->global_results[i];
+            for (size_t i = 0; i < result->global_result_count; i++) {
+                if (result->global_results[i].def->name && found->name &&
+                    strcmp(result->global_results[i].def->name, found->name) == 0) {
+                    res = &result->global_results[i];
+                    break;
+                }
+            }
+            if (!res && current_subcmd) {
+                for (size_t i = 0; i < result->current_result_count; i++) {
+                    if (result->current_results[i].def->name && found->name &&
+                        strcmp(result->current_results[i].def->name, found->name) == 0) {
+                        res = &result->current_results[i];
                         break;
                     }
                 }
-                if (!res && current_subcmd) {
-                    for (size_t i = 0; i < result->current_result_count; i++) {
-                        if (result->current_results[i].def == found) {
-                            res = &result->current_results[i];
-                            break;
-                        }
-                    }
-                }
+            }
+            
+            if (found->type == AP_TYPE_BOOL) {
                 if (res) {
                     res->is_set = true;
                     res->occurrence_count++;
@@ -259,23 +280,6 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                 } else if (arg_idx + 1 < argc) {
                     arg_idx++;
                     value = argv[arg_idx];
-                }
-                
-                if (res == NULL) {
-                    for (size_t i = 0; i < result->global_result_count; i++) {
-                        if (result->global_results[i].def == found) {
-                            res = &result->global_results[i];
-                            break;
-                        }
-                    }
-                }
-                if (!res && current_subcmd) {
-                    for (size_t i = 0; i < result->current_result_count; i++) {
-                        if (result->current_results[i].def == found) {
-                            res = &result->current_results[i];
-                            break;
-                        }
-                    }
                 }
                 if (res && value) {
                     res->is_set = true;
@@ -309,14 +313,16 @@ ap_parse_result_t* ap_parse(const ap_parser_t *parser, int argc, char *argv[]) {
                 if (found) {
                     ap_parsed_arg_t *res = NULL;
                     for (size_t i = 0; i < result->global_result_count; i++) {
-                        if (result->global_results[i].def == found) {
+                        if (result->global_results[i].def->name && found->name &&
+                            strcmp(result->global_results[i].def->name, found->name) == 0) {
                             res = &result->global_results[i];
                             break;
                         }
                     }
                     if (!res && current_subcmd) {
                         for (size_t i = 0; i < result->current_result_count; i++) {
-                            if (result->current_results[i].def == found) {
+                            if (result->current_results[i].def->name && found->name &&
+                                strcmp(result->current_results[i].def->name, found->name) == 0) {
                                 res = &result->current_results[i];
                                 break;
                             }
