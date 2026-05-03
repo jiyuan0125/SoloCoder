@@ -18,3 +18,23 @@
 | 分支/文件夹 | 84-c-ini-parser |
 
 ---
+
+## 84-c-ini-parser — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我测了下 include 和 save 的配合。解析的时候 include 没问题，能正确读进来被引用的文件内容。但我调了 ini_save 把配置写回文件后，打开保存的文件一看，原来的 include = xxx.ini 那行没了，被 include 的文件内容直接内联展开进来了。这样下次再 load 这个保存后的文件，include 引用就永久丢了，外部文件改了也不会同步过来。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 84-c-ini-parser |
+
+---
+
