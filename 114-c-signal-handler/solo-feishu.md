@@ -18,3 +18,22 @@
 | 分支/文件夹 | 114-c-signal-handler |
 
 ---
+
+## 114-c-signal-handler — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我刚跑了下这个信号处理模块，发现 kill -TERM 之后程序直接退出了，优雅停机的那些步骤（stop accepting、等请求完成、flush logs、close sockets、释放资源）一条都没执行，终端上也没看到 "Step 1: Stopping to accept" 这些日志。main.c 里 while 循环的条件 `!signal_handler_is_stop_requested()` 会在收到信号时直接退出循环，导致循环体内调用 shutdown_execute() 的代码根本跑不到。还有 main.c 里有个 g_request_mutex 声明了但没用到，编译的时候 chdir 那行有个 warning。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：shutdown_execute() 在 shutdown.c 中通过 pthread_mutex_trylock 获取 g_shutdown_mutex 后，在 while 循环中等待 g_active_request_count 变为 0（Step 2 等待活跃请求完成）。但 worker 线程完成请求后调用 shutdown_decrement_active_requests() 时需要 pthread_mutex_lock 获取同一把 g_shutdown_mutex 才能递减计数。shutdown_execute 持锁等待计数归零，worker 线程等锁才能递减计数，形成死锁。实际测试：无活跃请求时 kill -TERM 优雅停机 6 步全部正常执行；有活跃请求时 kill -TERM 程序永远卡在 Step 2，后续 Step 3-6 永远不会执行。过程不满意：R1 已反馈 kill -TERM 后停机步骤不执行，R2 修了主循环条件让 shutdown_execute 能被调用，但没有在有活跃请求的场景下实际测试，导致持锁等待与递减计数之间的死锁未被发现 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 114-c-signal-handler |
+
+---
