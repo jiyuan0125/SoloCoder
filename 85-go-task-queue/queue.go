@@ -236,7 +236,7 @@ func (q *TaskQueue) taskFailed(task *Task, err error) {
 
 	atomic.AddUint64(&q.stats.retries, 1)
 
-	if task.retryCount >= task.MaxRetries {
+	if task.retryCount > task.MaxRetries {
 		q.mu.Lock()
 		q.deadLetters = append(q.deadLetters, task)
 		q.mu.Unlock()
