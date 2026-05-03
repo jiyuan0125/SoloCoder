@@ -52,7 +52,7 @@ static int smtp_auth_login(int fd, const char *username, const char *password);
 static int smtp_mail_from(int fd, const char *from);
 static int smtp_rcpt_to(int fd, const char *to);
 static int smtp_data(int fd);
-static int smtp_data_end(int fd);
+static int smtp_data_end(int fd, int *out_code);
 static int smtp_quit_internal(int fd);
 static char *read_file(const char *path, size_t *size);
 static char *get_mime_type(const char *filename);
@@ -468,17 +468,21 @@ static int smtp_data(int fd) {
     return 0;
 }
 
-static int smtp_data_end(int fd) {
+static int smtp_data_end(int fd, int *out_code) {
     char response[SMTP_BUFFER_SIZE];
-    int code;
+    int code = 0;
 
     if (socket_send_all(fd, "\r\n.\r\n", 5) < 0) {
+        if (out_code) *out_code = 0;
         return -1;
     }
 
     if (socket_recv_response(fd, response, sizeof(response), &code) < 0) {
+        if (out_code) *out_code = 0;
         return -1;
     }
+
+    if (out_code) *out_code = code;
 
     if (code < 200 || code >= 300) {
         set_error("DATA end failed with code %d: %s", code, response);
@@ -962,6 +966,7 @@ static int smtp_send_mail_internal(const smtp_mail_t *mail, int retry_count) {
     smtp_connection_t *conn = NULL;
     char response[SMTP_BUFFER_SIZE];
     int code;
+    int server_code = 0;
     int supports_starttls = 0;
     int supports_auth = 0;
     int fd = -1;
@@ -1030,17 +1035,14 @@ static int smtp_send_mail_internal(const smtp_mail_t *mail, int retry_count) {
         fd = conn->socket_fd;
     }
 
-    /* 构建邮件 */
+    /* 构建邮件 - malloc 失败不重试 */
     size_t msg_size;
     message = build_mime_message(mail, &msg_size);
     if (message == NULL) {
-        if (retry_count < SMTP_MAX_RETRY) {
-            if (conn) {
-                close(conn->socket_fd);
-                free(conn->server);
-                free(conn);
-            }
-            return smtp_send_mail_internal(mail, retry_count + 1);
+        if (conn) {
+            close(conn->socket_fd);
+            free(conn->server);
+            free(conn);
         }
         return SMTP_ERROR_MEMORY;
     }
@@ -1088,12 +1090,14 @@ static int smtp_send_mail_internal(const smtp_mail_t *mail, int retry_count) {
         goto cleanup;
     }
 
-    /* 结束 DATA */
-    if (smtp_data_end(fd) < 0) {
-        if (strstr(g_last_error, "5") != NULL) {
+    /* 结束 DATA - 正确获取状态码 */
+    if (smtp_data_end(fd, &server_code) < 0) {
+        if (server_code >= 500 && server_code < 600) {
             ret = SMTP_ERROR_SERVER_5XX;
-        } else {
+        } else if (server_code >= 400 && server_code < 500) {
             ret = SMTP_ERROR_SERVER_4XX;
+        } else {
+            ret = SMTP_ERROR_PROTOCOL;
         }
         goto cleanup;
     }
@@ -1106,19 +1110,15 @@ static int smtp_send_mail_internal(const smtp_mail_t *mail, int retry_count) {
 cleanup:
     free(message);
 
-    /* 检查是否需要重试 */
+    /* 检查是否需要重试 - 只有 5xx 服务器错误才重试 */
     if (ret != SMTP_OK && retry_count < SMTP_MAX_RETRY) {
-        /* 5xx 错误重试 */
-        if (ret == SMTP_ERROR_SERVER_5XX || 
-            (strstr(g_last_error, "5") != NULL && strstr(g_last_error, "code") != NULL)) {
-            
+        if (ret == SMTP_ERROR_SERVER_5XX) {
             if (conn) {
                 close(conn->socket_fd);
                 free(conn->server);
                 free(conn);
             }
             
-            /* 等待 */
             sleep(SMTP_RETRY_INTERVAL);
             
             return smtp_send_mail_internal(mail, retry_count + 1);
