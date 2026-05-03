@@ -1,0 +1,1 @@
+我跑了下 demo，发现提交的两个 crash 任务（Task #9 和 #16）虽然线程恢复过来了继续处理后续任务，但它们都设置了 completion 回调，跑完之后看日志完全没有 [Callback] 输出。正常任务的回调都有打印，就崩溃任务的没有。你看看 crash recovery 那块是不是 continue 跳过了回调调用。
