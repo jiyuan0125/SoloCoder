@@ -1,0 +1,23 @@
+用 Go 写一个动态工作池。支持任务提交、超时执行、自动扩缩容和 panic 恢复。
+
+核心 API：
+1. pool.Submit(task func() error) (Future, error)：提交任务。返回 Future 用于获取结果。pool 关闭后返回 error
+2. pool.SubmitWithTimeout(task func() error, timeout time.Duration) (Future, error)：提交带超时的任务。超时后 Future 返回 TimeoutError，但 worker 继续执行完（不中断 worker）
+3. future.Result() (error, error)：阻塞等待任务结果。可以设置 timeout
+
+自动扩缩容：
+4. 初始 N 个 worker，如果任务队列积压超过 Threshold（默认 N*10）则创建新 worker
+5. 新 worker 总数不超过 MaxWorkers（默认 32）
+6. 空闲超过 IdleTimeout（默认 10 秒）的额外 worker 自动退出（恢复到初始数量）
+
+Panic 恢复：
+7. worker 执行任务时如果 panic，recover 住并记录 panic 信息到 stderr
+8. panic 的 worker goroutine 立即被替换为一个新 worker，不能让池子缺少 worker
+9. Future 收到 PanicError（包含 panic 的堆栈信息）
+
+优雅关闭：
+10. pool.Stop()：不再接受新任务，等正在执行的任务完成再返回
+11. pool.StopTimeout(timeout)：最多等指定时间，超时后未完成的任务标记为 Dropped
+12. Stop 返回（完成数, dropped 数）
+
+代码分 pool.go、worker.go、future.go 几个 package，go build 能过。
