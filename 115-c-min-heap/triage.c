@@ -30,7 +30,7 @@ int triage_add_patient(TriageSystem* ts, int priority, time_t arrival_time) {
     return patient_id;
 }
 
-int triage_call_next(TriageSystem* ts, Patient* out_patient) {
+int triage_call_next(TriageSystem* ts, Patient* out_patient, time_t current_time) {
     Patient patient;
     int patient_id = pq_extract_next(&ts->pq, &patient);
 
@@ -38,12 +38,11 @@ int triage_call_next(TriageSystem* ts, Patient* out_patient) {
         return -1;
     }
 
-    time_t now = time(NULL);
-    double wait_time = difftime(now, patient.arrival_time);
+    double wait_time = difftime(current_time, patient.arrival_time);
 
     int pri_idx = patient.priority - 1;
     ts->stats.priority_stats[pri_idx].total_wait_time += wait_time;
-    ts->stats.priority_stats[pri_idx].count++;
+    ts->stats.priority_stats[pri_idx].processed_count++;
     if (wait_time > ts->stats.priority_stats[pri_idx].max_wait_time) {
         ts->stats.priority_stats[pri_idx].max_wait_time = wait_time;
     }
@@ -85,7 +84,7 @@ int triage_check_priority_upgrade(TriageSystem* ts, time_t current_time) {
         }
 
         if (new_priority != p.priority) {
-            int result = pq_change_priority(&ts->pq, p.id, new_priority);
+            int result = pq_change_priority(&ts->pq, p.id, new_priority, current_time);
             if (result == 0) {
                 upgraded++;
                 if (ts->callback != NULL) {
@@ -128,15 +127,6 @@ int triage_check_timeouts(TriageSystem* ts, time_t current_time) {
     }
 
     return timeouts;
-}
-
-void triage_update_stats(TriageSystem* ts, time_t current_time) {
-    (void)current_time;
-    for (int p = 1; p <= 5; p++) {
-        int count = pq_get_priority_count(&ts->pq, p);
-        int pri_idx = p - 1;
-        ts->stats.priority_stats[pri_idx].count = count;
-    }
 }
 
 void triage_get_stats(const TriageSystem* ts, SystemStats* out_stats) {

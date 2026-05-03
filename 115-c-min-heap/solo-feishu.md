@@ -18,3 +18,22 @@
 | 分支/文件夹 | 115-c-min-heap |
 
 ---
+
+## 115-c-min-heap — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | （待填写） |
+| 第一轮Session ID | （待填写） |
+| 轮次 | 2 |
+| User Prompt | 跑了一下发现统计报告里的等待时间全不对，病人等了几分钟结果显示 2900 万分钟。我看代码里 triage_call_next 和 pq_change_priority 都用的 time(NULL) 取真实时间算等待，但 main 里明明有 g_simulated_time 在模拟，这两个函数没有接收当前时间参数。另外优先级升级之后堆里旧的节点标记 is_valid=0 但一直没被清理掉，cleanup_invalid_nodes 只清堆顶的，跑久了堆空间应该会耗尽。还有 triage_update_stats 里把排队人数直接写到了 count 字段，把之前叫号时统计的已处理人数给覆盖了。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 115-c-min-heap |
+
+---

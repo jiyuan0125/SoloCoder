@@ -29,7 +29,7 @@ typedef enum {
 } PriorityLevel;
 
 typedef struct {
-    int count;
+    int processed_count;
     double total_wait_time;
     double max_wait_time;
 } PriorityStats;

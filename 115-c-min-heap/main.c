@@ -102,7 +102,7 @@ int main(void) {
 
         if (doctor_available && !pq_is_empty(&ts.pq)) {
             Patient p;
-            int called = triage_call_next(&ts, &p);
+            int called = triage_call_next(&ts, &p, g_simulated_time);
             if (called > 0) {
                 doctor_available = 0;
             }
@@ -139,7 +139,7 @@ int main(void) {
                 Patient p;
                 if (pq_get_patient(&ts.pq, evt.id, &p) == 0) {
                     int old_pri = p.priority;
-                    int result = pq_change_priority(&ts.pq, evt.id, evt.new_priority);
+                    int result = pq_change_priority(&ts.pq, evt.id, evt.new_priority, g_simulated_time);
                     if (result == 0) {
                         if (evt.new_priority < old_pri) {
                             printf("[手动调整] 病人 #%d 从 %d 级 升级到 %d 级\n",
@@ -166,7 +166,6 @@ int main(void) {
     printf("模拟结束 - 最终统计\n");
     print_separator();
 
-    triage_update_stats(&ts, g_simulated_time);
     monitor_generate_stats_report(&ts, &report, g_simulated_time);
     monitor_print_report(&report);
 

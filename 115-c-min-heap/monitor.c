@@ -56,24 +56,24 @@ int monitor_generate_stats_report(const TriageSystem* ts, MonitorReport* report,
         int waiting = triage_get_priority_count(ts, p);
 
         double avg_wait = 0;
-        if (ps.count > 0) {
-            avg_wait = ps.total_wait_time / ps.count / 60.0;
+        if (ps.processed_count > 0) {
+            avg_wait = ps.total_wait_time / ps.processed_count / 60.0;
         }
 
         report_append(report, "[%d级 - %s]\n", p, get_priority_description(p));
         report_append(report, "  时间限制: %d 分钟\n", get_priority_time_limit(p));
         report_append(report, "  当前排队: %d 人\n", waiting);
-        report_append(report, "  已处理: %d 人\n", ps.count);
+        report_append(report, "  已处理: %d 人\n", ps.processed_count);
         report_append(report, "  平均等待: %.1f 分钟\n", avg_wait);
         report_append(report, "  最长等待: %.1f 分钟\n", ps.max_wait_time / 60.0);
         report_append(report, "\n");
 
-        if (ps.count > 0) {
+        if (ps.processed_count > 0) {
             overall_total += ps.total_wait_time;
             if (ps.max_wait_time > overall_max) {
                 overall_max = ps.max_wait_time;
             }
-            overall_count += ps.count;
+            overall_count += ps.processed_count;
         }
     }
 

@@ -55,11 +55,55 @@ static void heapify_down(PriorityQueue* pq, int index) {
     }
 }
 
+static void full_cleanup_invalid_nodes(PriorityQueue* pq) {
+    HeapNode temp_heap[HEAP_CAPACITY];
+    int new_size = 0;
+
+    for (int i = 0; i < pq->size; i++) {
+        if (pq->heap[i].is_valid) {
+            temp_heap[new_size++] = pq->heap[i];
+        }
+    }
+
+    memcpy(pq->heap, temp_heap, sizeof(HeapNode) * new_size);
+    pq->size = new_size;
+
+    for (int i = (new_size - 1) / 2; i >= 0; i--) {
+        int size_before = pq->size;
+        int idx = i;
+        while (1) {
+            int left = 2 * idx + 1;
+            int right = 2 * idx + 2;
+            int smallest = idx;
+
+            if (left < size_before && heap_compare(&pq->heap[left], &pq->heap[smallest]) < 0) {
+                smallest = left;
+            }
+            if (right < size_before && heap_compare(&pq->heap[right], &pq->heap[smallest]) < 0) {
+                smallest = right;
+            }
+
+            if (smallest != idx) {
+                heap_swap(&pq->heap[idx], &pq->heap[smallest]);
+                idx = smallest;
+            } else {
+                break;
+            }
+        }
+    }
+}
+
 static void cleanup_invalid_nodes(PriorityQueue* pq) {
     while (pq->size > 0 && !pq->heap[0].is_valid) {
         pq->heap[0] = pq->heap[pq->size - 1];
         pq->size--;
-        heapify_down(pq, 0);
+        if (pq->size > 0) {
+            heapify_down(pq, 0);
+        }
+    }
+
+    if (pq->size > HEAP_CAPACITY / 2) {
+        full_cleanup_invalid_nodes(pq);
     }
 }
 
@@ -143,7 +187,7 @@ int pq_peek_next(const PriorityQueue* pq, Patient* out_patient) {
     return patient_id;
 }
 
-int pq_change_priority(PriorityQueue* pq, int patient_id, int new_priority) {
+int pq_change_priority(PriorityQueue* pq, int patient_id, int new_priority, time_t current_time) {
     if (patient_id < 1 || patient_id >= pq->next_patient_id) {
         return -1;
     }
@@ -167,14 +211,15 @@ int pq_change_priority(PriorityQueue* pq, int patient_id, int new_priority) {
         }
     }
 
+    full_cleanup_invalid_nodes(pq);
+
     patient->priority = new_priority;
-    time_t now = time(NULL);
-    patient->queue_time = now;
+    patient->queue_time = current_time;
 
     HeapNode new_node;
     new_node.patient_id = patient_id;
     new_node.priority = new_priority;
-    new_node.queue_time = now;
+    new_node.queue_time = current_time;
     new_node.is_valid = 1;
 
     if (pq->size >= HEAP_CAPACITY) {

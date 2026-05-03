@@ -24,7 +24,7 @@ void pq_init(PriorityQueue* pq);
 int pq_add_patient(PriorityQueue* pq, int priority, time_t arrival_time);
 int pq_extract_next(PriorityQueue* pq, Patient* out_patient);
 int pq_peek_next(const PriorityQueue* pq, Patient* out_patient);
-int pq_change_priority(PriorityQueue* pq, int patient_id, int new_priority);
+int pq_change_priority(PriorityQueue* pq, int patient_id, int new_priority, time_t current_time);
 int pq_remove_patient(PriorityQueue* pq, int patient_id);
 int pq_is_empty(const PriorityQueue* pq);
 int pq_get_size(const PriorityQueue* pq);
