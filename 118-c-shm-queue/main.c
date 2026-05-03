@@ -118,6 +118,9 @@ int main(int argc, char *argv[]) {
     int status;
     int ret;
     
+    (void)argc;
+    (void)argv;
+    
     setup_signal_handler();
     
     printf("=== 共享内存消息队列演示程序 ===\n");

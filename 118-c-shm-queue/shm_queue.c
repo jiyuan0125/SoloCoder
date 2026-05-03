@@ -337,7 +337,6 @@ int shmq_send(shm_queue_t *q, const void *data, size_t len, int timeout_ms) {
     
     sem_sync_post(&priv->sems.mutex);
     sem_sync_post(&priv->sems.full);
-    sem_sync_post(&priv->sems.empty);
     
     return SHMQ_OK;
 }
@@ -378,6 +377,7 @@ int shmq_recv(shm_queue_t *q, void *data, size_t *len, int timeout_ms) {
     }
     
     sem_sync_post(&priv->sems.mutex);
+    sem_sync_post(&priv->sems.empty);
     
     return SHMQ_OK;
 }
