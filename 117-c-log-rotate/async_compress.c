@@ -8,6 +8,12 @@
 #include <sys/wait.h>
 #include <errno.h>
 
+static int file_exists(const char *path)
+{
+    struct stat st;
+    return (stat(path, &st) == 0);
+}
+
 int compress_sync(const char *src_path, const char *dst_path)
 {
     if (src_path == NULL || dst_path == NULL) {
@@ -25,44 +31,39 @@ int compress_sync(const char *src_path, const char *dst_path)
     }
     
     char tmp_path[COMPRESS_MAX_PATH];
-    snprintf(tmp_path, sizeof(tmp_path), "%s.tmp", dst_path);
+    snprintf(tmp_path, sizeof(tmp_path), "%s.XXXXXX", dst_path);
     
-    FILE *src = fopen(src_path, "rb");
-    if (src == NULL) {
+    int fd = mkstemp(tmp_path);
+    if (fd < 0) {
         return -1;
     }
+    close(fd);
     
-    char gzip_cmd[1024];
-    snprintf(gzip_cmd, sizeof(gzip_cmd), "gzip > '%s'", tmp_path);
+    char gzip_cmd[2048];
+    snprintf(gzip_cmd, sizeof(gzip_cmd), "gzip -c '%s' > '%s'", src_path, tmp_path);
     
-    FILE *gzip = popen(gzip_cmd, "w");
-    if (gzip == NULL) {
-        fclose(src);
-        return -1;
-    }
-    
-    char buf[4096];
-    size_t bytes_read;
-    while ((bytes_read = fread(buf, 1, sizeof(buf), src)) > 0) {
-        fwrite(buf, 1, bytes_read, gzip);
-    }
-    
-    fclose(src);
-    int ret = pclose(gzip);
+    int ret = system(gzip_cmd);
     
     if (ret != 0) {
         unlink(tmp_path);
+        unlink(src_path);
         return -1;
     }
     
     struct stat tmp_st;
     if (stat(tmp_path, &tmp_st) != 0 || tmp_st.st_size == 0) {
         unlink(tmp_path);
+        unlink(src_path);
         return -1;
+    }
+    
+    if (file_exists(dst_path)) {
+        unlink(dst_path);
     }
     
     if (rename(tmp_path, dst_path) != 0) {
         unlink(tmp_path);
+        unlink(src_path);
         return -1;
     }
     

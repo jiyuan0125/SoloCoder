@@ -77,6 +77,35 @@ static int needs_rotate_by_time(log_rotate_t *lr)
     return 0;
 }
 
+static int copy_file(const char *src, const char *dst)
+{
+    FILE *f_src = fopen(src, "rb");
+    if (f_src == NULL) {
+        return -1;
+    }
+    
+    FILE *f_dst = fopen(dst, "wb");
+    if (f_dst == NULL) {
+        fclose(f_src);
+        return -1;
+    }
+    
+    char buf[4096];
+    size_t bytes_read;
+    while ((bytes_read = fread(buf, 1, sizeof(buf), f_src)) > 0) {
+        if (fwrite(buf, 1, bytes_read, f_dst) != bytes_read) {
+            fclose(f_src);
+            fclose(f_dst);
+            unlink(dst);
+            return -1;
+        }
+    }
+    
+    fclose(f_src);
+    fclose(f_dst);
+    return 0;
+}
+
 static int perform_rotate(log_rotate_t *lr)
 {
     if (lr->fp == NULL) {
@@ -96,56 +125,74 @@ static int perform_rotate(log_rotate_t *lr)
         }
     }
     
+    if (lr->config.max_backups == 0) {
+        unlink(lr->config.base_path);
+        lr->fp = fopen(lr->config.base_path, "w");
+        return (lr->fp != NULL) ? 0 : -1;
+    }
+    
     char backup_path[LOG_ROTATE_MAX_PATH];
+    char compress_src[LOG_ROTATE_MAX_PATH];
+    char compress_dst[LOG_ROTATE_MAX_PATH];
+    char unique_suffix[64];
     int backup_created = 0;
     
-    if (lr->config.max_backups > 0) {
-        if (rotate_by_time && (lr->config.mode & LOG_ROTATE_MODE_TIME)) {
-            if (backup_create_with_date(lr->config.base_path, NULL) == 0) {
-                backup_created = 1;
-            }
-        } else {
-            backup_shift(lr->config.base_path, lr->config.max_backups);
-            
-            if (backup_generate_filename(backup_path, sizeof(backup_path), 
-                                         lr->config.base_path, 1) == 0) {
-                if (rename(lr->config.base_path, backup_path) == 0) {
-                    backup_created = 1;
+    if (rotate_by_time && (lr->config.mode & LOG_ROTATE_MODE_TIME)) {
+        if (backup_create_with_date(lr->config.base_path, NULL) == 0) {
+            backup_created = 1;
+            struct tm *tm_info = localtime(&lr->last_rotate_date);
+            if (tm_info != NULL) {
+                char date_str[32];
+                strftime(date_str, sizeof(date_str), "%Y-%m-%d", tm_info);
+                snprintf(compress_src, sizeof(compress_src), "%s.%s", 
+                         lr->config.base_path, date_str);
+                snprintf(compress_dst, sizeof(compress_dst), "%s.%s.gz", 
+                         lr->config.base_path, date_str);
+                
+                if (lr->config.compress_enabled) {
+                    snprintf(unique_suffix, sizeof(unique_suffix), "%lx_%u", 
+                             (unsigned long)time(NULL), (unsigned int)getpid());
+                    
+                    char tmp_compress_src[LOG_ROTATE_MAX_PATH];
+                    snprintf(tmp_compress_src, sizeof(tmp_compress_src), "%s.tmp.%s", 
+                             compress_src, unique_suffix);
+                    
+                    if (copy_file(compress_src, tmp_compress_src) == 0) {
+                        ensure_compressor_init();
+                        async_compress_submit(&g_compressor, tmp_compress_src, compress_dst);
+                    }
                 }
+            }
+        }
+    } else {
+        backup_shift(lr->config.base_path, lr->config.max_backups);
+        
+        if (backup_generate_filename(backup_path, sizeof(backup_path), 
+                                     lr->config.base_path, 1) == 0) {
+            if (rename(lr->config.base_path, backup_path) == 0) {
+                backup_created = 1;
             }
         }
         
         if (backup_created && lr->config.compress_enabled) {
-            ensure_compressor_init();
+            snprintf(unique_suffix, sizeof(unique_suffix), "%lx_%u", 
+                     (unsigned long)time(NULL), (unsigned int)getpid());
             
-            char compress_src[LOG_ROTATE_MAX_PATH];
-            char compress_dst[LOG_ROTATE_MAX_PATH];
+            snprintf(compress_src, sizeof(compress_src), "%s.tmp.%s", 
+                     backup_path, unique_suffix);
             
-            if (rotate_by_time && (lr->config.mode & LOG_ROTATE_MODE_TIME)) {
-                struct tm *tm_info = localtime(&lr->last_rotate_date);
-                if (tm_info != NULL) {
-                    char date_str[32];
-                    strftime(date_str, sizeof(date_str), "%Y-%m-%d", tm_info);
-                    snprintf(compress_src, sizeof(compress_src), "%s.%s", 
-                             lr->config.base_path, date_str);
-                    snprintf(compress_dst, sizeof(compress_dst), "%s.%s.gz", 
-                             lr->config.base_path, date_str);
-                } else {
-                    strncpy(compress_src, backup_path, sizeof(compress_src) - 1);
-                    snprintf(compress_dst, sizeof(compress_dst), "%s.gz", backup_path);
-                }
-            } else {
-                strncpy(compress_src, backup_path, sizeof(compress_src) - 1);
-                snprintf(compress_dst, sizeof(compress_dst), "%s.gz", backup_path);
+            if (copy_file(backup_path, compress_src) == 0) {
+                snprintf(compress_dst, sizeof(compress_dst), "%s.gz", 
+                         backup_path);
+                ensure_compressor_init();
+                async_compress_submit(&g_compressor, compress_src, compress_dst);
             }
-            
-            async_compress_submit(&g_compressor, compress_src, compress_dst);
         }
-        
-        backup_cleanup(lr->config.base_path, lr->config.max_backups);
     }
     
-    lr->fp = fopen(lr->config.base_path, "a");
+    backup_cleanup(lr->config.base_path, lr->config.max_backups);
+    
+    lr->fp = fopen(lr->config.base_path, "w");
     if (lr->fp == NULL) {
         return -1;
     }

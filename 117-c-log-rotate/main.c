@@ -161,6 +161,9 @@ int main(void)
     log_rotate_destroy(&lr);
     log_rotate_cleanup_compressor();
     
+    printf("\nCleaning up temp files...\n");
+    backup_cleanup_temp_files(LOG_FILE);
+    
     printf("\n========================================\n");
     printf("  Demo completed successfully!\n");
     printf("========================================\n");
