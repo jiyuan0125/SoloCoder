@@ -11,32 +11,11 @@
 #include <errno.h>
 #include <stdint.h>
 #include <time.h>
-#include <byteswap.h>
 #include <fcntl.h>
+#include "heartbeat_protocol.h"
 
-#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-#define htonll(x) bswap_64(x)
-#define ntohll(x) bswap_64(x)
-#else
-#define htonll(x) (x)
-#define ntohll(x) (x)
-#endif
-
-#define HEARTBEAT_MAGIC 0xDEADBEEF
-#define HEARTBEAT_CLIENT_ID_LEN 20
-#define HEARTBEAT_PORT 9999
 #define HEARTBEAT_INTERVAL_SEC 2
-#define HEARTBEAT_RECV_TIMEOUT_SEC 3
 #define MAX_MISSING_ACKS 3
-
-#pragma pack(push, 1)
-typedef struct {
-    uint32_t magic;
-    uint32_t seq_num;
-    uint64_t timestamp;
-    char client_id[HEARTBEAT_CLIENT_ID_LEN];
-} heartbeat_packet_t;
-#pragma pack(pop)
 
 static volatile int g_running = 1;
 static int g_sockfd = -1;
@@ -95,6 +74,7 @@ static int send_heartbeat(int sockfd, const struct sockaddr_in *server_addr,
     packet.seq_num = htonl(g_seq_num);
     packet.timestamp = htonll(get_timestamp_ms());
     strncpy(packet.client_id, client_id, HEARTBEAT_CLIENT_ID_LEN - 1);
+    packet.client_id[HEARTBEAT_CLIENT_ID_LEN - 1] = '\0';
     
     ssize_t n = sendto(sockfd, &packet, sizeof(packet), 0,
                         (struct sockaddr *)server_addr, sizeof(*server_addr));
@@ -265,7 +245,6 @@ int main(int argc, char *argv[]) {
             
             if (recv_ret < 0) {
                 fprintf(stderr, "Error receiving ACK\n");
-            } else if (recv_ret == 0) {
             }
             
             usleep(100000);
