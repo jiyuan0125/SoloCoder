@@ -37,3 +37,22 @@
 | 分支/文件夹 | 112-c-udp-echo |
 
 ---
+
+## 112-c-udp-echo — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 3 |
+| User Prompt | 看了下client_sim.c，发现里面把heartbeat_protocol.h里的结构体、宏什么的又重新定义了一遍，比如heartbeat_packet_t、htonll这些，两边的定义完全一样。另外.gitignore里也没加上编译出来的heartbeat_server和heartbeat_client这两个二进制，git status的时候会看到它们。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 网络服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 112-c-udp-echo |
+
+---
