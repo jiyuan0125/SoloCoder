@@ -52,14 +52,16 @@ func (p *Proxy) handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if !backend.Breaker.Acquire() {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		fmt.Fprintln(w, "503 Service Unavailable: Backend is in half-open state")
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(p.config.Timeout)*time.Second)
 	defer cancel()
 
 	r = r.WithContext(ctx)
-
-	go func() {
-		<-ctx.Done()
-	}()
 
 	resp, err := p.forwardRequest(r, backend)
 	if err != nil {

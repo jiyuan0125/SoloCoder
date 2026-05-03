@@ -43,19 +43,26 @@ func (b *Breaker) Allow() bool {
 		if time.Since(b.lastFailureTime) >= Timeout {
 			b.state = StateHalfOpen
 			b.failureCount = 0
-			b.halfOpenPending = true
+			b.halfOpenPending = false
 			return true
 		}
 		return false
 	case StateHalfOpen:
-		if b.halfOpenPending {
-			return false
-		}
-		b.halfOpenPending = true
-		return true
+		return !b.halfOpenPending
 	default:
 		return true
 	}
+}
+
+func (b *Breaker) Acquire() bool {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+
+	if b.state == StateHalfOpen && !b.halfOpenPending {
+		b.halfOpenPending = true
+		return true
+	}
+	return b.state == StateClosed
 }
 
 func (b *Breaker) RecordSuccess() {
