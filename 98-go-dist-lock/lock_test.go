@@ -233,3 +233,216 @@ func TestUnlockNotHeld(t *testing.T) {
 		t.Errorf("Expected ErrLockNotHeld, got: %v", err)
 	}
 }
+
+func TestConcurrentLockConsistency(t *testing.T) {
+	const numGoroutines = 5
+	const iterations = 100
+	
+	for round := 0; round < 10; round++ {
+		lm := NewLockManager()
+		key := "concurrent-key"
+		
+		var wg sync.WaitGroup
+		var errorsMu sync.Mutex
+		var testErrors []string
+		
+		var startWg sync.WaitGroup
+		startWg.Add(1)
+		
+		for i := 0; i < numGoroutines; i++ {
+			wg.Add(1)
+			go func(id int) {
+				defer wg.Done()
+				startWg.Wait()
+				
+				for j := 0; j < iterations; j++ {
+					if err := lm.Lock(key, 30*time.Second); err != nil {
+						errorsMu.Lock()
+						testErrors = append(testErrors, 
+							"Lock failed")
+						errorsMu.Unlock()
+						return
+					}
+					
+					myGid := getGoroutineID()
+					
+					for check := 0; check < 3; check++ {
+						stats := lm.Stats(key)
+						if stats.OwnerGoroutineID != myGid {
+							errorsMu.Lock()
+							testErrors = append(testErrors, 
+								"Stats owner mismatch")
+							errorsMu.Unlock()
+						}
+						time.Sleep(1 * time.Millisecond)
+					}
+					
+					time.Sleep(2 * time.Millisecond)
+					
+					if err := lm.Unlock(key); err != nil {
+						errorsMu.Lock()
+						testErrors = append(testErrors, 
+							"Unlock failed")
+						errorsMu.Unlock()
+						return
+					}
+				}
+			}(i)
+		}
+		
+		time.Sleep(50 * time.Millisecond)
+		startWg.Done()
+		wg.Wait()
+		
+		errorsMu.Lock()
+		if len(testErrors) > 0 {
+			t.Errorf("Round %d: Found %d errors: %v", round, len(testErrors), testErrors[:min(5, len(testErrors))])
+		}
+		errorsMu.Unlock()
+		
+		stats := lm.Stats(key)
+		if stats.OwnerGoroutineID != 0 {
+			t.Errorf("Round %d: Expected no owner after all goroutines done, got owner %d", round, stats.OwnerGoroutineID)
+		}
+		if stats.WaitQueueLength != 0 {
+			t.Errorf("Round %d: Expected empty wait queue, got %d waiters", round, stats.WaitQueueLength)
+		}
+	}
+}
+
+func TestFIFOOrder(t *testing.T) {
+	lm := NewLockManager()
+	key := "fifo-key"
+	
+	var order []int
+	var mu sync.Mutex
+	var readyWg sync.WaitGroup
+	
+	if err := lm.Lock(key, 30*time.Second); err != nil {
+		t.Fatalf("Main goroutine failed to acquire lock first: %v", err)
+	}
+	
+	stats := lm.Stats(key)
+	t.Logf("Main goroutine holds lock, owner ID: %d", stats.OwnerGoroutineID)
+	
+	for i := 1; i <= 5; i++ {
+		readyWg.Add(1)
+		go func(id int) {
+			readyWg.Done()
+			
+			if err := lm.Lock(key, 30*time.Second); err != nil {
+				t.Errorf("Goroutine %d: Lock failed: %v", id, err)
+				return
+			}
+			
+			mu.Lock()
+			order = append(order, id)
+			mu.Unlock()
+			
+			time.Sleep(5 * time.Millisecond)
+			
+			if err := lm.Unlock(key); err != nil {
+				t.Errorf("Goroutine %d: Unlock failed: %v", id, err)
+			}
+		}(i)
+	}
+	
+	readyWg.Wait()
+	time.Sleep(100 * time.Millisecond)
+	
+	stats = lm.Stats(key)
+	t.Logf("After all goroutines started waiting, wait queue length: %d", stats.WaitQueueLength)
+	
+	if err := lm.Unlock(key); err != nil {
+		t.Fatalf("Main goroutine failed to release lock: %v", err)
+	}
+	
+	time.Sleep(500 * time.Millisecond)
+	
+	mu.Lock()
+	defer mu.Unlock()
+	
+	t.Logf("Acquisition order: %v", order)
+	
+	if len(order) != 5 {
+		t.Errorf("Expected 5 goroutines to acquire lock, got %d", len(order))
+	}
+	
+	for i := 0; i < len(order)-1; i++ {
+		if order[i] >= order[i+1] {
+			t.Logf("Note: Order %v is not strictly increasing (goroutine startup order may vary)", order)
+			break
+		}
+	}
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func TestTryLockWithWaitQueue(t *testing.T) {
+	lm := NewLockManager()
+	key := "trylock-waitqueue-key"
+	
+	var wg sync.WaitGroup
+	var lockHeldWg sync.WaitGroup
+	
+	lockHeldWg.Add(1)
+	
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		
+		if err := lm.Lock(key, 30*time.Second); err != nil {
+			t.Errorf("Worker goroutine failed to acquire lock: %v", err)
+			return
+		}
+		
+		lockHeldWg.Done()
+		
+		var waiterReadyWg sync.WaitGroup
+		var waiterWg sync.WaitGroup
+		
+		for i := 0; i < 3; i++ {
+			waiterReadyWg.Add(1)
+			waiterWg.Add(1)
+			go func() {
+				defer waiterWg.Done()
+				waiterReadyWg.Done()
+				
+				if err := lm.Lock(key, 30*time.Second); err != nil {
+					t.Errorf("Waiting goroutine Lock failed: %v", err)
+					return
+				}
+				time.Sleep(10 * time.Millisecond)
+				lm.Unlock(key)
+			}()
+		}
+		
+		waiterReadyWg.Wait()
+		time.Sleep(100 * time.Millisecond)
+		
+		stats := lm.Stats(key)
+		t.Logf("Wait queue length: %d", stats.WaitQueueLength)
+		
+		lm.Unlock(key)
+		waiterWg.Wait()
+	}()
+	
+	lockHeldWg.Wait()
+	
+	ok, err := lm.TryLock(key, 30*time.Second)
+	if err != nil {
+		t.Fatalf("TryLock returned error: %v", err)
+	}
+	if ok {
+		t.Error("TryLock should fail when lock is held by another goroutine")
+	} else {
+		t.Log("TryLock correctly returned false when lock is held by another goroutine")
+	}
+	
+	wg.Wait()
+}

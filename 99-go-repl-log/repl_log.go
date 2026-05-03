@@ -18,6 +18,7 @@ const (
 	headerSize     = offsetSize + lengthSize
 	maxFileSize    = 16 * 1024 * 1024
 	baseFileNumber = 1
+	metaFileName   = "log.meta"
 )
 
 var (
@@ -60,8 +61,17 @@ func Open(dir string) (*Log, error) {
 		groups:       make(map[string]int64),
 	}
 
+	metaOffset, err := log.loadMeta()
+	if err != nil {
+		return nil, err
+	}
+
 	if err := log.loadLogFiles(); err != nil {
 		return nil, err
+	}
+
+	if metaOffset >= 0 {
+		log.currentOffset = metaOffset
 	}
 
 	if err := log.loadGroups(); err != nil {
@@ -298,6 +308,10 @@ func (l *Log) Append(entry []byte) (offset int64, err error) {
 		l.files[len(l.files)-1].EndOffset = newOffset
 	}
 
+	if err := l.saveMeta(); err != nil {
+		return -1, err
+	}
+
 	return newOffset, nil
 }
 
@@ -313,14 +327,23 @@ func (l *Log) CreateGroup(name string) error {
 		return ErrGroupExists
 	}
 
-	startOffset := int64(0)
-	if len(l.files) > 0 {
-		startOffset = l.files[0].StartOffset
-	}
+	startOffset := l.getFirstValidOffset()
 
 	l.groups[name] = startOffset
 
 	return l.saveGroupOffset(name, startOffset)
+}
+
+func (l *Log) getFirstValidOffset() int64 {
+	if len(l.files) == 0 {
+		return 0
+	}
+
+	firstFile := l.files[0]
+	if firstFile.StartOffset == -1 {
+		return l.currentOffset + 1
+	}
+	return firstFile.StartOffset
 }
 
 func (l *Log) saveGroupOffset(name string, offset int64) error {
@@ -331,6 +354,33 @@ func (l *Log) saveGroupOffset(name string, offset int64) error {
 	binary.BigEndian.PutUint64(buf, uint64(offset))
 
 	return os.WriteFile(filePath, buf, 0644)
+}
+
+func (l *Log) saveMeta() error {
+	metaPath := filepath.Join(l.dir, metaFileName)
+
+	buf := make([]byte, 8)
+	binary.BigEndian.PutUint64(buf, uint64(l.currentOffset))
+
+	return os.WriteFile(metaPath, buf, 0644)
+}
+
+func (l *Log) loadMeta() (int64, error) {
+	metaPath := filepath.Join(l.dir, metaFileName)
+
+	data, err := os.ReadFile(metaPath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return -1, nil
+		}
+		return -1, err
+	}
+
+	if len(data) != 8 {
+		return -1, ErrCorruptedLog
+	}
+
+	return int64(binary.BigEndian.Uint64(data)), nil
 }
 
 func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
@@ -358,8 +408,8 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 		return [][]byte{}, nil
 	}
 
-	firstFile := l.files[0]
-	if offset < firstFile.StartOffset {
+	firstValidOffset := l.getFirstValidOffset()
+	if offset < firstValidOffset {
 		return nil, ErrTruncated
 	}
 
@@ -374,6 +424,17 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 
 	for fileIdx < len(l.files) && count < maxCount {
 		logFile := l.files[fileIdx]
+
+		if logFile.StartOffset == -1 {
+			fileIdx++
+			continue
+		}
+
+		if currentOffset == logFile.EndOffset+1 {
+			fileIdx++
+			continue
+		}
+
 		filePath := filepath.Join(l.dir, logFile.FileName)
 
 		file, err := os.Open(filePath)
@@ -387,6 +448,7 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 		if currentOffset == logFile.StartOffset {
 			readFromBeginning = true
 		} else {
+			found := false
 			for {
 				n, err := file.Read(header)
 				if err == io.EOF {
@@ -411,6 +473,7 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 						return nil, err
 					}
 					readFromBeginning = true
+					found = true
 					break
 				}
 
@@ -423,6 +486,11 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 					file.Close()
 					return nil, err
 				}
+			}
+			if !found {
+				file.Close()
+				fileIdx++
+				continue
 			}
 		}
 
@@ -483,7 +551,10 @@ func (l *Log) Read(group string, maxCount int) ([][]byte, error) {
 
 func (l *Log) findFileIndexByOffset(offset int64) int {
 	for i, f := range l.files {
-		if offset >= f.StartOffset && offset <= f.EndOffset {
+		if f.StartOffset == -1 {
+			continue
+		}
+		if offset >= f.StartOffset && offset <= f.EndOffset+1 {
 			return i
 		}
 	}
@@ -506,8 +577,8 @@ func (l *Log) Truncate(offset int64) error {
 		return nil
 	}
 
-	firstFile := l.files[0]
-	if offset <= firstFile.StartOffset {
+	firstValidOffset := l.getFirstValidOffset()
+	if offset <= firstValidOffset {
 		return nil
 	}
 
@@ -519,6 +590,9 @@ func (l *Log) Truncate(offset int64) error {
 
 	targetFileIdx := -1
 	for i, f := range l.files {
+		if f.StartOffset == -1 {
+			continue
+		}
 		if offset >= f.StartOffset && offset <= f.EndOffset+1 {
 			targetFileIdx = i
 			break
@@ -530,15 +604,14 @@ func (l *Log) Truncate(offset int64) error {
 	}
 
 	targetFile := l.files[targetFileIdx]
-	needsRewrite := false
-	keepFromOffset := offset
-
-	if offset > targetFile.StartOffset {
-		needsRewrite = true
-	}
 
 	filesToRemove := l.files[:targetFileIdx]
-	l.files = l.files[targetFileIdx:]
+
+	entireFileToRemove := false
+	if offset > targetFile.EndOffset {
+		entireFileToRemove = true
+		filesToRemove = append(filesToRemove, targetFile)
+	}
 
 	for _, f := range filesToRemove {
 		filePath := filepath.Join(l.dir, f.FileName)
@@ -547,17 +620,50 @@ func (l *Log) Truncate(offset int64) error {
 		}
 	}
 
-	if needsRewrite {
-		if err := l.rewriteFileFromOffset(targetFile, keepFromOffset); err != nil {
+	if entireFileToRemove {
+		l.files = l.files[targetFileIdx+1:]
+
+		if len(l.files) == 0 {
+			if l.currentFile != nil {
+				l.currentFile.Close()
+			}
+			if err := l.createNewFile(); err != nil {
+				return err
+			}
+		}
+	} else {
+		l.files = l.files[targetFileIdx:]
+
+		if err := l.rewriteFileFromOffset(targetFile, offset); err != nil {
 			return err
+		}
+
+		if targetFile.StartOffset == -1 {
+			filePath := filepath.Join(l.dir, targetFile.FileName)
+			if err := os.Remove(filePath); err != nil {
+				return err
+			}
+
+			l.files = l.files[1:]
+
+			if len(l.files) == 0 {
+				if l.currentFile != nil {
+					l.currentFile.Close()
+				}
+				if err := l.createNewFile(); err != nil {
+					return err
+				}
+			}
 		}
 	}
 
 	if l.currentFile != nil {
 		l.currentFile.Close()
 	}
-	if err := l.openLastFile(); err != nil {
-		return err
+	if len(l.files) > 0 {
+		if err := l.openLastFile(); err != nil {
+			return err
+		}
 	}
 
 	return nil

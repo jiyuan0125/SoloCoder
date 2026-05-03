@@ -19,7 +19,9 @@ type LockStats struct {
 
 type waiter struct {
 	goroutineID uint64
+	lease       time.Duration
 	notify      chan struct{}
+	granted     bool
 }
 
 type keyLock struct {
@@ -58,10 +60,22 @@ func (lm *LockManager) Lock(key string, lease time.Duration) error {
 	goroutineID := getGoroutineID()
 	kl := lm.getOrCreateKeyLock(key)
 	
-	kl.mu.Lock()
-	
-	if kl.lease != nil {
-		if kl.lease.OwnerID() == goroutineID {
+	for {
+		kl.mu.Lock()
+		
+		if kl.lease == nil && len(kl.waitQueue) == 0 {
+			newLease := NewLease(goroutineID, lease)
+			kl.lease = newLease
+			
+			wd := NewWatchdog(key, newLease, lm.onWatchdogFailure)
+			kl.watchdog = wd
+			wd.Start()
+			
+			kl.mu.Unlock()
+			return nil
+		}
+		
+		if kl.lease != nil && kl.lease.OwnerID() == goroutineID {
 			kl.lease.IncrementCount()
 			kl.mu.Unlock()
 			return nil
@@ -69,25 +83,19 @@ func (lm *LockManager) Lock(key string, lease time.Duration) error {
 		
 		w := &waiter{
 			goroutineID: goroutineID,
+			lease:       lease,
 			notify:      make(chan struct{}),
+			granted:     false,
 		}
 		kl.waitQueue = append(kl.waitQueue, w)
 		kl.mu.Unlock()
 		
 		<-w.notify
 		
-		kl.mu.Lock()
+		if w.granted {
+			return nil
+		}
 	}
-	
-	newLease := NewLease(goroutineID, lease)
-	kl.lease = newLease
-	
-	wd := NewWatchdog(key, newLease, lm.onWatchdogFailure)
-	kl.watchdog = wd
-	wd.Start()
-	
-	kl.mu.Unlock()
-	return nil
 }
 
 func (lm *LockManager) TryLock(key string, lease time.Duration) (bool, error) {
@@ -144,12 +152,21 @@ func (lm *LockManager) Unlock(key string) error {
 		kl.watchdog = nil
 	}
 	
-	kl.lease = nil
-	
 	if len(kl.waitQueue) > 0 {
 		firstWaiter := kl.waitQueue[0]
 		kl.waitQueue = kl.waitQueue[1:]
+		
+		newLease := NewLease(firstWaiter.goroutineID, firstWaiter.lease)
+		kl.lease = newLease
+		
+		wd := NewWatchdog(key, newLease, lm.onWatchdogFailure)
+		kl.watchdog = wd
+		wd.Start()
+		
+		firstWaiter.granted = true
 		close(firstWaiter.notify)
+	} else {
+		kl.lease = nil
 	}
 	
 	return nil
@@ -184,11 +201,20 @@ func (lm *LockManager) onWatchdogFailure(key string) {
 		kl.watchdog = nil
 	}
 	
-	kl.lease = nil
-	
 	if len(kl.waitQueue) > 0 {
 		firstWaiter := kl.waitQueue[0]
 		kl.waitQueue = kl.waitQueue[1:]
+		
+		newLease := NewLease(firstWaiter.goroutineID, firstWaiter.lease)
+		kl.lease = newLease
+		
+		wd := NewWatchdog(key, newLease, lm.onWatchdogFailure)
+		kl.watchdog = wd
+		wd.Start()
+		
+		firstWaiter.granted = true
 		close(firstWaiter.notify)
+	} else {
+		kl.lease = nil
 	}
 }
