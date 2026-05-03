@@ -117,6 +117,10 @@ func (lm *LockManager) TryLock(key string, lease time.Duration) (bool, error) {
 		return false, nil
 	}
 	
+	if len(kl.waitQueue) > 0 {
+		return false, nil
+	}
+	
 	newLease := NewLease(goroutineID, lease)
 	kl.lease = newLease
 	

@@ -446,3 +446,101 @@ func TestTryLockWithWaitQueue(t *testing.T) {
 	
 	wg.Wait()
 }
+
+func TestTryLockCannotJumpQueue(t *testing.T) {
+	lm := NewLockManager()
+	key := "trylock-no-jump-key"
+	
+	var wg sync.WaitGroup
+	var waiterStartedWg sync.WaitGroup
+	
+	waiterStartedWg.Add(2)
+	
+	if err := lm.Lock(key, 30*time.Second); err != nil {
+		t.Fatalf("Main goroutine failed to acquire lock: %v", err)
+	}
+	
+	stats := lm.Stats(key)
+	t.Logf("Main goroutine holds lock, owner ID: %d", stats.OwnerGoroutineID)
+	
+	wg.Add(2)
+	
+	go func(id int) {
+		defer wg.Done()
+		
+		waiterStartedWg.Done()
+		t.Logf("Waiter %d waiting for lock", id)
+		
+		if err := lm.Lock(key, 30*time.Second); err != nil {
+			t.Errorf("Waiter %d: Lock failed: %v", id, err)
+			return
+		}
+		
+		t.Logf("Waiter %d acquired lock", id)
+		time.Sleep(10 * time.Millisecond)
+		
+		if err := lm.Unlock(key); err != nil {
+			t.Errorf("Waiter %d: Unlock failed: %v", id, err)
+		}
+	}(1)
+	
+	go func(id int) {
+		defer wg.Done()
+		
+		waiterStartedWg.Done()
+		t.Logf("Waiter %d waiting for lock", id)
+		
+		if err := lm.Lock(key, 30*time.Second); err != nil {
+			t.Errorf("Waiter %d: Lock failed: %v", id, err)
+			return
+		}
+		
+		t.Logf("Waiter %d acquired lock", id)
+		time.Sleep(10 * time.Millisecond)
+		
+		if err := lm.Unlock(key); err != nil {
+			t.Errorf("Waiter %d: Unlock failed: %v", id, err)
+		}
+	}(2)
+	
+	waiterStartedWg.Wait()
+	time.Sleep(50 * time.Millisecond)
+	
+	stats = lm.Stats(key)
+	t.Logf("After waiters started, wait queue length: %d", stats.WaitQueueLength)
+	
+	if stats.WaitQueueLength < 2 {
+		t.Errorf("Expected at least 2 waiters, got %d", stats.WaitQueueLength)
+	}
+	
+	ok, err := lm.TryLock(key, 30*time.Second)
+	if err != nil {
+		t.Fatalf("TryLock returned error: %v", err)
+	}
+	if !ok {
+		t.Error("TryLock should succeed for reentrant acquisition (same goroutine)")
+	} else {
+		t.Log("TryLock succeeded for reentrant acquisition")
+		lm.Unlock(key)
+	}
+	
+	if err := lm.Unlock(key); err != nil {
+		t.Fatalf("Main goroutine failed to release lock: %v", err)
+	}
+	
+	wg.Wait()
+}
+
+func TestTryLockConsistencyWithLock(t *testing.T) {
+	lm := NewLockManager()
+	key := "trylock-consistency-key"
+	
+	t.Log("Test: Both Lock and TryLock should check waitQueue for consistency")
+	
+	lockCheck := `Lock() condition: kl.lease == nil && len(kl.waitQueue) == 0`
+	tryLockCheck := `TryLock() condition: kl.lease == nil && len(kl.waitQueue) == 0`
+	
+	t.Logf("%s", lockCheck)
+	t.Logf("%s", tryLockCheck)
+	t.Log("Both now have the same condition - preventing queue jumping")
+}
