@@ -1,0 +1,1 @@
+我刚跑了下这个信号处理模块，发现 kill -TERM 之后程序直接退出了，优雅停机的那些步骤（stop accepting、等请求完成、flush logs、close sockets、释放资源）一条都没执行，终端上也没看到 "Step 1: Stopping to accept" 这些日志。main.c 里 while 循环的条件 `!signal_handler_is_stop_requested()` 会在收到信号时直接退出循环，导致循环体内调用 shutdown_execute() 的代码根本跑不到。还有 main.c 里有个 g_request_mutex 声明了但没用到，编译的时候 chdir 那行有个 warning。
