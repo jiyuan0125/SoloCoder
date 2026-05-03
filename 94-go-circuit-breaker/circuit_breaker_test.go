@@ -393,3 +393,57 @@ func TestConcurrentOnStateChangeAndStateTransitionNoDataRace(t *testing.T) {
 	
 	wg.Wait()
 }
+
+func TestHalfOpenProbeIntervalAfterLongOpen(t *testing.T) {
+	openDuration := 100 * time.Millisecond
+	cb := New(WithFailureThreshold(1), WithOpenDuration(openDuration))
+	
+	cb.Allow()
+	cb.RecordFailure(testErr)
+	
+	if cb.State() != StateOpen {
+		t.Error("Expected state to be Open after failure")
+	}
+	
+	time.Sleep(2 * openDuration)
+	
+	allowed, _ := cb.Allow()
+	if !allowed {
+		t.Error("Expected probe request to be allowed after open duration")
+	}
+	if cb.State() != StateHalfOpen {
+		t.Error("Expected state to be HalfOpen")
+	}
+	
+	cb.RecordFailure(testErr)
+	
+	if cb.State() != StateHalfOpen {
+		t.Error("Expected state to remain HalfOpen after probe failure")
+	}
+	
+	start := time.Now()
+	allowed, _ = cb.Allow()
+	elapsed := time.Since(start)
+	
+	if allowed {
+		t.Error("Expected request to be rejected immediately after probe failure")
+	}
+	
+	if elapsed > 10*time.Millisecond {
+		t.Errorf("Expected immediate rejection, but took %v", elapsed)
+	}
+	
+	time.Sleep(openDuration / 2)
+	
+	allowed, _ = cb.Allow()
+	if allowed {
+		t.Error("Expected request to be rejected before probe interval elapsed")
+	}
+	
+	time.Sleep(openDuration)
+	
+	allowed, _ = cb.Allow()
+	if !allowed {
+		t.Error("Expected probe request to be allowed after probe interval")
+	}
+}

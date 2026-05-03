@@ -100,7 +100,8 @@ func (cb *CircuitBreaker) allowInternal() (bool, error) {
 			oldState := cb.state
 			newState := StateHalfOpen
 			cb.state = newState
-			cb.nextProbeTime = cb.lastOpenTime.Add(cb.openDuration)
+			now := time.Now()
+			cb.nextProbeTime = now.Add(cb.openDuration)
 			cb.probeInProgress = true
 			cb.failureCount = 0
 			cb.mu.Unlock()
@@ -154,7 +155,8 @@ func (cb *CircuitBreaker) waitInQueue() (bool, error) {
 					oldState := cb.state
 					newState := StateHalfOpen
 					cb.state = newState
-					cb.nextProbeTime = cb.lastOpenTime.Add(cb.openDuration)
+					now := time.Now()
+					cb.nextProbeTime = now.Add(cb.openDuration)
 					cb.probeInProgress = true
 					cb.failureCount = 0
 					cb.mu.Unlock()

@@ -46,12 +46,12 @@
 | 第一轮Session ID | |
 | 轮次 | 3 |
 | User Prompt | 我测了一下 HalfOpen 探测重试的间隔，发现 circuit breaker 在 Open 状态待了很久没人调 Allow 的情况下，进入 HalfOpen 后探测失败不会等 30 秒就立刻开始下一次探测，间隔不对。你可以构造一个场景试试：先把 failureThreshold 设成 1 触发 Open，sleep 60 秒之后再调 Allow 进 HalfOpen，然后 RecordFailure，观察下一个探测是不是马上就触发了。 |
-| 任务类型 | Bug修复 |
+| 任务类型 | Bug 修复 |
 | 业务领域 | 命令行工具 |
 | 修改范围 | 跨模块多文件 |
 | 任务是否完成 | 未完成 |
 | 产物及过程是否满意 | 不满意 |
-| 不满意原因 | 产物不满意：R2 报告的 nextProbeTime 问题未修复。RecordFailure（line 253）仍然使用 cb.nextProbeTime.Add(cb.openDuration) 计算下一次探测时间，在 Open→HalfOpen 转换延迟发生时（如 Open 期间 60s 无请求），nextProbeTime 基于已过期的 lastOpenTime 计算，Add(openDuration) 后仍为过去时间，导致探测失败后下一次探测立即触发而非等待 30s。另外 waitInQueue() 使用 time.Sleep(10ms) 忙轮询等待状态变化（line 179/187），应使用 sync.Cond 或 channel 通知代替。过程不满意：R2 已明确指出 nextProbeTime 的计算方式和修复方向（使用 time.Now().Add），但本轮未做任何修改 |
+| 不满意原因 | 产物不满意：R2 修复解决了 nextProbeTime 基于 lastOpenTime 的问题，但引入了 openDuration 双重计算。进入 HalfOpen 时（line 104）将 nextProbeTime 设为 now.Add(openDuration)，RecordFailure 中（line 255）又在现有 nextProbeTime 基础上再加一次 openDuration，导致第一次探测重试间隔为 2*openDuration（60秒）而非 PROMPT 要求的 openDuration（30秒）。正确做法是将 line 104 改为 cb.nextProbeTime = now（因为第一个探测通过 probeInProgress 立即放行，不需要偏移），或在 RecordFailure 中使用 time.Now().Add(cb.openDuration)。测试 TestHalfOpenProbeIntervalAfterLongOpen 的断言时间也不够，最终 sleep 后仍早于 nextProbeTime，测试会失败。过程不满意：修了 lastOpenTime 的问题但没有验证探测间隔的绝对值是否正确，只验证了"不会立即触发"而没有验证"恰好等待 30 秒" |
 | github地址 | |
 | 分支/文件夹 | 94-go-circuit-breaker |
 
