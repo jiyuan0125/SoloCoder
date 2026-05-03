@@ -1,0 +1,22 @@
+用 Go 写一个复制日志（Replication Log）库。支持追加日志、消费者组读取和截断。
+
+日志写入：
+1. log.Append(entry []byte) (offset int64, error)：追加一条日志，返回该条目的 offset（从 0 开始递增）。O(1) 时间复杂度
+2. 日志条目存储格式：8 字节 offset（自己生成的递增序号）+ 8 字节数据长度 + 原始数据
+3. 日志文件超过 16MB 时轮转：关闭当前文件，创建新文件继续写入。文件名格式：log.0001, log.0002, ...
+
+消费者组：
+4. log.CreateGroup(name string) 创建消费者组，每个组独立维护消费偏移量
+5. log.Read(group, maxCount int) ([][]byte, error)：从该组的当前偏移量读取最多 maxCount 条日志
+6. Read 返回后自动推进该组的偏移量（下一次 Read 从上次结束的位置继续）
+
+截断：
+7. log.Truncate(offset int64) error：删除 offset 之前的所有日志
+8. 前提条件：所有消费者组的偏移量都 >= offset。如果有任何一个消费者组的偏移量 < offset 则拒绝截断并返回 error
+9. 截断是物理删除：重写日志文件，丢弃 offset 之前的所有数据
+
+恢复：
+10. log.Open(dir string) 从目录中恢复：读取所有日志文件，重建当前的 offset 和文件列表
+11. 消费者组的偏移量持久化到文件（group_name.offset），启动时加载
+
+代码分 repl_log.go 几个 package，go build 能过。
