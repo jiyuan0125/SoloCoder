@@ -24,6 +24,7 @@ void shmq_config_init(shm_queue_config_t *cfg) {
     cfg->default_timeout_ms = SHMQ_WAIT_INFINITE;
     cfg->reuse_existing = false;
     cfg->cleanup_on_destroy = true;
+    cfg->max_concurrent_writers = SHMQ_DEFAULT_WRITERS;
 }
 
 size_t shmq_calculate_total_size(size_t buffer_size) {
@@ -38,7 +39,6 @@ static void shmq_init(shm_queue_t *q) {
 static int do_create(shm_queue_t *q, const shm_queue_config_t *cfg) {
     shm_queue_private_t *priv = NULL;
     size_t total_size;
-    int ret = SHMQ_ERROR;
     
     total_size = shmq_calculate_total_size(cfg->buffer_size);
     
@@ -61,8 +61,11 @@ static int do_create(shm_queue_t *q, const shm_queue_config_t *cfg) {
         return SHMQ_ERROR;
     }
     
-    unsigned int empty_slots = (unsigned int)(cfg->buffer_size - 1);
-    if (sem_set_create(&priv->sems, cfg->name, 1, empty_slots, 0) < 0) {
+    unsigned int max_writers = cfg->max_concurrent_writers;
+    if (max_writers == 0) {
+        max_writers = SHMQ_DEFAULT_WRITERS;
+    }
+    if (sem_set_create(&priv->sems, cfg->name, 1, max_writers, 0) < 0) {
         shm_manager_close(&priv->shm);
         shm_manager_unlink(cfg->name);
         free((void *)q->config.name);
@@ -89,7 +92,8 @@ static int do_create(shm_queue_t *q, const shm_queue_config_t *cfg) {
 static int try_recover(shm_queue_t *q, const char *name) {
     shm_manager_t shm;
     msg_buffer_t msgbuf;
-    size_t total_size;
+    
+    (void)q;
     
     if (shm_manager_open(&shm, name, 4096) < 0) {
         return SHMQ_ERROR;
@@ -100,7 +104,6 @@ static int try_recover(shm_queue_t *q, const char *name) {
         return SHMQ_ERROR;
     }
     
-    total_size = shmq_calculate_total_size(msgbuf.header->buffer_size);
     msg_buffer_detach(&msgbuf);
     shm_manager_close(&shm);
     
@@ -267,16 +270,6 @@ bool shmq_exists(const char *name) {
     return shm_manager_exists(name);
 }
 
-static int convert_sem_error(int sem_ret) {
-    if (sem_ret == 0) {
-        return SHMQ_OK;
-    }
-    if (errno == EAGAIN || errno == ETIMEDOUT) {
-        return SHMQ_TIMEOUT;
-    }
-    return SHMQ_ERROR;
-}
-
 static int wait_with_recovery(sem_sync_t *sem, int timeout_ms, int max_retries) {
     int ret;
     int retries = 0;
@@ -344,6 +337,7 @@ int shmq_send(shm_queue_t *q, const void *data, size_t len, int timeout_ms) {
     
     sem_sync_post(&priv->sems.mutex);
     sem_sync_post(&priv->sems.full);
+    sem_sync_post(&priv->sems.empty);
     
     return SHMQ_OK;
 }
@@ -384,7 +378,6 @@ int shmq_recv(shm_queue_t *q, void *data, size_t *len, int timeout_ms) {
     }
     
     sem_sync_post(&priv->sems.mutex);
-    sem_sync_post(&priv->sems.empty);
     
     return SHMQ_OK;
 }

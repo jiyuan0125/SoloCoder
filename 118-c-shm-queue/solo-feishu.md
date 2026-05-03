@@ -18,3 +18,22 @@
 | 分支/文件夹 | 118-c-shm-queue |
 
 ---
+
+## 118-c-shm-queue — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我拿代码跑了下，gcc 编译有 8 个 warning，其中有几个函数和变量定义了但没用（buf_is_full、convert_sem_error、total_len 之类的），你看看能清一下吗。另外我打算在多 writer 并发场景下压测一下，empty 信号量的计数跟变长消息的容量对不上，高负载下应该会有不少无效的 mutex 竞争，你那边评估一下需不需要改 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：empty 信号量仍初始化为 max_concurrent_writers(64) 而非基于 buffer_size，shmq_send 成功写入后第 340 行仍 sem_sync_post(&priv->sems.empty) 导致 empty 净变化恒为 0，不反映实际缓冲区可用空间，多 writer 高负载下无效 mutex 竞争问题未解决。wait_with_recovery 仅重试 3×5s 后放弃，未实现真正的崩溃检测与状态恢复。main.c 中 argc/argv 未使用仍有 2 个 warning 未清理。过程不满意：用户明确提出 empty 信号量与变长消息容量不匹配并要求评估，代码未做任何改动也未给出评估结论或设计说明 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 118-c-shm-queue |
+
+---

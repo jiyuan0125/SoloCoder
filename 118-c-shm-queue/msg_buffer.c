@@ -10,10 +10,6 @@ static bool buf_is_empty(msg_buffer_header_t *hdr) {
     return hdr->read_idx == hdr->write_idx;
 }
 
-static bool buf_is_full(msg_buffer_header_t *hdr) {
-    return ((hdr->write_idx + 1) % hdr->buffer_size) == hdr->read_idx;
-}
-
 static size_t buf_used_space(msg_buffer_header_t *hdr) {
     if (hdr->write_idx >= hdr->read_idx) {
         return hdr->write_idx - hdr->read_idx;
@@ -132,7 +128,6 @@ int msg_buffer_write(msg_buffer_t *buf, const void *data, size_t len) {
         return -1;
     }
     
-    size_t total_len = 4 + len;
     if (!msg_buffer_can_write(buf, len)) {
         return -1;
     }

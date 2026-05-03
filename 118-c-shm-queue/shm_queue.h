@@ -22,6 +22,7 @@ extern "C" {
 #define SHMQ_DEFAULT_NAME     "/shmq_default"
 #define SHMQ_MIN_BUFFER_SIZE  (1024)
 #define SHMQ_MAX_MSG_LEN      (1024 * 1024)
+#define SHMQ_DEFAULT_WRITERS  64
 
 typedef enum {
     SHMQ_MODE_BLOCKING = 0,
@@ -41,6 +42,7 @@ typedef struct shm_queue_config {
     int default_timeout_ms;
     bool reuse_existing;
     bool cleanup_on_destroy;
+    unsigned int max_concurrent_writers;
 } shm_queue_config_t;
 
 typedef struct shm_queue {
