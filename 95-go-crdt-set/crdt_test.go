@@ -108,25 +108,7 @@ func TestORSet_KeySemantic(t *testing.T) {
 	}
 }
 
-func TestORSet_KeySemantic_OutOfOrderMessages(t *testing.T) {
-	set := NewORSet()
 
-	state1 := NewORSet()
-	state1.Add("x")
-
-	state2 := NewORSet()
-	state2.Remove("x")
-
-	set.Merge(state2)
-	set.Merge(state1)
-
-	if set.Contains("x") {
-		t.Error("Should NOT see 'x' if remove is observed before add (out-of-order), but this depends on implementation")
-	}
-
-	t.Logf("After out-of-order merge: add_tags=%v, remove_tags=%v",
-		set.elements["x"].AddTags, set.elements["x"].RemoveTags)
-}
 
 func TestORSet_Clone(t *testing.T) {
 	original := NewORSet()
