@@ -20,8 +20,6 @@ typedef struct {
     int count;
 } ThreadArg;
 
-static int g_scores[TEST_PLAYERS];
-
 static uint64_t get_timestamp_us(void) {
     struct timeval tv;
     gettimeofday(&tv, NULL);
@@ -75,60 +73,53 @@ static void demo_basic_operations(void) {
     
     Leaderboard *lb = lb_create(100);
     
-    printf("Inserting 10 players with different scores...\n");
+    printf("=== Test 1: Submit and get rank immediately ===\n");
     
-    struct {
-        uint64_t id;
-        int32_t score;
-    } players[] = {
-        {1, 1000}, {2, 2500}, {3, 1500}, {4, 3000}, {5, 2000},
-        {6, 3500}, {7, 1800}, {8, 2800}, {9, 1200}, {10, 2200}
-    };
+    int rank;
+    lb_submit_score_and_get_rank(lb, 1001, 5000, &rank);
+    printf("Player 1001 submitted 5000, current rank: %d\n", rank);
     
-    for (int i = 0; i < 10; i++) {
-        lb_submit_score(lb, players[i].id, players[i].score);
-        g_scores[players[i].id] = players[i].score;
+    lb_submit_score_and_get_rank(lb, 1002, 6000, &rank);
+    printf("Player 1002 submitted 6000, current rank: %d\n", rank);
+    
+    lb_submit_score_and_get_rank(lb, 1003, 5500, &rank);
+    printf("Player 1003 submitted 5500, current rank: %d\n\n", rank);
+    
+    printf("=== Test 2: Get rank by player_id (no need for timestamp) ===\n");
+    
+    rank = lb_get_rank_by_player_id(lb, 1002);
+    printf("Player 1002 current rank: %d (should be 1)\n", rank);
+    
+    rank = lb_get_rank_by_player_id(lb, 1003);
+    printf("Player 1003 current rank: %d (should be 2)\n", rank);
+    
+    rank = lb_get_rank_by_player_id(lb, 9999);
+    printf("Player 9999 (non-existent) rank: %d (should be -1)\n\n", rank);
+    
+    printf("=== Test 3: Same player re-submit (old record should be replaced) ===\n");
+    
+    printf("Before re-submit:\n");
+    printf("  Player 1001 rank: %d, score: 5000\n", lb_get_rank_by_player_id(lb, 1001));
+    
+    lb_submit_score_and_get_rank(lb, 1001, 7000, &rank);
+    printf("After Player 1001 submitted 7000:\n");
+    printf("  New rank: %d (should be 1)\n", rank);
+    printf("  Total players: %d (should be 3, not 4)\n\n", lb_get_total_players(lb));
+    
+    printf("=== Test 4: Get player info by player_id ===\n");
+    
+    int32_t score;
+    uint64_t ts;
+    if (lb_get_player_info(lb, 1001, &score, &ts)) {
+        printf("Player 1001 info: score=%d\n", score);
     }
     
-    printf("Total players: %d\n\n", lb_get_total_players(lb));
-    
-    printf("Top 5 players:\n");
+    printf("\nTop 5 players:\n");
     PlayerScore top5[5];
     int count = lb_get_top_n(lb, 5, top5, 5);
     for (int i = 0; i < count; i++) {
         printf("  Rank %d: Player %lu, Score %d\n", 
                top5[i].rank, (unsigned long)top5[i].player_id, top5[i].score);
-    }
-    printf("\n");
-    
-    printf("Players ranked 3-7:\n");
-    PlayerScore range[10];
-    count = lb_get_rank_range(lb, 3, 7, range, 10);
-    for (int i = 0; i < count; i++) {
-        printf("  Rank %d: Player %lu, Score %d\n", 
-               range[i].rank, (unsigned long)range[i].player_id, range[i].score);
-    }
-    printf("\n");
-    
-    int min_s = 2000, max_s = 3000;
-    int c = lb_count_players_in_score_range(lb, min_s, max_s);
-    printf("Players with score between %d and %d: %d\n\n", min_s, max_s, c);
-    
-    printf("Testing same score (earlier submission ranks higher):\n");
-    lb_submit_score(lb, 100, 2500);
-    lb_submit_score(lb, 101, 2500);
-    lb_submit_score(lb, 102, 2500);
-    
-    printf("Inserted 3 more players with score 2500\n");
-    
-    PlayerScore ps;
-    for (int i = 1; i <= 13; i++) {
-        if (lb_get_player_by_rank(lb, i, &ps)) {
-            if (ps.score == 2500) {
-                printf("  Rank %d: Player %lu, Score %d\n", 
-                       ps.rank, (unsigned long)ps.player_id, ps.score);
-            }
-        }
     }
     printf("\n");
     
@@ -250,7 +241,6 @@ static void demo_performance(void) {
     int num_players = 100000;
     uint64_t *player_ids = (uint64_t*)malloc(num_players * sizeof(uint64_t));
     int32_t *scores = (int32_t*)malloc(num_players * sizeof(int32_t));
-    uint64_t *timestamps = (uint64_t*)malloc(num_players * sizeof(uint64_t));
     
     printf("Generating %d random player scores...\n", num_players);
     srand((unsigned int)time(NULL));
@@ -293,7 +283,7 @@ static void demo_performance(void) {
            (double)(end_time - start_time) / (double)query_count);
     
     printf("Benchmarking range queries (10 players each)...\n");
-    query_count = 5000;
+    query_count = 100000;
     start_time = get_timestamp_us();
     
     PlayerScore results[10];
@@ -307,6 +297,22 @@ static void demo_performance(void) {
     
     printf("Range query time (%d queries): %.3f seconds\n", query_count, range_time);
     printf("Range query rate: %.2f queries/sec\n", (double)query_count / range_time);
+    printf("\n");
+    
+    printf("Benchmarking get_rank_by_player_id (new API)...\n");
+    query_count = 100000;
+    start_time = get_timestamp_us();
+    
+    for (int i = 0; i < query_count; i++) {
+        uint64_t pid = (uint64_t)((rand() % num_players) + 1);
+        lb_get_rank_by_player_id(lb, pid);
+    }
+    
+    end_time = get_timestamp_us();
+    double rank_by_id_time = (double)(end_time - start_time) / 1000000.0;
+    
+    printf("Get rank by player_id time (%d queries): %.3f seconds\n", query_count, rank_by_id_time);
+    printf("Get rank by player_id rate: %.2f queries/sec\n", (double)query_count / rank_by_id_time);
     printf("\n");
     
     printf("Benchmarking score range count queries...\n");
@@ -328,7 +334,6 @@ static void demo_performance(void) {
     
     free(player_ids);
     free(scores);
-    free(timestamps);
     lb_destroy(lb);
 }
 

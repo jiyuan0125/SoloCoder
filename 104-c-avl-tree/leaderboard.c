@@ -25,9 +25,27 @@ int lb_submit_score(Leaderboard *lb, uint64_t player_id, int32_t score) {
     return clb_submit_score(lb->clb, player_id, score);
 }
 
+int lb_submit_score_and_get_rank(Leaderboard *lb, uint64_t player_id, int32_t score, int *out_rank) {
+    if (lb == NULL || out_rank == NULL) {
+        if (out_rank != NULL) *out_rank = -1;
+        return 0;
+    }
+    return clb_submit_score_and_get_rank(lb->clb, player_id, score, out_rank);
+}
+
 int lb_get_player_rank(Leaderboard *lb, uint64_t player_id, int32_t score, uint64_t timestamp) {
     if (lb == NULL) return -1;
     return clb_get_rank(lb->clb, player_id, score, timestamp);
+}
+
+int lb_get_rank_by_player_id(Leaderboard *lb, uint64_t player_id) {
+    if (lb == NULL) return -1;
+    return clb_get_rank_by_player_id(lb->clb, player_id);
+}
+
+int lb_get_player_info(Leaderboard *lb, uint64_t player_id, int32_t *out_score, uint64_t *out_timestamp) {
+    if (lb == NULL) return 0;
+    return clb_get_player_info(lb->clb, player_id, out_score, out_timestamp);
 }
 
 int lb_get_player_by_rank(Leaderboard *lb, int rank, PlayerScore *result) {

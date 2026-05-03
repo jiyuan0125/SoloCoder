@@ -254,17 +254,36 @@ static int avl_get_by_rank_node(AVLNode *node, int rank, uint64_t *player_id, in
     }
 }
 
-static int avl_get_range_node(AVLNode *node, int *current_rank, int start_rank, int end_rank,
-                               uint64_t *player_ids, int32_t *scores, uint64_t *timestamps, 
-                               int max_count, int *filled_count) {
+static int avl_get_range_optimized(AVLNode *node, int start_rank, int end_rank,
+                                     int prefix_count,
+                                     uint64_t *player_ids, int32_t *scores, uint64_t *timestamps,
+                                     int max_count, int *filled_count) {
     if (node == NULL || *filled_count >= max_count) return 0;
 
-    avl_get_range_node(node->left, current_rank, start_rank, end_rank,
-                       player_ids, scores, timestamps, max_count, filled_count);
+    int left_size = size(node->left);
+    int node_rank = prefix_count + left_size + 1;
 
-    (*current_rank)++;
-    
-    if (*current_rank >= start_rank && *current_rank <= end_rank && *filled_count < max_count) {
+    if (node_rank > end_rank) {
+        if (left_size > 0 && prefix_count < end_rank) {
+            avl_get_range_optimized(node->left, start_rank, end_rank, prefix_count,
+                                     player_ids, scores, timestamps, max_count, filled_count);
+        }
+        return 1;
+    }
+
+    if (node_rank < start_rank) {
+        int right_prefix = prefix_count + left_size + 1;
+        avl_get_range_optimized(node->right, start_rank, end_rank, right_prefix,
+                                 player_ids, scores, timestamps, max_count, filled_count);
+        return 1;
+    }
+
+    if (left_size > 0 && prefix_count < end_rank) {
+        avl_get_range_optimized(node->left, start_rank, end_rank, prefix_count,
+                                 player_ids, scores, timestamps, max_count, filled_count);
+    }
+
+    if (*filled_count < max_count && node_rank >= start_rank && node_rank <= end_rank) {
         player_ids[*filled_count] = node->player_id;
         scores[*filled_count] = node->score;
         timestamps[*filled_count] = node->timestamp;
@@ -272,8 +291,9 @@ static int avl_get_range_node(AVLNode *node, int *current_rank, int start_rank, 
     }
 
     if (*filled_count < max_count) {
-        avl_get_range_node(node->right, current_rank, start_rank, end_rank,
-                           player_ids, scores, timestamps, max_count, filled_count);
+        int right_prefix = prefix_count + left_size + 1;
+        avl_get_range_optimized(node->right, start_rank, end_rank, right_prefix,
+                                 player_ids, scores, timestamps, max_count, filled_count);
     }
 
     return 1;
@@ -373,11 +393,10 @@ int avl_get_range(AVLTree *tree, int start_rank, int end_rank,
                   uint64_t *player_ids, int32_t *scores, uint64_t *timestamps, int max_count) {
     if (tree == NULL || tree->root == NULL || start_rank < 1 || end_rank < start_rank) return 0;
     
-    int current_rank = 0;
     int filled_count = 0;
     
-    avl_get_range_node(tree->root, &current_rank, start_rank, end_rank,
-                       player_ids, scores, timestamps, max_count, &filled_count);
+    avl_get_range_optimized(tree->root, start_rank, end_rank, 0,
+                            player_ids, scores, timestamps, max_count, &filled_count);
     
     return filled_count;
 }

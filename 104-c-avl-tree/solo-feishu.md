@@ -18,3 +18,22 @@
 | 分支/文件夹 | 104-c-avl-tree |
 
 ---
+
+## 104-c-avl-tree — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我试了一下这个排行榜，发现两个问题。第一个是提交分数后拿不到排名，clb_submit_score 返回的只是 0 或 1，我想查排名的话 clb_get_rank 要我传 timestamp，但这个 timestamp 是 submit 里面用 clock_gettime 生成的，外面根本拿不到，也没有按 player_id 查排名的接口。第二个是区间查询特别慢，我跑了下 benchmark，100K 数据量查区间只要 1286 ops/sec，但单点查排名有 360 万 ops/sec，差了快 3000 倍，看了一下 avl_get_range_node 那个函数，是完整的中序遍历，每个节点都走一遍，size 字段已经维护了但完全没用来做剪枝。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 104-c-avl-tree |
+
+---

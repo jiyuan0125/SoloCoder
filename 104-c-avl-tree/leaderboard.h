@@ -19,7 +19,12 @@ Leaderboard* lb_create(int max_capacity);
 void lb_destroy(Leaderboard *lb);
 
 int lb_submit_score(Leaderboard *lb, uint64_t player_id, int32_t score);
+int lb_submit_score_and_get_rank(Leaderboard *lb, uint64_t player_id, int32_t score, int *out_rank);
+
 int lb_get_player_rank(Leaderboard *lb, uint64_t player_id, int32_t score, uint64_t timestamp);
+int lb_get_rank_by_player_id(Leaderboard *lb, uint64_t player_id);
+int lb_get_player_info(Leaderboard *lb, uint64_t player_id, int32_t *out_score, uint64_t *out_timestamp);
+
 int lb_get_player_by_rank(Leaderboard *lb, int rank, PlayerScore *result);
 
 int lb_get_top_n(Leaderboard *lb, int n, PlayerScore *results, int max_results);

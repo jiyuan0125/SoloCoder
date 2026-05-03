@@ -2,10 +2,12 @@
 #define CONCURRENT_RB_H
 
 #include "avl_tree.h"
+#include "player_index.h"
 #include <pthread.h>
 
 typedef struct ConcurrentLeaderboard {
     AVLTree *tree;
+    PlayerIndex *index;
     pthread_rwlock_t rwlock;
 } ConcurrentLeaderboard;
 
@@ -13,7 +15,12 @@ ConcurrentLeaderboard* clb_create(int max_capacity);
 void clb_destroy(ConcurrentLeaderboard *clb);
 
 int clb_submit_score(ConcurrentLeaderboard *clb, uint64_t player_id, int32_t score);
+int clb_submit_score_and_get_rank(ConcurrentLeaderboard *clb, uint64_t player_id, int32_t score, int *out_rank);
+
 int clb_get_rank(ConcurrentLeaderboard *clb, uint64_t player_id, int32_t score, uint64_t timestamp);
+int clb_get_rank_by_player_id(ConcurrentLeaderboard *clb, uint64_t player_id);
+int clb_get_player_info(ConcurrentLeaderboard *clb, uint64_t player_id, int32_t *out_score, uint64_t *out_timestamp);
+
 int clb_get_by_rank(ConcurrentLeaderboard *clb, int rank, uint64_t *player_id, int32_t *score, uint64_t *timestamp);
 int clb_get_range(ConcurrentLeaderboard *clb, int start_rank, int end_rank,
                   uint64_t *player_ids, int32_t *scores, uint64_t *timestamps, int max_count);
