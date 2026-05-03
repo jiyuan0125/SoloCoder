@@ -8,21 +8,51 @@
 
 #define EARTH_RADIUS 6371000.0
 
-int geohash_precision_for_radius(double radius_meters)
+static int is_coverage_sufficient(int precision, double radius_meters, double center_lat)
 {
-    if (radius_meters <= 0) {
-        return 6;
+    int total_bits = precision * 5;
+    int lon_bits = (total_bits + 1) / 2;
+    int lat_bits = total_bits / 2;
+    
+    double lon_deg_per_cell = 360.0 / (1LL << lon_bits);
+    double lat_deg_per_cell = 180.0 / (1LL << lat_bits);
+    
+    double lat_rad = fabs(center_lat) * M_PI / 180.0;
+    double cos_lat = cos(lat_rad);
+    if (cos_lat < 0.0001) cos_lat = 0.0001;
+    
+    double km_per_deg_lat = 111.0;
+    double km_per_deg_lon = 111.0 * cos_lat;
+    
+    double lon_km_per_cell = lon_deg_per_cell * km_per_deg_lon;
+    double lat_km_per_cell = lat_deg_per_cell * km_per_deg_lat;
+    
+    double radius_km = radius_meters / 1000.0;
+    
+    double lon_3x3_coverage = 3 * lon_km_per_cell;
+    double lat_3x3_coverage = 3 * lat_km_per_cell;
+    
+    double required = 2.5 * radius_km;
+    
+    return (lon_3x3_coverage >= required) && (lat_3x3_coverage >= required);
+}
+
+int geohash_precision_for_radius_at_lat(double radius_meters, double center_lat)
+{
+    int precision;
+    
+    for (precision = GEOHASH_PRECISION_MAX; precision >= 1; precision--) {
+        if (is_coverage_sufficient(precision, radius_meters, center_lat)) {
+            return precision;
+        }
     }
     
-    if (radius_meters <= 5) return 9;
-    if (radius_meters <= 20) return 8;
-    if (radius_meters <= 150) return 7;
-    if (radius_meters <= 800) return 6;
-    if (radius_meters <= 3000) return 5;
-    if (radius_meters <= 24000) return 4;
-    if (radius_meters <= 100000) return 3;
-    if (radius_meters <= 800000) return 2;
     return 1;
+}
+
+int geohash_precision_for_radius(double radius_meters)
+{
+    return geohash_precision_for_radius_at_lat(radius_meters, 0.0);
 }
 
 void merchant_db_init(MerchantDatabase *db)
@@ -107,7 +137,7 @@ int search_merchants_by_radius(MerchantDatabase *db, double center_lat, double c
     int result_count = 0;
     int i;
     
-    precision = geohash_precision_for_radius(radius_meters);
+    precision = geohash_precision_for_radius_at_lat(radius_meters, center_lat);
     geohash_encode(center_lat, center_lon, precision, center_hash);
     
     geo_count = search_merchants_by_geohash(db, center_hash, geo_results, MAX_SEARCH_RESULTS);

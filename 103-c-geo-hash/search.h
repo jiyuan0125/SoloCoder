@@ -20,6 +20,7 @@ typedef struct {
 } MerchantDatabase;
 
 int geohash_precision_for_radius(double radius_meters);
+int geohash_precision_for_radius_at_lat(double radius_meters, double center_lat);
 void merchant_db_init(MerchantDatabase *db);
 int merchant_add(MerchantDatabase *db, const char *name, double lat, double lon, int precision);
 int search_merchants_by_geohash(MerchantDatabase *db, const char *center_geohash, 
