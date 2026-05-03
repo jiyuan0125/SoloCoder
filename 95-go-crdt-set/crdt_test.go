@@ -1,6 +1,7 @@
 package crdt
 
 import (
+	"encoding/json"
 	"testing"
 )
 
@@ -88,22 +89,43 @@ func TestORSet_KeySemantic(t *testing.T) {
 	nodeA.Remove("x")
 	nodeA.Add("x")
 
-	nodeBMid := nodeA.Clone()
-	nodeB.Remove("x")
+	nodeAFinal := nodeA.Clone()
+
 	nodeB.Add("x")
+	nodeB.Remove("x")
 
 	if !nodeA.Contains("x") {
 		t.Error("Node A should see 'x' after add-remove-add")
 	}
 
 	if nodeB.Contains("x") {
-		t.Error("Node B should NOT see 'x' - it only saw remove and new add, but remove includes the new tag")
+		t.Error("Node B should NOT see 'x' after add-then-remove")
 	}
 
-	nodeB.Merge(nodeBMid)
+	nodeB.Merge(nodeAFinal)
 	if !nodeB.Contains("x") {
-		t.Error("Node B should see 'x' after merging with Node A's state")
+		t.Error("Node B should see 'x' after merging with Node A's state (A has tag=2 which is not removed)")
 	}
+}
+
+func TestORSet_KeySemantic_OutOfOrderMessages(t *testing.T) {
+	set := NewORSet()
+
+	state1 := NewORSet()
+	state1.Add("x")
+
+	state2 := NewORSet()
+	state2.Remove("x")
+
+	set.Merge(state2)
+	set.Merge(state1)
+
+	if set.Contains("x") {
+		t.Error("Should NOT see 'x' if remove is observed before add (out-of-order), but this depends on implementation")
+	}
+
+	t.Logf("After out-of-order merge: add_tags=%v, remove_tags=%v",
+		set.elements["x"].AddTags, set.elements["x"].RemoveTags)
 }
 
 func TestORSet_Clone(t *testing.T) {
@@ -150,6 +172,49 @@ func TestORSet_JSONSerialization(t *testing.T) {
 	if !restored.Contains("z") {
 		t.Error("Restored set should support adding new elements")
 	}
+}
+
+func TestORSet_JSONFormat(t *testing.T) {
+	set := NewORSet()
+	set.Add("x")
+	set.Remove("x")
+	set.Add("x")
+
+	data, err := set.MarshalJSON()
+	if err != nil {
+		t.Fatalf("MarshalJSON failed: %v", err)
+	}
+
+	var obj map[string]interface{}
+	if err := json.Unmarshal(data, &obj); err != nil {
+		t.Fatalf("Failed to parse JSON: %v", err)
+	}
+
+	elements, ok := obj["elements"].([]interface{})
+	if !ok {
+		t.Error("JSON should have 'elements' array")
+	}
+
+	if len(elements) != 1 {
+		t.Errorf("Expected 1 element in JSON, got %d", len(elements))
+	}
+
+	elem := elements[0].(map[string]interface{})
+	if elem["value"] != "x" {
+		t.Errorf("Expected value 'x', got %v", elem["value"])
+	}
+
+	addTags, ok := elem["add_tags"].([]interface{})
+	if !ok || len(addTags) != 2 {
+		t.Errorf("Expected add_tags array with 2 elements, got %v", addTags)
+	}
+
+	removeTags, ok := elem["remove_tags"].([]interface{})
+	if !ok || len(removeTags) != 1 {
+		t.Errorf("Expected remove_tags array with 1 element, got %v", removeTags)
+	}
+
+	t.Logf("JSON: %s", string(data))
 }
 
 type MergeSimulatorResult struct {
@@ -272,8 +337,8 @@ func TestMergeSimulator_KeySemantic(t *testing.T) {
 			a.Add("x")
 		},
 		func(b *ORSet) {
-			b.Remove("x")
 			b.Add("x")
+			b.Remove("x")
 		},
 	)
 
@@ -282,7 +347,41 @@ func TestMergeSimulator_KeySemantic(t *testing.T) {
 	}
 
 	if len(result.MergedA_Elements) != 1 {
-		t.Errorf("Expected 1 element after merge (Node A's add tags should win), got %d: %v",
+		t.Errorf("Expected 1 element after merge (Node A's tag=2 should not be removed), got %d: %v",
 			len(result.MergedA_Elements), result.MergedA_Elements)
+	}
+}
+
+func TestORSet_IdempotentAdd(t *testing.T) {
+	set := NewORSet()
+
+	set.Add("x")
+	set.Add("x")
+
+	elements := set.Elements()
+	if len(elements) != 1 {
+		t.Errorf("Expected 1 element after two adds, got %d", len(elements))
+	}
+
+	state := set.elements["x"]
+	if len(state.AddTags) != 2 {
+		t.Errorf("Expected 2 add_tags after two adds, got %d", len(state.AddTags))
+	}
+}
+
+func TestORSet_RemoveIdempotent(t *testing.T) {
+	set := NewORSet()
+
+	set.Add("x")
+	set.Remove("x")
+	set.Remove("x")
+
+	if set.Contains("x") {
+		t.Error("Should not contain 'x' after remove")
+	}
+
+	state := set.elements["x"]
+	if len(state.RemoveTags) != 1 {
+		t.Errorf("Expected 1 remove_tag after two removes (idempotent), got %d", len(state.RemoveTags))
 	}
 }
