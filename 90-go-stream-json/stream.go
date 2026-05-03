@@ -149,20 +149,6 @@ func (qh *QueryHandler) HandleMatch(value interface{}) {
 	qh.Results = append(qh.Results, value)
 }
 
-type StreamProcessor struct {
-	decoder *json.Decoder
-	jp      *JSONPath
-	handler MatchHandler
-}
-
-func NewStreamProcessor(r io.Reader, jp *JSONPath, handler MatchHandler) *StreamProcessor {
-	return &StreamProcessor{
-		decoder: json.NewDecoder(r),
-		jp:      jp,
-		handler: handler,
-	}
-}
-
 type pathElement struct {
 	kind  elementKind
 	field string
@@ -177,6 +163,20 @@ const (
 	elemIndex
 )
 
+type StreamProcessor struct {
+	decoder *json.Decoder
+	jp      *JSONPath
+	handler MatchHandler
+}
+
+func NewStreamProcessor(r io.Reader, jp *JSONPath, handler MatchHandler) *StreamProcessor {
+	return &StreamProcessor{
+		decoder: json.NewDecoder(r),
+		jp:      jp,
+		handler: handler,
+	}
+}
+
 func (sp *StreamProcessor) Process() error {
 	var path []pathElement
 	path = append(path, pathElement{kind: elemRoot})
@@ -190,14 +190,14 @@ func (sp *StreamProcessor) Process() error {
 			return err
 		}
 
-		if err := sp.processToken(tok, &path); err != nil {
+		if err := sp.processRootToken(tok, &path); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (sp *StreamProcessor) processToken(tok json.Token, path *[]pathElement) error {
+func (sp *StreamProcessor) processRootToken(tok json.Token, path *[]pathElement) error {
 	switch t := tok.(type) {
 	case json.Delim:
 		switch t {
@@ -206,41 +206,9 @@ func (sp *StreamProcessor) processToken(tok json.Token, path *[]pathElement) err
 		case '[':
 			return sp.processArray(path)
 		}
-	case string:
-		if sp.decoder.More() {
-			*path = append(*path, pathElement{kind: elemField, field: t})
-		} else {
-			if sp.matchesPath(*path) {
-				sp.handler.HandleMatch(t)
-			}
-			if len(*path) > 1 {
-				*path = (*path)[:len(*path)-1]
-			}
-		}
-	case json.Number:
+	default:
 		if sp.matchesPath(*path) {
-			if f, err := t.Float64(); err == nil {
-				sp.handler.HandleMatch(f)
-			} else {
-				sp.handler.HandleMatch(t.String())
-			}
-		}
-		if len(*path) > 1 {
-			*path = (*path)[:len(*path)-1]
-		}
-	case bool:
-		if sp.matchesPath(*path) {
-			sp.handler.HandleMatch(t)
-		}
-		if len(*path) > 1 {
-			*path = (*path)[:len(*path)-1]
-		}
-	case nil:
-		if sp.matchesPath(*path) {
-			sp.handler.HandleMatch(nil)
-		}
-		if len(*path) > 1 {
-			*path = (*path)[:len(*path)-1]
+			sp.handleValue(t)
 		}
 	}
 	return nil
@@ -265,20 +233,17 @@ func (sp *StreamProcessor) processObject(path *[]pathElement) error {
 			return err
 		}
 
-		if err := sp.processToken(valTok, path); err != nil {
+		if err := sp.processValue(valTok, path); err != nil {
 			return err
+		}
+
+		if len(*path) > 1 {
+			*path = (*path)[:len(*path)-1]
 		}
 	}
 
 	_, err := sp.decoder.Token()
-	if err != nil {
-		return err
-	}
-
-	if len(*path) > 1 {
-		*path = (*path)[:len(*path)-1]
-	}
-	return nil
+	return err
 }
 
 func (sp *StreamProcessor) processArray(path *[]pathElement) error {
@@ -291,21 +256,52 @@ func (sp *StreamProcessor) processArray(path *[]pathElement) error {
 			return err
 		}
 
-		if err := sp.processToken(valTok, path); err != nil {
+		if err := sp.processValue(valTok, path); err != nil {
 			return err
+		}
+
+		if len(*path) > 1 {
+			*path = (*path)[:len(*path)-1]
 		}
 		index++
 	}
 
 	_, err := sp.decoder.Token()
-	if err != nil {
-		return err
-	}
+	return err
+}
 
-	if len(*path) > 1 {
-		*path = (*path)[:len(*path)-1]
+func (sp *StreamProcessor) processValue(tok json.Token, path *[]pathElement) error {
+	switch t := tok.(type) {
+	case json.Delim:
+		switch t {
+		case '{':
+			return sp.processObject(path)
+		case '[':
+			return sp.processArray(path)
+		}
+	default:
+		if sp.matchesPath(*path) {
+			sp.handleValue(tok)
+		}
 	}
 	return nil
+}
+
+func (sp *StreamProcessor) handleValue(tok json.Token) {
+	switch t := tok.(type) {
+	case string:
+		sp.handler.HandleMatch(t)
+	case json.Number:
+		if f, err := t.Float64(); err == nil {
+			sp.handler.HandleMatch(f)
+		} else {
+			sp.handler.HandleMatch(t.String())
+		}
+	case bool:
+		sp.handler.HandleMatch(t)
+	case nil:
+		sp.handler.HandleMatch(nil)
+	}
 }
 
 func (sp *StreamProcessor) matchesPath(currentPath []pathElement) bool {
@@ -313,7 +309,7 @@ func (sp *StreamProcessor) matchesPath(currentPath []pathElement) bool {
 		return true
 	}
 
-	if len(currentPath) < len(sp.jp.Segments) {
+	if len(currentPath) != len(sp.jp.Segments) {
 		return false
 	}
 
@@ -337,7 +333,7 @@ func (sp *StreamProcessor) matchesPath(currentPath []pathElement) bool {
 		}
 	}
 
-	return len(currentPath) == len(sp.jp.Segments)
+	return true
 }
 
 type KeysHandler struct {
@@ -387,14 +383,14 @@ func (kp *KeysProcessor) Process() error {
 			return err
 		}
 
-		if err := kp.processToken(tok); err != nil {
+		if err := kp.processRootToken(tok); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (kp *KeysProcessor) processToken(tok json.Token) error {
+func (kp *KeysProcessor) processRootToken(tok json.Token) error {
 	switch t := tok.(type) {
 	case json.Delim:
 		switch t {
@@ -402,10 +398,6 @@ func (kp *KeysProcessor) processToken(tok json.Token) error {
 			return kp.processObject()
 		case '[':
 			return kp.processArray()
-		}
-	case string:
-		if kp.decoder.More() {
-			kp.handler.AddKey(t)
 		}
 	}
 	return nil
@@ -427,7 +419,7 @@ func (kp *KeysProcessor) processObject() error {
 			return err
 		}
 
-		if err := kp.processToken(valTok); err != nil {
+		if err := kp.processValue(valTok); err != nil {
 			return err
 		}
 	}
@@ -443,11 +435,24 @@ func (kp *KeysProcessor) processArray() error {
 			return err
 		}
 
-		if err := kp.processToken(valTok); err != nil {
+		if err := kp.processValue(valTok); err != nil {
 			return err
 		}
 	}
 
 	_, err := kp.decoder.Token()
 	return err
+}
+
+func (kp *KeysProcessor) processValue(tok json.Token) error {
+	switch t := tok.(type) {
+	case json.Delim:
+		switch t {
+		case '{':
+			return kp.processObject()
+		case '[':
+			return kp.processArray()
+		}
+	}
+	return nil
 }

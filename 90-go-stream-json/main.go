@@ -108,12 +108,16 @@ func runCount(config *Config) {
 }
 
 func runSum(config *Config) {
-	mode, err := ParseStatsMode(config.StatsMode)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+	defaultMode := ModeSum
+	if config.StatsMode != "count" {
+		mode, err := ParseStatsMode(config.StatsMode)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
+		defaultMode = mode
 	}
-	runStats(config, mode)
+	runStats(config, defaultMode)
 }
 
 func runStats(config *Config, defaultMode StatsMode) {
