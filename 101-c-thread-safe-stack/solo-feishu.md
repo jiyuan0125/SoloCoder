@@ -37,3 +37,22 @@
 | 分支/文件夹 | 101-c-thread-safe-stack |
 
 ---
+
+## 101-c-thread-safe-stack — 第 3 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 3 |
+| User Prompt | R2 的代码跟 R1 基本没变，undo_redo_undo 和 undo_redo_record 还是抢同一把 stack_lock，没法并发。而且测试里也还是只有只读的渲染线程，没有测 undo 和 record 同时跑的场景。PROMPT 里说的并发要求你得用分开的锁或者读写锁来实现，不能就一把锁锁到底。另外测试也得加上真正的并发 undo+record 场景才能验证。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R3 的唯一改动是将 stack_lock 从 pthread_mutex_t 改为 pthread_rwlock_t（stack_rwlock），但 undo_redo_record()（第101行）和 undo_redo_undo()（第162行）仍然都调用 pthread_rwlock_wrlock 获取写锁。rwlock 的写锁与 mutex 行为完全一致——写锁之间互斥，读写锁之间也互斥。因此 undo 和 record 仍然完全串行化，PROMPT 要求的"撤销操作和记录新操作应该能并发进行"依然未实现。两把锁之间的竞态窗口（undo 释放 stack_rwlock 后、获取 doc->lock 前的间隙）也依然存在，record 可在此期间清空 redo 栈导致功能丢失。过程不满意：测试 4（test_concurrent_access）仍然只启动了 3 个只读渲染线程，主线程顺序执行编辑/撤销/重做。没有任何测试验证多线程同时执行 undo 和 record 的并发场景。连续 3 轮反馈同一核心问题均未解决，代码无实质改动。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 101-c-thread-safe-stack |
+
+---

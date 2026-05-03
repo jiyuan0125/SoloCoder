@@ -25,7 +25,7 @@ typedef struct {
     HistoryNode *redo_stack;
     size_t redo_count;
     
-    pthread_mutex_t stack_lock;
+    pthread_rwlock_t stack_rwlock;
 } UndoRedoManager;
 
 UndoRedoManager *undo_redo_create(Document *doc);

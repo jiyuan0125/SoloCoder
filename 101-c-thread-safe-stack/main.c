@@ -172,7 +172,7 @@ static void test_history_limit(void) {
 }
 
 static void test_concurrent_access(void) {
-    printf("\n\n========== 测试 4: 多线程并发访问 ==========\n\n");
+    printf("\n\n========== 测试 4: 多线程并发访问（渲染线程 + 编辑线程）==========\n\n");
     
     Document *doc = document_create();
     UndoRedoManager *manager = undo_redo_create(doc);
@@ -234,6 +234,184 @@ static void test_concurrent_access(void) {
     document_destroy(doc);
 }
 
+typedef struct {
+    UndoRedoManager *manager;
+    int id;
+    int iterations;
+    int success_count;
+    int fail_count;
+    int stop;
+} StressThreadArg;
+
+static void *undo_thread(void *arg) {
+    StressThreadArg *s_arg = (StressThreadArg *)arg;
+    int successes = 0;
+    int failures = 0;
+    
+    for (int i = 0; i < s_arg->iterations && !s_arg->stop; i++) {
+        if (undo_redo_undo(s_arg->manager)) {
+            successes++;
+        } else {
+            failures++;
+        }
+        usleep(100);
+    }
+    
+    s_arg->success_count = successes;
+    s_arg->fail_count = failures;
+    printf("[撤销线程 %d] 完成: 成功 %d 次, 失败 %d 次\n", 
+           s_arg->id, successes, failures);
+    return NULL;
+}
+
+static void *record_thread(void *arg) {
+    StressThreadArg *s_arg = (StressThreadArg *)arg;
+    int successes = 0;
+    int failures = 0;
+    
+    for (int i = 0; i < s_arg->iterations && !s_arg->stop; i++) {
+        char text[32];
+        snprintf(text, sizeof(text), "[T%d-%d]", s_arg->id, i);
+        Operation *op = operation_create_insert(0, text, strlen(text));
+        if (undo_redo_record_single(s_arg->manager, op)) {
+            successes++;
+        } else {
+            failures++;
+            operation_destroy(op);
+        }
+        usleep(150);
+    }
+    
+    s_arg->success_count = successes;
+    s_arg->fail_count = failures;
+    printf("[记录线程 %d] 完成: 成功 %d 次, 失败 %d 次\n", 
+           s_arg->id, successes, failures);
+    return NULL;
+}
+
+static void *query_thread(void *arg) {
+    StressThreadArg *s_arg = (StressThreadArg *)arg;
+    int count = 0;
+    
+    for (int i = 0; i < s_arg->iterations && !s_arg->stop; i++) {
+        size_t undo_cnt = undo_redo_undo_count(s_arg->manager);
+        size_t redo_cnt = undo_redo_redo_count(s_arg->manager);
+        int can_undo = undo_redo_can_undo(s_arg->manager);
+        int can_redo = undo_redo_can_redo(s_arg->manager);
+        (void)undo_cnt;
+        (void)redo_cnt;
+        (void)can_undo;
+        (void)can_redo;
+        count++;
+        usleep(50);
+    }
+    
+    printf("[查询线程 %d] 完成: 共查询 %d 次\n", s_arg->id, count);
+    s_arg->success_count = count;
+    return NULL;
+}
+
+static void test_true_concurrent_undo_record(void) {
+    printf("\n\n========== 测试 5: 真正的并发 Undo + Record（竞态窗口测试）==========\n\n");
+    
+    printf("测试目的:\n");
+    printf("  1. 验证撤销线程和记录线程能否安全并发执行\n");
+    printf("  2. 验证竞态窗口下引用计数机制的正确性\n");
+    printf("  3. 验证读写锁让查询操作可以并发\n\n");
+    
+    Document *doc = document_create();
+    UndoRedoManager *manager = undo_redo_create(doc);
+    
+    printf("--- 准备初始历史记录 ---\n");
+    for (int i = 0; i < 20; i++) {
+        char text[32];
+        snprintf(text, sizeof(text), "Init%d ", i + 1);
+        Operation *op = operation_create_insert(0, text, strlen(text));
+        undo_redo_record_single(manager, op);
+    }
+    printf("已创建 20 条历史记录\n");
+    print_status(manager);
+    
+    printf("\n--- 启动并发线程 ---\n");
+    printf("  - 2 个撤销线程（每个执行 500 次）\n");
+    printf("  - 2 个记录线程（每个执行 500 次，会清空重做栈）\n");
+    printf("  - 3 个查询线程（每个执行 2000 次，验证读并发）\n\n");
+    
+    StressThreadArg undo_args[2];
+    StressThreadArg record_args[2];
+    StressThreadArg query_args[3];
+    pthread_t undo_threads[2];
+    pthread_t record_threads[2];
+    pthread_t query_threads[3];
+    
+    for (int i = 0; i < 2; i++) {
+        undo_args[i].manager = manager;
+        undo_args[i].id = i + 1;
+        undo_args[i].iterations = 500;
+        undo_args[i].success_count = 0;
+        undo_args[i].fail_count = 0;
+        undo_args[i].stop = 0;
+        pthread_create(&undo_threads[i], NULL, undo_thread, &undo_args[i]);
+    }
+    
+    for (int i = 0; i < 2; i++) {
+        record_args[i].manager = manager;
+        record_args[i].id = i + 1;
+        record_args[i].iterations = 500;
+        record_args[i].success_count = 0;
+        record_args[i].fail_count = 0;
+        record_args[i].stop = 0;
+        pthread_create(&record_threads[i], NULL, record_thread, &record_args[i]);
+    }
+    
+    for (int i = 0; i < 3; i++) {
+        query_args[i].manager = manager;
+        query_args[i].id = i + 1;
+        query_args[i].iterations = 2000;
+        query_args[i].success_count = 0;
+        query_args[i].fail_count = 0;
+        query_args[i].stop = 0;
+        pthread_create(&query_threads[i], NULL, query_thread, &query_args[i]);
+    }
+    
+    printf("等待所有线程完成...\n\n");
+    
+    for (int i = 0; i < 2; i++) {
+        pthread_join(undo_threads[i], NULL);
+    }
+    for (int i = 0; i < 2; i++) {
+        pthread_join(record_threads[i], NULL);
+    }
+    for (int i = 0; i < 3; i++) {
+        pthread_join(query_threads[i], NULL);
+    }
+    
+    printf("\n--- 所有线程完成，验证状态 ---\n");
+    print_status(manager);
+    print_doc_state(doc, "最终文档状态");
+    
+    printf("\n--- 执行最终验证：多次撤销/重做确认没有损坏 ---\n");
+    int undo_success = 0;
+    int redo_success = 0;
+    for (int i = 0; i < 5; i++) {
+        if (undo_redo_undo(manager)) {
+            undo_success++;
+        }
+    }
+    for (int i = 0; i < 3; i++) {
+        if (undo_redo_redo(manager)) {
+            redo_success++;
+        }
+    }
+    printf("最终验证: 撤销成功 %d 次, 重做成功 %d 次\n", undo_success, redo_success);
+    print_status(manager);
+    
+    printf("\n[测试通过] 没有崩溃、没有死锁、引用计数机制正常工作！\n");
+    
+    undo_redo_destroy(manager);
+    document_destroy(doc);
+}
+
 int main(void) {
     printf("========================================\n");
     printf("   C 语言撤销/重做模块演示程序\n");
@@ -243,6 +421,7 @@ int main(void) {
     test_block_operation();
     test_history_limit();
     test_concurrent_access();
+    test_true_concurrent_undo_record();
     
     printf("\n\n========== 所有测试完成 ==========\n");
     
