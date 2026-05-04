@@ -1,2 +1,7 @@
 *.exe
 *.exe~
+.gopath/
+solo-check-temp
+data/
+NEXT_PROMPT_R*.txt
+*.db
