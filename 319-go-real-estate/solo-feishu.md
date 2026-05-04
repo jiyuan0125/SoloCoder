@@ -18,3 +18,22 @@
 | 分支/文件夹 | 319-go-real-estate |
 
 ---
+
+## 319-go-real-estate — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我试了下服务端，启动没问题但调发布房源的接口直接卡死了，curl一直挂着没返回。看了下代码，store.go 里的 save() 方法里面又加了一把 RLock，但它都是从已经持有 Lock 的方法里调的，同一 goroutine 里写锁还没释放又去拿读锁，Go 的 RWMutex 不支持这种用法，直接死锁了。所有写操作都走这条路径，所以整个服务端啥也干不了。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 单文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 319-go-real-estate |
+
+---
