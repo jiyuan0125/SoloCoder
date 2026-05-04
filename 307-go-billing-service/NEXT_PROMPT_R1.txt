@@ -1,1 +1,0 @@
-go build 报错了，service/bill_service.go 第43行有个 customer 变量声明了但没用到。另外我测了下，创建客户后直接调 POST /api/usages?action=sms 记录短信用量，接口返回成功但数据库里 usages 表没有数据，好像是因为那个月还没有用量记录行的时候 UPDATE 不会生效。

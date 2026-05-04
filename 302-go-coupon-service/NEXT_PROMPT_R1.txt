@@ -1,1 +1,0 @@
-我测了一下查询用户可用券的接口 GET /api/v1/coupons/user/:user_id，给用户领了券之后去查，返回的 data 永远是 null。我看了一下数据库里券确实有，status 也是 issued，怀疑是 SQL 里那个时间比较的问题。另外批次详情和券详情返回的 created_at、updated_at 全是 0001-01-01，数据库里明明有值的。

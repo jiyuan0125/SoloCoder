@@ -1,1 +1,0 @@
-我跑了一下服务，提交保修申请没问题，但调 GET /api/claims/pending 和 GET /api/claims/user?user_id=1 全都返回 500 了，错误信息是 "converting NULL to string is unsupported"，看起来是 reject_reason 那个字段的问题。审核通过和拒绝接口也是同样的报错，提交申诉也不行，基本除了提交申请和统计接口以外全挂了。

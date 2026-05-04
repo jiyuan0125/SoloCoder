@@ -1,1 +1,0 @@
-我跑了一下服务，创建场馆和场次都正常，但是调选座接口 POST /api/seats/lock 的时候直接报了 "near "FOR": syntax error"，确认订单和取消订单也是同样的错。看了下代码 seat_service.go 里用了 FOR UPDATE 做行锁，但咱们用的是 SQLite，SQLite 不支持这个语法。
