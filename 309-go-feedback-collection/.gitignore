@@ -1,2 +1,9 @@
 *.exe
 *.exe~
+.gopath/
+data/
+solo-check-temp
+solo-check-client
+NEXT_PROMPT_*.txt
+CHECK_R*.md
+*.db
