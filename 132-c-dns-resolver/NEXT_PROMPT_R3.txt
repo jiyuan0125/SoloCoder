@@ -1,0 +1,1 @@
+刚试了编译运行，还是 exit code 139 崩了，跟之前两轮一模一样。代码我 diff 了一下，dns_cache.h 和 main.c 跟上一轮完全没变化，dns_cache_t 还是 130MB 全在栈上。我上次 prompt 里都说了改成 malloc 或者缩小数组，你怎么完全没改啊？
