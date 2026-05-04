@@ -43,12 +43,14 @@ typedef struct {
 } logger_config_t;
 
 #define LOG_BUFFER_SIZE 4096
+#define LOG_FULL_LINE_SIZE (LOG_BUFFER_SIZE * 2)
 
 #define LOG_TIME_FORMAT_SIZE 16
 #define LOG_LEVEL_TEXT_SIZE 256
 
 typedef struct {
     char buffer[LOG_BUFFER_SIZE];
+    char full_line[LOG_FULL_LINE_SIZE];
     size_t used;
     char time_buf[LOG_TIME_FORMAT_SIZE];
     char level_buf[LOG_LEVEL_TEXT_SIZE];

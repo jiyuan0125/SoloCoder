@@ -652,7 +652,7 @@ size_t log_printf(log_level_t level, const char* format, ...)
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
-    size_t log_len = log_format_full(tbuf->temp_code, sizeof(tbuf->temp_code),
+    size_t log_len = log_format_full(tbuf->full_line, sizeof(tbuf->full_line),
                                       level, &tv, 0,
                                       tbuf->buffer, NULL);
 
@@ -660,16 +660,17 @@ size_t log_printf(log_level_t level, const char* format, ...)
 
     if (g_default_config.use_color == 0 ||
         g_default_config.term_info.mode == TERM_OUTPUT_STRIP) {
-        char stripped[LOG_BUFFER_SIZE];
+        char stripped[LOG_FULL_LINE_SIZE];
         size_t stripped_len = terminal_strip_ansi_codes(stripped, sizeof(stripped),
-                                                         tbuf->temp_code, log_len);
+                                                         tbuf->full_line, log_len);
         if (stripped_len > 0) {
             fwrite(stripped, 1, stripped_len, stdout);
+            fflush(stdout);
             return stripped_len;
         }
     }
 
-    fwrite(tbuf->temp_code, 1, log_len, stdout);
+    fwrite(tbuf->full_line, 1, log_len, stdout);
     fflush(stdout);
 
     return log_len;
