@@ -1,6 +1,0 @@
-*.exe
-*.exe~
-
-# Build artifacts
-.gopath/
-data/

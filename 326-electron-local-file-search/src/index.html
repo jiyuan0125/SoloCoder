@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>本地文件全文搜索工具</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>本地文件全文搜索工具</h1>
+    </header>
+
+    <div class="search-bar">
+      <div class="search-row">
+        <div class="search-input-group">
+          <input type="text" id="searchInput" placeholder="输入关键词搜索... (空格=AND, | = OR, - = 排除)">
+          <button id="searchHistoryBtn" class="history-btn" title="搜索历史">
+            <svg viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="search-row">
+        <div class="directory-selector">
+          <label>目录:</label>
+          <input type="text" id="directoryInput" placeholder="请选择根目录..." readonly>
+          <button id="selectDirBtn">选择目录</button>
+        </div>
+
+        <div class="file-type-filter">
+          <label>类型:</label>
+          <select id="fileTypeSelect">
+            <option value="all">全部类型</option>
+            <option value=".txt,.md,.js,.py,.json,.html,.css,.xml,.log,.csv">常见类型</option>
+            <option value=".txt">文本文件 (.txt)</option>
+            <option value=".md">Markdown (.md)</option>
+            <option value=".js">JavaScript (.js)</option>
+            <option value=".py">Python (.py)</option>
+            <option value=".json">JSON (.json)</option>
+            <option value=".html">HTML (.html)</option>
+            <option value=".css">CSS (.css)</option>
+            <option value=".xml">XML (.xml)</option>
+            <option value=".log">日志文件 (.log)</option>
+            <option value=".csv">CSV (.csv)</option>
+            <option value="custom">自定义...</option>
+          </select>
+          <input type="text" id="customExtensions" placeholder="如: .ts, .vue, .go" style="display: none;">
+        </div>
+
+        <div class="action-buttons">
+          <button id="indexBtn">建立索引</button>
+          <button id="reindexBtn" style="display: none;">重新索引</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="progress-section" id="progressSection" style="display: none;">
+      <div class="progress-info">
+        <span id="progressText">正在扫描文件...</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      </div>
+      <div class="scanning-file" id="scanningFile">准备中...</div>
+    </div>
+
+    <div class="stats-bar" id="statsBar" style="display: none;">
+      <span>已索引 <strong id="statFiles">0</strong> 个文件</span>
+      <span>共 <strong id="statTerms">0</strong> 个词项</span>
+      <span>目录: <strong id="statDirectory">-</strong></span>
+    </div>
+
+    <div class="search-history-dropdown" id="historyDropdown">
+      <div class="history-header">
+        <span>搜索历史</span>
+        <button id="clearHistoryBtn">清空</button>
+      </div>
+      <ul id="historyList"></ul>
+    </div>
+
+    <div class="results-container">
+      <div class="results-header">
+        <span id="resultCount">搜索结果: 0</span>
+      </div>
+      <div class="results-list" id="resultsList">
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🔍</div>
+          <p>选择目录并建立索引后开始搜索</p>
+          <p class="empty-tip">提示: 使用空格表示 AND，| 表示 OR，- 表示排除</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

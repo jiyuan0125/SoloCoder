@@ -1,0 +1,23 @@
+{
+  "name": "local-file-search",
+  "version": "1.0.0",
+  "description": "本地文件全文搜索工具",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "file-search",
+    "fulltext-search",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "node-watch": "^0.7.4"
+  }
+}

@@ -1,6 +1,0 @@
-*.exe
-*.exe~
-.gopath/
-solo-check-temp
-solo-check-client
-test-data/

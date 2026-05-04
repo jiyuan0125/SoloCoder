@@ -1,0 +1,42 @@
+{
+  "cars": {
+    "20260504204825-VeDWBK": {
+      "id": "20260504204825-VeDWBK",
+      "brand": "BMW",
+      "model": "X5",
+      "daily_rate": 500,
+      "deposit": 10000,
+      "status": "available",
+      "created_at": "2026-05-04T20:48:25.941382727+08:00"
+    },
+    "20260504204825-XZd0lT": {
+      "id": "20260504204825-XZd0lT",
+      "brand": "Toyota",
+      "model": "Camry",
+      "daily_rate": 200,
+      "deposit": 5000,
+      "status": "available",
+      "created_at": "2026-05-04T20:48:25.906281599+08:00"
+    }
+  },
+  "orders": {
+    "20260504204835-qyxQ0j": {
+      "id": "20260504204835-qyxQ0j",
+      "car_id": "20260504204825-XZd0lT",
+      "user_name": "Zhang",
+      "user_phone": "13800138000",
+      "pickup_date": "2026-05-05T00:00:00+08:00",
+      "return_date": "2026-05-07T00:00:00+08:00",
+      "original_total_cost": 600,
+      "total_cost": 600,
+      "deposit": 5000,
+      "deposit_deduction": 0,
+      "mileage": 0,
+      "condition": "",
+      "violation_or_damage": false,
+      "violation_amount": 0,
+      "status": "reserved",
+      "created_at": "2026-05-04T20:48:35.362045292+08:00"
+    }
+  }
+}

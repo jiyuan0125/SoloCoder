@@ -1,9 +1,0 @@
-*.exe
-*.exe~
-.gopath/
-solo-check-temp
-solo-check-client
-data.json
-*.db
-NEXT_PROMPT_R*.txt
-CHECK_R*.md

@@ -1,7 +1,0 @@
-*.o
-*.out
-*.a
-*.so
-*.d
-*.swp
-regex_test

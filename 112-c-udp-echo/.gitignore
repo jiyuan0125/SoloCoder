@@ -1,8 +1,0 @@
-*.o
-*.out
-*.exe
-*.d
-compile_commands.json
-.cache/
-heartbeat_server
-heartbeat_client

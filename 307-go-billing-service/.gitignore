@@ -1,8 +1,0 @@
-*.exe
-*.exe~
-solo-check-temp
-data/
-NEXT_PROMPT_R*.txt
-CHECK_R*.md
-*.db
-*.gopath

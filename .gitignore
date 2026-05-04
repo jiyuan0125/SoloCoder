@@ -1,0 +1,45 @@
+# Solo Coder 辅助产物
+NEXT_PROMPT.txt
+NEXT_PROMPT_R*.txt
+CHECK_R*.md
+solo-feishu.md
+check-*.png
+
+# ===== C (101-200) =====
+*.o
+*.out
+*.d
+*.a
+*.so
+*.swp
+compile_commands.json
+.cache/
+
+# ===== Go (201-320, 351-600) =====
+*.exe
+*.exe~
+*.test
+vendor/
+go/
+.gopath/
+
+# ===== Electron / Node.js (321-350) =====
+node_modules/
+dist/
+.next/
+
+# ===== Python (1-100 archived) =====
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# ===== 通用 =====
+*.db
+*.log
+.env
+.DS_Store
+build/
+target/
+data/
