@@ -1,0 +1,1 @@
+我跑了一下服务端，连续请求十几二十次之后服务就挂了，没有任何报错日志直接就没了。我看了一眼 storage.go 里的 saveToFile，每次写数据都 go s.saveToFile() 开个新协程去写文件，多次操作之后好几个协程同时 os.Create 同一个文件然后各写各的，这个并发写文件的方式是不是有问题？另外 handler.go 里的 ServeHTTP 每次请求都 new 一个 ServeMux 然后重新注册所有路由，感觉也不太对。

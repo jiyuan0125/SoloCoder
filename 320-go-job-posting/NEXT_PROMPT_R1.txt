@@ -1,0 +1,1 @@
+服务启动了，但是所有写入操作都会卡住，我试了下创建职位 POST /company/jobs，请求直接超时了，返回不了数据。看了一下 store.go 里面的 save() 方法用的是 RLock()，但 CreateJob 那些方法已经拿了写锁再调 save()，应该是锁死住了。
