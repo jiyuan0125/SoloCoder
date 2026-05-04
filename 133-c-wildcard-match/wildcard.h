@@ -69,7 +69,7 @@ typedef struct {
 } wc_match_result_t;
 
 typedef struct {
-    wc_pattern_t pattern;
+    wc_pattern_t *pattern;
     int rule_index;
     void *user_data;
 } wc_rule_t;

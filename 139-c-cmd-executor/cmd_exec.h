@@ -20,9 +20,4 @@ int cmd_kill_process_group(pid_t pgid);
 int cmd_read_pipes(cmd_result_t *result);
 int cmd_execute_sync(cmd_config_t *config, cmd_result_t *result);
 
-char **build_argv(const char *command);
-void free_argv(char **argv);
-char **build_envp(env_var_t *env_vars, size_t env_count);
-void free_envp(char **envp);
-
 #endif

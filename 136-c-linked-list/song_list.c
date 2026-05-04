@@ -156,11 +156,39 @@ void song_list_move(SongList* list, int from_pos, int to_pos) {
     SongNode* from_node = song_list_get_node_at(list, from_pos);
     if (!from_node) return;
     
-    Song* song = song_list_remove_by_node(list, from_node);
-    if (!song) return;
+    SongNode* to_node = song_list_get_node_at(list, to_pos);
+    if (!to_node) return;
     
-    int new_to_pos = (to_pos < from_pos) ? to_pos : to_pos - 1;
-    song_list_insert_at(list, new_to_pos, song);
+    if (from_node->prev) {
+        from_node->prev->next = from_node->next;
+    } else {
+        list->head = from_node->next;
+    }
+    if (from_node->next) {
+        from_node->next->prev = from_node->prev;
+    } else {
+        list->tail = from_node->prev;
+    }
+    
+    if (to_pos > from_pos) {
+        from_node->prev = to_node;
+        from_node->next = to_node->next;
+        if (to_node->next) {
+            to_node->next->prev = from_node;
+        } else {
+            list->tail = from_node;
+        }
+        to_node->next = from_node;
+    } else {
+        from_node->prev = to_node->prev;
+        from_node->next = to_node;
+        if (to_node->prev) {
+            to_node->prev->next = from_node;
+        } else {
+            list->head = from_node;
+        }
+        to_node->prev = from_node;
+    }
 }
 
 SongNode* song_list_get_node_at(SongList* list, int position) {

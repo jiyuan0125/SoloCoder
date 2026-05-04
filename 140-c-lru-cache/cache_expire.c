@@ -16,13 +16,15 @@ static void* cleanup_thread_func(void *arg) {
         
         if (!cache->cleanup_running) break;
         
-        if (cache_sync_write_lock(cache) == 0) {
-            size_t removed = 0;
-            CacheCore *core = cache->core;
-            if (core) {
-                cache_core_remove_expired(core, &removed);
+        for (int i = 0; i < CACHE_SEGMENTS; i++) {
+            if (cache_sync_write_lock(cache, i) == 0) {
+                size_t removed = 0;
+                CacheCore *core = cache->segments[i].core;
+                if (core) {
+                    cache_core_remove_expired(core, &removed);
+                }
+                cache_sync_write_unlock(cache, i);
             }
-            cache_sync_write_unlock(cache);
         }
     }
     
@@ -65,21 +67,27 @@ int cache_set(Cache *cache, const char *key, const unsigned char *value,
               size_t value_len, time_t ttl_seconds) {
     if (!cache || !key || !value || value_len == 0) return -1;
     
+    int segment_idx = cache_get_segment_idx(key);
     time_t expire_time = (ttl_seconds > 0) ? (time(NULL) + ttl_seconds) : 0;
+    size_t evicted = 0;
     
-    if (cache_sync_write_lock(cache) != 0) {
+    if (cache_sync_write_lock(cache, segment_idx) != 0) {
         return -1;
     }
     
-    CacheCore *core = cache->core;
+    CacheCore *core = cache->segments[segment_idx].core;
     if (!core) {
-        cache_sync_write_unlock(cache);
+        cache_sync_write_unlock(cache, segment_idx);
         return -1;
     }
     
-    int ret = cache_core_set(core, key, value, value_len, expire_time);
+    int ret = cache_core_set(core, key, value, value_len, expire_time, &evicted);
     
-    cache_sync_write_unlock(cache);
+    cache_sync_write_unlock(cache, segment_idx);
+    
+    if (evicted > 0) {
+        cache_sync_increment_evictions(cache, evicted);
+    }
     
     return ret;
 }
@@ -93,21 +101,23 @@ int cache_get(Cache *cache, const char *key, unsigned char **value,
     
     cache_sync_increment_total(cache);
     
-    if (cache_sync_write_lock(cache) != 0) {
+    int segment_idx = cache_get_segment_idx(key);
+    
+    if (cache_sync_write_lock(cache, segment_idx) != 0) {
         cache_sync_increment_misses(cache);
         return -1;
     }
     
-    CacheCore *core = cache->core;
+    CacheCore *core = cache->segments[segment_idx].core;
     if (!core) {
-        cache_sync_write_unlock(cache);
+        cache_sync_write_unlock(cache, segment_idx);
         cache_sync_increment_misses(cache);
         return -1;
     }
     
     int ret = cache_core_get(core, key, value, value_len);
     
-    cache_sync_write_unlock(cache);
+    cache_sync_write_unlock(cache, segment_idx);
     
     if (ret == 1) {
         cache_sync_increment_hits(cache);
@@ -121,19 +131,21 @@ int cache_get(Cache *cache, const char *key, unsigned char **value,
 int cache_delete(Cache *cache, const char *key) {
     if (!cache || !key) return -1;
     
-    if (cache_sync_write_lock(cache) != 0) {
+    int segment_idx = cache_get_segment_idx(key);
+    
+    if (cache_sync_write_lock(cache, segment_idx) != 0) {
         return -1;
     }
     
-    CacheCore *core = cache->core;
+    CacheCore *core = cache->segments[segment_idx].core;
     if (!core) {
-        cache_sync_write_unlock(cache);
+        cache_sync_write_unlock(cache, segment_idx);
         return -1;
     }
     
     int ret = cache_core_delete(core, key);
     
-    cache_sync_write_unlock(cache);
+    cache_sync_write_unlock(cache, segment_idx);
     
     return ret;
 }
@@ -141,11 +153,13 @@ int cache_delete(Cache *cache, const char *key) {
 void cache_clear(Cache *cache) {
     if (!cache) return;
     
-    cache_sync_write_lock(cache);
+    cache_sync_write_lock_all(cache);
     
-    CacheCore *core = cache->core;
-    if (core) {
-        cache_core_clear(core);
+    for (int i = 0; i < CACHE_SEGMENTS; i++) {
+        CacheCore *core = cache->segments[i].core;
+        if (core) {
+            cache_core_clear(core);
+        }
     }
     
     cache_sync_stats_lock(cache);
@@ -153,7 +167,7 @@ void cache_clear(Cache *cache) {
     cache->stats.entry_count = 0;
     cache_sync_stats_unlock(cache);
     
-    cache_sync_write_unlock(cache);
+    cache_sync_write_unlock_all(cache);
 }
 
 BatchResult* cache_batch_get(Cache *cache, const char **keys, size_t key_count) {
@@ -171,25 +185,41 @@ BatchResult* cache_batch_get(Cache *cache, const char **keys, size_t key_count) 
     result->hit_count = 0;
     result->miss_count = 0;
     
-    cache_sync_write_lock(cache);
-    
-    CacheCore *core = cache->core;
-    if (!core) {
-        cache_sync_write_unlock(cache);
+    int *segments_needed = (int *)calloc(CACHE_SEGMENTS, sizeof(int));
+    if (!segments_needed) {
         free(result->items);
         free(result);
         return NULL;
     }
     
     for (size_t i = 0; i < key_count; i++) {
+        int seg_idx = cache_get_segment_idx(keys[i]);
+        segments_needed[seg_idx] = 1;
+    }
+    
+    for (int i = 0; i < CACHE_SEGMENTS; i++) {
+        if (segments_needed[i]) {
+            cache_sync_write_lock(cache, i);
+        }
+    }
+    
+    for (size_t i = 0; i < key_count; i++) {
         cache_sync_increment_total(cache);
         
         const char *key = keys[i];
+        int segment_idx = cache_get_segment_idx(key);
         
         result->items[i].key = key;
         result->items[i].is_hit = 0;
         result->items[i].value = NULL;
         result->items[i].value_len = 0;
+        
+        CacheCore *core = cache->segments[segment_idx].core;
+        if (!core) {
+            cache_sync_increment_misses(cache);
+            result->miss_count++;
+            continue;
+        }
         
         unsigned char *value = NULL;
         size_t value_len = 0;
@@ -207,7 +237,11 @@ BatchResult* cache_batch_get(Cache *cache, const char **keys, size_t key_count) 
         }
     }
     
-    cache_sync_write_unlock(cache);
+    for (int i = 0; i < CACHE_SEGMENTS; i++) {
+        if (segments_needed[i]) {
+            cache_sync_write_unlock(cache, i);
+        }
+    }
     
     result->missed_keys = NULL;
     if (result->miss_count > 0) {
@@ -221,6 +255,8 @@ BatchResult* cache_batch_get(Cache *cache, const char **keys, size_t key_count) 
             }
         }
     }
+    
+    free(segments_needed);
     
     return result;
 }
@@ -254,13 +290,15 @@ void cache_get_stats(Cache *cache, CacheStats *stats) {
     stats->current_size = 0;
     stats->entry_count = 0;
     
-    if (cache_sync_read_lock(cache) == 0) {
-        CacheCore *core = cache->core;
-        if (core) {
-            stats->current_size = core->current_size;
-            stats->entry_count = core->entry_count;
+    for (int i = 0; i < CACHE_SEGMENTS; i++) {
+        if (cache_sync_read_lock(cache, i) == 0) {
+            CacheCore *core = cache->segments[i].core;
+            if (core) {
+                stats->current_size += core->current_size;
+                stats->entry_count += core->entry_count;
+            }
+            cache_sync_read_unlock(cache, i);
         }
-        cache_sync_read_unlock(cache);
     }
 }
 

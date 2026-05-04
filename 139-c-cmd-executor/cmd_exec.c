@@ -92,12 +92,20 @@ int output_buf_init(output_buf_t *buf, size_t max_size) {
     if (!buf) return -1;
     memset(buf, 0, sizeof(output_buf_t));
     
+    buf->max_size = (max_size > 0) ? max_size : DEFAULT_MAX_OUTPUT_SIZE;
+    
     buf->stdout_alloc = initial_buf_size;
+    if (buf->stdout_alloc > buf->max_size) {
+        buf->stdout_alloc = buf->max_size;
+    }
     buf->stdout_buf = malloc(buf->stdout_alloc);
     if (!buf->stdout_buf) return -1;
     buf->stdout_buf[0] = '\0';
     
     buf->stderr_alloc = initial_buf_size;
+    if (buf->stderr_alloc > buf->max_size) {
+        buf->stderr_alloc = buf->max_size;
+    }
     buf->stderr_buf = malloc(buf->stderr_alloc);
     if (!buf->stderr_buf) {
         free(buf->stdout_buf);
@@ -122,9 +130,7 @@ ssize_t output_buf_append(output_buf_t *buf, const char *data, size_t len, bool 
     size_t *len_ptr;
     size_t *alloc_ptr;
     bool *trunc_ptr;
-    size_t max_size = buf->stdout_alloc > buf->stderr_alloc ? 
-                       (buf->stdout_alloc > initial_buf_size ? buf->stdout_alloc : DEFAULT_MAX_OUTPUT_SIZE) :
-                       (buf->stderr_alloc > initial_buf_size ? buf->stderr_alloc : DEFAULT_MAX_OUTPUT_SIZE);
+    size_t max_size = buf->max_size;
     
     if (is_stdout) {
         buf_ptr = &buf->stdout_buf;
@@ -177,97 +183,9 @@ ssize_t output_buf_append(output_buf_t *buf, const char *data, size_t len, bool 
     return len;
 }
 
-char **build_argv(const char *command) {
-    if (!command || command[0] == '\0') return NULL;
-    
-    size_t argc = 0;
-    size_t buf_size = 16;
-    char **argv = malloc(buf_size * sizeof(char *));
-    if (!argv) return NULL;
-    
-    const char *ptr = command;
-    while (*ptr) {
-        while (*ptr == ' ' || *ptr == '\t') ptr++;
-        if (*ptr == '\0') break;
-        
-        const char *start = ptr;
-        bool in_quote = false;
-        char quote_char = 0;
-        
-        while (*ptr) {
-            if (!in_quote && (*ptr == ' ' || *ptr == '\t')) {
-                break;
-            }
-            if (*ptr == '"' || *ptr == '\'') {
-                if (!in_quote) {
-                    in_quote = true;
-                    quote_char = *ptr;
-                } else if (*ptr == quote_char) {
-                    in_quote = false;
-                    quote_char = 0;
-                }
-            }
-            ptr++;
-        }
-        
-        size_t len = ptr - start;
-        char *arg = malloc(len + 1);
-        if (!arg) {
-            free_argv(argv);
-            return NULL;
-        }
-        
-        char *dst = arg;
-        const char *src = start;
-        in_quote = false;
-        quote_char = 0;
-        
-        while (src < ptr) {
-            if (*src == '"' || *src == '\'') {
-                if (!in_quote) {
-                    in_quote = true;
-                    quote_char = *src;
-                    src++;
-                    continue;
-                } else if (*src == quote_char) {
-                    in_quote = false;
-                    quote_char = 0;
-                    src++;
-                    continue;
-                }
-            }
-            *dst++ = *src++;
-        }
-        *dst = '\0';
-        
-        if (argc + 1 >= buf_size) {
-            size_t new_size = buf_size * 2;
-            char **new_argv = realloc(argv, new_size * sizeof(char *));
-            if (!new_argv) {
-                free(arg);
-                free_argv(argv);
-                return NULL;
-            }
-            argv = new_argv;
-            buf_size = new_size;
-        }
-        
-        argv[argc++] = arg;
-    }
-    
-    argv[argc] = NULL;
-    return argv;
-}
+static void free_envp(char **envp);
 
-void free_argv(char **argv) {
-    if (!argv) return;
-    for (size_t i = 0; argv[i]; i++) {
-        free(argv[i]);
-    }
-    free(argv);
-}
-
-char **build_envp(env_var_t *env_vars, size_t env_count) {
+static char **build_envp(env_var_t *env_vars, size_t env_count) {
     extern char **environ;
     
     size_t base_count = 0;
@@ -310,7 +228,7 @@ char **build_envp(env_var_t *env_vars, size_t env_count) {
     return new_envp;
 }
 
-void free_envp(char **envp) {
+static void free_envp(char **envp) {
     if (!envp) return;
     for (size_t i = 0; envp[i]; i++) {
         free(envp[i]);

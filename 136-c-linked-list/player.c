@@ -268,12 +268,13 @@ static Song* handle_temp_song_finished(Player* player) {
     if (player->current_source != LIST_TEMP) return NULL;
     
     SongNode* finished_node = player->current_node;
-    Song* finished_song = finished_node->song;
     
     player->current_node = finished_node->next;
     
-    Song* removed = song_list_remove_by_node(player->temp_list, finished_node);
-    (void)removed;
+    Song* removed_song = song_list_remove_by_node(player->temp_list, finished_node);
+    if (removed_song) {
+        song_destroy(removed_song);
+    }
     
     if (player->current_node) {
         return player->current_node->song;

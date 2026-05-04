@@ -36,7 +36,7 @@ CacheCore* cache_core_create(size_t capacity);
 void cache_core_destroy(CacheCore *core);
 
 int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
-                   size_t value_len, time_t expire_time);
+                   size_t value_len, time_t expire_time, size_t *evicted_count);
 int cache_core_get(CacheCore *core, const char *key, unsigned char **value,
                    size_t *value_len);
 int cache_core_delete(CacheCore *core, const char *key);

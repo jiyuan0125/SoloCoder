@@ -203,7 +203,7 @@ static void run_batch_matcher_tests(void) {
                 wc_rule_t *rule = &matcher->rules[rule_idx];
                 printf("      [%d] '%s' - %s\n", 
                        rule_idx, 
-                       rule->pattern.original_pattern,
+                       rule->pattern->original_pattern,
                        (char*)rule->user_data);
                 
                 wc_match_result_t result;

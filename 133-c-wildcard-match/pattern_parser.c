@@ -28,6 +28,15 @@ static wc_char_class_t* char_class_create(void) {
 static void char_class_destroy(wc_char_class_t *cc) {
     if (cc) {
         free(cc->ranges);
+        cc->ranges = NULL;
+        cc->count = 0;
+        cc->capacity = 0;
+    }
+}
+
+static void char_class_full_destroy(wc_char_class_t *cc) {
+    if (cc) {
+        char_class_destroy(cc);
         free(cc);
     }
 }
@@ -188,12 +197,12 @@ static wc_char_class_t* parse_char_class(const char **p) {
         if (*ptr == '\\') {
             char escaped = parse_escaped_char(&ptr);
             if (escaped == 0 && last_error[0] != '\0') {
-                char_class_destroy(cc);
+                char_class_full_destroy(cc);
                 return NULL;
             }
             if (char_class_add_range(cc, escaped, escaped, false) < 0) {
                 set_error("Out of memory");
-                char_class_destroy(cc);
+                char_class_full_destroy(cc);
                 return NULL;
             }
             first = false;
@@ -204,7 +213,7 @@ static wc_char_class_t* parse_char_class(const char **p) {
             if (*ptr == '\\') {
                 end = parse_escaped_char(&ptr);
                 if (end == 0 && last_error[0] != '\0') {
-                    char_class_destroy(cc);
+                    char_class_full_destroy(cc);
                     return NULL;
                 }
             } else {
@@ -218,7 +227,7 @@ static wc_char_class_t* parse_char_class(const char **p) {
             char ch = *ptr;
             if (char_class_add_range(cc, ch, ch, false) < 0) {
                 set_error("Out of memory");
-                char_class_destroy(cc);
+                char_class_full_destroy(cc);
                 return NULL;
             }
             first = false;
@@ -228,7 +237,7 @@ static wc_char_class_t* parse_char_class(const char **p) {
     
     if (*ptr != ']') {
         set_error("Unterminated character class");
-        char_class_destroy(cc);
+        char_class_full_destroy(cc);
         return NULL;
     }
     ptr++;
@@ -312,7 +321,7 @@ wc_pattern_t* wc_pattern_create(const char *pattern_str, wc_case_mode_t case_mod
             }
             if (pattern_add_charclass(p, cc) < 0) {
                 set_error("Out of memory");
-                char_class_destroy(cc);
+                char_class_full_destroy(cc);
                 wc_pattern_destroy(p);
                 return NULL;
             }

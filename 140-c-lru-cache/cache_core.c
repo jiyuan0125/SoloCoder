@@ -187,14 +187,16 @@ int cache_core_evict_if_needed(CacheCore *core, size_t needed_size, size_t *evic
 }
 
 int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
-                   size_t value_len, time_t expire_time) {
+                   size_t value_len, time_t expire_time, size_t *evicted_count) {
     if (!core || !key || !value || value_len == 0) return -1;
+    if (evicted_count) *evicted_count = 0;
     
     size_t key_len = strlen(key);
     if (key_len > KEY_MAX_LEN) return -1;
     if (value_len > VALUE_MAX_LEN) return -1;
     
     size_t entry_size = key_len + 1 + value_len + sizeof(CacheEntry);
+    size_t total_evicted = 0;
     
     CacheEntry *existing = cache_core_find(core, key);
     if (existing) {
@@ -213,6 +215,19 @@ int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
                 return -1;
             }
             
+            size_t evicted = 0;
+            if (entry_size > existing->size) {
+                size_t additional_needed = entry_size - existing->size;
+                if (cache_core_evict_if_needed(core, additional_needed, &evicted) != 0) {
+                    hash_table_insert(&core->table, existing);
+                    core->current_size += existing->size;
+                    core->entry_count++;
+                    existing->value = new_value;
+                    return -1;
+                }
+                total_evicted += evicted;
+            }
+            
             memcpy(new_value, value, value_len);
             existing->value = new_value;
             existing->value_len = value_len;
@@ -223,6 +238,8 @@ int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
             core->current_size += entry_size;
             core->entry_count++;
             cache_core_move_to_head(core, existing);
+            
+            if (evicted_count) *evicted_count = total_evicted;
             return 0;
         }
     }
@@ -233,6 +250,7 @@ int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
     if (cache_core_evict_if_needed(core, entry_size, &evicted) != 0) {
         return -1;
     }
+    total_evicted += evicted;
     
     CacheEntry *entry = (CacheEntry *)malloc(sizeof(CacheEntry));
     if (!entry) return -1;
@@ -263,6 +281,7 @@ int cache_core_set(CacheCore *core, const char *key, const unsigned char *value,
     
     if (!core->lru_tail) core->lru_tail = entry;
     
+    if (evicted_count) *evicted_count = total_evicted;
     return 0;
 }
 

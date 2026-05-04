@@ -117,26 +117,23 @@ static bool match_recursive(match_context_t *ctx, size_t token_idx, size_t str_p
             
             push_capture(ctx, str_pos);
             
-            if (next_token_idx >= pattern->count) {
-                for (size_t i = str_pos; i <= ctx->str_len; i++) {
-                    if (str[i] == '/' && i < ctx->str_len) {
-                        continue;
-                    }
-                    if (i == ctx->str_len || str[i] == '/') {
-                        size_t cap_start = pop_capture(ctx);
-                        add_capture_result(ctx, cap_start, i);
-                        return true;
-                    }
-                }
-                pop_capture(ctx);
-                return false;
+            size_t next_slash = str_pos;
+            while (next_slash < ctx->str_len && str[next_slash] != '/') {
+                next_slash++;
             }
             
-            for (size_t i = str_pos; i <= ctx->str_len; i++) {
-                if (i < ctx->str_len && str[i] == '/') {
-                    break;
+            if (next_token_idx >= pattern->count) {
+                if (next_slash == ctx->str_len) {
+                    size_t cap_start = pop_capture(ctx);
+                    add_capture_result(ctx, cap_start, ctx->str_len);
+                    return true;
+                } else {
+                    pop_capture(ctx);
+                    return false;
                 }
-                
+            }
+            
+            for (size_t i = str_pos; i <= next_slash; i++) {
                 if (match_recursive(ctx, next_token_idx, i)) {
                     size_t cap_start = pop_capture(ctx);
                     add_capture_result(ctx, cap_start, i);

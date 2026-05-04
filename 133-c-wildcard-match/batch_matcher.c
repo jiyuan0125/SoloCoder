@@ -66,7 +66,7 @@ void wc_batch_matcher_destroy(wc_batch_matcher_t *matcher) {
     if (!matcher) return;
     
     for (size_t i = 0; i < matcher->rule_count; i++) {
-        wc_pattern_destroy(&matcher->rules[i].pattern);
+        wc_pattern_destroy(matcher->rules[i].pattern);
     }
     
     for (size_t i = 0; i < matcher->group_count; i++) {
@@ -94,11 +94,9 @@ int wc_batch_matcher_add_rule(wc_batch_matcher_t *matcher,
     int rule_idx = (int)matcher->rule_count;
     wc_rule_t *rule = &matcher->rules[matcher->rule_count++];
     
-    memcpy(&rule->pattern, pattern, sizeof(wc_pattern_t));
+    rule->pattern = pattern;
     rule->rule_index = rule_idx;
     rule->user_data = user_data;
-    
-    free(pattern);
     
     return rule_idx;
 }
@@ -163,7 +161,7 @@ void wc_batch_matcher_build(wc_batch_matcher_t *matcher) {
         const wc_rule_t *rule = &matcher->rules[i];
         char prefix[WC_MAX_PREFIX_LEN + 1];
         
-        int prefix_len = extract_pattern_prefix(&rule->pattern, prefix, sizeof(prefix));
+        int prefix_len = extract_pattern_prefix(rule->pattern, prefix, sizeof(prefix));
         
         if (prefix_len > 0) {
             int group_idx = find_or_create_group(matcher, prefix);
@@ -181,7 +179,7 @@ void wc_batch_matcher_build(wc_batch_matcher_t *matcher) {
 static bool match_rule_internal(const wc_batch_matcher_t *matcher, 
                                  const wc_rule_t *rule, const char *str,
                                  wc_match_result_t *result) {
-    return wc_match(&rule->pattern, str, matcher->case_mode, result);
+    return wc_match(rule->pattern, str, matcher->case_mode, result);
 }
 
 int* wc_batch_match(const wc_batch_matcher_t *matcher, const char *str, 

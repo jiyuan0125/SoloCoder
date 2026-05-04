@@ -54,6 +54,7 @@ typedef struct {
     size_t stderr_len;
     size_t stderr_alloc;
     bool stderr_truncated;
+    size_t max_size;
 } output_buf_t;
 
 typedef struct {
