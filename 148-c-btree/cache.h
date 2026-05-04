@@ -25,7 +25,6 @@ uint32_t wal_append(wal_t *wal, wal_op_type_t op_type, page_num_t page_num,
 int wal_read(wal_t *wal, uint32_t lsn, wal_header_t *out_header,
              bt_key_t *out_key, bt_value_t *out_value);
 
-int wal_recover(btree_t *btree, const char *wal_path);
 int wal_sync(wal_t *wal);
 
 #endif

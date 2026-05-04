@@ -21,4 +21,6 @@ int btree_update_partial(btree_t *btree, const bt_key_t *key,
 int btree_flush(btree_t *btree);
 int btree_sync(btree_t *btree);
 
+int wal_recover(btree_t *btree, const char *wal_path);
+
 #endif

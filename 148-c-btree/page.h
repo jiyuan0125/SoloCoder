@@ -77,6 +77,43 @@ static inline leaf_entry_t *page_get_leaf_entry(page_t *page, uint16_t idx) {
     return (leaf_entry_t *)page->data + idx;
 }
 
+static inline int page_get_min_key(const page_t *page, bt_key_t *out_key) {
+    if (page->num_entries == 0) {
+        return -1;
+    }
+    if (page->type == PAGE_TYPE_LEAF) {
+        leaf_entry_t *entry = (leaf_entry_t *)page->data;
+        key_copy(out_key, &entry->key);
+    } else {
+        internal_entry_t *entry = (internal_entry_t *)(page->data + sizeof(page_num_t));
+        key_copy(out_key, &entry->key);
+    }
+    return 0;
+}
+
+static inline int page_find_child_idx(const page_t *page, page_num_t child_page_num, uint16_t *out_idx) {
+    uint16_t i;
+
+    if (page->type != PAGE_TYPE_INTERNAL) {
+        return -1;
+    }
+
+    if (page_get_child(page, 0) == child_page_num) {
+        *out_idx = 0;
+        return 0;
+    }
+
+    for (i = 0; i < page->num_entries; i++) {
+        internal_entry_t *entry = (internal_entry_t *)(page->data + sizeof(page_num_t)) + i;
+        if (entry->child == child_page_num) {
+            *out_idx = i + 1;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
 int page_insert_internal(page_t *page, const bt_key_t *key, page_num_t left_child, page_num_t right_child);
 int page_insert_leaf(page_t *page, const bt_key_t *key, page_num_t value_page, uint32_t value_len);
 int page_update_leaf(page_t *page, uint16_t idx, page_num_t value_page, uint32_t value_len);
