@@ -1,0 +1,12 @@
+{
+  "de823d94-e7af-4048-bf49-e483c4a05844": {
+    "id": "de823d94-e7af-4048-bf49-e483c4a05844",
+    "user_id": "user_001",
+    "sku": "SKU_12345",
+    "specification": "红色 / L码",
+    "price": 299,
+    "shipping_fee": 15,
+    "total_amount": 314,
+    "create_time": "2026-05-04T18:47:54.203484202+08:00"
+  }
+}
