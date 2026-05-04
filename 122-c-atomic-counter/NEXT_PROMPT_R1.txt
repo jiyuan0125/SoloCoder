@@ -1,0 +1,12 @@
+代码整体架构不错，核心限流逻辑（固定窗口和滑动窗口）都正确实现了。但统计模块有两处缺陷需要修复：
+
+1. **`global_total_requests` 语义错误**：PROMPT 要求统计"总请求量"，但 `global_total_requests` 只在 `allowed=true` 时递增（sliding_window.c 的 `fixed_window_check_and_inc` 和 `sliding_window_check_and_inc` 两个函数都是如此），导致 `get_global_stats` 返回的 `total_requests` 实际是允许通过的请求数而非总请求量。修复方式：每次请求（无论允许或拒绝）都递增 `global_total_requests`，然后把 `global_stats_t.total_requests` 的语义改为真正的总请求量。
+
+2. **固定窗口模式不追踪每窗口拒绝次数**：`counter.h` 的 `fixed` 结构体只有 `requests` 和 `window_start`，没有 rejected 字段。`sliding_window.c` 的 `get_key_stats` 对固定窗口硬编码返回 `rejected_last_minute = 0`。修复方式：在 `fixed` 结构体加 `volatile uint32_t rejected`，在 `fixed_window_check_and_inc` 的拒绝分支递增它，在窗口重置时清零，`get_key_stats` 中读取该值。
+
+另外清理一下代码细节：
+- 删除 `cleanup.c` 里未使用的 `collect_expired_callback` 函数（编译有 unused function warning）
+- `counter.c` 的 `counter_get_or_create` 中，竞态路径 `free(new_counter)` 前补上 `pthread_spin_destroy(&new_counter->spinlock)`
+- `.gitignore` 里加上 `rate_limiter`（编译产物不应入库）
+
+修完后确保 `gcc -Wall -Wextra -o /tmp/solo-check-122 *.c -lpthread` 零 warning 零 error。
