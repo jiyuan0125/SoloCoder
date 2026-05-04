@@ -18,3 +18,22 @@
 | 分支/文件夹 | 305-go-warranty-claim |
 
 ---
+
+## 305-go-warranty-claim — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 服务端启动没问题，GET /statistics 能正常返回数据，但 POST /submit 提交保修申请的时候请求直接卡死没响应了，curl 一直等不到结果只能超时断开。我看了一下代码 store.go 里 CreateApplication 持有了写锁又调 Save() 去拿读锁，这个会死锁的。另外 struct 上的 JSON tag 好像也没加，外部用 snake_case 传参的话字段全都是空的。你跑一下看看能不能复现。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：store.go 中 Save() 方法仍使用 RLock()（第30行），CreateApplication()、UpdateApplication()、CreateAppeal()、UpdateAppeal() 持有 Lock() 后调用 Save() 尝试获取 RLock()，sync.RWMutex 死锁完全未修复，所有写操作（POST /submit、POST /review、POST /appeal、POST /resolve-appeal）全部卡死，curl 超时无响应。产物不满意：types.go 中所有 struct（WarrantyApplication、SubmitApplicationRequest、SubmitApplicationResponse、ReviewApplicationRequest、StatisticsResponse 等）仍然缺少 json tag，JSON 序列化使用 Go PascalCase 字段名，外部调用方用 snake_case 传参会全部丢失变为零值。过程不满意：上一轮已明确指出死锁和 JSON tag 两个问题并给出了具体代码位置，本轮交付代码两个问题均未修复，说明没有对照上轮反馈逐项检查修改。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 305-go-warranty-claim |
+
+---
