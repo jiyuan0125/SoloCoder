@@ -32,16 +32,18 @@ void rank_destroy(RankResult* result)
 int calculate_percentile(int rank, int total)
 {
     if (total <= 0) return 0;
-    if (rank <= 0) return 100;
-    if (rank >= total) return 0;
+    if (rank <= 0) return 99;
     
     int better = total - rank;
+    if (better <= 0) return 0;
+    
     double percentile = (double)better / total * 100.0;
+    int result = (int)percentile;
     
-    if (percentile >= 100.0) return 99;
-    if (percentile < 0.0) return 0;
+    if (result >= 100) return 99;
+    if (result < 0) return 0;
     
-    return (int)(percentile + 0.5);
+    return result;
 }
 
 int is_tie(const Student* a, const Student* b)
@@ -169,16 +171,4 @@ void rank_students(StudentDatabase* db, RankScope scope, int filter, RankResult*
     
     free(indices);
     free(temp);
-}
-
-int compare_for_class(const void* a, const void* b, int class_num)
-{
-    (void)class_num;
-    return student_compare_rank(a, b);
-}
-
-int compare_for_track(const void* a, const void* b, TrackType track)
-{
-    (void)track;
-    return student_compare_rank(a, b);
 }

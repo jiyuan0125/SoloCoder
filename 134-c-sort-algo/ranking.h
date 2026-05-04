@@ -27,7 +27,4 @@ void rank_students_by_indices(StudentDatabase* db, int* indices, int count, Rank
 int calculate_percentile(int rank, int total);
 int is_tie(const Student* a, const Student* b);
 
-int compare_for_class(const void* a, const void* b, int class_num);
-int compare_for_track(const void* a, const void* b, TrackType track);
-
 #endif
