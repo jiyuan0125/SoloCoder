@@ -1,0 +1,23 @@
+{
+  "name": "image-batch-processor",
+  "version": "1.0.0",
+  "description": "A local image batch processing tool built with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "electron",
+    "image",
+    "batch",
+    "processor"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "sharp": "^0.33.0"
+  }
+}

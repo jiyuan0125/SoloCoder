@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>番茄钟</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="main-content">
+      <div class="timer-section">
+        <div class="timer-container">
+          <div class="circular-timer" id="circularTimer">
+            <svg class="timer-svg" viewBox="0 0 200 200">
+              <circle class="timer-track" cx="100" cy="100" r="90" stroke-width="10" fill="none"/>
+              <circle class="timer-progress" cx="100" cy="100" r="90" stroke-width="10" fill="none"
+                stroke-linecap="round" transform="rotate(-90 100 100)"/>
+            </svg>
+            <div class="timer-display">
+              <div class="timer-mode" id="timerMode">专注时间</div>
+              <div class="timer-time" id="timerTime">25:00</div>
+              <div class="timer-status" id="timerStatus">准备开始</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="current-task">
+          <div class="current-task-label">当前任务</div>
+          <div class="current-task-name" id="currentTaskName">无任务</div>
+        </div>
+        
+        <div class="control-buttons">
+          <button class="control-btn start-btn" id="startBtn">开始</button>
+          <button class="control-btn pause-btn" id="pauseBtn" style="display: none;">暂停</button>
+          <button class="control-btn skip-btn" id="skipBtn">跳过</button>
+        </div>
+        
+        <div class="pomodoro-progress">
+          <div class="pomodoro-dots" id="pomodoroDots">
+            <div class="pomodoro-dot"></div>
+            <div class="pomodoro-dot"></div>
+            <div class="pomodoro-dot"></div>
+            <div class="pomodoro-dot"></div>
+          </div>
+          <div class="pomodoro-label" id="pomodoroLabel">已完成 0 个番茄钟</div>
+        </div>
+      </div>
+      
+      <div class="tasks-section">
+        <div class="tasks-header">
+          <h2>今天的任务</h2>
+        </div>
+        
+        <div class="add-task">
+          <input type="text" class="task-input" id="taskInput" placeholder="添加新任务..." maxlength="50">
+          <button class="add-task-btn" id="addTaskBtn">添加</button>
+        </div>
+        
+        <div class="tasks-list" id="tasksList">
+        </div>
+        
+        <div class="statistics">
+          <h3>今日统计</h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-value" id="statPomodoros">0</div>
+              <div class="stat-label">完成番茄</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statTotalTime">0分钟</div>
+              <div class="stat-label">总专注时长</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-value" id="statLongestStreak">0</div>
+              <div class="stat-label">最长连续专注</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="notification" id="notification">
+    <div class="notification-content">
+      <span class="notification-message" id="notificationMessage"></span>
+    </div>
+  </div>
+  
+  <script src="renderer.js"></script>
+</body>
+</html>

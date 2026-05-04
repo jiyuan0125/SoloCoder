@@ -1,0 +1,26 @@
+{
+  "name": "electron-rss-reader",
+  "version": "1.0.0",
+  "description": "A local RSS reader built with Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "keywords": [
+    "rss",
+    "reader",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1"
+  },
+  "dependencies": {
+    "fast-xml-parser": "^4.3.2",
+    "rss-parser": "^3.13.0",
+    "uuid": "^9.0.0"
+  }
+}

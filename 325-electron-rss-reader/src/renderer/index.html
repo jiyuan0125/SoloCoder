@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RSS 阅读器</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <header class="header">
+      <div class="header-left">
+        <h1>RSS 阅读器</h1>
+      </div>
+      <div class="header-center">
+        <input type="text" id="search-input" placeholder="搜索文章..." class="search-input">
+        <select id="sort-select" class="sort-select">
+          <option value="date-desc">时间倒序</option>
+          <option value="date-asc">时间正序</option>
+          <option value="title-asc">标题升序</option>
+          <option value="title-desc">标题降序</option>
+        </select>
+      </div>
+      <div class="header-right">
+        <button id="btn-add-feed" class="btn btn-primary">添加订阅</button>
+        <button id="btn-import-opml" class="btn">导入 OPML</button>
+        <button id="btn-export-opml" class="btn">导出 OPML</button>
+        <button id="btn-settings" class="btn">设置</button>
+      </div>
+    </header>
+
+    <div class="main-container">
+      <aside class="sidebar left-panel">
+        <div class="sidebar-header">
+          <h2>订阅源</h2>
+          <button id="btn-add-category" class="btn-sm">+ 分类</button>
+        </div>
+        <div class="sidebar-content">
+          <div class="feed-item special" data-view="all">
+            <span class="feed-title">全部文章</span>
+            <span class="unread-badge" id="unread-all">0</span>
+          </div>
+          <div class="feed-item special" data-view="favorites">
+            <span class="feed-title">收藏夹</span>
+            <span class="unread-badge" id="unread-favorites">0</span>
+          </div>
+          <div id="categories-list" class="categories-list"></div>
+        </div>
+      </aside>
+
+      <section class="article-list-panel">
+        <div class="panel-header">
+          <h2 id="article-list-title">文章列表</h2>
+          <div class="panel-actions">
+            <button id="btn-refresh" class="btn-sm">刷新</button>
+            <button id="btn-mark-all-read" class="btn-sm">全部已读</button>
+          </div>
+        </div>
+        <div id="article-list" class="article-list"></div>
+      </section>
+
+      <section class="article-detail-panel">
+        <div class="article-header">
+          <div class="article-actions">
+            <button id="btn-open-link" class="btn-sm">打开原文</button>
+            <button id="btn-toggle-read" class="btn-sm">标记已读</button>
+            <button id="btn-toggle-favorite" class="btn-sm">收藏</button>
+          </div>
+          <h2 id="article-title">请选择一篇文章</h2>
+          <div class="article-meta">
+            <span id="article-source"></span>
+            <span id="article-date"></span>
+          </div>
+        </div>
+        <div id="article-content" class="article-content">
+          <p class="empty-message">从左侧选择一篇文章查看详情</p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div id="modal-add-feed" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加订阅源</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-feed">
+          <div class="form-group">
+            <label for="feed-url">RSS/Atom URL</label>
+            <input type="url" id="feed-url" required placeholder="https://example.com/feed.xml">
+          </div>
+          <div class="form-group">
+            <label for="feed-category">分类（可选）</label>
+            <select id="feed-category">
+              <option value="">无分类</option>
+            </select>
+          </div>
+          <div id="feed-error" class="error-message" style="display: none;"></div>
+          <div class="form-actions">
+            <button type="button" class="btn modal-cancel">取消</button>
+            <button type="submit" class="btn btn-primary">添加</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-add-category" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建分类</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-add-category">
+          <div class="form-group">
+            <label for="category-name">分类名称</label>
+            <input type="text" id="category-name" required placeholder="输入分类名称">
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn modal-cancel">取消</button>
+            <button type="submit" class="btn btn-primary">创建</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-settings" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-settings">
+          <div class="form-group">
+            <label for="refresh-interval">自动刷新间隔（分钟）</label>
+            <select id="refresh-interval">
+              <option value="5">5 分钟</option>
+              <option value="15">15 分钟</option>
+              <option value="30" selected>30 分钟</option>
+              <option value="60">1 小时</option>
+              <option value="120">2 小时</option>
+              <option value="360">6 小时</option>
+              <option value="720">12 小时</option>
+              <option value="1440">24 小时</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn modal-cancel">取消</button>
+            <button type="submit" class="btn btn-primary">保存</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

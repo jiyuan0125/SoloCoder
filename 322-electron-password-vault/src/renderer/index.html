@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>密码保险箱</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- 登录/设置主密码页面 -->
+  <div id="auth-screen" class="auth-screen">
+    <div class="auth-container">
+      <h1 id="auth-title">设置主密码</h1>
+      <p id="auth-subtitle" class="subtitle">请设置一个安全的主密码来保护您的数据</p>
+      
+      <div id="setup-form" class="auth-form">
+        <div class="form-group">
+          <label for="setup-password">主密码</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="setup-password" placeholder="请输入主密码">
+            <button type="button" class="toggle-password" data-target="setup-password">
+              <span class="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="setup-confirm">确认密码</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="setup-confirm" placeholder="请再次输入主密码">
+            <button type="button" class="toggle-password" data-target="setup-confirm">
+              <span class="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+        <button id="setup-btn" class="primary-btn">设置密码</button>
+        <p id="setup-error" class="error-message"></p>
+      </div>
+      
+      <div id="login-form" class="auth-form" style="display: none;">
+        <div class="form-group">
+          <label for="login-password">主密码</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="login-password" placeholder="请输入主密码">
+            <button type="button" class="toggle-password" data-target="login-password">
+              <span class="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+        <button id="login-btn" class="primary-btn">解锁</button>
+        <p id="login-error" class="error-message"></p>
+        <p id="lock-message" class="lock-message" style="display: none;"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主应用页面 -->
+  <div id="main-screen" class="main-screen" style="display: none;">
+    <!-- 顶部工具栏 -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <h1>🔐 密码保险箱</h1>
+      </div>
+      <div class="toolbar-center">
+        <div class="search-wrapper">
+          <input type="text" id="search-input" placeholder="搜索网站名或用户名...">
+          <span class="search-icon">🔍</span>
+          <button id="clear-search" class="clear-search" style="display: none;">✕</button>
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <button id="lock-btn" class="icon-btn" title="锁定">🔒</button>
+      </div>
+    </header>
+
+    <!-- 三栏布局 -->
+    <main class="main-content">
+      <!-- 左侧分类 -->
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>分类</h2>
+          <button id="add-category-btn" class="icon-btn" title="添加分类">+</button>
+        </div>
+        <ul id="category-list" class="category-list">
+        </ul>
+      </aside>
+
+      <!-- 中间条目列表 -->
+      <section class="entries-section">
+        <div class="entries-header">
+          <h2 id="current-category-name">全部条目</h2>
+          <button id="add-entry-btn" class="primary-btn small">+ 新建条目</button>
+        </div>
+        <ul id="entries-list" class="entries-list">
+          <li class="empty-state">暂无条目</li>
+        </ul>
+      </section>
+
+      <!-- 右侧详情编辑区 -->
+      <section class="detail-section">
+        <div class="detail-header">
+          <h2 id="detail-title">条目详情</h2>
+          <div class="detail-actions">
+            <button id="save-entry-btn" class="primary-btn small" style="display: none;">保存</button>
+            <button id="delete-entry-btn" class="danger-btn small" style="display: none;">删除</button>
+            <button id="cancel-edit-btn" class="secondary-btn small" style="display: none;">取消</button>
+          </div>
+        </div>
+        
+        <div id="empty-detail" class="empty-detail">
+          <p>请选择一个条目查看详情</p>
+          <p>或点击"新建条目"添加</p>
+        </div>
+        
+        <form id="entry-form" class="entry-form" style="display: none;">
+          <div class="form-group">
+            <label for="entry-website">网站名称 <span class="required">*</span></label>
+            <input type="text" id="entry-website" placeholder="例如：GitHub">
+          </div>
+          
+          <div class="form-group">
+            <label for="entry-username">用户名</label>
+            <div class="input-with-copy">
+              <input type="text" id="entry-username" placeholder="用户名或邮箱">
+              <button type="button" class="copy-btn" data-field="username" title="复制用户名">📋</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="entry-password">密码</label>
+            <div class="input-with-actions">
+              <input type="password" id="entry-password" placeholder="密码">
+              <button type="button" class="toggle-password" data-target="entry-password" title="显示/隐藏">
+                <span class="eye-icon">👁️</span>
+              </button>
+              <button type="button" class="copy-btn" data-field="password" title="复制密码">📋</button>
+              <button type="button" id="generate-password-btn" class="generate-btn" title="生成密码">🔄</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label for="entry-url">网址</label>
+            <input type="url" id="entry-url" placeholder="https://example.com">
+          </div>
+          
+          <div class="form-group">
+            <label for="entry-notes">备注</label>
+            <textarea id="entry-notes" rows="4" placeholder="添加备注信息..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label for="entry-category">分类</label>
+            <select id="entry-category">
+            </select>
+          </div>
+        </form>
+      </section>
+    </main>
+  </div>
+
+  <!-- 添加分类弹窗 -->
+  <div id="category-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>添加分类</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-category-name">分类名称</label>
+          <input type="text" id="new-category-name" placeholder="例如：购物">
+        </div>
+        <div class="form-group">
+          <label>图标</label>
+          <div class="icon-picker" id="icon-picker">
+            <button type="button" class="icon-option" data-icon="🛒">🛒</button>
+            <button type="button" class="icon-option" data-icon="🎮">🎮</button>
+            <button type="button" class="icon-option" data-icon="📱">📱</button>
+            <button type="button" class="icon-option" data-icon="💻">💻</button>
+            <button type="button" class="icon-option" data-icon="🎯">🎯</button>
+            <button type="button" class="icon-option" data-icon="📚">📚</button>
+            <button type="button" class="icon-option" data-icon="🎨">🎨</button>
+            <button type="button" class="icon-option" data-icon="⭐">⭐</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn close-modal">取消</button>
+        <button id="save-category-btn" class="primary-btn">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 密码生成器弹窗 -->
+  <div id="password-modal" class="modal" style="display: none;">
+    <div class="modal-content password-modal">
+      <div class="modal-header">
+        <h3>密码生成器</h3>
+        <button class="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="generated-password">
+          <input type="text" id="generated-password" readonly>
+          <button type="button" id="copy-generated-btn" class="copy-btn" title="复制密码">📋</button>
+          <button type="button" id="regenerate-btn" class="generate-btn" title="重新生成">🔄</button>
+        </div>
+        
+        <div class="password-options">
+          <div class="form-group">
+            <label for="password-length">长度: <span id="length-value">16</span></label>
+            <input type="range" id="password-length" min="8" max="64" value="16">
+          </div>
+          
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="use-uppercase" checked>
+              <span>大写字母 (A-Z)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="use-lowercase" checked>
+              <span>小写字母 (a-z)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="use-numbers" checked>
+              <span>数字 (0-9)</span>
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" id="use-special" checked>
+              <span>特殊字符 (!@#$%)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="secondary-btn close-modal">取消</button>
+        <button id="use-password-btn" class="primary-btn">使用此密码</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提示消息 -->
+  <div id="toast" class="toast" style="display: none;"></div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

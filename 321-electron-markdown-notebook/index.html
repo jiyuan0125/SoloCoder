@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Markdown 笔记</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <div class="sidebar">
+      <div class="sidebar-header">
+        <h2>笔记目录</h2>
+        <div class="toolbar">
+          <button id="new-folder-btn" class="toolbar-btn" title="新建文件夹">
+            <span class="icon">📁</span>
+          </button>
+          <button id="new-file-btn" class="toolbar-btn" title="新建笔记 (Ctrl+N)">
+            <span class="icon">📄</span>
+          </button>
+          <button id="refresh-btn" class="toolbar-btn" title="刷新目录">
+            <span class="icon">🔄</span>
+          </button>
+        </div>
+      </div>
+      <div id="file-tree" class="file-tree"></div>
+    </div>
+    
+    <div class="main-content">
+      <div class="editor-header">
+        <div class="layout-switcher">
+          <button id="layout-edit" class="layout-btn active" data-layout="edit">仅编辑</button>
+          <button id="layout-split" class="layout-btn" data-layout="split">分屏</button>
+          <button id="layout-preview" class="layout-btn" data-layout="preview">仅预览</button>
+        </div>
+        <div class="file-info">
+          <span id="current-file-name">未打开文件</span>
+          <span id="save-status" class="save-status"></span>
+        </div>
+      </div>
+      
+      <div id="editor-container" class="editor-container layout-split">
+        <div id="editor-wrapper" class="editor-wrapper">
+          <textarea id="editor" class="editor" placeholder="开始输入 Markdown 内容..."></textarea>
+        </div>
+        <div id="preview-wrapper" class="preview-wrapper">
+          <div id="preview" class="preview"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div id="modal" class="modal">
+      <div id="modal-header" class="modal-header">
+        <h3 id="modal-title"></h3>
+        <button id="modal-close" class="modal-close">&times;</button>
+      </div>
+      <div id="modal-body" class="modal-body"></div>
+      <div id="modal-footer" class="modal-footer"></div>
+    </div>
+  </div>
+
+  <div id="context-menu" class="context-menu hidden">
+    <div class="context-menu-item" data-action="new-file">新建笔记</div>
+    <div class="context-menu-item" data-action="new-folder">新建文件夹</div>
+    <div class="context-menu-divider"></div>
+    <div class="context-menu-item" data-action="rename">重命名</div>
+    <div class="context-menu-item" data-action="delete">删除</div>
+  </div>
+
+  <script src="tree.js"></script>
+  <script src="editor.js"></script>
+  <script src="preview.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
