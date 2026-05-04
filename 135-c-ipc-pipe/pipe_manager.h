@@ -24,13 +24,16 @@ typedef struct {
 } pipe_pair_t;
 
 typedef struct {
-    pipe_pair_t *pipes;
-    size_t pipe_count;
-    size_t pipe_capacity;
-} pipe_manager_t;
+    uint8_t *buffer;
+    size_t buffer_size;
+    size_t total_len;
+    size_t written_len;
+    int is_active;
+} pipe_write_ctx_t;
 
-int pipe_manager_init(pipe_manager_t *pm, size_t initial_capacity);
-void pipe_manager_destroy(pipe_manager_t *pm);
+int pipe_write_ctx_init(pipe_write_ctx_t *ctx);
+void pipe_write_ctx_destroy(pipe_write_ctx_t *ctx);
+void pipe_write_ctx_reset(pipe_write_ctx_t *ctx);
 
 int pipe_pair_create(pipe_pair_t *pp);
 void pipe_pair_close(pipe_pair_t *pp);
@@ -40,12 +43,11 @@ void pipe_pair_close_write(pipe_pair_t *pp);
 int pipe_set_nonblocking(int fd);
 int pipe_set_blocking(int fd);
 
-ssize_t pipe_write_message(int fd, const uint8_t *msg_data, size_t msg_len);
-ssize_t pipe_read_partial(int fd, message_buffer_t *mb);
+ssize_t pipe_write_message(int fd, pipe_write_ctx_t *ctx, 
+                            const uint8_t *msg_data, size_t msg_len);
+ssize_t pipe_write_message_continue(int fd, pipe_write_ctx_t *ctx);
+int pipe_write_ctx_is_complete(const pipe_write_ctx_t *ctx);
 
-int pipe_manager_add_pipe(pipe_manager_t *pm, const pipe_pair_t *pp);
-pipe_pair_t *pipe_manager_get_pipe(pipe_manager_t *pm, size_t index);
-int pipe_manager_remove_pipe(pipe_manager_t *pm, size_t index);
-void pipe_manager_close_all(pipe_manager_t *pm);
+ssize_t pipe_read_partial(int fd, message_buffer_t *mb);
 
 #endif

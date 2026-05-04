@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <ctype.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include "process_manager.h"
 #include "message_frame.h"
@@ -23,14 +24,51 @@ typedef struct {
     uint8_t data[1024];
 } app_message_t;
 
+static void worker_flush(void) {
+    fflush(stdout);
+    fflush(stderr);
+}
+
+static void worker_log(const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    vprintf(format, args);
+    va_end(args);
+    worker_flush();
+}
+
+static ssize_t worker_write_msg(int fd, pipe_write_ctx_t *ctx, 
+                                 const uint8_t *data, size_t len) {
+    ssize_t result;
+    while (1) {
+        result = pipe_write_message(fd, ctx, data, len);
+        if (result == PIPE_AGAIN) {
+            usleep(10000);
+            continue;
+        }
+        break;
+    }
+    return result;
+}
+
 static void worker_main(int read_fd, int write_fd) {
     message_buffer_t recv_buffer;
+    pipe_write_ctx_t write_ctx;
     
     if (message_buffer_init(&recv_buffer, 4096) != 0) {
+        worker_log("[Worker %d] Failed to init recv buffer\n", getpid());
+        worker_flush();
         _exit(1);
     }
     
-    printf("[Worker %d] Started, waiting for messages...\n", getpid());
+    if (pipe_write_ctx_init(&write_ctx) != 0) {
+        worker_log("[Worker %d] Failed to init write context\n", getpid());
+        message_buffer_destroy(&recv_buffer);
+        worker_flush();
+        _exit(1);
+    }
+    
+    worker_log("[Worker %d] Started, waiting for messages...\n", getpid());
     
     while (1) {
         fd_set readfds;
@@ -50,13 +88,14 @@ static void worker_main(int read_fd, int write_fd) {
         
         if (ret < 0) {
             if (errno == EINTR) continue;
+            worker_log("[Worker %d] select error, exiting...\n", getpid());
             break;
         }
         
         ssize_t read_result = pipe_read_partial(read_fd, &recv_buffer);
         
         if (read_result == PIPE_EOF) {
-            printf("[Worker %d] Pipe closed, exiting...\n", getpid());
+            worker_log("[Worker %d] Pipe closed, exiting...\n", getpid());
             break;
         }
         
@@ -65,7 +104,7 @@ static void worker_main(int read_fd, int write_fd) {
         }
         
         if (read_result < 0) {
-            printf("[Worker %d] Read error, exiting...\n", getpid());
+            worker_log("[Worker %d] Read error, exiting...\n", getpid());
             break;
         }
         
@@ -89,20 +128,20 @@ static void worker_main(int read_fd, int write_fd) {
             
             switch (msg_type) {
                 case MSG_TYPE_ECHO:
-                    printf("[Worker %d] Received ECHO request\n", getpid());
+                    worker_log("[Worker %d] Received ECHO request\n", getpid());
                     response.type = MSG_TYPE_RESULT;
                     if (msg_len > 1) {
                         memcpy(response.data, msg_data + 1, 
                                (msg_len - 1 > 1023) ? 1023 : (msg_len - 1));
                     }
-                    printf("[Worker %d] Sending echo response: %s\n", 
+                    worker_log("[Worker %d] Sending echo response: %s\n", 
                            getpid(), response.data);
-                    pipe_write_message(write_fd, (uint8_t *)&response, 
+                    worker_write_msg(write_fd, &write_ctx, (uint8_t *)&response, 
                                        1 + strlen((char *)response.data) + 1);
                     break;
                     
                 case MSG_TYPE_UPPER:
-                    printf("[Worker %d] Received UPPER request\n", getpid());
+                    worker_log("[Worker %d] Received UPPER request\n", getpid());
                     response.type = MSG_TYPE_RESULT;
                     if (msg_len > 1) {
                         size_t data_len = (msg_len - 1 > 1023) ? 1023 : (msg_len - 1);
@@ -110,20 +149,22 @@ static void worker_main(int read_fd, int write_fd) {
                             response.data[i] = (uint8_t)toupper(msg_data[1 + i]);
                         }
                     }
-                    printf("[Worker %d] Sending upper response: %s\n", 
+                    worker_log("[Worker %d] Sending upper response: %s\n", 
                            getpid(), response.data);
-                    pipe_write_message(write_fd, (uint8_t *)&response, 
+                    worker_write_msg(write_fd, &write_ctx, (uint8_t *)&response, 
                                        1 + strlen((char *)response.data) + 1);
                     break;
                     
                 case MSG_TYPE_EXIT:
-                    printf("[Worker %d] Received EXIT command, exiting...\n", getpid());
+                    worker_log("[Worker %d] Received EXIT command, exiting...\n", getpid());
                     free(msg_data);
                     message_buffer_destroy(&recv_buffer);
+                    pipe_write_ctx_destroy(&write_ctx);
+                    worker_flush();
                     _exit(0);
                     
                 default:
-                    printf("[Worker %d] Unknown message type: %d\n", getpid(), msg_type);
+                    worker_log("[Worker %d] Unknown message type: %d\n", getpid(), msg_type);
                     break;
             }
             
@@ -132,6 +173,8 @@ static void worker_main(int read_fd, int write_fd) {
     }
     
     message_buffer_destroy(&recv_buffer);
+    pipe_write_ctx_destroy(&write_ctx);
+    worker_flush();
 }
 
 int main(int argc, char *argv[]) {
@@ -143,6 +186,7 @@ int main(int argc, char *argv[]) {
     int workers_created = 0;
     
     printf("[Master] Starting master process, PID: %d\n", getpid());
+    fflush(stdout);
     
     if (process_manager_init(&pm) != 0) {
         fprintf(stderr, "[Master] Failed to initialize process manager\n");
@@ -156,6 +200,8 @@ int main(int argc, char *argv[]) {
     }
     
     printf("[Master] Creating %d worker processes...\n", NUM_WORKERS);
+    fflush(stdout);
+    
     for (int i = 0; i < NUM_WORKERS; i++) {
         int result = process_manager_create_worker(&pm, worker_main);
         if (result < 0) {
@@ -165,6 +211,7 @@ int main(int argc, char *argv[]) {
         workers_created++;
         printf("[Master] Created worker %d, PID: %d\n", i, 
                pm.workers[result].pid);
+        fflush(stdout);
     }
     
     if (workers_created == 0) {
@@ -174,8 +221,11 @@ int main(int argc, char *argv[]) {
     }
     
     sleep(1);
+    fflush(stdout);
     
     printf("\n[Master] Sending test messages to workers...\n");
+    fflush(stdout);
+    
     const char *test_messages[] = {
         "hello world",
         "test message",
@@ -194,15 +244,17 @@ int main(int argc, char *argv[]) {
                i, worker->pid,
                (msg.type == MSG_TYPE_ECHO) ? "ECHO" : "UPPER",
                msg.data);
+        fflush(stdout);
         
         ssize_t send_result = worker_send_message(worker, (uint8_t *)&msg, 
                                                    1 + strlen((char *)msg.data) + 1);
-        if (send_result < 0) {
+        if (send_result < 0 && send_result != PIPE_AGAIN) {
             fprintf(stderr, "[Master] Failed to send message to worker %zu\n", i);
         }
     }
     
     printf("\n[Master] Waiting for responses...\n");
+    fflush(stdout);
     
     int responses_received = 0;
     int max_wait_loops = 50;
@@ -210,6 +262,7 @@ int main(int argc, char *argv[]) {
     for (int loop = 0; loop < max_wait_loops && responses_received < workers_created; loop++) {
         if (pm.sigchld_received) {
             printf("[Master] SIGCHLD received, checking children...\n");
+            fflush(stdout);
             process_manager_check_children(&pm);
             process_manager_cleanup_exited(&pm);
             pm.sigchld_received = 0;
@@ -266,6 +319,7 @@ int main(int argc, char *argv[]) {
                 if (recv_result == PIPE_EOF) {
                     printf("[Master] Worker %zu (PID %d) closed pipe\n", 
                            i, worker->pid);
+                    fflush(stdout);
                     worker->state = WORKER_EXITED;
                 } else if (recv_result == PIPE_AGAIN) {
                     continue;
@@ -276,6 +330,7 @@ int main(int argc, char *argv[]) {
                            i, worker->pid,
                            response_data[0],
                            (response_len > 1) ? (char *)&response_data[1] : "");
+                    fflush(stdout);
                     responses_received++;
                     free(response_data);
                 }
@@ -284,6 +339,8 @@ int main(int argc, char *argv[]) {
     }
     
     printf("\n[Master] Sending EXIT command to all workers...\n");
+    fflush(stdout);
+    
     for (size_t i = 0; i < pm.worker_count; i++) {
         worker_process_t *worker = process_manager_get_worker(&pm, i);
         if (worker == NULL || worker->state != WORKER_RUNNING) continue;
@@ -292,15 +349,18 @@ int main(int argc, char *argv[]) {
         exit_msg.type = MSG_TYPE_EXIT;
         
         printf("[Master] Sending EXIT to worker %zu (PID %d)\n", i, worker->pid);
+        fflush(stdout);
         worker_send_message(worker, (uint8_t *)&exit_msg, 1);
     }
     
     sleep(1);
     
     printf("[Master] Cleaning up...\n");
+    fflush(stdout);
     process_manager_check_children(&pm);
     process_manager_destroy(&pm);
     
     printf("[Master] Done.\n");
+    fflush(stdout);
     return 0;
 }

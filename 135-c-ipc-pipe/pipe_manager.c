@@ -5,44 +5,44 @@
 #include <fcntl.h>
 #include <errno.h>
 
-int pipe_manager_init(pipe_manager_t *pm, size_t initial_capacity) {
-    if (initial_capacity == 0) {
-        initial_capacity = 4;
-    }
-    
-    pm->pipes = (pipe_pair_t *)malloc(initial_capacity * sizeof(pipe_pair_t));
-    if (pm->pipes == NULL) {
-        return -1;
-    }
-    
-    pm->pipe_count = 0;
-    pm->pipe_capacity = initial_capacity;
+int pipe_write_ctx_init(pipe_write_ctx_t *ctx) {
+    ctx->buffer = NULL;
+    ctx->buffer_size = 0;
+    ctx->total_len = 0;
+    ctx->written_len = 0;
+    ctx->is_active = 0;
     return 0;
 }
 
-void pipe_manager_destroy(pipe_manager_t *pm) {
-    pipe_manager_close_all(pm);
-    if (pm->pipes != NULL) {
-        free(pm->pipes);
-        pm->pipes = NULL;
+void pipe_write_ctx_destroy(pipe_write_ctx_t *ctx) {
+    if (ctx->buffer != NULL) {
+        free(ctx->buffer);
+        ctx->buffer = NULL;
     }
-    pm->pipe_count = 0;
-    pm->pipe_capacity = 0;
+    ctx->buffer_size = 0;
+    ctx->total_len = 0;
+    ctx->written_len = 0;
+    ctx->is_active = 0;
 }
 
-static int pipe_manager_resize(pipe_manager_t *pm, size_t new_capacity) {
-    if (new_capacity <= pm->pipe_capacity) {
+void pipe_write_ctx_reset(pipe_write_ctx_t *ctx) {
+    ctx->total_len = 0;
+    ctx->written_len = 0;
+    ctx->is_active = 0;
+}
+
+static int pipe_write_ctx_resize(pipe_write_ctx_t *ctx, size_t new_size) {
+    if (new_size <= ctx->buffer_size) {
         return 0;
     }
     
-    pipe_pair_t *new_pipes = (pipe_pair_t *)realloc(pm->pipes, 
-                                                      new_capacity * sizeof(pipe_pair_t));
-    if (new_pipes == NULL) {
+    uint8_t *new_buf = (uint8_t *)realloc(ctx->buffer, new_size);
+    if (new_buf == NULL) {
         return -1;
     }
     
-    pm->pipes = new_pipes;
-    pm->pipe_capacity = new_capacity;
+    ctx->buffer = new_buf;
+    ctx->buffer_size = new_size;
     return 0;
 }
 
@@ -112,22 +112,49 @@ int pipe_set_blocking(int fd) {
     return 0;
 }
 
-ssize_t pipe_write_message(int fd, const uint8_t *msg_data, size_t msg_len) {
+int pipe_write_ctx_is_complete(const pipe_write_ctx_t *ctx) {
+    if (!ctx->is_active) {
+        return 1;
+    }
+    return (ctx->written_len >= ctx->total_len) ? 1 : 0;
+}
+
+ssize_t pipe_write_message(int fd, pipe_write_ctx_t *ctx, 
+                            const uint8_t *msg_data, size_t msg_len) {
+    if (ctx->is_active && ctx->written_len < ctx->total_len) {
+        return pipe_write_message_continue(fd, ctx);
+    }
+    
     size_t total_size = message_frame_calculate_total_size(msg_len);
-    uint8_t *buffer = (uint8_t *)malloc(total_size);
     
-    if (buffer == NULL) {
-        return -1;
+    if (pipe_write_ctx_resize(ctx, total_size) != 0) {
+        return PIPE_ERROR;
     }
     
-    int pack_result = message_frame_pack(buffer, total_size, msg_data, msg_len);
+    int pack_result = message_frame_pack(ctx->buffer, total_size, msg_data, msg_len);
     if (pack_result < 0) {
-        free(buffer);
-        return -1;
+        return PIPE_ERROR;
     }
     
-    ssize_t written = write(fd, buffer, total_size);
-    free(buffer);
+    ctx->total_len = total_size;
+    ctx->written_len = 0;
+    ctx->is_active = 1;
+    
+    return pipe_write_message_continue(fd, ctx);
+}
+
+ssize_t pipe_write_message_continue(int fd, pipe_write_ctx_t *ctx) {
+    if (!ctx->is_active) {
+        return PIPE_ERROR;
+    }
+    
+    if (ctx->written_len >= ctx->total_len) {
+        return (ssize_t)ctx->total_len;
+    }
+    
+    ssize_t written = write(fd, 
+                            ctx->buffer + ctx->written_len, 
+                            ctx->total_len - ctx->written_len);
     
     if (written < 0) {
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
@@ -136,11 +163,14 @@ ssize_t pipe_write_message(int fd, const uint8_t *msg_data, size_t msg_len) {
         return PIPE_ERROR;
     }
     
-    if ((size_t)written < total_size) {
-        return PIPE_AGAIN;
+    ctx->written_len += (size_t)written;
+    
+    if (ctx->written_len >= ctx->total_len) {
+        ctx->is_active = 0;
+        return (ssize_t)ctx->total_len;
     }
     
-    return written;
+    return PIPE_AGAIN;
 }
 
 ssize_t pipe_read_partial(int fd, message_buffer_t *mb) {
@@ -163,47 +193,4 @@ ssize_t pipe_read_partial(int fd, message_buffer_t *mb) {
     }
     
     return read_bytes;
-}
-
-int pipe_manager_add_pipe(pipe_manager_t *pm, const pipe_pair_t *pp) {
-    if (pm->pipe_count >= pm->pipe_capacity) {
-        size_t new_capacity = pm->pipe_capacity * 2;
-        if (pipe_manager_resize(pm, new_capacity) != 0) {
-            return -1;
-        }
-    }
-    
-    pm->pipes[pm->pipe_count] = *pp;
-    pm->pipe_count++;
-    return (int)(pm->pipe_count - 1);
-}
-
-pipe_pair_t *pipe_manager_get_pipe(pipe_manager_t *pm, size_t index) {
-    if (index >= pm->pipe_count) {
-        return NULL;
-    }
-    return &pm->pipes[index];
-}
-
-int pipe_manager_remove_pipe(pipe_manager_t *pm, size_t index) {
-    if (index >= pm->pipe_count) {
-        return -1;
-    }
-    
-    pipe_pair_close(&pm->pipes[index]);
-    
-    if (index < pm->pipe_count - 1) {
-        memmove(&pm->pipes[index], &pm->pipes[index + 1], 
-                (pm->pipe_count - index - 1) * sizeof(pipe_pair_t));
-    }
-    
-    pm->pipe_count--;
-    return 0;
-}
-
-void pipe_manager_close_all(pipe_manager_t *pm) {
-    for (size_t i = 0; i < pm->pipe_count; i++) {
-        pipe_pair_close(&pm->pipes[i]);
-    }
-    pm->pipe_count = 0;
 }

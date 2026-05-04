@@ -23,6 +23,7 @@ typedef struct {
     pipe_pair_t worker_to_master;
     
     message_buffer_t recv_buffer;
+    pipe_write_ctx_t write_ctx;
 } worker_process_t;
 
 typedef struct {
@@ -49,6 +50,8 @@ int process_manager_setup_sigchld(process_manager_t *pm);
 void process_manager_check_children(process_manager_t *pm);
 
 ssize_t worker_send_message(worker_process_t *worker, const uint8_t *data, size_t len);
+ssize_t worker_send_message_continue(worker_process_t *worker);
+int worker_write_is_complete(const worker_process_t *worker);
 ssize_t worker_recv_message(worker_process_t *worker, uint8_t **data, size_t *len);
 
 #endif

@@ -40,6 +40,7 @@ void process_manager_close_worker_pipes(worker_process_t *worker) {
     pipe_pair_close(&worker->master_to_worker);
     pipe_pair_close(&worker->worker_to_master);
     message_buffer_destroy(&worker->recv_buffer);
+    pipe_write_ctx_destroy(&worker->write_ctx);
 }
 
 int process_manager_create_worker(process_manager_t *pm, 
@@ -67,6 +68,10 @@ int process_manager_create_worker(process_manager_t *pm,
     }
     
     if (message_buffer_init(&worker->recv_buffer, 4096) != 0) {
+        goto cleanup;
+    }
+    
+    if (pipe_write_ctx_init(&worker->write_ctx) != 0) {
         goto cleanup;
     }
     
@@ -190,7 +195,25 @@ ssize_t worker_send_message(worker_process_t *worker, const uint8_t *data, size_
         return PIPE_ERROR;
     }
     
-    return pipe_write_message(worker->master_to_worker.write_fd, data, len);
+    return pipe_write_message(worker->master_to_worker.write_fd, 
+                              &worker->write_ctx, data, len);
+}
+
+ssize_t worker_send_message_continue(worker_process_t *worker) {
+    if (worker->state != WORKER_RUNNING) {
+        return PIPE_ERROR;
+    }
+    
+    if (worker->master_to_worker.write_fd < 0) {
+        return PIPE_ERROR;
+    }
+    
+    return pipe_write_message_continue(worker->master_to_worker.write_fd, 
+                                        &worker->write_ctx);
+}
+
+int worker_write_is_complete(const worker_process_t *worker) {
+    return pipe_write_ctx_is_complete(&worker->write_ctx);
 }
 
 ssize_t worker_recv_message(worker_process_t *worker, uint8_t **data, size_t *len) {
