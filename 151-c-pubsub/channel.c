@@ -345,8 +345,6 @@ int channel_publish_message(Channel *ch, const char *sender, const char *content
             if (copy) {
                 if (user_deliver_message(sub_snapshot[i], copy) == CHAT_OK) {
                     delivered++;
-                } else {
-                    message_destroy(copy);
                 }
             }
         }

@@ -1,0 +1,1 @@
+我跑了下 valgrind，channel_publish_message 每次成功发消息都泄漏一个 Message 结构体。看了一下代码，函数里创建 copy 传给 user_deliver_message，但 user_deliver_message 内部又自己 malloc 了一份副本塞进队列，外面那个 copy 成功的时候从来没 free 过。channel_destroy 里发销毁通知也是同样的问题。

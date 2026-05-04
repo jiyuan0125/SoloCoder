@@ -1,0 +1,1 @@
+我拿这个工具跑了下，先创建几个文件扫描一次，然后删掉其中一个文件再扫描，程序直接崩了，终端里报 malloc_consolidate(): unaligned fastbin chunk detected。我用 ASAN 编译跑了一下，定位到 main.c 第310行 process_pending_deletes 里面有个 use-after-free，changelist_destroy 释放了 changes 之后又去写 *changes。另外我发现删掉一个文件后第一次扫描不会报已删除，得再跑一次才行，这个行为不太对吧。还有 .o 文件和编译出来的二进制文件都提交到仓库里了。

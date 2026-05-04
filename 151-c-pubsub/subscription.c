@@ -231,14 +231,14 @@ Message *user_receive_message_timed(User *user, int timeout_ms) {
 }
 
 int user_deliver_message(User *user, Message *msg) {
-    if (!user || !msg) return CHAT_ERR_INVALID_ARG;
+    if (!user || !msg) {
+        message_destroy(msg);
+        return CHAT_ERR_INVALID_ARG;
+    }
     
-    Message *copy = message_create(msg->sender, msg->channel, msg->content);
-    if (!copy) return CHAT_ERR_MEMORY;
-    
-    int ret = message_queue_push(&user->msg_queue, copy);
+    int ret = message_queue_push(&user->msg_queue, msg);
     if (ret != CHAT_OK) {
-        message_destroy(copy);
+        message_destroy(msg);
     }
     
     return ret;
