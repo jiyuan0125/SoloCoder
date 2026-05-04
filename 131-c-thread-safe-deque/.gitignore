@@ -1,0 +1,6 @@
+*.o
+*.out
+*.exe
+*.d
+compile_commands.json
+.cache/
