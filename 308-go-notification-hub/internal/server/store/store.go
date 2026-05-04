@@ -95,7 +95,10 @@ func (s *Store) rebuildIndexes() {
 func (s *Store) Save() error {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	return s.saveLocked()
+}
 
+func (s *Store) saveLocked() error {
 	sd := storeData{
 		Notifications: s.notifications,
 		Deliveries:    s.deliveries,
@@ -115,7 +118,7 @@ func (s *Store) CreateNotification(n *models.Notification) error {
 	defer s.mu.Unlock()
 
 	s.notifications[n.ID] = n
-	return s.Save()
+	return s.saveLocked()
 }
 
 func (s *Store) GetNotification(id string) (*models.Notification, error) {
@@ -147,7 +150,7 @@ func (s *Store) CreateDelivery(d *models.UserDelivery) error {
 	s.deliveries[d.ID] = d
 	s.deliveriesByUser[d.UserID] = append(s.deliveriesByUser[d.UserID], d)
 	s.deliveriesByNotification[d.NotificationID] = append(s.deliveriesByNotification[d.NotificationID], d)
-	return s.Save()
+	return s.saveLocked()
 }
 
 func (s *Store) GetDelivery(id string) (*models.UserDelivery, error) {
@@ -172,7 +175,7 @@ func (s *Store) UpdateDeliveryStatus(id string, status models.DeliveryStatus) er
 
 	d.Status = status
 	d.UpdatedAt = time.Now()
-	return s.Save()
+	return s.saveLocked()
 }
 
 func (s *Store) MarkAsRead(deliveryID, userID string) error {
@@ -194,7 +197,7 @@ func (s *Store) MarkAsRead(deliveryID, userID string) error {
 
 	d.IsRead = true
 	d.UpdatedAt = time.Now()
-	return s.Save()
+	return s.saveLocked()
 }
 
 func (s *Store) GetUserDeliveries(userID string, isRead *bool) []*models.UserDelivery {

@@ -18,3 +18,22 @@
 | 分支/文件夹 | 308-go-notification-hub |
 
 ---
+
+## 308-go-notification-hub — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下服务端，启动没问题，GET /api/statistics 和 GET /api/users/user1/notifications 都能正常返回。但是 POST /api/notifications 一调就卡死了，curl 一直挂着等不到响应，之后整个服务都卡住了连 GET 都不响应了。你看看 store.go 里的写操作和 Save() 方法，感觉是锁的问题。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：PROMPT 明确要求"后续可以通过回调更新为已送达或发送失败"，但仍然没有提供回调 API 端点，邮件和短信的送达状态无法通过外部接口更新。产物不满意：InSiteSender、EmailSender、SMSSender 直接修改 delivery 指针的 Status 字段但未调用 store.UpdateDeliveryStatus()，状态变更不会主动持久化到文件，虽然后续 CreateDelivery 调用会间接保存全量数据，但这不是可靠的持久化机制。产物不满意：sendToChannel 中先调用 s.Send(deliv, notification) 修改 delivery.Status，然后又在 goroutine 中调用 d.store.UpdateDeliveryStatus(deliv.ID, models.StatusFailed)，两者操作同一个 delivery 对象的 Status 字段且无同步保护，存在数据竞争。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 308-go-notification-hub |
+
+---
