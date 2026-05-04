@@ -1,0 +1,1 @@
+我跑了一下演示程序，发现 mock server 在 accept 之后立刻就 close 了客户端连接。所以实际上连接池每次 acquire 拿到的都是刚建好的新连接，归还之后再 acquire 时原来的连接已经被服务端关掉了，根本没有复用。你改一下 mock server，让它 accept 之后保持连接不关，这样才能真正验证连接池的复用逻辑。另外 conn_sync.c 那个文件写了一堆 SyncLock/SyncCond 的封装但没有任何地方用到，实际并发控制全用的原生 pthread，这个模块可以考虑要么用起来要么删掉。

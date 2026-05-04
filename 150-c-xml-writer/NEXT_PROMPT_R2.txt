@@ -1,0 +1,1 @@
+我拿代码跑了一下静态分析，发现 xml_builder.c 的 XML_WriteCDataContent 函数里有个栈溢出，temp 数组才 3 字节但 strncpy 没限制长度。另外 XML_WriteEscaped 里用 XML_Escape_Length 算大小来 malloc，但 XML_Escape 内部会先做 UTF-8 修复把非法字节替换成 3 字节的替换符，算出来的长度可能不够用。

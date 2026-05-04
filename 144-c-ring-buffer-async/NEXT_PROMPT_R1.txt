@@ -1,0 +1,3 @@
+我刚跑了下多线程测试，发现吞吐量不随线程数增长，4线程比2线程还慢，8线程也差不多。看了下代码发现 ring_buffer_write 里面用了自旋锁，多个业务线程写的时候互相阻塞了。需求里说的无锁设计好像没做到。
+
+还有我试了下 drop 策略，ring_buffer_advance_read 里改 read_pos 的时候和写入线程的 ring_buffer_read 会不会冲突？两边都在改 read_pos 但没看到同步机制。

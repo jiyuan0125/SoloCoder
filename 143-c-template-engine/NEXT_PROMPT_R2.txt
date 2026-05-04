@@ -1,0 +1,1 @@
+else 分支修好了，但编译的时候还是 3 个 warning，跟上次一模一样没动过。另外 git 里 template_demo 和 test_else 两个二进制文件还在，gitignore 也没改。你看下能不能顺手清理一下。
