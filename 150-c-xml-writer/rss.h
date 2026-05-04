@@ -1,7 +1,7 @@
 #ifndef RSS_H
 #define RSS_H
 
-#include <stdio.h>
+#include "xml_builder.h"
 #include <time.h>
 
 #define RSS_VERSION "2.0"
@@ -32,22 +32,8 @@ typedef struct {
     int is_html_description;
 } RSS_Item;
 
-typedef enum {
-    RSS_OUTPUT_FILE,
-    RSS_OUTPUT_BUFFER
-} RSS_OutputType;
-
 typedef struct {
-    RSS_OutputType type;
-    union {
-        FILE *file;
-        struct {
-            char *buffer;
-            size_t size;
-            size_t used;
-        } buf;
-    } data;
-    int indent_level;
+    XML_Builder *builder;
     int max_items;
     int item_count;
     int started;

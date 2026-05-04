@@ -53,7 +53,7 @@ size_t XML_Escape(char *output, size_t output_size, const char *input) {
         for (size_t i = 0; i < XML_ENTITY_COUNT; i++) {
             if (*p == xml_entities[i].original) {
                 size_t rlen = xml_entities[i].replacement_len;
-                if (pos + rlen >= output_size - 1) {
+                if (pos + rlen > output_size - 1) {
                     break;
                 }
                 memcpy(output + pos, xml_entities[i].replacement, rlen);

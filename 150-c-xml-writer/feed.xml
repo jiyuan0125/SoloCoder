@@ -12,7 +12,7 @@
       <link>https://example.com/blog/c-memory-management</link>
       <description>本文详细介绍了 C 语言中的动态内存分配机制，包括 malloc、calloc、realloc 和 free 的使用方法，以及常见的内存泄漏问题和调试技巧。</description>
       <pubDate>Sun, 03 May 2026 10:00:00 GMT</pubDate>
-      <author>张三 &lt;zhangsan@example.com></author>
+      <author>张三 &lt;zhangsan@example.com&gt;</author>
       <category>C语言</category>
       <category>内存管理</category>
       <category>编程基础</category>
@@ -28,7 +28,7 @@
 <li>版本控制策略</li>
 </ul>]]></description>
       <pubDate>Sat, 02 May 2026 15:30:00 GMT</pubDate>
-      <author>李四 &lt;lisi@example.com></author>
+      <author>李四 &lt;lisi@example.com&gt;</author>
       <category>Web开发</category>
       <category>API</category>
     </item>
@@ -37,7 +37,7 @@
       <link>https://example.com/blog/testing-debugging</link>
       <description>测试是软件开发中不可或缺的环节。本文涵盖了单元测试、集成测试、端到端测试的概念和工具推荐，以及实用的调试技巧。</description>
       <pubDate>Fri, 01 May 2026 09:00:00 GMT</pubDate>
-      <author>王五 &lt;wangwu@example.com></author>
+      <author>王五 &lt;wangwu@example.com&gt;</author>
       <category>测试</category>
       <category>调试</category>
     </item>
@@ -61,7 +61,7 @@
 <li>资源限制设置</li>
 </ol>]]></description>
       <pubDate>Sat, 25 Apr 2026 11:30:00 GMT</pubDate>
-      <author>赵六 &lt;zhaoliu@example.com></author>
+      <author>赵六 &lt;zhaoliu@example.com&gt;</author>
       <category>Docker</category>
       <category>DevOps</category>
     </item>
