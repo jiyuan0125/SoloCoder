@@ -18,3 +18,23 @@
 | 分支/文件夹 | 361-go-file-type-detector |
 
 ---
+
+## 361-go-file-type-detector — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我测了一下，发现传一个空文件路径给服务端的 /detect 接口，返回的是 error: EOF 而不是 mime_type: unknown。用客户端命令行测空文件也会报错。另外 handler.go 里 ioutil.ReadAll 好像在 Go 1.16 之后就废弃了，编译会有警告。 |
+| 任务类型 | 0-1代码生成 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：handler.go 第35行仍检查 len(req.Data) > 0，客户端发送空文件数据（json序列化后为null）时被拒绝返回"No data or path provided"，而非通过 DetectFromBytes 返回 unknown。client.go 第59行仍使用 err.Error() != "EOF" 字符串比较而非 errors.Is(err, io.EOF)。过程不满意：上轮反馈了两个 bug，只修了 ioutil.ReadAll 这一个编译警告问题，核心逻辑 bug（handler 空数据处理、EOF 比较方式）均未修复，说明改完后没有用空文件场景实际测试 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 361-go-file-type-detector |
+
+---
+
