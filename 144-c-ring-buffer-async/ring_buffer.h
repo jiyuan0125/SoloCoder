@@ -6,14 +6,6 @@
 #include <stdbool.h>
 #include <stdatomic.h>
 
-#define RB_ALIGNMENT 8
-#define RB_ALIGN_UP(x) (((x) + RB_ALIGNMENT - 1) & ~(RB_ALIGNMENT - 1))
-#define RB_MSG_HEADER_SIZE 16
-
-#define RB_MAGIC_COMMITTED    0x434F4D4DU
-#define RB_MAGIC_TENTATIVE    0x54454E54U
-#define RB_MAGIC_FREE         0x46524545U
-
 typedef enum {
     RB_POLICY_DROP,
     RB_POLICY_BLOCK
@@ -32,6 +24,8 @@ typedef struct {
     _Atomic(size_t) write_seq;
     _Atomic(size_t) read_seq;
     
+    _Atomic(uint32_t) write_lock;
+    
     RingBufferPolicy policy;
     _Atomic(bool) is_running;
     _Atomic(size_t) dropped_count;
@@ -45,6 +39,7 @@ bool ring_buffer_read(RingBuffer* rb, void* data, size_t max_len, size_t* bytes_
 
 size_t ring_buffer_available(const RingBuffer* rb);
 size_t ring_buffer_used(const RingBuffer* rb);
+size_t ring_buffer_capacity(const RingBuffer* rb);
 bool ring_buffer_is_empty(const RingBuffer* rb);
 bool ring_buffer_is_full(const RingBuffer* rb);
 size_t ring_buffer_dropped(const RingBuffer* rb);

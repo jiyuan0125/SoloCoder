@@ -9,16 +9,42 @@
 
 AsyncLogger* g_logger = NULL;
 
-#define READ_BUFFER_SIZE (128 * 1024)
+#define READ_BUFFER_SIZE (256 * 1024)
 
 static void set_thread_priority(int nice_value) {
     setpriority(PRIO_PROCESS, 0, nice_value);
 }
 
+static void process_one_message(
+    AsyncLogger* logger,
+    const uint8_t* raw_msg,
+    size_t raw_len,
+    char* output_buffer,
+    size_t* unflushed_bytes
+) {
+    const LogMessageHeader* hdr = (const LogMessageHeader*)raw_msg;
+    if (raw_len < sizeof(LogMessageHeader) || hdr->magic != LOG_MSG_MAGIC) {
+        return;
+    }
+
+    size_t output_len = log_formatter_format_output(
+        output_buffer,
+        READ_BUFFER_SIZE,
+        (const char*)hdr,
+        raw_len
+    );
+
+    if (output_len > 0) {
+        fwrite(output_buffer, 1, output_len, logger->log_file);
+        *unflushed_bytes += output_len;
+        atomic_fetch_add(&logger->total_written, output_len);
+    }
+}
+
 static void* writer_thread_func(void* arg) {
     AsyncLogger* logger = (AsyncLogger*)arg;
     uint8_t* read_buffer = (uint8_t*)malloc(READ_BUFFER_SIZE);
-    char* output_buffer = (char*)malloc(READ_BUFFER_SIZE * 2);
+    char* output_buffer = (char*)malloc(READ_BUFFER_SIZE);
     size_t unflushed_bytes = 0;
 
     if (!read_buffer || !output_buffer) {
@@ -31,7 +57,7 @@ static void* writer_thread_func(void* arg) {
 
     while (atomic_load(&logger->is_running) || !ring_buffer_is_empty(logger->ring_buffer)) {
         size_t used = ring_buffer_used(logger->ring_buffer);
-        size_t buffer_size = logger->ring_buffer->buffer_size;
+        size_t buffer_size = ring_buffer_capacity(logger->ring_buffer);
         double usage = (double)used / (double)buffer_size;
 
         if (usage >= ASYNC_LOGGER_HIGH_WATERMARK && !atomic_load(&logger->writer_boosted)) {
@@ -42,10 +68,27 @@ static void* writer_thread_func(void* arg) {
             atomic_store(&logger->writer_boosted, false);
         }
 
-        size_t bytes_read = 0;
-        bool has_data = ring_buffer_read(logger->ring_buffer, read_buffer, READ_BUFFER_SIZE, &bytes_read);
+        int messages_processed = 0;
+        const int max_batch = 1000;
 
-        if (!has_data || bytes_read == 0) {
+        while (messages_processed < max_batch) {
+            size_t bytes_read = 0;
+            bool has_data = ring_buffer_read(
+                logger->ring_buffer,
+                read_buffer,
+                READ_BUFFER_SIZE,
+                &bytes_read
+            );
+
+            if (!has_data || bytes_read == 0) {
+                break;
+            }
+
+            process_one_message(logger, read_buffer, bytes_read, output_buffer, &unflushed_bytes);
+            messages_processed++;
+        }
+
+        if (messages_processed == 0) {
             if (unflushed_bytes > 0) {
                 fflush(logger->log_file);
                 unflushed_bytes = 0;
@@ -53,33 +96,9 @@ static void* writer_thread_func(void* arg) {
             
             struct timespec ts;
             ts.tv_sec = 0;
-            ts.tv_nsec = 100000;
+            ts.tv_nsec = 50000;
             nanosleep(&ts, NULL);
             continue;
-        }
-
-        size_t pos = 0;
-        while (pos < bytes_read) {
-            const LogMessageHeader* hdr = (const LogMessageHeader*)(read_buffer + pos);
-            if (hdr->magic != LOG_MSG_MAGIC) {
-                pos++;
-                continue;
-            }
-
-            size_t output_len = log_formatter_format_output(
-                output_buffer,
-                READ_BUFFER_SIZE * 2,
-                (const char*)hdr,
-                bytes_read - pos
-            );
-
-            if (output_len > 0) {
-                fwrite(output_buffer, 1, output_len, logger->log_file);
-                unflushed_bytes += output_len;
-                atomic_fetch_add(&logger->total_written, output_len);
-            }
-
-            pos += hdr->total_len;
         }
 
         if (logger->flush_policy == FLUSH_POLICY_IMMEDIATE || 
@@ -244,7 +263,7 @@ void async_logger_flush_all(AsyncLogger* logger) {
     }
 
     uint8_t* read_buffer = (uint8_t*)malloc(READ_BUFFER_SIZE);
-    char* output_buffer = (char*)malloc(READ_BUFFER_SIZE * 2);
+    char* output_buffer = (char*)malloc(READ_BUFFER_SIZE);
 
     if (!read_buffer || !output_buffer) {
         free(read_buffer);
@@ -254,32 +273,29 @@ void async_logger_flush_all(AsyncLogger* logger) {
 
     while (!ring_buffer_is_empty(logger->ring_buffer)) {
         size_t bytes_read = 0;
-        bool has_data = ring_buffer_read(logger->ring_buffer, read_buffer, READ_BUFFER_SIZE, &bytes_read);
+        bool has_data = ring_buffer_read(
+            logger->ring_buffer,
+            read_buffer,
+            READ_BUFFER_SIZE,
+            &bytes_read
+        );
 
         if (!has_data || bytes_read == 0) {
             break;
         }
 
-        size_t pos = 0;
-        while (pos < bytes_read) {
-            const LogMessageHeader* hdr = (const LogMessageHeader*)(read_buffer + pos);
-            if (hdr->magic != LOG_MSG_MAGIC) {
-                pos++;
-                continue;
-            }
-
+        const LogMessageHeader* hdr = (const LogMessageHeader*)read_buffer;
+        if (hdr->magic == LOG_MSG_MAGIC) {
             size_t output_len = log_formatter_format_output(
                 output_buffer,
-                READ_BUFFER_SIZE * 2,
+                READ_BUFFER_SIZE,
                 (const char*)hdr,
-                bytes_read - pos
+                bytes_read
             );
 
             if (output_len > 0) {
                 fwrite(output_buffer, 1, output_len, logger->log_file);
             }
-
-            pos += hdr->total_len;
         }
     }
 
