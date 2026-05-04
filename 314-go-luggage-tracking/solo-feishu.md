@@ -18,3 +18,22 @@
 | 分支/文件夹 | 314-go-luggage-tracking |
 
 ---
+
+## 314-go-luggage-tracking — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 服务启动没问题，health 接口也正常返回。但是调一下 POST /api/scan 上报行李扫码，curl 就卡住了一直没响应，然后试别的接口也全卡住了，服务直接不可用。你看看 store.go 里写操作加锁的逻辑，我觉得是锁嵌套的问题 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 单文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：service.go 的 Scan() 方法中，对 luggage.Completed 或 luggage.Status == common.StatusFlightCancel 的行李直接返回 ErrLuggageAlreadyExists，导致已完成或航班取消的行李无法重新开始新的追踪流程。PROMPT 要求"同一牌号同一时间只能有一个在途记录"，已完成/取消的行李不在途，应该允许重新创建。store.go 的 CreateLuggage 已正确处理此逻辑（允许覆盖已完成记录），但 Scan() 在调用 CreateLuggage 之前就提前返回了错误。过程不满意：R1 死锁问题修复了锁嵌套，但修改 Scan 逻辑时没有重新审视业务条件，写完后没有完整测试行李全生命周期（创建→完成→重新创建） |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 314-go-luggage-tracking |
+
+---
