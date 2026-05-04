@@ -18,3 +18,23 @@
 | 分支/文件夹 | 307-go-billing-service |
 
 ---
+
+## 307-go-billing-service — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了下套餐变更折算的功能，创建了个客户选基础版，然后中途升级到专业版，生成当月账单发现plan_breakdown里两个时段的plan_id都是专业版，前半段应该是基础版的。另外欠费超过60天标注"严重逾期"这个功能好像也没实现，配置里有个serious_overdue_days但账单状态从来没变过这个值。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：套餐折算的from_plan_id问题已修复，当月折算正确显示了旧套餐和新套餐两个时段。严重逾期功能已通过updateBillStatus在读账单时懒加载实现。但R1报告的6个问题只修了2个，其余4个完全没动——usageKey()函数仍然用string(rune(year))把年月转成Unicode字符而非数字字符串（store.go:309），PaymentRecord的ID字段在MarkPaid时仍未赋值（返回的payment_record.id为空），API仍无CORS配置，randomString仍用time.Sleep循环生成随机串。另外发现新问题：为变更前的历史月份生成账单时，calculatePlanFee没有查找变更月份之后的plan_change记录来确定当时的套餐，而是直接用了customer.CurrentPlanID（当前最新套餐），导致4月账单显示专业版而非实际的基础版。增值服务超量计费仍只用CurrentPlanID的配额，没有按折算时段分别计算。过程不满意：R1明确列出了6个bug，R2只修了用户在NEXT_PROMPT中提到的2个，其余4个被完全忽略，说明没有对照R1的完整bug列表逐一修复 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 307-go-billing-service |
+
+---
+

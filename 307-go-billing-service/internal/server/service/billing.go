@@ -244,22 +244,34 @@ func (s *BillingService) calculatePlanFee(customer *api.Customer, year, month in
 
 	periods := []period{}
 
-	currentPlanID := customer.CurrentPlanID
-	var currentStart time.Time = firstDay
-
 	sort.Slice(planChanges, func(i, j int) bool {
 		return planChanges[i].EffectiveDate.Before(planChanges[j].EffectiveDate)
 	})
 
-	for _, change := range planChanges {
-		if change.EffectiveDate.After(lastDay) {
-			continue
-		}
-		if change.EffectiveDate.Before(firstDay) {
-			currentPlanID = change.ToPlanID
-			continue
-		}
+	var beforeChanges []*api.PlanChange
+	var inMonthChanges []*api.PlanChange
 
+	for _, change := range planChanges {
+		if change.EffectiveDate.Before(firstDay) {
+			beforeChanges = append(beforeChanges, change)
+		} else if !change.EffectiveDate.After(lastDay) {
+			inMonthChanges = append(inMonthChanges, change)
+		}
+	}
+
+	var currentPlanID string
+
+	if len(beforeChanges) > 0 {
+		currentPlanID = beforeChanges[len(beforeChanges)-1].ToPlanID
+	} else if len(inMonthChanges) > 0 {
+		currentPlanID = inMonthChanges[0].FromPlanID
+	} else {
+		currentPlanID = customer.CurrentPlanID
+	}
+
+	var currentStart time.Time = firstDay
+
+	for _, change := range inMonthChanges {
 		end := change.EffectiveDate.AddDate(0, 0, -1)
 		if !end.Before(currentStart) {
 			periods = append(periods, period{
@@ -369,6 +381,10 @@ func (s *BillingService) GetBill(id string) (*api.Bill, error) {
 	if !ok {
 		return nil, model.ErrBillNotFound
 	}
+
+	pricing := s.dataStore.GetPricing()
+	s.updateBillStatus(bill, pricing)
+
 	return bill, nil
 }
 
@@ -377,15 +393,62 @@ func (s *BillingService) GetCustomerBill(customerID string, year, month int) (*a
 	if !ok {
 		return nil, model.ErrBillNotFound
 	}
+
+	pricing := s.dataStore.GetPricing()
+	s.updateBillStatus(bill, pricing)
+
 	return bill, nil
 }
 
 func (s *BillingService) ListCustomerBills(customerID string) []*api.Bill {
-	return s.dataStore.ListCustomerBills(customerID)
+	bills := s.dataStore.ListCustomerBills(customerID)
+	pricing := s.dataStore.GetPricing()
+
+	for _, bill := range bills {
+		s.updateBillStatus(bill, pricing)
+	}
+
+	return bills
 }
 
 func (s *BillingService) ListAllBills() []*api.Bill {
-	return s.dataStore.ListAllBills()
+	bills := s.dataStore.ListAllBills()
+	pricing := s.dataStore.GetPricing()
+
+	for _, bill := range bills {
+		s.updateBillStatus(bill, pricing)
+	}
+
+	return bills
+}
+
+func (s *BillingService) updateBillStatus(bill *api.Bill, pricing *api.PricingConfig) {
+	if bill.Status == api.BillStatusPaid {
+		return
+	}
+
+	now := time.Now()
+	daysOverdue := int(now.Sub(bill.DueDate).Hours() / 24)
+
+	var newStatus string
+
+	if daysOverdue > pricing.SeriousOverdueDays {
+		newStatus = api.BillStatusSeriousOverdue
+	} else if daysOverdue > 0 {
+		newStatus = api.BillStatusOverdue
+	} else {
+		if bill.Status == api.BillStatusOverdue {
+			newStatus = api.BillStatusOverdue
+		} else {
+			newStatus = api.BillStatusUnpaid
+		}
+	}
+
+	if bill.Status != newStatus {
+		s.dataStore.UpdateBillStatus(bill.ID, newStatus)
+		bill.Status = newStatus
+		s.save()
+	}
 }
 
 func (s *BillingService) MarkPaid(req *api.MarkPaidRequest) (*api.Bill, error) {
