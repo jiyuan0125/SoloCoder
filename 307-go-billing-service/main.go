@@ -1,131 +1,73 @@
 package main
 
 import (
+	"billing-service/handler"
+	"billing-service/repository"
+	"billing-service/service"
+	"flag"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"path/filepath"
 )
 
 func main() {
-	dataDir := "./data"
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		log.Fatalf("Failed to create data directory: %v", err)
+	dbPath := flag.String("db", "./data/billing.db", "Path to SQLite database file")
+	port := flag.Int("port", 8080, "HTTP server port")
+	flag.Parse()
+
+	absDBPath, err := filepath.Abs(*dbPath)
+	if err != nil {
+		log.Fatalf("Failed to get absolute path: %v", err)
 	}
 
-	customerStore := &FileCustomerStore{filePath: dataDir + "/customers.json"}
-	if err := customerStore.Load(); err != nil {
-		log.Printf("Warning: Failed to load customers: %v", err)
+	fmt.Printf("Initializing database at: %s\n", absDBPath)
+
+	db, err := repository.InitDB(absDBPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
 	}
+	defer db.Close()
 
-	usageStore := &FileUsageStore{filePath: dataDir + "/usage.json"}
-	if err := usageStore.Load(); err != nil {
-		log.Printf("Warning: Failed to load usage: %v", err)
-	}
+	fmt.Println("Database initialized successfully")
 
-	billingStore := &FileBillingStore{filePath: dataDir + "/billing.json"}
-	if err := billingStore.Load(); err != nil {
-		log.Printf("Warning: Failed to load billing: %v", err)
-	}
+	packageRepo := repository.NewPackageRepository(db)
+	customerRepo := repository.NewCustomerRepository(db)
+	usageRepo := repository.NewUsageRepository(db)
+	billRepo := repository.NewBillRepository(db)
+	configRepo := repository.NewConfigRepository(db)
 
-	customerService := NewCustomerService(customerStore)
-	usageService := NewUsageService(usageStore, customerStore)
-	billingService := NewBillingService(billingStore, customerStore, usageStore)
+	customerService := service.NewCustomerService(customerRepo, packageRepo)
+	usageService := service.NewUsageService(usageRepo)
+	billService := service.NewBillService(billRepo, customerRepo, packageRepo, usageRepo, configRepo)
+	configService := service.NewConfigService(configRepo)
 
-	http.HandleFunc("/customers", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			customerService.CreateCustomer(w, r)
-		case http.MethodGet:
-			customerService.ListCustomers(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	router := handler.NewRouter(billService, customerService, usageService, configService)
 
-	http.HandleFunc("/customers/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			customerService.GetCustomer(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	mux := http.NewServeMux()
+	router.SetupRoutes(mux)
 
-	http.HandleFunc("/customers/change-plan", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			customerService.ChangePlan(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
+	addr := fmt.Sprintf(":%d", *port)
+	fmt.Printf("Starting server on %s\n", addr)
+	fmt.Println("Available endpoints:")
+	fmt.Println("  GET  /api/customers          - List all customers")
+	fmt.Println("  POST /api/customers          - Create new customer")
+	fmt.Println("  GET  /api/customers/:id      - Get customer by ID")
+	fmt.Println("  POST /api/customers/:id/change-package - Change customer package")
+	fmt.Println("  GET  /api/bills              - List all bills")
+	fmt.Println("  GET  /api/bills?customer_id=:id - List customer bills")
+	fmt.Println("  POST /api/bills              - Generate monthly bill")
+	fmt.Println("  GET  /api/bills/:id          - Get bill by ID")
+	fmt.Println("  GET  /api/bills/:id/detail   - Get bill detail")
+	fmt.Println("  GET  /api/bills/:id/payments - Get bill payment history")
+	fmt.Println("  POST /api/bills/:id/mark-paid - Mark bill as paid")
+	fmt.Println("  GET  /api/usages?customer_id=:id&year=:year&month=:month - Get usage")
+	fmt.Println("  POST /api/usages?action=sms  - Record SMS usage")
+	fmt.Println("  POST /api/usages?action=storage - Record storage usage")
+	fmt.Println("  GET  /api/configs/:key       - Get config by key")
+	fmt.Println("  PUT  /api/configs/:key       - Update config")
 
-	http.HandleFunc("/usage/sms", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			usageService.RecordSMSUsage(w, r)
-		case http.MethodGet:
-			usageService.GetSMSUsage(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/usage/storage", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			usageService.RecordStorageUsage(w, r)
-		case http.MethodGet:
-			usageService.GetStorageUsage(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/usage/config", func(w http.ResponseWriter, r *http.Request) {
-		switch r.Method {
-		case http.MethodPost:
-			usageService.UpdatePricingConfig(w, r)
-		case http.MethodGet:
-			usageService.GetPricingConfig(w, r)
-		default:
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/bills/generate", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			billingService.GenerateMonthlyBills(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/bills", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			billingService.ListAllBills(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/bills/customer/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodGet {
-			billingService.ListCustomerBills(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	http.HandleFunc("/bills/pay", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == http.MethodPost {
-			billingService.MarkBillAsPaid(w, r)
-		} else {
-			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		}
-	})
-
-	port := ":8080"
-	log.Printf("Server starting on port %s...", port)
-	if err := http.ListenAndServe(port, nil); err != nil {
+	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("Server failed: %v", err)
 	}
 }
