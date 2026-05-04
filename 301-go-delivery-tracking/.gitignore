@@ -5,3 +5,6 @@ solo-feishu.md
 CHECK_R*.md
 *.db
 delivery_data.json
+delivery-tracking
+go/
+test_bin

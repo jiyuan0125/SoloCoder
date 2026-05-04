@@ -1,45 +1,53 @@
 package main
 
 import (
-	"fmt"
+	"delivery-tracking/handler"
+	"delivery-tracking/repository"
+	"delivery-tracking/service"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 )
 
-const dataFilePath = "./delivery_data.json"
+const (
+	defaultDBPath = "./delivery_tracking.db"
+	defaultPort   = ":8080"
+)
 
 func main() {
-	store, err := NewDataStore(dataFilePath)
-	if err != nil {
-		log.Fatalf("Failed to initialize data store: %v", err)
+	dbPath := os.Getenv("DB_PATH")
+	if dbPath == "" {
+		dbPath = defaultDBPath
 	}
 
-	reportHandler := NewReportHandler(store)
-	queryHandler := NewQueryHandler(store)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = defaultPort
+	}
 
-	http.HandleFunc("/report", reportHandler.Handle)
-	http.HandleFunc("/query", queryHandler.Handle)
+	log.Printf("Initializing database at: %s", dbPath)
+	repo, err := repository.NewSQLiteDeliveryRepository(dbPath)
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer repo.Close()
 
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	log.Println("Database initialized successfully")
 
-	go func() {
-		<-sigChan
-		log.Println("Shutting down server...")
-		if err := store.Save(); err != nil {
-			log.Printf("Failed to save data on shutdown: %v", err)
-		}
-		os.Exit(0)
-	}()
+	deliveryService := service.NewDeliveryService(repo)
+	deliveryHandler := handler.NewDeliveryHandler(deliveryService)
 
-	fmt.Println("Delivery tracking service starting on :8080")
-	fmt.Println("Available endpoints:")
-	fmt.Println("  POST /report - Report delivery status")
-	fmt.Println("  GET  /query?order_id=xxx - Query delivery trail")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
-		log.Fatalf("Server failed: %v", err)
+	http.HandleFunc("/api/delivery/status", deliveryHandler.ReportStatus)
+	http.HandleFunc("/api/delivery/status/batch", deliveryHandler.ReportBatchStatuses)
+	http.HandleFunc("/api/delivery/trajectory", deliveryHandler.GetTrajectory)
+
+	log.Printf("Server starting on port %s", port)
+	log.Printf("Endpoints:")
+	log.Printf("  POST /api/delivery/status - Report single delivery status")
+	log.Printf("  POST /api/delivery/status/batch - Report multiple delivery statuses")
+	log.Printf("  GET  /api/delivery/trajectory?order_no={order_no} - Get delivery trajectory")
+
+	if err := http.ListenAndServe(port, nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
 	}
 }
