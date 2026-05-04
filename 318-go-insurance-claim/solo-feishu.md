@@ -18,3 +18,23 @@
 | 分支/文件夹 | 318-go-insurance-claim |
 
 ---
+
+## 318-go-insurance-claim — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | （待填） |
+| 第一轮Session ID | （待填） |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下服务端，连续请求十几二十次之后服务就挂了，没有任何报错日志直接就没了。我看了一眼 storage.go 里的 saveToFile，每次写数据都 go s.saveToFile() 开个新协程去写文件，多次操作之后好几个协程同时 os.Create 同一个文件然后各写各的，这个并发写文件的方式是不是有问题？另外 handler.go 里的 ServeHTTP 每次请求都 new 一个 ServeMux 然后重新注册所有路由，感觉也不太对。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R2 修复并发写文件时引入了更严重的死锁 bug，storage.go 中 markDirty() 在调用方已持有 s.mu 的情况下再次调用 s.mu.Lock()，Go 的 sync.Mutex 不可重入导致 CreatePolicy、UpdatePolicy、CreateClaim、UpdateClaim 等所有写操作永久死锁，服务端只能处理读请求。ServeHTTP 每次请求创建新 ServeMux 的问题已修复。CORS 头仍未添加。过程不满意：R1 反馈的是并发文件写入问题，R2 用 channel+writeLoop+writeMu 重构了写入机制，思路正确但 markDirty() 方法没有考虑到调用方已持锁的场景，改完后没有实际测试任何一个写接口 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 318-go-insurance-claim |
+
+---
+

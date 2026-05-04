@@ -18,3 +18,22 @@
 | 分支/文件夹 | 313-go-food-menu |
 
 ---
+
+## 313-go-food-menu — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下服务端，发现添加菜品完全用不了。POST /api/dishes 返回"方法不允许"，看了下代码应该是 ServeHTTP 里路由匹配的问题，/api/dishes 这个路径被列表接口先接走了。另外编辑菜品的时候好像也不能改分类。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 313-go-food-menu |
+
+---
