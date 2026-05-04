@@ -115,6 +115,18 @@ func (c *APIClient) ProcessRefund(req common.ProcessRefundRequest) (string, floa
 	return result.RefundID, result.TotalRefund, nil
 }
 
+func (c *APIClient) HandlePriceDifference(req common.HandlePriceDifferenceRequest) (*common.HandlePriceDifferenceResponse, error) {
+	var result common.HandlePriceDifferenceResponse
+	err := c.doRequest("POST", "/api/applications/price-difference", req, &result)
+	if err != nil {
+		return nil, err
+	}
+	if !result.Success {
+		return nil, fmt.Errorf(result.Message)
+	}
+	return &result, nil
+}
+
 func (c *APIClient) CreateShippingOrder(req common.CreateShippingOrderRequest) (string, error) {
 	var result common.CreateShippingOrderResponse
 	err := c.doRequest("POST", "/api/applications/shipping", req, &result)

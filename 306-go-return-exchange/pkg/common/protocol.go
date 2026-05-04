@@ -63,3 +63,15 @@ type CreateShippingOrderResponse struct {
 	CommonResponse
 	ShippingOrderID string `json:"shipping_order_id,omitempty"`
 }
+
+type HandlePriceDifferenceRequest struct {
+	ApplicationID string `json:"application_id"`
+}
+
+type HandlePriceDifferenceResponse struct {
+	CommonResponse
+	Action          string  `json:"action,omitempty"`
+	Amount          float64 `json:"amount,omitempty"`
+	RefundID        string  `json:"refund_id,omitempty"`
+	PriceDifference float64 `json:"price_difference,omitempty"`
+}

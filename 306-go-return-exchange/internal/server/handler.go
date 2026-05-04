@@ -235,6 +235,46 @@ func (h *Handler) ListUserApplications(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) HandlePriceDifference(w http.ResponseWriter, r *http.Request) {
+	var req common.HandlePriceDifferenceRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.jsonResponse(w, http.StatusBadRequest, common.HandlePriceDifferenceResponse{
+			CommonResponse: common.CommonResponse{
+				Success: false,
+				Message: "invalid request body: " + err.Error(),
+			},
+		})
+		return
+	}
+
+	action, amount, refundID, err := h.service.HandlePriceDifference(req)
+	if err != nil {
+		h.jsonResponse(w, http.StatusBadRequest, common.HandlePriceDifferenceResponse{
+			CommonResponse: common.CommonResponse{
+				Success: false,
+				Message: err.Error(),
+			},
+		})
+		return
+	}
+
+	app, _ := h.service.GetApplication(req.ApplicationID)
+	var priceDiff float64
+	if app != nil {
+		priceDiff = app.PriceDifference
+	}
+
+	h.jsonResponse(w, http.StatusOK, common.HandlePriceDifferenceResponse{
+		CommonResponse: common.CommonResponse{
+			Success: true,
+		},
+		Action:          action,
+		Amount:          amount,
+		RefundID:        refundID,
+		PriceDifference: priceDiff,
+	})
+}
+
 func (h *Handler) CreateMockOrder(w http.ResponseWriter, r *http.Request) {
 	orderID := h.service.CreateMockOrder()
 	h.jsonResponse(w, http.StatusOK, map[string]interface{}{

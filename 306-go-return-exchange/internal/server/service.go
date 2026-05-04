@@ -11,12 +11,13 @@ import (
 )
 
 var (
-	ErrOrderNotFound        = errors.New("order not found")
-	ErrApplicationExists    = errors.New("application already exists for this order")
-	ErrApplicationNotFound  = errors.New("application not found")
-	ErrEvidenceRequired     = errors.New("evidence images required for this reason")
-	ErrInvalidStatus        = errors.New("invalid application status")
-	ErrRefundExceedsOrder   = errors.New("refund amount cannot exceed order amount")
+	ErrOrderNotFound            = errors.New("order not found")
+	ErrApplicationExists        = errors.New("application already exists for this order")
+	ErrApplicationNotFound      = errors.New("application not found")
+	ErrEvidenceRequired         = errors.New("evidence images required for this reason")
+	ErrInvalidStatus            = errors.New("invalid application status")
+	ErrRefundExceedsOrder       = errors.New("refund amount cannot exceed order amount")
+	ErrPriceDifferenceNotHandled = errors.New("price difference must be handled before creating shipping order")
 )
 
 type Service struct {
@@ -215,6 +216,10 @@ func (s *Service) CreateShippingOrder(req common.CreateShippingOrderRequest) (st
 		return "", errors.New("only exchange applications can create shipping orders")
 	}
 
+	if app.PriceDifference != 0 && !app.PriceDifferenceHandled {
+		return "", ErrPriceDifferenceNotHandled
+	}
+
 	shippingOrder := &models.ShippingOrder{
 		ID:               s.generateID(),
 		ApplicationID:    app.ID,
@@ -233,6 +238,65 @@ func (s *Service) CreateShippingOrder(req common.CreateShippingOrderRequest) (st
 	s.store.SaveApplication(app)
 
 	return shippingOrder.ID, nil
+}
+
+func (s *Service) HandlePriceDifference(req common.HandlePriceDifferenceRequest) (string, float64, string, error) {
+	app, exists := s.store.GetApplication(req.ApplicationID)
+	if !exists {
+		return "", 0, "", ErrApplicationNotFound
+	}
+
+	if app.Status != models.StatusApproved {
+		return "", 0, "", ErrInvalidStatus
+	}
+
+	if app.Type != models.ExchangeType {
+		return "", 0, "", errors.New("only exchange applications need price difference handling")
+	}
+
+	if app.PriceDifferenceHandled {
+		return "", 0, "", errors.New("price difference already handled")
+	}
+
+	if app.PriceDifference == 0 {
+		app.PriceDifferenceHandled = true
+		app.UpdateTime = time.Now()
+		s.store.SaveApplication(app)
+		return "no_action", 0, "", nil
+	}
+
+	priceDifference := app.PriceDifference
+	var action string
+	var refundID string
+
+	if priceDifference > 0 {
+		action = "refund_difference"
+		refundAmount := priceDifference
+
+		refundRecord := &models.RefundRecord{
+			ID:            s.generateID(),
+			ApplicationID: app.ID,
+			OrderID:       app.OrderID,
+			UserID:        app.UserID,
+			Amount:        refundAmount,
+			TotalRefund:   refundAmount,
+			CreateTime:    time.Now(),
+		}
+
+		s.store.SaveRefundRecord(refundRecord)
+
+		app.PriceDifferenceRefundID = refundRecord.ID
+		refundID = refundRecord.ID
+	} else {
+		action = "require_payment"
+		priceDifference = -priceDifference
+	}
+
+	app.PriceDifferenceHandled = true
+	app.UpdateTime = time.Now()
+	s.store.SaveApplication(app)
+
+	return action, priceDifference, refundID, nil
 }
 
 func (s *Service) CompleteApplication(applicationID string) error {

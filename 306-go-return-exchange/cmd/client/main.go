@@ -228,9 +228,103 @@ func adminCmd() *cobra.Command {
 	cmd.AddCommand(adminListCmd())
 	cmd.AddCommand(adminReviewCmd())
 	cmd.AddCommand(adminProcessRefundCmd())
+	cmd.AddCommand(adminHandlePriceDiffCmd())
 	cmd.AddCommand(adminCreateShippingCmd())
 	cmd.AddCommand(adminCompleteCmd())
 
+	return cmd
+}
+
+func adminHandlePriceDiffCmd() *cobra.Command {
+	var appID string
+
+	cmd := &cobra.Command{
+		Use:   "handle-price-diff",
+		Short: "Handle price difference for exchange applications",
+		Long: `Handle price difference for exchange applications.
+- If new SKU is cheaper: refund the difference to user
+- If new SKU is more expensive: require user to pay the difference first`,
+		Run: func(cmd *cobra.Command, args []string) {
+			if appID == "" && len(args) > 0 {
+				appID = args[0]
+			}
+			if appID == "" {
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Print("Enter Application ID: ")
+				appID, _ = reader.ReadString('\n')
+				appID = strings.TrimSpace(appID)
+			}
+
+			app, err := apiClient.GetApplication(appID)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return
+			}
+
+			if app.Type != models.ExchangeType {
+				fmt.Println("Error: only exchange applications need price difference handling")
+				return
+			}
+
+			if app.Status != models.StatusApproved {
+				fmt.Printf("Error: application status must be 'approved' to handle price difference, current status: %s\n", app.Status)
+				return
+			}
+
+			if app.PriceDifferenceHandled {
+				fmt.Println("Price difference already handled!")
+				if app.PriceDifferenceRefundID != "" {
+					fmt.Printf("Refund ID: %s\n", app.PriceDifferenceRefundID)
+				}
+				return
+			}
+
+			if app.PriceDifference == 0 {
+				fmt.Println("No price difference to handle (prices are equal)")
+			} else if app.PriceDifference > 0 {
+				fmt.Printf("New SKU is cheaper by %.2f. Will refund this difference to user.\n", app.PriceDifference)
+			} else {
+				fmt.Printf("New SKU is more expensive by %.2f. User needs to pay this difference first.\n", -app.PriceDifference)
+			}
+
+			if app.PriceDifference != 0 {
+				reader := bufio.NewReader(os.Stdin)
+				fmt.Print("Continue? (yes/no): ")
+				confirm, _ := reader.ReadString('\n')
+				confirm = strings.TrimSpace(strings.ToLower(confirm))
+				if confirm != "yes" && confirm != "y" {
+					fmt.Println("Operation cancelled.")
+					return
+				}
+			}
+
+			req := common.HandlePriceDifferenceRequest{
+				ApplicationID: appID,
+			}
+
+			result, err := apiClient.HandlePriceDifference(req)
+			if err != nil {
+				fmt.Printf("Error: %v\n", err)
+				return
+			}
+
+			fmt.Println("\nPrice difference handled successfully!")
+			switch result.Action {
+			case "refund_difference":
+				fmt.Printf("Action: Refund difference to user\n")
+				fmt.Printf("Refund Amount: %.2f\n", result.Amount)
+				fmt.Printf("Refund ID: %s\n", result.RefundID)
+			case "require_payment":
+				fmt.Printf("Action: Require user to pay difference\n")
+				fmt.Printf("Amount to pay: %.2f\n", result.Amount)
+				fmt.Println("Please collect payment from user before creating shipping order.")
+			case "no_action":
+				fmt.Printf("Action: No action needed (prices are equal)\n")
+			}
+		},
+	}
+
+	cmd.Flags().StringVar(&appID, "id", "", "Application ID")
 	return cmd
 }
 
@@ -524,6 +618,10 @@ func printApplicationDetail(app *models.ReturnExchangeApplication) {
 		fmt.Printf("New Specification: %s\n", app.NewSpecification)
 		fmt.Printf("New SKU Price: %.2f\n", app.NewSKUPrice)
 		fmt.Printf("Price Difference: %.2f\n", app.PriceDifference)
+		fmt.Printf("Price Difference Handled: %v\n", app.PriceDifferenceHandled)
+		if app.PriceDifferenceRefundID != "" {
+			fmt.Printf("Price Difference Refund ID: %s\n", app.PriceDifferenceRefundID)
+		}
 	}
 
 	if app.RefundID != "" {

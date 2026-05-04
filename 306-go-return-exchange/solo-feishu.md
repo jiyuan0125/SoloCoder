@@ -18,3 +18,22 @@
 | 分支/文件夹 | 306-go-return-exchange |
 
 ---
+
+## 306-go-return-exchange — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了一下换货流程，提交了一个换原价299的商品换成399的新SKU的申请，审核通过后直接调创建发货单接口就成功了，price_difference算出来是-100但没有任何补差价的环节。反过来换便宜的SKU也不会退差额，直接就发货了。按需求新SKU贵的话应该要用户先补差价才能发货，便宜的话要退差额给用户。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 306-go-return-exchange |
+
+---

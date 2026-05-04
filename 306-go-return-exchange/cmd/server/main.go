@@ -33,6 +33,7 @@ func main() {
 	r.HandleFunc("/api/applications/exchange", handler.SubmitExchange).Methods("POST")
 	r.HandleFunc("/api/applications/review", handler.ReviewApplication).Methods("POST")
 	r.HandleFunc("/api/applications/refund", handler.ProcessRefund).Methods("POST")
+	r.HandleFunc("/api/applications/price-difference", handler.HandlePriceDifference).Methods("POST")
 	r.HandleFunc("/api/applications/shipping", handler.CreateShippingOrder).Methods("POST")
 	r.HandleFunc("/api/applications/{id}/complete", handler.CompleteApplication).Methods("POST")
 	r.HandleFunc("/api/applications/{id}", handler.GetApplication).Methods("GET")
