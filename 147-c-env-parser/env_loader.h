@@ -4,10 +4,15 @@
 #include "env_file.h"
 #include "env_expand.h"
 
+#define ENV_LOADER_INITIAL_CACHE_SIZE 16
+
 typedef struct {
     env_file_t *file_vars;
     env_expand_ctx_t *expand_ctx;
     env_expand_config_t config;
+    char **result_cache;
+    size_t cache_count;
+    size_t cache_capacity;
 } env_loader_t;
 
 typedef enum {

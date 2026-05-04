@@ -4,9 +4,32 @@
 #include <stdio.h>
 #include <ctype.h>
 
+static int cache_ensure_capacity(env_loader_t *loader) {
+    if (!loader->result_cache) {
+        loader->result_cache = (char **)malloc(ENV_LOADER_INITIAL_CACHE_SIZE * sizeof(char *));
+        if (!loader->result_cache) return 0;
+        loader->cache_capacity = ENV_LOADER_INITIAL_CACHE_SIZE;
+        loader->cache_count = 0;
+        return 1;
+    }
+    
+    if (loader->cache_count >= loader->cache_capacity) {
+        size_t new_cap = loader->cache_capacity * 2;
+        char **new_cache = (char **)realloc(loader->result_cache, new_cap * sizeof(char *));
+        if (!new_cache) return 0;
+        loader->result_cache = new_cache;
+        loader->cache_capacity = new_cap;
+    }
+    return 1;
+}
+
 env_loader_t *env_loader_create(env_expand_config_t config) {
     env_loader_t *loader = (env_loader_t *)malloc(sizeof(env_loader_t));
     if (!loader) return NULL;
+    
+    loader->result_cache = NULL;
+    loader->cache_count = 0;
+    loader->cache_capacity = 0;
     
     loader->file_vars = env_file_create();
     if (!loader->file_vars) {
@@ -27,6 +50,13 @@ env_loader_t *env_loader_create(env_expand_config_t config) {
 
 void env_loader_destroy(env_loader_t *loader) {
     if (!loader) return;
+    
+    if (loader->result_cache) {
+        for (size_t i = 0; i < loader->cache_count; i++) {
+            free(loader->result_cache[i]);
+        }
+        free(loader->result_cache);
+    }
     
     env_expand_ctx_destroy(loader->expand_ctx);
     env_file_destroy(loader->file_vars);
@@ -72,11 +102,13 @@ const char *env_loader_get_string(env_loader_t *loader, const char *key, const c
         return default_val;
     }
     
-    static char *last_result = NULL;
-    free(last_result);
-    last_result = expanded;
+    if (!cache_ensure_capacity(loader)) {
+        free(expanded);
+        return default_val;
+    }
     
-    return last_result;
+    loader->result_cache[loader->cache_count++] = expanded;
+    return expanded;
 }
 
 int env_loader_get_int(env_loader_t *loader, const char *key, int default_val) {

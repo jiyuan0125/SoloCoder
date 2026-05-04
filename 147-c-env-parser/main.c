@@ -91,6 +91,20 @@ int main(int argc, char *argv[]) {
     
     const char *undefined_ref = env_loader_get_string(loader, "UNDEFINED_REF", "");
     printf("UNDEFINED_REF = '%s'\n", undefined_ref);
+    printf("  说明: $UNDEFINED_VAR_suffix 被解析为变量 UNDEFINED_VAR_suffix（下划线是变量名有效字符）\n");
+    printf("        变量不存在，所以展开为空字符串\n");
+    
+    const char *explicit_boundary = env_loader_get_string(loader, "EXPLICIT_BOUNDARY", "");
+    printf("EXPLICIT_BOUNDARY = '%s'\n", explicit_boundary);
+    printf("  说明: 使用 ${DATABASE_NAME}_suffix 格式，明确变量名边界\n");
+    printf("        ${DATABASE_NAME} 被解析为变量，_suffix 作为普通字符串保留\n");
+    
+    printf("\n  [验证] 多个 get_string 结果同时使用:\n");
+    const char *a = env_loader_get_string(loader, "DATABASE_HOST", "");
+    const char *b = env_loader_get_string(loader, "DATABASE_NAME", "");
+    printf("  a (DATABASE_HOST) = '%s'\n", a);
+    printf("  b (DATABASE_NAME) = '%s'\n", b);
+    printf("  a && b 同时有效: a='%s', b='%s'\n", a, b);
     
     printf("\n----------------------------------------\n");
     printf("  3. 整数类型读取演示\n");
