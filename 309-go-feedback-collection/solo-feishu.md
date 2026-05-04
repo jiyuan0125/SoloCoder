@@ -18,3 +18,22 @@
 | 分支/文件夹 | 309-go-feedback-collection |
 
 ---
+
+## 309-go-feedback-collection — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我试了下提交反馈接口，rating 字段传字符串 "5" 的时候直接返回了"请求体解析失败"，Go 的 JSON decoder 在反序列化阶段就报错了，根本走不到后面的 ValidateRating 校验。你那个 ValidateRating 函数明明写了支持 string 类型的处理逻辑，但因为结构体里 Rating 字段定义的是 int，json.Decode 直接就挂了，那块逻辑永远跑不到。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 309-go-feedback-collection |
+
+---

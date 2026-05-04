@@ -7,6 +7,38 @@ import (
 	"time"
 )
 
+type Rating int
+
+func (r *Rating) UnmarshalJSON(data []byte) error {
+	if len(data) == 0 {
+		return errors.New("评分不能为空")
+	}
+
+	str := string(data)
+	if str[0] == '"' && str[len(str)-1] == '"' {
+		str = str[1 : len(str)-1]
+	}
+
+	parsed, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return errors.New("评分必须是1-5之间的整数")
+	}
+
+	*r = Rating(parsed)
+	return nil
+}
+
+func (r Rating) Int() int {
+	return int(r)
+}
+
+func (r Rating) Validate() error {
+	if r < MinRating || r > MaxRating {
+		return errors.New("评分必须在1-5之间")
+	}
+	return nil
+}
+
 type FeedbackType string
 
 const (
@@ -147,7 +179,7 @@ func ValidatePageParams(page, pageSize int) (int, int) {
 type SubmitFeedbackRequest struct {
 	UserID      string `json:"user_id"`
 	Type        string `json:"type"`
-	Rating      int    `json:"rating"`
+	Rating      Rating `json:"rating"`
 	Description string `json:"description"`
 }
 

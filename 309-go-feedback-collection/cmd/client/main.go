@@ -122,7 +122,7 @@ func handleSubmit(client *api.Client) {
 	req := common.SubmitFeedbackRequest{
 		UserID:      userID,
 		Type:        feedbackType,
-		Rating:      rating,
+		Rating:      common.Rating(rating),
 		Description: description,
 	}
 

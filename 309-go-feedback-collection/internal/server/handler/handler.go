@@ -47,7 +47,7 @@ func writeJSONSuccess(w http.ResponseWriter, data interface{}) {
 func (h *Handler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 	var req common.SubmitFeedbackRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		writeJSONError(w, http.StatusBadRequest, "请求体解析失败")
+		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -61,8 +61,7 @@ func (h *Handler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rating, err := common.ValidateRating(req.Rating)
-	if err != nil {
+	if err := req.Rating.Validate(); err != nil {
 		writeJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
@@ -89,7 +88,7 @@ func (h *Handler) SubmitFeedback(w http.ResponseWriter, r *http.Request) {
 		ID:          uuid.New().String(),
 		UserID:      req.UserID,
 		Type:        common.FeedbackType(strings.ToLower(req.Type)),
-		Rating:      rating,
+		Rating:      req.Rating.Int(),
 		Description: req.Description,
 		Status:      common.StatusPending,
 		CreatedAt:   time.Now(),
