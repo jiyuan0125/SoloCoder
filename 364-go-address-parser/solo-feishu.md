@@ -18,3 +18,23 @@
 | 分支/文件夹 | 364-go-address-parser |
 
 ---
+
+## 364-go-address-parser — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我刚测了下这个地址解析服务，发现两个问题：1. 地址里如果有逗号或者多余的空格，比如"北京市, 朝阳区 建国路100号"，返回结果里 city 和 district 都是空的，整个"朝阳区 建国路100号"都被当成了 detail 2. 输入"北京市朝阳区"返回的 province 是"北京市"，但需求说直辖市不应该有省份这一级，province 应该是空的 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 364-go-address-parser |
+
+---
+

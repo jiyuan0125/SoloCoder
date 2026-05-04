@@ -1,0 +1,1 @@
+我测了下发现两个问题还没修。handler.go 里还是 len(req.Data) > 0 的判断，导致用客户端测空文件时返回的是 "No data or path provided" 而不是 unknown，因为客户端读空文件拿到空字节切片后 json 序列化成 null。另外 client.go 里 readFileHeader 还是 err.Error() != "EOF" 那个字符串比较。

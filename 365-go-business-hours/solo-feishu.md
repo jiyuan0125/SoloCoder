@@ -18,3 +18,23 @@
 | 分支/文件夹 | 365-go-business-hours |
 
 ---
+
+## 365-go-business-hours — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我试了下跨天营业时间，设置周一 22:00-02:00，然后 Check 周二凌晨 00:30 返回的是未营业，应该是在营业时段内才对。CalculateHours 算 22:00 到 02:00 的范围也只得到 2 小时，感觉只算了当天的部分，次日凌晨那段漏掉了。另外 9:00 开始营业的话，精确传 9:00:00 也返回未营业，9:00:01 才行，边界是不是不对。客户端 config 命令点了也没反应，就打印了个 usage。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：parseWeekday 对无效输入仍然静默返回 Sunday（default case return 0, nil），发送 config 请求时 weekday 填 "Funday" 或空字符串均返回 success:true，应返回 400 错误。R1 报告的 5 个 bug 中修复了 4 个（跨天 Check、跨天 CalculateHours、边界判断、客户端 config），parseWeekday 未修复。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 365-go-business-hours |
+
+---
+
