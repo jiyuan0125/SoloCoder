@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>技术博客 RSS Feed</title>
+    <link>https://example.com/blog</link>
+    <description>分享技术文章、编程教程和开发经验。关注 Web 开发、系统架构和最佳实践。</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Mon, 04 May 2026 14:30:00 GMT</lastBuildDate>
+    <pubDate>Mon, 04 May 2026 12:00:00 GMT</pubDate>
+    <item>
+      <title>深入理解 C 语言中的内存管理</title>
+      <link>https://example.com/blog/c-memory-management</link>
+      <description>本文详细介绍了 C 语言中的动态内存分配机制，包括 malloc、calloc、realloc 和 free 的使用方法，以及常见的内存泄漏问题和调试技巧。</description>
+      <pubDate>Sun, 03 May 2026 10:00:00 GMT</pubDate>
+      <author>张三 &lt;zhangsan@example.com></author>
+      <category>C语言</category>
+      <category>内存管理</category>
+      <category>编程基础</category>
+    </item>
+    <item>
+      <title>现代 Web 开发中的 API 设计原则</title>
+      <link>https://example.com/blog/api-design-principles</link>
+      <description><![CDATA[<p>好的 API 设计是系统可维护性的关键。本文讨论了 RESTful API 设计的最佳实践，包括：</p>
+<ul>
+<li>资源命名规范</li>
+<li>HTTP 方法的正确使用</li>
+<li>状态码语义</li>
+<li>版本控制策略</li>
+</ul>]]></description>
+      <pubDate>Sat, 02 May 2026 15:30:00 GMT</pubDate>
+      <author>李四 &lt;lisi@example.com></author>
+      <category>Web开发</category>
+      <category>API</category>
+    </item>
+    <item>
+      <title>测试与调试：从入门到精通</title>
+      <link>https://example.com/blog/testing-debugging</link>
+      <description>测试是软件开发中不可或缺的环节。本文涵盖了单元测试、集成测试、端到端测试的概念和工具推荐，以及实用的调试技巧。</description>
+      <pubDate>Fri, 01 May 2026 09:00:00 GMT</pubDate>
+      <author>王五 &lt;wangwu@example.com></author>
+      <category>测试</category>
+      <category>调试</category>
+    </item>
+  </channel>
+</rss>
