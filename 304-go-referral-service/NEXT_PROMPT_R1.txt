@@ -1,0 +1,1 @@
+我看了下代码，handleFirstOrderPaid里面先读relation判断FirstOrderPaid，然后直接改字段，这两步之间没有锁保护。如果两个请求同时打过来，同一个首单可能被发两次积分。handleOrderRefund也有同样的问题，并发退款可能扣两次。另外退款后FirstOrderPaid被改成false了，用户退款再下单又能触发一次奖励，感觉可以无限刷。还有admin stats那个积分总额，退款后relation的RewardPoints被清零了，统计出来的不是发放总额而是当前净额。API也没加CORS，前端直接调不了。

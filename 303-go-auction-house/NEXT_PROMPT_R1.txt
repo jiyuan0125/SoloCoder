@@ -1,0 +1,7 @@
+我刚测了下这个竞拍系统，发现几个问题：
+
+1. 我手动 kill 掉进程再重启，之前已经过期的拍品状态还是 active，看起来 CheckAndCloseExpiredAuctions 改了状态但没落盘
+2. 出价的时候 bidder_id 传空字符串居然也能成功创建出价记录
+3. rules.go 里写了 ValidateBid 和 GetMinimumBidAmount 但好像没人调，PlaceBid 里自己又写了一遍校验逻辑
+4. auction.go 里 CloseAuction 方法也完全没用到，StatusClosed 这个枚举值也是
+5. 前端调接口的时候 CORS 过不去，响应头里没有 Access-Control-Allow-Origin

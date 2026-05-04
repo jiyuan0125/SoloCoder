@@ -1,0 +1,1 @@
+我刚测了下接口，发现几个问题。错误响应返回的 Content-Type 全是 text/plain，但 body 里明明是 JSON，前端解析容易出问题。还有 go.sum 文件没有，go build 直接报错跑不过。另外接口完全没有 CORS 配置，跨域请求会被浏览器拦住。

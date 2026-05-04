@@ -1,0 +1,1 @@
+我刚测了下这个通知中心，发现几个问题：1）查用户通知列表的时候传 is_read=false 筛选未读，结果邮件和短信渠道的通知也全返回了，按理说已读未读筛选只对站内信有效，其他渠道不应该在这种筛选条件下出现吧；2）代码里有好几个函数定义了但没用到，比如 logError、parseChannel、parseStatus，还有一个 BatchMarkAsReadHandler 写了但没注册路由；3）API 没有加 CORS 头，前端调不了
