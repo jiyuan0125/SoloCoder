@@ -1,0 +1,1 @@
+我跑了一下服务端，启动没问题，GET /api/statistics 和 GET /api/users/user1/notifications 都能正常返回。但是 POST /api/notifications 一调就卡死了，curl 一直挂着等不到响应，之后整个服务都卡住了连 GET 都不响应了。你看看 store.go 里的写操作和 Save() 方法，感觉是锁的问题。
