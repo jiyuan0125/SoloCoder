@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>代码片段管理工具</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/highlight.css">
+</head>
+<body>
+  <div class="app-container">
+    
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h1>代码片段</h1>
+        <div class="sidebar-actions">
+          <button id="importBtn" class="icon-btn" title="导入">📥</button>
+          <button id="exportBtn" class="icon-btn" title="导出">📤</button>
+          <button id="addCategoryBtn" class="icon-btn" title="添加分类">➕</button>
+        </div>
+      </div>
+      
+      <div class="category-list" id="categoryList">
+        <div class="category-item active" data-id="all">
+          <span class="category-icon">📁</span>
+          <span class="category-name">全部片段</span>
+          <span class="category-count" id="allCount">0</span>
+        </div>
+        <div class="category-item" data-id="favorites">
+          <span class="category-icon">⭐</span>
+          <span class="category-name">收藏夹</span>
+          <span class="category-count" id="favoritesCount">0</span>
+        </div>
+        <div class="category-divider"></div>
+      </div>
+    </aside>
+    
+    <main class="main-content">
+      
+      <section class="snippets-section">
+        <div class="snippets-header">
+          <div class="search-container">
+            <input type="text" id="searchInput" placeholder="搜索标题、代码、标签、备注..." autocomplete="off">
+            <button id="searchClearBtn" class="icon-btn" style="display: none;">✕</button>
+          </div>
+          <div class="snippets-actions">
+            <select id="sortSelect" class="form-select">
+              <option value="favorite">按收藏排序</option>
+              <option value="title">按标题排序</option>
+              <option value="date">按时间排序</option>
+            </select>
+            <button id="addSnippetBtn" class="btn btn-primary">新建片段</button>
+          </div>
+        </div>
+        
+        <div class="snippets-list" id="snippetsList">
+          <div class="empty-state">
+            <p>暂无代码片段</p>
+            <p class="empty-hint">点击"新建片段"开始添加</p>
+          </div>
+        </div>
+      </section>
+      
+      <section class="editor-section" id="editorSection">
+        <div class="editor-header">
+          <h2 id="editorTitle">片段详情</h2>
+          <div class="editor-actions">
+            <button id="copyBtn" class="btn btn-secondary" title="复制代码">📋 复制代码</button>
+            <button id="saveBtn" class="btn btn-primary" style="display: none;">💾 保存</button>
+            <button id="cancelBtn" class="btn btn-secondary" style="display: none;">✕ 取消</button>
+          </div>
+        </div>
+        
+        <div class="editor-content">
+          <div class="editor-empty" id="editorEmpty">
+            <p>选择一个片段查看详情</p>
+            <p class="empty-hint">或点击"新建片段"创建新的代码片段</p>
+          </div>
+          
+          <div class="editor-form" id="editorForm" style="display: none;">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="formTitle">标题</label>
+                <input type="text" id="formTitle" class="form-input" placeholder="输入片段标题">
+              </div>
+            </div>
+            
+            <div class="form-row">
+              <div class="form-group flex-1">
+                <label for="formCategory">分类</label>
+                <select id="formCategory" class="form-select">
+                </select>
+              </div>
+              <div class="form-group flex-1">
+                <label for="formLanguage">语言</label>
+                <select id="formLanguage" class="form-select">
+                  <option value="text">纯文本</option>
+                  <option value="javascript">JavaScript</option>
+                  <option value="python">Python</option>
+                  <option value="go">Go</option>
+                  <option value="java">Java</option>
+                  <option value="sql">SQL</option>
+                  <option value="html">HTML</option>
+                  <option value="css">CSS</option>
+                  <option value="json">JSON</option>
+                  <option value="typescript">TypeScript</option>
+                  <option value="rust">Rust</option>
+                  <option value="php">PHP</option>
+                  <option value="csharp">C#</option>
+                  <option value="cpp">C++</option>
+                  <option value="ruby">Ruby</option>
+                  <option value="swift">Swift</option>
+                  <option value="kotlin">Kotlin</option>
+                  <option value="shell">Shell</option>
+                  <option value="yaml">YAML</option>
+                  <option value="xml">XML</option>
+                  <option value="markdown">Markdown</option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="formTags">标签（用空格或逗号分隔）</label>
+              <input type="text" id="formTags" class="form-input" placeholder="例如: 算法 排序 面试">
+              <div class="tags-preview" id="tagsPreview"></div>
+            </div>
+            
+            <div class="form-group">
+              <label for="formCode">代码</label>
+              <div class="code-container">
+                <textarea id="formCode" class="form-textarea code-textarea" placeholder="粘贴或输入代码..." spellcheck="false"></textarea>
+              </div>
+            </div>
+            
+            <div class="form-group">
+              <label for="formNotes">备注</label>
+              <textarea id="formNotes" class="form-textarea notes-textarea" placeholder="添加备注说明..."></textarea>
+            </div>
+            
+            <div class="form-meta" id="formMeta" style="display: none;">
+              <span>创建时间: <span id="metaCreated"></span></span>
+              <span>更新时间: <span id="metaUpdated"></span></span>
+            </div>
+          </div>
+          
+          <div class="editor-view" id="editorView" style="display: none;">
+            <div class="view-header">
+              <div class="view-favorite" id="viewFavorite"></div>
+              <div class="view-title" id="viewTitle"></div>
+            </div>
+            
+            <div class="view-meta">
+              <span class="meta-badge category-badge" id="viewCategory"></span>
+              <span class="meta-badge language-badge" id="viewLanguage"></span>
+            </div>
+            
+            <div class="view-tags" id="viewTags"></div>
+            
+            <div class="view-code-section">
+              <div class="code-header">
+                <span>代码</span>
+              </div>
+              <pre><code class="code-block" id="viewCode"></code></pre>
+            </div>
+            
+            <div class="view-notes" id="viewNotesSection" style="display: none;">
+              <div class="notes-header">
+                <span>备注</span>
+              </div>
+              <div class="notes-content" id="viewNotes"></div>
+            </div>
+            
+            <div class="view-timestamps" id="viewTimestamps">
+              <span>创建: <span id="viewCreated"></span></span>
+              <span>更新: <span id="viewUpdated"></span></span>
+            </div>
+            
+            <div class="view-actions">
+              <button id="editBtn" class="btn btn-primary">✏️ 编辑</button>
+              <button id="deleteBtn" class="btn btn-danger">🗑️ 删除</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <div class="toast-container" id="toastContainer"></div>
+  
+  <div class="modal" id="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 id="modalTitle">提示</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer" id="modalFooter"></div>
+    </div>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/highlight.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

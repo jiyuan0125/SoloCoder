@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>记账本</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <!-- 顶部：快速记账栏 -->
+    <div class="quick-entry">
+      <h2>快速记账</h2>
+      <div class="entry-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label>金额</label>
+            <input type="text" id="amount" placeholder="请输入金额" maxlength="15">
+          </div>
+          
+          <div class="form-group">
+            <label>类型</label>
+            <div class="type-switch">
+              <button id="btn-expense" class="active">支出</button>
+              <button id="btn-income">收入</button>
+            </div>
+          </div>
+          
+          <div class="form-group">
+            <label>分类</label>
+            <select id="category"></select>
+          </div>
+          
+          <div class="form-group">
+            <label>备注</label>
+            <input type="text" id="note" placeholder="可选">
+          </div>
+          
+          <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="date">
+          </div>
+          
+          <div class="form-group">
+            <label>&nbsp;</label>
+            <button id="btn-add" class="btn-primary">添加</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 中间：主要内容区 -->
+    <div class="main-content">
+      <!-- 左侧：日历视图 -->
+      <div class="left-panel">
+        <div class="panel-header">
+          <h3>月度日历</h3>
+          <div class="month-selector">
+            <button id="prev-month">&lt;</button>
+            <span id="current-month">2026年5月</span>
+            <button id="next-month">&gt;</button>
+          </div>
+        </div>
+        <div id="calendar" class="calendar"></div>
+        
+        <!-- 预算状态 -->
+        <div class="budget-status">
+          <h4>预算状态</h4>
+          <div id="budget-list" class="budget-list"></div>
+          <button id="btn-set-budget" class="btn-secondary">设置预算</button>
+        </div>
+      </div>
+
+      <!-- 右侧：明细列表 -->
+      <div class="right-panel">
+        <div class="panel-header">
+          <h3 id="selected-date-title">今日明细</h3>
+          <div class="actions">
+            <button id="btn-search" class="btn-secondary">搜索</button>
+            <button id="btn-stats" class="btn-secondary">统计</button>
+            <button id="btn-export" class="btn-secondary">导出CSV</button>
+          </div>
+        </div>
+        
+        <!-- 搜索筛选 -->
+        <div id="search-panel" class="search-panel hidden">
+          <div class="search-row">
+            <div class="search-group">
+              <label>分类</label>
+              <select id="search-category">
+                <option value="">全部</option>
+              </select>
+            </div>
+            <div class="search-group">
+              <label>类型</label>
+              <select id="search-type">
+                <option value="">全部</option>
+                <option value="expense">支出</option>
+                <option value="income">收入</option>
+              </select>
+            </div>
+            <div class="search-group">
+              <label>最小金额</label>
+              <input type="text" id="search-min-amount" placeholder="不限">
+            </div>
+            <div class="search-group">
+              <label>最大金额</label>
+              <input type="text" id="search-max-amount" placeholder="不限">
+            </div>
+          </div>
+          <div class="search-row">
+            <div class="search-group">
+              <label>关键词</label>
+              <input type="text" id="search-keyword" placeholder="备注关键词">
+            </div>
+            <div class="search-group">
+              <label>开始日期</label>
+              <input type="date" id="search-start-date">
+            </div>
+            <div class="search-group">
+              <label>结束日期</label>
+              <input type="date" id="search-end-date">
+            </div>
+            <div class="search-group">
+              <label>&nbsp;</label>
+              <div class="search-buttons">
+                <button id="btn-do-search" class="btn-primary">搜索</button>
+                <button id="btn-clear-search" class="btn-secondary">清除</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 记录列表 -->
+        <div id="records-list" class="records-list">
+          <div class="empty-state">暂无记录</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部：统计面板 -->
+    <div id="stats-panel" class="stats-panel hidden">
+      <div class="panel-header">
+        <h3>月度统计</h3>
+        <button id="btn-close-stats" class="btn-close">×</button>
+      </div>
+      <div class="stats-content">
+        <div class="stats-summary">
+          <div class="stat-item income">
+            <span class="stat-label">总收入</span>
+            <span class="stat-value" id="stat-income">¥0.00</span>
+          </div>
+          <div class="stat-item expense">
+            <span class="stat-label">总支出</span>
+            <span class="stat-value" id="stat-expense">¥0.00</span>
+          </div>
+          <div class="stat-item balance">
+            <span class="stat-label">结余</span>
+            <span class="stat-value" id="stat-balance">¥0.00</span>
+          </div>
+          <div class="stat-item count">
+            <span class="stat-label">记录数</span>
+            <span class="stat-value" id="stat-count">0</span>
+          </div>
+        </div>
+        <div class="stats-chart">
+          <div class="chart-section">
+            <h4>分类支出</h4>
+            <div id="expense-chart" class="chart-container"></div>
+          </div>
+          <div class="chart-section">
+            <h4>分类收入</h4>
+            <div id="income-chart" class="chart-container"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 预算设置弹窗 -->
+    <div id="budget-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>设置月度预算</h3>
+          <button id="btn-close-budget" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">为各分类设置月度预算上限（每月自动重置）</p>
+          <div id="budget-form-list" class="budget-form-list"></div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-save-budget" class="btn-primary">保存</button>
+          <button id="btn-cancel-budget" class="btn-secondary">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 编辑记录弹窗 -->
+    <div id="edit-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>编辑记录</h3>
+          <button id="btn-close-edit" class="btn-close">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>金额</label>
+            <input type="text" id="edit-amount" maxlength="15">
+          </div>
+          <div class="form-group">
+            <label>类型</label>
+            <div class="type-switch">
+              <button id="edit-btn-expense">支出</button>
+              <button id="edit-btn-income">收入</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>分类</label>
+            <select id="edit-category"></select>
+          </div>
+          <div class="form-group">
+            <label>备注</label>
+            <input type="text" id="edit-note">
+          </div>
+          <div class="form-group">
+            <label>日期</label>
+            <input type="date" id="edit-date">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-save-edit" class="btn-primary">保存</button>
+          <button id="btn-cancel-edit" class="btn-secondary">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 确认删除弹窗 -->
+    <div id="delete-modal" class="modal hidden">
+      <div class="modal-content small">
+        <div class="modal-header">
+          <h3>确认删除</h3>
+        </div>
+        <div class="modal-body">
+          <p>确定要删除这条记录吗？此操作不可撤销。</p>
+        </div>
+        <div class="modal-footer">
+          <button id="btn-confirm-delete" class="btn-danger">删除</button>
+          <button id="btn-cancel-delete" class="btn-secondary">取消</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="renderer.js"></script>
+</body>
+</html>

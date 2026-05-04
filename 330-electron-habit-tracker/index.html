@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>习惯打卡追踪</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>📊 习惯打卡追踪</h1>
+      <div class="header-actions">
+        <button id="exportBtn" class="btn btn-secondary">导出 CSV</button>
+        <button id="addHabitBtn" class="btn btn-primary">+ 添加习惯</button>
+      </div>
+    </header>
+
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="calendar">📅 热力图</button>
+      <button class="tab-btn" data-tab="habits">✅ 习惯列表</button>
+      <button class="tab-btn" data-tab="stats">📈 月度统计</button>
+    </nav>
+
+    <main class="main-content">
+      <section id="calendar-tab" class="tab-content active">
+        <div class="month-nav">
+          <button id="prevMonth" class="nav-btn">◀</button>
+          <h2 id="currentMonth"></h2>
+          <button id="nextMonth" class="nav-btn">▶</button>
+        </div>
+        
+        <div class="heatmap-container">
+          <div class="heatmap-legend">
+            <span>少</span>
+            <div class="legend-colors">
+              <div class="legend-color" style="background-color: #ebedf0;"></div>
+              <div class="legend-color" style="background-color: #9be9a8;"></div>
+              <div class="legend-color" style="background-color: #40c463;"></div>
+              <div class="legend-color" style="background-color: #30a14e;"></div>
+              <div class="legend-color" style="background-color: #216e39;"></div>
+            </div>
+            <span>多</span>
+          </div>
+          <div id="heatmap" class="heatmap"></div>
+        </div>
+      </section>
+
+      <section id="habits-tab" class="tab-content">
+        <div id="habitsList" class="habits-list"></div>
+        <div id="noHabits" class="empty-state">
+          <p>还没有添加习惯</p>
+          <p class="hint">点击右上角的「添加习惯」按钮开始</p>
+        </div>
+      </section>
+
+      <section id="stats-tab" class="tab-content">
+        <div class="month-nav">
+          <button id="prevMonthStats" class="nav-btn">◀</button>
+          <h2 id="statsMonth"></h2>
+          <button id="nextMonthStats" class="nav-btn">▶</button>
+        </div>
+        
+        <div class="stats-summary">
+          <div class="stat-card">
+            <h3>本月打卡率</h3>
+            <div class="stat-value" id="monthlyRate">0%</div>
+          </div>
+          <div class="stat-card">
+            <h3>应打卡天数</h3>
+            <div class="stat-value" id="totalDays">0</div>
+          </div>
+          <div class="stat-card">
+            <h3>已完成</h3>
+            <div class="stat-value" id="completedDays">0</div>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <h3>各习惯完成率对比</h3>
+          <div id="barChart" class="bar-chart"></div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div id="addHabitModal" class="modal">
+    <div class="modal-content">
+      <h2>添加新习惯</h2>
+      <form id="addHabitForm">
+        <div class="form-group">
+          <label for="habitName">习惯名称</label>
+          <input type="text" id="habitName" required placeholder="例如：每天喝水8杯">
+        </div>
+        
+        <div class="form-group">
+          <label for="habitIcon">图标</label>
+          <select id="habitIcon">
+            <option value="💧">💧 喝水</option>
+            <option value="🏃">🏃 跑步</option>
+            <option value="📚">📚 阅读</option>
+            <option value="💪">💪 健身</option>
+            <option value="🌙">🌙 早睡</option>
+            <option value="☀️">☀️ 早起</option>
+            <option value="📝">📝 写作</option>
+            <option value="🎨">🎨 创作</option>
+            <option value="📌">📌 其他</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label>打卡频率</label>
+          <div class="radio-group">
+            <label>
+              <input type="radio" name="frequency" value="daily" checked>
+              每天
+            </label>
+            <label>
+              <input type="radio" name="frequency" value="weekly">
+              每周几天
+            </label>
+            <label>
+              <input type="radio" name="frequency" value="custom">
+              自定义间隔
+            </label>
+          </div>
+        </div>
+        
+        <div id="weeklyOptions" class="frequency-options hidden">
+          <label>选择星期几</label>
+          <div class="checkbox-group">
+            <label><input type="checkbox" class="weekday" value="0"> 周日</label>
+            <label><input type="checkbox" class="weekday" value="1"> 周一</label>
+            <label><input type="checkbox" class="weekday" value="2"> 周二</label>
+            <label><input type="checkbox" class="weekday" value="3"> 周三</label>
+            <label><input type="checkbox" class="weekday" value="4"> 周四</label>
+            <label><input type="checkbox" class="weekday" value="5"> 周五</label>
+            <label><input type="checkbox" class="weekday" value="6"> 周六</label>
+          </div>
+        </div>
+        
+        <div id="customOptions" class="frequency-options hidden">
+          <label for="customInterval">间隔天数</label>
+          <input type="number" id="customInterval" min="1" value="1" style="width: 100px;">
+          <span>天</span>
+        </div>
+        
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancelAddHabit">取消</button>
+          <button type="submit" class="btn btn-primary">添加</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="checkinModal" class="modal">
+    <div class="modal-content">
+      <h2 id="checkinDateTitle"></h2>
+      <div id="checkinList" class="checkin-list"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" id="closeCheckinModal">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

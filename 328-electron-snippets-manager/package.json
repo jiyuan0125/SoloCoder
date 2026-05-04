@@ -1,0 +1,19 @@
+{
+  "name": "electron-snippets-manager",
+  "version": "1.0.0",
+  "description": "代码片段收藏管理工具",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "keywords": [
+    "snippets",
+    "code-manager",
+    "electron"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  }
+}

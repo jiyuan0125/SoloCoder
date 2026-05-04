@@ -1,0 +1,25 @@
+{
+  "name": "electron-api-debugger",
+  "version": "1.0.0",
+  "description": "A simplified Postman-like HTTP request debugging tool",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev-tools"
+  },
+  "keywords": [
+    "electron",
+    "http",
+    "api",
+    "debugger",
+    "postman"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0"
+  },
+  "dependencies": {
+    "form-data": "^4.0.0"
+  }
+}

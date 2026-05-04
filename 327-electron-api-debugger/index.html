@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Debugger</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>API Debugger</h1>
+            <div class="header-actions">
+                <select id="environment-selector">
+                    <option value="default">默认环境</option>
+                </select>
+                <button id="manage-envs-btn" class="btn btn-secondary">管理环境</button>
+                <button id="settings-btn" class="btn btn-secondary">设置</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <h2>历史记录</h2>
+                    <div class="search-box">
+                        <input type="text" id="history-search" placeholder="搜索请求...">
+                        <button id="clear-search-btn" class="btn-icon" title="清除搜索">×</button>
+                    </div>
+                </div>
+                <div class="history-list" id="history-list">
+                </div>
+            </aside>
+
+            <div class="content-area">
+                <div class="request-section">
+                    <div class="request-bar">
+                        <select id="method-select" class="method-select">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                        <input type="text" id="url-input" class="url-input" placeholder="输入请求 URL，例如: https://api.example.com/endpoint">
+                        <button id="send-btn" class="btn btn-primary">发送</button>
+                        <button id="save-btn" class="btn btn-secondary">保存</button>
+                    </div>
+
+                    <div class="request-tabs">
+                        <div class="tab active" data-tab="headers">Headers</div>
+                        <div class="tab" data-tab="body">Body</div>
+                    </div>
+
+                    <div class="tab-content">
+                        <div class="tab-panel active" id="headers-panel">
+                            <div class="headers-editor">
+                                <table class="key-value-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Key</th>
+                                            <th>Value</th>
+                                            <th style="width: 60px;">操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="headers-table-body">
+                                    </tbody>
+                                </table>
+                                <button id="add-header-btn" class="btn btn-secondary">+ 添加 Header</button>
+                            </div>
+                        </div>
+
+                        <div class="tab-panel" id="body-panel">
+                            <div class="body-editor">
+                                <div class="body-type-selector">
+                                    <label class="radio-label">
+                                        <input type="radio" name="body-type" value="none" checked>
+                                        <span>None</span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="body-type" value="json">
+                                        <span>JSON</span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="body-type" value="form-urlencoded">
+                                        <span>x-www-form-urlencoded</span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="body-type" value="form-data">
+                                        <span>form-data</span>
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="body-type" value="raw">
+                                        <span>Raw</span>
+                                    </label>
+                                </div>
+
+                                <div class="body-content" id="body-content">
+                                    <p class="body-hint">选择 Body 类型以继续</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="response-section">
+                    <div class="response-info" id="response-info">
+                        <span class="response-status-label">状态:</span>
+                        <span class="response-status" id="response-status">-</span>
+                        <span class="response-time-label">耗时:</span>
+                        <span class="response-time" id="response-time">-</span>
+                        <span class="response-size-label">大小:</span>
+                        <span class="response-size" id="response-size">-</span>
+                    </div>
+
+                    <div class="response-tabs">
+                        <div class="tab active" data-response-tab="response-body">响应体</div>
+                        <div class="tab" data-response-tab="response-headers">响应头</div>
+                    </div>
+
+                    <div class="response-tab-content">
+                        <div class="response-tab-panel active" id="response-body-panel">
+                            <div class="response-truncated" id="response-truncated" style="display: none;">
+                                <span>⚠️ 响应内容已截断（超过 1MB），仅显示前 100KB</span>
+                            </div>
+                            <pre class="response-body" id="response-body"><code>-</code></pre>
+                        </div>
+                        <div class="response-tab-panel" id="response-headers-panel">
+                            <div class="response-headers" id="response-headers">
+                                <p>-</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="environments-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>环境变量管理</h2>
+                <button class="modal-close" id="close-envs-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="envs-left">
+                    <div class="env-list-header">
+                        <h3>环境列表</h3>
+                        <button id="add-env-btn" class="btn btn-secondary btn-sm">+ 新建</button>
+                    </div>
+                    <div class="env-list" id="env-list">
+                    </div>
+                </div>
+                <div class="envs-right">
+                    <div class="env-edit-header">
+                        <input type="text" id="env-name-input" placeholder="环境名称">
+                        <button id="delete-env-btn" class="btn btn-danger btn-sm">删除</button>
+                    </div>
+                    <div class="env-vars">
+                        <table class="key-value-table">
+                            <thead>
+                                <tr>
+                                    <th>变量名</th>
+                                    <th>值</th>
+                                    <th style="width: 60px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="env-vars-body">
+                            </tbody>
+                        </table>
+                        <button id="add-env-var-btn" class="btn btn-secondary">+ 添加变量</button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-envs-btn" class="btn btn-primary">保存</button>
+                <button id="cancel-envs-btn" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="settings-modal">
+        <div class="modal-content modal-small">
+            <div class="modal-header">
+                <h2>设置</h2>
+                <button class="modal-close" id="close-settings-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="setting-item">
+                    <label>请求超时时间 (秒)</label>
+                    <input type="number" id="timeout-input" min="5" max="300" value="30">
+                </div>
+                <div class="setting-item">
+                    <button id="clear-history-btn" class="btn btn-danger">清除所有历史记录</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings-btn" class="btn btn-primary">保存</button>
+                <button id="cancel-settings-btn" class="btn btn-secondary">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="renderer.js"></script>
+</body>
+</html>
