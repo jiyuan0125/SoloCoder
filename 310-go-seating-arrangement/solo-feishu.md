@@ -18,3 +18,23 @@
 | 分支/文件夹 | 310-go-seating-arrangement |
 
 ---
+
+## 310-go-seating-arrangement — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了一下导出已售座位明细的接口，返回的结果里包含了已取消的订单，不只是已售出的。然后我跑了一下 go test -race 发现 OrderManager 的 ConfirmOrder 和 CancelOrder 里有数据竞争，它们拿的是 om 的锁但直接改了 session 的 SeatStates，session 那边有自己的锁。另外所有接口不管成功失败 HTTP 状态码全是 200，错误的时候也应该返回对应的 4xx 吧。 |
+| 任务类型 | Bug 修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 310-go-seating-arrangement |
+
+---
+

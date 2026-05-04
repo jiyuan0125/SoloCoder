@@ -187,6 +187,62 @@ func (sm *SessionManager) ReleaseSeat(sessionID, seatID string, isAdmin bool) er
 	return errors.New("座位当前未被锁定")
 }
 
+func (sm *SessionManager) ConfirmSeatSold(sessionID, seatID string) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	session, exists := sm.sessions[sessionID]
+	if !exists {
+		return errors.New("场次不存在")
+	}
+
+	seatState, exists := session.SeatStates[seatID]
+	if !exists {
+		return errors.New("座位不存在")
+	}
+
+	now := time.Now()
+	if seatState.Status == protocol.SeatStatusLocked && seatState.LockedAt != nil {
+		if now.Sub(*seatState.LockedAt) >= LockTimeout {
+			return errors.New("座位锁定已超时，请重新选座")
+		}
+	} else if seatState.Status != protocol.SeatStatusLocked {
+		return errors.New("座位未被锁定，无法确认支付")
+	}
+
+	seatState.Status = protocol.SeatStatusSold
+	seatState.LockedAt = nil
+	return nil
+}
+
+func (sm *SessionManager) ReleaseSeatFromOrder(sessionID, seatID string) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	session, exists := sm.sessions[sessionID]
+	if !exists {
+		return errors.New("场次不存在")
+	}
+
+	seatState, exists := session.SeatStates[seatID]
+	if !exists {
+		return errors.New("座位不存在")
+	}
+
+	if seatState.Status == protocol.SeatStatusSold {
+		return errors.New("座位已售出，无法释放")
+	}
+
+	if seatState.Status == protocol.SeatStatusLocked {
+		seatState.Status = protocol.SeatStatusAvailable
+		seatState.LockedAt = nil
+		seatState.OrderID = ""
+		return nil
+	}
+
+	return errors.New("座位当前未被锁定")
+}
+
 func (sm *SessionManager) GetSessionStats(sessionID string) (*protocol.SessionStats, error) {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()

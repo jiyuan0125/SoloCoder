@@ -29,82 +29,81 @@ func (om *OrderManager) GetOrder(id string) (*protocol.Order, bool) {
 }
 
 func (om *OrderManager) ConfirmOrder(orderID string) error {
+	om.mu.RLock()
+	order, exists := om.orders[orderID]
+	if !exists {
+		om.mu.RUnlock()
+		return errors.New("订单不存在")
+	}
+	if order.Status != protocol.OrderStatusCreated {
+		om.mu.RUnlock()
+		return errors.New("订单状态不正确，无法确认支付")
+	}
+	sessionID := order.SessionID
+	seatID := order.SeatID
+	om.mu.RUnlock()
+
+	if err := om.sessionManager.ConfirmSeatSold(sessionID, seatID); err != nil {
+		return err
+	}
+
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	order, exists := om.orders[orderID]
+	order, exists = om.orders[orderID]
 	if !exists {
 		return errors.New("订单不存在")
 	}
-
 	if order.Status != protocol.OrderStatusCreated {
-		return errors.New("订单状态不正确，无法确认支付")
-	}
-
-	session, exists := om.sessionManager.GetSession(order.SessionID)
-	if !exists {
-		return errors.New("场次不存在")
-	}
-
-	seatState, exists := session.SeatStates[order.SeatID]
-	if !exists {
-		return errors.New("座位不存在")
-	}
-
-	now := time.Now()
-	if seatState.Status == protocol.SeatStatusLocked && seatState.LockedAt != nil {
-		if now.Sub(*seatState.LockedAt) >= LockTimeout {
-			return errors.New("座位锁定已超时，请重新选座")
-		}
-	} else if seatState.Status != protocol.SeatStatusLocked {
-		return errors.New("座位未被锁定，无法确认支付")
+		return errors.New("订单状态已改变")
 	}
 
 	order.Status = protocol.OrderStatusPaid
 	order.UpdatedAt = time.Now()
-
-	seatState.Status = protocol.SeatStatusSold
-	seatState.LockedAt = nil
-
 	return nil
 }
 
 func (om *OrderManager) CancelOrder(orderID string) error {
+	om.mu.RLock()
+	order, exists := om.orders[orderID]
+	if !exists {
+		om.mu.RUnlock()
+		return errors.New("订单不存在")
+	}
+	if order.Status == protocol.OrderStatusPaid {
+		om.mu.RUnlock()
+		return errors.New("已支付的订单无法取消")
+	}
+	if order.Status == protocol.OrderStatusCancelled {
+		om.mu.RUnlock()
+		return errors.New("订单已取消")
+	}
+	sessionID := order.SessionID
+	seatID := order.SeatID
+	om.mu.RUnlock()
+
+	if err := om.sessionManager.ReleaseSeatFromOrder(sessionID, seatID); err != nil {
+		if err.Error() != "座位当前未被锁定" {
+			return err
+		}
+	}
+
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	order, exists := om.orders[orderID]
+	order, exists = om.orders[orderID]
 	if !exists {
 		return errors.New("订单不存在")
 	}
-
 	if order.Status == protocol.OrderStatusPaid {
 		return errors.New("已支付的订单无法取消")
 	}
-
 	if order.Status == protocol.OrderStatusCancelled {
 		return errors.New("订单已取消")
 	}
 
-	session, exists := om.sessionManager.GetSession(order.SessionID)
-	if !exists {
-		return errors.New("场次不存在")
-	}
-
-	seatState, exists := session.SeatStates[order.SeatID]
-	if !exists {
-		return errors.New("座位不存在")
-	}
-
 	order.Status = protocol.OrderStatusCancelled
 	order.UpdatedAt = time.Now()
-
-	if seatState.Status == protocol.SeatStatusLocked {
-		seatState.Status = protocol.SeatStatusAvailable
-		seatState.LockedAt = nil
-		seatState.OrderID = ""
-	}
-
 	return nil
 }
 
@@ -145,7 +144,7 @@ func (om *OrderManager) GetOrderDetails(sessionID string) []*protocol.OrderDetai
 
 	var details []*protocol.OrderDetail
 	for _, order := range om.orders {
-		if order.SessionID == sessionID {
+		if order.SessionID == sessionID && order.Status == protocol.OrderStatusPaid {
 			detail := &protocol.OrderDetail{
 				ID:          order.ID,
 				SessionID:   order.SessionID,
