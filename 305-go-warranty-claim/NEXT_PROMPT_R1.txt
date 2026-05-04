@@ -1,0 +1,1 @@
+服务端启动没问题，GET /statistics 能正常返回数据，但 POST /submit 提交保修申请的时候请求直接卡死没响应了，curl 一直等不到结果只能超时断开。我看了一下代码 store.go 里 CreateApplication 持有了写锁又调 Save() 去拿读锁，这个会死锁的。另外 struct 上的 JSON tag 好像也没加，外部用 snake_case 传参的话字段全都是空的。你跑一下看看能不能复现。
