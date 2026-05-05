@@ -92,51 +92,35 @@ func (t *SQLTemplater) replaceStringLiterals(sql string) string {
 
 func (t *SQLTemplater) replaceNumericValues(sql string) string {
 	re := regexp.MustCompile(`(\b[+-]?\d+(\.\d+)?(e[+-]?\d+)?\b)`)
-
-	matches := re.FindAllStringIndex(sql, -1)
-	if len(matches) == 0 {
-		return sql
-	}
-
-	var result strings.Builder
-	lastEnd := 0
-
-	for _, match := range matches {
-		start, end := match[0], match[1]
-
-		result.WriteString(sql[lastEnd:start])
-
-		if t.isNumericInContextOfIdentifierAt(sql, start, end) {
-			result.WriteString(sql[start:end])
-		} else {
-			result.WriteString("?")
+	return re.ReplaceAllStringFunc(sql, func(match string) string {
+		if t.isNumericInContextOfIdentifier(match, sql) {
+			return match
 		}
-
-		lastEnd = end
-	}
-
-	result.WriteString(sql[lastEnd:])
-	return result.String()
+		return "?"
+	})
 }
 
-func (t *SQLTemplater) isNumericInContextOfIdentifierAt(sql string, start, end int) bool {
-	if start > 0 {
-		prevChar := sql[start-1]
-		if (prevChar >= 'a' && prevChar <= 'z') ||
-			(prevChar >= 'A' && prevChar <= 'Z') ||
-			prevChar == '_' || prevChar == '$' {
+func (t *SQLTemplater) isNumericInContextOfIdentifier(numStr, sql string) bool {
+	idx := strings.Index(sql, numStr)
+	if idx == -1 {
+		return false
+	}
+	if idx > 0 {
+		prevChar := sql[idx-1]
+		if (prevChar >= 'a' && prevChar <= 'z') || 
+		   (prevChar >= 'A' && prevChar <= 'Z') || 
+		   prevChar == '_' || prevChar == '$' {
 			return true
 		}
 	}
-
-	if end < len(sql) {
-		nextChar := sql[end]
-		if (nextChar >= 'a' && nextChar <= 'z') ||
-			(nextChar >= 'A' && nextChar <= 'Z') ||
-			nextChar == '_' || nextChar == '$' {
+	endIdx := idx + len(numStr)
+	if endIdx < len(sql) {
+		nextChar := sql[endIdx]
+		if (nextChar >= 'a' && nextChar <= 'z') || 
+		   (nextChar >= 'A' && nextChar <= 'Z') || 
+		   nextChar == '_' || nextChar == '$' {
 			return true
 		}
 	}
-
 	return false
 }

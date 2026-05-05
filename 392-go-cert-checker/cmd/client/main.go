@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"os"
 	"strings"
@@ -16,96 +17,21 @@ const defaultServerAddr = "localhost:8080"
 const defaultWarnDays = 30
 
 func main() {
-	serverMode := false
-	serverAddr := defaultServerAddr
-	warnDays := defaultWarnDays
-	jsonOutput := false
-	inputFile := ""
-	var domains []string
+	var serverMode bool
+	var serverAddr string
+	var warnDays int
+	var jsonOutput bool
+	var inputFile string
 
-	args := os.Args[1:]
-	for i := 0; i < len(args); i++ {
-		arg := args[i]
+	flag.BoolVar(&serverMode, "server", false, "使用服务端模式")
+	flag.StringVar(&serverAddr, "addr", defaultServerAddr, "服务端地址 (默认: localhost:8080)")
+	flag.IntVar(&warnDays, "warn-days", defaultWarnDays, "告警天数阈值 (默认: 30)")
+	flag.BoolVar(&jsonOutput, "json", false, "输出JSON格式")
+	flag.StringVar(&inputFile, "file", "", "从文件读取域名列表")
 
-		if strings.HasPrefix(arg, "-") {
-			flagName := strings.TrimLeft(arg, "-")
+	flag.Parse()
 
-			switch flagName {
-			case "server":
-				serverMode = true
-			case "json":
-				jsonOutput = true
-			case "addr":
-				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-					serverAddr = args[i+1]
-					i++
-				} else {
-					fmt.Fprintf(os.Stderr, "错误: --addr 参数需要一个值\n")
-					os.Exit(1)
-				}
-			case "warn-days":
-				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-					var days int
-					_, err := fmt.Sscanf(args[i+1], "%d", &days)
-					if err != nil || days < 0 {
-						fmt.Fprintf(os.Stderr, "错误: --warn-days 参数必须是一个非负整数\n")
-						os.Exit(1)
-					}
-					warnDays = days
-					i++
-				} else {
-					fmt.Fprintf(os.Stderr, "错误: --warn-days 参数需要一个值\n")
-					os.Exit(1)
-				}
-			case "file":
-				if i+1 < len(args) && !strings.HasPrefix(args[i+1], "-") {
-					inputFile = args[i+1]
-					i++
-				} else {
-					fmt.Fprintf(os.Stderr, "错误: --file 参数需要一个值\n")
-					os.Exit(1)
-				}
-			case "help", "h":
-				printUsage()
-				os.Exit(0)
-			default:
-				if strings.Contains(flagName, "=") {
-					parts := strings.SplitN(flagName, "=", 2)
-					flagName = parts[0]
-					flagValue := parts[1]
-
-					switch flagName {
-					case "addr":
-						serverAddr = flagValue
-					case "warn-days":
-						var days int
-						_, err := fmt.Sscanf(flagValue, "%d", &days)
-						if err != nil || days < 0 {
-							fmt.Fprintf(os.Stderr, "错误: --warn-days 参数必须是一个非负整数\n")
-							os.Exit(1)
-						}
-						warnDays = days
-					case "file":
-						inputFile = flagValue
-					case "server":
-						serverMode = flagValue == "true"
-					case "json":
-						jsonOutput = flagValue == "true"
-					default:
-						fmt.Fprintf(os.Stderr, "错误: 未知参数 --%s\n", flagName)
-						printUsage()
-						os.Exit(1)
-					}
-				} else {
-					fmt.Fprintf(os.Stderr, "错误: 未知参数 --%s\n", flagName)
-					printUsage()
-					os.Exit(1)
-				}
-			}
-		} else {
-			domains = append(domains, arg)
-		}
-	}
+	domains := flag.Args()
 
 	if inputFile != "" {
 		fileDomains, err := readDomainsFromFile(inputFile)
@@ -117,7 +43,9 @@ func main() {
 	}
 
 	if len(domains) == 0 && !serverMode {
-		printUsage()
+		fmt.Fprintln(os.Stderr, "使用方法: cert-checker [选项] <域名1> [域名2] ...")
+		fmt.Fprintln(os.Stderr, "选项:")
+		flag.PrintDefaults()
 		os.Exit(1)
 	}
 
@@ -257,23 +185,4 @@ func outputHumanReadable(results []protocol.CertInfo, warnDays int) {
 
 		fmt.Printf("检查时间: %s\n", result.CheckedAt.Format("2006-01-02 15:04:05"))
 	}
-}
-
-func printUsage() {
-	fmt.Println("使用方法: cert-checker [选项] <域名1> [域名2] ...")
-	fmt.Println()
-	fmt.Println("选项:")
-	fmt.Println("  --server          使用服务端模式，与后台服务通信")
-	fmt.Println("  --addr <地址>     服务端地址 (默认: localhost:8080)")
-	fmt.Println("  --warn-days <天数> 告警天数阈值 (默认: 30)")
-	fmt.Println("  --json            输出JSON格式")
-	fmt.Println("  --file <文件>     从文件读取域名列表")
-	fmt.Println("  --help, -h        显示帮助信息")
-	fmt.Println()
-	fmt.Println("示例:")
-	fmt.Println("  cert-checker example.com:443")
-	fmt.Println("  cert-checker baidu.com:443 --warn-days 30 --json")
-	fmt.Println("  cert-checker example.com api.example.com:8443")
-	fmt.Println("  cert-checker --file domains.txt")
-	fmt.Println("  cert-checker --server example.com")
 }
