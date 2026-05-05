@@ -18,3 +18,22 @@
 | 分支/文件夹 | 417-java-employee-directory |
 
 ---
+
+## 417-java-employee-directory — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 启动之后试了几个接口，创建员工没问题，但只要URL里带参数的都500了。比如 GET /api/employees/E001 查详情、PUT /api/employees/E002 更新信息、GET /api/employees?includeResigned=true 查含离职人员的列表，全部报 parameter name 找不到。看了下好像 Spring Boot 3 + Java 17 需要编译器加个 -parameters 参数，@PathVariable 和 @RequestParam 才能正常工作。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：createEmployee()和batchImport()方法没有调用operationLogService.logChange()，创建和批量导入员工时不生成操作日志，PROMPT明确要求"通讯录变更记录操作日志——谁在什么时间改了谁的什么字段"。EmployeeClient.runWithArgs()方法仍只打印"命令行模式暂未实现完整功能"，PROMPT要求client是"纯Java的命令行客户端"。HttpClientWrapper使用.header("X-User-Name", currentUserName)直接设置中文header值，Java HttpClient默认用ISO-8859-1编码HTTP header，中文字符会被损坏。过程不满意：本轮只修复了-parameters编译参数这一个R1问题，其余3个R1 bug均未处理，说明没有全面对照R1评估结果逐项修复 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 417-java-employee-directory |
+
+---
