@@ -1,0 +1,17 @@
+{
+  "name": "commission-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @commission-tracker/shared && npm run build -w @commission-tracker/server && npm run build -w @commission-tracker/cli",
+    "start": "npm run start -w server",
+    "cli": "npm run start -w cli"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/node": "^20.0.0"
+  }
+}
