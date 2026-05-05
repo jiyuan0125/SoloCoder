@@ -1,1 +1,0 @@
-我刚试了下这个项目，启动没问题也能创建标签，但是所有带子路径的接口都不工作。比如 POST /tags/{id}/apply、PUT /tags/{id}/update、DELETE /tags/{id}/delete 这些，全部返回 404 说 tag 找不到，感觉像是 ID 从 URL 里提取的时候把后面的路径也一起截进去了。只有 GET /tags 和 POST /tags/create 这种单段路径是正常的。

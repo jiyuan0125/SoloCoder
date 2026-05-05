@@ -1,1 +1,0 @@
-cache_get 和 cache_batch_get 里用的还是 write_lock，这个从第一轮说到现在第三轮了。我写了个测试让 4 个线程并发读同一批 key，测出来 parallelism ratio 才 0.88x，跟单线程跑没什么区别，完全是串行的。另外 cache_sync_update_size 和 cache_sync_update_entry_count 这两个函数从第一轮到现在从来没被调过。

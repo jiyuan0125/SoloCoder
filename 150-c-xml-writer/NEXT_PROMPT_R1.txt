@@ -1,1 +1,0 @@
-我刚跑了一下生成的 feed.xml，发现 author 字段里 email 地址的右尖括号没有被转义，输出是 `张三 &lt;zhangsan@example.com>` 而不是 `张三 &lt;zhangsan@example.com&gt;`。另外 xml_builder.c 这个模块好像完全没有被用到，RSS 那边全是自己内联写的 XML 输出逻辑。

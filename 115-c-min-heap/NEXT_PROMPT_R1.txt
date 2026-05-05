@@ -1,1 +1,0 @@
-跑了一下发现统计报告里的等待时间全不对，病人等了几分钟结果显示 2900 万分钟。我看代码里 triage_call_next 和 pq_change_priority 都用的 time(NULL) 取真实时间算等待，但 main 里明明有 g_simulated_time 在模拟，这两个函数没有接收当前时间参数。另外优先级升级之后堆里旧的节点标记 is_valid=0 但一直没被清理掉，cleanup_invalid_nodes 只清堆顶的，跑久了堆空间应该会耗尽。还有 triage_update_stats 里把排队人数直接写到了 count 字段，把之前叫号时统计的已处理人数给覆盖了。

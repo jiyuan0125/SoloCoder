@@ -1,3 +1,0 @@
-createSnapshot() 的持锁问题修好了，但 sendAppendEntries() 里又犯了同样的错误。raft.go:386-401 的 InstallSnapshot 路径在持有 rn.mu 期间调 rn.stateMachine.CreateSnapshot() 做 JSON 序列化，这和之前 createSnapshot() 的问题完全一样——持锁期间做耗时操作会阻塞 AppendEntries 处理。应该先拷贝快照元数据（lastSnapshotIndex、lastSnapshotTerm），释放 rn.mu，然后在无锁状态下调 CreateSnapshot()、构造 InstallSnapshotArgs、发送 RPC，最后重新加锁更新 nextIndex/matchIndex。
-
-另外 rpc.go 用的 io/ioutil 在 Go 1.16 就废弃了，go.mod 指定的是 1.21，把 ioutil.ReadAll 改成 io.ReadAll，ioutil.WriteFile 改成 os.WriteFile，import 也一并更新。

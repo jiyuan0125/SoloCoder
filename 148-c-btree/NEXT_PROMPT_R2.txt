@@ -1,1 +1,0 @@
-我看了下 wal_recover 的实现，它在 btree_open 里是在 wal_open 之前调用的，所以重放的时候 btree_put 往 wal->fd（值是 0）写东西，而且 wal->mutex 也没初始化，感觉这个调用顺序有问题。还有编译 warning 从 4 个涨到 7 个了，btree_delete_internal 那个死代码函数还在。page_allocate 也还是只改 num_pages 没去扩展文件。

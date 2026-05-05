@@ -1,1 +1,0 @@
-R2 的代码跟 R1 基本没变，undo_redo_undo 和 undo_redo_record 还是抢同一把 stack_lock，没法并发。而且测试里也还是只有只读的渲染线程，没有测 undo 和 record 同时跑的场景。PROMPT 里说的并发要求你得用分开的锁或者读写锁来实现，不能就一把锁锁到底。另外测试也得加上真正的并发 undo+record 场景才能验证。

@@ -1,1 +1,0 @@
-我测了一下，发现传一个空文件路径给服务端的 /detect 接口，返回的是 error: EOF 而不是 mime_type: unknown。用客户端命令行测空文件也会报错。另外 handler.go 里 ioutil.ReadAll 好像在 Go 1.16 之后就废弃了，编译会有警告。

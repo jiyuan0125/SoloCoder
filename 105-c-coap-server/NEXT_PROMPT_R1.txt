@@ -1,1 +1,0 @@
-我跑了一下你的代码，模拟查询线程发 GET /sensor/temp_001/latest 返回了 4.04 Endpoint not found，查了一下发现 main.c 里的 handle_request 函数路由匹配那里 seg_count >= 4 写错了，/sensor/{id}/latest 解析出来只有 3 段所以永远匹配不上，history 那个也一样。另外 g_next_msg_id 好几个线程在同时调 get_next_msg_id 递增，没加锁吧

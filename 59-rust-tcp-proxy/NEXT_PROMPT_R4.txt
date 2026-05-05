@@ -1,6 +1,0 @@
-connection.rs 的 put() 和 get() 里调用的 is_connected() 用了 stream.peek()，对 keep-alive 后端（不主动关连接也不发数据）peek 会永久阻塞，导致连接永远无法归还到池子。
-
-修复方案：把 is_connected() 从基于 peek 改为非阻塞检查。具体做法：
-1. put() 中直接去掉 is_connected() 检查，或者换成带超时的 peek（比如 100ms），超时就认为连接还活着直接放回池子
-2. get() 中同理，用带超时的 peek 检查，或者用 activity 时间戳判断是否超时即可（不需要 peek）
-3. 最简单的做法：is_connected() 里用 tokio::time::timeout 包一层 peek，超时返回 true（没数据可读说明连接可能还活着），读到 0 字节返回 false（对端关了）

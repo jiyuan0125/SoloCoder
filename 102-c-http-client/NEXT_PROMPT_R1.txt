@@ -1,1 +1,0 @@
-我拿代码跑了一下，默认 make 编出来的二进制，传一个 https 的 webhook 地址进去直接报错说 HTTPS 没编译进去。看了下 Makefile，要 make ssl 才行，还得装 libssl-dev。PROMPT 里说"有些 webhook 地址是 HTTPS 的，模块要能处理"，默认编译都不支持 HTTPS 这不合适吧？另外 retry_scheduler.h 里定义了一个 AlertCallback 类型但代码里根本没用过，是死代码。

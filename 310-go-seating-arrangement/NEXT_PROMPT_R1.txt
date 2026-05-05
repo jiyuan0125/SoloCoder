@@ -1,1 +1,0 @@
-我测了一下导出已售座位明细的接口，返回的结果里包含了已取消的订单，不只是已售出的。然后我跑了一下 go test -race 发现 OrderManager 的 ConfirmOrder 和 CancelOrder 里有数据竞争，它们拿的是 om 的锁但直接改了 session 的 SeatStates，session 那边有自己的锁。另外所有接口不管成功失败 HTTP 状态码全是 200，错误的时候也应该返回对应的 4xx 吧。

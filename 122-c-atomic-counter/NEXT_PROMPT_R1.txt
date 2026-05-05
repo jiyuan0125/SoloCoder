@@ -1,1 +1,0 @@
-我跑了一下你的代码，限流效果没问题，但统计那块有几个问题：1. 我看 print_stats 输出的"总请求量"跟"允许的请求数"是一样的，拒绝了的请求没算进去，这个 total_requests 到底是总请求量还是只算通过的？2. 用固定窗口模式的时候，get_key_stats 返回的 rejected_last_minute 一直是 0，但我明明有被拒绝的请求啊。3. 编译有个 unused function 的 warning 你看看清一下。4. .gitignore 里别忘了加 rate_limiter。

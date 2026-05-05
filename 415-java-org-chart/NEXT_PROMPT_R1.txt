@@ -1,1 +1,0 @@
-我跑了一下项目，启动没问题，POST 创建部门、员工、虚拟团队都能正常用。但所有带路径参数的接口全部 500 了，比如 GET /api/departments/{id}、GET /api/employees/{id}/reporting-line、PUT、DELETE 这些全挂了，返回的错是 "Name for argument of type not specified, and parameter name information not available via reflection. Ensure that the compiler uses the '-parameters' flag."。感觉是编译参数的问题，你看下 maven-compiler-plugin 的配置

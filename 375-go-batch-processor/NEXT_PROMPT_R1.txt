@@ -1,2 +1,0 @@
-我发现Flush方法好像没起作用，我往服务端提交了1条数据然后调用flush接口，但stats显示buffer_size还是1，直到shutdown的时候才被处理掉。
-另外客户端的-server参数好像也没生效，我运行 `client -server http://localhost:8085 stats` 报错说 "flag provided but not defined: -server"。

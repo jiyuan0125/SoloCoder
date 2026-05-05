@@ -1,1 +1,0 @@
-项目编译能过但启动后查询接口全是500，报表、导出、对比这些带请求参数的 GET 接口都挂了，应该是 maven-compiler-plugin 没加 -parameters 导致 Spring Boot 3 解析不了参数名。另外导出报表那个接口 /years/{year}/report/export 返回的数据跟普通报表一模一样，敏感字段（员工姓名、身份证后四位）全是明文没做脱敏，但我看代码里 MaskUtil 类是写好了的，就是没被调用。

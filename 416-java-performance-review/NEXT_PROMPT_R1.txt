@@ -1,1 +1,0 @@
-项目能编译通过但启动后很多接口返回500。我试了下，所有URL里带ID的接口（比如 GET /api/performance-reviews/{id}、GET /api/review-cycles/{id}）全部报错，日志里说 parameter name 找不到。好像是 Spring Boot 3 和 Java 17 的编译参数问题，@PathVariable 不加 name 属性的话需要 maven 编译器加个配置才行。还有上级评分的时候，我自评打了4分，上级也打了4分，系统居然接受了，不是说上下级评分差值不能为0吗？

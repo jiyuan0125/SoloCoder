@@ -1,1 +1,0 @@
-我试着把两个 get_string 的结果存下来一起用，发现第一个拿到的值变成了乱码。比如 const char *a = get_string(loader, "KEY1", ""); const char *b = get_string(loader, "KEY2", ""); 打印 a 的时候内容已经不对了，看起来是内存被第二次调用释放掉了。另外 UNDEFINED_REF 那个测试用例输出是 prefix_，但我 .env 里写的是 prefix_$UNDEFINED_VAR_suffix，_suffix 不见了，感觉变量名解析把下划线后面的也吃掉了。

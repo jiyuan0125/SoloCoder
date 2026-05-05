@@ -1,3 +1,0 @@
-我跑了一下你的代码，提交任务后拿到的 task id，等任务执行完了再去查状态，发现查不到了，返回的是失败。看了一下 worker.c 里的 worker_thread_func，任务执行完之后直接 task_map_remove + task_destroy 把任务从 map 里删了也释放了内存，那后面用 id 查当然找不到了。这个得修一下，任务完成后结果得保留着才行。
-
-还有个问题，priority_queue_enqueue 里面拿着 pq->mutex 去调 task_queue_enqueue，如果某个优先级的子队列满了会阻塞在那，但 worker 线程 dequeue 需要 pq->mutex 才能取出任务腾空间，感觉会死锁。

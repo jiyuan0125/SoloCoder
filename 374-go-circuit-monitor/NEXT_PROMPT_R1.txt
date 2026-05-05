@@ -1,5 +1,0 @@
-我测试了一下服务端，发现好几个问题：
-1. 创建熔断器时不传 config 字段会报 "invalid config: WindowSize - must be greater than 0"，只有显式传 `"config": {}` 才能创建成功
-2. 对熔断器做 reset、force-state、save、load 这些 POST 操作全部返回 "method not allowed"，看起来是路由解析路径那块把 name 和 action 的索引取错了
-3. GET /api/circuits/{name}/config 返回的是熔断器状态信息而不是配置信息，感觉是路由匹配被 GetCircuit 抢了
-4. 半开状态下只要有一个试探请求失败就立刻重新打开，但需求说的是等所有试探请求结果都回来再决定

@@ -1,1 +1,0 @@
-启动之后试了几个接口，创建员工没问题，但只要URL里带参数的都500了。比如 GET /api/employees/E001 查详情、PUT /api/employees/E002 更新信息、GET /api/employees?includeResigned=true 查含离职人员的列表，全部报 parameter name 找不到。看了下好像 Spring Boot 3 + Java 17 需要编译器加个 -parameters 参数，@PathVariable 和 @RequestParam 才能正常工作。

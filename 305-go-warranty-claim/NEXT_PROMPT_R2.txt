@@ -1,1 +1,0 @@
-我又跑了一遍，POST /submit 还是卡死超时，store.go 里 Save() 还是 RLock()，CreateApplication 里 Lock() 调 Save() 的死锁完全没改。struct 上的 json tag 也还是没加。上轮提的两个问题一个都没修，你确认下改的到底是哪个版本的代码？

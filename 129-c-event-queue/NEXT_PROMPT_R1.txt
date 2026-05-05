@@ -1,5 +1,0 @@
-跑了一下 demo，功能上优先级排序和多线程投递都没问题，但定时器那边有两个问题：
-
-1. event_timer.c 里 timer_thread_func 的 pthread_cond_timedwait 传的 timespec 是相对时间，但这个 API 需要的是绝对时间（ CLOCK_REALTIME ），所以定时器线程其实在忙等而不是真正 sleep，用 top 看着一个核 100% 占用
-
-2. timer_heap_erase 删掉元素后只做了 heapify_down 没做 heapify_up，如果换上来的末尾元素比父节点小，堆性质就被破坏了，连续 cancel 几个定时器之后可能会出现定时器乱序触发

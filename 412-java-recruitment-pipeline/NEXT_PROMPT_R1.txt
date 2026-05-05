@@ -1,5 +1,0 @@
-项目 mvn clean package 能过，但服务端起不来。java -jar 启动直接崩了，报错说 LoggerFactory 不是 Logback LoggerContext，看着像是 SLF4J 版本冲突，同时有 1.x 和 2.x 两个版本。
-
-另外我看了下代码，按来源渠道筛选候选人的接口好像没生效，sourceChannel 参数传了但返回结果没过滤。还有 offer 过期那个需求，代码里写了 checkExpiredOffers 方法但没地方调用它，不发请求响应的话 offer 就永远不会过期。
-
-能帮忙修一下吗？

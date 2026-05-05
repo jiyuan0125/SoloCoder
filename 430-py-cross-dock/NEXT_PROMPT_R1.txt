@@ -1,1 +1,0 @@
-我跑了一下接口，GET /api/cross-dock/reports/daily 直接返回500了，报错信息是"can't compare offset-naive and offset-aware datetimes"，感觉是日报那块构造日期的时候没带时区信息。另外 GET /api/cross-dock/exception-plans 传了个不存在的类型也返回500而不是404。然后我看 app.py 里基本每个路由都有 except Exception as e 这种写法，当时明确说了不能用裸except的。

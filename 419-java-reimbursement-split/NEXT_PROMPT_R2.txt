@@ -1,1 +1,0 @@
-上轮提的 specialApprovalRequested 那个问题还在。创建报销单的时候只要 specialApprovalRequested 传 true，specialApprovalGranted 就直接变成 true 了，等于不需要任何人审批就自动通过了。PROMPT 说的是超过5个成本中心"需要走特殊审批流程"，应该是有人审批通过之后才能继续往下走才对。你看看这个逻辑是不是还漏了什么

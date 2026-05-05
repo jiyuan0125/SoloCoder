@@ -1,1 +1,0 @@
-上次说的并发写文件的问题你改了，但是改完之后所有写接口都挂了。我试了一下创建保单，请求发出去就卡住了一直没响应，GET 查询倒是可以正常返回。我看了 storage.go，CreatePolicy 里面先 s.mu.Lock() 加了锁，然后调 markDirty()，markDirty 里面又 s.mu.Lock()，Go 的 Mutex 不是可重入的，这样不就死锁了吗。UpdatePolicy、CreateClaim、UpdateClaim 好像都是同样的问题。还有 CORS 的问题上次也提到了，这次还是没加。

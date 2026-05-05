@@ -1,1 +1,0 @@
-我看了下 cross_dock_service.py 的 check_cross_day 方法，还是用的 .date() 直接比较，没有先转 UTC。time_utils.py 里已经有 is_same_day_utc 这个函数了但一直没用上，如果入库和出库时间有时区差异的话这个判断会不准。另外 timeout_monitor.py 里还有个 except Exception as e 的裸 except 没改掉。

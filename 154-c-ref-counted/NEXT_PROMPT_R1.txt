@@ -1,1 +1,0 @@
-跑了一下测试全部通过，但我注意到 dump_state 输出有问题——已经释放掉的 image 对象（比如 img:/test/unique.png）显示的类型变成了 TEMPLATE，size 也变成了模板的大小，明显是内存被复用了。感觉是 store 里的 entry 没有自己持有一份引用，对象释放之后 entry 还指着那块已经 free 掉的内存，后面 new 的模板恰好分配到了同一块地址。另外 sp_lc_break_circular_refs 和 sp_lc_unload_unused 好像都没真正实现，里面只是加了个计数器。

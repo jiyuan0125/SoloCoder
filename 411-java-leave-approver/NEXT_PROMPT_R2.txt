@@ -1,1 +1,0 @@
-其他几个问题都修好了，但审批接口还有个 NPE 没处理。我调 POST /api/leaves/approve 的时候 managerId 传了 null，服务端直接 500 了，报 Cannot invoke "java.lang.Long.equals(Object)" because "managerId" is null。LeaveService 里 approveLeave 那个方法第 130 行还是 managerId.equals()，没做 null 判断。

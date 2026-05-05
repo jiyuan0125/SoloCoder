@@ -1,2 +1,0 @@
-我试了下客户端，用 ./client -port 8737 submit --user test --content "hello" 提交评论，结果它提示"使用: submit --user <用户ID> --content <评论内容>"，参数没接上。用默认端口不加 -port 倒是可以，但服务端跑在别的端口上就没法用客户端了。
-另外我提交评论的时候 user_id 和 content 传空字符串居然也能创建成功，返回 200 了。

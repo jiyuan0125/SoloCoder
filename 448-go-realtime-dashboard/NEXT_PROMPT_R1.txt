@@ -1,1 +1,0 @@
-我试了下客户端的 history 命令，直接 ./solo-client history cpu_usage 不带任何时间参数就报错了，返回 400。但加上 --start 和 --end 就正常。应该是默认时间拼 URL 的时候 +08:00 没处理好吧

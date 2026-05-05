@@ -1,1 +1,0 @@
-我拉下来跑了下mvn clean package，common模块直接编译失败了，报了一堆jakarta.validation.constraints包找不到的错误。CreateEmployeeRequest和CreateChecklistItemRequest里面用了@NotBlank和@NotNull注解，但common的pom.xml里没有加jakarta.validation-api这个依赖，server模块虽然通过spring-boot-starter-validation间接带了，但common模块编译的时候根本拿不到。

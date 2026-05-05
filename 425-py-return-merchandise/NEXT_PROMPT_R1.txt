@@ -1,1 +1,0 @@
-我试了下 import cli 直接报 NameError，看了下 cli/__init__.py 第3行写了个 __all 但没赋值，应该是 __all__ = [...] 被截断了，导致整个 cli 包都 import 不了，rma 命令也跑不起来。另外 statistics_service.py 里 check_quality_alert 算质量问题退货率的时候，分子是报废记录条数（每条算1），分母是退货商品总数量（quantity求和），单位对不上，算出来的百分比不太对

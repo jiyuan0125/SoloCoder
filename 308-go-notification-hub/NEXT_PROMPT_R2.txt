@@ -1,1 +1,0 @@
-上次那个死锁问题修好了，POST 不再卡死了。但我看了下需求里说"后续可以通过回调更新为已送达或发送失败"，现在还是没有任何接口可以用来更新邮件和短信的送达状态。另外我看 notification.go 里 sendToChannel 方法，Sender.Send() 返回之后又在 goroutine 里调 UpdateDeliveryStatus，但 Send() 内部也改了 delivery.Status，这两个地方同时写同一个字段是不是有竞争问题？而且 InSiteSender.Send() 里直接改了 status 但没调 store 的方法去持久化，如果这时候服务挂了重启会不会丢状态？
