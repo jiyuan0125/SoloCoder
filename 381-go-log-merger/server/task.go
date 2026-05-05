@@ -126,7 +126,7 @@ func (tm *TaskManager) executeTask(task *Task) {
 		}
 	}
 
-	merger, err := NewLogMerger(task.InputFiles, task.OutputFile, task.TimeFormat)
+	merger, err := NewLogMerger(task.InputFiles, task.OutputFile, task.TimeFormat, task.Resume && checkpoint != nil)
 	if err != nil {
 		tm.setTaskError(task.ID, err)
 		return

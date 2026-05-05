@@ -1,0 +1,5 @@
+2026-05-04 10:00:00 [INFO] service1 - message 1
+2026-05-04 10:00:02 [INFO] service1 - message 2
+2026-05-04 10:00:04 [INFO] service1 - message 3
+2026-05-04 10:00:06 [INFO] service1 - message 4
+2026-05-04 10:00:08 [INFO] service1 - message 5

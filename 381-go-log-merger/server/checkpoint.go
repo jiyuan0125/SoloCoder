@@ -12,6 +12,8 @@ type FileCheckpoint struct {
 
 type Checkpoint struct {
 	TimeFormat string          `json:"time_format"`
+	OutputFile string          `json:"output_file,omitempty"`
+	OutputPos  int64           `json:"output_pos,omitempty"`
 	Files      []FileCheckpoint `json:"files"`
 }
 

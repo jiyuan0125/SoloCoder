@@ -18,3 +18,22 @@
 | 分支/文件夹 | 381-go-log-merger |
 
 ---
+
+## 381-go-log-merger — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了下断点续传的功能，发现有问题。先正常跑一次合并三个文件，然后再用 --resume 跑同样的任务。结果输出的合并文件只有后半段数据，前面那些行全没了。看了一下代码，NewLogMerger 里面用的是 os.Create 打开输出文件，这个会把文件清空，但 resume 的时候输入文件是从 checkpoint 位置接着读的，等于输出文件被截断了但输入跳过了前半段。 还有 GetPosition 那个偏移量计算，用了 scanner.Bytes() 的长度来算，这个返回的是 bufio.Scanner 内部缓冲区的数据，不是未消费的字节数，算出来的位置不太对。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 381-go-log-merger |
+
+---
