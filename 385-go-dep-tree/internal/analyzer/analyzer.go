@@ -28,7 +28,7 @@ func Analyze(projectPath string, filterOpts protocol.FilterOptions) (*protocol.P
 
 	standardLibs := getStandardLibraries()
 
-	depMap := buildDependencyMap(pkgImports, modFile, standardLibs)
+	depMap := buildDependencyMap(moduleName, pkgImports, modFile, standardLibs)
 
 	root, circularDeps := buildDependencyTree(moduleName, depMap, filterOpts)
 
@@ -245,7 +245,7 @@ func extractImports(filePath string) ([]string, error) {
 	return imports, scanner.Err()
 }
 
-func buildDependencyMap(pkgImports map[string][]string, modFile *GoModInfo, standardLibs map[string]bool) map[string]*PackageInfo {
+func buildDependencyMap(moduleName string, pkgImports map[string][]string, modFile *GoModInfo, standardLibs map[string]bool) map[string]*PackageInfo {
 	depMap := make(map[string]*PackageInfo)
 
 	for pkg, imports := range pkgImports {
@@ -278,7 +278,56 @@ func buildDependencyMap(pkgImports map[string][]string, modFile *GoModInfo, stan
 		}
 	}
 
+	internalPkgs := collectInternalPackages(moduleName, pkgImports, depMap)
+	entryPkgs := findEntryPackages(moduleName, internalPkgs, depMap)
+	
+	depMap[moduleName] = &PackageInfo{
+		Name:         moduleName,
+		IsStandard:   false,
+		IsLocal:      true,
+		Dependencies: entryPkgs,
+	}
+
 	return depMap
+}
+
+func collectInternalPackages(moduleName string, pkgImports map[string][]string, depMap map[string]*PackageInfo) map[string]bool {
+	internalPkgs := make(map[string]bool)
+	
+	for pkg := range pkgImports {
+		if pkg == moduleName || strings.HasPrefix(pkg, moduleName+"/") {
+			internalPkgs[pkg] = true
+		}
+	}
+	
+	for pkg, info := range depMap {
+		if info.IsLocal && (pkg == moduleName || strings.HasPrefix(pkg, moduleName+"/")) {
+			internalPkgs[pkg] = true
+		}
+	}
+	
+	return internalPkgs
+}
+
+func findEntryPackages(moduleName string, internalPkgs map[string]bool, depMap map[string]*PackageInfo) []string {
+	importedByOthers := make(map[string]bool)
+	
+	for _, info := range depMap {
+		for _, dep := range info.Dependencies {
+			if internalPkgs[dep] && dep != moduleName {
+				importedByOthers[dep] = true
+			}
+		}
+	}
+	
+	entryPkgs := make([]string, 0)
+	for pkg := range internalPkgs {
+		if pkg != moduleName && !importedByOthers[pkg] {
+			entryPkgs = append(entryPkgs, pkg)
+		}
+	}
+	
+	return entryPkgs
 }
 
 type PackageInfo struct {

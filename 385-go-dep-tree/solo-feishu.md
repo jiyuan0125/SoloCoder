@@ -18,3 +18,22 @@
 | 分支/文件夹 | 385-go-dep-tree |
 
 ---
+
+## 385-go-dep-tree — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下，不管分析哪个项目输出都是 0 依赖，依赖树永远只有根节点一个空的 module name。我看代码里 buildDependencyTree 用 module name 去查 depMap 找子节点，但 depMap 里的 key 是像 dep-tree/cmd/server 这种完整子包路径，根本匹配不上 module name，所以根节点下面永远是空的。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：extractImports 函数用 strings.Contains(line, "import") 检测 import 块，但变量名 importPattern 所在行也包含 "import" 和 "("，导致 inImportBlock 被错误设为 true，后续代码行被当作 import 语句解析，产生 {、err、}、continue 等伪造的包名依赖条目污染整个依赖树输出。--search 过滤功能返回空树，无法正确搜索依赖。过程不满意：修复 R1 的 depMap 查找问题后没有实际运行测试，否则不可能不发现依赖树中混入了大量非包名的垃圾条目 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 385-go-dep-tree |
+
+---
