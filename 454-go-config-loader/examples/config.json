@@ -1,0 +1,21 @@
+{
+  "database": {
+    "host": "db.example.com",
+    "port": 5432,
+    "username": "admin",
+    "password": "secret123",
+    "max_conns": 20,
+    "ssl_mode": "require"
+  },
+  "server": {
+    "host": "0.0.0.0",
+    "port": 8080,
+    "timeout": 60
+  },
+  "logging": {
+    "level": "info",
+    "format": "text"
+  },
+  "debug": false,
+  "features": ["auth", "metrics", "tracing"]
+}
