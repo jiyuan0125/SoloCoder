@@ -1,94 +1,24 @@
-项目存在 3 个致命 Bug 和 2 个缺失功能，需要修复后才能正常运行。
+项目构建成功但存在 3 个致命 Bug 和 2 个缺失功能，导致应用基本不可用。请逐一修复：
 
 ## 致命 Bug（必须修复）
 
-### Bug 1: maven-compiler-plugin 缺少 -parameters 编译参数
-所有 @PathVariable 和 @RequestParam 注解的参数都无法解析名称，导致：
-- 所有 GET /xxx/{id} 端点返回 500（获取课程/员工/部门/讲师详情全部失败）
-- 所有 PUT /xxx/{id} 端点返回 500（更新课程/员工/部门/讲师全部失败）
-- 所有 DELETE /xxx/{id} 端点返回 500（删除操作全部失败）
-- 所有带查询参数的 GET 端点返回 500（按部门筛选员工、按讲师筛选课程、学分查询、讲师评价查询全部失败）
-- 只有纯 @RequestBody 的 POST 端点能正常工作
+1. 几乎所有 REST API 端点都返回 500 错误，包括：
+   - 所有 GET /xxx/{id} 端点（获取课程/员工/部门/讲师详情）
+   - 所有 PUT /xxx/{id} 端点（更新操作）
+   - 所有 DELETE /xxx/{id} 端点（删除操作）
+   - 所有带查询参数的 GET 端点（按部门筛选、按讲师筛选等）
+   错误信息为参数名无法解析。只有使用 @RequestBody 的 POST 端点能正常工作。
 
-**修复方案**：在 parent POM 的 maven-compiler-plugin 中添加 `-parameters` 编译参数：
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-compiler-plugin</artifactId>
-    <version>3.11.0</version>
-    <configuration>
-        <source>${java.version}</source>
-        <target>${java.version}</target>
-        <compilerArgs>
-            <arg>-parameters</arg>
-        </compilerArgs>
-    </configuration>
-</plugin>
-```
-或者给所有 @PathVariable 和 @RequestParam 显式指定 name 属性，如 `@PathVariable("id") String id`。
+2. server 模块的 JAR 文件只有约 48KB，无法通过 `java -jar server/target/*.jar` 启动，报错 "no main manifest attribute"。JAR 不是 Spring Boot 可执行的 fat JAR。
 
-### Bug 2: spring-boot-maven-plugin 未执行 repackage
-server 模块的 JAR 只有 48KB（瘦 JAR），不是 Spring Boot 可执行 fat JAR。
-`java -jar server/target/*.jar` 失败："no main manifest attribute"。
-需要确保 spring-boot-maven-plugin 的 repackage goal 在 package 阶段执行。
-
-**修复方案**：在 server/pom.xml 中显式配置 executions：
-```xml
-<plugin>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-maven-plugin</artifactId>
-    <executions>
-        <execution>
-            <goals>
-                <goal>repackage</goal>
-            </goals>
-        </execution>
-    </executions>
-</plugin>
-```
-
-### Bug 3: client 模块 JAR 不包含依赖
-`java -jar client/target/*.jar` 失败，提示 "Unresolved compilation problems"（找不到 jackson 和 common 模块类）。
-client 模块使用了 maven-jar-plugin 设置了 mainClass，但 JAR 中只有自身编译类，没有打包依赖。
-
-**修复方案**：在 client/pom.xml 中使用 maven-shade-plugin 或 maven-assembly-plugin 创建 fat JAR：
-```xml
-<plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-shade-plugin</artifactId>
-    <version>3.5.1</version>
-    <executions>
-        <execution>
-            <phase>package</phase>
-            <goals>
-                <goal>shade</goal>
-            </goals>
-            <configuration>
-                <transformers>
-                    <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                        <mainClass>com.training.client.TrainingClient</mainClass>
-                    </transformer>
-                </transformers>
-            </configuration>
-        </execution>
-    </executions>
-</plugin>
-```
+3. client 模块的 JAR 无法运行，`java -jar client/target/*.jar` 报编译错误，提示找不到 jackson 和 common 模块的类。JAR 中只有自身编译产物，没有打包任何依赖。
 
 ## 缺失功能
 
-### 缺失 1: 讲师未打分自动提醒
-需求："课程结束超过7天但讲师还没给某些学员打分，每天自动提醒讲师直到全部评完"
-当前代码中没有任何定时任务实现（无 @Scheduled、@EnableScheduling、ScheduledExecutorService、Timer）。
-需要添加定时任务，扫描已完成课程中尚未打分的报名记录，在课程结束超过7天后生成提醒。
+4. 需求要求"课程结束超过7天但讲师还没给某些学员打分，每天自动提醒讲师直到全部评完"。当前代码中没有任何定时任务或调度机制实现此功能。
 
-### 缺失 2: 统计接口不支持按部门和时间段筛选
-需求："支持按部门和时间段筛选"
-当前 GET /api/statistics 返回全部统计，无筛选参数。需要添加 departmentId、startTime、endTime 等查询参数。
+5. 统计接口 GET /api/statistics 只返回全量统计，不支持按部门和时间范围筛选。需求要求"支持按部门和时间段筛选"。
 
-## 修复后验证要求
-1. `mvn clean package` 构建成功
-2. `java -jar server/target/*.jar --server.port=8084` 能正常启动
-3. `java -jar client/target/*.jar help` 能正常输出帮助信息
-4. 所有 REST API 端点通过 curl 测试正常（GET/POST/PUT/DELETE）
-5. 完整业务流程测试：创建→发布→报名→取消→打分→评价→统计→学分查询
+## 修复后验证
+
+请确保 `mvn clean package` 构建成功，server 可通过 `java -jar` 启动（端口 8084），client 可通过 `java -jar` 正常运行。

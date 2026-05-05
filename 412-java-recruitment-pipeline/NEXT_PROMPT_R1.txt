@@ -2,34 +2,16 @@
 
 ## 必须修复（阻塞启动）
 
-1. **服务端启动失败 — SLF4J 版本冲突**
-   - 原因：`spring-boot-starter-test` 传递依赖 `json-path:2.8.0`，它引入了 `slf4j-api:1.7.36`（compile scope），与 Spring Boot 3.2.0 自带的 SLF4J 2.x + Logback 冲突
-   - 报错：`LoggerFactory is not a Logback LoggerContext but Logback is on the classpath`
-   - 修复：在 `recruitment-server/pom.xml` 中排除 `json-path` 对 `slf4j-api` 的传递依赖，或显式声明 `slf4j-api` 版本为 `2.0.9`
+1. 服务端启动失败。运行 `java -jar server/target/*.jar` 后立即报错退出，错误信息包含 "LoggerFactory is not a Logback LoggerContext but Logback is on the classpath"。这是 SLF4J 绑定冲突，项目中同时存在 SLF4J 1.x 和 2.x 两个不兼容的版本。需要检查依赖树中哪个依赖引入了旧版 SLF4J 并排除。
 
-2. **客户端连接端口错误**
-   - `recruitment-client/src/main/java/com/recruitment/client/http/HttpClient.java` 中 `BASE_URL` 硬编码为 `http://localhost:8080`，应为 `http://localhost:8082`
-   - 或者改为可配置（通过环境变量或命令行参数）
+2. 客户端硬编码连接端口为 8080（见 HttpClient.java），但评测期望 server 在 8082 端口启动。client 需要能连接到正确的 server 端口。
 
 ## 功能缺陷
 
-3. **来源渠道筛选查询无效**
-   - `ApplicationRepository.findByPosition()` 方法接收 `sourceChannel` 参数但从未在 filter 中使用，导致按来源渠道筛选查询无效
-   - 修复：需要关联查询 candidate 的 sourceChannel，或在 ApplicationDTO 上冗余存储 sourceChannel，并在 filter 中使用
+3. 按来源渠道筛选候选人无效。调用候选人查询接口传入 sourceChannel 参数后，返回结果未按渠道过滤，仍然返回所有候选人。查询方法接收了 sourceChannel 参数但未在过滤逻辑中使用。
 
-4. **offer 自动过期机制缺失**
-   - `checkExpiredOffers()` 方法已定义但从未被调用（没有 @Scheduled 定时任务或启动检查）
-   - PROMPT 要求"offer发出后7天未回复自动过期"，目前只在有人尝试响应时才惰性检查
-   - 修复：添加 `@Scheduled` 定时任务，或在 `sendOffer()` 后安排延迟任务
+4. 需求要求"offer 发出后7天未回复自动过期"。代码中有检查过期的方法，但没有任何定时任务自动调用它。目前只在有人尝试响应 offer 时才惰性检查，无人响应时 offer 永远不会过期。
 
-5. **过期 offer 无法重新审批后再次发放**
-   - `sendOffer()` 检查 `needReapproval=true` 时直接拒绝，但没有提供重置 `needReapproval` 的接口
-   - 修复：添加重新审批接口，或在 `sendOffer` 中增加 `reapproval` 参数
+5. 过期的 offer 无法重新发放。当 offer 的 needReapproval 标记为 true 时，再次发送 offer 直接被拒绝，但系统没有提供任何重置该标记或重新审批的接口。
 
-6. **缺少全局异常处理器**
-   - 没有添加 `@ControllerAdvice`，未预期的异常会返回 Spring 默认错误格式而非 `ApiResponse` 格式
-
-## 建议改进
-
-7. `QueryCandidatesRequest` 中有 `page`/`size` 字段但服务端从未实现分页逻辑
-8. `queryCandidates` 中的双重过滤模式（先按 application 过滤再按 candidate 过滤）逻辑混乱，建议重构
+请先修复启动问题使服务端能正常运行，然后修复所有功能缺陷。
