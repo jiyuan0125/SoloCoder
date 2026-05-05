@@ -2,6 +2,7 @@ package relay
 
 import (
 	"fmt"
+	"unicode/utf8"
 )
 
 type Channel interface {
@@ -34,8 +35,11 @@ func (c *SMSChannel) Name() string {
 func (c *SMSChannel) Send(alert *Alert) error {
 	content := alert.Message
 	maxLength := 70
-	if len(content) > maxLength {
-		content = content[:maxLength] + "..."
+	charCount := utf8.RuneCountInString(content)
+	
+	if charCount > maxLength {
+		runes := []rune(content)
+		content = string(runes[:maxLength]) + "..."
 	}
 	fmt.Println("[SMS] ====================================")
 	fmt.Printf("[SMS] 内容: %s\n", content)
