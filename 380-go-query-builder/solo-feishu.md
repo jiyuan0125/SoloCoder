@@ -18,3 +18,19 @@
 | 分支/文件夹 | 380-go-query-builder |
 
 ---
+
+## 380-go-query-builder — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| 轮次 | 2 |
+| User Prompt | 服务端在处理LIKE条件时，如果JSON里value传的不是字符串类型（比如传了个数字），整个服务会直接panic崩溃。HTTP接口调用时如果不传like_type字段，LIKE条件不会自动加前后%，值原样返回了，但要求是默认应该加%做模糊匹配的。范围条件的自动交换在传字符串类型（比如日期"2025-01-01"到"2024-01-01"）时没有生效，只有数字类型才能交换。 |
+| 任务类型 | Bug修复 |
+| R1 Bug1 LIKE非字符串panic | ✅ 已修复 — handler.go新增interfaceToString()安全转换，支持int/float/bool等类型 |
+| R1 Bug2 默认LIKE类型失效 | ✅ 已修复 — handler.go:44-47对空字符串默认设为LikeTypeBoth |
+| R1 Bug3 范围交换仅支持数值 | ✅ 已修复 — querybuilder.go:280-288新增toString()字符串比较回退 |
+| 新发现问题 | 无严重问题；like_type传无效值(如"invalid")时不加%也不报错，属于边界情况 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+
+---

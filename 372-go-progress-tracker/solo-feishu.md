@@ -18,3 +18,23 @@
 | 分支/文件夹 | 372-go-progress-tracker |
 
 ---
+
+## 372-go-progress-tracker — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 启动服务端后调用 POST /progress/update 接口更新进度，请求会一直挂住没有任何响应，服务端进程也卡死了。 创建进度时返回的 ID 是类似 "p_\x01" 这样的不可读控制字符，看起来 ID 生成有问题。 调用 GET 接口查进度时 IsCancelled 字段显示的是 Close 的状态，取消和关闭应该是两个不同的操作。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 后端工具库/进度追踪 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 372-go-progress-tracker |
+
+---
+

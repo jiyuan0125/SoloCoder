@@ -18,3 +18,23 @@
 | 分支/文件夹 | 375-go-batch-processor |
 
 ---
+
+## 375-go-batch-processor — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我发现Flush方法好像没起作用，我往服务端提交了1条数据然后调用flush接口，但stats显示buffer_size还是1，直到shutdown的时候才被处理掉。另外客户端的-server参数好像也没生效，我运行 `client -server http://localhost:8085 stats` 报错说 "flag provided but not defined: -server"。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 批量处理/工具库 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | R1两个bug已修复（Flush现在正确调用processBatch绕过batchSize检查；client -server flag定义移到flag.Parse之前）。但发现新bug：超时计时器在首次到期且缓冲区为空后不再重启，后续Add添加的数据无法被超时机制处理。根因是Add/AddAll从不调用startTimer()，timer仅在run()初始化、processBatch后、timer触发后有剩余数据时才启动。实际测试：服务端启动后等待6s让初始timer过期，提交1条数据后再等7s，buffer_size仍为1，数据未被处理。只有flush或达到batchSize才能触发处理。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 375-go-batch-processor |
+
+---
+

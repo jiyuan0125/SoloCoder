@@ -18,3 +18,22 @@
 | 分支/文件夹 | 374-go-circuit-monitor |
 
 ---
+
+## 374-go-circuit-monitor — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我测试了一下服务端，发现好几个问题：1. 创建熔断器时不传 config 字段会报 "invalid config: WindowSize - must be greater than 0"，只有显式传 `"config": {}` 才能创建成功 2. 对熔断器做 reset、force-state、save、load 这些 POST 操作全部返回 "method not allowed"，看起来是路由解析路径那块把 name 和 action 的索引取错了 3. GET /api/circuits/{name}/config 返回的是熔断器状态信息而不是配置信息，感觉是路由匹配被 GetCircuit 抢了 4. 半开状态下只要有一个试探请求失败就立刻重新打开，但需求说的是等所有试探请求结果都回来再决定 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 分布式系统/容错 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1的5个bug修复了3个（路由off-by-one、nil config校验、GET /config被拦截），但半开状态的核心逻辑仍存在2个严重bug：1) MarkFailure半开分支用halfOpenRequests（已分配数）而非halfOpenSuccesses+halfOpenFailures（已收集结果数）判断是否所有试探完成，导致3个试探全部派发后第一个失败就立即重新打开，不等另外两个结果返回；2) MarkSuccess半开分支同样用halfOpenRequests判断，导致3个试探全部派发后第一个成功（此时无失败）就直接转关闭，不等另外两个结果返回；正确做法应改为 halfOpenSuccesses+halfOpenFailures >= HalfOpenMaxRequests |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 374-go-circuit-monitor |
+
+---

@@ -18,3 +18,15 @@
 | 分支/文件夹 | 378-go-password-strength |
 
 ---
+
+## 378-go-password-strength — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| 轮次 | 2 |
+| User Prompt | 我测了一下密码长度不足6位和弱密码的情况，发现返回的JSON里缺少score字段。比如传空密码、传"123456"或者传5个字符的密码时，响应里只有level和suggestions，看不到score是多少。我觉得API响应格式应该统一，不管什么情况都应该返回完整的字段。 |
+| 任务类型 | Bug修复 |
+| R1 Bug: score字段omitempty | ✅ 已修复。messages.go中Score字段已移除omitempty标签，弱密码(123456→score:0)、短密码(abc→score:0)、正常密码(MyP@ss2024!→score:5)均正确返回score字段。 |
+| 新发现问题 | 无。所有功能正常：弱密码检测、长度检查、评分逻辑、键盘序列检测、连续重复检测、错误处理、HTTP方法校验。 |
+| 任务是否完成 | 已完成 |
+| 产物及过程是否满意 | 满意 |

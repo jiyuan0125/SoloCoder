@@ -1,0 +1,7 @@
+上次修了路由和config的问题，谢谢。但半开状态的核心逻辑还有bug：
+
+circuitbreaker.go 里 MarkSuccess 和 MarkFailure 的半开分支，判断"试探是否全部完成"用的是 halfOpenRequests（已分配的试探请求数），但应该用 halfOpenSuccesses + halfOpenFailures（已收集到的结果数）。
+
+复现方式：创建一个 HalfOpenMaxRequests=3 的熔断器，强制到半开，然后连续 Allow() 3次拿到3个试探名额，接着只让第一个失败——它会立即转到 open，而不是等剩下两个结果回来再决定。反过来如果第一个成功，它也会立即转到 closed，同样不等剩下两个。
+
+正确逻辑：把 MarkSuccess 和 MarkFailure 里半开分支的 `cb.halfOpenRequests >= cb.config.HalfOpenMaxRequests` 改成 `cb.halfOpenSuccesses + cb.halfOpenFailures >= cb.config.HalfOpenMaxRequests`。
