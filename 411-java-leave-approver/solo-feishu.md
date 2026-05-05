@@ -18,3 +18,22 @@
 | 分支/文件夹 | 411-java-leave-approver |
 
 ---
+
+## 411-java-leave-approver — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我刚跑了一下项目，发现所有带路径参数的 GET 接口全返回 400，报错说参数名找不到，比如 GET /api/employees/1、GET /api/leaves/1 这些全挂了，只有 POST 能用。 CLI 客户端也跑不起来，java -jar 直接 NoClassDefFoundError 找不到 jackson 的类。 然后我测了一下年假，申请 5/8（周五）到 5/11（周一），按需求年假不算周末应该只算 2 天工作日，结果返回了 4 天。 还有事假不需要附件的吧？申请事假不传附件就报错说"该请假类型必须提供附件"。员工信息里的 yearsOfService 也全是 0。 需求里说的"每年 1 月 1 日按工龄重算年假"和"3 月 31 日清零结转年假"这两个定时任务代码里有方法但没人调。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1 的 7 个 bug 中修复了 6 个，但审批接口 managerId=null 时的 NPE 仍未修复。LeaveService.approveLeave 第 130 行仍为 `if (!managerId.equals(employee.getManagerId()))`，当 managerId 为 null 时直接抛出 NullPointerException，返回 500。应改为 `if (managerId == null || !managerId.equals(employee.getManagerId()))` 或使用 Objects.equals。过程不满意：R1 已明确指出 NPE 位于第 130 行并给出了具体原因，修复时漏掉了这个 bug |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 411-java-leave-approver |
+
+---
