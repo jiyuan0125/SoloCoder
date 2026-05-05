@@ -213,44 +213,71 @@ export class CouponService {
     orderAmount: number
   ): { couponIds: string[]; totalDiscount: number } {
     const availableCoupons = this.getUserAvailableCoupons(userId);
-    const eligibleCoupons = availableCoupons.filter(c => isOrderAmountSufficient(c, orderAmount));
 
-    if (eligibleCoupons.length === 0) {
+    if (availableCoupons.length === 0) {
       return { couponIds: [], totalDiscount: 0 };
     }
 
-    const fixedAmountCoupons = eligibleCoupons.filter(c => c.type === CouponType.FIXED_AMOUNT);
-    const fullReductionCoupons = eligibleCoupons.filter(c => c.type === CouponType.FULL_REDUCTION);
-    const discountCoupons = eligibleCoupons.filter(c => c.type === CouponType.DISCOUNT);
+    const fixedAmountCoupons = availableCoupons.filter(c => c.type === CouponType.FIXED_AMOUNT);
+    const fullReductionCoupons = availableCoupons.filter(c => c.type === CouponType.FULL_REDUCTION);
+    const discountCoupons = availableCoupons.filter(c => c.type === CouponType.DISCOUNT);
 
     let bestCombination: Coupon[] = [];
     let bestDiscount = 0;
 
-    if (discountCoupons.length > 0) {
-      const bestDiscountCoupon = discountCoupons[0];
-      const discountAmount = this.calculateDiscount(bestDiscountCoupon, orderAmount);
-      bestCombination = [bestDiscountCoupon];
-      bestDiscount = discountAmount;
+    for (const discountCoupon of discountCoupons) {
+      if (!isOrderAmountSufficient(discountCoupon, orderAmount)) {
+        continue;
+      }
+      const discountAmount = this.calculateDiscount(discountCoupon, orderAmount);
+      if (discountAmount > bestDiscount) {
+        bestDiscount = discountAmount;
+        bestCombination = [discountCoupon];
+      }
     }
 
-    if (fixedAmountCoupons.length > 0 || fullReductionCoupons.length > 0) {
-      const fixedCombinations: Coupon[][] = [];
+    for (const fixedCoupon of fixedAmountCoupons) {
+      if (!isOrderAmountSufficient(fixedCoupon, orderAmount)) {
+        continue;
+      }
+      const discountAmount = this.calculateDiscount(fixedCoupon, orderAmount);
+      if (discountAmount > bestDiscount) {
+        bestDiscount = discountAmount;
+        bestCombination = [fixedCoupon];
+      }
+    }
 
-      if (fixedAmountCoupons.length > 0) {
-        fixedCombinations.push([fixedAmountCoupons[0]]);
+    for (const fullReductionCoupon of fullReductionCoupons) {
+      if (!isOrderAmountSufficient(fullReductionCoupon, orderAmount)) {
+        continue;
       }
-      if (fullReductionCoupons.length > 0) {
-        fixedCombinations.push([fullReductionCoupons[0]]);
+      const discountAmount = this.calculateDiscount(fullReductionCoupon, orderAmount);
+      if (discountAmount > bestDiscount) {
+        bestDiscount = discountAmount;
+        bestCombination = [fullReductionCoupon];
       }
-      if (fixedAmountCoupons.length > 0 && fullReductionCoupons.length > 0) {
-        fixedCombinations.push([fixedAmountCoupons[0], fullReductionCoupons[0]]);
+    }
+
+    for (const fixedCoupon of fixedAmountCoupons) {
+      if (!isOrderAmountSufficient(fixedCoupon, orderAmount)) {
+        continue;
       }
 
-      for (const combo of fixedCombinations) {
-        const totalDiscount = combo.reduce((sum, coupon) => sum + this.calculateDiscount(coupon, orderAmount), 0);
+      const afterFixedAmount = orderAmount - this.calculateDiscount(fixedCoupon, orderAmount);
+
+      for (const fullReductionCoupon of fullReductionCoupons) {
+        if (!isOrderAmountSufficient(fullReductionCoupon, afterFixedAmount)) {
+          continue;
+        }
+
+        const firstDiscount = this.calculateDiscount(fixedCoupon, orderAmount);
+        const remainingAfterFirst = Math.max(0, orderAmount - firstDiscount);
+        const secondDiscount = this.calculateDiscount(fullReductionCoupon, remainingAfterFirst);
+        const totalDiscount = firstDiscount + secondDiscount;
+
         if (totalDiscount > bestDiscount) {
           bestDiscount = totalDiscount;
-          bestCombination = combo;
+          bestCombination = [fixedCoupon, fullReductionCoupon];
         }
       }
     }

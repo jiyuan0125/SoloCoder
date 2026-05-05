@@ -13,10 +13,20 @@ import {
   RedeemCouponRequest,
   RedeemCouponResponse,
   UserFilterType,
+  ValidityConfig,
   ValidityType,
 } from '@coupon/shared';
 import { couponService } from './coupon-service';
-import { dataStore } from './data-store';
+
+function isValidityConfig(validity: DistributeCouponRequest['validity']): validity is ValidityConfig {
+  if (validity.type === ValidityType.FIXED_DATE) {
+    return validity.startDate !== undefined && validity.endDate !== undefined;
+  }
+  if (validity.type === ValidityType.DAYS_AFTER_RECEIVE) {
+    return validity.days !== undefined && validity.days > 0;
+  }
+  return false;
+}
 
 async function parseRequestBody(req: IncomingMessage): Promise<unknown> {
   return new Promise((resolve, reject) => {
@@ -100,12 +110,24 @@ async function handleDistributeCoupon(req: IncomingMessage, res: ServerResponse)
       return;
     }
 
+    if (!isValidityConfig(body.validity)) {
+      const response: DistributeCouponResponse = {
+        success: false,
+        count: 0,
+        distributionRecords: [],
+        errorCode: ErrorCode.INVALID_PARAMS,
+        errorMessage: errorMessages[ErrorCode.INVALID_PARAMS],
+      };
+      sendJsonResponse(res, 400, response);
+      return;
+    }
+
     const result = couponService.distributeCoupon(
       body.type as CouponType,
       body.name,
       body.value,
       body.threshold,
-      body.validity as any,
+      body.validity,
       body.distributionType,
       body.distributorId,
       body.userIds,
