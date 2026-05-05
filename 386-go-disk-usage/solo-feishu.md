@@ -18,3 +18,22 @@
 | 分支/文件夹 | 386-go-disk-usage |
 
 ---
+
+## 386-go-disk-usage — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我测了下扫描功能，建了个符号链接目录指向自己的父目录（ln -s .. /tmp/test-loop/link），然后拿这个工具去扫 /tmp/test-loop，直接卡死了，进程 hang 住内存一路涨上去。PROMPT 里专门说了"扫描时不跟随符号链接否则可能死循环"，但 scanner.go 里 scanDirectory 碰到目录类型的 symlink 没做判断，entry.IsDir() 返回 true 就直接递归了。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 386-go-disk-usage |
+
+---

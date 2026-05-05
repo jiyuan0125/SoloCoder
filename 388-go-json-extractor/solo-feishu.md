@@ -18,3 +18,22 @@
 | 分支/文件夹 | 388-go-json-extractor |
 
 ---
+
+## 388-go-json-extractor — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下测试，发现字段不存在的时候输出的是 "null" 字符串，不是空字符串。比如提取一个 JSON 里根本不存在的字段 nonexistent.field，结果打出来是 "nonexistent.field=null"，但我要的是 "nonexistent.field="。数组索引越界（比如 users.5.name）也是一样的问题，打出来是 "null"。还有如果路径中间某个节点本身就是 null，比如 {"a":null} 然后 extract a.b.c，出来的也是 "null" 而不是空。这三种情况需求里说的是输出空字符串，不是 null。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1 报告的三个 null 输出问题已修复，但原始需求"JSON文件可能是一个数组或单个对象都要能处理"未实现——当输入是顶层 JSON 数组 [{"n":"a"},{"n":"b"}] 时，提取字段 n 的结果是空字符串而不是预期的 a 和 b，代码只处理了每行一个 JSON 对象的情况，没有检测顶层是数组时遍历其元素。过程不满意：修了 R1 报告的三个特定 bug 但未全面测试原始 PROMPT 的所有场景，遗漏了顶层数组这个基本需求 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 388-go-json-extractor |
+
+---

@@ -18,3 +18,22 @@
 | 分支/文件夹 | 387-go-port-forward |
 
 ---
+
+## 387-go-port-forward — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下发现几个问题。首先 stats 显示的连接信息不太对，我同时开了好几个客户端连同一个转发端口，stats 里所有连接的 ID 都是 0，只有最后一个连接的字节数是对的，前面的全丢了。看了下代码，forwarder.go 里 handleConnection 往 NewConnCh 发了 connInfo 指针，发完马上就读 connInfo.ID，但 ID 是在 server.go 的 handleNewConnection 里才赋值的，这两个操作之间没有同步，connID 基本读到的一直是 0。另外 server.go 的 handleAddForward 里检查端口是否已存在和实际添加 forwarder 之间把锁释放了又重新拿，两个客户端同时 add 同一个端口的话都能通过检查。还有个体验问题，pfclient 的命令必须把参数放前面才行，比如 pfclient --local 3306 --remote host:3306 add 才能工作，pfclient add --local 3306 就不行，跟一般的命令行工具用法不太一样。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：CLI参数顺序修复引入回归Bug——客户端 --verbose 和 --control-port 两个全局flag完全不可用，globalFs 定义了但从未调用 Parse()，cmdFs 未注册这两个 flag，pfclient stats --verbose 会直接报错退出，parseGlobalFlags 函数是死代码。活跃连接 stats 始终显示 0 字节，handleConnectionClose 才更新 bytesSent/bytesReceived，不满足"verbose模式实时打印"要求。usage 示例 pfclient stats --local 3306 --verbose 与实际行为不符。过程不满意：修了 CLI 参数顺序问题但引入了 --verbose 完全不可用的回归 Bug，说明修改后没有实际测试 stats 命令带 --verbose 的场景 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 387-go-port-forward |
+
+---

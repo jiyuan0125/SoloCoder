@@ -13,11 +13,90 @@ func DetectEncoding(data []byte) string {
 		return "UTF-8-BOM"
 	}
 
+	if isValidUTF8(data) {
+		return "UTF-8"
+	}
+
 	if isGBK(data) {
 		return "GBK"
 	}
 
 	return "UTF-8"
+}
+
+func isValidUTF8(data []byte) bool {
+	length := len(data)
+	var i int = 0
+
+	for i < length {
+		b := data[i]
+
+		if b <= 0x7F {
+			i++
+			continue
+		}
+
+		if b >= 0xC0 && b <= 0xDF {
+			if i+1 >= length {
+				return false
+			}
+			if !isUTF8ContinuationByte(data[i+1]) {
+				return false
+			}
+			i += 2
+			continue
+		}
+
+		if b >= 0xE0 && b <= 0xEF {
+			if i+2 >= length {
+				return false
+			}
+			if !isUTF8ContinuationByte(data[i+1]) || !isUTF8ContinuationByte(data[i+2]) {
+				return false
+			}
+			if b == 0xE0 {
+				if data[i+1] < 0xA0 {
+					return false
+				}
+			}
+			if b == 0xED {
+				if data[i+1] > 0x9F {
+					return false
+				}
+			}
+			i += 3
+			continue
+		}
+
+		if b >= 0xF0 && b <= 0xF7 {
+			if i+3 >= length {
+				return false
+			}
+			if !isUTF8ContinuationByte(data[i+1]) || !isUTF8ContinuationByte(data[i+2]) || !isUTF8ContinuationByte(data[i+3]) {
+				return false
+			}
+			if b == 0xF0 {
+				if data[i+1] < 0x90 {
+					return false
+				}
+			}
+			if b == 0xF4 {
+				if data[i+1] > 0x8F {
+					return false
+				}
+			}
+			i += 4
+			continue
+		}
+
+		return false
+	}
+
+	return true
+}
+
+func isUTF8ContinuationByte(b byte) bool {
+	return b >= 0x80 && b <= 0xBF
 }
 
 func isGBK(data []byte) bool {
