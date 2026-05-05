@@ -11,7 +11,7 @@
 | 任务类型 | 0-1代码生成 |
 | 业务领域 | 命令行工具 |
 | 修改范围 | 跨模块多文件 |
-| 任务是否完成 | 完成了任务 |
+| 任务是否完成 | 未完成任务 |
 | 产物及过程是否满意 | 不满意 |
 | 不满意原因 | 产物不满意：connID 数据竞争——forwarder.go handleConnection 发送 connInfo 指针到 channel 后立即读取 connInfo.ID（line 115），但 server.go handleNewConnection 在之后才设置 connInfo.ID（line 239），实际运行 connID 几乎总是 0，导致所有并发连接共享 ID 0，stats 统计完全错误。handleAddForward TOCTOU 竞争——检查端口是否存在和添加 forwarder 之间释放了锁（server.go:154-186），并发 AddForward 同一端口可能都成功。pfclient 使用 Go flag 包导致 flags 必须在命令之前（如 --local 3306 --remote host add），与标准 CLI 约定（add --local 3306 --remote host）相反。过程不满意：connID 的读写竞争是基本的并发安全错误，写完后没有测试多连接场景下 stats 的正确性 |
 | github地址 | https://github.com/jiyuan0125/SoloCoder |
