@@ -1,5 +1,11 @@
 import { apiClient } from '../client';
 import {
+  Salesperson,
+  CommissionCalculation,
+  BalanceInfo,
+  ResignResult,
+} from '@commission-tracker/shared';
+import {
   formatSalesperson,
   formatSalespersonList,
 } from '../utils/formatter';
@@ -24,8 +30,9 @@ export async function handleCreateSalesperson(args: string[]): Promise<void> {
     return;
   }
 
+  const data = response.data as Salesperson;
   console.log('销售创建成功:');
-  console.log(formatSalesperson(response.data as any));
+  console.log(formatSalesperson(data));
 }
 
 export async function handleGetSalesperson(args: string[]): Promise<void> {
@@ -42,7 +49,8 @@ export async function handleGetSalesperson(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatSalesperson(response.data as any));
+  const data = response.data as Salesperson;
+  console.log(formatSalesperson(data));
 }
 
 export async function handleListSalespeople(): Promise<void> {
@@ -53,7 +61,8 @@ export async function handleListSalespeople(): Promise<void> {
     return;
   }
 
-  console.log(formatSalespersonList(response.data as any[]));
+  const data = response.data as Salesperson[];
+  console.log(formatSalespersonList(data));
 }
 
 export async function handleResignSalesperson(args: string[]): Promise<void> {
@@ -88,7 +97,7 @@ export async function handleGetBalance(args: string[]): Promise<void> {
     return;
   }
 
-  const data = response.data as any;
+  const data = response.data as BalanceInfo;
   console.log(`销售ID: ${data.salespersonId}`);
   console.log(`实时佣金余额: ${new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(data.balance / 100)}`);
   console.log(`本月已结算金额: ${new Intl.NumberFormat('zh-CN', { style: 'currency', currency: 'CNY' }).format(data.thisMonthSettled / 100)}`);
@@ -123,5 +132,6 @@ export async function handleGetCommission(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(JSON.stringify(response.data, null, 2));
+  const data = response.data as CommissionCalculation;
+  console.log(JSON.stringify(data, null, 2));
 }

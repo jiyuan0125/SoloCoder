@@ -3,20 +3,22 @@ import { AmountFen } from "./types.js";
 export const TAX_NUMBER_REGEX = /^[A-Z0-9]{18}$/;
 export const MAX_BATCH_SIZE = 100;
 
+export const TAX_RATE_SCALE = 10000;
+
 export function isValidTaxNumber(taxNumber: string): boolean {
   return TAX_NUMBER_REGEX.test(taxNumber);
 }
 
-export function calculateTaxRate(
+export function calculateTaxRateScaled(
   amountExcludingTax: AmountFen,
   taxAmount: AmountFen
 ): number | null {
   if (amountExcludingTax === 0) {
     return taxAmount === 0 ? 0 : null;
   }
-  
-  const rate = taxAmount / amountExcludingTax;
-  return rate;
+
+  const rateScaled = Math.round((taxAmount * TAX_RATE_SCALE) / amountExcludingTax);
+  return rateScaled;
 }
 
 export function validateAmountRelation(
@@ -36,9 +38,9 @@ export function validateAmountRelation(
     return taxAmount === 0;
   }
 
-  const rate = taxAmount / amountExcludingTax;
-  const calculatedTaxAmount = Math.round(amountExcludingTax * rate);
-  
+  const rateScaled = Math.round((taxAmount * TAX_RATE_SCALE) / amountExcludingTax);
+  const calculatedTaxAmount = Math.round((amountExcludingTax * rateScaled) / TAX_RATE_SCALE);
+
   return calculatedTaxAmount === taxAmount;
 }
 

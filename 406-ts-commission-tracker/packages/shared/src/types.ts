@@ -112,3 +112,19 @@ export interface RankingFilter {
   month?: Month;
   quarter?: Quarter;
 }
+
+export interface BalanceInfo {
+  salespersonId: SalespersonId;
+  balance: AmountInCents;
+  thisMonthSettled: AmountInCents;
+}
+
+export interface ResignResult {
+  salesperson: Salesperson;
+  settlement: Settlement;
+}
+
+export interface TriggerSettlementResult {
+  settlements: Settlement[];
+  totalSettled: AmountInCents;
+}

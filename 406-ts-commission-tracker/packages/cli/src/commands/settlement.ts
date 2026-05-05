@@ -1,5 +1,9 @@
 import { apiClient } from '../client';
 import {
+  Settlement,
+  TriggerSettlementResult,
+} from '@commission-tracker/shared';
+import {
   formatSettlement,
   formatSettlementList,
 } from '../utils/formatter';
@@ -21,7 +25,7 @@ export async function handleTriggerSettlement(args: string[]): Promise<void> {
     return;
   }
 
-  const data = response.data as any;
+  const data = response.data as TriggerSettlementResult;
   console.log(`结算完成，共 ${data.settlements.length} 笔结算记录`);
   console.log(`总结算金额: ¥${(data.totalSettled / 100).toFixed(2)}`);
   console.log('');
@@ -53,7 +57,8 @@ export async function handleListSettlements(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatSettlementList(response.data as any[]));
+  const data = response.data as Settlement[];
+  console.log(formatSettlementList(data));
 }
 
 export async function handleGetSettlement(args: string[]): Promise<void> {
@@ -70,5 +75,6 @@ export async function handleGetSettlement(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatSettlement(response.data as any));
+  const data = response.data as Settlement;
+  console.log(formatSettlement(data));
 }

@@ -222,13 +222,13 @@ async function monthlySummaryHandler(req: http.IncomingMessage, res: http.Server
 
 const routes: Route[] = [
   { method: "POST", path: "/api/invoices", handler: createInvoiceHandler },
-  { method: "GET", path: /^\/api\/invoices\/[^\/]+$/, handler: getInvoiceHandler },
+  { method: "POST", path: "/api/invoices/batch-import", handler: batchImportHandler },
   { method: "GET", path: "/api/invoices", handler: queryInvoicesHandler },
+  { method: "GET", path: "/api/invoices/monthly-summary", handler: monthlySummaryHandler },
+  { method: "GET", path: /^\/api\/invoices\/[^\/]+$/, handler: getInvoiceHandler },
   { method: "PUT", path: /^\/api\/invoices\/[^\/]+$/, handler: updateInvoiceHandler },
   { method: "POST", path: /^\/api\/invoices\/[^\/]+\/void$/, handler: voidInvoiceHandler },
   { method: "POST", path: /^\/api\/invoices\/[^\/]+\/red$/, handler: redInvoiceHandler },
-  { method: "POST", path: "/api/invoices/batch-import", handler: batchImportHandler },
-  { method: "GET", path: "/api/invoices/monthly-summary", handler: monthlySummaryHandler },
 ];
 
 function matchRoute(req: http.IncomingMessage): Route | null {

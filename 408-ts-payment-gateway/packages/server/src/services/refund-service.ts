@@ -20,6 +20,22 @@ import { ErrorCode, PaymentGatewayError } from "@payment-gateway/shared";
 import { store } from "../store";
 import { getOrder, saveOrder, canRefundOrder } from "./order-service";
 
+function getPendingRefundsTotal(orderNo: string): Amount {
+  const refunds = store.getRefundsByOrder(orderNo);
+  let total: Amount = 0;
+  for (const refund of refunds) {
+    if (refund.status === RefundStatus.PENDING || refund.status === RefundStatus.PROCESSING) {
+      total = addAmount(total, refund.amount);
+    }
+  }
+  return total;
+}
+
+function getActualRefundableAmount(order: Order): Amount {
+  const pendingTotal = getPendingRefundsTotal(order.orderNo);
+  return subtractAmount(order.refundableAmount, pendingTotal);
+}
+
 export function createRefund(request: CreateRefundRequest): CreateRefundResponse {
   if (!request.orderNo) {
     throw new PaymentGatewayError(ErrorCode.INVALID_PARAMS, "订单号不能为空");
@@ -45,18 +61,24 @@ export function createRefund(request: CreateRefundRequest): CreateRefundResponse
   }
 
   const refundAmount = request.amount;
-  const refundableAmount = order.refundableAmount;
+  const actualRefundableAmount = getActualRefundableAmount(order);
 
   let actualRefundAmount = refundAmount;
   const isFinalRefund = request.isFinalRefund ?? false;
 
   if (isFinalRefund) {
-    actualRefundAmount = refundableAmount;
-  } else {
-    if (isAmountGreaterThan(refundAmount, refundableAmount)) {
+    if (actualRefundableAmount <= 0) {
       throw new PaymentGatewayError(
         ErrorCode.REFUND_AMOUNT_EXCEEDED,
-        `退款金额 ${refundAmount} 分超过可退款金额 ${refundableAmount} 分`
+        `无可退款金额，当前待处理退款已占用全部可退款额度`
+      );
+    }
+    actualRefundAmount = actualRefundableAmount;
+  } else {
+    if (isAmountGreaterThan(refundAmount, actualRefundableAmount)) {
+      throw new PaymentGatewayError(
+        ErrorCode.REFUND_AMOUNT_EXCEEDED,
+        `退款金额 ${refundAmount} 分超过实际可退款金额 ${actualRefundableAmount} 分（含待处理退款）`
       );
     }
   }

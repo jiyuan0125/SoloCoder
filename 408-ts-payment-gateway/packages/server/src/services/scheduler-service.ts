@@ -1,6 +1,6 @@
-import { Order, OrderStatus, CALLBACK_TIMEOUT_SECONDS, SYNC_INTERVAL_HOURS } from "@payment-gateway/shared";
+import { Order, OrderStatus, CALLBACK_TIMEOUT_SECONDS, SYNC_INTERVAL_HOURS, Payment } from "@payment-gateway/shared";
 import { getProcessingOrders, getPendingConfirmOrders, saveOrder } from "./order-service";
-import { setOrderPendingConfirm, confirmPaymentSuccess, confirmPaymentFailed } from "./payment-service";
+import { setOrderPendingConfirm, confirmPaymentSuccess, confirmPaymentFailed, getPaymentsByOrder } from "./payment-service";
 import { getPendingRefunds, confirmRefundSuccess, confirmRefundFailed } from "./refund-service";
 import { simulateChannelQueryOrderStatus, simulateChannelQueryRefundStatus } from "../channel-mock";
 import { CALLBACK_CHECK_INTERVAL_MS, DAILY_SYNC_HOUR } from "../config";
@@ -35,7 +35,7 @@ function checkTimeoutPayments(): void {
 
   const processingOrders = getProcessingOrders();
   for (const order of processingOrders) {
-    const payments = getOrderPayments(order.orderNo);
+    const payments = getPaymentsByOrder(order.orderNo);
     for (const payment of payments) {
       if (payment.status === OrderStatus.PROCESSING) {
         const elapsed = now - payment.createdAt;
@@ -119,19 +119,6 @@ function syncPendingRefunds(): void {
       console.error(`Error syncing refund ${refund.refundNo}:`, error);
     }
   }
-}
-
-function getOrderPayments(orderNo: string): Array<{ orderNo: string; status: OrderStatus; createdAt: number }> {
-  const order = getOrderOrNull(orderNo);
-  if (!order) return [];
-
-  return [
-    {
-      orderNo: orderNo,
-      status: order.status,
-      createdAt: order.createdAt,
-    },
-  ];
 }
 
 function getOrderOrNull(orderNo: string): Order | null {

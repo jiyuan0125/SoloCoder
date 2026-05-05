@@ -5,7 +5,6 @@ import {
 import {
   CreateOrderRequest,
   Order,
-  OrderStatus,
   SalesContribution,
   successResponse,
   errorResponse,
@@ -15,7 +14,7 @@ import {
 import { store } from '../store';
 import { validateSalesContributions } from '../services/teamAllocation';
 import { handleRefund } from '../services/settlementService';
-import { parseRequestBody, sendJsonResponse } from '../utils';
+import { parseRequestBody, sendJsonResponse, extractOrderId } from '../utils';
 
 function generateOrderId(): string {
   const timestamp = Date.now().toString(36);
@@ -127,7 +126,7 @@ export async function handleGetOrder(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const id = url.pathname.split('/').pop();
+    const id = extractOrderId(url.pathname);
 
     if (!id) {
       sendJsonResponse(
@@ -201,8 +200,7 @@ export async function handleRefundOrder(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const pathParts = url.pathname.split('/');
-    const id = pathParts[pathParts.length - 2];
+    const id = extractOrderId(url.pathname);
 
     if (!id) {
       sendJsonResponse(

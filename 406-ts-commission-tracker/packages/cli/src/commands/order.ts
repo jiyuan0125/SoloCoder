@@ -1,5 +1,9 @@
 import { apiClient } from '../client';
 import {
+  Order,
+  SalesContribution,
+} from '@commission-tracker/shared';
+import {
   formatOrder,
   formatOrderList,
 } from '../utils/formatter';
@@ -21,7 +25,7 @@ export async function handleCreateOrder(args: string[]): Promise<void> {
     return;
   }
 
-  const salesContributions = contributionArgs.map(arg => {
+  const salesContributions: SalesContribution[] = contributionArgs.map(arg => {
     const parts = arg.split(':');
     return {
       salespersonId: parts[0],
@@ -40,8 +44,9 @@ export async function handleCreateOrder(args: string[]): Promise<void> {
     return;
   }
 
+  const data = response.data as Order;
   console.log('订单创建成功:');
-  console.log(formatOrder(response.data as any));
+  console.log(formatOrder(data));
 }
 
 export async function handleGetOrder(args: string[]): Promise<void> {
@@ -58,7 +63,8 @@ export async function handleGetOrder(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatOrder(response.data as any));
+  const data = response.data as Order;
+  console.log(formatOrder(data));
 }
 
 export async function handleListOrders(args: string[]): Promise<void> {
@@ -86,7 +92,8 @@ export async function handleListOrders(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatOrderList(response.data as any[]));
+  const data = response.data as Order[];
+  console.log(formatOrderList(data));
 }
 
 export async function handleRefundOrder(args: string[]): Promise<void> {
@@ -103,6 +110,7 @@ export async function handleRefundOrder(args: string[]): Promise<void> {
     return;
   }
 
+  const data = response.data as Order;
   console.log('订单退款成功:');
-  console.log(formatOrder(response.data as any));
+  console.log(formatOrder(data));
 }

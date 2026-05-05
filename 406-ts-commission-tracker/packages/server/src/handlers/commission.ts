@@ -3,7 +3,6 @@ import {
   ServerResponse,
 } from 'http';
 import {
-  GetSalespersonCommissionRequest,
   successResponse,
   errorResponse,
   ErrorCodes,
@@ -13,7 +12,7 @@ import {
 } from '@commission-tracker/shared';
 import { store } from '../store';
 import { calculateSalespersonCommissionForMonth } from '../services/settlementService';
-import { sendJsonResponse } from '../utils';
+import { sendJsonResponse, extractSalespersonId } from '../utils';
 
 export async function handleGetSalespersonCommission(
   req: IncomingMessage,
@@ -21,8 +20,7 @@ export async function handleGetSalespersonCommission(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const pathParts = url.pathname.split('/');
-    const salespersonId = pathParts[pathParts.length - 4];
+    const salespersonId = extractSalespersonId(url.pathname);
 
     const monthParam = url.searchParams.get('month');
     const yearParam = url.searchParams.get('year');

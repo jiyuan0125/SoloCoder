@@ -10,10 +10,16 @@ import {
   Month,
   Year,
   AmountInCents,
+  Settlement,
 } from '@commission-tracker/shared';
 import { store } from '../store';
 import { performMonthlySettlement } from '../services/settlementService';
-import { parseRequestBody, sendJsonResponse } from '../utils';
+import { parseRequestBody, sendJsonResponse, extractSettlementId } from '../utils';
+
+interface TriggerSettlementResponse {
+  settlements: Settlement[];
+  totalSettled: AmountInCents;
+}
 
 export async function handleTriggerMonthlySettlement(
   req: IncomingMessage,
@@ -43,10 +49,12 @@ export async function handleTriggerMonthlySettlement(
       0
     );
 
-    sendJsonResponse(res, 200, successResponse({
+    const result: TriggerSettlementResponse = {
       settlements,
       totalSettled,
-    }));
+    };
+
+    sendJsonResponse(res, 200, successResponse(result));
   } catch (error) {
     sendJsonResponse(
       res,
@@ -103,7 +111,7 @@ export async function handleGetSettlement(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const id = url.pathname.split('/').pop();
+    const id = extractSettlementId(url.pathname);
 
     if (!id) {
       sendJsonResponse(

@@ -219,6 +219,6 @@ export interface ApiResponse<T = unknown> {
 
 export const MIN_AMOUNT: Amount = 1;
 export const MAX_AMOUNT: Amount = 50000000;
-export const WECHAT_THRESHOLD: Amount = 100;
+export const WECHAT_THRESHOLD: Amount = 10000;
 export const CALLBACK_TIMEOUT_SECONDS: number = 30;
 export const SYNC_INTERVAL_HOURS: number = 24;

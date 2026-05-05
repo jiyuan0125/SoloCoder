@@ -37,3 +37,20 @@ export function parseQueryParams(url: string): Record<string, string> {
 
   return params;
 }
+
+export function extractPathSegment(pathname: string, index: number): string | undefined {
+  const parts = pathname.split('/');
+  return parts[index];
+}
+
+export function extractSalespersonId(pathname: string): string | undefined {
+  return extractPathSegment(pathname, 3);
+}
+
+export function extractOrderId(pathname: string): string | undefined {
+  return extractPathSegment(pathname, 3);
+}
+
+export function extractSettlementId(pathname: string): string | undefined {
+  return extractPathSegment(pathname, 3);
+}

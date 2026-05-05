@@ -1,4 +1,5 @@
 import { apiClient } from '../client';
+import { Ranking } from '@commission-tracker/shared';
 import { formatRankingList } from '../utils/formatter';
 
 export async function handleGetRankings(args: string[]): Promise<void> {
@@ -33,5 +34,6 @@ export async function handleGetRankings(args: string[]): Promise<void> {
     return;
   }
 
-  console.log(formatRankingList(response.data as any[]));
+  const data = response.data as Ranking[];
+  console.log(formatRankingList(data));
 }

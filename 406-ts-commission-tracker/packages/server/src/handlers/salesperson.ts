@@ -4,9 +4,8 @@ import {
 } from 'http';
 import {
   CreateSalespersonRequest,
-  GetSalespersonRequest,
-  ResignSalespersonRequest,
   Salesperson,
+  Month,
   successResponse,
   errorResponse,
   ErrorCodes,
@@ -14,7 +13,7 @@ import {
 } from '@commission-tracker/shared';
 import { store } from '../store';
 import { performResignationSettlement } from '../services/settlementService';
-import { parseRequestBody, sendJsonResponse } from '../utils';
+import { parseRequestBody, sendJsonResponse, extractSalespersonId } from '../utils';
 
 function generateSalespersonId(): string {
   const timestamp = Date.now().toString(36);
@@ -75,7 +74,7 @@ export async function handleGetSalesperson(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const id = url.pathname.split('/').pop();
+    const id = extractSalespersonId(url.pathname);
 
     if (!id) {
       sendJsonResponse(
@@ -129,8 +128,7 @@ export async function handleResignSalesperson(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const pathParts = url.pathname.split('/');
-    const id = pathParts[pathParts.length - 2];
+    const id = extractSalespersonId(url.pathname);
 
     if (!id) {
       sendJsonResponse(
@@ -185,8 +183,7 @@ export async function handleGetSalespersonBalance(
 ): Promise<void> {
   try {
     const url = new URL(req.url || '', `http://${req.headers.host}`);
-    const pathParts = url.pathname.split('/');
-    const id = pathParts[pathParts.length - 3];
+    const id = extractSalespersonId(url.pathname);
 
     if (!id) {
       sendJsonResponse(
@@ -213,7 +210,7 @@ export async function handleGetSalespersonBalance(
     const currentYear = now.getFullYear();
 
     const settlementsThisMonth = store.getSettlementsForMonth(
-      currentMonth as import('@commission-tracker/shared').Month,
+      currentMonth as Month,
       currentYear
     );
 
