@@ -77,12 +77,12 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	case path == "/tasks" && r.Method == "POST":
 		h.createTask(w, r)
-	case strings.HasPrefix(path, "/tasks/") && r.Method == "GET":
-		h.getTask(w, r)
 	case strings.HasPrefix(path, "/tasks/") && strings.HasSuffix(path, "/progress") && r.Method == "GET":
 		h.getTaskProgress(w, r)
 	case strings.HasPrefix(path, "/tasks/") && strings.HasSuffix(path, "/download") && r.Method == "GET":
 		h.downloadTaskFile(w, r)
+	case strings.HasPrefix(path, "/tasks/") && r.Method == "GET":
+		h.getTask(w, r)
 
 	case path == "/stats" && r.Method == "GET":
 		h.getStats(w, r)

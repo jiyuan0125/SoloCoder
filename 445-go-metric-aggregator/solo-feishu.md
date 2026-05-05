@@ -17,4 +17,21 @@
 | github地址 | https://github.com/jiyuan0125/SoloCoder |
 | 分支/文件夹 | 445-go-metric-aggregator |
 
+## 445-go-metric-aggregator — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | - |
+| 第一轮Session ID | - |
+| 轮次 | 第二轮 |
+| User Prompt | 我试了一下删除指标，调完DELETE接口之后整个服务就卡死了，后续请求全部超时没响应，只能杀进程重启。另外查询5分钟粒度的数据，结果返回的时间范围和我请求的不一样，感觉像是缓存串了，同样的查询参数多次调用返回结果不一致。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | internal/server/store.go |
+| 任务是否完成 | 已完成任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | - |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 445-go-metric-aggregator |
+
 ---

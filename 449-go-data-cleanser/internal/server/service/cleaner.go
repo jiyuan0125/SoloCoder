@@ -43,53 +43,56 @@ func (cs *CleanerService) Clean(records []map[string]interface{}, rule common.Cl
 	batchID := uuid.New().String()
 
 	for _, record := range records {
+		originalRecord := deepCopyRecord(record)
 		recordCopy := deepCopyRecord(record)
 
 		if cs.isInvalidRecord(recordCopy, rule.KeyFields) {
-			result.InvalidRecords = append(result.InvalidRecords, recordCopy)
+			result.InvalidRecords = append(result.InvalidRecords, originalRecord)
 			result.Report.InvalidCount++
 			result.Report.RuleHits["invalid"]++
 			continue
 		}
 
+		formatModified := false
+		if cs.normalizePhone(recordCopy, rule.PhoneFields) {
+			formatModified = true
+			result.Report.RuleHits["phone_normalize"]++
+		}
+		if cs.normalizeDate(recordCopy, rule.DateFields) {
+			formatModified = true
+			result.Report.RuleHits["date_normalize"]++
+		}
+		if cs.normalizeAmount(recordCopy, rule.AmountFields) {
+			formatModified = true
+			result.Report.RuleHits["amount_normalize"]++
+		}
+
 		if cs.isDuplicate(recordCopy, rule.DedupFields, seenKeys) {
-			result.DuplicateRecords = append(result.DuplicateRecords, recordCopy)
+			result.DuplicateRecords = append(result.DuplicateRecords, originalRecord)
 			result.Report.DuplicateCount++
 			result.Report.RuleHits["duplicate"]++
 			continue
 		}
 
-		recordModified := false
-
+		fillModified := false
 		if err := cs.fillNulls(recordCopy, rule.DefaultValues, prevRecord); err != nil {
 			errorSample := common.ErrorSample{
-				Record:    recordCopy,
+				Record:    originalRecord,
 				Error:     "fill nulls error: " + err.Error(),
 				Timestamp: time.Now(),
 				BatchID:   batchID,
 			}
 			cs.storage.AddErrorSample(errorSample)
-			result.ErrorRecords = append(result.ErrorRecords, recordCopy)
+			result.ErrorRecords = append(result.ErrorRecords, originalRecord)
 			result.Report.RuleHits["error"]++
 			continue
 		}
 
-		if cs.normalizePhone(recordCopy, rule.PhoneFields) {
-			recordModified = true
-			result.Report.RuleHits["phone_normalize"]++
+		if len(rule.DefaultValues) > 0 {
+			fillModified = true
 		}
 
-		if cs.normalizeDate(recordCopy, rule.DateFields) {
-			recordModified = true
-			result.Report.RuleHits["date_normalize"]++
-		}
-
-		if cs.normalizeAmount(recordCopy, rule.AmountFields) {
-			recordModified = true
-			result.Report.RuleHits["amount_normalize"]++
-		}
-
-		if recordModified {
+		if formatModified || fillModified {
 			result.Report.CorrectedCount++
 		}
 

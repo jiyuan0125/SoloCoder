@@ -2,6 +2,7 @@ package storage
 
 import (
 	"datacleanser/internal/common"
+	"fmt"
 	"sync"
 	"time"
 
@@ -243,7 +244,7 @@ type InvalidVersionError struct {
 }
 
 func (e *InvalidVersionError) Error() string {
-	return "invalid version: " + string(rune(e.Version)) + ", max version: " + string(rune(e.MaxVersion))
+	return fmt.Sprintf("invalid version: %d, max version: %d", e.Version, e.MaxVersion)
 }
 
 type TaskNotFoundError struct {

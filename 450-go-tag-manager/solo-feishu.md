@@ -18,3 +18,26 @@
 | 分支/文件夹 | 450-go-tag-manager |
 
 ---
+
+## 450-go-tag-manager — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 第二轮 |
+| User Prompt | 我刚试了下这个项目，启动没问题也能创建标签，但是所有带子路径的接口都不工作。比如 POST /tags/{id}/apply、PUT /tags/{id}/update、DELETE /tags/{id}/delete 这些，全部返回 404 说 tag 找不到，感觉像是 ID 从 URL 里提取的时候把后面的路径也一起截进去了。只有 GET /tags 和 POST /tags/create 这种单段路径是正常的。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | server/utils.go（getIDFromPath 函数）、server/main.go（路由正则） |
+| 任务是否完成 | 已完成任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 450-go-tag-manager |
+
+### R2 验证过程
+
+编译通过（go build ./... 无错误）。创建 tag 后依次测试：POST /tags/{id}/apply ✓、GET /tags/{id}/impact ✓、PUT /tags/{id}/update ✓、POST /tags/{id}/batch-apply ✓、GET /users/{id}/tags ✓、DELETE /tags/{id}/remove ✓、DELETE /tags/{id}/delete ✓、GET /groups/{id} ✓。R1 报告的所有多段路径接口均恢复正常，ID 提取正确。 |
+
+---

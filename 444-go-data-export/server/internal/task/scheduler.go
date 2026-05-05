@@ -164,11 +164,28 @@ func (s *TaskScheduler) executeTask(task *common.ExportTask) {
 	filters := make(map[string]interface{})
 	if task.Params != nil {
 		for k, v := range task.Params {
-			filters[k] = v
+			switch val := v.(type) {
+			case map[string]interface{}:
+				filters[k] = val
+			default:
+				filters[k] = v
+			}
 		}
 	}
 	for _, cond := range tpl.QueryCondition {
-		filters[cond.Field] = cond.Value
+		if existing, exists := filters[cond.Field]; exists {
+			if existingMap, isMap := existing.(map[string]interface{}); isMap {
+				existingMap[cond.Operator] = cond.Value
+			} else {
+				filters[cond.Field] = map[string]interface{}{
+					cond.Operator: cond.Value,
+				}
+			}
+		} else {
+			filters[cond.Field] = map[string]interface{}{
+				cond.Operator: cond.Value,
+			}
+		}
 	}
 
 	records, err := s.dataSource.Query(tpl.DataSource, filters)
@@ -212,7 +229,7 @@ func (s *TaskScheduler) executeTask(task *common.ExportTask) {
 
 	ext := string(tpl.OutputFormat)
 	if tpl.OutputFormat == common.FormatExcel {
-		ext = "csv"
+		ext = "xlsx"
 	}
 	fileName := task.TemplateName + "_" + time.Now().Format("20060102150405") + "." + ext
 

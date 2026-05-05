@@ -35,7 +35,182 @@ func ValidateCronExpression(expr string) error {
 		}
 	}
 
+	dayField := fields[3]
+	monthField := fields[4]
+	if err := validateDayMonthCombination(dayField, monthField); err != nil {
+		return fmt.Errorf("日期和月份组合无效: %w", err)
+	}
+
 	return nil
+}
+
+func validateDayMonthCombination(dayField, monthField string) error {
+	if dayField == "*" || monthField == "*" {
+		if dayField == "*" {
+			return nil
+		}
+		
+		dayValues := expandCronField(dayField, CronFields[3])
+		if len(dayValues) == 0 {
+			return nil
+		}
+		
+		maxDay := 0
+		for _, d := range dayValues {
+			if d > maxDay {
+				maxDay = d
+			}
+		}
+		
+		if maxDay > 28 {
+			hasMonthWithEnoughDays := false
+			for month := 1; month <= 12; month++ {
+				days := getMaxDaysForMonth(time.Month(month))
+				if days >= maxDay {
+					hasMonthWithEnoughDays = true
+					break
+				}
+			}
+			
+			if !hasMonthWithEnoughDays {
+				return fmt.Errorf("日期字段要求的最大天数 %d 不存在于任何月份", maxDay)
+			}
+		}
+		return nil
+	}
+
+	monthValues := expandCronField(monthField, CronFields[4])
+	dayValues := expandCronField(dayField, CronFields[3])
+
+	if len(monthValues) == 0 || len(dayValues) == 0 {
+		return nil
+	}
+
+	hasValidCombination := false
+	for _, month := range monthValues {
+		maxDays := getMaxDaysForMonth(time.Month(month))
+		for _, day := range dayValues {
+			if day <= maxDays {
+				hasValidCombination = true
+				break
+			}
+		}
+		if hasValidCombination {
+			break
+		}
+	}
+
+	if !hasValidCombination {
+		return fmt.Errorf("日期和月份组合不存在有效的执行时间")
+	}
+
+	return nil
+}
+
+func getMaxDaysForMonth(month time.Month) int {
+	switch month {
+	case time.February:
+		return 29
+	case time.April, time.June, time.September, time.November:
+		return 30
+	default:
+		return 31
+	}
+}
+
+func expandCronField(field string, cf CronField) []int {
+	result := make([]int, 0)
+
+	if field == "*" {
+		for i := cf.MinValue; i <= cf.MaxValue; i++ {
+			result = append(result, i)
+		}
+		return result
+	}
+
+	if strings.Contains(field, ",") {
+		values := strings.Split(field, ",")
+		for _, v := range values {
+			subValues := expandCronField(v, cf)
+			result = append(result, subValues...)
+		}
+		return deduplicateAndSort(result)
+	}
+
+	if strings.Contains(field, "-") {
+		rangeParts := strings.Split(field, "-")
+		if len(rangeParts) != 2 {
+			return nil
+		}
+		start, err1 := parseValue(rangeParts[0], cf)
+		end, err2 := parseValue(rangeParts[1], cf)
+		if err1 != nil || err2 != nil {
+			return nil
+		}
+		for i := start; i <= end; i++ {
+			result = append(result, i)
+		}
+		return result
+	}
+
+	if strings.Contains(field, "/") {
+		stepParts := strings.Split(field, "/")
+		if len(stepParts) != 2 {
+			return nil
+		}
+		base := stepParts[0]
+		stepStr := stepParts[1]
+		step, err := strconv.Atoi(stepStr)
+		if err != nil || step <= 0 {
+			return nil
+		}
+
+		var start int
+		if base == "*" {
+			start = cf.MinValue
+		} else {
+			start, err = parseValue(base, cf)
+			if err != nil {
+				return nil
+			}
+		}
+
+		for i := start; i <= cf.MaxValue; i += step {
+			result = append(result, i)
+		}
+		return result
+	}
+
+	val, err := parseValue(field, cf)
+	if err != nil {
+		return nil
+	}
+	return []int{val}
+}
+
+func deduplicateAndSort(values []int) []int {
+	if len(values) == 0 {
+		return values
+	}
+
+	seen := make(map[int]bool)
+	result := make([]int, 0)
+	for _, v := range values {
+		if !seen[v] {
+			seen[v] = true
+			result = append(result, v)
+		}
+	}
+
+	for i := 0; i < len(result); i++ {
+		for j := i + 1; j < len(result); j++ {
+			if result[i] > result[j] {
+				result[i], result[j] = result[j], result[i]
+			}
+		}
+	}
+
+	return result
 }
 
 func validateCronField(field string, cf CronField) error {

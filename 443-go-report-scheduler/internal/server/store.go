@@ -430,12 +430,10 @@ func (s *Store) GetTasksToExecute(now time.Time) []*common.Task {
 		if task.Status != common.TaskStatusActive {
 			continue
 		}
-		if !task.NextRunTime.After(now) && !task.NextRunTime.Equal(now) {
+		if task.NextRunTime.After(now) {
 			continue
 		}
-		if now.After(task.NextRunTime) || now.Equal(task.NextRunTime) {
-			result = append(result, task)
-		}
+		result = append(result, task)
 	}
 
 	return result

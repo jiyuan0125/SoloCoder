@@ -6,8 +6,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
+
+	"github.com/xuri/excelize/v2"
 
 	"data-export/pkg/common"
 	"data-export/server/internal/security"
@@ -57,14 +58,6 @@ func (f *Formatter) ToCSV(records []map[string]interface{}, mappings []common.Fi
 	return buf.Bytes(), nil
 }
 
-func escapeCSVField(field string) string {
-	if !strings.ContainsAny(field, ",\n\"") {
-		return field
-	}
-	field = strings.ReplaceAll(field, "\"", "\"\"")
-	return "\"" + field + "\""
-}
-
 func (f *Formatter) ToJSON(records []map[string]interface{}, mappings []common.FieldMapping) ([]byte, error) {
 	var result []map[string]interface{}
 
@@ -85,27 +78,62 @@ func (f *Formatter) ToJSON(records []map[string]interface{}, mappings []common.F
 	return json.MarshalIndent(result, "", "  ")
 }
 
-func (f *Formatter) ToExcel(records []map[string]interface{}, mappings []common.FieldMapping) ([]byte, error) {
-	var buf bytes.Buffer
-
-	buf.WriteString("\xEF\xBB\xBF")
-
-	headers := make([]string, len(mappings))
-	for i, m := range mappings {
-		headers[i] = escapeCSVField(m.TargetField)
+func colIndexToName(index int) string {
+	name := ""
+	for index >= 0 {
+		name = string(rune('A'+(index%26))) + name
+		index = index/26 - 1
 	}
-	buf.WriteString(strings.Join(headers, ",") + "\n")
+	return name
+}
 
-	for _, record := range records {
-		row := make([]string, len(mappings))
-		for i, m := range mappings {
-			value := f.formatValue(record[m.SourceField], &m)
+func (f *Formatter) ToExcel(records []map[string]interface{}, mappings []common.FieldMapping) ([]byte, error) {
+	fx := excelize.NewFile()
+	defer fx.Close()
+
+	sheetName := "Sheet1"
+
+	for i, m := range mappings {
+		cell := colIndexToName(i) + "1"
+		fx.SetCellValue(sheetName, cell, m.TargetField)
+	}
+
+	for rowIdx, record := range records {
+		excelRow := rowIdx + 2
+		for colIdx, m := range mappings {
+			cell := colIndexToName(colIdx) + strconv.Itoa(excelRow)
+			value := record[m.SourceField]
+
 			if m.Sensitive {
-				value = f.masker.Mask(value, string(m.FieldType))
+				strVal := f.formatValue(value, &m)
+				maskedVal := f.masker.Mask(strVal, string(m.FieldType))
+				fx.SetCellValue(sheetName, cell, maskedVal)
+			} else {
+				switch v := value.(type) {
+				case int:
+					fx.SetCellValue(sheetName, cell, v)
+				case int64:
+					fx.SetCellValue(sheetName, cell, v)
+				case float64:
+					fx.SetCellValue(sheetName, cell, v)
+				case bool:
+					fx.SetCellValue(sheetName, cell, v)
+				case time.Time:
+					if m.FormatPattern != "" {
+						fx.SetCellValue(sheetName, cell, v.Format(m.FormatPattern))
+					} else {
+						fx.SetCellValue(sheetName, cell, v)
+					}
+				default:
+					fx.SetCellValue(sheetName, cell, fmt.Sprintf("%v", v))
+				}
 			}
-			row[i] = escapeCSVField(value)
 		}
-		buf.WriteString(strings.Join(row, ",") + "\n")
+	}
+
+	var buf bytes.Buffer
+	if err := fx.Write(&buf); err != nil {
+		return nil, err
 	}
 
 	return buf.Bytes(), nil

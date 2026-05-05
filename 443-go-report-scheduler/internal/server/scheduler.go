@@ -125,7 +125,15 @@ func (s *Scheduler) checkAndExecuteTasks() {
 func (s *Scheduler) executeTaskWithRetry(task *common.Task, triggerType common.TriggerType) string {
 	execution := s.store.CreateExecution(task.ID, triggerType)
 	execID := execution.ID
+	s.doExecuteTaskWithRetry(task, execID)
+	return execID
+}
 
+func (s *Scheduler) executeTaskWithRetryAsync(task *common.Task, execID string) {
+	s.doExecuteTaskWithRetry(task, execID)
+}
+
+func (s *Scheduler) doExecuteTaskWithRetry(task *common.Task, execID string) {
 	success := false
 	var lastError error
 
@@ -137,7 +145,7 @@ func (s *Scheduler) executeTaskWithRetry(task *common.Task, triggerType common.T
 			select {
 			case <-s.stopChan:
 				s.store.UpdateExecutionSkipped(execID, "Scheduler stopped during retry wait")
-				return execID
+				return
 			case <-time.After(time.Duration(RetryIntervalMinutes) * time.Minute):
 			}
 
@@ -172,8 +180,6 @@ func (s *Scheduler) executeTaskWithRetry(task *common.Task, triggerType common.T
 
 		s.skipDependentTasks(task.ID, fmt.Sprintf("Dependency task %s failed", task.ID))
 	}
-
-	return execID
 }
 
 func (s *Scheduler) executeSingleTask(task *common.Task, execID string) error {
@@ -267,6 +273,14 @@ func (s *Scheduler) ManualTrigger(taskID string) (string, error) {
 		return "", fmt.Errorf("task is deleted")
 	}
 
-	execID := s.executeTaskWithRetry(task, common.TriggerTypeManual)
+	execution := s.store.CreateExecution(task.ID, common.TriggerTypeManual)
+	execID := execution.ID
+
+	s.workerWG.Add(1)
+	go func(t *common.Task, eid string) {
+		defer s.workerWG.Done()
+		s.executeTaskWithRetryAsync(t, eid)
+	}(task, execID)
+
 	return execID, nil
 }

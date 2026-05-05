@@ -3,6 +3,7 @@ package server
 import (
 	"metric-aggregator/pkg/common"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -86,13 +87,15 @@ func (s *Store) CreateMetric(name string) error {
 
 func (s *Store) DeleteMetric(name string) error {
 	s.mu.Lock()
-	defer s.mu.Unlock()
 	
 	if _, exists := s.metrics[name]; !exists {
+		s.mu.Unlock()
 		return &MetricError{Code: common.ErrMetricNotFound, Metric: name}
 	}
 	
 	delete(s.metrics, name)
+	s.mu.Unlock()
+	
 	s.invalidateCacheForMetric(name)
 	return nil
 }
@@ -117,11 +120,13 @@ func (s *Store) ReportPoint(point common.DataPoint) (bool, int64) {
 	}
 	
 	m.mu.Lock()
-	defer m.mu.Unlock()
 	
 	m.RawPoints = append(m.RawPoints, rawDataPoint{Timestamp: ts, Value: value})
 	
 	s.aggregatePoint(m, ts, value)
+	
+	m.mu.Unlock()
+	
 	s.invalidateCacheForMetric(point.Metric)
 	
 	return true, ts
@@ -292,8 +297,8 @@ func (s *Store) buildCacheKey(
 	g common.Granularity,
 	aggType common.AggregationType,
 ) string {
-	return metric + "_" + string(g) + "_" + string(aggType) + "_" + 
-		string(rune(start)) + "_" + string(rune(end))
+	return metric + "_" + string(g) + "_" + string(aggType) + "_" +
+		strconv.FormatInt(start, 10) + "_" + strconv.FormatInt(end, 10)
 }
 
 func (s *Store) getFromCache(key string) (common.AggregationResult, bool) {

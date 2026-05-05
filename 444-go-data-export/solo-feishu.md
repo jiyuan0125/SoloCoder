@@ -18,3 +18,22 @@
 | 分支/文件夹 | 444-go-data-export |
 
 ---
+
+## 444-go-data-export — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | - |
+| 第一轮Session ID | - |
+| 轮次 | 第二轮 |
+| User Prompt | R1 Bug Report：下载文件时GET /tasks/{id}/download返回JSON格式的任务信息而不是文件。Excel格式导出的文件打开看其实是CSV加了BOM头，不是真正的xlsx。模板里配了query_conditions但是导出出来的数据完全没有按条件过滤，好像过滤逻辑根本没生效。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 已完成任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | - |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 444-go-data-export |
+
+---
