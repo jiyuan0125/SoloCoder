@@ -1,24 +1,11 @@
-项目构建成功但存在 3 个致命 Bug 和 2 个缺失功能，导致应用基本不可用。请逐一修复：
+跑了一下项目，发现几乎所有接口都返回 500 错误，不管是获取课程详情、更新、删除还是带查询参数的 GET 请求，全挂了。错误说参数名解析不了。只有 POST 创建接口能正常用，其他基本都不可用。
 
-## 致命 Bug（必须修复）
+然后 server 的 JAR 只有 48KB，java -jar 启动报 no main manifest attribute，根本不是个能运行的 fat jar。
 
-1. 几乎所有 REST API 端点都返回 500 错误，包括：
-   - 所有 GET /xxx/{id} 端点（获取课程/员工/部门/讲师详情）
-   - 所有 PUT /xxx/{id} 端点（更新操作）
-   - 所有 DELETE /xxx/{id} 端点（删除操作）
-   - 所有带查询参数的 GET 端点（按部门筛选、按讲师筛选等）
-   错误信息为参数名无法解析。只有使用 @RequestBody 的 POST 端点能正常工作。
+client 也跑不起来，java -jar 报编译错误，找不到 jackson 和 common 模块的类。
 
-2. server 模块的 JAR 文件只有约 48KB，无法通过 `java -jar server/target/*.jar` 启动，报错 "no main manifest attribute"。JAR 不是 Spring Boot 可执行的 fat JAR。
+需求里说"课程结束超过 7 天讲师没打分要每天自动提醒"，我没看到有定时任务在做这个。
 
-3. client 模块的 JAR 无法运行，`java -jar client/target/*.jar` 报编译错误，提示找不到 jackson 和 common 模块的类。JAR 中只有自身编译产物，没有打包任何依赖。
+还有统计接口只返回全量数据，需求要求能按部门和时间段筛选的。
 
-## 缺失功能
-
-4. 需求要求"课程结束超过7天但讲师还没给某些学员打分，每天自动提醒讲师直到全部评完"。当前代码中没有任何定时任务或调度机制实现此功能。
-
-5. 统计接口 GET /api/statistics 只返回全量统计，不支持按部门和时间范围筛选。需求要求"支持按部门和时间段筛选"。
-
-## 修复后验证
-
-请确保 `mvn clean package` 构建成功，server 可通过 `java -jar` 启动（端口 8084），client 可通过 `java -jar` 正常运行。
+能帮忙看看吗？

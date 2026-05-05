@@ -1,11 +1,5 @@
-项目编译失败，执行 `mvn clean package` 报错。请修复以下问题后确保构建成功：
+项目编译就过不了，mvn clean package 直接报错。common 模块里 CreateEmployeeRequest 这些类用了 @NotBlank 和 @NotNull 注解，但 common 的 pom.xml 里没声明 jakarta.validation-api 这个依赖，导致编译失败。server 和 client 也跟着编不过。
 
-## 编译错误（阻塞）
+另外客户端默认连的 8080 端口，但服务端应该在 8083，需要能连到正确的端口。
 
-1. common 模块编译失败。CreateEmployeeRequest、CreateChecklistItemRequest、CreateTemplateRequest 等类使用了 @NotBlank、@NotNull 注解（来自 jakarta.validation.constraints 包），但 common 模块的 pom.xml 中没有声明该依赖。错误信息为"包 jakarta.validation.constraints 不存在"。common 模块无法独立编译，导致 server 和 client 也编译失败。
-
-## 运行时问题（修复编译后需确认）
-
-2. 客户端默认连接端口硬编码为 8080，但评测期望 server 在 8083 端口启动。需要确保 client 能连接到正确的 server 端口。
-
-请先修复编译错误使 `mvn clean package` 成功，然后确认 server 能正常启动、client 能正常连接。
+能先帮忙把编译问题修了吗？

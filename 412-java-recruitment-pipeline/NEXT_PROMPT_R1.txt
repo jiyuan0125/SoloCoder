@@ -1,17 +1,11 @@
-项目构建通过（mvn clean package 成功），但服务端启动失败，无法进行任何运行时测试。需要修复以下所有问题：
+项目 mvn clean package 能过，但服务端起不来。java -jar 启动就崩了，报错说 LoggerFactory 不是 Logback LoggerContext，看着像是 SLF4J 版本冲突，项目里好像同时有 1.x 和 2.x 两个不兼容的版本。
 
-## 必须修复（阻塞启动）
+然后客户端连的端口是 8080，但服务端应该在 8082，对不上。
 
-1. 服务端启动失败。运行 `java -jar server/target/*.jar` 后立即报错退出，错误信息包含 "LoggerFactory is not a Logback LoggerContext but Logback is on the classpath"。这是 SLF4J 绑定冲突，项目中同时存在 SLF4J 1.x 和 2.x 两个不兼容的版本。需要检查依赖树中哪个依赖引入了旧版 SLF4J 并排除。
+跑起来之后我也发现按来源渠道筛选候选人没效果，传了 sourceChannel 参数但返回结果还是所有的，没过滤。
 
-2. 客户端硬编码连接端口为 8080（见 HttpClient.java），但评测期望 server 在 8082 端口启动。client 需要能连接到正确的 server 端口。
+还有需求说"offer 发出后 7 天未回复自动过期"，但我看代码里没有定时任务在跑这个检查，如果没人去响应那个 offer 的话它就永远不会过期。
 
-## 功能缺陷
+另外过期后的 offer 点重新发放会被拒绝，但也没看到有重新审批的入口。
 
-3. 按来源渠道筛选候选人无效。调用候选人查询接口传入 sourceChannel 参数后，返回结果未按渠道过滤，仍然返回所有候选人。查询方法接收了 sourceChannel 参数但未在过滤逻辑中使用。
-
-4. 需求要求"offer 发出后7天未回复自动过期"。代码中有检查过期的方法，但没有任何定时任务自动调用它。目前只在有人尝试响应 offer 时才惰性检查，无人响应时 offer 永远不会过期。
-
-5. 过期的 offer 无法重新发放。当 offer 的 needReapproval 标记为 true 时，再次发送 offer 直接被拒绝，但系统没有提供任何重置该标记或重新审批的接口。
-
-请先修复启动问题使服务端能正常运行，然后修复所有功能缺陷。
+能帮忙看一下吗？
