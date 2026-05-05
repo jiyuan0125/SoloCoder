@@ -158,7 +158,17 @@ export function createRefund(
 
     const now = new Date();
     const refundId = generateId();
-    const initialStatus: RefundStatus = hasPhysicalProducts ? 'pending' : 'processing';
+    
+    let initialStatus: RefundStatus;
+    let finalNote: string;
+    
+    if (hasPhysicalProducts) {
+      initialStatus = 'pending';
+      finalNote = 'Refund request created, waiting for return';
+    } else {
+      initialStatus = 'refunded';
+      finalNote = 'Virtual product refund completed';
+    }
 
     const refund: Refund = {
       refundId,
@@ -172,7 +182,7 @@ export function createRefund(
       shippingFeeRefund,
       createdAt: now,
       updatedAt: now,
-      statusHistory: [{ status: initialStatus, time: now, note: 'Refund request created' }]
+      statusHistory: [{ status: initialStatus, time: now, note: finalNote }]
     };
 
     refunds.push(refund);

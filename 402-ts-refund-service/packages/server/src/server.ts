@@ -3,14 +3,14 @@ import { IncomingMessage, ServerResponse } from 'http';
 import { ApiResponse, RefundStatus, ErrorCodes, OrderProduct, ProductType } from '@refund/shared';
 import * as service from './service.js';
 
-type RequestHandler = (req: IncomingMessage, res: ServerResponse) => Promise<void>;
-
 interface ParsedRequest {
   method: string;
   pathname: string;
   query: Record<string, string>;
   body: unknown;
 }
+
+type RequestHandler = (req: IncomingMessage, res: ServerResponse, parsed: ParsedRequest) => Promise<void>;
 
 async function parseRequest(req: IncomingMessage): Promise<ParsedRequest> {
   const url = new URL(req.url ?? '', `http://${req.headers.host}`);
@@ -70,8 +70,7 @@ function validateBody(body: unknown, requiredFields: string[]): { valid: boolean
   return { valid: missing.length === 0, missing };
 }
 
-const createRefundHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const createRefundHandler: RequestHandler = async (_req, res, parsed) => {
   const body = parsed.body as Record<string, unknown>;
   
   const validation = validateBody(body, ['orderId', 'userId', 'refundReason', 'productIds']);
@@ -94,8 +93,7 @@ const createRefundHandler: RequestHandler = async (_req, res) => {
   }
 };
 
-const submitLogisticsHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const submitLogisticsHandler: RequestHandler = async (_req, res, parsed) => {
   const body = parsed.body as Record<string, unknown>;
   
   const validation = validateBody(body, ['refundId', 'logisticsNumber']);
@@ -116,8 +114,7 @@ const submitLogisticsHandler: RequestHandler = async (_req, res) => {
   }
 };
 
-const warehouseConfirmHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const warehouseConfirmHandler: RequestHandler = async (_req, res, parsed) => {
   const body = parsed.body as Record<string, unknown>;
   
   const validation = validateBody(body, ['refundId', 'received']);
@@ -138,8 +135,7 @@ const warehouseConfirmHandler: RequestHandler = async (_req, res) => {
   }
 };
 
-const getRefundHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const getRefundHandler: RequestHandler = async (_req, res, parsed) => {
   const refundId = parsed.pathname.split('/').pop();
   
   if (!refundId) {
@@ -156,8 +152,7 @@ const getRefundHandler: RequestHandler = async (_req, res) => {
   }
 };
 
-const queryRefundsHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const queryRefundsHandler: RequestHandler = async (_req, res, parsed) => {
   const query = parsed.query;
 
   const options: service.QueryOptions = {};
@@ -173,8 +168,7 @@ const queryRefundsHandler: RequestHandler = async (_req, res) => {
   sendSuccess(res, result);
 };
 
-const updateConfigHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const updateConfigHandler: RequestHandler = async (_req, res, parsed) => {
   const body = parsed.body as Record<string, unknown>;
 
   const updates: { refundPeriodDays?: number; virtualProductRefundThreshold?: number } = {};
@@ -190,13 +184,12 @@ const updateConfigHandler: RequestHandler = async (_req, res) => {
   sendSuccess(res, result);
 };
 
-const getConfigHandler: RequestHandler = async (_req, res) => {
+const getConfigHandler: RequestHandler = async (_req, res, _parsed) => {
   const result = service.getServiceConfig();
   sendSuccess(res, result);
 };
 
-const addMockOrderHandler: RequestHandler = async (_req, res) => {
-  const parsed = await parseRequest(_req);
+const addMockOrderHandler: RequestHandler = async (_req, res, parsed) => {
   const body = parsed.body as Record<string, unknown>;
   
   const validation = validateBody(body, ['order']);
@@ -218,7 +211,7 @@ const addMockOrderHandler: RequestHandler = async (_req, res) => {
   sendSuccess(res, result);
 };
 
-const getOrdersHandler: RequestHandler = async (_req, res) => {
+const getOrdersHandler: RequestHandler = async (_req, res, _parsed) => {
   const result = service.getAllOrders();
   sendSuccess(res, result);
 };
@@ -272,7 +265,7 @@ function matchRoute(method: string, pathname: string): { handler: RequestHandler
   return null;
 }
 
-const notFoundHandler: RequestHandler = async (_req, res) => {
+const notFoundHandler: RequestHandler = async (_req, res, _parsed) => {
   sendError(res, 'NOT_FOUND', 'Route not found', 404);
 };
 
@@ -283,9 +276,9 @@ export function createServer(): http.Server {
       const match = matchRoute(parsed.method, parsed.pathname);
 
       if (match) {
-        await match.handler(req, res);
+        await match.handler(req, res, parsed);
       } else {
-        await notFoundHandler(req, res);
+        await notFoundHandler(req, res, parsed);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Internal server error';
