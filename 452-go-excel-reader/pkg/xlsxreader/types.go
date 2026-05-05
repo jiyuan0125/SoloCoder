@@ -37,10 +37,15 @@ type Row struct {
 }
 
 type Cell struct {
-	R string `xml:"r,attr"`
-	T string `xml:"t,attr"`
-	S string `xml:"s,attr"`
-	V string `xml:"v"`
+	R       string    `xml:"r,attr"`
+	T       string    `xml:"t,attr"`
+	S       string    `xml:"s,attr"`
+	V       string    `xml:"v"`
+	Is      InlineStr `xml:"is"`
+}
+
+type InlineStr struct {
+	T string `xml:"t"`
 }
 
 type MergeCells struct {

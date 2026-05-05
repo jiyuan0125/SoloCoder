@@ -326,12 +326,11 @@ func (r *XlsxReader) processRows(worksheet *Worksheet, mergedCells map[string]st
 }
 
 func (r *XlsxReader) getCellValue(cell *Cell) string {
-	if cell.V == "" {
-		return ""
-	}
-
 	switch cell.T {
 	case "s":
+		if cell.V == "" {
+			return ""
+		}
 		idx, err := strconv.Atoi(cell.V)
 		if err == nil && idx >= 0 && idx < len(r.sharedStrings) {
 			return r.sharedStrings[idx]
@@ -342,9 +341,12 @@ func (r *XlsxReader) getCellValue(cell *Cell) string {
 		return cell.V
 
 	case "inlineStr":
-		return cell.V
+		return cell.Is.T
 
 	case "b":
+		if cell.V == "" {
+			return ""
+		}
 		if cell.V == "1" {
 			return "TRUE"
 		}
@@ -354,6 +356,9 @@ func (r *XlsxReader) getCellValue(cell *Cell) string {
 		fallthrough
 
 	default:
+		if cell.V == "" {
+			return ""
+		}
 		numFmtID := r.getNumFmtID(cell)
 		if r.isDateFormat(numFmtID) {
 			return r.formatDate(cell.V)

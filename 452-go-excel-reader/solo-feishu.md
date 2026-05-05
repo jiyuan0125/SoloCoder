@@ -18,3 +18,22 @@
 | 分支/文件夹 | 452-go-excel-reader |
 
 ---
+
+## 452-go-excel-reader — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 第二轮 |
+| User Prompt | 我拿一个openpyxl生成的xlsx文件试了下，上传后读sheet发现所有文本内容都是空的，数字倒是能正常显示。我用Python重新创建了一个用sharedStrings格式的xlsx文件测试，文字就能读出来了，看起来是inlineStr那种字符串存储方式没处理好，你看看怎么回事。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 库/SDK |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 452-go-excel-reader |
+
+---
