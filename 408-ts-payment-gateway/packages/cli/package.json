@@ -1,0 +1,16 @@
+{
+  "name": "@payment-gateway/cli",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "payment-gateway": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "cli": "node dist/index.js"
+  },
+  "dependencies": {
+    "@payment-gateway/shared": "^1.0.0"
+  }
+}

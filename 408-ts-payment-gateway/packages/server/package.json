@@ -1,0 +1,13 @@
+{
+  "name": "@payment-gateway/server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@payment-gateway/shared": "^1.0.0"
+  }
+}
