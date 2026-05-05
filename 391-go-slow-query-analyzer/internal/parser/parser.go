@@ -95,6 +95,8 @@ func (p *Parser) ParseLine(line string) (*protocol.LogEntry, error) {
 
 	entry := &protocol.LogEntry{}
 	parsedFields := 0
+	hasSQL := false
+	hasExecTime := false
 
 	for i, col := range p.columns {
 		if i >= len(parts) {
@@ -109,6 +111,7 @@ func (p *Parser) ParseLine(line string) (*protocol.LogEntry, error) {
 		switch col {
 		case protocol.ColumnSQL:
 			entry.SQL = p.trimSQLQuotes(value)
+			hasSQL = true
 			parsedFields++
 		case protocol.ColumnExecTime:
 			val, err := p.parseFloat(value)
@@ -116,6 +119,7 @@ func (p *Parser) ParseLine(line string) (*protocol.LogEntry, error) {
 				return nil, fmt.Errorf("invalid exec_time: %v", err)
 			}
 			entry.ExecTimeMs = val
+			hasExecTime = true
 			parsedFields++
 		case protocol.ColumnScanRows:
 			val, err := p.parseInt(value)
@@ -138,7 +142,65 @@ func (p *Parser) ParseLine(line string) (*protocol.LogEntry, error) {
 		return nil, fmt.Errorf("no valid fields parsed")
 	}
 
+	if !p.isValidLogEntry(entry, hasSQL, hasExecTime) {
+		return nil, fmt.Errorf("invalid log entry")
+	}
+
 	return entry, nil
+}
+
+func (p *Parser) isValidLogEntry(entry *protocol.LogEntry, hasSQL, hasExecTime bool) bool {
+	if hasSQL {
+		if p.looksLikeSQL(entry.SQL) {
+			return true
+		}
+	}
+
+	if hasExecTime && entry.ExecTimeMs > 0 {
+		return true
+	}
+
+	return false
+}
+
+func (p *Parser) looksLikeSQL(sql string) bool {
+	sqlUpper := strings.ToUpper(strings.TrimSpace(sql))
+	sqlKeywords := []string{
+		"SELECT ", "INSERT ", "UPDATE ", "DELETE ",
+		"CREATE ", "ALTER ", "DROP ", "TRUNCATE ",
+		"WITH ", "UNION ", "INTERSECT ", "EXCEPT ",
+		"DECLARE ", "SET ", "EXEC ", "EXECUTE ",
+		"COMMIT", "ROLLBACK", "SAVEPOINT",
+		"GRANT ", "REVOKE ",
+	}
+
+	for _, keyword := range sqlKeywords {
+		if strings.HasPrefix(sqlUpper, keyword) {
+			return true
+		}
+	}
+
+	selectIdx := strings.Index(sqlUpper, " SELECT ")
+	if selectIdx > 0 {
+		return true
+	}
+
+	fromIdx := strings.Index(sqlUpper, " FROM ")
+	if fromIdx > 0 {
+		return true
+	}
+
+	whereIdx := strings.Index(sqlUpper, " WHERE ")
+	if whereIdx > 0 {
+		return true
+	}
+
+	joinIdx := strings.Index(sqlUpper, " JOIN ")
+	if joinIdx > 0 {
+		return true
+	}
+
+	return false
 }
 
 func (p *Parser) trimSQLQuotes(sql string) string {

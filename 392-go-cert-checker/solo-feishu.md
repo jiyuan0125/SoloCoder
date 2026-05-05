@@ -18,3 +18,22 @@
 | 分支/文件夹 | 392-go-cert-checker |
 
 ---
+
+## 392-go-cert-checker — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 我按 README 里的用法试了一下，./cert-checker baidu.com:443 --warn-days 30 --json，结果 --warn-days 和 30 被当成域名去连接了，报了 "lookup --warn-days: no such host" 和 "lookup 30: no such host"。flag 得放域名前面才能正常解析，但 README 和帮助信息里的示例都是域名写在前面、flag 写在后面的。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 命令行工具 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 392-go-cert-checker |
+
+---

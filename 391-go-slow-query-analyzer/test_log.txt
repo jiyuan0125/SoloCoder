@@ -1,0 +1,5 @@
+SELECT * FROM table2 WHERE col1=1	100	5000	10
+SELECT * FROM table2 WHERE col1=2	150	6000	15
+this is just some garbage text
+SELECT * FROM users WHERE id IN (1,2,3)	200	10000	20
+SELECT * FROM users WHERE id IN (4,5,6)	250	12000	25
