@@ -1,0 +1,29 @@
+[
+  {
+    "name": "cleanup-expired-data",
+    "command": "echo 'Cleaning up expired data...'",
+    "cron_expr": "0 0 * * *",
+    "timeout": 300000000000,
+    "max_retry": 3,
+    "retry_interval": 60000000000,
+    "disabled": false
+  },
+  {
+    "name": "hourly-report",
+    "command": "echo 'Generating hourly report...'",
+    "cron_expr": "0 * * * *",
+    "timeout": 60000000000,
+    "max_retry": 3,
+    "retry_interval": 60000000000,
+    "disabled": false
+  },
+  {
+    "name": "health-check",
+    "command": "echo 'Checking service health...' && curl -s http://localhost:8080/health || echo 'Health check failed'",
+    "cron_expr": "*/5 * * * *",
+    "timeout": 30000000000,
+    "max_retry": 3,
+    "retry_interval": 60000000000,
+    "disabled": false
+  }
+]

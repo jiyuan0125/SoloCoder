@@ -1,0 +1,7 @@
+{
+  "tcp_addr": "localhost:8081",
+  "http_addr": "localhost:8080",
+  "config_file": "tasks.json",
+  "max_records": 100,
+  "shutdown_wait": 30
+}
