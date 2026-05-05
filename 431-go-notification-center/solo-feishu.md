@@ -18,3 +18,23 @@
 | 分支/文件夹 | 431-go-notification-center |
 
 ---
+
+## 431-go-notification-center — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | - |
+| 第一轮Session ID | - |
+| 轮次 | 2 |
+| User Prompt | 我测了下你这个通知中心，高优先级的"每天提醒一次直到已读"这个功能好像没做，后台任务里只看到了不活跃用户的每日汇总，active用户的高优先级未读通知没有提醒逻辑。另外API没加CORS，前端调不了。list接口按status=read筛选的时候unread_count返回的还是总数不对。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1反馈的3个bug只修了2个，ListNotifications接口按status=read筛选时unread_count仍返回该用户全部未读数而非0，store.go中totalUnreadCount在status过滤之前计算，没有根据筛选条件调整。 |
+| github地址 | - |
+| 分支/文件夹 | 431-go-notification-center |
+
+---
+
