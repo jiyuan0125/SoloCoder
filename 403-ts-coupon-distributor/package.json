@@ -1,0 +1,16 @@
+{
+  "name": "coupon-distributor",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/server && npm run build --workspace=packages/cli",
+    "clean": "rm -rf packages/*/dist packages/*/node_modules node_modules",
+    "start": "npm run start --workspace=packages/server",
+    "cli": "npm run cli --workspace=packages/cli"
+  }
+}

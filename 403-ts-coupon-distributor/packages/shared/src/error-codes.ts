@@ -1,0 +1,31 @@
+export enum ErrorCode {
+  SUCCESS = 0,
+  UNKNOWN_ERROR = 1,
+  INVALID_PARAMS = 1000,
+  COUPON_NOT_FOUND = 1001,
+  COUPON_EXPIRED = 1002,
+  COUPON_ALREADY_USED = 1003,
+  ORDER_AMOUNT_NOT_ENOUGH = 1004,
+  INVALID_DISCOUNT_RATE = 1005,
+  COUPON_CANNOT_STACK = 1006,
+  TOO_MANY_COUPONS = 1007,
+  USER_NOT_FOUND = 1008,
+  NO_AVAILABLE_COUPONS = 1009,
+  INVALID_VALIDITY_DATE = 1010,
+}
+
+export const errorMessages: Record<ErrorCode, string> = {
+  [ErrorCode.SUCCESS]: '成功',
+  [ErrorCode.UNKNOWN_ERROR]: '未知错误',
+  [ErrorCode.INVALID_PARAMS]: '参数无效',
+  [ErrorCode.COUPON_NOT_FOUND]: '优惠券不存在',
+  [ErrorCode.COUPON_EXPIRED]: '优惠券已过期',
+  [ErrorCode.COUPON_ALREADY_USED]: '优惠券已使用',
+  [ErrorCode.ORDER_AMOUNT_NOT_ENOUGH]: '订单金额不满足使用门槛',
+  [ErrorCode.INVALID_DISCOUNT_RATE]: '折扣率无效，最低5折',
+  [ErrorCode.COUPON_CANNOT_STACK]: '优惠券不能叠加使用',
+  [ErrorCode.TOO_MANY_COUPONS]: '订单使用优惠券数量超过限制',
+  [ErrorCode.USER_NOT_FOUND]: '用户不存在',
+  [ErrorCode.NO_AVAILABLE_COUPONS]: '没有可用的优惠券',
+  [ErrorCode.INVALID_VALIDITY_DATE]: '有效期日期无效',
+};

@@ -1,0 +1,20 @@
+{
+  "name": "billing-engine",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/cli",
+    "clean": "npm run clean -w packages/shared && npm run clean -w packages/server && npm run clean -w packages/cli",
+    "start": "npm run start -w packages/server",
+    "cli": "npm run cli -w packages/cli"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

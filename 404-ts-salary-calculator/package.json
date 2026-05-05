@@ -1,0 +1,17 @@
+{
+  "name": "salary-calculator",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @salary/shared && npm run build -w @salary/server && npm run build -w @salary/cli",
+    "clean": "rm -rf packages/*/dist",
+    "start": "node packages/server/dist/index.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  }
+}

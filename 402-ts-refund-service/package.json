@@ -1,0 +1,17 @@
+{
+  "name": "refund-service-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@refund/shared && npm run build --workspace=@refund/server && npm run build --workspace=@refund/cli",
+    "dev": "npm run dev --workspace=@refund/server",
+    "clean": "npm run clean --workspace=@refund/shared && npm run clean --workspace=@refund/server && npm run clean --workspace=@refund/cli"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.6"
+  }
+}

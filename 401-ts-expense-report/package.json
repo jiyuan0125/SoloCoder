@@ -1,0 +1,17 @@
+{
+  "name": "expense-report-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=packages/shared && npm run build --workspace=packages/server && npm run build --workspace=packages/cli",
+    "start:server": "npm run start --workspace=packages/server",
+    "cli": "npm run cli --workspace=packages/cli"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3",
+    "@types/node": "^20.10.5"
+  }
+}

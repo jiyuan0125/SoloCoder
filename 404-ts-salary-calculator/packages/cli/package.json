@@ -1,0 +1,16 @@
+{
+  "name": "@salary/cli",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "salary-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@salary/shared": "^1.0.0"
+  }
+}

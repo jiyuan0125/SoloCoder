@@ -1,0 +1,12 @@
+{
+  "name": "@expense-report/server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@expense-report/shared": "^1.0.0"
+  }
+}

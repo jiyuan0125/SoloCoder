@@ -1,0 +1,15 @@
+{
+  "name": "@expense-report/cli",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "bin": {
+    "expense-cli": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "cli": "node dist/index.js"
+  },
+  "dependencies": {
+    "@expense-report/shared": "^1.0.0"
+  }
+}
