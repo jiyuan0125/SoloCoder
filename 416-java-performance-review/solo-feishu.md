@@ -18,3 +18,23 @@
 | 分支/文件夹 | 416-java-performance-review |
 
 ---
+
+## 416-java-performance-review — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 项目能编译通过但启动后很多接口返回500。我试了下，所有URL里带ID的接口（比如 GET /api/performance-reviews/{id}、GET /api/review-cycles/{id}）全部报错，日志里说 parameter name 找不到。好像是 Spring Boot 3 和 Java 17 的编译参数问题，@PathVariable 不加 name 属性的话需要 maven 编译器加个配置才行。还有上级评分的时候，我自评打了4分，上级也打了4分，系统居然接受了，不是说上下级评分差值不能为0吗？ |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：员工调岗（PUT /api/employees/{id}/transfer）只更新了Employee实体的departmentId和managerId，未同步更新已创建的PerformanceReview记录中的departmentId和managerId，导致调岗后绩效评估仍关联旧部门旧上级。连续C级计算countConsecutiveCGrads方法存在重复计数bug：当currentGrade为C时先初始化count=1，然后遍历所有review（含当前正在确认的review）又会将C级再次+1，导致连续C数多算1次。过程不满意：核心业务逻辑bug未全部修复，调岗联动是PROMPT明确要求的功能，修复后应实际测试调岗场景 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 416-java-performance-review |
+
+---
+
