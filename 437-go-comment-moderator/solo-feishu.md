@@ -18,3 +18,23 @@
 | 分支/文件夹 | 437-go-comment-moderator |
 
 ---
+
+## 437-go-comment-moderator — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 第二轮 |
+| User Prompt | 我试了下客户端，用 ./client -port 8737 submit --user test --content "hello" 提交评论，结果它提示"使用: submit --user <用户ID> --content <评论内容>"，参数没接上。用默认端口不加 -port 倒是可以，但服务端跑在别的端口上就没法用客户端了。 另外我提交评论的时候 user_id 和 content 传空字符串居然也能创建成功，返回 200 了。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 437-go-comment-moderator |
+
+---
+
