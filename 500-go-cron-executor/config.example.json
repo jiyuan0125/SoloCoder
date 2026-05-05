@@ -1,0 +1,35 @@
+{
+  "tcp_port": 8765,
+  "web_api_port": 8080,
+  "log_dir": "./logs",
+  "data_dir": "./data",
+  "tasks": [
+    {
+      "name": "backup-database",
+      "cron_expr": "0 2 * * *",
+      "command": "/usr/bin/mysqldump -u root mydb > /backup/mydb-$(date +%Y%m%d).sql",
+      "timeout": 3600000000000,
+      "max_retries": 3,
+      "retry_interval": 60000000000,
+      "dependencies": []
+    },
+    {
+      "name": "sync-files",
+      "cron_expr": "*/30 * * * *",
+      "command": "rsync -av /data/ /backup/data/",
+      "timeout": 1800000000000,
+      "max_retries": 2,
+      "retry_interval": 30000000000,
+      "dependencies": []
+    },
+    {
+      "name": "clean-logs",
+      "cron_expr": "0 3 * * 0",
+      "command": "find /var/log -name '*.log' -mtime +30 -delete",
+      "timeout": 300000000000,
+      "max_retries": 1,
+      "retry_interval": 10000000000,
+      "dependencies": ["backup-database"]
+    }
+  ]
+}
