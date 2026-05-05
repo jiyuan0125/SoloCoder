@@ -1,0 +1,52 @@
+项目构建成功、服务端可启动，但存在多个严重 Bug 导致核心功能不可用。请逐一修复以下问题：
+
+## 严重 Bug（必须修复）
+
+### 1. @PathVariable 参数名无法解析 — 所有带路径参数的 GET 接口全部 400 报错
+**现象**：`GET /api/employees/{id}`、`GET /api/leaves/employee/{employeeId}`、`GET /api/calendar/team/{managerId}` 等全部返回 400："Name for argument of type [java.lang.Long] not specified, and parameter name information not found in class file either."
+**根因**：Spring Boot 3.x + Java 17 默认不编译参数名，而代码中 `@PathVariable Long id` 没有显式指定 name。
+**修复方案（二选一）**：
+- 方案 A：在 maven-compiler-plugin 中加 `<parameters>true</parameters>`
+- 方案 B：所有 @PathVariable 显式命名，如 `@PathVariable("id") Long id`
+**涉及文件**：EmployeeController.java、LeaveController.java、CalendarController.java、父 pom.xml
+
+### 2. CLI 客户端 JAR 缺少依赖，完全无法运行
+**现象**：`java -jar client/target/*.jar` 报 NoClassDefFoundError: com/fasterxml/jackson/databind/Module
+**根因**：client 模块使用 maven-jar-plugin 打包，未将 jackson-databind、jackson-datatype-jsr310 等依赖打入 JAR。
+**修复方案**：改用 maven-shade-plugin 或 maven-assembly-plugin 创建 fat JAR（uber-jar），将所有依赖打包进去。
+**涉及文件**：client/pom.xml
+
+### 3. 年假周末计入逻辑反了
+**现象**：年假跨周末时，周末被计入了请假天数（测试：年假 5/8-5/11 周五到周一，期望 2 天，实际返回 4 天）
+**根因**：`LeaveType.ANNUAL("年假", true, false)` 中 countWeekends=true，但需求明确说"年假不计入周末"。应改为 `countWeekends=false`。
+**涉及文件**：common/.../enums/LeaveType.java — 将 ANNUAL 的第二个参数从 true 改为 false
+
+### 4. 事假错误地要求附件
+**现象**：申请事假不传附件名时返回"该请假类型必须提供附件"，但需求只要求病假、婚假、产假需要附件。
+**根因**：`LeaveType.PERSONAL("事假", true, true)` 中 requiresAttachment=true，但需求未要求事假提供附件。
+**涉及文件**：common/.../enums/LeaveType.java — 将 PERSONAL 的第三个参数从 true 改为 false
+
+## 中等问题
+
+### 5. yearsOfService 字段始终为 0
+EmployeeDTO 有 yearsOfService 字段，但 EmployeeController.toDTO() 没有计算和赋值，API 返回中该字段始终为 0。
+**修复**：在 toDTO() 中调用 AnnualLeaveService.calculateYearsOfService() 计算后赋值。
+
+### 6. 缺少每年1月1日自动重算年假的定时任务
+需求："每年1月1日按最新工龄重新计算年假天数"。AnnualLeaveService.recalculateAnnualLeaveOnNewYear() 方法已写好但从未被调用。
+**修复**：添加 @Scheduled 定时任务或在应用启动时检查，每年1月1日自动触发重算。
+
+### 7. 缺少3月31日自动清零结转年假的定时任务
+需求："上一年剩的年假可以延续到次年3月31日，过期自动清零"。clearCarriedOverLeaveIfExpired() 方法已写好但从未被调用。
+**修复**：添加定时任务在每年3月31日后自动清零结转年假。
+
+### 8. 陪产假天数上限校验不正确
+当前用 actualDays（已排除周末）判断 >15，但陪产假15天应按自然日算。应改为用日期跨度（ChronoUnit.DAYS.between）校验。
+
+## 小问题
+
+### 9. 默认端口不一致
+需求指定端口 8081，但服务端无 application.properties 设置（默认 8080），客户端 DEFAULT_BASE_URL 也是 8080。
+**修复**：server 模块添加 application.properties 设置 server.port=8081，客户端 DEFAULT_BASE_URL 改为 8081。
+
+请修复以上所有问题后确保 `mvn clean package` 构建成功。

@@ -1,0 +1,16 @@
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/EmployeeDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/response/ApiResponse.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/ChecklistItemDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/enums/PositionType.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/OnboardingStatisticsDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/ChecklistTemplateDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/request/CreateTemplateRequest.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/request/CreateChecklistItemRequest.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/enums/ItemStatus.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/request/CreateEmployeeRequest.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/TemplateItemDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/dto/AlertDTO.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/enums/OnboardingStatus.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/request/UpdateChecklistItemRequest.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/enums/ErrorCode.java
+/home/baru/Work/Private/work01/SoloCoder/413-java-onboarding-checklist/common/src/main/java/com/example/common/enums/AlertLevel.java

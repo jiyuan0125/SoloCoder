@@ -1,0 +1,15 @@
+项目编译失败，请修复以下问题后确保 mvn clean package 成功：
+
+## 编译错误（阻塞）
+
+1. **common/pom.xml 缺少 jakarta.validation-api 依赖**：common 模块的 CreateEmployeeRequest、CreateChecklistItemRequest、CreateTemplateRequest 三个 Request 类使用了 @NotBlank、@NotNull 注解（来自 jakarta.validation.constraints 包），但 common/pom.xml 没有声明 jakarta.validation-api 依赖。该依赖目前只在 server/pom.xml 的 spring-boot-starter-validation 中间接引入。需要在父 POM 的 dependencyManagement 中添加 jakarta.validation-api 的版本管理，并在 common/pom.xml 中声明该依赖。
+
+## 架构问题
+
+2. **common 模块不应依赖 validation API**：PROMPT 要求 common 子模块放置"DTO 类、请求响应格式定义和错误码枚举"，validation 注解是服务端校验关注点，放在 common 模块会造成不必要的耦合。更好的做法是将 Request 类移到 server 模块，或在 common 中只保留 DTO 和枚举，Request 类放在 server 中。
+
+## 运行时问题（需确认修复后）
+
+3. **client 默认端口硬编码为 8080**：OnboardingChecklistClient.java 第 20 行 DEFAULT_BASE_URL = "http://localhost:8080"，而评测要求 server 启动在 8083。client 需通过 SERVER_URL 环境变量或命令行参数支持端口配置，否则 client 无法连接 server。当前代码支持 SERVER_URL 环境变量，但默认值应与 server 默认端口一致，或在 README 中明确说明。
+
+请先修复编译错误使项目能成功构建，然后确认 server 能正常启动、client 能通过环境变量连接 server。

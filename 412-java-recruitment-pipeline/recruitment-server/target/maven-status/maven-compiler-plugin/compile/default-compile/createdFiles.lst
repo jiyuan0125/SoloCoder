@@ -1,0 +1,13 @@
+com/recruitment/server/controller/ApplicationController.class
+com/recruitment/server/repository/EmployeeArchiveRepository.class
+com/recruitment/server/service/CandidateService.class
+com/recruitment/server/repository/CandidateRepository.class
+com/recruitment/server/repository/ApplicationRepository.class
+com/recruitment/server/controller/StatisticsController.class
+com/recruitment/server/service/StatisticsService.class
+com/recruitment/server/service/ContactRecordService.class
+com/recruitment/server/service/ApplicationService.class
+com/recruitment/server/RecruitmentApplication.class
+com/recruitment/server/repository/ContactRecordRepository.class
+com/recruitment/server/controller/ContactRecordController.class
+com/recruitment/server/controller/CandidateController.class

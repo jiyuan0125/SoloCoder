@@ -1,0 +1,30 @@
+项目整体架构合理，但存在以下必须修复的致命问题：
+
+## 必须修复
+
+### 1. Spring Boot 3.x @PathVariable 参数名无法解析（致命，影响全部带路径参数的接口）
+所有使用 `@PathVariable String id` 的接口（GET by ID、PUT、DELETE）全部报错：
+`Name for argument of type [java.lang.String] not specified, and parameter name information not available via reflection. Ensure that the compiler uses the '-parameters' flag.`
+
+**修复方案**（二选一）：
+- 方案A：在父POM的 maven-compiler-plugin 中添加 `<compilerArgs><arg>-parameters</arg></compilerArgs>`
+- 方案B：所有 @PathVariable 注解显式指定名称，如 `@PathVariable("id") String id`
+
+涉及的 Controller：DepartmentController、EmployeeController、VirtualTeamController、OperationLogController 中所有带 @PathVariable 的方法。
+
+### 2. DepartmentService.updateDepartment 逻辑反转（严重Bug）
+第101行：`if (request.getParentId() != null && !request.getParentId().equals(id))` 
+应该是：`if (request.getParentId() != null && request.getParentId().equals(id))`
+当前逻辑导致：设自己为父部门时不会报错（应该报错），设其他部门为父部门时会报错（不应该报错）。
+
+### 3. CLI client JAR 无法独立运行
+client 模块的 pom.xml 使用 maven-jar-plugin 配置了 classpath，但没有打包依赖。`java -jar client/target/*.jar` 运行时 NoClassDefFoundError。
+**修复方案**：使用 maven-shade-plugin 或 maven-assembly-plugin 打包成 fat JAR（uber JAR），包含所有依赖（common模块、jackson、commons-httpclient）。
+
+### 4. CLI client 默认连接端口错误
+HttpClient.java 第19行硬编码 `http://localhost:8080`，但 server 监听 8085 端口。应改为 8085，或支持通过环境变量/命令行参数指定。
+
+## 建议优化
+
+- CLI client 使用的是已废弃的 commons-httpclient 3.1（最后发布于2007年），建议改用 Java 11+ 自带的 java.net.http.HttpClient，减少外部依赖且更现代化。
+- OperationLogController 的日志查询接口使用了 `@PathVariable String targetType`，修复参数名问题后即可正常工作。

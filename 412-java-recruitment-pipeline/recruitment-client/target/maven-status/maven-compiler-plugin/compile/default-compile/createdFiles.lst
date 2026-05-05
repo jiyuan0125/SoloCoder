@@ -1,0 +1,4 @@
+com/recruitment/client/command/CommandExecutor.class
+com/recruitment/client/command/CommandParser.class
+com/recruitment/client/http/HttpClient.class
+com/recruitment/client/RecruitmentClient.class
