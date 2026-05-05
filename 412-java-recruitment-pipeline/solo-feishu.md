@@ -13,7 +13,7 @@
 | 修改范围 | 跨系统多模块 |
 | 任务是否完成 | 未完成任务 |
 | 产物及过程是否满意 | 不满意 |
-| 不满意原因 | 产物不满意：服务端无法启动，SLF4J版本冲突（json-path传递slf4j-api:1.7.36与Spring Boot 3.2.0的SLF4J 2.x冲突），这是最基础的可运行性要求未满足。代码架构和业务逻辑设计整体合理，但存在致命的依赖冲突和多个功能缺陷（来源渠道筛选无效、offer自动过期未实现、重新审批无接口）。客户端端口硬编码8080也是低级错误。过程不满意：服务端编译通过但启动即崩，说明写完后没有实际启动测试过 |
+| 不满意原因 | 产物不满意：服务端因SLF4J版本冲突（slf4j-api:1.7.36与Spring Boot 3.2.0的SLF4J 2.x冲突）无法启动，项目完全无法运行。ApplicationRepository.findByPosition()接收sourceChannel参数但未使用该参数过滤，来源渠道筛选功能失效。QueryCandidatesRequest有page/size字段但queryCandidates()未实现分页逻辑。checkExpiredOffers()方法存在但无定时任务触发，offer不会自动过期。过程不满意：mvn clean package构建通过但启动即崩溃，说明写完后没有实际运行测试过 |
 | github地址 | https://github.com/jiyuan0125/SoloCoder |
 | 分支/文件夹 | 412-java-recruitment-pipeline |
 
