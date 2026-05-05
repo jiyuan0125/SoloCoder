@@ -92,9 +92,52 @@ func applyRule(name string, rule protocol.Rule, seqNum int, totalFiles int, file
     case protocol.RuleTypeRegexReplace:
         return regexReplace(name, rule.Pattern, rule.Replacement)
 
+    case protocol.RuleTypeTemplate:
+        return applyTemplate(rule.Template, name, seqNum, totalFiles, filePath), nil
+
     default:
         return name, nil
     }
+}
+
+func applyTemplate(template string, originalName string, seqNum int, totalFiles int, filePath string) string {
+    result := template
+
+    result = replaceSequenceInTemplate(result, seqNum, totalFiles)
+    result = replaceDateInTemplate(result, filePath)
+    result = strings.ReplaceAll(result, "{name}", originalName)
+
+    return result
+}
+
+func replaceSequenceInTemplate(template string, seqNum int, totalFiles int) string {
+    if !strings.Contains(template, "{seq}") {
+        return template
+    }
+
+    padding := 0
+    for totalFiles > 0 {
+        padding++
+        totalFiles /= 10
+    }
+
+    seqStr := fmt.Sprintf("%0*d", padding, seqNum)
+    return strings.ReplaceAll(template, "{seq}", seqStr)
+}
+
+func replaceDateInTemplate(template string, filePath string) string {
+    if !strings.Contains(template, "{date}") {
+        return template
+    }
+
+    info, err := os.Stat(filePath)
+    if err != nil {
+        return template
+    }
+
+    modTime := info.ModTime()
+    dateStr := modTime.Format("20060102")
+    return strings.ReplaceAll(template, "{date}", dateStr)
 }
 
 func replaceSequence(name string, seqNum int, totalFiles int) string {

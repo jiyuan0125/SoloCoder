@@ -7,8 +7,10 @@ type MessageType string
 const (
     MsgTypePreview       MessageType = "preview"
     MsgTypeExecute       MessageType = "execute"
+    MsgTypeHistory       MessageType = "history"
     MsgTypePreviewResp   MessageType = "preview_resp"
     MsgTypeExecuteResp   MessageType = "execute_resp"
+    MsgTypeHistoryResp   MessageType = "history_resp"
     MsgTypeError         MessageType = "error"
 )
 
@@ -21,6 +23,7 @@ const (
     RuleTypeDate         RuleType = "date"
     RuleTypeReplace      RuleType = "replace"
     RuleTypeRegexReplace RuleType = "regex_replace"
+    RuleTypeTemplate     RuleType = "template"
 )
 
 type Rule struct {
@@ -32,6 +35,7 @@ type Rule struct {
     NewString   string   `json:"new_string,omitempty"`
     Pattern     string   `json:"pattern,omitempty"`
     Replacement string   `json:"replacement,omitempty"`
+    Template    string   `json:"template,omitempty"`
 }
 
 type Request struct {
@@ -69,6 +73,20 @@ type ErrorResponse struct {
     Message string `json:"message"`
 }
 
+type HistoryRecord struct {
+    ID        int64        `json:"id"`
+    Timestamp int64        `json:"timestamp"`
+    Items     []RenameItem `json:"items"`
+    Success   int          `json:"success"`
+    Failed    int          `json:"failed"`
+    Skipped   int          `json:"skipped"`
+}
+
+type HistoryResponse struct {
+    Records []HistoryRecord `json:"records"`
+    Total   int             `json:"total"`
+}
+
 func (r *Request) ToJSON() ([]byte, error) {
     return json.Marshal(r)
 }
@@ -98,5 +116,13 @@ func (r *ErrorResponse) ToJSON() ([]byte, error) {
 }
 
 func (r *ErrorResponse) FromJSON(data []byte) error {
+    return json.Unmarshal(data, r)
+}
+
+func (r *HistoryResponse) ToJSON() ([]byte, error) {
+    return json.Marshal(r)
+}
+
+func (r *HistoryResponse) FromJSON(data []byte) error {
     return json.Unmarshal(data, r)
 }

@@ -92,6 +92,8 @@ func (s *Server) handleConnection(conn net.Conn) {
             s.handlePreview(writer, &req)
         case protocol.MsgTypeExecute:
             s.handleExecute(writer, &req)
+        case protocol.MsgTypeHistory:
+            s.handleHistory(writer, &req)
         default:
             s.sendError(writer, fmt.Sprintf("Unknown request type: %s", req.Type))
         }
@@ -217,10 +219,30 @@ func (s *Server) handleExecute(writer *bufio.Writer, req *protocol.Request) {
         Skipped: skipped,
     }
 
+    AddHistoryRecord(resultItems, success, failed, skipped)
+
     s.sendExecuteResponse(writer, &resp)
 }
 
 func (s *Server) sendExecuteResponse(writer *bufio.Writer, resp *protocol.ExecuteResponse) {
+    data, _ := json.Marshal(resp)
+    writer.Write(data)
+    writer.WriteByte('\n')
+    writer.Flush()
+}
+
+func (s *Server) handleHistory(writer *bufio.Writer, req *protocol.Request) {
+    records := GetAllHistoryRecords()
+
+    resp := protocol.HistoryResponse{
+        Records: records,
+        Total:   len(records),
+    }
+
+    s.sendHistoryResponse(writer, &resp)
+}
+
+func (s *Server) sendHistoryResponse(writer *bufio.Writer, resp *protocol.HistoryResponse) {
     data, _ := json.Marshal(resp)
     writer.Write(data)
     writer.WriteByte('\n')

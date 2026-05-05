@@ -15,19 +15,23 @@ const (
 )
 
 type renameFlags struct {
-    prefix       string
-    suffix       string
-    sequence     bool
-    date         bool
-    dateFormat   string
-    replaceOld   string
-    replaceNew   string
-    regexPattern string
-    regexReplace string
-    recursive    bool
-    dryRun       bool
-    serverAddr   string
-    help         bool
+    prefix         string
+    suffix         string
+    sequence       bool
+    date           bool
+    dateFormat     string
+    replaceOld     string
+    replaceNew     string
+    regexPattern   string
+    regexReplace   string
+    recursive      bool
+    dryRun         bool
+    serverAddr     string
+    help           bool
+    template       string
+    sequenceFormat string
+    dateFormatArg  string
+    history        bool
 }
 
 func main() {
@@ -36,23 +40,6 @@ func main() {
     if flags.help {
         printUsage()
         os.Exit(0)
-    }
-
-    rules := collectRules(flags)
-    if len(rules) == 0 {
-        fmt.Println("Error: At least one rule is required")
-        printUsage()
-        os.Exit(1)
-    }
-
-    files := collectFilesFromArgs()
-
-    req := protocol.Request{
-        Type:      protocol.MsgTypePreview,
-        Files:     files,
-        Rules:     rules,
-        Recursive: flags.recursive,
-        DryRun:    flags.dryRun,
     }
 
     conn, err := net.Dial("tcp", flags.serverAddr)
@@ -64,6 +51,28 @@ func main() {
 
     reader := bufio.NewReader(conn)
     writer := bufio.NewWriter(conn)
+
+    if flags.history {
+        handleHistoryRequest(writer, reader)
+        return
+    }
+
+    rules := collectRules(flags)
+    if len(rules) == 0 {
+        fmt.Println("Error: At least one rule is required")
+        printUsage()
+        os.Exit(1)
+    }
+
+    files := collectFiles()
+
+    req := protocol.Request{
+        Type:      protocol.MsgTypePreview,
+        Files:     files,
+        Rules:     rules,
+        Recursive: flags.recursive,
+        DryRun:    flags.dryRun,
+    }
 
     previewResp, err := sendPreviewRequest(writer, reader, &req)
     if err != nil {
@@ -103,9 +112,10 @@ func parseFlags() *renameFlags {
 
     flag.StringVar(&flags.prefix, "prefix", "", "Add prefix to file name")
     flag.StringVar(&flags.suffix, "suffix", "", "Add suffix to file name (before extension)")
-    flag.BoolVar(&flags.sequence, "seq", false, "Replace {seq} with sequential number")
-    flag.BoolVar(&flags.date, "date", false, "Replace {date} with file modification date")
-    flag.StringVar(&flags.dateFormat, "date-format", "20060102", "Date format for {date} (Go format)")
+    flag.BoolVar(&flags.sequence, "seq", false, "Use sequence number as new name (equivalent to --template \"{seq}\")")
+    flag.StringVar(&flags.sequenceFormat, "seq-format", "", "Sequence format template, e.g., \"photo_{seq}\"")
+    flag.BoolVar(&flags.date, "date", false, "Use date in file name (equivalent to --template \"{date}_{name}\")")
+    flag.StringVar(&flags.dateFormat, "date-format", "20060102", "Date format for {date} (Go format, e.g., 2006-01-02)")
     flag.StringVar(&flags.replaceOld, "replace-old", "", "Old string to replace")
     flag.StringVar(&flags.replaceNew, "replace-new", "", "New string to replace with")
     flag.StringVar(&flags.regexPattern, "regex-pattern", "", "Regex pattern for replacement")
@@ -116,6 +126,8 @@ func parseFlags() *renameFlags {
     flag.StringVar(&flags.serverAddr, "server", defaultServerAddr, "Server address (host:port)")
     flag.BoolVar(&flags.help, "help", false, "Show this help message")
     flag.BoolVar(&flags.help, "h", false, "Short form of --help")
+    flag.StringVar(&flags.template, "template", "", "Template for new file name (supports {seq}, {date}, {name} placeholders)")
+    flag.BoolVar(&flags.history, "history", false, "Show rename history")
 
     flag.Parse()
 
@@ -124,6 +136,28 @@ func parseFlags() *renameFlags {
 
 func collectRules(flags *renameFlags) []protocol.Rule {
     var rules []protocol.Rule
+
+    if flags.template != "" {
+        rules = append(rules, protocol.Rule{
+            Type:     protocol.RuleTypeTemplate,
+            Template: flags.template,
+        })
+    } else if flags.sequenceFormat != "" {
+        rules = append(rules, protocol.Rule{
+            Type:     protocol.RuleTypeTemplate,
+            Template: flags.sequenceFormat,
+        })
+    } else if flags.sequence {
+        rules = append(rules, protocol.Rule{
+            Type:     protocol.RuleTypeTemplate,
+            Template: "{seq}",
+        })
+    } else if flags.date {
+        rules = append(rules, protocol.Rule{
+            Type:     protocol.RuleTypeTemplate,
+            Template: "{date}_{name}",
+        })
+    }
 
     if flags.prefix != "" {
         rules = append(rules, protocol.Rule{
@@ -136,19 +170,6 @@ func collectRules(flags *renameFlags) []protocol.Rule {
         rules = append(rules, protocol.Rule{
             Type:   protocol.RuleTypeSuffix,
             Suffix: flags.suffix,
-        })
-    }
-
-    if flags.sequence {
-        rules = append(rules, protocol.Rule{
-            Type: protocol.RuleTypeSequence,
-        })
-    }
-
-    if flags.date {
-        rules = append(rules, protocol.Rule{
-            Type:       protocol.RuleTypeDate,
-            DateFormat: flags.dateFormat,
         })
     }
 
@@ -171,8 +192,45 @@ func collectRules(flags *renameFlags) []protocol.Rule {
     return rules
 }
 
-func collectFilesFromArgs() []string {
-    return flag.Args()
+func collectFiles() []string {
+    args := flag.Args()
+    if len(args) > 0 {
+        return args
+    }
+
+    stdinFiles := collectFilesFromStdin()
+    if len(stdinFiles) > 0 {
+        return stdinFiles
+    }
+
+    return []string{}
+}
+
+func collectFilesFromStdin() []string {
+    var files []string
+    
+    fi, err := os.Stdin.Stat()
+    if err != nil {
+        return files
+    }
+    
+    if (fi.Mode() & os.ModeNamedPipe) == 0 {
+        return files
+    }
+
+    scanner := bufio.NewScanner(os.Stdin)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if line != "" {
+            files = append(files, line)
+        }
+    }
+
+    if scanner.Err() != nil {
+        return files
+    }
+
+    return files
 }
 
 func printUsage() {
@@ -180,46 +238,66 @@ func printUsage() {
 
 Usage:
   batch-rename [options] [files/directories...]
+  ls *.jpg | batch-rename [options]
 
 Options:
-  --prefix <string>        Add prefix to file name
-  --suffix <string>        Add suffix to file name (before extension)
-  --seq                    Replace {seq} with sequential number (auto-padded)
-  --date                   Replace {date} with file modification date
-  --date-format <format>   Date format for {date} (default: 20060102)
-  --replace-old <string>   Old string to replace
-  --replace-new <string>   New string to replace with
-  --regex-pattern <regex>  Regex pattern for replacement
-  --regex-replace <string> Replacement string for regex (use $1, $2 for groups)
-  -r, --recursive          Process files recursively in subdirectories
-  --dry-run                Only preview without executing
-  --server <addr>          Server address (default: localhost:8888)
-  -h, --help               Show this help message
+  --template <string>       Template for new file name (supports placeholders)
+                            Placeholders:
+                              {seq}  - Sequential number (auto-padded)
+                              {date} - File modification date
+                              {name} - Original file name (without extension)
+                            
+  --seq                     Use sequence number as new name (equivalent to --template "{seq}")
+  --seq-format <string>     Sequence format template, e.g., "photo_{seq}"
+  --date                    Use date in file name (equivalent to --template "{date}_{name}")
+  --date-format <format>    Date format for {date} (Go format, default: 20060102)
+                            
+  --prefix <string>         Add prefix to file name
+  --suffix <string>         Add suffix to file name (before extension)
+  --replace-old <string>    Old string to replace
+  --replace-new <string>    New string to replace with
+  --regex-pattern <regex>   Regex pattern for replacement
+  --regex-replace <string>  Replacement string for regex (use $1, $2 for groups)
+                            
+  -r, --recursive           Process files recursively in subdirectories
+  --dry-run                 Only preview without executing
+  --history                 Show rename history
+  --server <addr>           Server address (default: localhost:8888)
+  -h, --help                Show this help message
 
 Rules are applied in the order they are specified.
 
 Examples:
-  # Add prefix "photo_" to all jpg files
-  batch-rename --prefix "photo_" *.jpg
+  # Rename to sequential numbers: 001.jpg, 002.jpg, etc.
+  batch-rename --seq *.jpg
 
-  # Add sequence number
-  batch-rename --seq "image_{seq}.jpg" *.jpg
+  # Rename using template
+  batch-rename --template "photo_{seq}" *.jpg
 
-  # Add date from file modification time
-  batch-rename --date "vacation_{date}_{seq}.jpg" *.jpg
+  # Rename using date and sequence
+  batch-rename --template "vacation_{date}_{seq}" *.jpg
 
-  # Replace "IMG" with "Photo"
+  # Add prefix
+  batch-rename --prefix "2024_" *.jpg
+
+  # Replace string
   batch-rename --replace-old "IMG" --replace-new "Photo" *.jpg
 
   # Regex replace: extract number and reformat
   batch-rename --regex-pattern "img(\d+)" --regex-replace "photo_$1" *.jpg
 
-  # Multiple rules
-  batch-rename --prefix "2024_" --seq "vacation_{seq}" *.jpg
+  # Multiple rules: template + prefix
+  batch-rename --template "{seq}" --prefix "photo_" *.jpg
+
+  # Read from pipe
+  ls *.jpg | batch-rename --template "image_{seq}"
 
   # Recursive
-  batch-rename -r --prefix "backup_" ./photos
+  batch-rename -r --template "{name}_{seq}" ./photos
 
   # Dry run
-  batch-rename --dry-run --prefix "test_" *.jpg`)
+  batch-rename --dry-run --template "test_{seq}" *.jpg
+
+  # Show history
+  batch-rename --history`)
 }
