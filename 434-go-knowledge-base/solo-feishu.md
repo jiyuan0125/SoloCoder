@@ -18,3 +18,22 @@
 | 分支/文件夹 | 434-go-knowledge-base |
 
 ---
+
+## 434-go-knowledge-base — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | - |
+| 第一轮Session ID | - |
+| 轮次 | 第二轮 |
+| User Prompt | 我刚跑了一下服务端，启动没问题但是一调创建文章的接口就卡死了，curl直接超时，之后连stats这种读接口也挂了不响应。我看了一下store.go的代码，GenerateID()里面又调了一次s.mu.Lock()，但外面CreateArticle已经锁住了，Go的RWMutex不支持重入吧？还有我发现更新文章只允许草稿状态才能编辑，但需求说的是已发布的文章编辑后变成草稿才对。搜索接口没结果的时候返回的是null不是空数组。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：handler.go第121-124行仍然限制只有草稿状态才能编辑文章（article.Status != common.StatusDraft 时返回错误1005），已发布文章无法编辑。store.go层已经正确处理了wasPublished逻辑（编辑后回退为草稿），但handler层在调用store之前就拦截了请求，导致这个修复无效。过程不满意：修改了store层但没检查handler层的重复校验逻辑，说明修改不彻底。 |
+| github地址 | - |
+| 分支/文件夹 | 434-go-knowledge-base |
+
+---
