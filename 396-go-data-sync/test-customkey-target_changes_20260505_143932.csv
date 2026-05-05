@@ -1,0 +1,4 @@
+Operation,Key,Old_Name,Old_Email,Old_Age,New_Name,New_Email,New_Age
+ADD,alice@example.com,,,,Alice,alice@example.com,30
+ADD,charlie@example.com,,,,Charlie,charlie@example.com,35
+DELETE,alice@old.com,Alice,alice@old.com,30,,,

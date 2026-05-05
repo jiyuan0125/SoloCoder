@@ -85,8 +85,8 @@ public class CandidateService {
     }
 
     public ApiResponse<List<CandidateListResponse>> queryCandidates(QueryCandidatesRequest request) {
-        List<ApplicationDTO> applications = applicationRepository.findByPosition(
-                request.getPosition(), request.getStage(), request.getSourceChannel());
+        List<ApplicationDTO> applications = applicationRepository.findByFilters(
+                request.getPosition(), request.getStage());
 
         List<CandidateListResponse> result = new ArrayList<>();
         List<String> processedCandidateIds = new ArrayList<>();
@@ -96,9 +96,10 @@ public class CandidateService {
                 Optional<CandidateDTO> candidateOpt = candidateRepository.findById(app.getCandidateId());
                 if (candidateOpt.isPresent()) {
                     CandidateDTO candidate = candidateOpt.get();
-                    List<ApplicationDTO> candidateApps = applicationRepository.findByCandidateId(candidate.getId());
                     
-                    if (request.getSourceChannel() == null || request.getSourceChannel() == candidate.getSourceChannel()) {
+                    if (request.getSourceChannel() == null 
+                            || request.getSourceChannel().equals(candidate.getSourceChannel())) {
+                        List<ApplicationDTO> candidateApps = applicationRepository.findByCandidateId(candidate.getId());
                         result.add(new CandidateListResponse(candidate, candidateApps));
                     }
                     processedCandidateIds.add(candidate.getId());

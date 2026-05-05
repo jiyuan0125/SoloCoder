@@ -23,7 +23,9 @@ public class ScoreValidator {
         if (score1 == null || score2 == null) {
             return false;
         }
-        BigDecimal diff = score1.subtract(score2).abs();
+        BigDecimal normalized1 = normalizeScore(score1);
+        BigDecimal normalized2 = normalizeScore(score2);
+        BigDecimal diff = normalized1.subtract(normalized2).abs();
         return diff.compareTo(MIN_DIFFERENCE) >= 0;
     }
 

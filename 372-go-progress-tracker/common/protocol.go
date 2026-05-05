@@ -13,6 +13,7 @@ type ProgressStatus struct {
 	Description  string        `json:"description"`
 	IsDone       bool          `json:"is_done"`
 	IsCancelled  bool          `json:"is_cancelled"`
+	IsClosed     bool          `json:"is_closed"`
 	CreatedAt    time.Time     `json:"created_at"`
 }
 

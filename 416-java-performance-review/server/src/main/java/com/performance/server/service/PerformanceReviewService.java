@@ -112,7 +112,7 @@ public class PerformanceReviewService {
         }
 
         if (review.getSelfScore() != null && 
-            ScoreValidator.isDifferenceZero(request.getScore(), review.getSelfScore())) {
+            !ScoreValidator.hasMinimumDifference(request.getScore(), review.getSelfScore())) {
             return Optional.of(ErrorCode.SCORE_DIFFERENCE_ZERO);
         }
 

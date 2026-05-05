@@ -6,8 +6,8 @@ type EvaluateRequest struct {
 
 type EvaluateResponse struct {
 	Success     bool     `json:"success"`
-	Level       string   `json:"level,omitempty"`
-	Score       int      `json:"score,omitempty"`
-	Suggestions []string `json:"suggestions,omitempty"`
+	Level       string   `json:"level"`
+	Score       int      `json:"score"`
+	Suggestions []string `json:"suggestions"`
 	Error       string   `json:"error,omitempty"`
 }

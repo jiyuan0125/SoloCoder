@@ -52,14 +52,14 @@ public class LeaveController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<LeaveRecordDTO> getLeaveRecord(@PathVariable Long id) {
+    public ApiResponse<LeaveRecordDTO> getLeaveRecord(@PathVariable("id") Long id) {
         return leaveService.getLeaveRecord(id)
                 .map(record -> ApiResponse.success(toDTO(record)))
                 .orElse(ApiResponse.error(ErrorCode.LEAVE_NOT_FOUND));
     }
 
     @GetMapping("/employee/{employeeId}")
-    public ApiResponse<List<LeaveRecordDTO>> getEmployeeLeaves(@PathVariable Long employeeId) {
+    public ApiResponse<List<LeaveRecordDTO>> getEmployeeLeaves(@PathVariable("employeeId") Long employeeId) {
         List<LeaveRecordDTO> dtos = leaveService.getLeaveRecordsByEmployee(employeeId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());

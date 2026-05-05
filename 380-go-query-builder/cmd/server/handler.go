@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"querybuilder/pkg/common"
 	"querybuilder/pkg/querybuilder"
@@ -39,7 +40,12 @@ func (h *Handler) BuildQuery(w http.ResponseWriter, r *http.Request) {
 		case querybuilder.ConditionTypeIn:
 			qb = qb.In(cond.Field, cond.Values...)
 		case querybuilder.ConditionTypeLike:
-			qb = qb.Like(cond.Field, cond.Value.(string), cond.LikeType)
+			valueStr := interfaceToString(cond.Value)
+			likeType := cond.LikeType
+			if likeType == "" {
+				likeType = querybuilder.LikeTypeBoth
+			}
+			qb = qb.Like(cond.Field, valueStr, likeType)
 		}
 	}
 
@@ -54,4 +60,22 @@ func (h *Handler) BuildQuery(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(common.NewSuccessResponse(query))
+}
+
+func interfaceToString(v interface{}) string {
+	if v == nil {
+		return ""
+	}
+	switch val := v.(type) {
+	case string:
+		return val
+	case int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64:
+		return fmt.Sprintf("%d", val)
+	case float32, float64:
+		return fmt.Sprintf("%v", val)
+	case bool:
+		return fmt.Sprintf("%t", val)
+	default:
+		return fmt.Sprintf("%v", val)
+	}
 }

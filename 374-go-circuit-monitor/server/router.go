@@ -15,68 +15,13 @@ func NewRouter(registry *circuitbreaker.Registry) http.Handler {
 	mux.HandleFunc("GET /api/circuits", handler.ListCircuits)
 	mux.HandleFunc("POST /api/circuits", handler.CreateCircuit)
 
-	mux.HandleFunc("GET /api/circuits/", handler.GetCircuit)
-	mux.HandleFunc("POST /api/circuits/", handler.HandleCircuitPost)
+	mux.HandleFunc("GET /api/circuits/{name}", handler.GetCircuit)
+	mux.HandleFunc("GET /api/circuits/{name}/config", handler.GetConfig)
+
+	mux.HandleFunc("POST /api/circuits/{name}/reset", handler.ResetCircuit)
+	mux.HandleFunc("POST /api/circuits/{name}/force-state", handler.ForceState)
+	mux.HandleFunc("POST /api/circuits/{name}/save", handler.SaveState)
+	mux.HandleFunc("POST /api/circuits/{name}/load", handler.LoadState)
 
 	return mux
-}
-
-func (h *Handler) HandleCircuitPost(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
-	parts := splitPath(path)
-
-	if len(parts) < 4 {
-		writeError(w, http.StatusBadRequest, "invalid path")
-		return
-	}
-
-	if len(parts) == 4 {
-		name := parts[3]
-		if name == "" {
-			writeError(w, http.StatusBadRequest, "circuit name is required")
-			return
-		}
-
-		writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-		return
-	}
-
-	action := parts[4]
-	switch action {
-	case "reset":
-		h.ResetCircuit(w, r)
-	case "force-state":
-		h.ForceState(w, r)
-	case "config":
-		if r.Method == http.MethodGet {
-			h.GetConfig(w, r)
-		} else {
-			writeError(w, http.StatusMethodNotAllowed, "method not allowed")
-		}
-	case "save":
-		h.SaveState(w, r)
-	case "load":
-		h.LoadState(w, r)
-	default:
-		writeError(w, http.StatusNotFound, "unknown action")
-	}
-}
-
-func splitPath(path string) []string {
-	var parts []string
-	current := ""
-	for _, c := range path {
-		if c == '/' {
-			if current != "" {
-				parts = append(parts, current)
-				current = ""
-			}
-		} else {
-			current += string(c)
-		}
-	}
-	if current != "" {
-		parts = append(parts, current)
-	}
-	return parts
 }

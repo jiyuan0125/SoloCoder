@@ -6,6 +6,7 @@ import com.payroll.server.entity.DeductionDetail;
 import com.payroll.server.entity.PayrollArchive;
 import com.payroll.server.repository.PayrollArchiveRepository;
 import com.payroll.server.util.ChecksumUtil;
+import com.payroll.server.util.MaskUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -237,6 +238,25 @@ public class PayrollArchiveService {
         comparison.setMonthlyComparisons(monthlyComparisons);
 
         return comparison;
+    }
+
+    public AnnualReportExportDTO exportAnnualReport(int year) {
+        AnnualReportDTO summary = generateAnnualReport(year);
+        List<PayrollArchive> archives = repository.findByYear(year).stream()
+                .filter(a -> a.getStatus() == ArchiveStatus.CONFIRMED)
+                .collect(Collectors.toList());
+
+        List<PayrollArchiveDTO> maskedArchives = archives.stream()
+                .map(a -> {
+                    boolean isValid = ChecksumUtil.verifyChecksum(a, a.getChecksum());
+                    PayrollArchiveDTO dto = convertToDTO(a, isValid);
+                    dto.setEmployeeName(MaskUtil.maskName(dto.getEmployeeName()));
+                    dto.setIdCard(MaskUtil.maskIdCard(dto.getIdCard()));
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return new AnnualReportExportDTO(summary, maskedArchives);
     }
 
     private BigDecimal calculateYearOverYearChange(int year) {

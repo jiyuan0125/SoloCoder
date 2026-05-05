@@ -22,6 +22,8 @@ compile_commands.json
 vendor/
 go/
 .gopath/
+*-bin
+checkpoints/
 
 # ===== Electron / Node.js (321-350) =====
 node_modules/
@@ -43,3 +45,5 @@ venv/
 build/
 target/
 data/
+dependency-reduced-pom.xml
+*.tsbuildinfo

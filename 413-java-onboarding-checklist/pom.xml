@@ -18,6 +18,7 @@
         <spring-boot.version>3.2.0</spring-boot.version>
         <jackson.version>2.16.0</jackson.version>
         <junit.version>5.10.0</junit.version>
+        <jakarta-validation.version>3.0.2</jakarta-validation.version>
     </properties>
 
     <modules>
@@ -59,6 +60,11 @@
                 <artifactId>junit-jupiter-engine</artifactId>
                 <version>${junit.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>jakarta.validation</groupId>
+                <artifactId>jakarta.validation-api</artifactId>
+                <version>${jakarta-validation.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>

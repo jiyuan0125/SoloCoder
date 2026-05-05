@@ -4,13 +4,14 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.*;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -32,10 +33,12 @@ public class HttpClient {
         HttpGet httpGet = new HttpGet(BASE_URL + path);
         httpGet.setHeader("Content-Type", "application/json");
         
-        HttpResponse response = httpClient.execute(httpGet);
-        String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-        
-        return objectMapper.readValue(responseBody, responseType);
+        return httpClient.execute(httpGet, response -> {
+            int statusCode = response.getCode();
+            HttpEntity entity = response.getEntity();
+            String responseBody = entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "";
+            return objectMapper.readValue(responseBody, responseType);
+        });
     }
 
     public <T> T post(String path, Object requestBody, Class<T> responseType) throws IOException {
@@ -47,11 +50,11 @@ public class HttpClient {
             httpPost.setEntity(new StringEntity(jsonBody, StandardCharsets.UTF_8));
         }
         
-        HttpResponse response = httpClient.execute(httpPost);
-        HttpEntity entity = response.getEntity();
-        String responseBody = entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "";
-        
-        return objectMapper.readValue(responseBody, responseType);
+        return httpClient.execute(httpPost, response -> {
+            HttpEntity entity = response.getEntity();
+            String responseBody = entity != null ? EntityUtils.toString(entity, StandardCharsets.UTF_8) : "";
+            return objectMapper.readValue(responseBody, responseType);
+        });
     }
 
     public void close() throws IOException {

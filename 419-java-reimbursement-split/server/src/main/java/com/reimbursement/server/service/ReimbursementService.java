@@ -252,6 +252,14 @@ public class ReimbursementService {
                 monthlyReportService.addAllocationToReport(reimbursement);
             }
         } else {
+            for (ReimbursementAllocation allocation : reimbursement.getAllocations()) {
+                allocation.setApprovalStatus(ApprovalStatus.PENDING);
+                allocation.setApproverId(null);
+                allocation.setApproverName(null);
+                allocation.setApprovalTime(null);
+                allocation.setComment(null);
+            }
+
             targetAllocation.setApprovalStatus(ApprovalStatus.REJECTED);
             targetAllocation.setApproverId(request.getApproverId());
             targetAllocation.setApproverName(request.getApproverName());

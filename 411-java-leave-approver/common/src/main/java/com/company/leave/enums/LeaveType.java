@@ -1,9 +1,9 @@
 package com.company.leave.enums;
 
 public enum LeaveType {
-    ANNUAL("年假", true, false),
+    ANNUAL("年假", false, false),
     SICK("病假", true, true),
-    PERSONAL("事假", true, true),
+    PERSONAL("事假", true, false),
     MARRIAGE("婚假", false, true),
     MATERNITY("产假", false, true),
     PATERNITY("陪产假", false, false);

@@ -35,6 +35,7 @@ export function createCustomer(request: CreateCustomerRequest): Customer {
     email: request.email,
     status: 'trial',
     trialEndAt,
+    frozenAt: null,
     createdAt: now,
     updatedAt: now,
   };
@@ -73,6 +74,7 @@ export function checkAndUpdateCustomerStatus(customerId: string): Customer {
       const monthsOverdue = getMonthsBetween(oldestBill.dueAt, now);
       if (monthsOverdue >= FREEZE_AFTER_MONTHS_OVERDUE) {
         customer.status = 'frozen';
+        customer.frozenAt = now;
         customer.updatedAt = now;
         saveCustomer(customer);
       }
@@ -84,7 +86,11 @@ export function checkAndUpdateCustomerStatus(customerId: string): Customer {
 
 export function updateCustomerStatus(customerId: string, status: CustomerStatus): Customer {
   const customer = getCustomer(customerId);
+  const wasFrozen = customer.status === 'frozen';
   customer.status = status;
+  if (wasFrozen && status !== 'frozen') {
+    customer.frozenAt = null;
+  }
   customer.updatedAt = getCurrentDate();
   saveCustomer(customer);
   return customer;

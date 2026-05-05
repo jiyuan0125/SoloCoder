@@ -9,6 +9,9 @@ import (
 
 func main() {
 	flag.Usage = printUsage
+
+	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
+
 	flag.Parse()
 
 	args := flag.Args()
@@ -17,7 +20,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
 	cmd := args[0]
 
 	client := NewClient(*serverURL)

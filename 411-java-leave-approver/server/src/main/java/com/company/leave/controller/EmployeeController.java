@@ -3,6 +3,7 @@ package com.company.leave.controller;
 import com.company.leave.dto.ApiResponse;
 import com.company.leave.dto.EmployeeDTO;
 import com.company.leave.entity.Employee;
+import com.company.leave.service.AnnualLeaveService;
 import com.company.leave.service.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,9 +15,11 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/employees")
 public class EmployeeController {
     private final EmployeeService employeeService;
+    private final AnnualLeaveService annualLeaveService;
 
-    public EmployeeController(EmployeeService employeeService) {
+    public EmployeeController(EmployeeService employeeService, AnnualLeaveService annualLeaveService) {
         this.employeeService = employeeService;
+        this.annualLeaveService = annualLeaveService;
     }
 
     @PostMapping
@@ -30,7 +33,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<EmployeeDTO> getEmployee(@PathVariable Long id) {
+    public ApiResponse<EmployeeDTO> getEmployee(@PathVariable("id") Long id) {
         return employeeService.getEmployee(id)
                 .map(emp -> ApiResponse.success(toDTO(emp)))
                 .orElse(ApiResponse.error(com.company.leave.enums.ErrorCode.EMPLOYEE_NOT_FOUND));
@@ -45,7 +48,7 @@ public class EmployeeController {
     }
 
     @GetMapping("/manager/{managerId}/team")
-    public ApiResponse<List<EmployeeDTO>> getTeamMembers(@PathVariable Long managerId) {
+    public ApiResponse<List<EmployeeDTO>> getTeamMembers(@PathVariable("managerId") Long managerId) {
         List<EmployeeDTO> dtos = employeeService.getTeamMembers(managerId).stream()
                 .map(this::toDTO)
                 .collect(Collectors.toList());
@@ -58,6 +61,11 @@ public class EmployeeController {
         dto.setName(employee.getName());
         dto.setManagerId(employee.getManagerId());
         dto.setJoinDate(employee.getJoinDate());
+        
+        int yearsOfService = annualLeaveService.calculateYearsOfService(
+                employee.getJoinDate(), LocalDate.now());
+        dto.setYearsOfService(yearsOfService);
+        
         dto.setAnnualLeaveQuota(employee.getAnnualLeaveQuota());
         dto.setAnnualLeaveRemaining(employee.getAnnualLeaveRemaining());
         dto.setCarriedOverLeave(employee.getCarriedOverLeave());

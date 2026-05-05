@@ -1,0 +1,8 @@
+{"level":"error","message":"数据库连接超时，主库192.168.1.100:3306连接失败，已切换到备用数据库节点，但响应延迟明显升高，当前连接池使用率已达百分之九十五以上，需要立即处理"}
+{"level":"info","message":"系统正常启动完成，所有服务运行良好"}
+{"level":"warn","message":"磁盘空间不足预警，根分区使用率已达到百分之八十五，请及时清理不必要的文件释放空间"}
+{"level":"fatal","message":"这是一条致命级别的告警消息用于测试所有渠道是否都能正常转发，包括邮件、短信和钉钉机器人三个不同的通知渠道"}
+{"level":"error","message":"short error"}
+this is not valid json
+{"message":"这条没有level字段应该默认为info"}
+{"level":"unknown_level","message":"未知级别测试"}

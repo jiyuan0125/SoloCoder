@@ -1,6 +1,7 @@
 package main
 
 import (
+	"strconv"
 	"sync"
 	"time"
 
@@ -151,7 +152,7 @@ func (s *ProgressStore) AddSubTask(parentID string, total int64, weight float64)
 func (s *ProgressStore) generateID() string {
 	id := s.nextID
 	s.nextID++
-	return "p_" + string(rune(id))
+	return "p_" + strconv.FormatInt(id, 10)
 }
 
 func (s *ProgressStore) toStatus(id string, entry *progressEntry) *common.ProgressStatus {
@@ -172,7 +173,8 @@ func (s *ProgressStore) toStatus(id string, entry *progressEntry) *common.Progre
 		Remaining:   remaining,
 		Description: entry.description,
 		IsDone:      tracker.IsDone(),
-		IsCancelled: tracker.IsClosed(),
+		IsCancelled: tracker.IsCancelled(),
+		IsClosed:    tracker.IsClosed(),
 		CreatedAt:   entry.createdAt,
 	}
 }

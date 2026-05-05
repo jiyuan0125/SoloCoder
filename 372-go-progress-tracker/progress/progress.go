@@ -19,12 +19,13 @@ type Tracker struct {
 	cancel    context.CancelFunc
 	ctx       context.Context
 	closed    bool
+	cancelled bool
 }
 
 type SubTask struct {
-	tracker    *Tracker
-	parent     *Tracker
-	weight     float64
+	tracker *Tracker
+	parent  *Tracker
+	weight  float64
 }
 
 func New(total int64) *Tracker {
@@ -46,20 +47,22 @@ func NewWithContext(ctx context.Context, total int64) *Tracker {
 
 func (t *Tracker) Update(delta int64) {
 	t.mu.Lock()
-	defer t.mu.Unlock()
 
-	if t.closed {
+	if t.closed || t.cancelled {
+		t.mu.Unlock()
 		return
 	}
 
 	select {
 	case <-t.ctx.Done():
+		t.mu.Unlock()
 		return
 	default:
 	}
 
 	newCurrent := t.current + delta
 	if newCurrent <= t.current {
+		t.mu.Unlock()
 		return
 	}
 
@@ -68,24 +71,35 @@ func (t *Tracker) Update(delta int64) {
 	}
 
 	t.current = newCurrent
-	t.notifyCallbacks()
+
+	current := t.current
+	total := t.total
+	percentage := t.calculatePercentageLocked()
+	callbacks := make([]ProgressCallback, len(t.callbacks))
+	copy(callbacks, t.callbacks)
+
+	t.mu.Unlock()
+
+	t.notifyCallbacksWithValues(callbacks, current, total, percentage)
 }
 
 func (t *Tracker) Set(current int64) {
 	t.mu.Lock()
-	defer t.mu.Unlock()
 
-	if t.closed {
+	if t.closed || t.cancelled {
+		t.mu.Unlock()
 		return
 	}
 
 	select {
 	case <-t.ctx.Done():
+		t.mu.Unlock()
 		return
 	default:
 	}
 
 	if current <= t.current {
+		t.mu.Unlock()
 		return
 	}
 
@@ -94,7 +108,16 @@ func (t *Tracker) Set(current int64) {
 	}
 
 	t.current = current
-	t.notifyCallbacks()
+
+	savedCurrent := t.current
+	savedTotal := t.total
+	percentage := t.calculatePercentageLocked()
+	callbacks := make([]ProgressCallback, len(t.callbacks))
+	copy(callbacks, t.callbacks)
+
+	t.mu.Unlock()
+
+	t.notifyCallbacksWithValues(callbacks, savedCurrent, savedTotal, percentage)
 }
 
 func (t *Tracker) Current() int64 {
@@ -112,19 +135,22 @@ func (t *Tracker) Total() int64 {
 func (t *Tracker) Percentage() float64 {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
+	return t.calculatePercentageLocked()
+}
 
+func (t *Tracker) calculatePercentageLocked() float64 {
 	if t.total <= 0 {
 		return 0.0
 	}
 
 	if len(t.subTasks) > 0 {
-		return t.calculateSubTaskPercentage()
+		return t.calculateSubTaskPercentageLocked()
 	}
 
 	return (float64(t.current) / float64(t.total)) * 100.0
 }
 
-func (t *Tracker) calculateSubTaskPercentage() float64 {
+func (t *Tracker) calculateSubTaskPercentageLocked() float64 {
 	var totalPercentage float64
 	var totalWeight float64
 
@@ -134,7 +160,10 @@ func (t *Tracker) calculateSubTaskPercentage() float64 {
 			continue
 		default:
 		}
-		totalPercentage += st.tracker.Percentage() * st.weight
+		st.tracker.mu.RLock()
+		subPercentage := st.tracker.calculatePercentageLocked()
+		st.tracker.mu.RUnlock()
+		totalPercentage += subPercentage * st.weight
 		totalWeight += st.weight
 	}
 
@@ -149,7 +178,7 @@ func (t *Tracker) RemainingTime() time.Duration {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	percentage := t.Percentage()
+	percentage := t.calculatePercentageLocked()
 
 	if percentage <= 0 {
 		return -1
@@ -170,10 +199,9 @@ func (t *Tracker) RegisterCallback(callback ProgressCallback) {
 	t.callbacks = append(t.callbacks, callback)
 }
 
-func (t *Tracker) notifyCallbacks() {
-	percentage := t.Percentage()
-	for _, cb := range t.callbacks {
-		cb(t.current, t.total, percentage)
+func (t *Tracker) notifyCallbacksWithValues(callbacks []ProgressCallback, current, total int64, percentage float64) {
+	for _, cb := range callbacks {
+		cb(current, total, percentage)
 	}
 }
 
@@ -183,7 +211,6 @@ func (t *Tracker) AddSubTask(total int64) *Tracker {
 
 func (t *Tracker) AddSubTaskWithWeight(total int64, weight float64) *Tracker {
 	t.mu.Lock()
-	defer t.mu.Unlock()
 
 	subTracker := NewWithContext(t.ctx, total)
 
@@ -196,19 +223,28 @@ func (t *Tracker) AddSubTaskWithWeight(total int64, weight float64) *Tracker {
 	t.subTasks = append(t.subTasks, subTask)
 
 	if weight == 0 {
-		t.rebalanceSubTaskWeights()
+		t.rebalanceSubTaskWeightsLocked()
 	}
 
+	parent := t
 	subTracker.RegisterCallback(func(current, total int64, percentage float64) {
-		t.mu.Lock()
-		defer t.mu.Unlock()
-		t.notifyCallbacks()
+		parent.mu.RLock()
+		parentCurrent := parent.current
+		parentTotal := parent.total
+		parentPercentage := parent.calculatePercentageLocked()
+		parentCallbacks := make([]ProgressCallback, len(parent.callbacks))
+		copy(parentCallbacks, parent.callbacks)
+		parent.mu.RUnlock()
+
+		parent.notifyCallbacksWithValues(parentCallbacks, parentCurrent, parentTotal, parentPercentage)
 	})
+
+	t.mu.Unlock()
 
 	return subTracker
 }
 
-func (t *Tracker) rebalanceSubTaskWeights() {
+func (t *Tracker) rebalanceSubTaskWeightsLocked() {
 	if len(t.subTasks) == 0 {
 		return
 	}
@@ -236,6 +272,12 @@ func (t *Tracker) Cancel() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
+	if t.cancelled || t.closed {
+		return
+	}
+
+	t.cancelled = true
+
 	if t.cancel != nil {
 		t.cancel()
 	}
@@ -249,7 +291,7 @@ func (t *Tracker) String() string {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	percentage := t.Percentage()
+	percentage := t.calculatePercentageLocked()
 	return fmt.Sprintf("已完成%d/%d (%.1f%%)", t.current, t.total, percentage)
 }
 
@@ -282,4 +324,10 @@ func (t *Tracker) IsClosed() bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	return t.closed
+}
+
+func (t *Tracker) IsCancelled() bool {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	return t.cancelled
 }

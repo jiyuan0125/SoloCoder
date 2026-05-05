@@ -32,8 +32,11 @@ func (h *EvaluateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	result, err := h.evaluator.Evaluate(req.Password)
 	if err != nil {
 		resp := api.EvaluateResponse{
-			Success: false,
-			Error:   err.Error(),
+			Success:     false,
+			Level:       "",
+			Score:       0,
+			Suggestions: []string{},
+			Error:       err.Error(),
 		}
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(resp)

@@ -791,19 +791,20 @@ func (l *Loader) Load(target interface{}) error {
 		return errors.New("target must be a non-nil pointer")
 	}
 
-	config, err := l.LoadToConfig()
+	defaults, requiredFields := l.extractDefaultsAndRequired(v.Elem())
+
+	loadedConfig, err := l.LoadToConfig()
 	if err != nil {
 		return err
 	}
 
-	defaults, requiredFields := l.extractDefaultsAndRequired(v.Elem())
-	config.Merge(defaults)
+	defaults.Merge(loadedConfig)
 
-	if err := config.Unmarshal(target); err != nil {
+	if err := defaults.Unmarshal(target); err != nil {
 		return err
 	}
 
-	missing := l.checkRequiredFields(config, requiredFields)
+	missing := l.checkRequiredFields(defaults, requiredFields)
 	if len(missing) > 0 {
 		return &MissingRequiredError{Fields: missing}
 	}
@@ -881,9 +882,14 @@ func (l *Loader) loadFromFile(path string) (*Config, error) {
 }
 
 // loadFromEnv loads configuration from environment variables.
+// Only loads environment variables if envPrefix is set.
 func (l *Loader) loadFromEnv() *Config {
 	config := New()
 	prefix := strings.ToUpper(l.envPrefix)
+
+	if prefix == "" {
+		return config
+	}
 
 	for _, env := range os.Environ() {
 		parts := strings.SplitN(env, "=", 2)
@@ -894,12 +900,10 @@ func (l *Loader) loadFromEnv() *Config {
 		key := parts[0]
 		value := parts[1]
 
-		if prefix != "" {
-			if !strings.HasPrefix(key, prefix+"_") {
-				continue
-			}
-			key = strings.TrimPrefix(key, prefix+"_")
+		if !strings.HasPrefix(key, prefix+"_") {
+			continue
 		}
+		key = strings.TrimPrefix(key, prefix+"_")
 
 		path := strings.ReplaceAll(strings.ToLower(key), "_", ".")
 		config.Set(path, parseValue(value), SourceEnv)

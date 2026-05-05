@@ -84,9 +84,13 @@ function handleFrozenPeriodUsage(customerId: string): void {
   const customer = getCustomer(customerId);
   const now = getCurrentDate();
 
+  if (!customer.frozenAt) {
+    return;
+  }
+
   const recentUsage = findUsageRecordsByCustomerId(
     customerId,
-    customer.updatedAt,
+    customer.frozenAt,
     now
   );
 

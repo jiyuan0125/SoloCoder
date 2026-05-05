@@ -1,0 +1,7 @@
+Operation,Key,Old_ID,Old_Name,Old_Age,Old_City,New_ID,New_Name,New_Age,New_City
+MODIFY,2,2,Bob,25,Manchester,2,Bob,25,London
+ADD,4,,,,,4,David,40,Tokyo
+ADD,5,,,,,5,Emma,28,Sydney
+ADD,6,,,,,6,Frank,33,Berlin
+DELETE,7,7,Grace,29,Madrid,,,,
+DELETE,8,8,Henry,45,Rome,,,,

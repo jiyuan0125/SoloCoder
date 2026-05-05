@@ -85,9 +85,9 @@ func (h *Handler) CreateCircuit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var config circuitbreaker.Config
+	var err error
 	if req.Config != nil {
-		config = circuitbreaker.Config{
+		config := circuitbreaker.Config{
 			WindowSize:          req.Config.WindowSize,
 			FailureThreshold:    req.Config.FailureThreshold,
 			OpenTimeout:         req.Config.OpenTimeout,
@@ -109,9 +109,10 @@ func (h *Handler) CreateCircuit(w http.ResponseWriter, r *http.Request) {
 		if config.SuccessThreshold == 0 {
 			config.SuccessThreshold = circuitbreaker.DefaultSuccessThreshold
 		}
+		_, err = h.registry.Register(req.Name, config)
+	} else {
+		_, err = h.registry.Register(req.Name)
 	}
-
-	_, err := h.registry.Register(req.Name, config)
 	if err != nil {
 		if strings.Contains(err.Error(), "already registered") {
 			writeError(w, http.StatusConflict, err.Error())
@@ -260,12 +261,7 @@ func (h *Handler) HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func getCircuitName(r *http.Request) string {
-	path := r.URL.Path
-	parts := strings.Split(path, "/")
-	if len(parts) >= 4 {
-		return parts[3]
-	}
-	return ""
+	return r.PathValue("name")
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {

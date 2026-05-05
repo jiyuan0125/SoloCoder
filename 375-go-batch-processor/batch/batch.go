@@ -193,7 +193,7 @@ func (bp *BatchProcessor[T]) run() {
 			return
 
 		case <-bp.processChan:
-			bp.processIfNeeded()
+			bp.processBatch()
 
 		case <-bp.timerChannel():
 			bp.timerMu.Lock()

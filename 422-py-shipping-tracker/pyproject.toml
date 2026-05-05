@@ -1,0 +1,56 @@
+[project]
+name = "shipping-tracker"
+version = "0.1.0"
+description = "物流跟踪系统 - 多包架构"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "pydantic>=2.5.0",
+    "pydantic-settings>=2.1.0",
+    "httpx>=0.26.0",
+    "click>=8.1.0",
+    "rich>=13.7.0",
+    "typing-extensions>=4.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8.0",
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.1.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_no_return = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = [
+    "httpx.*",
+    "click.*",
+    "rich.*",
+]
+ignore_missing_imports = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "server", "cli"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

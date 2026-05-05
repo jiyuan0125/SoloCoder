@@ -20,6 +20,7 @@ export interface Customer {
   email: string;
   status: CustomerStatus;
   trialEndAt: string | null;
+  frozenAt: string | null;
   createdAt: string;
   updatedAt: string;
 }

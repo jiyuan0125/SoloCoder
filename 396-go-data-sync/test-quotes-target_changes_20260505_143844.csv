@@ -1,0 +1,3 @@
+Operation,Key,Old_ID,Old_Name,Old_Description,Old_Price,New_ID,New_Name,New_Description,New_Price
+MODIFY,1,1,Widget A,"A nice, red widget",9.99,1,Widget A,"A nice, blue widget",9.99
+ADD,3,,,,,3,Widget C,Simple,5.50

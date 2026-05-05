@@ -16,9 +16,9 @@ public class CalendarController {
 
     @GetMapping("/team/{managerId}")
     public ApiResponse<CalendarViewDTO> getTeamCalendar(
-            @PathVariable Long managerId,
-            @RequestParam int year,
-            @RequestParam int month) {
+            @PathVariable("managerId") Long managerId,
+            @RequestParam("year") int year,
+            @RequestParam("month") int month) {
         CalendarViewDTO calendar = calendarService.getTeamCalendar(managerId, year, month);
         return ApiResponse.success(calendar);
     }

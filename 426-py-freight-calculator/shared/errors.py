@@ -1,0 +1,31 @@
+from enum import Enum
+from typing import Final
+
+
+class ErrorCode(Enum):
+    INVALID_PACKAGE = "INVALID_PACKAGE"
+    INVALID_TRANSPORT_MODE = "INVALID_TRANSPORT_MODE"
+    INVALID_CONTAINER_TYPE = "INVALID_CONTAINER_TYPE"
+    EXCEEDED_MAX_PACKAGES = "EXCEEDED_MAX_PACKAGES"
+    INVALID_WEIGHT = "INVALID_WEIGHT"
+    INVALID_DIMENSIONS = "INVALID_DIMENSIONS"
+    REMOTE_AREA_CONFIG_ERROR = "REMOTE_AREA_CONFIG_ERROR"
+    DISCOUNT_CONFIG_ERROR = "DISCOUNT_CONFIG_ERROR"
+    CACHE_ERROR = "CACHE_ERROR"
+    INTERNAL_ERROR = "INTERNAL_ERROR"
+    INVALID_REQUEST = "INVALID_REQUEST"
+
+
+error_messages: Final[dict[ErrorCode, str]] = {
+    ErrorCode.INVALID_PACKAGE: "无效的包裹信息",
+    ErrorCode.INVALID_TRANSPORT_MODE: "无效的运输方式",
+    ErrorCode.INVALID_CONTAINER_TYPE: "无效的集装箱类型，海运必须指定集装箱类型",
+    ErrorCode.EXCEEDED_MAX_PACKAGES: "批量计算一次最多100个包裹",
+    ErrorCode.INVALID_WEIGHT: "包裹重量必须大于0",
+    ErrorCode.INVALID_DIMENSIONS: "包裹尺寸必须大于0",
+    ErrorCode.REMOTE_AREA_CONFIG_ERROR: "偏远地区配置错误",
+    ErrorCode.DISCOUNT_CONFIG_ERROR: "折扣配置错误",
+    ErrorCode.CACHE_ERROR: "缓存操作错误",
+    ErrorCode.INTERNAL_ERROR: "服务器内部错误",
+    ErrorCode.INVALID_REQUEST: "无效的请求参数",
+}

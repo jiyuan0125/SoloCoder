@@ -277,6 +277,14 @@ func (qb *QueryBuilder) processCondition(cond Condition) *Condition {
 		if startOk && endOk && start > end {
 			rangeCond.Start, rangeCond.End = rangeCond.End, rangeCond.Start
 			cond.Value = rangeCond
+		} else if !startOk || !endOk {
+			startStr, startOkStr := toString(rangeCond.Start)
+			endStr, endOkStr := toString(rangeCond.End)
+			
+			if startOkStr && endOkStr && startStr > endStr {
+				rangeCond.Start, rangeCond.End = rangeCond.End, rangeCond.Start
+				cond.Value = rangeCond
+			}
 		}
 		
 		return &cond
@@ -328,6 +336,18 @@ func toFloat64(v interface{}) (float64, bool) {
 		return float64(val), true
 	default:
 		return 0, false
+	}
+}
+
+func toString(v interface{}) (string, bool) {
+	if v == nil {
+		return "", false
+	}
+	switch val := v.(type) {
+	case string:
+		return val, true
+	default:
+		return "", false
 	}
 }
 

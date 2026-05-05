@@ -33,7 +33,7 @@ public class ApplicationRepository {
         return new ArrayList<>(applications.values());
     }
 
-    public List<ApplicationDTO> findByPosition(String position, Stage stage, SourceChannel sourceChannel) {
+    public List<ApplicationDTO> findByFilters(String position, Stage stage) {
         return applications.values().stream()
                 .filter(a -> position == null || position.isEmpty() || a.getPosition().contains(position))
                 .filter(a -> stage == null || a.getCurrentStage() == stage)

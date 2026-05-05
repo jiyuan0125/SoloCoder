@@ -331,15 +331,7 @@ public class ShiftRuleValidator {
         int prevEndHour = previous.getEndHour();
         int nextStartHour = next.getStartHour();
         
-        if (prevEndHour == 24) {
-            prevEndHour = 0;
-        }
-        
-        if (prevEndHour < nextStartHour) {
-            return nextStartHour - prevEndHour;
-        } else {
-            return (24 - prevEndHour) + nextStartHour;
-        }
+        return (24 - prevEndHour) + nextStartHour;
     }
 
     private List<ShiftEntity> getShiftsForWeekContaining(List<ShiftEntity> shifts, LocalDate date) {
@@ -394,7 +386,7 @@ public class ShiftRuleValidator {
                 ShiftEntity newShift = new ShiftEntity();
                 newShift.setId(shift.getId());
                 newShift.setEmployeeId(currentEmployeeId);
-                newShift.setDate(otherShift.getDate());
+                newShift.setDate(currentShift.getDate());
                 newShift.setShiftType(otherShift.getShiftType());
                 newShift.setPublished(shift.isPublished());
                 newShift.setPublishTime(shift.getPublishTime());

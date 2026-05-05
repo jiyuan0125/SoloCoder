@@ -74,8 +74,13 @@ public class RegistrationService {
 
         Optional<Registration> existingOpt = registrationRepository.findByEmployeeIdAndCourseId(
                 employee.getId(), course.getId());
-        if (existingOpt.isPresent() && existingOpt.get().getStatus() != RegistrationStatus.CANCELLED) {
-            throw new RuntimeException(ErrorCode.ALREADY_REGISTERED.getMessage());
+        if (existingOpt.isPresent()) {
+            Registration existing = existingOpt.get();
+            if (existing.getStatus() == RegistrationStatus.REGISTERED || 
+                existing.getStatus() == RegistrationStatus.CANCEL_PENDING ||
+                existing.getStatus() == RegistrationStatus.COMPLETED) {
+                throw new RuntimeException(ErrorCode.ALREADY_REGISTERED.getMessage());
+            }
         }
 
         int currentEnrollment = registrationRepository.countByCourseId(course.getId());

@@ -154,8 +154,12 @@ func (cb *circuitBreaker) MarkFailure() {
 		}
 	} else if cb.state == StateHalfOpen {
 		cb.halfOpenFailures++
-		if cb.halfOpenRequests >= cb.config.HalfOpenMaxRequests || cb.halfOpenFailures > 0 {
-			cb.transitionTo(StateOpen)
+		if cb.halfOpenRequests >= cb.config.HalfOpenMaxRequests {
+			if cb.halfOpenFailures > 0 {
+				cb.transitionTo(StateOpen)
+			} else {
+				cb.transitionTo(StateClosed)
+			}
 		}
 	}
 }

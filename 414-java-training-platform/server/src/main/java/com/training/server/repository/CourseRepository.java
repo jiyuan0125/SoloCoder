@@ -1,5 +1,6 @@
 package com.training.server.repository;
 
+import com.training.common.enums.CourseStatus;
 import com.training.server.entity.Course;
 import org.springframework.stereotype.Repository;
 
@@ -39,6 +40,16 @@ public class CourseRepository {
         List<Course> result = new ArrayList<>();
         for (Course course : courses.values()) {
             if (instructorId.equals(course.getInstructorId())) {
+                result.add(course);
+            }
+        }
+        return result;
+    }
+
+    public List<Course> findByStatus(CourseStatus status) {
+        List<Course> result = new ArrayList<>();
+        for (Course course : courses.values()) {
+            if (status == course.getStatus()) {
                 result.add(course);
             }
         }

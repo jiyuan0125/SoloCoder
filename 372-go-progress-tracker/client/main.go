@@ -256,6 +256,7 @@ func printProgressStatus(status *common.ProgressStatus) {
 	}
 	fmt.Printf("Is Done:     %v\n", status.IsDone)
 	fmt.Printf("Is Cancelled:%v\n", status.IsCancelled)
+	fmt.Printf("Is Closed:   %v\n", status.IsClosed)
 	fmt.Printf("Created At:  %s\n", status.CreatedAt.Format(time.RFC3339))
 }
 

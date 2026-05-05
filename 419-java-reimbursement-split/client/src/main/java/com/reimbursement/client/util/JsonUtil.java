@@ -223,24 +223,100 @@ public class JsonUtil {
 
     private static List<Object> parseArray(String json) {
         List<Object> result = new ArrayList<>();
-        json = json.substring(1, json.length() - 1).trim();
         
-        int index = 0;
-        while (index < json.length()) {
-            while (index < json.length() && Character.isWhitespace(json.charAt(index))) {
+        int index = 1;
+        int len = json.length();
+        
+        while (index < len - 1) {
+            while (index < len && Character.isWhitespace(json.charAt(index))) {
                 index++;
             }
-            if (index >= json.length()) {
+            if (index >= len - 1 || json.charAt(index) == ']') {
                 break;
             }
 
-            Object value = parseValue(json, index);
-            result.add(value);
+            ParseResult parseResult = parseValueWithPosition(json, index);
+            if (parseResult.value != null) {
+                result.add(parseResult.value);
+            }
+            index = parseResult.endPosition;
 
-            index = findNextSeparator(json, index);
+            while (index < len && Character.isWhitespace(json.charAt(index))) {
+                index++;
+            }
+            if (index < len && json.charAt(index) == ',') {
+                index++;
+            } else if (index < len && json.charAt(index) == ']') {
+                break;
+            }
         }
 
         return result;
+    }
+
+    private static class ParseResult {
+        Object value;
+        int endPosition;
+        
+        ParseResult(Object value, int endPosition) {
+            this.value = value;
+            this.endPosition = endPosition;
+        }
+    }
+
+    private static ParseResult parseValueWithPosition(String json, int startIndex) {
+        int index = startIndex;
+        while (index < json.length() && Character.isWhitespace(json.charAt(index))) {
+            index++;
+        }
+
+        if (index >= json.length()) {
+            return new ParseResult(null, index);
+        }
+
+        char c = json.charAt(index);
+        
+        if (c == '"') {
+            int end = findNextQuote(json, index + 1);
+            String value = json.substring(index + 1, end);
+            return new ParseResult(value, end + 1);
+        }
+        
+        if (c == '{') {
+            int end = findMatchingBrace(json, index);
+            Map<String, Object> value = parseJson(json.substring(index, end + 1));
+            return new ParseResult(value, end + 1);
+        }
+        
+        if (c == '[') {
+            int end = findMatchingBracket(json, index);
+            List<Object> value = parseArray(json.substring(index, end + 1));
+            return new ParseResult(value, end + 1);
+        }
+        
+        if (c == 't' && json.startsWith("true", index)) {
+            return new ParseResult(true, index + 4);
+        }
+        
+        if (c == 'f' && json.startsWith("false", index)) {
+            return new ParseResult(false, index + 5);
+        }
+        
+        if (c == 'n' && json.startsWith("null", index)) {
+            return new ParseResult(null, index + 4);
+        }
+
+        int end = findEndOfValue(json, index);
+        String valueStr = json.substring(index, end);
+        
+        try {
+            if (valueStr.contains(".")) {
+                return new ParseResult(new BigDecimal(valueStr), end);
+            }
+            return new ParseResult(Integer.parseInt(valueStr), end);
+        } catch (NumberFormatException e) {
+            return new ParseResult(valueStr, end);
+        }
     }
 
     private static int findNextQuote(String json, int start) {

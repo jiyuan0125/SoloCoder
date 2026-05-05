@@ -4,7 +4,6 @@ import com.payroll.common.dto.*;
 import com.payroll.common.enums.ErrorCode;
 import com.payroll.common.response.ApiResponse;
 import com.payroll.server.service.PayrollArchiveService;
-import com.payroll.server.util.MaskUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -120,9 +119,9 @@ public class PayrollArchiveController {
     }
 
     @GetMapping("/years/{year}/report/export")
-    public ApiResponse<AnnualReportDTO> exportAnnualReport(@PathVariable int year) {
+    public ApiResponse<AnnualReportExportDTO> exportAnnualReport(@PathVariable int year) {
         try {
-            AnnualReportDTO result = service.generateAnnualReport(year);
+            AnnualReportExportDTO result = service.exportAnnualReport(year);
             return ApiResponse.success(result);
         } catch (Exception e) {
             return ApiResponse.error(ErrorCode.INTERNAL_ERROR);

@@ -25,7 +25,7 @@ public class ReimbursementController {
     }
 
     @PostMapping("/submit/{id}")
-    public ApiResponse<ReimbursementDetailDTO> submitReimbursement(@PathVariable String id) {
+    public ApiResponse<ReimbursementDetailDTO> submitReimbursement(@PathVariable(name = "id") String id) {
         return reimbursementService.submitReimbursement(id);
     }
 
@@ -45,7 +45,7 @@ public class ReimbursementController {
     }
 
     @GetMapping("/{id}")
-    public ApiResponse<ReimbursementDetailDTO> getReimbursement(@PathVariable String id) {
+    public ApiResponse<ReimbursementDetailDTO> getReimbursement(@PathVariable(name = "id") String id) {
         return reimbursementService.getReimbursement(id);
     }
 
@@ -61,9 +61,9 @@ public class ReimbursementController {
 
     @GetMapping("/report/{year}/{month}/{costCenterId}")
     public ApiResponse<MonthlyReportDTO> getMonthlyReport(
-            @PathVariable int year,
-            @PathVariable int month,
-            @PathVariable String costCenterId) {
+            @PathVariable(name = "year") int year,
+            @PathVariable(name = "month") int month,
+            @PathVariable(name = "costCenterId") String costCenterId) {
         MonthlyReportDTO report = monthlyReportService.getMonthlyReport(year, month, costCenterId);
         if (report == null) {
             return ApiResponse.error(404, "报表不存在");
@@ -73,13 +73,13 @@ public class ReimbursementController {
 
     @GetMapping("/report/{year}/{month}")
     public ApiResponse<List<MonthlyReportDTO>> getAllMonthlyReports(
-            @PathVariable int year,
-            @PathVariable int month) {
+            @PathVariable(name = "year") int year,
+            @PathVariable(name = "month") int month) {
         return ApiResponse.success(monthlyReportService.getAllMonthlyReports(year, month));
     }
 
     @GetMapping("/budget-warning/{costCenterId}")
-    public ApiResponse<Boolean> checkBudgetWarning(@PathVariable String costCenterId) {
+    public ApiResponse<Boolean> checkBudgetWarning(@PathVariable(name = "costCenterId") String costCenterId) {
         return ApiResponse.success(monthlyReportService.checkBudgetWarning(costCenterId));
     }
 }

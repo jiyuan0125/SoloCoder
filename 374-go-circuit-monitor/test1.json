@@ -1,0 +1,21 @@
+{
+  "Name": "test1",
+  "Config": {
+    "WindowSize": 10,
+    "FailureThreshold": 6,
+    "OpenTimeout": 30000000000,
+    "HalfOpenMaxRequests": 3,
+    "SuccessThreshold": 10
+  },
+  "State": "half-open",
+  "TotalRequests": 0,
+  "SuccessCount": 0,
+  "FailureCount": 0,
+  "ConsecutiveSuccesses": 0,
+  "OpenAt": "2026-05-05T09:02:12.973989018+08:00",
+  "LastStateChange": "2026-05-05T09:02:12.992331357+08:00",
+  "HalfOpenRequests": 0,
+  "HalfOpenSuccesses": 0,
+  "HalfOpenFailures": 0,
+  "WindowRecords": []
+}

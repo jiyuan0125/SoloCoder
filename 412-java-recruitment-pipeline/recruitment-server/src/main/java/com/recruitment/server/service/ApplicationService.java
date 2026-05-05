@@ -6,11 +6,11 @@ import com.recruitment.common.request.*;
 import com.recruitment.common.response.ApiResponse;
 import com.recruitment.common.response.ApplicationDetailResponse;
 import com.recruitment.server.repository.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -283,6 +283,7 @@ public class ApplicationService {
         return ApiResponse.success(application);
     }
 
+    @Scheduled(fixedRate = 60000)
     public void checkExpiredOffers() {
         List<ApplicationDTO> applications = applicationRepository.findByStatus(ApplicationStatus.IN_PROGRESS);
         LocalDateTime now = LocalDateTime.now();

@@ -1,0 +1,37 @@
+[project]
+name = "inventory-alert"
+version = "0.1.0"
+description = "库存预警系统 - 避免断货和积压的智能库存监控"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
+    "pydantic>=2.10.0",
+    "pydantic-settings>=2.6.0",
+    "httpx>=0.28.0",
+    "click>=8.1.8",
+    "rich>=13.9.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.14.0",
+    "pytest>=8.3.0",
+]
+
+[project.scripts]
+inventory = "cli.main:main"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_unused_ignores = true
+no_implicit_optional = true
+strict_equality = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["shared", "server", "cli"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
