@@ -18,3 +18,23 @@
 | 分支/文件夹 | 435-go-helpdesk-ticket |
 
 ---
+
+## 435-go-helpdesk-ticket — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 第二轮 |
+| User Prompt | 我刚测了下创建工单接口，title传空字符串、description也传空，甚至submitter_id和submitter_name都不传，居然都能创建成功返回200，这个不应该吧？ |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 435-go-helpdesk-ticket |
+
+---
+
