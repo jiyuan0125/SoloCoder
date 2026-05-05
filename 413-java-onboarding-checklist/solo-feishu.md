@@ -18,3 +18,22 @@
 | 分支/文件夹 | 413-java-onboarding-checklist |
 
 ---
+
+## 413-java-onboarding-checklist — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我拉下来跑了下mvn clean package，common模块直接编译失败了，报了一堆jakarta.validation.constraints包找不到的错误。CreateEmployeeRequest和CreateChecklistItemRequest里面用了@NotBlank和@NotNull注解，但common的pom.xml里没有加jakarta.validation-api这个依赖，server模块虽然通过spring-boot-starter-validation间接带了，但common模块编译的时候根本拿不到。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1的jakarta.validation-api编译错误已修复（common/pom.xml已添加依赖），mvn clean package构建成功。但存在新的严重bug——maven-compiler-plugin缺少-parameters编译参数，导致所有使用@PathVariable的接口返回500错误（"Name for argument of type [java.lang.String] not specified, and parameter name information not found in class file either"），包括：GET/DELETE员工详情、添加/更新清单事项、GET/DELETE模板详情、复制模板、告警CRUD等，几乎全部非列表接口不可用。只有列表类接口（GET /api/employees、GET /api/templates、GET /api/alerts、GET /api/statistics）和POST /api/employees能正常工作。过程不满意：修复了编译问题但未做基本的运行时接口测试，否则一个curl调用即可发现所有@PathVariable接口全部500的问题 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 413-java-onboarding-checklist |
+
+---
