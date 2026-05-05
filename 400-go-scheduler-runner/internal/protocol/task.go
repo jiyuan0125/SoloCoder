@@ -5,13 +5,13 @@ import (
 )
 
 type TaskConfig struct {
-	Name        string        `json:"name"`
-	Command     string        `json:"command"`
-	CronExpr    string        `json:"cron_expr"`
-	Timeout     time.Duration `json:"timeout"`
-	MaxRetry    int           `json:"max_retry"`
+	Name          string        `json:"name"`
+	Command       string        `json:"command"`
+	CronExpr      string        `json:"cron_expr"`
+	Timeout       time.Duration `json:"timeout"`
+	MaxRetry      *int          `json:"max_retry,omitempty"`
 	RetryInterval time.Duration `json:"retry_interval"`
-	Disabled    bool          `json:"disabled"`
+	Disabled      bool          `json:"disabled"`
 }
 
 type ExecutionRecord struct {

@@ -25,12 +25,12 @@ type apiResponse struct {
 }
 
 type addTaskRequest struct {
-	Name          string        `json:"name"`
-	Command       string        `json:"command"`
-	CronExpr      string        `json:"cron_expr"`
-	Timeout       time.Duration `json:"timeout"`
-	MaxRetry      int           `json:"max_retry"`
-	RetryInterval time.Duration `json:"retry_interval"`
+	Name          string         `json:"name"`
+	Command       string         `json:"command"`
+	CronExpr      string         `json:"cron_expr"`
+	Timeout       time.Duration  `json:"timeout"`
+	MaxRetry      *int           `json:"max_retry"`
+	RetryInterval time.Duration  `json:"retry_interval"`
 }
 
 func NewHTTPServer(addr string, s *scheduler.Scheduler) *HTTPServer {

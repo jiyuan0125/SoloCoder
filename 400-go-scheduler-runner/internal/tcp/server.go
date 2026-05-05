@@ -218,7 +218,8 @@ func (t *TCPServer) handleAddTask(req *protocol.Request) protocol.Response {
 		cfg.Timeout = time.Duration(timeout) * time.Second
 	}
 	if maxRetry, ok := req.Data["max_retry"].(float64); ok {
-		cfg.MaxRetry = int(maxRetry)
+		val := int(maxRetry)
+		cfg.MaxRetry = &val
 	}
 	if retryInterval, ok := req.Data["retry_interval"].(float64); ok {
 		cfg.RetryInterval = time.Duration(retryInterval) * time.Second

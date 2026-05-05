@@ -13,10 +13,11 @@ import (
 )
 
 const (
-	defaultMaxRetry     = 3
-	defaultRetryInterval = 60 * time.Second
-	defaultTimeout      = 60 * time.Second
-	maxRecords          = 100
+	defaultMaxRetry        = 3
+	defaultRetryInterval   = 60 * time.Second
+	defaultTimeout         = 60 * time.Second
+	maxRecords             = 100
+	unsetMarker            = -1
 )
 
 type Task struct {
@@ -58,6 +59,29 @@ func (s *Scheduler) SetMaxRecords(max int) {
 	s.maxRecords = max
 }
 
+func (s *Scheduler) writeConfigFile(configs []protocol.TaskConfig) error {
+	if s.configFile == "" {
+		return nil
+	}
+
+	data, err := json.MarshalIndent(configs, "", "  ")
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(s.configFile, data, 0644)
+}
+
+func (s *Scheduler) collectConfigsLocked() []protocol.TaskConfig {
+	configs := make([]protocol.TaskConfig, 0, len(s.tasks))
+	for _, task := range s.tasks {
+		if !task.Deleted {
+			configs = append(configs, task.Config)
+		}
+	}
+	return configs
+}
+
 func (s *Scheduler) LoadConfig() error {
 	if s.configFile == "" {
 		return nil
@@ -92,11 +116,17 @@ func (s *Scheduler) LoadConfig() error {
 			task.Config.Disabled = true
 		} else {
 			task.CronField = cf
-			task.NextRun = cf.Next(time.Now())
+			nextRun := cf.Next(time.Now())
+			if nextRun.IsZero() {
+				task.Config.Disabled = true
+			} else {
+				task.NextRun = nextRun
+			}
 		}
 
-		if task.Config.MaxRetry <= 0 {
-			task.Config.MaxRetry = defaultMaxRetry
+		if task.Config.MaxRetry == nil {
+			val := defaultMaxRetry
+			task.Config.MaxRetry = &val
 		}
 		if task.Config.RetryInterval <= 0 {
 			task.Config.RetryInterval = defaultRetryInterval
@@ -119,20 +149,10 @@ func (s *Scheduler) SaveConfig() error {
 	}
 
 	s.taskMu.RLock()
-	configs := make([]protocol.TaskConfig, 0, len(s.tasks))
-	for _, task := range s.tasks {
-		if !task.Deleted {
-			configs = append(configs, task.Config)
-		}
-	}
+	configs := s.collectConfigsLocked()
 	s.taskMu.RUnlock()
 
-	data, err := json.MarshalIndent(configs, "", "  ")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(s.configFile, data, 0644)
+	return s.writeConfigFile(configs)
 }
 
 func (s *Scheduler) AddTask(cfg protocol.TaskConfig) error {
@@ -141,8 +161,14 @@ func (s *Scheduler) AddTask(cfg protocol.TaskConfig) error {
 		return err
 	}
 
-	if cfg.MaxRetry <= 0 {
-		cfg.MaxRetry = defaultMaxRetry
+	nextRun := cf.Next(time.Now())
+	if nextRun.IsZero() {
+		return os.ErrInvalid
+	}
+
+	if cfg.MaxRetry == nil {
+		val := defaultMaxRetry
+		cfg.MaxRetry = &val
 	}
 	if cfg.RetryInterval <= 0 {
 		cfg.RetryInterval = defaultRetryInterval
@@ -154,20 +180,24 @@ func (s *Scheduler) AddTask(cfg protocol.TaskConfig) error {
 	task := &Task{
 		Config:    cfg,
 		CronField: cf,
-		NextRun:   cf.Next(time.Now()),
+		NextRun:   nextRun,
 	}
 
 	s.taskMu.Lock()
-	defer s.taskMu.Unlock()
 
 	if existing, ok := s.tasks[cfg.Name]; ok && !existing.Deleted {
+		s.taskMu.Unlock()
 		return os.ErrExist
 	}
 
 	s.tasks[cfg.Name] = task
+	configs := s.collectConfigsLocked()
+	s.taskMu.Unlock()
 
-	if err := s.SaveConfig(); err != nil {
+	if err := s.writeConfigFile(configs); err != nil {
+		s.taskMu.Lock()
 		delete(s.tasks, cfg.Name)
+		s.taskMu.Unlock()
 		return err
 	}
 
@@ -176,17 +206,21 @@ func (s *Scheduler) AddTask(cfg protocol.TaskConfig) error {
 
 func (s *Scheduler) DeleteTask(name string) error {
 	s.taskMu.Lock()
-	defer s.taskMu.Unlock()
 
 	task, ok := s.tasks[name]
 	if !ok || task.Deleted {
+		s.taskMu.Unlock()
 		return os.ErrNotExist
 	}
 
 	task.Deleted = true
+	configs := s.collectConfigsLocked()
+	s.taskMu.Unlock()
 
-	if err := s.SaveConfig(); err != nil {
+	if err := s.writeConfigFile(configs); err != nil {
+		s.taskMu.Lock()
 		task.Deleted = false
+		s.taskMu.Unlock()
 		return err
 	}
 
@@ -320,6 +354,11 @@ func (s *Scheduler) checkAndRunTasks() {
 	for _, task := range tasks {
 		task.mu.Lock()
 		if task.Deleted || task.Config.Disabled || task.IsRunning {
+			task.mu.Unlock()
+			continue
+		}
+
+		if task.NextRun.IsZero() {
 			task.mu.Unlock()
 			continue
 		}

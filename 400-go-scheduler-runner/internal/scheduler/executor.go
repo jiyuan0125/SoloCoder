@@ -30,7 +30,10 @@ func (s *Scheduler) executeTask(task *Task) {
 	}()
 
 	retryCount := 0
-	maxRetry := task.Config.MaxRetry
+	maxRetry := defaultMaxRetry
+	if task.Config.MaxRetry != nil {
+		maxRetry = *task.Config.MaxRetry
+	}
 	retryInterval := task.Config.RetryInterval
 
 	var lastResult executeResult
