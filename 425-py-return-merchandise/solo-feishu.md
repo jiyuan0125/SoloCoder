@@ -18,3 +18,22 @@
 | 分支/文件夹 | 425-py-return-merchandise |
 
 ---
+
+## 425-py-return-merchandise — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我试了下 import cli 直接报 NameError，看了下 cli/__init__.py 第3行写了个 __all 但没赋值，应该是 __all__ = [...] 被截断了，导致整个 cli 包都 import 不了，rma 命令也跑不起来。另外 statistics_service.py 里 check_quality_alert 算质量问题退货率的时候，分子是报废记录条数（每条算1），分母是退货商品总数量（quantity求和），单位对不上，算出来的百分比不太对 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：退货单ID没有唯一性校验，用相同 return_order_id 重复调用 /returns/apply 会直接覆盖旧记录导致数据丢失。产物不满意：API 项目缺少 CORS 中间件。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 425-py-return-merchandise |
+
+---
