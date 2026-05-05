@@ -1,5 +1,1 @@
-项目编译就过不了，mvn clean package 直接报错。common 模块里 CreateEmployeeRequest 这些类用了 @NotBlank 和 @NotNull 注解，但 common 的 pom.xml 里没声明 jakarta.validation-api 这个依赖，导致编译失败。server 和 client 也跟着编不过。
-
-另外客户端默认连的 8080 端口，但服务端应该在 8083，需要能连到正确的端口。
-
-能先帮忙把编译问题修了吗？
+我拉下来跑了下mvn clean package，common模块直接编译失败了，报了一堆jakarta.validation.constraints包找不到的错误。CreateEmployeeRequest和CreateChecklistItemRequest里面用了@NotBlank和@NotNull注解，但common的pom.xml里没有加jakarta.validation-api这个依赖，server模块虽然通过spring-boot-starter-validation间接带了，但common模块编译的时候根本拿不到。
