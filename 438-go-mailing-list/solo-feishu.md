@@ -18,3 +18,22 @@
 | 分支/文件夹 | 438-go-mailing-list |
 
 ---
+
+## 438-go-mailing-list — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 第二轮 |
+| User Prompt | 我刚跑了一下项目，发现发邮件的时候服务直接崩了，日志里是 nil pointer dereference panic，在 queue.go 的 processItem 里调 store.UpdateTask 的时候炸的。另外 GET /api/lists/{id}/subscribers 这个接口返回 404，但创建列表和订阅都能正常工作，订阅完查收件人列表查不到。还有创建列表的时候 name 传空字符串返回的错误信息是 "invalid email format"，有点奇怪。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：handlers.go 的 GetSendRecords 方法用 parts[len(parts)-1] 从 URL 路径 /api/tasks/{taskID}/records 提取 taskID，实际取到的是 "records" 字符串而非 taskID，导致发送记录查询接口永远返回 null。过程不满意：R1 的 4 个 bug 均已修复（SendQueue 初始化、路由匹配顺序、空名称错误信息、MethodNotAllowed 复用），但修复过程中没有发现这个预先存在的 records 接口 bug，说明没有完整测试所有端点。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 438-go-mailing-list |
+
+---
