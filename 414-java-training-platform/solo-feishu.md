@@ -18,3 +18,22 @@
 | 分支/文件夹 | 414-java-training-platform |
 
 ---
+
+## 414-java-training-platform — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我拉下来跑了一下，mvn clean package 构建能过，server 用 mvn spring-boot:run 也能启动。但是大部分接口都调不通，GET /api/courses?publishedOnly=true 这种带查询参数的、GET /api/departments/{id} 这种带路径参数的，全部返回 500，报错说参数名解析不了，让我加 -parameters 编译参数。只有无参数的 GET 列表和 POST 创建能正常返回。另外 server 打出来的 jar 只有几十 KB，java -jar 跑不了，不是 fat jar。还有课程结束超过7天的自动提醒功能完全没看到，重修流程也没实现，不及格的学员没法重新报名。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 414-java-training-platform |
+
+---
