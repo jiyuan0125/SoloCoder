@@ -1,0 +1,10 @@
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/AnnualReportDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/ArchiveRequestDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/DeductionDetailDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/MonthlyComparisonDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/MonthlySummaryDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/PayrollArchiveDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/RemarkRequestDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/dto/YearComparisonDTO.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/enums/ErrorCode.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/common/src/main/java/com/payroll/common/response/ApiResponse.java

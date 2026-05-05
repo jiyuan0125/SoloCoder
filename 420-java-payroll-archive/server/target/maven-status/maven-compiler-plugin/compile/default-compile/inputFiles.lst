@@ -1,0 +1,10 @@
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/PayrollArchiveServerApplication.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/controller/PayrollArchiveController.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/entity/ArchiveStatus.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/entity/DeductionDetail.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/entity/PayrollArchive.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/exception/GlobalExceptionHandler.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/repository/PayrollArchiveRepository.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/service/PayrollArchiveService.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/util/ChecksumUtil.java
+/home/baru/Work/Private/work01/SoloCoder/420-java-payroll-archive/server/src/main/java/com/payroll/server/util/MaskUtil.java

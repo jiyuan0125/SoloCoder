@@ -1,0 +1,17 @@
+com/workshift/server/controller/StatisticsController.class
+com/workshift/server/repository/DataStore.class
+com/workshift/server/entity/ObjectionEntity.class
+com/workshift/server/controller/ShiftController.class
+com/workshift/server/WorkShiftApplication.class
+com/workshift/server/entity/EmployeeEntity.class
+com/workshift/server/service/ShiftRuleValidator.class
+com/workshift/server/service/StatisticsService.class
+com/workshift/server/controller/EmployeeController.class
+com/workshift/server/service/EmployeeService.class
+com/workshift/server/controller/SwapController.class
+com/workshift/server/entity/ShiftSwapEntity.class
+com/workshift/server/service/ShiftService.class
+com/workshift/server/service/ObjectionService.class
+com/workshift/server/entity/ShiftEntity.class
+com/workshift/server/controller/ObjectionController.class
+com/workshift/server/service/SwapService.class

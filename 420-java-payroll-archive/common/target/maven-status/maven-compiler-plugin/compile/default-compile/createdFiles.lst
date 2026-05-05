@@ -1,0 +1,10 @@
+com/payroll/common/enums/ErrorCode.class
+com/payroll/common/dto/MonthlyComparisonDTO.class
+com/payroll/common/dto/DeductionDetailDTO.class
+com/payroll/common/dto/AnnualReportDTO.class
+com/payroll/common/dto/ArchiveRequestDTO.class
+com/payroll/common/dto/YearComparisonDTO.class
+com/payroll/common/dto/PayrollArchiveDTO.class
+com/payroll/common/response/ApiResponse.class
+com/payroll/common/dto/MonthlySummaryDTO.class
+com/payroll/common/dto/RemarkRequestDTO.class
