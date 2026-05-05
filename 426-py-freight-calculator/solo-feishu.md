@@ -18,3 +18,22 @@
 | 分支/文件夹 | 426-py-freight-calculator |
 
 ---
+
+## 426-py-freight-calculator — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了一下包裹拆分，发了个三边之和 310cm 的陆运包裹（超了 300cm 上限），结果返回的 is_split 是 false，费用直接按 10kg 整包裹算了 55 块，完全没拆。看了下 split_package_by_perimeter 里的逻辑，max_perimeter 传进来是米（3.00），但后面 middle+smallest 拿的是厘米（110），max_single_length 算出来直接是负数就 return 空列表了。另外 calculator.py 里 num_splits 那行用了 math.ceil(float(...))，PROMPT 说了不能用 float。还有 statistics /months 接口返回的 total_packages 数字跟月度统计里的对不上。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 426-py-freight-calculator |
+
+---

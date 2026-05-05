@@ -18,3 +18,22 @@
 | 分支/文件夹 | 427-py-packing-list |
 
 ---
+
+## 427-py-packing-list — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我测了一下 add_item_to_package 这个接口，往一个空包裹里添加两件35kg的商品，接口返回了 WEIGHT_EXCEEDS_LIMIT 错误，这没问题。但奇怪的是，我接着再往同一个包裹添加一件同样的商品（qty=1），接口居然报 HEAVY_ITEM_MUST_BE_ALONE 了，说这个商品必须单独装箱。我查了一下那个包裹的状态，发现上一次失败请求里的两件商品已经残留在包裹的 items 列表里了，也就是说虽然接口报错了但数据已经被改了。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 已完成任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 | |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 427-py-packing-list |
+
+---

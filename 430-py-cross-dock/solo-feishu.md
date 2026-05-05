@@ -16,3 +16,21 @@
 | 分支/文件夹 | 430-py-cross-dock |
 
 ---
+
+## 430-py-cross-dock — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| 轮次 | 第二轮 |
+| User Prompt | 我跑了一下接口，GET /api/cross-dock/reports/daily 直接返回500了，报错信息是"can't compare offset-naive and offset-aware datetimes"，感觉是日报那块构造日期的时候没带时区信息。另外 GET /api/cross-dock/exception-plans 传了个不存在的类型也返回500而不是404。然后我看 app.py 里基本每个路由都有 except Exception as e 这种写法，当时明确说了不能用裸except的。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1 Bug #4 check_cross_day 方法仍使用 inbound_time.date() != outbound_time.date() 直接比较，未先转换为 UTC，time_utils.py 中已有的 is_same_day_utc 函数仍未被使用。当入库和出库时间跨时区但 UTC 日期相同时会产生误判。过程不满意：timeout_monitor.py 第33行仍有 except Exception as e 裸 except，违反 PROMPT "异常处理不能裸 except" 的要求，虽然是在后台线程中但规则应全局适用。 |
+| github地址 | - |
+| 分支/文件夹 | 430-py-cross-dock |
+
+---
+

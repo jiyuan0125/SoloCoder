@@ -18,3 +18,23 @@
 | 分支/文件夹 | 429-py-inventory-alert |
 
 ---
+
+## 429-py-inventory-alert — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 第二轮 |
+| User Prompt | 我跑了一下周转率分析接口，发现有些商品的 turnover_days 返回了 null。看了看代码，service.py 里没出库的商品 turnover_days 赋的是 float("inf")，但这个值序列化成 JSON 就变成 null 了，数据直接丢了。另外创建商品的时候如果初始库存比安全库存最低值低，比如库存设了 5 但最低值是 20，创建完之后没有触发低库存预警，得手动调一下 set-safety-stock 才会触发。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 模块内多文件 |
+| 任务是否完成 | 完成了任务 |
+| 产物及过程是否满意 | 满意 |
+| 不满意原因 |  |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 429-py-inventory-alert |
+
+---
+
