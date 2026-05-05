@@ -1,0 +1,18 @@
+{
+  "name": "ts-budget-planner",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "packages/shared",
+    "packages/server",
+    "packages/cli"
+  ],
+  "scripts": {
+    "build": "npm run build -w packages/shared && npm run build -w packages/server && npm run build -w packages/cli",
+    "clean": "npm run clean -w packages/shared && npm run clean -w packages/server && npm run clean -w packages/cli"
+  },
+  "devDependencies": {
+    "typescript": "~5.4.0",
+    "@types/node": "~20.12.0"
+  }
+}

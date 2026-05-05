@@ -1,0 +1,16 @@
+{
+  "name": "@budget-planner/cli",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "budget-cli": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@budget-planner/shared": "^1.0.0"
+  }
+}

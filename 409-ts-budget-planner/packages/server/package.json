@@ -1,0 +1,14 @@
+{
+  "name": "@budget-planner/server",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@budget-planner/shared": "^1.0.0"
+  }
+}
