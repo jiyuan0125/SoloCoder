@@ -6,6 +6,9 @@ import (
 	"io"
 	"os"
 	"unicode/utf8"
+
+	"golang.org/x/text/encoding/simplifiedchinese"
+	"golang.org/x/text/transform"
 )
 
 // Encoding represents a text encoding.
@@ -145,8 +148,6 @@ func (d *EncodingDetector) looksLikeGBK(data []byte) bool {
 }
 
 // EncodingConverter converts text from one encoding to UTF-8.
-// Note: For full GBK/GB18030 support, consider using golang.org/x/text/encoding/simplifiedchinese
-// This implementation provides basic detection and a framework for conversion.
 type EncodingConverter struct{}
 
 // NewEncodingConverter creates a new encoding converter.
@@ -155,52 +156,22 @@ func NewEncodingConverter() *EncodingConverter {
 }
 
 // ConvertToUTF8 converts data from the specified encoding to UTF-8.
-// For GBK/GB18030, this is a placeholder that returns the original data.
-// For production use with GBK, import golang.org/x/text/encoding/simplifiedchinese
-// and use simplifiedchinese.GBK.NewDecoder().Reader()
 func (c *EncodingConverter) ConvertToUTF8(r io.Reader, from Encoding) (io.Reader, error) {
 	switch from {
 	case EncodingUTF8:
 		// Already UTF-8, just check for BOM
 		return detectBOM(r)
-	case EncodingGBK, EncodingGB18030:
-		// For GBK conversion, you need to import golang.org/x/text/encoding/simplifiedchinese
-		// Example:
-		// import "golang.org/x/text/encoding/simplifiedchinese"
-		// import "golang.org/x/text/transform"
-		// return transform.NewReader(r, simplifiedchinese.GBK.NewDecoder()), nil
-		//
-		// Since we can't use external packages in this implementation,
-		// we provide a basic implementation that assumes the data is already UTF-8
-		// or returns the data as-is.
-		//
-		// In a real implementation, you would add to go.mod:
-		// require golang.org/x/text v0.14.0
-		//
-		// For now, we'll read the data and attempt to handle common cases
-		return c.basicGBKConverter(r), nil
+	case EncodingGBK:
+		// Use simplifiedchinese to convert GBK to UTF-8
+		decoder := simplifiedchinese.GBK.NewDecoder()
+		return transform.NewReader(r, decoder), nil
+	case EncodingGB18030:
+		// Use simplifiedchinese to convert GB18030 to UTF-8
+		decoder := simplifiedchinese.GB18030.NewDecoder()
+		return transform.NewReader(r, decoder), nil
 	default:
 		return r, nil
 	}
-}
-
-// basicGBKConverter is a simple converter that reads the data and returns it as-is.
-// For proper GBK support, use golang.org/x/text/encoding/simplifiedchinese
-func (c *EncodingConverter) basicGBKConverter(r io.Reader) io.Reader {
-	// Read all data
-	data, err := io.ReadAll(r)
-	if err != nil {
-		return bytes.NewReader(nil)
-	}
-
-	// Check if it's already valid UTF-8
-	if utf8.Valid(data) {
-		return bytes.NewReader(data)
-	}
-
-	// For now, return the data as-is
-	// In production, use the proper encoding library
-	return bytes.NewReader(data)
 }
 
 // AutoDetectAndConvert automatically detects the encoding and converts to UTF-8.

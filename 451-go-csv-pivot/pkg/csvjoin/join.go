@@ -48,6 +48,7 @@ func (j *Joiner) Join(outputPath string) (*JoinResult, error) {
 			rightOptions,
 			tempOutput,
 			i == 1, // First join needs to read both headers
+			i,      // Right file index in original options
 		)
 		if err != nil {
 			return nil, err
@@ -77,7 +78,7 @@ func (j *Joiner) Join(outputPath string) (*JoinResult, error) {
 func (j *Joiner) joinTwoFiles(
 	leftPath string, leftOpts FileOptions,
 	rightPath string, rightOpts FileOptions,
-	outputPath string, isFirstJoin bool,
+	outputPath string, isFirstJoin bool, rightFileIndex int,
 ) (*JoinResult, error) {
 	// Determine which file is smaller to minimize memory usage
 	leftSize, _ := getFileSize(leftPath)
@@ -99,22 +100,21 @@ func (j *Joiner) joinTwoFiles(
 		}
 		streamPath = rightPath
 		streamOpts = rightOpts
-	} else {
-		// Load right file, stream left file
-		var err error
-		lookupTable, lookupColumns, lookupKeyIndex, err = j.loadFileIntoLookup(rightPath, rightOpts, isFirstJoin)
-		if err != nil {
-			return nil, err
-		}
-		streamPath = leftPath
-		streamOpts = leftOpts
+
+		// Perform the join based on which file was loaded
+		return j.joinStreamingRight(lookupTable, lookupColumns, lookupKeyIndex, streamPath, streamOpts, outputPath, isFirstJoin, rightFileIndex)
 	}
 
-	// Perform the join based on which file was loaded
-	if leftSize <= rightSize {
-		return j.joinStreamingRight(lookupTable, lookupColumns, lookupKeyIndex, streamPath, streamOpts, outputPath, isFirstJoin)
+	// Load right file, stream left file
+	var err error
+	lookupTable, lookupColumns, lookupKeyIndex, err = j.loadFileIntoLookup(rightPath, rightOpts, isFirstJoin)
+	if err != nil {
+		return nil, err
 	}
-	return j.joinStreamingLeft(lookupTable, lookupColumns, lookupKeyIndex, streamPath, streamOpts, outputPath, isFirstJoin)
+	streamPath = leftPath
+	streamOpts = leftOpts
+
+	return j.joinStreamingLeft(lookupTable, lookupColumns, lookupKeyIndex, streamPath, streamOpts, outputPath, isFirstJoin, rightFileIndex)
 }
 
 // loadFileIntoLookup reads a CSV file and creates a lookup table indexed by the join key.
@@ -206,7 +206,7 @@ func (j *Joiner) findJoinKeyColumn(columns []string, filePath string) (int, erro
 func (j *Joiner) joinStreamingRight(
 	lookupTable map[string][][]string, lookupColumns []string, lookupKeyIndex int,
 	streamPath string, streamOpts FileOptions,
-	outputPath string, isFirstJoin bool,
+	outputPath string, isFirstJoin bool, rightFileIndex int,
 ) (*JoinResult, error) {
 	streamReader, err := j.openCSVReader(streamPath, streamOpts, isFirstJoin)
 	if err != nil {
@@ -221,13 +221,16 @@ func (j *Joiner) joinStreamingRight(
 	}
 
 	// Prepare output columns with suffixes
-	leftSuffix := j.getFileSuffix(0)
-	rightSuffix := j.getFileSuffix(1)
-
-	if !isFirstJoin {
-		// For subsequent joins, left columns already have suffixes
+	var leftSuffix string
+	if isFirstJoin {
+		// First join: left is file 0, add suffix from options
+		leftSuffix = j.getFileSuffix(0)
+	} else {
+		// Subsequent joins: left is intermediate result, already has suffixes
 		leftSuffix = ""
 	}
+	// Right file is always the new file being joined
+	rightSuffix := j.getFileSuffix(rightFileIndex)
 
 	outputColumns := j.prepareOutputColumns(
 		lookupColumns, lookupKeyIndex, streamColumns, streamKeyIndex,
@@ -323,7 +326,7 @@ func (j *Joiner) joinStreamingRight(
 func (j *Joiner) joinStreamingLeft(
 	lookupTable map[string][][]string, lookupColumns []string, lookupKeyIndex int,
 	streamPath string, streamOpts FileOptions,
-	outputPath string, isFirstJoin bool,
+	outputPath string, isFirstJoin bool, rightFileIndex int,
 ) (*JoinResult, error) {
 	streamReader, err := j.openCSVReader(streamPath, streamOpts, isFirstJoin)
 	if err != nil {
@@ -338,15 +341,18 @@ func (j *Joiner) joinStreamingLeft(
 	}
 
 	// Prepare output columns with suffixes
-	leftSuffix := j.getFileSuffix(0)
-	rightSuffix := j.getFileSuffix(1)
-
-	if !isFirstJoin {
-		// For subsequent joins, left columns already have suffixes
+	// Note: in this case, stream is left, lookup is right
+	var leftSuffix string
+	if isFirstJoin {
+		// First join: left (stream) is file 0, add suffix from options
+		leftSuffix = j.getFileSuffix(0)
+	} else {
+		// Subsequent joins: left (stream) is intermediate result, already has suffixes
 		leftSuffix = ""
 	}
+	// Right (lookup) is always the new file being joined
+	rightSuffix := j.getFileSuffix(rightFileIndex)
 
-	// Note: in this case, stream is left, lookup is right
 	outputColumns := j.prepareOutputColumns(
 		streamColumns, streamKeyIndex, lookupColumns, lookupKeyIndex,
 		leftSuffix, rightSuffix,
