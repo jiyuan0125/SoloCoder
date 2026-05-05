@@ -1,0 +1,22 @@
+{
+  "name": "@tax-invoice/cli",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "type": "module",
+  "bin": {
+    "tax-invoice": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc -w",
+    "cli": "node ./dist/index.js"
+  },
+  "dependencies": {
+    "@tax-invoice/shared": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "typescript": "^5.3.3"
+  }
+}

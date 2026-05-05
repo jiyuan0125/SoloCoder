@@ -1,0 +1,20 @@
+{
+  "name": "tax-invoice-monorepo",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace=@tax-invoice/shared && npm run build --workspace=@tax-invoice/server && npm run build --workspace=@tax-invoice/cli",
+    "clean": "rm -rf packages/*/dist",
+    "start": "npm run start --workspace=@tax-invoice/server",
+    "cli": "npm run cli --workspace=@tax-invoice/cli"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
