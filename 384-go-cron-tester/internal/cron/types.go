@@ -5,10 +5,6 @@ import (
 	"time"
 )
 
-const (
-	maxIterations = 10000
-)
-
 type FieldType int
 
 const (
