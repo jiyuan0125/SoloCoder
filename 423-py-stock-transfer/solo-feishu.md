@@ -18,3 +18,22 @@
 | 分支/文件夹 | 423-py-stock-transfer |
 
 ---
+
+## 423-py-stock-transfer — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 我跑了一下调拨流程，创建了一个调拨单确认发货后，又测试了取消操作。取消完之后回去看源仓库的库存，发现冻结数量没变，还是冻着的状态，available 也没恢复。另外损耗台账的月度统计返回的数据里没有损耗率字段，调拨单列表接口返回的数据格式也缺了 requested_amount 这些字段。跨公司调拨那个审批我也没找到对应的接口。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨模块多文件 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：R1 的 CORS 中间件问题仍未修复，create_app() 中没有添加任何 CORS 配置。confirm_transfer 存在审批绕过 bug——当 required_approval_level != NONE 且 is_approved == False 时，如果 approval_records 为空（审批尚未提交），for 循环不执行，confirm 直接通过，实际测试中金额超过 1 万元需要仓库主管审批的调拨单在没有任何审批的情况下就被确认并冻结了库存。过程不满意：R1 明确指出了 CORS 缺失，本轮仍未修复。审批绕过 bug 说明修改后没有测试"需要审批的调拨单在未审批时尝试确认"这个场景 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 423-py-stock-transfer |
+
+---
