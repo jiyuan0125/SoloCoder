@@ -1,9 +1,1 @@
-项目跑起来之后发现大部分接口都 500 了，获取/更新/删除部门、员工、虚拟团队这些全挂了，错误提示说参数名通过反射拿不到，需要 -parameters 编译参数。大概 70% 的接口不可用，只有 POST 能正常工作。
-
-还有个奇怪的逻辑问题：我把部门 A 的父部门设成部门 B，结果报错说"不能将自己设为父部门"，但这两个是不同的部门啊。反过来我试着把部门 A 设成自己的父部门（这应该报错的），反而没报错，这个检查逻辑是不是写反了？
-
-CLI client 也跑不起来，java -jar 报 NoClassDefFoundError，依赖没打进去。
-
-还有客户端默认连的 8080 端口，但服务端跑在 8085。
-
-能帮忙修一下吗？
+我跑了一下项目，启动没问题，POST 创建部门、员工、虚拟团队都能正常用。但所有带路径参数的接口全部 500 了，比如 GET /api/departments/{id}、GET /api/employees/{id}/reporting-line、PUT、DELETE 这些全挂了，返回的错是 "Name for argument of type not specified, and parameter name information not available via reflection. Ensure that the compiler uses the '-parameters' flag."。感觉是编译参数的问题，你看下 maven-compiler-plugin 的配置
