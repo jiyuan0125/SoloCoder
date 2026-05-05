@@ -1,9 +1,1 @@
-服务端跑起来后，按 ID 查员工、按 ID 查日志这些接口全 500，错误说参数名解析不了。创建和搜索能用但好多 GET 接口都挂了。
-
-端口配的是 8080 不是 8087，客户端连的也是 8080。
-
-客户端还有个问题，用中文用户名的时候报 invalid header value，好像 header 里不能直接放中文。
-
-另外创建员工和批量导入的时候我看操作日志里没有记录，只有更新才有。客户端的命令行模式也只输出了"暂未实现"就没了。
-
-能帮忙修一下吗？
+启动之后试了几个接口，创建员工没问题，但只要URL里带参数的都500了。比如 GET /api/employees/E001 查详情、PUT /api/employees/E002 更新信息、GET /api/employees?includeResigned=true 查含离职人员的列表，全部报 parameter name 找不到。看了下好像 Spring Boot 3 + Java 17 需要编译器加个 -parameters 参数，@PathVariable 和 @RequestParam 才能正常工作。
