@@ -18,3 +18,23 @@
 | 分支/文件夹 | 412-java-recruitment-pipeline |
 
 ---
+
+## 412-java-recruitment-pipeline — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID | |
+| 第一轮Session ID | |
+| 轮次 | 2 |
+| User Prompt | 项目 mvn clean package 能过，但服务端起不来。java -jar 启动直接崩了，报错说 LoggerFactory 不是 Logback LoggerContext，看着像是 SLF4J 版本冲突，同时有 1.x 和 2.x 两个版本。 另外我看了下代码，按来源渠道筛选候选人的接口好像没生效，sourceChannel 参数传了但返回结果没过滤。还有 offer 过期那个需求，代码里写了 checkExpiredOffers 方法但没地方调用它，不发请求响应的话 offer 就永远不会过期。 能帮忙修一下吗？ |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：所有使用@PathVariable和@RequestParam的接口（GET /api/candidates/{id}、GET /api/candidates/simple/{id}、GET /api/contacts/candidate/{candidateId}、GET /api/applications/{id}、POST /api/applications/onboard、POST /api/applications/add）全部返回500，原因是maven-compiler-plugin未配置-parameters选项，Spring Boot 3.x无法解析参数名。offer接受后status变为OFFER_ACCEPTED，但updateStage()检查status!=IN_PROGRESS就拒绝，导致无法推进到入职确认阶段，入职流程完全无法走通。QueryCandidatesRequest有page/size字段但queryCandidates()仍未实现分页逻辑（R1反馈未修复）。过程不满意：修了3个bug（SLF4J冲突、sourceChannel筛选、定时任务）但引入了新的严重bug导致多个GET接口全部500，且offer接受到入职的关键流程无法走通，说明修改后只测了POST接口没有全面测试 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 412-java-recruitment-pipeline |
+
+---
+
