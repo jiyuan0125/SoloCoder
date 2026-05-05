@@ -18,3 +18,23 @@
 | 分支/文件夹 | 419-java-reimbursement-split |
 
 ---
+
+## 419-java-reimbursement-split — 第 2 轮
+
+| 字段 | 值 |
+|------|------|
+| Trae Session ID |  |
+| 第一轮Session ID |  |
+| 轮次 | 2 |
+| User Prompt | 项目启动了，创建报销单没问题，但提交报销的接口 POST /api/reimbursements/{id}/submit 返回500，看日志也是 parameter name 那个编译参数问题。还有我试了下审批流程，先让一个成本中心通过，然后另一个驳回，结果通过的那个状态还显示 APPROVED，PROMPT 不是说驳回后"已通过的全部清零重新走"吗？另外特殊审批也有点奇怪，只要把 specialApprovalRequested 设为 true 就自动通过了，根本不需要谁来批。 |
+| 任务类型 | Bug修复 |
+| 业务领域 | 纯后端API服务 |
+| 修改范围 | 跨系统多模块 |
+| 任务是否完成 | 未完成任务 |
+| 产物及过程是否满意 | 不满意 |
+| 不满意原因 | 产物不满意：特殊审批仍然自动批准——ReimbursementService.createReimbursement 第81行 specialApprovalGranted 直接取 specialApprovalRequested 的值，设置 true 即自动获得特殊审批，没有任何实际的特殊审批流程（没有审批接口、没有审批状态），R1 反馈的这个问题没有修复。 |
+| github地址 | https://github.com/jiyuan0125/SoloCoder |
+| 分支/文件夹 | 419-java-reimbursement-split |
+
+---
+
