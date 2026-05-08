@@ -1,3 +1,0 @@
-Operation,Key,Old_ID,Old_City,Old_Name,Old_Age,New_ID,New_City,New_Name,New_Age
-MODIFY,1,1,New York,Alice,30,1,NYC,Alice,30
-MODIFY,2,2,London,Bob,25,2,LDN,Bob,25

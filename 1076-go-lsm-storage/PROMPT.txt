@@ -1,0 +1,21 @@
+帮我实现一个简易的LSM-Tree存储引擎，Go语言写。LSM-Tree全名是Log-Structured Merge-Tree，很多数据库底层都在用，比如LevelDB、RocksDB。
+
+整体架构分几层：写入的数据先进MemTable，MemTable满了之后变成Immutable MemTable刷到磁盘变成SSTable。读数据时先查MemTable，再查Immutable MemTable，最后查SSTable。后台有合并线程定期把多个SSTable合并成更大的SSTable。
+
+MemTable用跳表实现，跳表的节点要存key、value和一个删除标记。删除操作不是真的删除，而是写一条带删除标记的记录，这叫tombstone。查询的时候如果遇到了tombstone就认为这个key不存在。
+
+WAL（Write-Ahead Log）要配合MemTable用。每次写MemTable之前先把操作追加到WAL文件里，这样崩溃恢复的时候可以从WAL重建MemTable。WAL的格式可以简单点，每条记录存key长度、value长度、删除标记、key内容、value内容。MemTable刷盘之后对应的WAL就可以删掉了。
+
+SSTable在磁盘上存储，数据有序。格式包含：数据块（存放key-value对，按key排序）、索引块（记录每个数据块的起始key和偏移量）、布隆过滤器（快速判断key是否可能存在）。SSTable文件末尾有个Footer，记录索引块和布隆过滤器的位置。
+
+合并（Compaction）分两种：size-tiered compaction和leveled compaction。简单起见做size-tiered就行，当同层SSTable数量超过阈值就触发合并。合并时要处理key的覆盖和删除，只保留最新的版本。tombstone只有在合并到最底层且被tombstone覆盖的key不会被更老的SSTable包含时才能丢弃。
+
+服务端HTTP接口支持Put、Get、Delete、Scan（范围查询）。客户端命令行工具对应提供put、get、delete、scan子命令。
+
+并发方面要注意：写操作要加锁保证原子性，读操作可以不加锁用快照读。MemTable切换成Immutable的时候不能阻塞正在进行的读写。
+
+有个容易搞错的地方：布隆过滤器的假阳性。布隆过滤器说key存在不代表真的存在，但说不存在就一定不存在。查询时要先检查布隆过滤器，不存在就直接跳过这个SSTable。但要注意布隆过滤器需要预知大概会存多少个key来计算最优的bit数组大小和hash函数个数。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

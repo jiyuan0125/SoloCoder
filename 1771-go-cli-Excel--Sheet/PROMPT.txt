@@ -1,0 +1,11 @@
+财务那边经常需要把Excel文件转成CSV给其他系统用，还要能操作Excel的Sheet。你帮我写一个 Go 命令行工具做Excel批量处理，叫 xltool。
+
+工具用urfave/cli v2框架，有 convert、sheet、query 三个子命令。
+
+convert子命令把Excel文件（.xlsx格式）转换为CSV。支持指定要转换的Sheet名称或索引，不指定就转换第一个Sheet。支持指定编码（默认UTF-8，可选GBK）。支持指定日期格式（Excel中的日期序列号转换为可读的日期字符串时用的格式）。如果Excel文件中有多个Sheet，可以一次全部转换为多个CSV文件，文件名为"原文件名_Sheet名.csv"。支持反向操作：CSV转Excel，可以指定列的类型（文本、数字、日期），避免Excel自动把纯数字的文本（如手机号、身份证号）当作数字处理导致精度丢失。
+
+sheet子命令操作Excel的Sheet。list操作列出所有Sheet的名称和索引。rename操作重命名指定Sheet。copy操作复制一个Sheet到同一个文件或另一个Excel文件。delete操作删除指定Sheet。merge操作把多个Sheet合并为一个（按行追加，列名相同的列对齐合并）。split操作把一个Sheet按某列的值拆分成多个Sheet（比如按部门列拆分，每个部门一个Sheet）。
+
+query子命令用类似SQL的语法查询Excel数据。支持SELECT指定列、WHERE条件过滤、ORDER BY排序、LIMIT限制行数。条件支持等于、大于、小于、包含等操作符。查询结果输出为表格或CSV。
+
+细节要求。第一，Excel中的公式单元格读取的是计算后的值，不是公式本身。第二，合并单元格读取时，只有左上角的单元格有值，其他位置要自动填充相同的值。第三，处理大Excel文件（超过50万行）时使用流式读取避免内存溢出。第四，CSV转Excel时正确处理引号内的逗号和换行符。

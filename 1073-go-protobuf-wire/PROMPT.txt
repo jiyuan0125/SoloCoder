@@ -1,0 +1,21 @@
+我想做一个Protobuf wire format的解析器，纯Go实现，不用protoc也不用任何生成的代码。就是拿到一坨二进制数据，能把它解析出字段号、wire type和值来。
+
+Protobuf的编码其实不复杂，每个字段都是tag加value。tag本身也是个varint，低3位是wire type，剩下的高位右移就是field number。Wire type有6种：varint、64-bit fixed、length-delimited、start group、end group、32-bit fixed。实际上常用就前三种加上32-bit fixed，group的两种已经废弃了。
+
+varint编码是每字节低7位存数据，最高位表示后面还有没有。解析varint的时候要注意，如果数据已经读完了但最高位还是1，说明数据被截断了，这是错误情况。还有varint最多10字节表示64位数，超过10字节也是错误。
+
+length-delimited类型要先读一个varint作为长度，然后读那么多字节。这里有个坑：长度值可能是恶意的超大数字，不能直接分配那么大的内存，要设个上限。
+
+嵌套消息也是length-delimited类型，解析完长度那部分字节后，递归解析里面的字段。嵌套层级太深的话要注意栈溢出，限制递归深度比如100层。
+
+服务端提供HTTP接口，上传二进制数据就能得到解析结果，以JSON格式返回字段结构。客户端命令行工具支持从文件读取protobuf二进制数据并解析打印。
+
+对于packed repeated字段，就是同一个field number连续出现多个length-delimited或varint，要合并到一个数组里返回。另外default value的问题，protobuf对数值类型默认值0、bool类型默认false、字符串默认空串，按照规范这些默认值的字段在编码时可以省略不传，解析时如果没遇到这个字段就按默认值处理。
+
+zigzag编码也要支持，signed int32用zigzag映射到unsigned再varint编码。解码的时候记得转回来：n >> 1 ^ -(n & 1)。这个公式别写反了。
+
+解析结果要包含每个字段的原始字节数和编码类型，方便调试。wire type用数字或名称都行，field number用十进制显示。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

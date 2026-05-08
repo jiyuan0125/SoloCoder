@@ -1,0 +1,7 @@
+最近在做一个内部开发平台的网关服务，需要模拟OAuth2授权码流程。核心逻辑是：客户端先向授权端点发起请求，携带client_id、redirect_uri、response_type=code，还有scope。授权通过后拿到authorization code，再拿code去token端点换access_token和refresh_token。关键是要支持PKCE，客户端生成code_verifier（43-128字符的随机字符串，字符集是A-Z a-z 0-9 - . _ ~），再用SHA256哈希后base64url编码得到code_challenge，method固定S256。token请求时带上code_verifier，服务端校验hash是否匹配。token刷新也必须实现，用refresh_token换取新的access_token，旧的refresh_token同时失效。access_token有效期设为1小时，refresh_token有效期设为7天。scope支持多值，用空格分隔，比如"read write admin"。授权请求时要校验redirect_uri必须是预注册的URI之一，严格匹配。token端点需要client认证，用client_id加client_secret的Basic Auth方式。code只能使用一次，用过立即失效，有效期5分钟。
+
+需要提供一个HTTP服务，端口8080。接口包括：POST /auth/authorize（模拟授权，返回code）、POST /auth/token（code换token）、POST /auth/refresh（刷新token）。CLI客户端需要支持三个命令：auth login（走授权码流程）、auth token（手动用code换token）、auth refresh（刷新）。客户端会把拿到的token缓存在本地文件里，每次操作前先检查是否过期，过期了自动用refresh_token续期。服务端数据全部内存存储，用sync.Map就行。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

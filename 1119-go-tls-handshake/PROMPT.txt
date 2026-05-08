@@ -1,0 +1,13 @@
+我要做一个TLS握手过程的模拟器，用于教学和安全分析。不需要实现真正的加密运算，但要完整模拟握手的状态机和消息流程，包括密码套件协商、扩展字段处理和证书交换的格式解析。
+
+TLS 1.2的握手从ClientHello开始。ClientHello消息包含客户端支持的TLS版本、32字节随机数、session ID（用于会话恢复）、密码套件列表（每项2字节，列表长度2字节前缀）和扩展字段列表。密码套件列表里客户端把自己支持的套件按优先级排序发给服务端，服务端从中选一个自己也支持的。常见的套件有TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256（0xC02F）、TLS_RSA_WITH_AES_256_CBC_SHA（0x0035）等。服务端回复ServerHello，包含选定的TLS版本、服务端随机数、session ID、选定的密码套件和压缩方法。注意TLS 1.3的握手流程和1.2完全不同，这里只模拟1.2。
+
+扩展字段是TLS 1.2后期加入的机制，每个扩展有2字节类型和2字节长度。关键扩展包括：Server Name Indication（SNI，type=0x0000）让客户端指定要访问的主机名；Supported Groups（type=0x000A）列出客户端支持的椭圆曲线；Signature Algorithms（type=0x000D）列出客户端支持的签名算法组合；Application Layer Protocol Negotiation（ALPN，type=0x0010）协商应用层协议比如h2和http/1.1。扩展字段的顺序不是随意的，RFC规定了一些扩展必须在特定位置，比如SNI应该是第一个扩展。解析时要校验扩展顺序。
+
+握手状态机要处理正常流程和异常情况。正常流程是ClientHello、ServerHello、Certificate、ServerKeyExchange、ServerHelloDone、ClientKeyExchange、ChangeCipherSpec、Finished（客户端）、ChangeCipherSpec、Finished（服务端）。每一步收到错误的消息类型就应该转移到error状态并记录错误原因。session恢复是捷径：如果客户端发的session ID在服务端缓存里能找到，服务端直接跳过Certificate和KeyExchange，直接发ChangeCipherSpec和Finished。
+
+服务端提供模拟握手、展示每一步消息内容、展示密码套件协商结果的接口。客户端可以指定客户端和服务端各自支持的密码套件列表来运行模拟。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

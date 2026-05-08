@@ -1,0 +1,9 @@
+最近在做Go服务的线上内存排查，想做一个pprof文件的分析工具。日常开发中经常需要从生产环境拉heap profile或者cpu profile回来分析，但每次都得用go tool pprof交互式看，不太方便做批量对比。我想让这个工具能读取标准的pprof格式文件，把内存按函数维度聚合统计，然后给出占用最高的前N个函数列表，包括函数名、分配的字节数、分配的对象数量以及占整体的百分比。服务端提供HTTP接口，上传pprof文件后返回解析结果，也能查看历史分析记录。客户端是命令行工具，可以直接指定本地pprof文件路径进行分析，输出格式化的文本报告，也能调服务端的接口做远程分析。
+
+pprof文件本身是protocol buffer编码的，格式分两种：heap profile记录的是内存分配的快照，里面有inuse_space、inuse_objects、alloc_space、alloc_objects这些采样维度；cpu profile记录的是CPU时间采样。文件开头可能有一段注释文本（以#开头），真正的protobuf数据跟在后面。有些pprof文件是gzip压缩的，需要先解压再解析。函数名在protobuf里有address到function的映射，还有location信息，需要把sample的location链路解析成可读的函数调用栈，然后按顶层函数聚合。调用栈里经常会出现runtime.mallocgc、runtime.newobject这类运行时函数，聚合的时候应该忽略掉它们，只关注用户代码。inline展开的函数会以不同地址出现但函数名相同，需要合并。有的profile里同一个函数名来自不同的包路径，比如main.Handler和api.Handler，不能简单按函数名字符串去重，要带上完整的包路径。
+
+服务端上传接口要支持multipart表单，文件字段名固定为file。返回的分析结果JSON包含profile类型、总采样值、按分配量降序排列的函数列表。客户端用文本表格输出，对齐函数名列宽，百分比保留两位小数，最后一行输出"其他"的汇总。如果用户指定了--top参数，只输出前N个，否则默认10个。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

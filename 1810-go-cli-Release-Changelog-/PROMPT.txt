@@ -1,0 +1,19 @@
+用Go写一个Release管理和Changelog自动生成命令行工具。我们项目每次发版都要手动写Changelog，整理这个版本改了什么功能、修了什么bug，非常耗时。
+
+工具叫releasetool，在Git仓库中运行。基本用法：releasetool new v1.2.0，创建一个新版本。工具自动分析从上一个版本标签到当前HEAD之间的所有提交记录，按类型分类整理成Changelog。
+
+提交分类规则基于Conventional Commits格式。feat:开头的归入"新功能"分类，fix:开头的归入"Bug修复"，docs:归入"文档更新"，refactor:归入"重构"，perf:归入"性能优化"，test:归入"测试"，chore:归入"其他"。对于不符合Conventional Commits格式的提交，归入"未分类"并给出警告。
+
+每个分类下列出具体的提交条目，条目内容取提交消息的第一行（去掉前缀后）。如果有关联的Issue编号（提交消息中包含#123这种格式），在条目后面标注Issue链接。
+
+生成的Changelog写入CHANGELOG.md文件，格式采用Keep a Changelog标准。文件顶部是最新版本，下面依次是历史版本。如果CHANGELOG.md已存在，在顶部插入新版本内容，保留历史记录不变。
+
+版本号管理：用releasetool new v1.2.0创建版本时会自动打Git标签。创建前检查版本号格式是否符合语义化版本规范（SemVer），检查是否有重复版本号，检查从上一个版本到现在是否有新的提交（如果没有就提示"没有新变更，无需发版"）。
+
+还有个releasetool diff v1.1.0 v1.2.0命令，对比两个版本之间的差异，输出Changelog预览但不写入文件。这个在发版前预览很方便。
+
+加--dry-run参数可以预览将要生成的Changelog内容但不实际写入文件或打标签。加--template参数可以用自定义的Changelog模板。
+
+有个容易出bug的地方：版本号的排序比较。v1.2.0和v1.10.0按字符串排序的话1.10会在1.2前面（因为'1' < '2'），但按语义化版本应该是1.10更新。需要正确解析版本号的major、minor、patch三个部分再比较。
+
+另一个要注意的：如果项目从没有打过任何Git标签，releasetool new应该是第一次发版，要能正确处理这种边界情况，把所有历史提交都纳入第一个版本的Changelog。

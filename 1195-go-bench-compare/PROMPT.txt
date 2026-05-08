@@ -1,0 +1,15 @@
+帮我做一个Go benchmark结果解析和性能对比工具。
+
+Go的go test -bench输出格式大概是：`BenchmarkFunc-8    1234567    234.5 ns/op    1234 B/op    12 allocs/op`。我需要一个工具解析这种格式，并且能对比两个版本的benchmark结果。
+
+核心功能：解析benchmark输出文本，提取每个benchmark函数的名称、迭代次数、耗时、内存分配字节数、分配次数。支持多次运行的统计，取中位数作为代表值（不是平均值，因为outlier会影响平均值）。然后对比两个版本，计算每个benchmark的耗时变化百分比、内存变化百分比。变化超过5%标记为changed，超过20%标记为regression或improvement。
+
+服务端可以上传两份benchmark输出文本，返回对比报告。客户端支持从文件读取或从管道读取。用--baseline和--current分别指定基线和当前版本的结果文件。报告用表格输出，按变化幅度排序，显著变化的高亮显示。
+
+有个容易出错的地方：benchmark名称可能带斜杠分隔的子测试名称，比如`BenchmarkFunc/subcase1-8`和`BenchmarkFunc/subcase2-8`，它们是不同的benchmark。对比时要按完整名称匹配，如果某个benchmark只在一个版本中出现，要标记为added或removed。
+
+还有：Go 1.21之后benchmark输出格式有变化，新增了`~`标记表示不稳定的结果。如果某行结果有`~`前缀，说明这个数据不稳定，对比时要标注uncertain。另外，`ns/op`的值可能带单位前缀如`µs/op`或`ms/op`，解析时要统一换算成纳秒。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

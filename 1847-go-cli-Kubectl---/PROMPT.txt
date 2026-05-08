@@ -1,0 +1,9 @@
+用Go写一个Kubernetes资源管理命令行工具。运维团队觉得kubectl虽然功能强大但有些常用操作太繁琐，比如查某个namespace下所有Pod的日志、批量重启某个Deployment下的所有Pod、快速做端口转发等，每次都要敲很长的命令。
+
+工具通过调用Kubernetes API来实现（用client-go库），不依赖kubectl。提供以下功能。资源查询：列出指定namespace下的Pod/Deployment/Service等资源，支持自定义输出列（类似kubectl的-o custom-columns但语法更简单）。日志查看：获取指定Pod的日志，支持选择容器（一个Pod可能有多个容器）、按时间范围过滤、自动跟踪最新日志（类似tail -f）。多Pod日志聚合：把同一个Deployment下所有Pod的日志聚合到一起按时间排序输出，每行日志前面标注来源Pod名称。
+
+端口转发：快速建立本地端口到Pod端口的转发，支持同时转发多个端口。批量操作：对一组资源执行同一个操作，比如把某个Deployment的所有Pod重启、把所有标签为env=test的Pod删除、把所有使用某个镜像版本的Pod列出来。
+
+配置导出：把一个namespace下的所有资源导出为YAML文件，方便做备份或者迁移。导出时过滤掉系统自动添加的注解和标签，只保留用户定义的部分。
+
+实现时要注意，调用Kubernetes API需要kubeconfig文件，工具要从默认路径（~/.kube/config）或者环境变量KUBECONFIG读取配置，找不到时要给出明确提示。多Pod日志聚合时，如果Pod数量很多（比如几十个），同时建立几十个日志流连接可能给API Server带来压力，需要做并发控制和分批获取。Pod可能在你操作的过程中被删除或重建，要处理ResourceNotFound错误。端口转发使用的SPDY协议底层是HTTP/2，实现时需要正确处理多路复用。导出YAML时要保持资源的原始顺序和格式，不能随意改变字段排列。不同版本的Kubernetes API字段可能不同，工具要兼容主流的几个K8s版本。

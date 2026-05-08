@@ -1,0 +1,17 @@
+我需要一个Go实现的DHCP报文解析器和租约管理工具。要能解析DHCPv4报文的各个字段，模拟DORA（Discover-Offer-Request-Ack）流程，管理IP地址租约。
+
+DHCPv4报文格式是：op（1字节，1为BOOTREQUEST，2为BOOTREPLY）、htype（1字节，以太网是1）、hlen（1字节，MAC地址长度，以太网是6）、hops（1字节）、xid（4字节，事务ID）、secs（2字节）、flags（2字节，最高位是广播标志）、ciaddr/yiaddr/siaddr/giaddr（各4字节IP地址）、chaddr（16字节，前6字节是MAC地址）、sname（64字节）、file（128字节）和options（可变长度）。options字段以magic cookie 0x63825363开头，后面跟TLV格式的选项。
+
+选项解析是核心。Option 53（DHCP Message Type）标识报文类型：1是Discover、2是Offer、3是Request、4是Decline、5是ACK、6是NAK、7是Release。Option 54（Server Identifier）是DHCP服务器的IP地址。Option 51（IP Address Lease Time）是租约时间，单位秒。Option 50（Requested IP Address）是客户端请求的IP。Option 1（Subnet Mask）、Option 3（Router）、Option 6（DNS Server）等网络参数也要解析。Option 255表示选项结束，Option 0是padding。有些选项可以出现多次（比如Option 6 DNS Server可以列多个地址），有些选项有最小长度要求。
+
+租约管理功能要模拟DHCP服务器端的行为：维护一个IP地址池，收到Discover时从池中分配一个IP，发送Offer；收到Request时确认分配，发送ACK并记录租约信息（客户端MAC、分配的IP、租约开始时间、租约时长）。租约到期前（到达T1时间，即租约期的50%）客户端应该续租，收到续租Request时延长租约。到达T2时间（87.5%）如果还没续租成功，客户端应该向其他服务器申请。租约到期后IP回收到地址池。
+
+服务端HTTP接口：解析DHCP报文（POST，传入十六进制字节，返回解析后的结构化信息）、构造DHCP报文（POST，指定报文类型和各字段，返回字节序列）、管理地址池（GET/POST，添加删除IP范围）、查看租约表（GET，按MAC地址或IP查询）、模拟DORA流程（POST，输入客户端请求，自动走完整个流程返回结果）。客户端CLI用于DHCP报文的分析和调试。
+
+有个坑：DHCP选项中有些是变长数据，解析时不能只看类型字节后面跟1个长度字节。大部分选项确实是TLV格式（1字节type + 1字节length + length字节value），但Option 12（Host Name）等选项的值是字符串，不需要额外处理。Option 82（Relay Agent Information）是嵌套的子选项格式，里面又包含子选项的TLV。Options字段的总长度由报文总长度减去固定头部236字节得出，不是到Option 255就结束，后面可能还有数据（虽然通常不会）。
+
+还有一个容易搞错的地方：DHCP报文中的xid是客户端生成的事务标识，服务器在回复Offer和ACK时必须使用和Discover/Request相同的xid。模拟DORA流程时要确保这个匹配关系正确。另外flags字段的最高位（广播标志）为1时，服务器应该以广播方式回复，而不是单播。ciaddr在Discover中必须为0，在Request中如果客户端之前已经获得过IP则填入之前的IP（续租场景），否则为0。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

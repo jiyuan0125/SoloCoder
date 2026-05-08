@@ -1,0 +1,13 @@
+帮我实现一个HTTP Range请求处理器。这个模块要能正确处理客户端发来的Range请求头，返回资源对应范围的内容。
+
+Range请求的基本格式是 Range: bytes=start-end。支持三种形式：指定起止位置如 bytes=0-499，只指定起始如 bytes=500-（从500到末尾），只指定末尾如 bytes=-500（最后500字节）。当Range请求合法时，响应状态码应该是206 Partial Content，并且带上Content-Range响应头，格式为 bytes start-end/total，其中total是完整资源的总大小。如果Range请求的范围不合法（比如start超过文件大小），返回416 Range Not Satisfiable。
+
+多范围请求是难点。客户端可以在一个Range头里请求多个不连续的范围，用逗号分隔，比如 bytes=0-99,500-599,800-。这种情况下响应体的Content-Type要设为 multipart/byteranges，每个范围作为一个part，用边界字符串分隔，每个part有自己的Content-Type和Content-Range头。边界字符串要随机生成，保证不会和内容冲突。
+
+If-Range条件请求也要支持。客户端发If-Range头时，值可以是资源的ETag或者最后修改时间。如果当前资源的ETag或修改时间和If-Range匹配，就正常返回Range内容；如果不匹配，就忽略Range头，返回完整的资源（200状态码）。
+
+提供两个核心方法：HandleRangeRequest接收HTTP请求和资源内容，处理Range逻辑并返回响应；ParseRangeHeader解析Range请求头，返回解析后的范围列表和错误信息。同时提供GenerateETag方法，根据内容生成ETag值（用内容的SHA-256哈希的前32个十六进制字符）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

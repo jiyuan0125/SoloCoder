@@ -1,0 +1,17 @@
+我想让你写一个Go的gRPC帧解析器。要求不使用google.golang.org/grpc包，完全手动解析gRPC over HTTP/2的帧格式和消息内容。
+
+gRPC消息在HTTP/2上传输时，每个RPC方法对应一个HTTP/2流。请求和响应都封装在gRPC帧中，帧格式是：1字节的压缩标志（0表示未压缩，1表示GZIP压缩）加上4字节的大端序消息长度，后面跟着消息体。消息体是protobuf编码的。这个5字节的帧头需要在HTTP/2的DATA帧中正确切分，一个HTTP/2 DATA帧可能包含多个gRPC帧，也可能一个gRPC帧跨多个HTTP/2 DATA帧，所以解析时要维护一个缓冲区来处理跨帧的情况。
+
+HTTP/2帧格式也要解析：9字节的帧头，包含3字节的长度（大端序）、1字节的类型（DATA是0x0，HEADERS是0x1，SETTINGS是0x4等）、1字节的标志和4字节的流标识符。类型为DATA的帧载荷就是gRPC数据。类型为HEADERS的帧要用HPACK算法解压缩来获取请求头信息，其中":method"、":path"、":scheme"、":authority"是伪头部字段，"content-type"必须是"application/grpc"才表示这是gRPC请求，"grpc-encoding"表示压缩方式。
+
+protobuf消息的解析也需要手写一个简单的解析器。protobuf的wire format中每个字段是varint编码的tag（字段编号加类型编码），后面跟对应类型的值。只需要支持varint（type 0）、length-delimited（type 2）和fixed32/64（type 5/1）这几种基本类型就够了。能解析出字段编号和值就行，不需要处理嵌套message的完整语义。
+
+服务端HTTP接口：输入gRPC原始数据（POST，传入HTTP/2帧的原始字节），返回解析后的结构化信息，包括HTTP/2帧头信息、gRPC帧信息、protobuf字段列表。也可以反向操作：输入结构化数据，输出编码后的字节序列。客户端CLI用于分析gRPC抓包数据，支持从文件读取或从标准输入传入十六进制数据。
+
+有几个容易出错的地方：HTTP/2帧长度字段最大值是16384（2的14次方），超过这个值的帧要拒绝。DATA帧的END_STREAM标志位表示流结束，但gRPC的消息结束不一定和HTTP/2流结束同步，gRPC用trailers（HTTP/2的END_HEADERS标志+特殊trailers帧）来表示RPC结束，其中"grpc-status"头部表示状态码，0表示成功。protobuf的varint编码中，最高位是继续标志，实际数据在低7位，解析时要注意有符号整数使用zigzag编码，不是直接存储的补码形式。
+
+还有一个细节：gRPC的trailers通过HTTP/2的HEADERS帧发送，flags中包含END_STREAM表示整个流关闭。解析时要区分HEADERS帧是请求头还是trailers，trailers里不包含伪头部字段（不以冒号开头的字段名）。如果"grpc-status"不存在但END_STREAM已设置，按规范默认status为0（OK）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

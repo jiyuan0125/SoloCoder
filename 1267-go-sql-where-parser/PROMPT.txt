@@ -1,0 +1,15 @@
+需要实现一个SQL WHERE子句解析器，把WHERE后面的条件字符串解析成AST（抽象语法树）。支持的语法包括：比较表达式（column = value、column > value、column < value、column >= value、column <= value、column != value）、逻辑组合（AND、OR、NOT）、IN列表（column IN (1, 2, 3)）、NOT IN（column NOT IN (1, 2, 3)）、LIKE模式匹配（column LIKE '%pattern%'）、NOT LIKE、BETWEEN范围（column BETWEEN 1 AND 100）、IS NULL、IS NOT NULL。
+
+值类型要区分：不带引号的数字解析为数值类型，单引号包裹的解析为字符串，关键字NULL解析为空值。SQL关键字不区分大小写，AND/and/And都行。列名支持反引号包裹以避免跟关键字冲突，比如`order` = 5。
+
+运算符优先级：NOT最高，然后是AND，OR最低。可以用圆括号改变优先级。BETWEEN有个隐藏陷阱：BETWEEN x AND y里的AND不是逻辑操作符，而是BETWEEN语法的一部分，不能把它拆成三个独立条件。解析器必须把BETWEEN作为一个整体节点处理。
+
+IN列表的元素可以是数字或字符串，用逗号分隔，空列表IN ()不合法。LIKE的通配符只有%和_，解析时不展开通配符，原样保留给后续匹配引擎用。百分号和下划线如果要用字面值，需要用ESCAPE子句指定转义字符，比如LIKE '%abc\%' ESCAPE '\'。
+
+解析结果要能序列化为JSON，方便调试。AST节点类型包括ComparisonNode、LogicalNode、InNode、LikeNode、BetweenNode、NullCheckNode。每个节点有类型标识和子节点。
+
+HTTP服务端口8080，接口：POST /sql/parse（传入WHERE子句字符串，返回AST JSON）、POST /sql/match（传入WHERE和一条数据记录的JSON，返回是否匹配）。CLI客户端：sql parse "WHERE age > 18 AND name LIKE '%张%'"（解析并打印AST）、sql validate "WHERE ..."（只检查语法是否合法）、sql explain "WHERE ..."（打印解析过程和中间步骤）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

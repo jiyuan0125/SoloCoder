@@ -1,0 +1,19 @@
+defaults: &defaults
+  adapter:  postgres
+  host:     localhost
+  port:     5432
+
+development:
+  database: myapp_development
+  <<: *defaults
+
+test:
+  database: myapp_test
+  <<: *defaults
+  host: test.example.com
+
+production:
+  database: myapp_production
+  <<: *defaults
+  host: prod.example.com
+  port: 5433

@@ -1,0 +1,9 @@
+帮我用Go写一个HTML内容净化命令行工具。我们公司有个富文本编辑器，用户在前端写的内容会保存成HTML片段，然后在不同终端（App内嵌WebView、邮件模板、小程序富文本）上展示。问题是用户可能故意或无意地插入恶意脚本，比如在img标签的onerror里写JavaScript，或者在style里用expression执行代码。我们需要一个工具在服务端对这些HTML片段做安全清洗。
+
+工具接收一个HTML文件或者从标准输入读取HTML字符串，输出净化后的HTML。净化规则基于白名单机制，只保留允许的标签和属性，其他全部移除。默认允许的标签包括p、br、div、span、strong、em、a、img、ul、ol、li、h1到h6、table、thead、tbody、tr、td、th、blockquote、pre、code。允许的属性按标签区分：a标签允许href和title，img标签允许src、alt和width，其他标签只允许class和style。href属性的值如果是JavaScript协议（以javascript:开头，注意大小写混合的情况比如Javascript:或JAVASCRIPT:）必须移除整个a标签，而不是只清空href。style属性里的内容也需要检查，移除expression和url函数调用。
+
+工具还需要支持通过命令行参数指定自定义的白名单配置文件。配置文件用JSON格式，里面定义额外的允许标签和每个标签允许的属性列表。这样不同业务场景可以灵活调整净化策略。
+
+净化过程中有几个比较隐蔽的问题。第一，HTML实体编码绕过，攻击者可能把"javascript"编码成"&#106;avascript"或者"&#x6A;avascript"，你在检查协议的时候需要先解码HTML实体再做判断。第二，属性值里可能包含换行符和制表符，比如"java\nscript:"这种，浏览器会忽略这些空白字符照样执行脚本，你的检测逻辑也要处理这种情况。第三，自闭合标签和不闭合标签的处理，比如用户写了"<img src=x onerror=alert(1)"没有关闭，HTML解析器会怎么理解？你需要确保在这种情况下onerror属性仍然能被检测到并移除。第四，嵌套的注释标签，攻击者可能用"<!--><script>alert(1)</script>"这种方式绕过注释过滤，需要确保净化后的输出不包含任何可执行的脚本内容。
+
+架构上，先把HTML解析成节点树，遍历树上的每个元素节点，检查标签名是否在白名单中，不在就移除（保留其子文本节点），在的话就逐个检查属性，不在白名单中的属性删除，特殊属性做值检查。最终把过滤后的树重新序列化成HTML输出。

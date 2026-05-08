@@ -1,0 +1,19 @@
+1096
+
+我想写一个Go语言的GraphQL查询解析器，能解析GraphQL查询语法并执行简单的数据查询。
+
+核心库包含一个词法分析器和一个递归下降解析器，把GraphQL查询字符串解析成AST（抽象语法树）。支持的语法包括：字段选择（name, age）、嵌套字段（user { name, posts { title } }）、参数传递（user(id: "123")）、别名（admin: user(role: "admin")）、变量定义和使用（query($id: ID!) { user(id: $id) { name } }）、片段（fragment on User）、以及基本的操作类型（query和mutation）。解析器遇到语法错误时要报告错误位置（行号和列号）。
+
+解析成AST后需要一个执行引擎。执行引擎维护一个"解析器注册表"，每个类型（比如User、Post）可以注册一组字段解析函数（Resolver）。字段解析函数的签名是func(ctx context.Context, source interface{}, args map[string]interface{}) (interface{}, error)。执行时从根查询类型开始，逐层解析每个字段，收集结果构建成嵌套的map。
+
+还要实现N+1查询检测：如果一个字段解析函数在循环中被反复调用（通过统计调用次数来检测），给出警告日志。
+
+服务端提供HTTP接口，/api/graphql接受GraphQL查询字符串作为POST body，执行并返回JSON结果。支持GET请求只做语法验证不执行。/api/schema返回当前注册的所有类型和字段信息。/api/variables可以预设变量值供后续查询使用。
+
+客户端是命令行工具，query子命令直接在命令行输入GraphQL查询并执行，file子命令从.gql文件读取查询执行。lint子命令只做语法检查不执行，输出格式化后的查询和所有警告（包括N+1检测）。format子命令做查询的格式化美化输出。
+
+边界情况：空查询要报错而不是panic。循环引用的类型定义要能检测并报错。变量类型不匹配（比如传字符串给Int类型参数）要给出明确的验证错误。深层嵌套查询（比如100层嵌套）要设置最大深度限制防止栈溢出。查询中包含注释（#开头）要正确跳过。不支持的语法要给出"unsupported"提示而不是直接忽略。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

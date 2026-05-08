@@ -1,0 +1,19 @@
+需要实现RFC 7396 JSON Merge Patch的处理工具。JSON Merge Patch跟JSON Patch（RFC 6902）不一样，很多人会搞混。Merge Patch更简单：直接用一个JSON对象来描述目标对象应该变成什么样。处理规则是：原始对象和patch对象做合并，patch中出现的字段覆盖原始对象的对应字段，patch中没有出现的字段保持不变。如果patch中某个字段的值是JSON null，则从原始对象中删除该字段。
+
+举个例子，原始对象是{"a": "b", "c": {"d": "e", "f": "g"}}，patch是{"a": "z", "c": {"f": null}}。合并结果是{"a": "z", "c": {"d": "e"}}。a被覆盖为z，c.f因为patch中值为null所以被删除，c.d因为patch的c对象里没提到所以保留。
+
+有几个容易踩的坑。第一，如果patch本身就是一个对象，那它要跟目标对象逐字段合并。但如果patch不是对象（是字符串、数字、数组、布尔值），那它直接替换整个目标对象，不做逐字段合并。比如目标是{"a": "b"}，patch是"hello"，结果是"hello"。
+
+第二，数组的处理。数组在merge patch中被当作原子值，整个替换而不是逐元素合并。目标是{"items": [1, 2, 3]}，patch是{"items": [4]}，结果是{"items": [4]}。
+
+第三，null值的语义。JSON里null是合法值，但在merge patch中null表示"删除这个字段"。那如果原始对象的某个字段值就是null怎么办？按规范，patch中该字段为null仍然表示删除。如果想让某个字段保持为null，就不要在patch里包含这个字段。
+
+第四，空对象的处理。patch是{}表示不做任何修改。目标是{"a": "b"}，patch是{}，结果还是{"a": "b"}。但目标是"hello"（非对象），patch是{}，结果是{}（空对象替换了原始值）。
+
+第五，顶层patch可以不是对象。如果目标本身就是非对象类型，patch可以是用新值直接替换。如果目标是null，patch是{"a": 1}，结果是{"a": 1}。
+
+HTTP服务端口8080，接口：POST /merge/apply（传入original和patch两个JSON，返回合并结果）、POST /merge/diff（传入两个JSON，反向生成merge patch）。CLI客户端：merge apply --original <file> --patch <file>（应用patch并输出）、merge diff <file1> <file2>（生成从file1到file2的patch）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

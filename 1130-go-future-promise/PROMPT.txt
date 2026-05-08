@@ -1,0 +1,11 @@
+异步编程里Future和Promise是经典模式，Go虽然goroutine和channel已经很方便了，但有些场景还是需要一个结构化的异步计算框架。比如要支持Then链式调用（异步任务完成后自动触发下一个任务）、超时控制、错误传播，这些用裸goroutine写起来很乱。
+
+核心库实现Future/Promise模式：创建一个Promise，启动异步计算，返回Future对象。Future支持Then注册回调（任务完成后执行）、Chain串联多个异步任务（前一个的输出作为后一个的输入）、Await阻塞等待结果、Timeout设置超时。Promise在异步计算完成后调用Resolve设置结果或Reject设置错误，触发回调链执行。服务端提供HTTP接口提交异步计算任务、查询任务状态和结果、取消正在执行的任务。客户端是命令行工具，提交任务、查看结果、测试链式调用和超时行为。
+
+Then回调的执行时机和goroutine调度是个坑。如果异步任务已经完成了，这时候注册Then回调应该立刻执行还是放到下一个goroutine？不同语言的Promise实现行为不一样：JavaScript的microtask会在当前tick内同步执行，Java的CompletableFuture默认在完成线程内执行回调。Go里需要明确这个语义，建议用独立goroutine执行回调避免阻塞完成线程，但这也意味着回调的执行顺序不能保证。超时处理也有微妙之处：如果Future已经resolve了，超时不应该触发Reject，反之亦然，需要用atomic状态标记保证Resolve和Timeout只执行一次。Chain串联时中间步骤出错了，后续的Then不应该执行，但要触发Catch链，这个错误传播逻辑需要仔细设计。还有一个实际的问题：如果Then回调里又返回一个Future（异步回调），外层Future应该等待内层Future完成后才算完成，这叫Future的扁平化，实现起来需要递归等待。
+
+客户端子命令：run提交一个异步任务并等待结果，chain提交链式任务（多个步骤串联），timeout测试超时行为，cancel取消任务，log查看所有任务的执行日志和时序。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

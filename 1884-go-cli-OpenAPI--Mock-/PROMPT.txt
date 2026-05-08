@@ -1,0 +1,9 @@
+帮我用Go写一个OpenAPI规范文件校验和Mock数据生成的命令行工具。我们公司的API文档用的是OpenAPI 3.0格式，前后端对接时经常出现文档和实际实现不一致的情况，需要一个工具做两件事：一是验证OpenAPI文件的规范性，二是根据API定义自动生成Mock响应数据。
+
+先说校验功能。工具接收一个.yaml或.json格式的OpenAPI文件，检查以下内容：必填字段是否齐全（info.title、info.version、paths至少有一条路径）、每个路径操作是否有至少一个响应定义（不能只定义request没有response）、请求体和响应体的schema引用是否能解析到（$ref指向的组件是否存在）、HTTP方法名是否合法（只允许get、put、post、delete、patch、head、options）、路径参数是否在对应的操作参数列表中声明了（比如路径是/users/{id}但参数列表里没有id）。校验结果按错误和警告分类，错误是会导致工具无法正确解析的问题，警告是不规范但不影响解析的问题。
+
+再说Mock数据生成功能。工具接收OpenAPI文件和一个API路径加方法（比如/users/{id} GET），根据响应定义的schema自动生成一个符合schema约束的JSON响应体。生成规则：字符串类型的字段生成有意义的示例值（如果是name就生成一个中文名，如果是email就生成一个邮箱地址，其他字段用字段名加上随机后缀），数字类型根据minimum和maximum约束生成范围内的随机数，没有约束就生成1到100的随机整数，数组类型生成2到3个元素的对象，布尔类型随机true或false。如果schema里有enum定义，就从enum值里随机选一个。如果字段是required的必须生成，optional的以50%概率决定是否生成。生成的Mock数据输出为格式化的JSON。
+
+这个工具有一个容易出错的地方：OpenAPI文件中schema的引用解析。$ref可以是文件内引用（#/components/schemas/User）也可以是外部文件引用（./common.yaml#/components/schemas/Error）。外部引用需要加载外部文件并解析，这里要处理循环引用的问题，比如A文件引用B文件，B文件又引用A文件，检测到循环就停止解析并报错。另一个坑是allOf、oneOf、anyOf这几个组合关键字的合并处理，allOf需要把多个schema的所有字段合并，oneOf只能匹配其中一个，anyOf至少匹配一个。Mock数据生成时遇到oneOf要随机选一个schema来生成数据。
+
+代码架构用分层设计，底层是YAML/JSON解析和schema引用解析，中间层是校验规则引擎和数据生成器，上层是命令行参数解析和输出格式化。

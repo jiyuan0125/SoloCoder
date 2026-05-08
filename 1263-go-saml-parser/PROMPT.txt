@@ -1,0 +1,15 @@
+我在做企业身份联邦对接，对方发来的SAML断言是XML格式的，需要写一个解析和验证工具。SAML断言的结构是嵌套XML，根元素是<saml:Assertion>，带xmlns命名空间声明。里面包含<ds:Signature>签名节点和<saml:AttributeStatement>属性节点。
+
+解析器需要做这几件事：从断言中提取签名节点，然后用XML Signature规范验证签名的完整性。签名验证的核心是计算摘要值，用SHA256对引用的XML节点做canonicalization（C14N），然后跟签名中的DigestValue比对。实际开发中先实现签名节点的提取和结构化解析，RSA签名验证用预置的公钥做。
+
+从AttributeStatement里提取属性，每个<saml:Attribute>有Name和AttributeValue列表。常见的属性有email、firstName、lastName、roles。roles可能是一个多值属性，多个<saml:AttributeValue>。属性值要去掉前后空白，如果属性值为空字符串则忽略该属性。
+
+AudienceRestriction校验也很重要，<saml:Conditions>里的<AudienceRestriction>指定了哪些服务提供者可以接收这个断言。必须检查断言中的Audience列表是否包含我们配置的SP实体ID。同时Conditions里的NotBefore和NotOnOrAfter要检查时间有效性，允许2分钟的时钟偏移。如果当前时间在NotBefore之前或NotOnOrAfter之后，断言无效。
+
+SubjectConfirmation也要验证，Method必须为"urn:oasis:names:tc:SAML:2.0:cm:bearer"，SubjectConfirmationData里的Recipient必须跟我们的ACS URL完全匹配，NotOnOrAfter也要检查。
+
+HTTP服务端口8080，接口：POST /saml/parse（传入XML字符串，返回解析结果）、POST /saml/validate（完整验证断言）。CLI客户端支持：saml parse <file>、saml validate <file> --audience <sp-id>、saml extract <file> --attribute <name>。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

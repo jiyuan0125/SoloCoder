@@ -1,0 +1,15 @@
+团队里每次新建Go项目都要手写struct定义来对应配置文件，想做个工具自动从TOML文件生成Go结构体代码。输入一个TOML文件，输出对应的Go struct定义，字段类型自动推断。
+
+TOML的类型推断规则：纯数字整数用int64，带小数点用float64，true/false用bool，双引号字符串用string，日期时间用time.Time，数组根据第一个元素的类型决定（空数组默认[]interface{}，数组元素类型不一致则用[]interface{}）。TOML的key如果包含连字符或点号，生成的Go字段名要转成驼峰命名，同时加toml tag保留原始key名。
+
+表（table）生成嵌套的struct。比如[section]下的键值对变成对应struct的字段。表名转驼峰作为字段名和类型名。数组表（array of tables，[[items]]）生成struct切片类型。
+
+有几个容易出错的地方。TOML的键是区分大小写的，"Name"和"name"是不同的键，生成的struct字段也要区分。内联表（inline table，用花括号{}）跟普通表语义一样，只是写法不同，解析时要统一处理。多行字符串（"""三引号）和字面量字符串（'单引号）内容不同：双引号字符串支持转义，字面量字符串不支持转义、原样保留。生成Go代码时字符串字段统一用string类型就行，不需要区分来源。
+
+TOML的注释用#号，解析时忽略。键名如果跟Go关键字冲突（比如type、func、var），字段名加后缀_避免编译错误。Dotted keys（如[fruit.apple]、[fruit.apple.taste]）要正确展开为嵌套结构，但如果同一个dotted key既作为表的键又作为表名出现，后者覆盖前者。
+
+HTTP服务端口8080，接口：POST /codegen/generate（传入TOML内容，返回Go代码字符串）。CLI客户端：toml2struct <input.toml>（读取文件并输出Go代码到stdout）、toml2struct <input.toml> -o output.go（输出到文件）、toml2struct -pkg mypackage（指定包名）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

@@ -1,0 +1,21 @@
+帮我想一个Raft领导者选举的模拟程序，用Go写。不用实现完整的Raft协议，只需要模拟领导者选举和日志追加这两个核心部分就行。
+
+具体来说，每个节点有自己的状态：follower、candidate、leader。初始都是follower，每个follower有个随机的选举超时时间，范围150到300毫秒。超时没收到心跳就变成candidate，开始发RequestVote请求，投票给自己，然后给其他节点拉票。收到大多数票就变成leader。leader要定期发心跳AppendEntries，告诉别人自己还活着。心跳间隔大概50毫秒。
+
+日志追加这边，leader收到客户端的写请求后，先追加到自己日志里，然后复制给follower。收到大多数确认就commit。follower的日志如果和leader冲突了，要以leader为准回滚。
+
+服务端提供HTTP接口，可以创建集群、启动选举、提交日志、查询各节点状态。客户端通过命令行操作这些接口。
+
+有个关键点：任期Term很重要，每次选举Term加1，投票时如果对方的Term比自己大就要让步。如果follower收到了更高Term的心跳或投票请求，自己的Term也要更新。这个逻辑别搞错了。
+
+还有一个容易忽略的地方：candidate在等待投票结果的过程中，如果收到了Term大于等于自己的AppendEntries心跳，说明已经有leader产生了，得立刻退回follower。别一直傻等选票。
+
+关于并发，每个节点内部要用goroutine来处理定时器和消息，节点之间通过channel通信。但服务端HTTP处理是另外的goroutine，要注意状态访问的并发安全，用mutex保护共享状态。
+
+日志匹配的细节要注意：leader在AppendEntries里要带上prevLogIndex和prevLogTerm，follower检查自己在这个位置上的日志Term是否匹配，不匹配就拒绝。leader收到拒绝后要回退一条重试。这个退避逻辑别省略。
+
+最后，集群至少得3个节点才能体现选举的意义，1个或2个节点没法选出leader。接口上要允许动态加节点。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

@@ -1,0 +1,11 @@
+我们公司的SSO系统要接入第三方身份提供商，需要解析OpenID Connect的ID Token。ID Token本质上是一个JWT，由header、payload、signature三部分用点号拼接而成。header是base64url编码的JSON，里面指定alg和typ。payload也是base64url编码的JSON，包含iss（issuer）、sub（subject）、aud（audience）、exp（expiration）、iat（issued at）、nonce等标准claim。signature用HMAC SHA256算法（HS256）验证。
+
+实现一个ID Token验证器。首先拆分JWT的三段，分别base64url解码。然后验证signature，用预共享的密钥对前两段重新签名，对比是否一致。接着检查所有时间相关的claim：exp必须大于当前时间，iat不能是未来时间，可以允许最多60秒的时钟偏移。aud必须包含我们自己的client_id，如果aud是数组就逐个检查。iss必须跟配置中信任的issuer完全匹配，不允许子域名通配。nonce字段用于防止重放攻击，验证时需要核对是否跟授权请求时发出的nonce一致，nonce在服务端缓存5分钟后清除。
+
+还需要验证acr（Authentication Context Class Reference）claim，要求值必须为"urn:mfa"或"urn:password"，其他值拒绝。对于自定义claims，要支持提取email、name、picture等标准profile字段，如果不存在就跳过而不是报错。
+
+HTTP服务端口8080，提供两个接口：POST /oidc/verify（接收JWT字符串，返回验证结果和解析出的claims）、POST /oidc/config（配置issuer和client_id）。CLI客户端支持命令：token verify <jwt-file>（从文件读取JWT并验证）、token parse <jwt-file>（仅解析不验证，打印所有claims）、token config set <key> <value>（设置配置）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

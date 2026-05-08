@@ -1,0 +1,39 @@
+{
+  "tasks": [
+    {
+      "id": "A",
+      "dependencies": [],
+      "duration": 2,
+      "should_fail": true,
+      "retries": 2,
+      "retry_interval": 1
+    },
+    {
+      "id": "B",
+      "dependencies": [],
+      "duration": 3,
+      "should_fail": false
+    },
+    {
+      "id": "C",
+      "dependencies": ["A", "B"],
+      "duration": 2,
+      "should_fail": false
+    },
+    {
+      "id": "D",
+      "dependencies": ["B"],
+      "duration": 1,
+      "should_fail": false
+    },
+    {
+      "id": "E",
+      "dependencies": ["C", "D"],
+      "duration": 2,
+      "should_fail": false
+    }
+  ],
+  "max_concurrency": 4,
+  "default_retries": 0,
+  "default_retry_interval": 1
+}

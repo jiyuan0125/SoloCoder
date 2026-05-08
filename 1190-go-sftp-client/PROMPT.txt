@@ -1,0 +1,19 @@
+帮我写一个Go的SFTP协议子集实现。要求基于SSH通道传输，不使用golang.org/x/crypto/ssh以外的第三方库，实现基本的文件传输和目录操作功能。
+
+SFTP是SSH File Transfer Protocol，运行在SSH连接之上。首先需要建立SSH连接：支持密码认证和密钥认证两种方式。SSH连接建立后，在SSH通道上复用SFTP子系统（子系统名"sftp"）。SFTP协议本身是二进制协议，每个数据包由4字节长度（大端序）加1字节类型加1字节请求ID加载荷组成。
+
+SFTP协议版本要协商：客户端发送SSH_FXP_INIT（类型1），包含客户端支持的协议版本号（建议5或6），服务器回复SSH_FXP_VERSION（类型2），包含服务器支持的版本号，客户端使用两者中较小的版本号。后续操作使用的请求ID从1开始递增，每个请求的回复中会带上对应的请求ID，客户端通过匹配ID来关联请求和响应。
+
+文件操作包括：打开文件（SSH_FXP_OPEN，类型3）、读取文件（SSH_FXP_READ，类型5，要指定偏移量和长度）、写入文件（SSH_FXP_WRITE，类型6）、关闭文件句柄（SSH_FXP_CLOSE，类型4）。打开文件时flags字段指定读写模式：SSH_FXF_READ(0x00000001)、SSH_FXF_WRITE(0x00000002)、SSH_FXF_CREATE(0x00000008)、SSH_FXF_TRUNCATE(0x00000010)、SSH_FXF_APPEND(0x00000020)。SSH_FXF_CREATE和SSH_FXF_APPEND组合使用时要先清空再追加，不要弄混。
+
+目录操作：打开目录（SSH_FXP_OPENDIR，类型11）、读取目录条目（SSH_FXP_READDIR，类型12，每次返回一批条目，当返回空列表时表示读完）、获取文件属性（SSH_FXP_FSTAT，类型8，通过文件句柄）和SSH_FXP_STAT（类型17，通过路径）。文件属性结构包含文件类型（普通文件、目录、符号链接）、文件大小、权限、修改时间等字段。文件类型用SSH_FILEXFER_TYPE_*常量表示。
+
+服务端HTTP接口：管理SSH连接配置（POST，传入主机、端口、用户名、密码或密钥路径）、执行文件操作（POST，指定操作类型和参数如上传下载列表目录）、查看文件内容（GET，通过SFTP读取远程文件并返回）、传输进度查询（GET）。客户端CLI提供交互式的SFTP操作界面，类似sftp命令行工具。
+
+有个关键陷阱：SSH_FXP_READDIR在读完目录所有条目后不会返回EOF错误，而是返回SSH_FXP_NAME（类型104）但文件名列表为空。如果持续调用READDIR且不检查返回列表是否为空，会导致无限循环。另一个容易出错的地方：SFTP的文件偏移量是uint64，但SSH_FXP_READ请求中的偏移量编码为8字节大端序，Go中int在32位平台上只有4字节，要用int64或uint64来处理偏移量。
+
+还有一个细节：SFTP v6中文件权限字段是4字节，而v3中权限是2字节。属性flags字段控制哪些属性存在，解析时要根据flags决定读取哪些字段，不能假设所有字段都存在。SSH_FXP_STATUS（类型101）是错误响应，包含错误码和错误消息，常见的错误码有SSH_FX_OK(0)、SSH_FX_EOF(1)、SSH_FX_NO_SUCH_FILE(2)、SSH_FX_PERMISSION_DENIED(3)等，所有操作失败都会返回STATUS包而不是网络错误。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

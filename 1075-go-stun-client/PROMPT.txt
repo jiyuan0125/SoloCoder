@@ -1,0 +1,21 @@
+我想做一个STUN协议的客户端工具，用Go实现。STUN是Session Traversal Utilities for NAT的缩写，用来检测NAT类型和获取公网IP地址。
+
+基本原理是客户端向公网STUN服务器发送Binding Request，服务器返回Binding Response，里面包含客户端的映射地址（就是NAT分配的公网IP和端口）。通过多次请求不同的服务器和端口，可以判断NAT的类型。
+
+服务端提供HTTP接口，可以发起STUN检测请求，返回NAT类型和映射地址。也支持配置自定义的STUN服务器地址。客户端命令行工具直接运行就能检测当前网络的NAT类型，打印出结果。
+
+STUN协议的消息格式有固定的20字节头部，前2字节是消息类型，接着2字节是消息长度，然后4字节是Magic Cookie（固定值0x2112A442），再12字节是Transaction ID。后面跟着属性，每个属性也是TLV格式：2字节类型、2字节长度、然后值。XOR-MAPPED-ADDRESS属性要把IP和端口跟Magic Cookie和Transaction ID做异或，这个异或逻辑别搞错。
+
+NAT类型检测的流程是这样的：先向服务器的同一个IP不同端口发两个请求，如果返回的映射地址端口不同，说明是对称型NAT。然后从另一个IP向客户端发请求，如果客户端能收到，说明不是地址受限型。再细分就是Full Cone、Restricted Cone、Port Restricted Cone和Symmetric四种。
+
+有个细节要注意：STUN用的是UDP，发送请求后要设置合理的超时时间，比如3秒。收不到响应要重试，最多重试3次。Transaction ID要随机生成，每次请求都不一样，用来匹配请求和响应。如果收到的响应Transaction ID对不上，要丢弃。
+
+还要处理认证，有些STUN服务器需要Short-Term Credential机制，就是用户名和密码。MESSAGE-INTEGRITY属性要用HMAC-SHA1计算，输入是整个消息（先把MESSAGE-INTEGRITY的长度设为0再加上padding到4字节对齐），密钥是密码。FINGERPRINT属性是对整个消息（包括MESSAGE-INTEGRITY）做CRC32然后异或0x5354554e。
+
+编码方面，所有多字节数值都是网络字节序（大端），IP地址也是网络字节序。IPv4和IPv6都要支持。
+
+最后，FAMILY字段：IPv4是0x01，IPv6是0x02，别写反了。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

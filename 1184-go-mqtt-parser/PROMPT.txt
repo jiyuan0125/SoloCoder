@@ -1,0 +1,17 @@
+帮我用Go写一个MQTT协议解析器，支持MQTT 3.1.1版本。不需要实际连接Broker，只做报文的编码和解码，以及QoS级别的正确处理和遗嘱消息的构造。
+
+MQTT报文格式是固定的头字节加上可变头部和载荷。第一个字节的高4位是报文类型，低4位是标志位。剩余长度用变长整数编码（Variable Byte Integer），每个字节的最高位是继续标志，剩余7位存数据，最多4个字节。解析时要正确处理这个变长长度字段，它决定了后面要读多少字节。
+
+CONNECT报文的可变头部包含协议名（MQTT）、协议级别（4代表3.1.1）、连接标志字节和Keep Alive。连接标志字节里包含Clean Session、Will Flag、Will QoS、Will Retain、用户名标志和密码标志。遗嘱消息（Last Will）在CONNECT报文的载荷里，包含遗嘱主题和遗嘱消息内容，如果Will Flag为1则必须有这两个字段。Will QoS可以是0、1或2，对应不同级别的消息可靠性保证。
+
+PUBLISH报文的QoS处理是重点。QoS 0的PUBLISH直接发出去就行，不需要确认。QoS 1的PUBLISH发送后要等待PUBACK确认，超时要重发。QoS 2的PUBLISH要先等待PUBREC，再发送PUBREL，最后等待PUBCOMP，两阶段确认保证消息不重复不丢失。SUBSCRIBE报文的可变头部包含报文标识符，载荷里是主题过滤器列表，每个过滤器后面跟着期望的QoS级别。SUBACK响应里也是一一对应的返回码。
+
+服务端HTTP接口：解析报文（POST，传入十六进制字符串或base64编码的报文数据，返回解析结果JSON）、构造报文（POST，指定报文类型和各字段值，返回编码后的报文）、管理遗嘱消息配置（GET/PUT）。客户端CLI用来做报文分析，输入原始报文数据输出解析结果，或者输入参数输出构造好的报文。
+
+有个容易搞混的地方：SUBSCRIBE和UNSUBSCRIBE报文的载荷里，每个主题过滤器后面都有2个字节（期望QoS），不是1个字节。而SUBACK和UNSUBACK的返回码是1个字节。另外PUBLISH报文的DUP标志位只在QoS 1和2的重发报文中才置1，首次发送的PUBLISH DUP必须为0。报文标识符的范围是1到65535，0表示无效，SUBSCRIBE/PUBLISH(QoS>0)/UNSUBSCRIBE/PUBACK/PUBREC/PUBREL/PUBCOMP都必须携带标识符。
+
+还有一个细节：CONNECT报文的Client ID如果为空且Clean Session为0，按协议规范服务器应该拒绝连接（返回CONNACK with identifier rejected），解析器验证CONNECT报文时要检查这个约束。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

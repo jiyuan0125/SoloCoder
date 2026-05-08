@@ -1,0 +1,20 @@
+{
+  "tasks": [
+    {
+      "id": "A",
+      "dependencies": ["C"],
+      "duration": 2
+    },
+    {
+      "id": "B",
+      "dependencies": ["A"],
+      "duration": 3
+    },
+    {
+      "id": "C",
+      "dependencies": ["B"],
+      "duration": 2
+    }
+  ],
+  "max_concurrency": 4
+}

@@ -1,4 +1,0 @@
-Operation,Key,Old_ID,Old_Name,Old_Age,Old_City,New_ID,New_Name,New_Age,New_City
-ADD,1,,,,,1,Alice,30,New York
-ADD,2,,,,,2,Bob,25,London
-ADD,3,,,,,3,Charlie,35,Paris

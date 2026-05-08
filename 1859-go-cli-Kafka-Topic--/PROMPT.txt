@@ -1,0 +1,11 @@
+帮我写一个Go命令行工具来管理Kafka的Topic和消费者组。我们有好几个Kafka集群，每个集群里有几十个Topic，平时管理起来靠kafka自带的命令行脚本，参数太多记不住，想做一个简化版的统一管理工具。
+
+工具通过Kafka的JMX接口或者AdminClient API来操作。为了简单起见，用Kafka的REST Proxy（如果有的话）或者直接通过shell调用kafka命令行工具来实现也行。不过既然是Go写的，最好还是直接用sarama这个Go客户端库来连接Kafka。
+
+topic子命令管理Topic。默认列出所有Topic，显示名称、分区数、副本因子、消息数量（每个分区的最新offset）和创建时间。支持--create创建Topic，指定名称、分区数和副本数。支持--describe查看Topic的详细信息，包括每个分区的leader、ISR列表和副本分布。支持--delete删除Topic，需要Kafka服务端配置了delete.topic.enable=true，如果没配置要提示用户。
+
+consumer子命令管理消费者组。列出所有消费者组，显示组名、消费的Topic、每个分区当前消费到的offset、每个分区的最新offset、滞后消息数（lag）。支持--reset参数重置消费者组的offset到最早或最新位置。
+
+produce和consume子命令用于测试，produce往指定Topic发送消息（从标准输入读取或者直接传入文本），consume从指定Topic消费消息并打印到标准输出。
+
+边缘情况：Kafka集群可能配置了SASL认证（PLAIN或SCRAM），工具需要支持认证参数。连接超时需要合理设置，Kafka集群如果某个Broker不可用，工具要能继续工作而不是完全失败。消费者组的lag可能很大，显示时要用人类可读的格式（比如1.2万条而不是12345条）。如果Topic正在被写入，offset每秒都在变，消费者组的状态查询只是一个时间点的快照，工具要注明这一点。创建Topic时如果指定的分区数超过了集群Broker数量的某个倍数（通常副本数不能超过Broker数），要给出警告。

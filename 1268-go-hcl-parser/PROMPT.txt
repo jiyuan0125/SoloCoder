@@ -1,0 +1,15 @@
+我们基础设施团队用Terraform管理资源，配置文件用的HCL（HashiCorp Configuration Language），需要写一个HCL配置解析器来做自定义的配置校验和转换。HCL的语法有点像Terraform的配置格式，支持块（block）、属性（attribute）、表达式（expression）三种顶级结构。
+
+块用花括号定义，格式是"block_type \"label1\" \"label2\" { ... }"。块类型是标识符，标签用双引号字符串。块可以嵌套。属性是key = value的形式，value可以是字面量（字符串、数字、布尔值）、列表（用方括号[]）、映射（用花括号{}，键值对逗号分隔）、变量引用（var.name或module.xxx.name）、函数调用（func(arg1, arg2)）、条件表达式（condition ? true_val : false_val）、heredoc字符串（<<EOF ... EOF）。
+
+heredoc字符串有个细节：结束标记EOF必须在一行的开头（前面只有空白字符）。如果用了<<-EOF，结束标记前的缩进会被剥除，剥除的长度以结束标记行的前导空白为准。heredoc里支持变量插值${var.name}，解析时标记为表达式节点而不是纯字符串。
+
+变量引用支持点号路径和多级索引，比如var.list[0].name。索引可以是数字字面量或简单的表达式。函数调用的参数可以是位置参数也可以是命名参数（key = value），两者可以在同一个调用中混用，但位置参数必须在命名参数前面。
+
+注释支持#单行注释和/* */多行注释，嵌套块注释是不合法的（第一个*/就结束注释）。行尾的逗号是可选的，方便多行格式化。
+
+HTTP服务端口8080，接口：POST /hcl/parse（传入HCL文本，返回解析后的JSON结构）、POST /hcl/validate（校验配置是否符合指定schema）。CLI客户端：hcl parse <file>（解析并打印）、hcl format <file>（标准化格式化输出）、hcl get <file> --path "resource.aws_instance.web.ami"（用点号路径提取某个值）。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

@@ -1,0 +1,17 @@
+1094
+
+我想用纯Go写一个SQLite文件格式解析器，不依赖CGO，能够读取sqlite3数据库文件的基本结构和数据。
+
+核心库能解析SQLite文件格式。SQLite文件的结构是这样的：文件开头100字节是header，包含magic string（"SQLite format 3\000"）、页大小、文件格式版本、reserved space大小等信息。文件由固定大小的页组成（页大小从header读取，默认4096）。第一页从第100字节开始是schema table的B-tree，记录了所有用户表的创建SQL和根页号。B-tree有表内B-tree（存数据）和索引B-tree两种，每个节点又有内部节点和叶子节点的区别。我需要能解析出：文件头信息、所有表的schema、每个表的数据行。
+
+核心库的API：OpenFile打开一个sqlite3文件并解析header。GetTables返回所有用户表的名称和CREATE TABLE语句。QueryTable接受表名，返回该表所有行的数据（以map[string]interface{}切片的形式）。GetIntegers、GetTexts、GetBlobs这些辅助方法可以从解析出的值中提取具体类型。还要能处理NULL值。
+
+服务端提供HTTP接口，/api/upload上传一个sqlite3文件到服务端内存，/api/tables列出这个数据库的所有表和schema，/api/query?table=xxx查询指定表的数据，支持简单的行数限制和偏移（limit/offset参数）。/api/header返回文件头详细信息。同一时间只保持一个数据库文件在内存中，新上传的会替换旧的。
+
+客户端是命令行工具，open子命令指定sqlite3文件路径并上传到服务端，然后进入交互模式可以输入表名查看数据。tables子命令列出所有表，schema子命令查看建表语句。export子命令把查询结果导出为CSV文件。
+
+边界情况处理：损坏的文件头（magic string不匹配）要给出清晰错误。页大小不在合法范围（512到65536，且必须是2的幂）要报错。遇到不支持的B-tree页面类型或记录格式时，跳过而不是崩溃。变长整数（varint）的解码要正确处理所有合法长度（1到9字节）。TEXT字段要正确处理UTF-8编码。BLOB字段以base64返回。数据库为空（没有任何用户表）时要正常返回空结果。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

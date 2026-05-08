@@ -1,0 +1,23 @@
+帮我做一个MsgPack的编解码库，Go语言实现。MsgPack是一种二进制序列化格式，比JSON更紧凑更快，很多RPC框架用它做传输格式。
+
+MsgPack的格式定义：每个值都有一个类型标记字节，后面跟着具体数据。主要类型有：positive fixint（0x00到0x7f，直接存值）、fixmap（0x80到0x8f，低4位表示元素个数）、fixarray（0x91到0x9f，低4位表示元素个数）、fixstr（0xa0到0xbf，低5位表示字节长度）。还有对应的16位和32位版本用于更大的数据。
+
+整数类型比较复杂：有int8、int16、int32、int64、uint8、uint16、uint32、uint64，加上fixint和negative fixint。编码时要选最小的能容纳该值的格式，解码时要根据类型标记正确解析。比如数字1应该编码为positive fixint（1字节），而不是uint8（2字节）。
+
+map类型在MsgPack里是无序的，编码时key-value对依次排列。解码时要把它们放到Go的map[string]interface{}里。这里有个要注意的：map的key可以是任何类型，不一定是字符串。但Go的map key必须是可比较的类型，所以解码到interface{}时要处理好类型映射。
+
+扩展类型（ext format）用来存储自定义类型，格式是：类型标记、一个字节的type code、数据长度、数据内容。解码时如果遇到不认识的ext type，应该保留原始数据不要丢弃，让调用者自己处理。
+
+服务端提供HTTP接口，可以上传MsgPack二进制数据解码成JSON返回，也可以上传JSON数据编码成MsgPack返回。客户端命令行工具支持对文件进行编码和解码。
+
+有一个容易出错的细节：bin格式（0xc4到0xc6）存的是二进制数据，解码后应该是[]byte，不是字符串。str格式（0xa0到0xbf等）存的是UTF-8字符串，解码后是string。两者在编码时要区分，如果输入是[]byte就用bin，如果输入是string就用str。反过来说，解码bin得到[]byte，解码str得到string。
+
+时间戳类型（timestamp ext）比较特殊，MsgPack定义了timestamp 32（秒级）、timestamp 64（毫秒级）、timestamp 96（纳秒级）三种。编码时要根据精度选择合适的格式，解码时要能正确还原。
+
+浮点数方面：NaN和正负无穷要用IEEE 754的标准表示。比较的时候NaN不等于任何值，包括NaN自己。编码解码过程中要原样保留NaN的payload位，不能改变。
+
+还有一个性能方面的要求：编码解码大数组和大map时不能递归太深，要考虑用迭代代替递归来避免栈溢出。另外，nil值要正确处理，编码为nil格式（0xc0），解码nil格式返回nil。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

@@ -1,0 +1,13 @@
+我想做一个Go语言的反射工具，能读取结构体的标签并做解析校验。
+
+具体来说，核心功能是：给定一个结构体（通过反射获取），把所有字段的tag按名称提取出来。支持json、db、validate三种标签。json标签要处理omitempty和string两种option，db标签要提取列名和索引类型（pk、unique、index），validate标签要支持required、min、max、email、regex等规则。
+
+标签值可以带逗号分隔的option，比如`json:"name,omitempty" validate:"required,min=1,max=50"`。解析的时候要正确拆分，有些option后面带等号和参数。validate标签的min和max既可以用在字符串长度上也可以用在数字范围上，需要根据字段类型来判断。
+
+服务端提供HTTP接口，可以注册结构体（客户端传结构体名称和字段定义的JSON描述），然后查询某个结构体某个字段的标签解析结果。客户端是命令行工具，支持register和query两个子命令。register时从stdin读取JSON格式的结构体描述，query时输出解析后的标签信息，用表格形式展示。
+
+有个细节要注意：匿名字段和嵌套结构体都要处理。匿名字段的标签要从内层结构体继承，但如果外层已经定义了同名标签就用外层的。嵌套结构体用点号拼接路径来表示，比如User.Profile.Avatar这种形式。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

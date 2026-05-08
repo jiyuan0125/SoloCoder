@@ -1,0 +1,15 @@
+我们团队在做API网关的配置校验，需要验证前端提交的JSON数据是否符合预定义的Schema规范。想用Go实现一个JSON Schema校验器，支持draft-07规范的核心子集。
+
+JSON Schema本身也是一个JSON文档，用关键字来描述数据应该长什么样。type规定类型（string/number/integer/boolean/object/array/null），properties规定对象的属性和各属性的schema，items规定数组元素的schema，required规定必填字段，minimum/maximum规定数值范围，minLength/maxLength规定字符串长度，pattern用正则表达式约束字符串格式，enum规定枚举值，additionalProperties控制是否允许额外属性，allOf/anyOf/oneOf/not做组合约束。draft-07还支持$ref引用，可以用"$ref": "#/definitions/UserType"这样的路径引用同一文档中定义的schema片段，避免重复。
+
+$ref的解析是整个实现中最容易出bug的地方。路径以#开头表示当前文档根，然后按JSON Pointer规范逐级定位。JSON Pointer中用/分隔层级，~1代表斜杠/，~0代表波浪号~。比如"definitions/foo/bar"表示根下definitions对象的foo属性的bar子属性。递归引用（$ref引用的schema内部又包含$ref）必须正确处理，要防止无限递归导致栈溢出。一个schema文档引用自身就是无限递归的典型案例，需要用visited集合做检测。
+
+服务端提供两个接口。一个是注册接口，上传JSON Schema文档并给它一个名称，保存到内存中。另一个是校验接口，指定schema名称和待校验的JSON数据，返回校验结果。校验失败时要详细列出所有不通过的约束和对应路径，比如"$.user.age: 值-1小于minimum(0)"。这里有个细节：错误路径要用JSON Pointer格式还是x-path-like格式要统一，不能混着来。
+
+命令行客户端支持从本地文件读取schema和data。用法类似 `client validate --schema user.json --data input.json`。也支持直接在命令行传入schema名称做远程校验。输出要列出所有校验错误，每条包含字段路径、约束名称和实际值，按路径排序。
+
+有个容易踩的坑：additionalProperties的默认值在不同场景下行为不同。当schema中没有显式设置additionalProperties时，draft-07规定默认为true（允许额外属性），但很多人误以为默认是false。如果写错了默认值，很多合法的JSON会被错误地拒绝。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。

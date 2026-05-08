@@ -1,0 +1,13 @@
+我想做一个Go fuzzing种子语料管理工具。Go 1.18引入了原生fuzzing支持，fuzz语料库存在testdata/fuzz目录下，每个fuzz函数对应一个corpus子目录，里面是种子文件。我要做一个工具来管理这些语料。
+
+核心功能：扫描指定目录下的fuzz corpus，统计每个fuzz target的语料数量和总大小。支持语料去重（基于内容哈希），支持变异操作（对已有语料做随机翻转、插入、删除字节来生成新种子），支持从crash文件导入。去重时要保留最早添加的那个文件，删除重复的。
+
+服务端管理语料库的元数据（每个文件的哈希、大小、添加时间、来源），提供增删查接口。客户端支持scan、dedup、mutate、import四个子命令。scan扫描当前目录，dedup执行去重并报告删除了哪些文件，mutate对指定target的语料执行N次变异生成新种子文件，import从crash目录导入文件到对应target的corpus。
+
+变异策略有三种：bitflip随机翻转一个bit，byteflip随机翻转一个字节，insert随机插入一个随机字节。mutate命令接受--count参数指定变异次数，默认100次。每次变异基于随机选择的一个已有语料文件，生成的新文件如果和已有语料重复则丢弃重来。
+
+有个细节：fuzz corpus的目录结构约定是`testdata/fuzz/<FuzzFuncName>/`，比如`testdata/fuzz/FuzzParseJSON/`。但Go的fuzzing框架也会自动在corpus里生成seed文件，文件名是一串十六进制哈希。工具要能识别手工添加的种子文件（通常有意义的文件名）和自动生成的种子文件（哈希文件名），在mutate时优先基于手工种子变异，因为它们的覆盖率引导效果更好。
+
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+
+本项目属于跨系统多模块架构。
