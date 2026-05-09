@@ -1,5 +1,3 @@
-1064
-
 我们内部系统一直用原始SQL操作数据库，维护成本越来越高。想做一个轻量级的ORM层，不是要替代GORM那种重量级框架，就是把我们常用的CRUD操作包一下，减少手写SQL的错误率。
 
 基本思路是把Go结构体映射到数据库表。结构体的字段名默认按snake_case转换成列名，也可以通过struct tag `db:"column_name"` 指定。支持的Go类型包括：int、int64、float64、string、bool、time.Time，以及这些类型的指针类型。指针类型为nil时对应数据库的NULL。

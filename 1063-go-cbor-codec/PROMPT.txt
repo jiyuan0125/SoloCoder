@@ -1,5 +1,3 @@
-1063
-
 有个IoT项目，设备端内存和带宽都有限，JSON太占空间了，想换成CBOR（Concise Binary Object Representation, RFC 8949）来做序列化。CBOR比JSON紧凑得多，而且天然支持二进制数据，不用像JSON那样做base64编码。
 
 核心库需要实现CBOR的编解码功能，同时提供CBOR和JSON之间的互转。需要支持的数据类型包括：整数（正整数和负整数）、浮点数（单精度和双精度）、字节串、文本串、数组、映射（map）、布尔值、null，以及简单值（simple values，编码范围0到255）。不确定长度的整数也要能处理，比如大整数超过uint64范围的。
