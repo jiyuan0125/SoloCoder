@@ -1,5 +1,3 @@
-1091
-
 我想做一个Go语言的插件热加载系统，用来在不重启服务的情况下动态扩展功能。
 
 核心库提供一个PluginManager，它维护一个插件目录的监听，当目录里出现新的.so文件时自动加载，文件被删除时自动卸载。插件必须实现一个叫Extension的接口，包含Name() string和Execute(ctx context.Context, input []byte) ([]byte, error)两个方法。加载插件的时候要做接口版本兼容性检查：插件导出一个叫PluginInfo的变量，里面包含APIVersion字符串和Capabilities字符串切片。如果插件的APIVersion跟当前系统不匹配，就拒绝加载但不要崩溃。每个插件运行在自己的goroutine里，执行超时由调用方通过context控制。

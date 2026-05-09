@@ -1,5 +1,3 @@
-1094
-
 我想用纯Go写一个SQLite文件格式解析器，不依赖CGO，能够读取sqlite3数据库文件的基本结构和数据。
 
 核心库能解析SQLite文件格式。SQLite文件的结构是这样的：文件开头100字节是header，包含magic string（"SQLite format 3\000"）、页大小、文件格式版本、reserved space大小等信息。文件由固定大小的页组成（页大小从header读取，默认4096）。第一页从第100字节开始是schema table的B-tree，记录了所有用户表的创建SQL和根页号。B-tree有表内B-tree（存数据）和索引B-tree两种，每个节点又有内部节点和叶子节点的区别。我需要能解析出：文件头信息、所有表的schema、每个表的数据行。
