@@ -12,4 +12,3 @@
 
 查询方面：按会议室查某天的预约列表、按预约人查自己的预约记录、查当前所有可用的会议室（某个时间段内没有预约的）。查询结果按时间排序显示。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

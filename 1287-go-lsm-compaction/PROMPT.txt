@@ -1,11 +1,10 @@
-做一个LSM Tree存储引擎的简化实现。LSM Tree是LevelDB、RocksDB这些数据库的底层存储结构。核心思想是把随机写变成顺序写：所有写操作先写到内存中的MemTable，MemTable满了之后flush成不可变的SSTable文件存在"磁盘"上。查询的时候先查MemTable，再逐层查SSTable。
+做一个LSM Tree存储引擎的简化实现。LSM Tree是LevelDB、RocksDB这些数据库的底层存储结构。写操作先写到内存中的MemTable，MemTable满了之后flush成不可变的SSTable文件存到磁盘上。查询时先查MemTable，再逐层查SSTable。
 
-SSTable的合并策略有两种主流方案需要你实现并支持切换。第一种是Size-Tiered Compaction：每层大小相近的SSTable达到一定数量后合并成一个大文件放到下一层，适合写多读少的场景，但会产生写放大。第二种是Leveled Compaction：每层的大小有严格的比例关系（通常是10倍），每层内部SSTable的key范围不重叠，适合读多写少的场景，但合并更频繁。服务端需要能切换策略，并且能展示两种策略下的写放大倍数。
+SSTable的合并策略有两种主流方案需要你实现并支持切换。第一种是Size-Tiered Compaction：每层大小相近的SSTable达到一定数量后合并成一个大文件放到下一层。第二种是Leveled Compaction：每层内部SSTable的key范围不重叠。服务端需要能切换策略，并且能展示两种策略下的写放大倍数。
 
 服务端提供接口：写入一个键值对，读取一个key对应的value，删除一个key（LSM Tree的删除实际上是写入一个tombstone标记），手动触发合并，切换合并策略，查看各层SSTable的数量和大小，查看写放大统计。客户端要能批量导入数据，也能执行点查和范围查询。
 
-实现中有很多细节要注意。MemTable为空时查询应该返回"不存在"。写入相同key应该覆盖旧值，但旧值可能还在SSTable中没被合并，查询时要正确处理。删除一个已经被删除的key不应报错。MemTable容量可配置，flush时要原子性地切换到新MemTable。SSTable支持范围查询时要注意跨层合并结果的正确性。另外，tombstone标记在合并到最底层且没有更上层覆盖时才能被真正删除，不能提前清理。
+实现中有很多细节要注意。MemTable为空时查询应该返回"不存在"。写入相同key应该覆盖旧值，但旧值可能还在SSTable中没被合并，查询时要正确处理。删除一个已经被删除的key不应报错。MemTable容量可配置，flush时要原子性地切换到新MemTable。SSTable支持范围查询时要注意跨层合并结果的正确性。另外，tombstone标记的清理时机要正确处理，确保不会提前清理导致查询结果错误。
 
 核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
 
-本项目属于跨系统多模块架构。

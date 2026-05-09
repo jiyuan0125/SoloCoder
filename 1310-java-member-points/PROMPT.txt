@@ -12,4 +12,3 @@
 
 这里还有个细节：会员等级变化是实时的。当一笔消费完成后，如果累计消费金额达到了下一个等级的门槛，等级要立刻更新。后续的积分获取就要按新等级的倍率来算了。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

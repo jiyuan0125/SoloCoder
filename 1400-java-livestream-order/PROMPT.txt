@@ -18,4 +18,3 @@
 
 管理员功能：上架/下架商品、修改直播价、查看实时库存、查看订单列表、处理退款申请、结束直播。直播结束后生成销售报表，包括每个商品的销售数量、销售额、退款数量。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

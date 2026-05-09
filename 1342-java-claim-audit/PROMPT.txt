@@ -12,4 +12,3 @@
 
 有个容易忽略的点：退回到某个环节后重新提交，需要重新走完整的审核流程。比如终审退回到初审，员工修改后重新提交，又要经过初审→复审→终审。不是只走退回的那个环节。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

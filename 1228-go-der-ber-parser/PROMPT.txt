@@ -1,11 +1,10 @@
 帮我实现一个DER和BER编码切换工具，用于处理ASN.1格式的数据。ASN.1是通信协议和密码学中广泛使用的数据描述语言，DER（Distinguished Encoding Rules）和BER（Basic Encoding Rules）是它的两种编码规则，它们都使用TLV（Tag-Length-Value）结构，但有关键区别。
 
-TLV结构中，Tag标识数据类型，Length标识Value的长度，Value是实际数据。Tag通常占1个字节，高2位表示类别（00通用、01应用、10上下文相关、11私有），第3位表示是否为结构化类型，低5位是标签编号。如果低5位都是1（值为31），则标签编号编码在后续字节中。Length的编码是两种规则的主要区别所在。BER支持定长和不定长两种形式：定长形式中，如果长度小于128，直接用1个字节表示；如果大于等于128，第一个字节的高位设为1，低7位表示后续有多少个字节用来编码长度值（大端序）。不定长形式中，长度字节固定为0x80，表示Value一直延伸到遇到两个连续的0x00字节（End-of-Contents）为止。DER只支持定长形式，不支持不定长形式，这是两者的核心差异。
+TLV结构中，Tag标识数据类型，Length标识Value的长度，Value是实际数据。DER和BER的核心区别在于Length的编码方式：BER支持定长和不定长两种形式，而DER只支持定长形式。不定长形式的Length中，Value的边界由End-of-Contents标记来界定。
 
 服务端提供三个接口：encode-der（按DER规则编码）、encode-ber（按BER规则编码，支持不定长形式）、decode（自动检测并解码TLV数据，输出每个字段的类型标签、长度和值）。编码接口接受一个结构化的数据描述（用JSON表示，包含类型和值），解码接口接受十六进制字符串形式的TLV数据。客户端有encode和decode子命令，encode通过mode参数指定der或ber。
 
-三个陷阱。第一，不定长Length编码中的End-of-Contents标记是Tag为0x00、Length为0x00的两个字节对。在解码不定长形式时，需要在Value数据中寻找这个终止标记，但不能把Value内容中恰好出现的0x00 0x00误认为是终止标记。正确的做法是：只有当Tag也是0x00时，0x00 0x00才是终止标记，因为普通数据字段的Tag不会是0x00。第二，嵌套结构中的不定长Length：如果一个SEQUENCE或SET使用不定长Length编码，它的所有子元素编码完后，需要追加End-of-Contents标记。嵌套层次越深，需要的End-of-Contents标记越多。第三，BER解码时如果遇到不定长Length（0x80），必须正确找到对应的End-of-Contents标记才能确定Value的边界。如果输入数据被截断（没有End-of-Contents），应该返回错误。
+三个陷阱。第一，不定长Length编码中的End-of-Contents标记是Tag为0x00、Length为0x00的两个字节对。在解码不定长形式时，需要在Value数据中寻找这个终止标记，但要小心区分真正的终止标记和Value内容中恰好出现的0x00 0x00序列，你需要思考如何正确识别终止标记。第二，嵌套结构中的不定长Length：如果一个SEQUENCE或SET使用不定长Length编码，它的所有子元素编码完后，需要追加End-of-Contents标记。嵌套层次越深，需要的End-of-Contents标记越多。第三，BER解码时如果遇到不定长Length（0x80），必须正确找到对应的End-of-Contents标记才能确定Value的边界。如果输入数据被截断（没有End-of-Contents），应该返回错误。
 
 核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
 
-本项目属于跨系统多模块架构。

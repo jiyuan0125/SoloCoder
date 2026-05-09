@@ -10,4 +10,3 @@
 
 退休人员的报销比例比在职人员高5个百分点。但退休人员如果是由单位退休后跨统筹区转过来的，要确认其医保关系是否已转移完成，未完成的按参保地规则执行。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

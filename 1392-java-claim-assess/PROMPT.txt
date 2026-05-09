@@ -8,4 +8,3 @@
 
 有个容易忽略的地方：车辆实际价值为0的情况要处理，计算80%比例时除以0会出问题。还有残值不能超过车辆实际价值，赔付款不能为负数，这些边界情况都要考虑。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

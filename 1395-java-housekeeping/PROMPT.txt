@@ -14,4 +14,3 @@
 
 客户可以给服务打评分（1到5分），评分后记录在订单上。管理员可以查看所有评分，统计每位阿姨的平均评分。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

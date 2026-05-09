@@ -10,4 +10,3 @@
 
 客户端命令行工具支持管理商家和骑手信息、模拟下单、查看骑手状态和当前订单、查看等待队列、手动分配订单。服务端REST API，内存数据。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

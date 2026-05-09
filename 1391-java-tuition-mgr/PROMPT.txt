@@ -8,4 +8,3 @@
 
 管理员还要能查看欠费学生名单，按欠费金额从高到低排序，支持导出。导出格式简单点，返回一个文本列表就行，每行一个学生：学号、姓名、应缴金额、已缴金额、欠费金额。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

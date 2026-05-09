@@ -12,4 +12,3 @@
 
 查询功能：用户查自己的订单列表（按时间倒序）、查订单详情（包含菜品、数量、口味、总价）；管理员查所有订单、查菜单和库存情况。管理员还能上下架菜品和修改库存。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

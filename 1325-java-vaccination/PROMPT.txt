@@ -10,4 +10,3 @@
 
 服务端REST API。客户端命令行工具，支持人员管理、接种记录录入、接种校验、查询接种记录和接种计划完成情况。内存数据。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

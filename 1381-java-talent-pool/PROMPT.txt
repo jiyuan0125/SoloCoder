@@ -14,4 +14,3 @@
 
 员工的ID由系统自动生成，格式是EMP加四位数字，从EMP0001开始。部门数据也由系统初始化一些示例数据，比如技术部、产品部、市场部。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

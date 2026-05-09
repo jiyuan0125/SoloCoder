@@ -12,4 +12,3 @@ AQL（Acceptable Quality Limit）是国际通用的抽样检验标准。它的�
 
 客户端命令行工具支持创建工单、录入检验结果、申请复检、审批复检、查询工单和统计报表（合格率按产品统计、按时间段统计）。服务端REST API，内存数据。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

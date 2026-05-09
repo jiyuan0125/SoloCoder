@@ -10,4 +10,3 @@
 
 client命令行支持创建工艺路线、添加工序和依赖、计算关键路径、模拟工序执行过程、版本对比。server内存存储。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

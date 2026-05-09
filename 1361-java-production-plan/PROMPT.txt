@@ -8,4 +8,3 @@
 
 对外接口方面，server模块提供REST API，包括维护窗口的增删改查、订单的创建和列表查询、排产结果查询。client模块做一个命令行工具，能手动触发排产计算，也能查看当前的排产甘特图（用文本方式展示就行）。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

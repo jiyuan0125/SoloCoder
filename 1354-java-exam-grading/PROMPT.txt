@@ -8,4 +8,3 @@
 
 最终成绩由客观题自动得分和主观题人工评分加总。系统支持成绩发布后的复核申请，学生在规定时间内可以申请复核，复核只检查是否有漏评或加总分错误，不重新评分。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。

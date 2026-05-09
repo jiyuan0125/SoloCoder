@@ -10,4 +10,3 @@ VIP优先机制：VIP客户取的号会插入当前等候队列的前面，但�
 
 client命令行模拟取号、窗口叫号、过号处理、队列状态查看。server内存存储。
 
-Maven多模块项目：common模块放DTO、枚举、统一响应格式等共享定义；server模块是Spring Boot应用，数据全部存在内存中，不连接数据库；client模块是纯Java CLI，通过HTTP调用server。三个模块各自独立pom.xml，根目录有一个父pom.xml。先mvn clean package能编译通过。
