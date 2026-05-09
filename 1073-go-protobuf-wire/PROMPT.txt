@@ -2,11 +2,11 @@
 
 Protobuf的编码其实不复杂，每个字段都是tag加value。tag本身也是个varint，低3位是wire type，剩下的高位右移就是field number。Wire type有6种：varint、64-bit fixed、length-delimited、start group、end group、32-bit fixed。实际上常用就前三种加上32-bit fixed，group的两种已经废弃了。
 
-varint编码是每字节低7位存数据，最高位表示后面还有没有。解析varint的时候要注意，如果数据已经读完了但最高位还是1，说明数据被截断了，这是错误情况。还有varint最多10字节表示64位数，超过10字节也是错误。
+varint编码是每字节低7位存数据，最高位表示后面还有没有。解析varint的时候要如果数据已经读完了但最高位还是1，说明数据被截断了，这是错误情况。还有varint最多10字节表示64位数，超过10字节也是错误。
 
 length-delimited类型要先读一个varint作为长度，然后读那么多字节。这里有个坑：长度值可能是恶意的超大数字，不能直接分配那么大的内存，要设个上限。
 
-嵌套消息也是length-delimited类型，解析完长度那部分字节后，递归解析里面的字段。嵌套层级太深的话要注意栈溢出，限制递归深度比如100层。
+嵌套消息也是length-delimited类型，解析完长度那部分字节后，递归解析里面的字段。嵌套层级太深的话要栈溢出，限制递归深度比如100层。
 
 服务端提供HTTP接口，上传二进制数据就能得到解析结果，以JSON格式返回字段结构。客户端命令行工具支持从文件读取protobuf二进制数据并解析打印。
 

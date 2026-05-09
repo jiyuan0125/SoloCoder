@@ -1,0 +1,6 @@
+id,x1,y1,x2,y2,metadata
+obj1,0,0,10,10,building
+obj2,5,5,15,15,shop
+obj3,20,20,30,30,office
+obj4,12,12,22,22,park
+obj5,8,8,18,18,cafe

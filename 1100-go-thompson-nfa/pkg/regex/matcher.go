@@ -68,18 +68,16 @@ func (r *Regex) MatchString(input string) bool {
 func (r *Regex) FindAllString(input string) []string {
 	var results []string
 	
-	for start := 0; start <= len(input); start++ {
-		for end := start; end <= len(input); end++ {
+	for start := 0; start < len(input); start++ {
+		bestEnd := -1
+		for end := start + 1; end <= len(input); end++ {
 			if r.MatchString(input[start:end]) {
-				if start < end {
-					results = append(results, input[start:end])
-					for end < len(input) && r.MatchString(input[start:end+1]) {
-						end++
-					}
-					start = end - 1
-				}
-				break
+				bestEnd = end
 			}
+		}
+		if bestEnd > start {
+			results = append(results, input[start:bestEnd])
+			start = bestEnd - 1
 		}
 	}
 	
@@ -89,18 +87,16 @@ func (r *Regex) FindAllString(input string) []string {
 func (r *Regex) FindAllStringIndex(input string) [][]int {
 	var results [][]int
 	
-	for start := 0; start <= len(input); start++ {
-		for end := start; end <= len(input); end++ {
+	for start := 0; start < len(input); start++ {
+		bestEnd := -1
+		for end := start + 1; end <= len(input); end++ {
 			if r.MatchString(input[start:end]) {
-				if start < end {
-					results = append(results, []int{start, end})
-					for end < len(input) && r.MatchString(input[start:end+1]) {
-						end++
-					}
-					start = end - 1
-				}
-				break
+				bestEnd = end
 			}
+		}
+		if bestEnd > start {
+			results = append(results, []int{start, bestEnd})
+			start = bestEnd - 1
 		}
 	}
 	

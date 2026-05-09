@@ -14,4 +14,4 @@
 
 有个容易忽略的问题：有些依赖的LICENSE文件是多个许可证的组合，比如"Apache-2.0 OR MIT"表示用户可以选择其中任一许可证。这种情况要正确解析，不能把整个文本当成一个未知许可证。
 
-另一个要注意的：有些依赖的许可证信息写在README或者包管理器的元数据中而不是独立的LICENSE文件。比如npm包的package.json里可能有license字段。要优先看独立LICENSE文件，没有的话再看元数据。
+有些依赖的许可证信息写在README或者包管理器的元数据中而不是独立的LICENSE文件。比如npm包的package.json里可能有license字段。要优先看独立LICENSE文件，没有的话再看元数据。

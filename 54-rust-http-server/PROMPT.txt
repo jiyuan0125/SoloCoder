@@ -5,7 +5,7 @@ HTTP 部分：
 2. 支持 Connection: keep-alive，一个连接处理多个请求
 3. POST body 按 Content-Length 读取，body 超过 1MB 返回 413 Payload Too Large
 4. 请求行 + 所有 headers 总大小超过 8KB 返回 431 Request Header Fields Too Large
-5. 解析查询参数：路径 /api/users?page=2&size=10 中的参数通过 query() 方法返回 HashMap<String, String>，注意同名的 key 只保留最后一个值
+5. 解析查询参数：路径 /api/users?page=2&size=10 中的参数通过 query() 方法返回 HashMap<String, String>，同名的 key 只保留最后一个值
 
 WebSocket 升级：
 6. 客户端发送 Upgrade: websocket + Sec-WebSocket-Key 时完成握手升级协议

@@ -8,7 +8,7 @@ protobuf消息的解析也需要手写一个简单的解析器。protobuf的wire
 
 服务端HTTP接口：输入gRPC原始数据（POST，传入HTTP/2帧的原始字节），返回解析后的结构化信息，包括HTTP/2帧头信息、gRPC帧信息、protobuf字段列表。也可以反向操作：输入结构化数据，输出编码后的字节序列。客户端CLI用于分析gRPC抓包数据，支持从文件读取或从标准输入传入十六进制数据。
 
-有几个容易出错的地方：HTTP/2帧长度字段最大值是16384（2的14次方），超过这个值的帧要拒绝。DATA帧的END_STREAM标志位表示流结束，但gRPC的消息结束不一定和HTTP/2流结束同步，gRPC用trailers（HTTP/2的END_HEADERS标志+特殊trailers帧）来表示RPC结束，其中"grpc-status"头部表示状态码，0表示成功。protobuf的varint编码中，最高位是继续标志，实际数据在低7位，解析时要注意有符号整数使用zigzag编码，不是直接存储的补码形式。
+有几个容易出错的地方：HTTP/2帧长度字段最大值是16384（2的14次方），超过这个值的帧要拒绝。DATA帧的END_STREAM标志位表示流结束，但gRPC的消息结束不一定和HTTP/2流结束同步，gRPC用trailers（HTTP/2的END_HEADERS标志+特殊trailers帧）来表示RPC结束，其中"grpc-status"头部表示状态码，0表示成功。protobuf的varint编码中，最高位是继续标志，实际数据在低7位，解析时要有符号整数使用zigzag编码，不是直接存储的补码形式。
 
 还有一个细节：gRPC的trailers通过HTTP/2的HEADERS帧发送，flags中包含END_STREAM表示整个流关闭。解析时要区分HEADERS帧是请求头还是trailers，trailers里不包含伪头部字段（不以冒号开头的字段名）。如果"grpc-status"不存在但END_STREAM已设置，按规范默认status为0（OK）。
 

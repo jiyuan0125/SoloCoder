@@ -8,7 +8,7 @@ STUN协议的消息格式有固定的20字节头部，前2字节是消息类型�
 
 NAT类型检测的流程是这样的：先向服务器的同一个IP不同端口发两个请求，如果返回的映射地址端口不同，说明是对称型NAT。然后从另一个IP向客户端发请求，如果客户端能收到，说明不是地址受限型。再细分就是Full Cone、Restricted Cone、Port Restricted Cone和Symmetric四种。
 
-有个细节要注意：STUN用的是UDP，发送请求后要设置合理的超时时间，比如3秒。收不到响应要重试，最多重试3次。Transaction ID要随机生成，每次请求都不一样，用来匹配请求和响应。如果收到的响应Transaction ID对不上，要丢弃。
+有个细节要STUN用的是UDP，发送请求后要设置合理的超时时间，比如3秒。收不到响应要重试，最多重试3次。Transaction ID要随机生成，每次请求都不一样，用来匹配请求和响应。如果收到的响应Transaction ID对不上，要丢弃。
 
 还要处理认证，有些STUN服务器需要Short-Term Credential机制，就是用户名和密码。MESSAGE-INTEGRITY属性要用HMAC-SHA1计算，输入是整个消息（先把MESSAGE-INTEGRITY的长度设为0再加上padding到4字节对齐），密钥是密码。FINGERPRINT属性是对整个消息（包括MESSAGE-INTEGRITY）做CRC32然后异或0x5354554e。
 

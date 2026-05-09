@@ -16,6 +16,6 @@
 
 AS（自治系统）号查询：加--as参数，查询每一跳IP所属的AS号和运营商名称。这个功能通过查询公开的ASN数据库实现，内置一个常用的ASN到运营商名称的映射表。
 
-有个要注意的地方：Linux上发送UDP/TCP探测包和接收ICMP响应需要用到raw socket，需要root权限或适当的能力。没有权限时要给出提示。可以考虑用unprivileged模式作为后备方案（使用connected UDP socket），但功能会有所限制。
+Linux上发送UDP/TCP探测包和接收ICMP响应需要用到raw socket，需要root权限或适当的能力。没有权限时要给出提示。可以考虑用unprivileged模式作为后备方案（使用connected UDP socket），但功能会有所限制。
 
 还有一个容易出bug的地方：某些路由器对ICMP限速，导致部分探测包超时。不能因为一两个包超时就认为该跳不可达，要显示已收到的响应。

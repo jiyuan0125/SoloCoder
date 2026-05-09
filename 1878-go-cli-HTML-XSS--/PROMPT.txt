@@ -1,6 +1,6 @@
 帮我用Go写一个HTML内容净化命令行工具。我们公司有个富文本编辑器，用户在前端写的内容会保存成HTML片段，然后在不同终端（App内嵌WebView、邮件模板、小程序富文本）上展示。问题是用户可能故意或无意地插入恶意脚本，比如在img标签的onerror里写JavaScript，或者在style里用expression执行代码。我们需要一个工具在服务端对这些HTML片段做安全清洗。
 
-工具接收一个HTML文件或者从标准输入读取HTML字符串，输出净化后的HTML。净化规则基于白名单机制，只保留允许的标签和属性，其他全部移除。默认允许的标签包括p、br、div、span、strong、em、a、img、ul、ol、li、h1到h6、table、thead、tbody、tr、td、th、blockquote、pre、code。允许的属性按标签区分：a标签允许href和title，img标签允许src、alt和width，其他标签只允许class和style。href属性的值如果是JavaScript协议（以javascript:开头，注意大小写混合的情况比如Javascript:或JAVASCRIPT:）必须移除整个a标签，而不是只清空href。style属性里的内容也需要检查，移除expression和url函数调用。
+工具接收一个HTML文件或者从标准输入读取HTML字符串，输出净化后的HTML。净化规则基于白名单机制，只保留允许的标签和属性，其他全部移除。默认允许的标签包括p、br、div、span、strong、em、a、img、ul、ol、li、h1到h6、table、thead、tbody、tr、td、th、blockquote、pre、code。允许的属性按标签区分：a标签允许href和title，img标签允许src、alt和width，其他标签只允许class和style。href属性的值如果是JavaScript协议（以javascript:开头，大小写混合的情况比如Javascript:或JAVASCRIPT:）必须移除整个a标签，而不是只清空href。style属性里的内容也需要检查，移除expression和url函数调用。
 
 工具还需要支持通过命令行参数指定自定义的白名单配置文件。配置文件用JSON格式，里面定义额外的允许标签和每个标签允许的属性列表。这样不同业务场景可以灵活调整净化策略。
 

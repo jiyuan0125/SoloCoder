@@ -11,7 +11,7 @@
 6. 不需要 RCU 或 copy-on-write，简单的读写锁即可
 
 范围查询：
-7. range(low, high) 返回所有 key 在 [low, high) 范围内的 key-value 对（注意左闭右开，high 不包含）
+7. range(low, high) 返回所有 key 在 [low, high) 范围内的 key-value 对，左闭右开，high 不包含）
 8. 返回结果按 key 升序排列，通过一个回调函数逐个访问：range(low, high, callback(key, value))
 
 统计：

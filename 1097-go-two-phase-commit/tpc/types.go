@@ -1,7 +1,6 @@
 package tpc
 
 import (
-	"sync"
 	"time"
 )
 

@@ -10,4 +10,4 @@
 
 还需要一个容器日志的快捷查看功能，类似docker logs但支持彩色输出和自动分页，还能按时间范围过滤。
 
-实现时要注意，Docker API通过Unix Socket通信（默认/var/run/docker.sock），连接时要处理权限问题。批量删除容器时要先停止运行中的容器再删除，但如果容器设置了restart policy为always，单纯stop后再delete可能不够，需要先更新restart policy。镜像的磁盘空间统计不能简单看镜像大小，因为层之间有共享，要用docker的API获取真实的磁盘占用。容器名的通配符匹配要区分精确匹配和模糊匹配。资源监控的数据采集频率不能太高，否则会给Docker daemon带来压力。当Docker daemon不可用时要有友好的错误提示而不是输出一堆JSON错误。
+实现，Docker API通过Unix Socket通信（默认/var/run/docker.sock），连接时要处理权限问题。批量删除容器时要先停止运行中的容器再删除，但如果容器设置了restart policy为always，单纯stop后再delete可能不够，需要先更新restart policy。镜像的磁盘空间统计不能简单看镜像大小，因为层之间有共享，要用docker的API获取真实的磁盘占用。容器名的通配符匹配要区分精确匹配和模糊匹配。资源监控的数据采集频率不能太高，否则会给Docker daemon带来压力。当Docker daemon不可用时要有友好的错误提示而不是输出一堆JSON错误。

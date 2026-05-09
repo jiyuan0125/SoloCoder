@@ -2,7 +2,7 @@
 
 工具需要能解析Go runtime生成的goroutine stack trace文本（就是runtime.Stack或者pprof的goroutine profile拿到的那个格式）。每段goroutine信息以"goroutine 数字 ["开头，后面跟着状态（running、chan receive、chan send、select、IO wait、syscall、sleep这些），然后是调用栈。工具要能识别出哪些goroutine是"可疑"的：比如在chan receive上阻塞超过一定时长的、在select里长时间没有进展的、或者在IO wait状态超过阈值且没有超时设置的。服务端提供接口上传stack trace文本，返回检测报告，包含goroutine总数、按阻塞类型分类的统计、以及每个可疑goroutine的详情。客户端是命令行，可以读取本地文件做分析，也可以指定一个正在运行的进程PID直接拉取goroutine profile来分析。
 
-有几个坑要注意。runtime.Stack输出的文本里，goroutine状态行格式是"goroutine 数字 [状态, 数字分钟]:"，但如果goroutine刚创建还没运行过，状态栏可能是空的或者只有数字没有状态文字。还有一类情况是runtime的main goroutine和gc相关的goroutine，它们看起来可能也在select或chan receive上阻塞，但这是正常行为，不能误报。调用栈里的runtime.systemstack_switch、runtime.gopark这些函数是runtime内部的，聚合的时候应该跳过，只展示用户代码的调用路径。另外，stack trace里有些goroutine的栈信息会被截断（以"...additional frames elided"结尾），这种截断的栈需要标注出来，不能当作完整的调用链来分析。有的goroutine在锁竞争状态下，栈顶可能是runtime.semacquire，但这不一定是泄漏，可能只是短暂等待，需要结合等待时长来判断。
+有几个坑要。runtime.Stack输出的文本里，goroutine状态行格式是"goroutine 数字 [状态, 数字分钟]:"，但如果goroutine刚创建还没运行过，状态栏可能是空的或者只有数字没有状态文字。还有一类情况是runtime的main goroutine和gc相关的goroutine，它们看起来可能也在select或chan receive上阻塞，但这是正常行为，不能误报。调用栈里的runtime.systemstack_switch、runtime.gopark这些函数是runtime内部的，聚合的时候应该跳过，只展示用户代码的调用路径。另外，stack trace里有些goroutine的栈信息会被截断（以"...additional frames elided"结尾），这种截断的栈需要标注出来，不能当作完整的调用链来分析。有的goroutine在锁竞争状态下，栈顶可能是runtime.semacquire，但这不一定是泄漏，可能只是短暂等待，需要结合等待时长来判断。
 
 服务端接口上传的文本可能很大（几万goroutine的情况），解析要尽量高效。返回的报告按阻塞类型分组，每组内按等待时长降序。客户端输出时，如果检测到可疑goroutine超过阈值数量，退出码返回1。
 

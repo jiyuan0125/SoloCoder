@@ -49,6 +49,10 @@ func (p *parser) alternate() (*Node, error) {
 		return nil, err
 	}
 	
+	if node == nil {
+		node = newEmptyNode()
+	}
+	
 	for p.peek() == '|' {
 		p.consume()
 		right, err := p.concat()

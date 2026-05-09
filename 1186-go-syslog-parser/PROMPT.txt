@@ -2,7 +2,7 @@
 
 RFC 5424的syslog消息格式是："<PRI>VERSION SP TIMESTAMP SP HOSTNAME SP APP-NAME SP PROCID SP MSGID SP STRUCTURED-DATA SP MSG"。PRI是尖括号里的数字，范围0到191，等于Facility乘以8加上Severity。Facility有0到23共24个级别（kern到local7），Severity有0到7共8个级别（emergency到debug）。解析PRI时要分别算出Facility和Severity。
 
-时间戳支持RFC 3339完整格式（如2003-10-11T22:14:15.003Z）和RFC 3339的本地时间格式（带时区偏移如+08:00）。还要兼容RFC 3164的旧格式时间戳（如Oct 11 22:14:15），旧格式没有年份，需要根据当前日期来推断。解析时区偏移时要注意格式，+0800和+08:00都是合法的，还有Z表示UTC。毫秒部分是可选的，小数点后跟1到6位数字都合法。
+时间戳支持RFC 3339完整格式（如2003-10-11T22:14:15.003Z）和RFC 3339的本地时间格式（带时区偏移如+08:00）。还要兼容RFC 3164的旧格式时间戳（如Oct 11 22:14:15），旧格式没有年份，需要根据当前日期来推断。解析时区偏移时要格式，+0800和+08:00都是合法的，还有Z表示UTC。毫秒部分是可选的，小数点后跟1到6位数字都合法。
 
 结构化数据（STRUCTURED-DATA）是最复杂的部分。如果值为"-"表示没有结构化数据。否则是一组SD-ELEMENT，每个SD-ELEMENT格式为"[SD-ID PARAM-NAME=PARAM-VALUE ...]"。SD-ID可以是IANA注册的（以"@"开头如@iana/timeQuality）、私有企业编号的（格式为name@PEN如exampleCompany@32473）或者自定义的（纯字母数字加点）。PARAM-VALUE用双引号包裹，里面的双引号、反斜杠和右中括号要做转义（\"、\\、\]）。空格、等号、双引号、右中括号这些字符出现在参数值中时必须转义，其他字符转义是可选的。
 

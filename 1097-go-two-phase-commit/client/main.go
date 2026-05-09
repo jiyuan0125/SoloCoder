@@ -51,9 +51,9 @@ func main() {
 }
 
 func runCompleteTransaction() {
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("Running complete transaction flow")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 
 	fmt.Println("\n[Step 1] Begin transaction...")
 	beginResp, err := beginTransaction()
@@ -108,9 +108,9 @@ func runCompleteTransaction() {
 
 	fmt.Printf("  Final status: %s\n", statusResp.Status)
 
-	fmt.Println("\n=" * 60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("Transaction flow completed successfully!")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 }
 
 func checkTransactionStatus(txID string) {
@@ -143,9 +143,9 @@ func runTest(scenario string) {
 }
 
 func testAllSuccess() {
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: All Success")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 
 	fmt.Println("\n[1/5] Begin transaction...")
 	beginResp, err := beginTransaction()
@@ -196,15 +196,15 @@ func testAllSuccess() {
 	}
 	fmt.Printf("  Final status: %s\n", statusResp.Status)
 
-	fmt.Println("\n=" * 60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: All Success - PASSED")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 }
 
 func testPartialFailure() {
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Partial Failure")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 
 	fmt.Println("\n[1/5] Begin transaction...")
 	beginResp, err := beginTransaction()
@@ -259,15 +259,15 @@ func testPartialFailure() {
 	}
 	fmt.Println("  SUCCESS: No data was written")
 
-	fmt.Println("\n=" * 60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Partial Failure - PASSED")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 }
 
 func testTimeoutRollback() {
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Timeout Rollback")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 
 	fmt.Println("\n[1/6] Begin transaction...")
 	beginResp, err := beginTransaction()
@@ -331,15 +331,15 @@ func testTimeoutRollback() {
 	}
 	fmt.Println("  SUCCESS: No data was written")
 
-	fmt.Println("\n=" * 60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Timeout Rollback - PASSED")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 }
 
 func testRecovery() {
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Coordinator Recovery")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 
 	fmt.Println("\n[Note]")
 	fmt.Println("  Coordinator recovery happens automatically on server startup")
@@ -368,9 +368,9 @@ func testRecovery() {
 			p.ID, p.Unavailable, p.StorageSize)
 	}
 
-	fmt.Println("\n=" * 60)
+	fmt.Println("\n" + strings.Repeat("=", 60))
 	fmt.Println("Test Scenario: Coordinator Recovery - PASSED")
-	fmt.Println("=" * 60)
+	fmt.Println(strings.Repeat("=", 60))
 }
 
 func beginTransaction() (*common.BeginTxResponse, error) {

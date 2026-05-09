@@ -4,7 +4,7 @@ MsgPack的格式定义：每个值都有一个类型标记字节，后面跟着�
 
 整数类型比较复杂：有int8、int16、int32、int64、uint8、uint16、uint32、uint64，加上fixint和negative fixint。编码时要选最小的能容纳该值的格式，解码时要根据类型标记正确解析。比如数字1应该编码为positive fixint（1字节），而不是uint8（2字节）。
 
-map类型在MsgPack里是无序的，编码时key-value对依次排列。解码时要把它们放到Go的map[string]interface{}里。这里有个要注意的：map的key可以是任何类型，不一定是字符串。但Go的map key必须是可比较的类型，所以解码到interface{}时要处理好类型映射。
+map类型在MsgPack里是无序的，编码时key-value对依次排列。解码时要把它们放到Go的map[string]interface{}里。这里有个要的：map的key可以是任何类型，不一定是字符串。但Go的map key必须是可比较的类型，所以解码到interface{}时要处理好类型映射。
 
 扩展类型（ext format）用来存储自定义类型，格式是：类型标记、一个字节的type code、数据长度、数据内容。解码时如果遇到不认识的ext type，应该保留原始数据不要丢弃，让调用者自己处理。
 

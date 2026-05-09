@@ -6,7 +6,7 @@
 
 切片字段的处理比较微妙。如果切片元素是基本类型（如[]string、[]int），映射为JSON文本存到一列里，存取时自动做JSON序列化和反序列化。如果切片元素是自定义结构体，同样用JSON列存储。这个设计不是为了性能，是为了简单实用。
 
-自定义类型转换器是扩展点。有些业务类型需要特殊处理，比如我们有个"货币金额"类型，底层是int64（以分为单位），但数据库里存的是decimal。用户可以实现一个TypeConverter接口，包含两个方法：ToDB(value interface{}) (interface{}, error) 和 FromDB(value interface{}) (interface{}, error)。注册转换器后，ORM在读写该类型字段时自动调用。需要注意转换器的优先级：struct tag指定的转换器优先于类型注册的全局转换器。
+自定义类型转换器是扩展点。有些业务类型需要特殊处理，比如我们有个"货币金额"类型，底层是int64（以分为单位），但数据库里存的是decimal。用户可以实现一个TypeConverter接口，包含两个方法：ToDB(value interface{}) (interface{}, error) 和 FromDB(value interface{}) (interface{}, error)。注册转换器后，ORM在读写该类型字段时自动调用。转换器的优先级：struct tag指定的转换器优先于类型注册的全局转换器。
 
 表名默认取结构体名的snake_case复数形式，User变成users。也可以通过struct tag `db:"table=xxx"` 指定。建表操作不在ORM范围内，ORM只负责数据读写，表结构由数据库管理员管理。
 

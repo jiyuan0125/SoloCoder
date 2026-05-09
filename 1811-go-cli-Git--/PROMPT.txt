@@ -4,7 +4,7 @@
 
 推荐的忽略规则按类别分组显示。语言相关规则：比如Go项目忽略vendor目录、.exe文件、test覆盖率文件；Node.js项目忽略node_modules、dist、.next；Java项目忽略target、.class文件。IDE相关规则：VSCode的.vscode目录、JetBrains的.idea目录、Vim的.swp文件。操作系统相关规则：macOS的.DS_Store、Windows的Thumbs.db、Linux的*~备份文件。用户可以用空格键选择或取消选择每个规则组。
 
-生成.gitignore后，还可以用ignorance check命令检查当前目录中是否有应该被忽略但还没被忽略的文件。检查逻辑是：扫描工作目录中所有未被Git跟踪的文件（git ls-files --others --exclude-standard），然后分析这些文件是否匹配常见的应该忽略的模式。比如发现了go.sum文件但.gitignore中没有排除go.sum（注意go.sum其实应该提交，这个例子不对），比如发现了__pycache__目录但.gitignore中没有排除Python缓存目录。
+生成.gitignore后，还可以用ignorance check命令检查当前目录中是否有应该被忽略但还没被忽略的文件。检查逻辑是：扫描工作目录中所有未被Git跟踪的文件（git ls-files --others --exclude-standard），然后分析这些文件是否匹配常见的应该忽略的模式。比如发现了go.sum文件但.gitignore中没有排除go.sum（go.sum其实应该提交，这个例子不对），比如发现了__pycache__目录但.gitignore中没有排除Python缓存目录。
 
 ignorance clean命令用来清理已经被Git跟踪但应该被忽略的文件。这个操作要谨慎，需要用户确认。先列出匹配的文件，用户确认后再执行git rm --cached把这些文件从Git索引中移除（不删除实际文件）。
 

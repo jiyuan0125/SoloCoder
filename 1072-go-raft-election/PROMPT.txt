@@ -10,9 +10,9 @@
 
 还有一个容易忽略的地方：candidate在等待投票结果的过程中，如果收到了Term大于等于自己的AppendEntries心跳，说明已经有leader产生了，得立刻退回follower。别一直傻等选票。
 
-关于并发，每个节点内部要用goroutine来处理定时器和消息，节点之间通过channel通信。但服务端HTTP处理是另外的goroutine，要注意状态访问的并发安全，用mutex保护共享状态。
+关于并发，每个节点内部要用goroutine来处理定时器和消息，节点之间通过channel通信。但服务端HTTP处理是另外的goroutine，要状态访问的并发安全，用mutex保护共享状态。
 
-日志匹配的细节要注意：leader在AppendEntries里要带上prevLogIndex和prevLogTerm，follower检查自己在这个位置上的日志Term是否匹配，不匹配就拒绝。leader收到拒绝后要回退一条重试。这个退避逻辑别省略。
+日志匹配的细节要leader在AppendEntries里要带上prevLogIndex和prevLogTerm，follower检查自己在这个位置上的日志Term是否匹配，不匹配就拒绝。leader收到拒绝后要回退一条重试。这个退避逻辑别省略。
 
 最后，集群至少得3个节点才能体现选举的意义，1个或2个节点没法选出leader。接口上要允许动态加节点。
 
