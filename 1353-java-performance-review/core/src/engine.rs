@@ -1,5 +1,5 @@
 use crate::models::*;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 
 const MIN_PEERS: usize = 3;
 const SELF_WEIGHT: f64 = 0.20;
@@ -18,19 +18,13 @@ pub fn calculate_weighted_scores(
     employee_id: &EmployeeId,
     cycle_id: &ReviewCycleId,
 ) -> Option<WeightedScores> {
-    let self_score = data
-        .self_assessments
-        .get(&(employee_id.clone(), cycle_id.clone())
-        .map(|sa| sa.score);
+    let key = (employee_id.clone(), cycle_id.clone());
 
-    let manager_score = data
-        .manager_reviews
-        .get(&(employee_id.clone(), cycle_id.clone())
-        .map(|mr| mr.score);
+    let self_score = data.self_assessments.get(&key).map(|sa| sa.score);
 
-    let peer_reviews = data
-        .peer_reviews
-        .get(&(employee_id.clone(), cycle_id.clone()));
+    let manager_score = data.manager_reviews.get(&key).map(|mr| mr.score);
+
+    let peer_reviews = data.peer_reviews.get(&key);
 
     let peer_count = peer_reviews.map(|prs| prs.len()).unwrap_or(0);
     let peer_avg = peer_reviews.map(|prs| {
@@ -100,7 +94,7 @@ pub fn get_employee_department_segments(
 
         if overlap_start <= overlap_end {
             let days = count_days(overlap_start, overlap_end) as u32;
-            segments.push((assignment.department_id.clone(), days);
+            segments.push((assignment.department_id.clone(), days));
         }
     }
 
@@ -112,9 +106,19 @@ pub fn group_employees_by_primary_department(
     data: &PerformanceData,
     cycle_id: &ReviewCycleId,
 ) -> HashMap<DepartmentId, Vec<EmployeeId>> {
-    let cycle = match data.review_cycles.get(cycle_id)?;
-    let cycle_start = parse_date(&cycle.start_date)?;
-    let cycle_end = parse_date(&cycle.end_date)?;
+    let cycle = match data.review_cycles.get(cycle_id) {
+        Some(c) => c,
+        None => return HashMap::new(),
+    };
+
+    let cycle_start = match parse_date(&cycle.start_date) {
+        Some(d) => d,
+        None => return HashMap::new(),
+    };
+    let cycle_end = match parse_date(&cycle.end_date) {
+        Some(d) => d,
+        None => return HashMap::new(),
+    };
 
     let mut dept_map: HashMap<DepartmentId, Vec<EmployeeId>> = HashMap::new();
 
@@ -128,7 +132,7 @@ pub fn group_employees_by_primary_department(
         }
     }
 
-    Some(dept_map)
+    dept_map
 }
 
 pub fn calculate_forced_distribution(total: usize) -> HashMap<Grade, usize> {
@@ -161,7 +165,7 @@ pub fn calculate_forced_distribution(total: usize) -> HashMap<Grade, usize> {
 
 pub fn assign_grades_for_department(
     data: &PerformanceData,
-    dept_id: &DepartmentId,
+    _dept_id: &DepartmentId,
     cycle_id: &ReviewCycleId,
     employees: &[EmployeeId],
 ) -> Vec<(EmployeeId, Grade)> {
@@ -171,17 +175,16 @@ pub fn assign_grades_for_department(
         .iter()
         .filter_map(|emp_id| {
             let scores = calculate_weighted_scores(data, emp_id, cycle_id)?;
-            Some((emp_id.clone(), scores.total_score)
+            Some((emp_id.clone(), scores.total_score))
         })
         .collect();
 
-    let mut sorted = scored;
-    sorted.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal);
+    scored.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
     let distribution = calculate_forced_distribution(total);
 
     if distribution.is_empty() {
-        return sorted
+        return scored
             .into_iter()
             .map(|(emp_id, _)| (emp_id, Grade::C))
             .collect();
@@ -196,35 +199,35 @@ pub fn assign_grades_for_department(
     let mut idx = 0usize;
 
     for _ in 0..a_count {
-        if let Some((emp_id, _)) = sorted.get(idx) {
-            result.push((emp_id.clone(), Grade::A);
+        if let Some((emp_id, _)) = scored.get(idx) {
+            result.push((emp_id.clone(), Grade::A));
             idx += 1;
         }
     }
 
     for _ in 0..b_count {
-        if let Some((emp_id, _)) = sorted.get(idx) {
-            result.push((emp_id.clone(), Grade::B);
+        if let Some((emp_id, _)) = scored.get(idx) {
+            result.push((emp_id.clone(), Grade::B));
             idx += 1;
         }
     }
 
     for _ in 0..c_count {
-        if let Some((emp_id, _)) = sorted.get(idx) {
-            result.push((emp_id.clone(), Grade::C);
+        if let Some((emp_id, _)) = scored.get(idx) {
+            result.push((emp_id.clone(), Grade::C));
             idx += 1;
         }
     }
 
     for _ in 0..d_count {
-        if let Some((emp_id, _)) = sorted.get(idx) {
-            result.push((emp_id.clone(), Grade::D);
+        if let Some((emp_id, _)) = scored.get(idx) {
+            result.push((emp_id.clone(), Grade::D));
             idx += 1;
         }
     }
 
-    while idx < sorted.len() {
-        if let Some((emp_id, _)) = sorted.get(idx) {
+    while idx < scored.len() {
+        if let Some((emp_id, _)) = scored.get(idx) {
             result.push((emp_id.clone(), Grade::C));
         }
         idx += 1;
@@ -251,7 +254,7 @@ pub fn calculate_employee_result(
     let segments = get_employee_department_segments(employee, cycle_start, cycle_end);
     let primary_dept_id = segments.first().map(|(d, _)| d.clone())?;
 
-    let mut department_segments: Vec<_> = segments
+    let department_segments: Vec<_> = segments
         .iter()
         .map(|(dept_id, days)| {
             let proportion = *days as f64 / cycle_total_days as f64;
@@ -284,7 +287,7 @@ pub fn calculate_cycle_results(
     data: &PerformanceData,
     cycle_id: &ReviewCycleId,
 ) -> Vec<DepartmentDistribution> {
-    let dept_groups = group_employees_by_primary_department(data, cycle_id)?;
+    let dept_groups = group_employees_by_primary_department(data, cycle_id);
 
     let mut results = Vec::new();
 
@@ -310,7 +313,7 @@ pub fn calculate_cycle_results(
         });
     }
 
-    Some(results)
+    results
 }
 
 #[cfg(test)]
@@ -362,7 +365,7 @@ mod tests {
 
             for j in 1..=3 {
                 data.add_peer_review(PeerReview {
-                    reviewer_id: format!("emp{}", ((i + j) % 10 + 1),
+                    reviewer_id: format!("emp{}", ((i + j) % 10 + 1)),
                     reviewee_id: format!("emp{}", i),
                     cycle_id: "cycle1".to_string(),
                     score: 75.0 + i as f64,

@@ -1,0 +1,8 @@
+Click 写一个 JSON Schema 验证工具。
+用户传入一个 JSON 文件和对应的 Schema 文件，
+工具验证 JSON 是否符合 Schema 定义，
+输出验证结果和不符合的字段路径。
+Schema 可能引用外部定义（$ref）。
+大文件（几十MB）也要能在合理时间内验证完。
+验证结果可以输出为报告文件。
+用 jsonschema 库。

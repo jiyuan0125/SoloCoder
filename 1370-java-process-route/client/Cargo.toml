@@ -1,0 +1,19 @@
+[package]
+name = "process_route_client"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "process_route_client"
+path = "src/main.rs"
+
+[dependencies]
+process_route_core = { path = "../core" }
+reqwest.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+tokio.workspace = true

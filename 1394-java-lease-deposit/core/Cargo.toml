@@ -1,0 +1,13 @@
+[package]
+name = "lease-core"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+thiserror = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1.30", features = ["serde", "maths"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }

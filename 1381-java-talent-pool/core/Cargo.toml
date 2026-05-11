@@ -1,0 +1,11 @@
+[package]
+name = "talent-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+serde.workspace = true
+uuid.workspace = true
+chrono.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync"] }

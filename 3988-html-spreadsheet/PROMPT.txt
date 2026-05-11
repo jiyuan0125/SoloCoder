@@ -1,0 +1,11 @@
+用原生 HTML/CSS/JS 做一个简易电子表格。
+类似简化版 Excel，网格布局，单元格可以点击编辑。
+支持基本公式：SUM、AVERAGE、MAX、MIN、COUNT。
+公式以 = 开头，引用单元格用 A1 格式。
+模块拆分：sheet-model.js 管理单元格数据模型和公式计算引擎，sheet-render.js 处理表格DOM渲染和滚动，
+sheet-selection.js 管理选区和键盘导航，sheet-formula.js 解析和计算公式。
+支持公式链式依赖（A1=B1+C1，B1=D1*2），D1 变化时 A1 自动更新。
+循环引用要检测并提示。
+支持拖拽填充（选中单元格右下角拖拽自动填充序列）。
+列宽和行高可拖拽调整。
+支持冻结首行。

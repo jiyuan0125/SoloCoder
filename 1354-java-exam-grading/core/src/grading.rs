@@ -1,6 +1,7 @@
 use crate::models::*;
 use crate::errors::GradingError;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
+use uuid::Uuid;
 
 pub const DEFAULT_SCORE_DIFF_THRESHOLD: u32 = 2;
 

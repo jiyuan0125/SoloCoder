@@ -1,7 +1,7 @@
 use thiserror::Error;
 use uuid::Uuid;
 
-#[derive(Debug, Error)]
+#[derive(Debug, Clone, Error)]
 pub enum GradingError {
     #[error("Exam not found: {0}")]
     ExamNotFound(Uuid),

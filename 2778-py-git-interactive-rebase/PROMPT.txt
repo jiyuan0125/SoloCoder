@@ -1,0 +1,8 @@
+Click 写一个 Git 交互式 rebase 助手工具。
+命令行参数要有基本的校验和帮助信息。
+读取当前分支的提交历史，让用户选择要 rebase 的提交范围。
+对选中的提交依次执行：pick（保留）、squash（合并到前一个）、drop（丢弃）、edit（暂停修改）。
+工具按顺序处理每个提交，遇到 edit 状态时暂停等待用户操作完成。
+最终完成 rebase 操作。
+常用选项可以放配置文件里，不用每次都在命令行指定。
+需要 git_operations、commit_parser、rebase_executor 三个模块协作。

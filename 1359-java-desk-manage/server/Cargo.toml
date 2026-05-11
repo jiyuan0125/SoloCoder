@@ -1,0 +1,18 @@
+[package]
+name = "desk-server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+desk-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower-http.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true

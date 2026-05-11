@@ -1,0 +1,8 @@
+用 cobra 写一个 Protobuf 和 JSON 互转命令行工具。
+输入 .proto 文件定义和二进制 protobuf 数据，输出对应的 JSON 格式。反过来也支持。
+支持嵌套消息、枚举类型、repeated 字段和 map 字段。oneof 字段在 JSON 中用对象表示。
+proto3 的默认值字段在 JSON 中可以省略或保留，通过参数控制。
+时间戳类型（google.protobuf.Timestamp）转换为可读的日期时间格式。
+JSON 输出可以格式化或压缩。
+批量转换时输入目录，输出到另一个目录。
+使用 google.golang.org/protobuf 库。命令行参数指定 proto 文件和输入输出路径。

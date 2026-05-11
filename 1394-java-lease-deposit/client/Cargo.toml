@@ -1,0 +1,16 @@
+[package]
+name = "lease-client"
+version = { workspace = true }
+edition = { workspace = true }
+authors = { workspace = true }
+license = { workspace = true }
+
+[dependencies]
+lease-core = { path = "../core" }
+clap = { version = "4.0", features = ["derive", "env"] }
+reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"], default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1.30", features = ["serde", "maths"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }

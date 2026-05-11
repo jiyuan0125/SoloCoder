@@ -1,0 +1,19 @@
+[package]
+name = "parking-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "parking-cli"
+path = "src/main.rs"
+
+[dependencies]
+parking-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+reqwest.workspace = true
+clap.workspace = true
+anyhow.workspace = true

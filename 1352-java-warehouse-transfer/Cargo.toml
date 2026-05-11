@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "core",
+    "warehouse_core",
     "server",
     "client",
 ]

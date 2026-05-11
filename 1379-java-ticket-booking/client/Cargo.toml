@@ -1,0 +1,20 @@
+[package]
+name = "ticket_client"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "ticket_client"
+path = "src/main.rs"
+
+[dependencies]
+ticket_core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

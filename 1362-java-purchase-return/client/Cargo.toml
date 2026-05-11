@@ -1,0 +1,16 @@
+[package]
+name = "purchase_return_client"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+purchase_return_core = { path = "../core" }
+clap = { version = "4.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json", "blocking", "rustls-tls"], default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "1.0"
+
+[[bin]]
+name = "purchase_return_client"
+path = "src/main.rs"

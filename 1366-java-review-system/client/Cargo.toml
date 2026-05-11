@@ -1,0 +1,18 @@
+[package]
+name = "review-client"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "review-client"
+path = "src/main.rs"
+
+[dependencies]
+review-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+reqwest.workspace = true
+clap.workspace = true
+tokio.workspace = true
+uuid.workspace = true

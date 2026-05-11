@@ -1,0 +1,9 @@
+用 Click 写一个 SSH 连接管理工具。
+保存服务器信息（主机、端口、用户名），连接时用 paramiko 库建立 SSH 会话。
+支持执行远程命令和文件传输（SFTP），文件传输用 paramiko 的 SFTPClient。
+密码用 cryptography 库加密存储。
+有个批量执行功能，同时对多个服务器执行同一条命令，结果汇总展示。
+用 concurrent.futures 控制并发数。
+服务器信息分标签管理，支持导入导出。
+连接配置用 SSHConfig 类解析 ~/.ssh/config 格式。
+数据存加密的 JSON 文件。

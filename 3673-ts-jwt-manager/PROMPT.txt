@@ -1,0 +1,9 @@
+用 TypeScript 写一个命令行 JWT 令牌管理工具。
+签发Token时包含用户ID、角色和过期时间。
+支持双Token机制：Access Token短有效期15分钟加Refresh Token长有效期7天。
+Token吊销功能：登出时吊销所有相关的Refresh Token。
+吊销列表存在本地文件里。
+同一用户同一设备只保留一个有效Refresh Token。
+新登录会使旧Token失效。
+提供验证Token有效性的命令，返回Token中的用户信息。
+Token格式使用标准JWT，密钥从配置文件读取。

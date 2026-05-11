@@ -1,0 +1,9 @@
+用 cobra 写一个 GeoJSON 转 TopoJSON 命令行工具。
+
+读取 GeoJSON 文件（FeatureCollection 格式），将其转换为 TopoJSON 格式。转换过程：提取所有几何体，找出共享的弧段（相邻多边形的公共边），用弧段索引重建拓扑结构。共享边只存储一次，减少文件大小。
+
+GeoJSON 支持的几何类型：Point、MultiPoint、LineString、MultiLineString、Polygon、MultiPolygon。坐标精度可配置（默认保留 6 位小数）。转换时要正确处理多边形中的洞（外环逆时针、内环顺时针）。
+
+输出 TopoJSON 包含 arcs 数组和 objects 对象。如果输入文件不是合法的 GeoJSON，给出具体的错误信息。
+
+支持指定坐标系变换（简化 WGS84 到 GCJ02）。大文件（>10MB）转换时显示进度。转换后的文件大小和原始文件大小的压缩比也要输出。支持量化精度配置（quantize 参数）。

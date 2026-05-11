@@ -1,0 +1,8 @@
+Typer 写一个 SSH 配置管理命令行工具。
+管理 ~/.ssh/config 文件中的主机配置。
+支持添加、删除、查看主机配置。
+配置项包括 HostName、User、Port、IdentityFile、ProxyJump 等。
+添加时自动检查配置格式是否正确。
+支持导出配置为 JSON。
+可以测试某个主机的连通性（尝试 socket 连接）。
+配置文件不存在时自动创建。

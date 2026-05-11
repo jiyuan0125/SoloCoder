@@ -1,0 +1,8 @@
+用 Go 标准库写一个 SPF 和 DKIM 验证 HTTP 服务。
+
+输入一个邮件的发件人域名和邮件原文，服务检查该域名的 SPF 记录和 DKIM 签名。SPF 检查：查询域名的 TXT 记录找到 SPF 声明（v=spf1 ...），解析 IP 白名单、include 引用、all 策略（+all/-all/~all/?all），判断发送 IP 是否在允许列表。
+
+DKIM 检查：从邮件头提取 DKIM-Signature 字段，解析出签名域名（d=）、选择器（s=）和签名算法。查询 _selector._domainkey.domain 的 TXT 记录获取公钥，用公钥验证签名。
+
+DNS 查询使用标准库 net.LookupTXT。SPF 的 include 引用可能嵌套多层，要递归解析并设置深度上限。DKIM 签名的 body hash 和 header hash 都要验证。结果返回 SPF 通过/失败/软失败/无记录、DKIM 通过/失败/无签名。
+8080 端口。

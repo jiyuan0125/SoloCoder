@@ -9,3 +9,4 @@ serde_json.workspace = true
 thiserror.workspace = true
 rand.workspace = true
 chrono.workspace = true
+uuid = { version = "1.6", features = ["v4"] }

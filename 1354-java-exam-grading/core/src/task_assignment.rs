@@ -2,9 +2,10 @@ use crate::models::*;
 use crate::errors::GradingError;
 use crate::grading::is_teacher_eligible;
 use std::collections::{HashMap, HashSet};
+use uuid::Uuid;
 
 pub struct TaskAssignmentSystem {
-    teacher_workload: HashMap<Uuid, u32>,
+    pub teacher_workload: HashMap<Uuid, u32>,
 }
 
 impl TaskAssignmentSystem {

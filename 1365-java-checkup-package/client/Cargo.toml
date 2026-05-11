@@ -1,0 +1,17 @@
+[package]
+name = "checkup_client"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "checkup_client"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.0", features = ["derive", "env"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+tokio = { version = "1.0", features = ["full"] }

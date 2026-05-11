@@ -1,0 +1,9 @@
+帮我写一个音频文件元数据编辑脚本。
+用 mutagen 库读写 MP3、FLAC、OGG 文件的标签信息。
+MP3 用 ID3 标签（mutagen.id3 模块），
+FLAC 用 Vorbis Comment，
+不同格式的标签字段名不一样（比如 artist vs TPE1）。
+支持批量修改：指定目录下所有音频文件的某个字段统一改。
+比如把所有文件的 artist 改成新名字。
+还有个重命名功能，根据标签信息自动重命名文件，格式像 {artist} - {title}.{ext}。
+操作前预览，记录操作日志。

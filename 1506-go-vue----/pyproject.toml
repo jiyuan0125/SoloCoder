@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kitchen-management"
+version = "0.1.0"
+description = "连锁餐饮品牌后厨管理系统"
+requires-python = ">=3.9"
+
+[project.scripts]
+kitchen-client = "client.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

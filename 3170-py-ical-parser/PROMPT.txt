@@ -1,0 +1,9 @@
+写一个Python脚本解析iCalendar（.ics）文件。
+用标准库手写解析，不依赖icalendar第三方包。
+解析VEVENT组件：SUMMARY、
+DTSTART、DTEND、LOCATION、
+DESCRIPTION、RRULE。
+处理时区信息——有些时间带Z是UTC，有些带TZID参数。
+RRULE解析基本的FREQ、INTERVAL、COUNT、UNTIL参数，展开重复事件。
+一个ics文件可能包含多个日历和多个事件。
+输出指定日期范围内的事件列表，按时间排序。

@@ -1,0 +1,8 @@
+写一个简易模板渲染引擎。
+用标准库实现，不依赖Jinja2。
+支持变量替换{{var}}、条件渲染{%if%}{%endif%}、循环{%for item in list%}{%endfor%}、模板继承{%extends%}{%block%}。
+变量支持点号访问属性（user.name）。
+过滤器支持：upper、lower、length、default。
+模板语法错误要报出行号。
+从文件系统加载模板，支持指定模板目录。
+渲染结果输出为字符串。

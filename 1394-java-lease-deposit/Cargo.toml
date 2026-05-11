@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "core",
+    "server",
+    "client",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+authors = ["Lease Management System"]
+license = "MIT"

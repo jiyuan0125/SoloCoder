@@ -1,0 +1,16 @@
+[package]
+name = "insurance_client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+insurance_core = { path = "../core" }
+clap = { version = "4.0", features = ["derive", "env"] }
+reqwest = { version = "0.11", features = ["json", "rustls-tls"], default-features = false }
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+chrono = { version = "0.4", features = ["serde"] }
+rust_decimal = { version = "1.30", features = ["serde"] }
+rust_decimal_macros = "1.30"
+anyhow = "1.0"

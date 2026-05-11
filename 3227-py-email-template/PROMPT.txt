@@ -1,0 +1,10 @@
+用 FastAPI 写一个邮件模板管理服务。
+模板支持变量插值，语法用 Jinja2。
+变量可能是嵌套对象，比如{{user.profile.name}}。
+提供模板预览接口，传入变量值后返回渲染后的HTML。
+模板里可以用条件判断和循环，比如根据用户等级显示不同内容。
+还要支持内联CSS，把style标签里的样式转为内联样式，用premailer库处理。
+HTML里的图片要支持CID嵌入。
+模板可以导入导出，导出格式是MIME multipart的.eml文件。
+用email.policy和email.message来构建。
+SQLite存模板。

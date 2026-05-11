@@ -1,0 +1,18 @@
+[package]
+name = "dialysis-client"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "dialysis-client"
+path = "src/main.rs"
+
+[dependencies]
+dialysis-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+uuid.workspace = true
+thiserror.workspace = true
+clap = { version = "4.0", features = ["derive", "env"] }
+reqwest = { version = "0.12", features = ["json", "blocking", "rustls-tls"], default-features = false }

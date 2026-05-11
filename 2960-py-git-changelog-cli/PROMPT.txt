@@ -1,0 +1,9 @@
+写一个 Python 命令行工具。
+从 git 仓库的提交记录自动生成变更日志。
+按版本标签分组。
+每个版本下面列出 feat、fix、refactor 等不同类型的提交。
+支持 conventional commits 格式解析。
+没有标签的提交归到「未发布」分组。
+输出 Markdown 格式到标准输出或文件。
+使用 Click 框架。
+支持指定仓库路径。

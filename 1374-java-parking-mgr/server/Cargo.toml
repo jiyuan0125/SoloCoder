@@ -1,0 +1,20 @@
+[package]
+name = "parking-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "parking-server"
+path = "src/main.rs"
+
+[dependencies]
+parking-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+chrono.workspace = true
+tokio.workspace = true
+axum.workspace = true
+tower.workspace = true
+clap.workspace = true
+anyhow.workspace = true

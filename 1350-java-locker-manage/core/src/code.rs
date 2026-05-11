@@ -1,4 +1,5 @@
-use rand::Rng;
+use rand::rngs::StdRng;
+use rand::{Rng, SeedableRng};
 use std::collections::HashSet;
 
 const CODE_LENGTH: usize = 6;
@@ -6,14 +7,14 @@ const MAX_ATTEMPTS: usize = 100;
 
 pub struct PickupCodeGenerator {
     used_codes: HashSet<String>,
-    rng: rand::rngs::ThreadRng,
+    rng: StdRng,
 }
 
 impl PickupCodeGenerator {
     pub fn new() -> Self {
         Self {
             used_codes: HashSet::new(),
-            rng: rand::thread_rng(),
+            rng: StdRng::from_entropy(),
         }
     }
 

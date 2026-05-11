@@ -1,0 +1,17 @@
+[package]
+name = "purchase_return_server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+purchase_return_core = { path = "../core" }
+axum = "0.7"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tower-http = { version = "0.5", features = ["cors"] }
+clap = { version = "4.0", features = ["derive", "env"] }
+
+[[bin]]
+name = "purchase_return_server"
+path = "src/main.rs"

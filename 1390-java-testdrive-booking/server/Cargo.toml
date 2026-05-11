@@ -1,0 +1,15 @@
+[package]
+name = "booking_server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+booking_core = { path = "../core" }
+axum = { version = "0.7", features = ["http1"] }
+serde_json.workspace = true
+serde.workspace = true
+tokio = { version = "1", features = ["full"] }
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors"] }
+clap = { version = "4", features = ["derive", "env"] }
+uuid.workspace = true

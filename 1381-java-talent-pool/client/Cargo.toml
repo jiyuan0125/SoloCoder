@@ -1,0 +1,12 @@
+[package]
+name = "client"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+talent-core.workspace = true
+serde.workspace = true
+uuid.workspace = true
+clap.workspace = true
+reqwest.workspace = true
+tokio.workspace = true

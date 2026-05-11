@@ -1,0 +1,10 @@
+用 Go 标准库写一个 Prometheus 指标标签聚合服务。
+服务的运行时指标用 expvar 暴露，同时提供 HTTP API 让用户注册自定义指标。
+指标有名称、标签键值对和值，比如 http_requests_total{method="GET",path="/api"}。
+
+支持按标签聚合查询：比如查询所有 method="GET" 的指标的总和、平均值、分位数。
+标签的基数可能很大（比如 path 标签有上千个不同值）。
+聚合结果可以用 text/template 格式化输出为 Prometheus exposition 格式。
+
+指标数据保留最近 N 个时间点。
+高基数查询时要控制内存使用。HTTP API，数据存 SQLite。

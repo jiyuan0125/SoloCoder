@@ -1,0 +1,16 @@
+[package]
+name = "presale_server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+presale_core = { path = "../core" }
+tokio = { workspace = true }
+axum = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }

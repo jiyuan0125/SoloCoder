@@ -1,0 +1,8 @@
+Click 写一个静态网站生成器。
+项目目录包含 content/（Markdown文章）、templates/（Jinja2模板）、static/（CSS/JS/图片）三个文件夹。
+工具读取 Markdown 文件，
+解析 frontmatter 中的元数据，
+用模板渲染成 HTML，
+输出到 build/ 目录。
+支持博客列表页、文章详情页、标签分类页。
+需要 content_parser、template_renderer、site_builder 三个模块协作。

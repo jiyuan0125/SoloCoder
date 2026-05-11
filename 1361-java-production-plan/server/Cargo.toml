@@ -1,0 +1,17 @@
+[package]
+name = "scheduler-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+scheduler-core = { path = "../core" }
+axum = { version = "0.7", features = ["http1"] }
+tokio = { version = "1.0", features = ["full"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+clap = { version = "4.0", features = ["derive", "env"] }
+tower = { version = "0.4", features = ["util"] }
+tower-http = { version = "0.5", features = ["cors"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }

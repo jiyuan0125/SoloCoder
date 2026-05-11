@@ -1,0 +1,8 @@
+用 TypeScript 写一个检查项目依赖的命令行工具。
+读取 package.json，分析 dependencies 和 devDependencies。检查每个依赖是否有新版本，列出可更新的。
+同时检查是否有未使用的依赖（在 package.json 中声明但代码中没有 import/require）。
+也检查是否有缺失的依赖（代码中 import 了但没在 package.json 中声明的）。
+扫描 node_modules 检查是否有重复安装的不同版本的同一个包。
+结果输出为表格，也可以导出为 JSON。检查结果按严重程度排序。
+能正常运行。
+能正常启动运行就行。

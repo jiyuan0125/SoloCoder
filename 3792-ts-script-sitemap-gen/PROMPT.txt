@@ -1,0 +1,8 @@
+用 TypeScript 写一个 sitemap.xml 生成脚本。
+给定一个基础 URL 和一组页面路径（从文本文件读取），生成符合 sitemap 协议的 XML 文件。
+每个页面可以设置 lastmod（最后修改日期）、changefreq（更新频率）、priority（优先级）。没有设置的给默认值。
+如果页面数超过 50000，自动分割成多个 sitemap 文件并生成 sitemap index。
+URL 中的特殊字符要正确转义。
+生成后验证 XML 格式是否合法。
+能跑起来。
+能正常启动运行就行。

@@ -1,0 +1,10 @@
+用 Node.js + TypeScript 写一个仓库健康度检查脚本。
+扫描一个Node.js项目检查多个维度。
+检查是否有gitignore和README，README内容是否超过100字。
+package.json中是否有license字段。
+依赖是否有已知安全漏洞，检查npm audit输出。
+代码中是否有console.log残留。
+TypeScript严格模式是否开启。
+每个检查项给出通过、警告或失败的判定和说明。
+最终输出综合健康度评分0到100。
+结果可以输出为JSON或终端彩色报告。

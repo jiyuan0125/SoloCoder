@@ -1,0 +1,8 @@
+用 Flask 做一个 Markdown 内容管理服务。
+文章用 Markdown 写，存储时原样保存，读取时用 markdown 库转成 HTML。
+支持代码高亮，用 pygments 库处理。
+Markdown 里可以嵌入 mermaid 图表，渲染后转成 SVG。
+文章的元数据用 YAML front matter 格式，就是 Markdown 文件开头的 --- 包裹的 YAML 块，解析它来提取标题、标签、日期等信息。
+还要支持 TOC 目录生成和锚点。
+文章可以有系列归属，同系列按日期排列。
+SQLite。
