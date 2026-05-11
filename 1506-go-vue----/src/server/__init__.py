@@ -1,1 +1,0 @@
-from .app import app, get_service

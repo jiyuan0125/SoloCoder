@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class RiderStatus(str, Enum):
@@ -13,34 +13,37 @@ class RiderStatus(str, Enum):
 
 class OrderStatus(str, Enum):
     PENDING = "pending"
-    ASSIGNED = "assigned"
     DELIVERING = "delivering"
     COMPLETED = "completed"
-    TIMED_OUT = "timed_out"
+    TIMEOUT = "timeout"
 
 
 class Rider(BaseModel):
     id: str
     status: RiderStatus = RiderStatus.IDLE
-    last_position_update: datetime
     current_order_id: Optional[str] = None
+    last_position_update: datetime = Field(default_factory=datetime.now)
+    created_at: datetime = Field(default_factory=datetime.now)
 
 
 class Order(BaseModel):
     id: str
-    created_at: datetime
-    expected_delivery_at: datetime
+    merchant_name: str
     status: OrderStatus = OrderStatus.PENDING
-    assigned_rider_id: Optional[str] = None
+    rider_id: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.now)
     accepted_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    needs_manual_reassign: bool = False
+    timeout_at: datetime = Field(default_factory=lambda: datetime.now())
 
+    @property
+    def is_timeout(self) -> bool:
+        if self.status in (OrderStatus.COMPLETED, OrderStatus.TIMEOUT):
+            return self.status == OrderStatus.TIMEOUT
+        return datetime.now() >= self.timeout_at
 
-class Metrics(BaseModel):
-    online_riders: int
-    pending_orders: int
-    delivering_orders: int
-    today_completed: int
-    avg_delivery_time_minutes: float
-    timeout_rate: float
+    @property
+    def delivery_duration_minutes(self) -> Optional[float]:
+        if self.accepted_at and self.completed_at:
+            return (self.completed_at - self.accepted_at).total_seconds() / 60
+        return None

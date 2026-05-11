@@ -1,166 +1,147 @@
-from typing import List, Optional
-from contextlib import asynccontextmanager
-
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+import os
 import asyncio
+from contextlib import asynccontextmanager
+from typing import List, Optional
+from fastapi import FastAPI, HTTPException, BackgroundTasks
+from pydantic import BaseModel
 
-from core import (
-    Rider,
-    Order,
-    Metrics,
-    RiderStatus,
-    OrderStatus,
-    create_order,
-    create_rider,
-    update_rider_position,
-    set_rider_status,
-    accept_order,
-    complete_order,
-    manually_reassign_order,
-    dispatch_orders,
-    check_timeouts,
-    check_offline_riders,
-    get_metrics,
-    get_rider,
-    get_all_riders,
-    get_order,
-    get_all_orders,
-)
+from core import SystemState, Scheduler, MetricsCalculator, RiderStatus, OrderStatus
 
 
-class CreateRiderRequest(BaseModel):
+state = SystemState()
+scheduler = Scheduler(state)
+metrics = MetricsCalculator(state)
+
+
+class RiderCreateRequest(BaseModel):
     rider_id: str
 
 
-class SetRiderStatusRequest(BaseModel):
-    status: RiderStatus
-
-
-class AcceptOrderRequest(BaseModel):
+class OrderCreateRequest(BaseModel):
     order_id: str
+    merchant_name: str
 
 
-class ReassignOrderRequest(BaseModel):
+class OrderAssignRequest(BaseModel):
     rider_id: str
-
-
-async def background_tasks():
-    while True:
-        dispatch_orders()
-        check_timeouts()
-        check_offline_riders()
-        await asyncio.sleep(5)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    task = asyncio.create_task(background_tasks())
-    yield
-    task.cancel()
+    scheduler_task = asyncio.create_task(run_scheduler())
     try:
-        await task
-    except asyncio.CancelledError:
-        pass
+        yield
+    finally:
+        scheduler_task.cancel()
 
 
-app = FastAPI(title="配送调度系统", lifespan=lifespan)
+async def run_scheduler():
+    while True:
+        scheduler.tick()
+        await asyncio.sleep(1)
 
 
-@app.post("/riders", response_model=Rider)
-def api_create_rider(request: CreateRiderRequest):
-    rider = get_rider(request.rider_id)
-    if rider:
-        raise HTTPException(status_code=400, detail="骑手已存在")
-    return create_rider(request.rider_id)
+def create_app() -> FastAPI:
+    app = FastAPI(title="外卖配送调度系统", lifespan=lifespan)
 
+    @app.get("/health")
+    async def health():
+        return {"status": "ok"}
 
-@app.get("/riders", response_model=List[Rider])
-def api_list_riders(status: Optional[RiderStatus] = None):
-    if status:
-        return [r for r in get_all_riders() if r.status == status]
-    return get_all_riders()
+    @app.get("/metrics")
+    async def get_metrics():
+        return metrics.get_all_metrics()
 
+    @app.post("/riders")
+    async def add_rider(request: RiderCreateRequest):
+        try:
+            rider = state.add_rider(request.rider_id)
+            return rider.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/riders/{rider_id}", response_model=Rider)
-def api_get_rider(rider_id: str):
-    rider = get_rider(rider_id)
-    if not rider:
-        raise HTTPException(status_code=404, detail="骑手不存在")
-    return rider
+    @app.get("/riders")
+    async def list_riders():
+        return [rider.model_dump() for rider in state.get_all_riders()]
 
+    @app.get("/riders/{rider_id}")
+    async def get_rider(rider_id: str):
+        rider = state.get_rider(rider_id)
+        if not rider:
+            raise HTTPException(status_code=404, detail="Rider not found")
+        return rider.model_dump()
 
-@app.post("/riders/{rider_id}/heartbeat", response_model=Rider)
-def api_heartbeat(rider_id: str):
-    rider = update_rider_position(rider_id)
-    if not rider:
-        raise HTTPException(status_code=404, detail="骑手不存在")
-    return rider
+    @app.post("/riders/{rider_id}/status")
+    async def update_rider_status(rider_id: str, status: RiderStatus):
+        try:
+            rider = state.update_rider_status(rider_id, status)
+            return rider.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
+    @app.post("/riders/{rider_id}/position")
+    async def update_rider_position(rider_id: str):
+        try:
+            rider = state.update_rider_position(rider_id)
+            return rider.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/riders/{rider_id}/status", response_model=Rider)
-def api_set_rider_status(rider_id: str, request: SetRiderStatusRequest):
-    rider = get_rider(rider_id)
-    if not rider:
-        raise HTTPException(status_code=404, detail="骑手不存在")
-    updated = set_rider_status(rider_id, request.status)
-    if not updated:
-        raise HTTPException(status_code=400, detail="状态更新失败")
-    return updated
+    @app.post("/riders/{rider_id}/back-online")
+    async def rider_back_online(rider_id: str):
+        try:
+            state.handle_rider_back_online(rider_id)
+            rider = state.get_rider(rider_id)
+            return rider.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
+    @app.post("/orders")
+    async def add_order(request: OrderCreateRequest, background_tasks: BackgroundTasks):
+        try:
+            order = state.add_order(request.order_id, request.merchant_name)
+            background_tasks.add_task(scheduler.tick)
+            return order.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-@app.post("/riders/{rider_id}/accept-order", response_model=Order)
-def api_accept_order(rider_id: str, request: AcceptOrderRequest):
-    rider = get_rider(rider_id)
-    if not rider:
-        raise HTTPException(status_code=404, detail="骑手不存在")
-    order = accept_order(rider_id, request.order_id)
-    if not order:
-        raise HTTPException(status_code=400, detail="接单失败")
-    return order
+    @app.get("/orders")
+    async def list_orders(status: Optional[OrderStatus] = None):
+        if status:
+            orders = state.get_orders_by_status(status)
+        else:
+            orders = state.get_all_orders()
+        return [order.model_dump() for order in orders]
 
+    @app.get("/orders/{order_id}")
+    async def get_order(order_id: str):
+        order = state.get_order(order_id)
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        return order.model_dump()
 
-@app.post("/orders", response_model=Order)
-def api_create_order():
-    return create_order()
+    @app.post("/orders/{order_id}/complete")
+    async def complete_order(order_id: str, background_tasks: BackgroundTasks):
+        try:
+            state.complete_order(order_id)
+            background_tasks.add_task(scheduler.tick)
+            order = state.get_order(order_id)
+            return order.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
+    @app.post("/orders/{order_id}/assign")
+    async def manual_assign_order(order_id: str, request: OrderAssignRequest, background_tasks: BackgroundTasks):
+        try:
+            state.assign_order_to_rider(order_id, request.rider_id)
+            background_tasks.add_task(scheduler.tick)
+            order = state.get_order(order_id)
+            return order.model_dump()
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
 
-@app.get("/orders", response_model=List[Order])
-def api_list_orders(status: Optional[OrderStatus] = None):
-    if status:
-        return [o for o in get_all_orders() if o.status == status]
-    return get_all_orders()
+    @app.post("/scheduler/tick")
+    async def manual_tick():
+        return scheduler.tick()
 
-
-@app.get("/orders/{order_id}", response_model=Order)
-def api_get_order(order_id: str):
-    order = get_order(order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="订单不存在")
-    return order
-
-
-@app.post("/orders/{order_id}/complete", response_model=Order)
-def api_complete_order(order_id: str):
-    order = complete_order(order_id)
-    if not order:
-        raise HTTPException(status_code=400, detail="完成订单失败")
-    return order
-
-
-@app.post("/orders/{order_id}/reassign", response_model=Order)
-def api_reassign_order(order_id: str, request: ReassignOrderRequest):
-    order = get_order(order_id)
-    if not order:
-        raise HTTPException(status_code=404, detail="订单不存在")
-    if not order.needs_manual_reassign:
-        raise HTTPException(status_code=400, detail="该订单不需要手动重新分配")
-    updated = manually_reassign_order(order_id, request.rider_id)
-    if not updated:
-        raise HTTPException(status_code=400, detail="重新分配失败")
-    return updated
-
-
-@app.get("/metrics", response_model=Metrics)
-def api_get_metrics():
-    return get_metrics()
+    return app

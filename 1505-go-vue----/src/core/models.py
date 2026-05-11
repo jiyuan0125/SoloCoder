@@ -1,96 +1,116 @@
-from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
 from typing import List, Optional
-from uuid import uuid4
+
+from pydantic import BaseModel, Field
 
 
-def _generate_id() -> str:
-    return str(uuid4())
-
-
-class QCResult(str, Enum):
-    PASS = "pass"
-    FAIL = "fail"
-
-
-class DispositionType(str, Enum):
-    REWORK = "rework"
-    DOWNGRADE = "downgrade"
-    SCRAP = "scrap"
+class InspectionResult(str, Enum):
+    PASS = "合格"
+    FAIL = "不合格"
 
 
 class TodoStatus(str, Enum):
-    PENDING = "pending"
-    RESOLVED = "resolved"
+    PENDING = "待处理"
+    REWORK = "返工"
+    DOWNGRADE = "降级"
+    SCRAP = "报废"
 
 
-@dataclass
-class RawMaterialItem:
+class MaterialInventory(BaseModel):
+    id: int
     name: str
+    current_stock: float
+    safety_stock: float
+
+
+class RecipeIngredient(BaseModel):
+    material_name: str
     quantity: float
-    is_key: bool
+    is_key_material: bool
 
 
-@dataclass
-class RawMaterial:
-    id: str = field(default_factory=_generate_id)
-    name: str = ""
-    current_stock: float = 0.0
-    safety_stock: float = 0.0
-    created_at: datetime = field(default_factory=datetime.utcnow)
-    updated_at: datetime = field(default_factory=datetime.utcnow)
-
-    @property
-    def is_below_safety(self) -> bool:
-        return self.current_stock < self.safety_stock
+class RecipeBase(BaseModel):
+    name: str
+    product_category: str
+    ingredients: List[RecipeIngredient]
 
 
-@dataclass
-class Recipe:
-    id: str = field(default_factory=_generate_id)
-    name: str = ""
-    category: str = ""
-    raw_materials: List[RawMaterialItem] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.utcnow)
+class RecipeCreate(RecipeBase):
+    pass
 
 
-@dataclass
-class QualityCheck:
-    id: str = field(default_factory=_generate_id)
-    batch_id: str = ""
-    inspector: str = ""
-    result: QCResult = QCResult.PASS
-    measured_value: Optional[float] = None
-    notes: str = ""
-    created_at: datetime = field(default_factory=datetime.utcnow)
+class Recipe(RecipeBase):
+    id: int
+    created_at: datetime
 
 
-@dataclass
-class Todo:
-    id: str = field(default_factory=_generate_id)
-    batch_id: str = ""
+class BatchBase(BaseModel):
+    recipe_id: int
+    planned_quantity: float
+    actual_quantity: Optional[float] = None
+    production_date: Optional[datetime] = None
+
+
+class BatchCreate(BatchBase):
+    pass
+
+
+class Batch(BatchBase):
+    id: int
+    created_at: datetime
+    has_passed_inspection: bool = False
+
+
+class QualityInspectionBase(BaseModel):
+    batch_id: int
+    result: InspectionResult
+    inspection_value: Optional[float] = None
+    inspector: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class QualityInspectionCreate(QualityInspectionBase):
+    pass
+
+
+class QualityInspection(QualityInspectionBase):
+    id: int
+    created_at: datetime
+
+
+class TodoBase(BaseModel):
+    batch_id: int
     status: TodoStatus = TodoStatus.PENDING
-    disposition: Optional[DispositionType] = None
-    resolved_by: Optional[str] = None
-    resolved_at: Optional[datetime] = None
-    created_at: datetime = field(default_factory=datetime.utcnow)
+    assigned_to: Optional[str] = None
+    notes: Optional[str] = None
 
 
-@dataclass
-class ProductionBatch:
-    id: str = field(default_factory=_generate_id)
-    recipe_id: str = ""
-    plan_quantity: int = 0
-    actual_quantity: int = 0
-    quality_checks: List[QualityCheck] = field(default_factory=list)
-    todos: List[Todo] = field(default_factory=list)
-    created_at: datetime = field(default_factory=datetime.utcnow)
+class TodoCreate(TodoBase):
+    pass
 
-    @property
-    def has_passed_qc(self) -> bool:
-        return any(qc.result == QCResult.PASS for qc in self.quality_checks)
 
-    @property
-    def has_pending_todo(self) -> bool:
-        return any(todo.status == TodoStatus.PENDING for todo in self.todos)
+class TodoUpdate(BaseModel):
+    status: TodoStatus
+    notes: Optional[str] = None
+
+
+class Todo(TodoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class BatchSummary(BaseModel):
+    batch_id: int
+    recipe_name: str
+    product_category: str
+    planned_quantity: float
+    actual_quantity: Optional[float]
+    production_date: Optional[datetime]
+    inspection_result: Optional[str]
+    todo_status: Optional[str]
+
+
+class ValidationError(Exception):
+    pass

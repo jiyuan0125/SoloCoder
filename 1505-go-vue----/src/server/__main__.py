@@ -1,18 +1,28 @@
 import os
-import sys
 
-from uvicorn import run
+import uvicorn
+from pydantic_settings import BaseSettings
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from server.app import create_app
+class ServerSettings(BaseSettings):
+    host: str = "127.0.0.1"
+    port: int = 8000
+
+    model_config = {
+        "env_prefix": "SERVER_",
+        "env_file": ".env",
+        "extra": "ignore",
+    }
 
 
 def main():
-    app = create_app()
-    port = int(os.environ.get("PORT", "8000"))
-    host = os.environ.get("HOST", "127.0.0.1")
-    run(app, host=host, port=port)
+    settings = ServerSettings()
+    uvicorn.run(
+        "server.app:app",
+        host=settings.host,
+        port=settings.port,
+        reload=True,
+    )
 
 
 if __name__ == "__main__":

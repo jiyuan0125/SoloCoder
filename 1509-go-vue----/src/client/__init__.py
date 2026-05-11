@@ -1,3 +1,3 @@
-from .cli import main
+from client.api_client import TraceabilityAPIClient
 
-__all__ = ["main"]
+__all__ = ['TraceabilityAPIClient']

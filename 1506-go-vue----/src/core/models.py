@@ -1,116 +1,115 @@
 from datetime import date, datetime
-from enum import Enum
-from typing import List, Optional
-from pydantic import BaseModel, Field, validator
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Float,
+    Date,
+    DateTime,
+    ForeignKey,
+    Enum,
+    Boolean,
+    UniqueConstraint,
+)
+from sqlalchemy.orm import relationship, DeclarativeBase
 
 
-class PurchaseRequestStatus(str, Enum):
+class Base(DeclarativeBase):
+    pass
+
+
+class Store(Base):
+    __tablename__ = "stores"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    address = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    ingredients = relationship("Ingredient", back_populates="store")
+    purchase_orders = relationship("PurchaseOrder", back_populates="store")
+    wastages = relationship("Wastage", back_populates="store")
+    alerts = relationship("LowStockAlert", back_populates="store")
+
+
+class Ingredient(Base):
+    __tablename__ = "ingredients"
+    __table_args__ = (
+        UniqueConstraint("store_id", "name", name="uq_ingredient_store_name"),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    stock_quantity = Column(Float, nullable=False, default=0.0)
+    unit_price = Column(Float, nullable=False, default=0.0)
+    expiry_date = Column(Date, nullable=True)
+    safety_stock = Column(Float, nullable=False, default=0.0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    store = relationship("Store", back_populates="ingredients")
+    purchase_orders = relationship("PurchaseOrder", back_populates="ingredient")
+    wastages = relationship("Wastage", back_populates="ingredient")
+    alerts = relationship("LowStockAlert", back_populates="ingredient")
+
+
+class PurchaseOrderStatus(str, Enum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"
-    COMPLETED = "completed"
+    RECEIVED = "received"
 
 
-class Store(BaseModel):
-    id: str
-    name: str
-    address: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.now)
+class PurchaseOrder(Base):
+    __tablename__ = "purchase_orders"
+
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
+    requested_quantity = Column(Float, nullable=False)
+    received_quantity = Column(Float, nullable=True)
+    expected_arrival_date = Column(Date, nullable=False)
+    actual_arrival_date = Column(Date, nullable=True)
+    status = Column(String(20), nullable=False, default=PurchaseOrderStatus.PENDING.value)
+    remarks = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    store = relationship("Store", back_populates="purchase_orders")
+    ingredient = relationship("Ingredient", back_populates="purchase_orders")
 
 
-class Ingredient(BaseModel):
-    id: str
-    name: str
-    unit: str
-    safety_stock: float = Field(gt=0)
+class Wastage(Base):
+    __tablename__ = "wastages"
 
-    @validator("safety_stock")
-    def validate_safety_stock(cls, v):
-        if v <= 0:
-            raise ValueError("安全库存线必须大于0")
-        return v
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
+    quantity = Column(Float, nullable=False)
+    actual_deducted = Column(Float, nullable=False)
+    wastage_date = Column(Date, nullable=False, default=date.today)
+    reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-
-class InventoryItem(BaseModel):
-    ingredient_id: str
-    ingredient_name: str
-    quantity: float = Field(ge=0)
-    unit_price: float = Field(ge=0)
-    expiry_date: Optional[date] = None
-    updated_at: datetime = Field(default_factory=datetime.now)
-    is_low_stock: bool = False
+    store = relationship("Store", back_populates="wastages")
+    ingredient = relationship("Ingredient", back_populates="wastages")
 
 
-class PurchaseRequest(BaseModel):
-    id: str
-    store_id: str
-    ingredient_id: str
-    ingredient_name: str
-    requested_quantity: float = Field(gt=0)
-    unit_price: float = Field(ge=0)
-    expected_arrival_date: date
-    status: PurchaseRequestStatus = PurchaseRequestStatus.PENDING
-    created_at: datetime = Field(default_factory=datetime.now)
-    approved_at: Optional[datetime] = None
-    rejected_reason: Optional[str] = None
+class LowStockAlert(Base):
+    __tablename__ = "low_stock_alerts"
+    __table_args__ = (
+        UniqueConstraint("ingredient_id", "alert_date", name="uq_alert_ingredient_date"),
+    )
 
-    @validator("expected_arrival_date")
-    def validate_expected_arrival_date(cls, v):
-        if v < date.today():
-            raise ValueError("采购期望到货日期不能是过去的")
-        return v
+    id = Column(Integer, primary_key=True, index=True)
+    store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    ingredient_id = Column(Integer, ForeignKey("ingredients.id"), nullable=False)
+    alert_date = Column(Date, nullable=False, default=date.today)
+    current_stock = Column(Float, nullable=False)
+    safety_stock = Column(Float, nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-
-class PurchaseArrival(BaseModel):
-    id: str
-    purchase_request_id: str
-    store_id: str
-    ingredient_id: str
-    ingredient_name: str
-    arrived_quantity: float = Field(gt=0)
-    unit_price: float = Field(ge=0)
-    arrived_at: datetime = Field(default_factory=datetime.now)
-    expiry_date: Optional[date] = None
-
-
-class WasteRecord(BaseModel):
-    id: str
-    store_id: str
-    ingredient_id: str
-    ingredient_name: str
-    requested_quantity: float = Field(gt=0)
-    actual_deducted: float = Field(ge=0)
-    unit_price: float = Field(ge=0)
-    waste_date: date = Field(default_factory=date.today)
-    reason: Optional[str] = None
-    created_at: datetime = Field(default_factory=datetime.now)
-
-
-class LowStockAlert(BaseModel):
-    id: str
-    store_id: str
-    ingredient_id: str
-    ingredient_name: str
-    current_quantity: float
-    safety_stock: float
-    alert_date: date = Field(default_factory=date.today)
-    created_at: datetime = Field(default_factory=datetime.now)
-
-
-class AggregationResult(BaseModel):
-    store_id: str
-    store_name: str
-    start_date: date
-    end_date: date
-    total_purchase_amount: float
-    total_waste_amount: float
-    waste_rate: float
-    is_high_waste_rate: bool
-
-
-class StoreRanking(BaseModel):
-    rank: int
-    store_id: str
-    store_name: str
-    waste_rate: float
-    is_high_waste_rate: bool
+    store = relationship("Store", back_populates="alerts")
+    ingredient = relationship("Ingredient", back_populates="alerts")

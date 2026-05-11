@@ -1,73 +1,101 @@
-from datetime import datetime, date, time
-from typing import Optional, Dict, Any
-from pydantic import BaseModel, Field, validator
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Date, Time, Boolean
+from sqlalchemy.orm import relationship
+
+from .database import Base
 
 
-class Pond(BaseModel):
-    id: Optional[int] = None
-    code: str
-    area: float
-    species: str
-    stock_quantity: int
-    created_at: datetime = Field(default_factory=datetime.now)
-    updated_at: datetime = Field(default_factory=datetime.now)
+class Pond(Base):
+    __tablename__ = "ponds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(50), unique=True, index=True, nullable=False)
+    area = Column(Float, nullable=False)
+    species = Column(String(100), nullable=False)
+    initial_stock = Column(Integer, nullable=False)
+    current_stock = Column(Integer, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    thresholds = relationship(
+        "WaterThreshold", back_populates="pond", cascade="all, delete-orphan"
+    )
+    water_records = relationship(
+        "WaterRecord", back_populates="pond", cascade="all, delete-orphan"
+    )
+    feeding_plans = relationship(
+        "FeedingPlan", back_populates="pond", cascade="all, delete-orphan"
+    )
+    feeding_records = relationship(
+        "FeedingRecord", back_populates="pond", cascade="all, delete-orphan"
+    )
+    harvest_records = relationship(
+        "HarvestRecord", back_populates="pond", cascade="all, delete-orphan"
+    )
 
 
-class WaterQualityThreshold(BaseModel):
-    id: Optional[int] = None
-    pond_id: int
-    parameter: str
-    min_value: Optional[float] = None
-    max_value: Optional[float] = None
+class WaterThreshold(Base):
+    __tablename__ = "water_thresholds"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pond_id = Column(Integer, ForeignKey("ponds.id"), nullable=False)
+    indicator = Column(String(50), nullable=False)
+    min_value = Column(Float, nullable=True)
+    max_value = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    pond = relationship("Pond", back_populates="thresholds")
 
 
-class WaterQualityRecord(BaseModel):
-    id: Optional[int] = None
-    pond_id: int
-    water_temp: float
-    dissolved_oxygen: float
-    ph: float
-    ammonia: float
-    recorded_at: datetime = Field(default_factory=datetime.now)
-    anomalies: Dict[str, bool] = Field(default_factory=dict)
+class WaterRecord(Base):
+    __tablename__ = "water_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pond_id = Column(Integer, ForeignKey("ponds.id"), nullable=False)
+    temperature = Column(Float, nullable=False)
+    dissolved_oxygen = Column(Float, nullable=False)
+    ph = Column(Float, nullable=False)
+    ammonia_nitrogen = Column(Float, nullable=False)
+    is_abnormal = Column(Boolean, default=False)
+    abnormal_indicators = Column(String(500), nullable=True)
+    recorded_at = Column(DateTime, default=datetime.utcnow)
+
+    pond = relationship("Pond", back_populates="water_records")
 
 
-class FeedingPlan(BaseModel):
-    id: Optional[int] = None
-    pond_id: int
-    feed_date: date
-    feed_time: time
-    amount: float
-    created_at: datetime = Field(default_factory=datetime.now)
+class FeedingPlan(Base):
+    __tablename__ = "feeding_plans"
 
-    @validator('amount')
-    def check_amount(cls, v):
-        if v <= 0:
-            raise ValueError('投喂量必须大于0')
-        return v
+    id = Column(Integer, primary_key=True, index=True)
+    pond_id = Column(Integer, ForeignKey("ponds.id"), nullable=False)
+    plan_date = Column(Date, nullable=False)
+    plan_time = Column(Time, nullable=False)
+    feed_amount = Column(Float, nullable=False)
+    is_executed = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-
-class FeedingRecord(BaseModel):
-    id: Optional[int] = None
-    pond_id: int
-    plan_id: Optional[int] = None
-    feed_date: date
-    feed_time: time
-    amount: float
-    created_at: datetime = Field(default_factory=datetime.now)
+    pond = relationship("Pond", back_populates="feeding_plans")
 
 
-class HarvestRecord(BaseModel):
-    id: Optional[int] = None
-    pond_id: int
-    species: str
-    quantity: int
-    weight: float
-    harvested_at: datetime = Field(default_factory=datetime.now)
+class FeedingRecord(Base):
+    __tablename__ = "feeding_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pond_id = Column(Integer, ForeignKey("ponds.id"), nullable=False)
+    plan_id = Column(Integer, ForeignKey("feeding_plans.id"), nullable=True)
+    feed_amount = Column(Float, nullable=False)
+    executed_at = Column(DateTime, default=datetime.utcnow)
+
+    pond = relationship("Pond", back_populates="feeding_records")
 
 
-class WaterQualityAggregation(BaseModel):
-    parameter: str
-    min_value: float
-    max_value: float
-    avg_value: float
+class HarvestRecord(Base):
+    __tablename__ = "harvest_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    pond_id = Column(Integer, ForeignKey("ponds.id"), nullable=False)
+    species = Column(String(100), nullable=False)
+    quantity = Column(Integer, nullable=False)
+    weight = Column(Float, nullable=False)
+    harvested_at = Column(DateTime, default=datetime.utcnow)
+
+    pond = relationship("Pond", back_populates="harvest_records")

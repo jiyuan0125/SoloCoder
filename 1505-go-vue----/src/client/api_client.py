@@ -1,99 +1,55 @@
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
+from urllib.parse import urljoin
 
-import requests
+import urllib.request
+import json
 
 
 class APIClient:
     def __init__(self, base_url: Optional[str] = None):
-        self.base_url = base_url or os.environ.get("API_URL", "http://127.0.0.1:8000")
+        if base_url is None:
+            host = os.environ.get("SERVER_HOST", "127.0.0.1")
+            port = os.environ.get("SERVER_PORT", "8000")
+            base_url = f"http://{host}:{port}"
+        self.base_url = base_url.rstrip("/") + "/"
 
-    def _get(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
-        resp = requests.get(f"{self.base_url}{path}", params=params)
-        if resp.status_code >= 400:
-            raise RuntimeError(f"请求失败 [{resp.status_code}]: {resp.text}")
-        if resp.headers.get("content-type", "").startswith("text"):
-            return resp.text
-        return resp.json()
-
-    def _post(self, path: str, data: Optional[Dict[str, Any]] = None) -> Any:
-        resp = requests.post(f"{self.base_url}{path}", json=data or {})
-        if resp.status_code >= 400:
-            raise RuntimeError(f"请求失败 [{resp.status_code}]: {resp.text}")
-        return resp.json()
-
-    def create_recipe(self, name: str, category: str, raw_materials: List[Dict[str, Any]]) -> Dict[str, Any]:
-        return self._post("/recipes", {
-            "name": name,
-            "category": category,
-            "raw_materials": raw_materials,
-        })
-
-    def list_recipes(self) -> List[Dict[str, Any]]:
-        return self._get("/recipes")
-
-    def get_recipe(self, recipe_id: str) -> Dict[str, Any]:
-        return self._get(f"/recipes/{recipe_id}")
-
-    def upsert_material(self, name: str, current_stock: float, safety_stock: float) -> Dict[str, Any]:
-        return self._post("/raw-materials", {
-            "name": name,
-            "current_stock": current_stock,
-            "safety_stock": safety_stock,
-        })
-
-    def list_materials(self, low_stock: bool = False) -> List[Dict[str, Any]]:
-        return self._get("/raw-materials", params={"low_stock": low_stock})
-
-    def get_material(self, material_id: str) -> Dict[str, Any]:
-        return self._get(f"/raw-materials/{material_id}")
-
-    def create_batch(self, recipe_id: str, plan_quantity: int, actual_quantity: int) -> Dict[str, Any]:
-        return self._post("/batches", {
-            "recipe_id": recipe_id,
-            "plan_quantity": plan_quantity,
-            "actual_quantity": actual_quantity,
-        })
-
-    def list_batches(self, start: Optional[str] = None, end: Optional[str] = None) -> List[Dict[str, Any]]:
-        params = {}
-        if start:
-            params["start"] = start
-        if end:
-            params["end"] = end
-        return self._get("/batches", params=params if params else None)
-
-    def get_batch(self, batch_id: str) -> Dict[str, Any]:
-        return self._get(f"/batches/{batch_id}")
-
-    def add_quality_check(
+    def _request(
         self,
-        batch_id: str,
-        inspector: str,
-        result: str,
-        measured_value: Optional[float],
-        notes: str = "",
-    ) -> Dict[str, Any]:
-        return self._post(f"/batches/{batch_id}/quality-checks", {
-            "inspector": inspector,
-            "result": result,
-            "measured_value": measured_value,
-            "notes": notes,
-        })
+        method: str,
+        endpoint: str,
+        data: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        url = urljoin(self.base_url, endpoint.lstrip("/"))
+        
+        headers = {"Content-Type": "application/json"}
+        body = json.dumps(data).encode("utf-8") if data else None
+        
+        req = urllib.request.Request(url, data=body, headers=headers, method=method)
+        
+        try:
+            with urllib.request.urlopen(req) as response:
+                content_type = response.headers.get("Content-Type", "")
+                raw = response.read().decode("utf-8")
+                if "application/json" in content_type:
+                    return json.loads(raw)
+                return raw
+        except urllib.error.HTTPError as e:
+            error_body = e.read().decode("utf-8")
+            try:
+                error_data = json.loads(error_body)
+                detail = error_data.get("detail", error_body)
+            except (ValueError, KeyError):
+                detail = error_body
+            raise Exception(f"请求失败 [{e.code}]: {detail}")
+        except urllib.error.URLError as e:
+            raise Exception(f"无法连接到服务器: {e.reason}")
 
-    def list_todos(self) -> List[Dict[str, Any]]:
-        return self._get("/todos")
+    def get(self, endpoint: str) -> Any:
+        return self._request("GET", endpoint)
 
-    def resolve_todo(self, todo_id: str, disposition: str, resolved_by: str) -> Dict[str, Any]:
-        return self._post(f"/todos/{todo_id}/resolve", {
-            "disposition": disposition,
-            "resolved_by": resolved_by,
-        })
+    def post(self, endpoint: str, data: Dict[str, Any]) -> Any:
+        return self._request("POST", endpoint, data)
 
-    def export_batches(self, start: Optional[str] = None, end: Optional[str] = None) -> str:
-        params = {}
-        if start:
-            params["start"] = start
-        if end:
-            params["end"] = end
-        return self._get("/export/batches", params=params if params else None)
+    def patch(self, endpoint: str, data: Dict[str, Any]) -> Any:
+        return self._request("PATCH", endpoint, data)
