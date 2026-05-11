@@ -1,0 +1,19 @@
+{
+  "nodes": [
+    {"id": "S"},
+    {"id": "A"},
+    {"id": "B"},
+    {"id": "C"},
+    {"id": "T"}
+  ],
+  "edges": [
+    {"from": "S", "to": "A", "capacity": 1000},
+    {"from": "S", "to": "B", "capacity": 1000},
+    {"from": "A", "to": "B", "capacity": 1},
+    {"from": "A", "to": "C", "capacity": 1000},
+    {"from": "B", "to": "C", "capacity": 1000},
+    {"from": "C", "to": "T", "capacity": 1000}
+  ],
+  "source": "S",
+  "sink": "T"
+}

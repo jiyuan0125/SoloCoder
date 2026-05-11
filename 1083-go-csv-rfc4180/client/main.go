@@ -15,7 +15,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	baseURL := "http://localhost:8080"
+	baseURL := "http://localhost:8303"
 	if envURL := os.Getenv("CSV_SERVER_URL"); envURL != "" {
 		baseURL = envURL
 	}
@@ -53,7 +53,7 @@ Commands:
   help       - Show this help
 
 Environment:
-  CSV_SERVER_URL  - Server URL (default: http://localhost:8080)
+  CSV_SERVER_URL  - Server URL (default: http://localhost:8303)
 
 Examples:
   csv-client parse --file data.csv

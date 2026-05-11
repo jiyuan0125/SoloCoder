@@ -28,9 +28,10 @@ type SkipMap struct {
 }
 
 type Iterator struct {
-	sm    *SkipMap
-	curr  *node
-	end   string
+	sm     *SkipMap
+	curr   *node
+	start  string
+	end    string
 	hasEnd bool
 }
 
@@ -136,6 +137,14 @@ func (sm *SkipMap) Put(key string, value string) (bool, error) {
 		}
 
 		newLevel := randomLevel()
+		currentLevel := int(sm.level.Load())
+		if newLevel > currentLevel {
+			for i := currentLevel; i < newLevel; i++ {
+				preds[i] = sm.head
+				succs[i] = sm.tail
+			}
+		}
+
 		newNode := newNode(key, value, newLevel)
 
 		for i := 0; i < newLevel; i++ {
@@ -154,15 +163,22 @@ func (sm *SkipMap) Put(key string, value string) (bool, error) {
 					break
 				}
 				sm.findNode(key, preds, succs)
+				currentLevel = int(sm.level.Load())
+				if newLevel > currentLevel {
+					for j := currentLevel; j < newLevel; j++ {
+						preds[j] = sm.head
+						succs[j] = sm.tail
+					}
+				}
 			}
 		}
 
 		for {
-			currentLevel := sm.level.Load()
-			if int32(newLevel) <= currentLevel {
+			cl := sm.level.Load()
+			if int32(newLevel) <= cl {
 				break
 			}
-			if sm.level.CompareAndSwap(currentLevel, int32(newLevel)) {
+			if sm.level.CompareAndSwap(cl, int32(newLevel)) {
 				break
 			}
 		}
@@ -230,9 +246,10 @@ func (sm *SkipMap) Size() int64 {
 
 func (sm *SkipMap) RangeScan(start, end string) *Iterator {
 	return &Iterator{
-		sm:    sm,
-		curr:  nil,
-		end:   end,
+		sm:     sm,
+		curr:   nil,
+		start:  start,
+		end:    end,
 		hasEnd: len(end) > 0,
 	}
 }
@@ -255,9 +272,13 @@ func (it *Iterator) findStart(start string) *node {
 
 func (it *Iterator) Next(key *string, value *string) bool {
 	if it.curr == nil {
-		it.curr = it.sm.head.next[0].Load()
-		for !it.sm.isTail(it.curr) && it.curr.deleted.Load() {
-			it.curr = it.curr.next[0].Load()
+		if len(it.start) > 0 {
+			it.curr = it.findStart(it.start)
+		} else {
+			it.curr = it.sm.head.next[0].Load()
+			for !it.sm.isTail(it.curr) && it.curr.deleted.Load() {
+				it.curr = it.curr.next[0].Load()
+			}
 		}
 	}
 

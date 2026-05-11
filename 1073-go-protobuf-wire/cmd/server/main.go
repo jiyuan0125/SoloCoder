@@ -20,11 +20,23 @@ func convertParsedFields(fields []*core.ParsedField) []*common.Field {
 			WireTypeName: f.WireType.String(),
 			RawBytes:     f.RawBytes,
 			RawByteSize:  f.RawByteSize,
-			Value:        convertValue(f.Value),
+			Value:        convertFieldValue(f),
 			ValueType:    f.ValueType,
+			Repeated:     f.Repeated,
 		}
 	}
 	return result
+}
+
+func convertFieldValue(f *core.ParsedField) interface{} {
+	if f.Repeated && f.Values != nil {
+		converted := make([]interface{}, len(f.Values))
+		for i, v := range f.Values {
+			converted[i] = convertValue(v)
+		}
+		return converted
+	}
+	return convertValue(f.Value)
 }
 
 func convertValue(v interface{}) interface{} {
@@ -101,7 +113,7 @@ func sendError(w http.ResponseWriter, errMsg string, status int) {
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8100"
 	}
 
 	http.HandleFunc("/parse", parseHandler)

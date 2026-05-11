@@ -162,7 +162,7 @@ func writeError(w http.ResponseWriter, status int, message string) {
 }
 
 func main() {
-	port := "8080"
+	port := "8300"
 	if len(os.Args) > 1 {
 		port = os.Args[1]
 	}

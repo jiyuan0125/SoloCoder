@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	serverURL = "http://localhost:8080"
+	serverURL = "http://localhost:8200"
 )
 
 func main() {

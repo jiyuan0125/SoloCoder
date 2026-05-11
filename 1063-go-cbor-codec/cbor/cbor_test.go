@@ -341,3 +341,78 @@ func TestJSONRoundTrip(t *testing.T) {
 		t.Errorf("expected non-empty CBOR data")
 	}
 }
+
+func TestMapKeyOrderPreserved(t *testing.T) {
+	m := NewMap()
+	m.Add("z", uint64(1))
+	m.Add("a", uint64(2))
+	m.Add("m", uint64(3))
+
+	jsonData, err := ToJSON(m)
+	if err != nil {
+		t.Fatalf("ToJSON() error = %v", err)
+	}
+
+	expected := `{"z":1,"a":2,"m":3}`
+	if string(jsonData) != expected {
+		t.Errorf("Map key order not preserved.\nGot:      %s\nExpected: %s", string(jsonData), expected)
+	}
+}
+
+func TestNestedMapKeyOrder(t *testing.T) {
+	inner := NewMap()
+	inner.Add("bbb", uint64(2))
+	inner.Add("aaa", uint64(1))
+
+	outer := NewMap()
+	outer.Add("first", "value1")
+	outer.Add("inner", inner)
+	outer.Add("last", uint64(99))
+
+	jsonData, err := ToJSON(outer)
+	if err != nil {
+		t.Fatalf("ToJSON() error = %v", err)
+	}
+
+	expected := `{"first":"value1","inner":{"bbb":2,"aaa":1},"last":99}`
+	if string(jsonData) != expected {
+		t.Errorf("Nested map key order not preserved.\nGot:      %s\nExpected: %s", string(jsonData), expected)
+	}
+}
+
+func TestMapWithIntegerKeys(t *testing.T) {
+	m := NewMap()
+	m.Add(int64(3), "three")
+	m.Add(int64(1), "one")
+	m.Add(int64(2), "two")
+
+	jsonData, err := ToJSON(m)
+	if err != nil {
+		t.Fatalf("ToJSON() error = %v", err)
+	}
+
+	expected := `{"3":"three","1":"one","2":"two"}`
+	if string(jsonData) != expected {
+		t.Errorf("Map with integer keys not ordered correctly.\nGot:      %s\nExpected: %s", string(jsonData), expected)
+	}
+}
+
+func TestEmptyMapAndArray(t *testing.T) {
+	emptyMap := NewMap()
+	jsonMap, err := ToJSON(emptyMap)
+	if err != nil {
+		t.Fatalf("ToJSON(empty map) error = %v", err)
+	}
+	if string(jsonMap) != "{}" {
+		t.Errorf("Empty map should be {}, got: %s", string(jsonMap))
+	}
+
+	emptyArr := []Value{}
+	jsonArr, err := ToJSON(emptyArr)
+	if err != nil {
+		t.Fatalf("ToJSON(empty array) error = %v", err)
+	}
+	if string(jsonArr) != "[]" {
+		t.Errorf("Empty array should be [], got: %s", string(jsonArr))
+	}
+}

@@ -14,7 +14,7 @@ import (
 	"naturalsort/common"
 )
 
-const defaultServer = "http://localhost:8080"
+const defaultServer = "http://localhost:8710"
 
 func main() {
 	serverURL := flag.String("server", defaultServer, "Sort server URL")

@@ -38,7 +38,7 @@ func NewDecoder(minCodeSize int, r io.Reader) (*Decoder, error) {
 		reader: r,
 	}
 
-	for i := 0; i < int(clearCode); i++ {
+	for i := 0; i < 256; i++ {
 		dec.dict[i] = string([]byte{byte(i)})
 	}
 
@@ -46,7 +46,6 @@ func NewDecoder(minCodeSize int, r io.Reader) (*Decoder, error) {
 }
 
 func (d *Decoder) reset() {
-	clearCode := d.clearCode
 	eoiCode := d.eoiCode
 
 	d.dict = make([]string, 4096)
@@ -55,7 +54,7 @@ func (d *Decoder) reset() {
 	d.maxCode = 1 << (d.minCodeSize + 1)
 	d.prev = ""
 
-	for i := 0; i < int(clearCode); i++ {
+	for i := 0; i < 256; i++ {
 		d.dict[i] = string([]byte{byte(i)})
 	}
 }

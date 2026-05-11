@@ -60,10 +60,21 @@ func (t *Topology) AddLink(link Link) {
 	if _, ok := t.adjacency[link.From]; !ok {
 		t.adjacency[link.From] = make(map[string]Adjacency)
 	}
+	if _, ok := t.adjacency[link.To]; !ok {
+		t.adjacency[link.To] = make(map[string]Adjacency)
+	}
 	existing, exists := t.adjacency[link.From][link.To]
 	if !exists || IsNewerOrEqual(existing.SeqNum, link.SeqNum) {
 		t.adjacency[link.From][link.To] = Adjacency{
 			Neighbor: link.To,
+			Cost:     link.Cost,
+			SeqNum:   link.SeqNum,
+		}
+	}
+	existing, exists = t.adjacency[link.To][link.From]
+	if !exists || IsNewerOrEqual(existing.SeqNum, link.SeqNum) {
+		t.adjacency[link.To][link.From] = Adjacency{
+			Neighbor: link.From,
 			Cost:     link.Cost,
 			SeqNum:   link.SeqNum,
 		}

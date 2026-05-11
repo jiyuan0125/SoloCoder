@@ -57,12 +57,6 @@ func (c *CIDR) Broadcast() net.IP {
 	if c.Prefix == 32 || c.Prefix == 128 {
 		return c.IP
 	}
-	if c.Prefix == 31 && c.Version == IPv4 {
-		return c.IP
-	}
-	if c.Prefix == 127 && c.Version == IPv6 {
-		return c.IP
-	}
 
 	bcast := make(net.IP, len(c.IP))
 	copy(bcast, c.IP)
@@ -81,10 +75,10 @@ func (c *CIDR) FirstUsable() net.IP {
 		return c.IP
 	}
 	if c.Prefix == 31 && c.Version == IPv4 {
-		return c.IP
+		return c.Network()
 	}
 	if c.Prefix == 127 && c.Version == IPv6 {
-		return c.IP
+		return c.Network()
 	}
 
 	network := c.Network()
@@ -103,16 +97,10 @@ func (c *CIDR) LastUsable() net.IP {
 		return c.IP
 	}
 	if c.Prefix == 31 && c.Version == IPv4 {
-		bcast := c.Broadcast()
-		result := make(net.IP, len(bcast))
-		copy(result, bcast)
-		return result
+		return c.Broadcast()
 	}
 	if c.Prefix == 127 && c.Version == IPv6 {
-		bcast := c.Broadcast()
-		result := make(net.IP, len(bcast))
-		copy(result, bcast)
-		return result
+		return c.Broadcast()
 	}
 
 	bcast := c.Broadcast()

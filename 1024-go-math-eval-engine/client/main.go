@@ -49,7 +49,7 @@ func (v *variableFlag) Set(value string) error {
 }
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
+	serverURL := flag.String("server", "http://localhost:8302", "Server URL")
 	expression := flag.String("expr", "", "Expression to evaluate")
 	variables := variableFlag{}
 	flag.Var(&variables, "var", "Variable in format key=value (can be used multiple times)")

@@ -1,0 +1,16 @@
+[package]
+name = "stock_core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+chrono = { version = "0.4", features = ["serde"] }
+tokio = { version = "1.0", features = ["sync"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+rust_decimal = { version = "1.0", features = ["serde"] }
+thiserror = "1.0"

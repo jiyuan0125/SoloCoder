@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "server URL")
+	serverURL := flag.String("server", "http://localhost:8420", "server URL")
 	expr := flag.String("expr", "", "expression to evaluate")
 	filePath := flag.String("file", "", "file containing expressions (one per line)")
 	setVar := flag.String("set", "", "set variable (format: name=value)")

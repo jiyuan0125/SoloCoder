@@ -29,9 +29,16 @@ func (e *Evaluator) Evaluate(expr Expr, context *Node) (*XPathResult, error) {
 }
 
 func (e *Evaluator) evaluateWithContext(expr Expr, contextList NodeSet, contextPos int) (*XPathResult, error) {
+	var currentNodeList NodeSet
+	if len(contextList) > 0 && contextPos < len(contextList) {
+		currentNodeList = NodeSet{contextList[contextPos]}
+	} else {
+		currentNodeList = NodeSet{}
+	}
+	
 	switch ex := expr.(type) {
 	case *LocationPath:
-		return e.evaluateLocationPath(ex, contextList)
+		return e.evaluateLocationPath(ex, currentNodeList)
 	
 	case *PathExpr:
 		filterResult, err := e.evaluateWithContext(ex.Filter, contextList, contextPos)
@@ -252,8 +259,7 @@ func (e *Evaluator) applyPredicates(nodes NodeSet, predicates []*Predicate) Node
 		var filtered NodeSet
 		
 		for i, node := range result {
-			contextList := NodeSet{node}
-			predResult, err := e.evaluateWithContext(pred.Expr, contextList, i)
+			predResult, err := e.evaluateWithContext(pred.Expr, result, i)
 			if err != nil {
 				continue
 			}
@@ -446,11 +452,12 @@ func (e *Evaluator) evaluateFunctionCall(call *FunctionCallExpr, contextList Nod
 	
 	switch funcName {
 	case "text":
-		if len(contextList) == 0 {
+		if len(contextList) == 0 || contextPos >= len(contextList) {
 			return &XPathResult{Type: NodeSetResult, Value: NodeSet{}}, nil
 		}
+		currentNode := contextList[contextPos]
 		var texts NodeSet
-		for _, child := range contextList[0].Children {
+		for _, child := range currentNode.Children {
 			if child.Type == TextNode {
 				texts = append(texts, child)
 			}
@@ -461,8 +468,8 @@ func (e *Evaluator) evaluateFunctionCall(call *FunctionCallExpr, contextList Nod
 		var argResult *XPathResult
 		var err error
 		if len(call.Args) == 0 {
-			if len(contextList) > 0 {
-				argResult = &XPathResult{Type: NodeSetResult, Value: NodeSet{contextList[0]}}
+			if len(contextList) > 0 && contextPos < len(contextList) {
+				argResult = &XPathResult{Type: NodeSetResult, Value: NodeSet{contextList[contextPos]}}
 			} else {
 				argResult = &XPathResult{Type: StringResult, Value: ""}
 			}
@@ -496,10 +503,10 @@ func (e *Evaluator) evaluateFunctionCall(call *FunctionCallExpr, contextList Nod
 		return &XPathResult{Type: NumberResult, Value: float64(len(nodes))}, nil
 	
 	case "name":
-		if len(contextList) == 0 {
+		if len(contextList) == 0 || contextPos >= len(contextList) {
 			return &XPathResult{Type: StringResult, Value: ""}, nil
 		}
-		node := contextList[0]
+		node := contextList[contextPos]
 		return &XPathResult{Type: StringResult, Value: node.Name.Local}, nil
 	
 	default:

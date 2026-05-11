@@ -1,0 +1,16 @@
+[package]
+name = "checkin-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+checkin-core = { path = "../core" }
+axum = "0.6"
+tokio = { version = "1.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+clap = { version = "4.0", features = ["derive", "env"] }
+chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"

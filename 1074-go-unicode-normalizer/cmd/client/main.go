@@ -30,7 +30,7 @@ func main() {
 	flag.StringVar(&outputFile, "output", "", "Output file path (or use stdout)")
 	flag.StringVar(&form, "form", "NFC", "Normalization form: NFC, NFD, NFKC, NFKD")
 	flag.StringVar(&text, "text", "", "Input text (alternative to file)")
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "Server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8101", "Server URL")
 	flag.BoolVar(&analyzeMode, "analyze", false, "Analyze changes mode")
 	flag.BoolVar(&showVersion, "version", false, "Show version")
 

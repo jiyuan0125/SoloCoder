@@ -14,7 +14,7 @@ import (
 	"github.com/exif-reader/pkg/api"
 )
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:8203"
 
 func main() {
 	if len(os.Args) < 2 {

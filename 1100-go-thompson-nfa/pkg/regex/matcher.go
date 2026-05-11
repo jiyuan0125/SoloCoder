@@ -1,6 +1,9 @@
 package regex
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 type Regex struct {
 	startState      *State
@@ -161,8 +164,8 @@ func (r *Regex) Visualize() string {
 			acceptStr = " [ACCEPT]"
 		}
 		
-		builder.WriteString(string("State "))
-		builder.WriteString(string(rune('0' + i)))
+		builder.WriteString("State ")
+		builder.WriteString(strconv.Itoa(i))
 		builder.WriteString(acceptStr)
 		builder.WriteString(":\n")
 
@@ -172,8 +175,8 @@ func (r *Regex) Visualize() string {
 				if j > 0 {
 					builder.WriteString(", ")
 				}
-				builder.WriteString(string("State "))
-				builder.WriteString(string(rune('0' + stateMap[next])))
+				builder.WriteString("State ")
+				builder.WriteString(strconv.Itoa(stateMap[next]))
 			}
 			builder.WriteString("\n")
 		}
@@ -189,9 +192,7 @@ func (r *Regex) Visualize() string {
 				} else if ch == '\r' {
 					builder.WriteString("\\r")
 				} else if ch < 32 || ch >= 127 {
-					builder.WriteString(string(rune('0' + (ch/100)%10)))
-					builder.WriteString(string(rune('0' + (ch/10)%10)))
-					builder.WriteString(string(rune('0' + ch%10)))
+					builder.WriteString(strconv.Itoa(int(ch)))
 				} else {
 					builder.WriteString(string(ch))
 				}
@@ -200,8 +201,8 @@ func (r *Regex) Visualize() string {
 					if j > 0 {
 						builder.WriteString(", ")
 					}
-					builder.WriteString(string("State "))
-					builder.WriteString(string(rune('0' + stateMap[target])))
+					builder.WriteString("State ")
+					builder.WriteString(strconv.Itoa(stateMap[target]))
 				}
 				builder.WriteString("\n")
 			}

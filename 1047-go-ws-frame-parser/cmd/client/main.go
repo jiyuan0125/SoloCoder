@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	defaultHost       = "localhost:8080"
+	defaultHost       = "localhost:8410"
 	defaultPath       = "/ws"
 	maxMessageSize    = 1 << 20
 )

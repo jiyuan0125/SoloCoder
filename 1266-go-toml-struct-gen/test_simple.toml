@@ -1,0 +1,15 @@
+# 简单测试配置
+title = "Test"
+
+# 数组（放在数组表之前）
+tags = ["go", "toml", "config"]
+numbers = [1, 2, 3]
+
+# 数组表
+[[servers]]
+name = "server1"
+port = 80
+
+[[servers]]
+name = "server2"
+port = 443

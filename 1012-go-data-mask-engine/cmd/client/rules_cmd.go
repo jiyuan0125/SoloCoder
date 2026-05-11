@@ -14,7 +14,7 @@ import (
 
 func handleRules(args []string) {
 	fs := flag.NewFlagSet("rules", flag.ExitOnError)
-	serverURL := fs.String("server", "http://localhost:8080", "Server URL")
+	serverURL := fs.String("server", "http://localhost:8102", "Server URL")
 	update := fs.Bool("update", false, "Update rules")
 	phonePrefix := fs.Int("phone-prefix", -1, "Phone prefix keep")
 	phoneSuffix := fs.Int("phone-suffix", -1, "Phone suffix keep")

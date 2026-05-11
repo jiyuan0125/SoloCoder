@@ -101,7 +101,7 @@ func printUsage() {
 	fmt.Println()
 	fmt.Println("Flags:")
 	fmt.Println("  -server string")
-	fmt.Println("        Server URL (default \"localhost:8080\")")
+	fmt.Println("        Server URL (default \"localhost:8101\")")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  client proto-to-json my.package.Message '{\"field\": 123}'")
@@ -109,7 +109,7 @@ func printUsage() {
 }
 
 func main() {
-	serverURL := flag.String("server", "localhost:8080", "Server URL")
+	serverURL := flag.String("server", "localhost:8101", "Server URL")
 	flag.Parse()
 
 	args := flag.Args()

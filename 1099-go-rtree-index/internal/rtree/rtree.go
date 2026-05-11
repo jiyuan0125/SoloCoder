@@ -506,10 +506,7 @@ func (r *Rtree) condenseTree(n *node) {
 		return
 	}
 
-	reinsert := make([]*entry, 0, len(n.entries))
-	for _, e := range n.entries {
-		reinsert = append(reinsert, e)
-	}
+	leafEntries := r.collectAllLeafEntries(n)
 
 	for i, e := range parent.entries {
 		if e.child == n {
@@ -524,18 +521,28 @@ func (r *Rtree) condenseTree(n *node) {
 		r.adjustMBRs(parent)
 	}
 
-	for _, e := range reinsert {
-		if n.typ == leafNode {
-			leaf := r.chooseLeaf(r.root, e.mbr)
-			leaf.entries = append(leaf.entries, e)
-			if len(leaf.entries) > r.maxEntries {
-				split := r.splitNode(leaf)
-				r.adjustTree(leaf, split)
-			} else {
-				r.adjustMBRs(leaf)
-			}
+	for _, e := range leafEntries {
+		leaf := r.chooseLeaf(r.root, e.mbr)
+		leaf.entries = append(leaf.entries, e)
+		if len(leaf.entries) > r.maxEntries {
+			split := r.splitNode(leaf)
+			r.adjustTree(leaf, split)
+		} else {
+			r.adjustMBRs(leaf)
 		}
 	}
+}
+
+func (r *Rtree) collectAllLeafEntries(n *node) []*entry {
+	var result []*entry
+	if n.typ == leafNode {
+		result = append(result, n.entries...)
+	} else {
+		for _, e := range n.entries {
+			result = append(result, r.collectAllLeafEntries(e.child)...)
+		}
+	}
+	return result
 }
 
 func (r *Rtree) adjustMBRs(n *node) {

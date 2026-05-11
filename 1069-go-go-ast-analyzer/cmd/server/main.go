@@ -31,8 +31,8 @@ func analyzeHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 	http.HandleFunc("/analyze", analyzeHandler)
 	
-	fmt.Println("Server starting on :8080...")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	fmt.Println("Server starting on :8303...")
+	if err := http.ListenAndServe(":8303", nil); err != nil {
 		log.Fatal(err)
 	}
 }

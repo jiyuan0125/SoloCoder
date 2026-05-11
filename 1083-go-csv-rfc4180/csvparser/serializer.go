@@ -11,16 +11,14 @@ func Serialize(data [][]string) string {
 
 	var sb strings.Builder
 
-	for i, record := range data {
+	for _, record := range data {
 		for j, field := range record {
 			if j > 0 {
 				sb.WriteByte(',')
 			}
 			sb.WriteString(serializeField(field))
 		}
-		if i < len(data)-1 {
-			sb.WriteString("\r\n")
-		}
+		sb.WriteString("\r\n")
 	}
 
 	return sb.String()

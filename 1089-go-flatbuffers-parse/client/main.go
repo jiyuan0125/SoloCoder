@@ -19,7 +19,7 @@ func main() {
 	var schemaFile string
 	var command string
 
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "Server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8500", "Server URL")
 	flag.StringVar(&bufferFile, "buffer", "", "Path to FlatBuffers buffer file")
 	flag.StringVar(&schemaFile, "schema", "", "Path to JSON schema file")
 	flag.StringVar(&command, "command", "inspect", "Command: inspect | health")

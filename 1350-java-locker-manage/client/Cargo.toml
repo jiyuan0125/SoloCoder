@@ -1,0 +1,16 @@
+[package]
+name = "locker_client"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "locker_client"
+path = "src/main.rs"
+
+[dependencies]
+locker_core = { path = "../core" }
+clap.workspace = true
+reqwest.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true

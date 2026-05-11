@@ -18,7 +18,7 @@ func main() {
 	var outputFile string
 	var markdown string
 	
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "Server URL (default: http://localhost:8080)")
+	flag.StringVar(&serverURL, "server", "http://localhost:8301", "Server URL (default: http://localhost:8301)")
 	flag.StringVar(&inputFile, "input", "", "Input Markdown file (use '-' for stdin)")
 	flag.StringVar(&outputFile, "output", "", "Output HTML file (default: stdout)")
 	flag.StringVar(&markdown, "text", "", "Markdown text to convert")

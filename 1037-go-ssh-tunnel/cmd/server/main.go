@@ -163,7 +163,7 @@ func (s *Server) run(addr string) error {
 }
 
 func main() {
-	addr := flag.String("addr", ":8080", "服务端监听地址")
+	addr := flag.String("addr", ":8300", "服务端监听地址")
 	flag.Parse()
 
 	server := NewServer()

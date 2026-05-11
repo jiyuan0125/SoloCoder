@@ -184,12 +184,15 @@ func Decode(encoded string, opts *DecodeOptions) ([]byte, error) {
 	
 	for i < n {
 		var quartet [4]int
+		count := 0
+		paddingCount := 0
 		
 		for j := 0; j < 4 && i < n; j++ {
 			ch := cleaned[i]
 			
 			if ch == StandardPadding {
 				quartet[j] = -1
+				paddingCount++
 			} else {
 				value := decoderMap[ch]
 				if value == -1 {
@@ -201,7 +204,21 @@ func Decode(encoded string, opts *DecodeOptions) ([]byte, error) {
 				}
 				quartet[j] = value
 			}
+			count++
 			i++
+		}
+		
+		if count < 2 {
+			return nil, errors.New("invalid base64: too few characters")
+		}
+		
+		if i == n {
+			switch count {
+			case 2:
+				paddingCount = 2
+			case 3:
+				paddingCount = 1
+			}
 		}
 		
 		b0 := quartet[0]
@@ -216,14 +233,14 @@ func Decode(encoded string, opts *DecodeOptions) ([]byte, error) {
 		byte1 := (b0 << 2) | (b1 >> 4)
 		result = append(result, byte(byte1))
 		
-		if b2 != -1 {
+		if paddingCount <= 1 {
 			byte2 := ((b1 & 0x0F) << 4) | (b2 >> 2)
 			result = append(result, byte(byte2))
-			
-			if b3 != -1 {
-				byte3 := ((b2 & 0x03) << 6) | b3
-				result = append(result, byte(byte3))
-			}
+		}
+		
+		if paddingCount == 0 {
+			byte3 := ((b2 & 0x03) << 6) | b3
+			result = append(result, byte(byte3))
 		}
 	}
 	

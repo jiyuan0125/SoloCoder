@@ -69,35 +69,32 @@ func MakeTable32(poly uint32, refIn bool) (*CRC32Table, error) {
 	}
 
 	table := &CRC32Table{}
-	for i := 0; i < 256; i++ {
-		var crc uint32
-		if refIn {
-			crc = reverseBits32(uint32(i))
-		} else {
-			crc = uint32(i) << 24
-		}
 
-		for j := 0; j < 8; j++ {
-			if refIn {
+	if refIn {
+		reflectedPoly := reverseBits32(poly)
+		for i := 0; i < 256; i++ {
+			crc := uint32(i)
+			for j := 0; j < 8; j++ {
 				if (crc & 0x00000001) != 0 {
-					crc = (crc >> 1) ^ poly
+					crc = (crc >> 1) ^ reflectedPoly
 				} else {
 					crc >>= 1
 				}
-			} else {
+			}
+			table[i] = crc
+		}
+	} else {
+		for i := 0; i < 256; i++ {
+			crc := uint32(i) << 24
+			for j := 0; j < 8; j++ {
 				if (crc & 0x80000000) != 0 {
 					crc = (crc << 1) ^ poly
 				} else {
 					crc <<= 1
 				}
 			}
+			table[i] = crc
 		}
-
-		if refIn {
-			crc = reverseBits32(crc)
-		}
-
-		table[i] = crc
 	}
 
 	return table, nil
@@ -128,15 +125,17 @@ func CalculateCRC32(data []byte, variant CRC32Variant, table *CRC32Table) (uint3
 			index := byte(crc) ^ b
 			crc = (crc >> 8) ^ table[index]
 		}
+		if !variant.RefOut {
+			crc = reverseBits32(crc)
+		}
 	} else {
 		for _, b := range data {
 			index := byte(crc>>24) ^ b
 			crc = (crc << 8) ^ table[index]
 		}
-	}
-
-	if variant.RefOut {
-		crc = reverseBits32(crc)
+		if variant.RefOut {
+			crc = reverseBits32(crc)
+		}
 	}
 
 	return crc ^ variant.XorOut, nil
@@ -183,8 +182,14 @@ func CalculateCRC32Stream(reader io.Reader, variant CRC32Variant, table *CRC32Ta
 		}
 	}
 
-	if variant.RefOut {
-		crc = reverseBits32(crc)
+	if variant.RefIn {
+		if !variant.RefOut {
+			crc = reverseBits32(crc)
+		}
+	} else {
+		if variant.RefOut {
+			crc = reverseBits32(crc)
+		}
 	}
 
 	return crc ^ variant.XorOut, nil

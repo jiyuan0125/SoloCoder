@@ -37,6 +37,8 @@ type ParsedField struct {
 	RawByteSize  int
 	Value        interface{}
 	ValueType    string
+	Repeated     bool
+	Values       []interface{}
 }
 
 type ParseOptions struct {

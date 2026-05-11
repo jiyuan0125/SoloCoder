@@ -75,6 +75,10 @@ func (o MarshalOptions) marshalMessage(md protoreflect.Message) (map[string]inte
 			}
 		}
 		
+		if field.Kind() == protoreflect.MessageKind && !md.Has(field) {
+			continue
+		}
+		
 		value := md.Get(field)
 		fieldValue, err := o.marshalField(field, value)
 		if err != nil {

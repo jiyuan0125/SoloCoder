@@ -1,0 +1,26 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Doe;John;Michael;Mr.;PhD
+FN:Mr. John Michael Doe PhD
+ORG:Acme Corporation
+TITLE:Senior Engineer
+TEL;TYPE=WORK,VOICE:+1-555-123-4567
+TEL;TYPE=CELL,VOICE:+1-555-987-6543
+EMAIL;TYPE=WORK:john.doe@acme.com
+EMAIL;TYPE=HOME:john.doe@example.com
+ADR;TYPE=WORK;LABEL=123 Main St\; Suite 400\nNew York\, NY 10001\nUSA:;;123 Main St;New York;NY;10001;USA
+BDAY:1985-05-15
+NOTE:This is a test contact with escaped characters\: \; \, \\
+END:VCARD
+
+BEGIN:VCARD
+VERSION:4.0
+N:Smith;Jane;Ann;Ms.;
+FN:Jane Smith
+ORG:Tech Innovations Inc.
+TITLE:CEO
+TEL;TYPE=WORK;VALUE=tel:+1-444-111-2222
+EMAIL;TYPE=WORK:jane@techinnovations.com
+ADR;TYPE=HOME:;;456 Oak Ave;San Francisco;CA;94105;USA
+URL:https://techinnovations.com/jane
+END:VCARD

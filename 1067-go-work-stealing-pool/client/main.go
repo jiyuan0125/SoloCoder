@@ -18,7 +18,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	serverAddr := flag.String("server", "http://localhost:8080", "Server address")
+	serverAddr := flag.String("server", "http://localhost:8300", "Server address")
 	flag.Parse()
 
 	client := NewTaskClient(*serverAddr)

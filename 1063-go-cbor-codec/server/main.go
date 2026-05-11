@@ -12,7 +12,7 @@ import (
 	"github.com/example/cbor-codec/cbor"
 )
 
-const port = ":8080"
+const port = ":8110"
 
 func main() {
 	http.HandleFunc("/encode", encodeHandler)

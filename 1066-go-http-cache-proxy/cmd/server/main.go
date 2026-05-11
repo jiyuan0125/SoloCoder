@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	listenAddr  = flag.String("addr", ":8080", "Listen address")
+	listenAddr  = flag.String("addr", ":8300", "Listen address")
 	defaultTTL  = flag.Int("ttl", 60, "Default cache TTL in seconds")
 	maxCacheSize = flag.Int64("size", 100*1024*1024, "Max cache size in bytes")
 )
@@ -52,12 +52,6 @@ func (s *Server) handleProxy(w http.ResponseWriter, r *http.Request) {
 		Body:       result.Body,
 		FromCache:  result.FromCache,
 		CacheAge:   result.CacheAge,
-	}
-
-	for k, values := range result.Header {
-		for _, v := range values {
-			w.Header().Add(k, v)
-		}
 	}
 
 	if result.FromCache {

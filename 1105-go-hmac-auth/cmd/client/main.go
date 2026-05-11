@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	serverURL = flag.String("server", "http://localhost:8080", "server URL")
+	serverURL = flag.String("server", "http://localhost:8203", "server URL")
 	method    = flag.String("method", "POST", "HTTP method for signing")
 	path      = flag.String("path", "/api/test", "request path for signing")
 )
@@ -77,44 +77,27 @@ func remoteSign(body []byte) error {
 	return nil
 }
 
-func localVerify(keyHex, signature string, body []byte) (bool, error) {
+func localVerify(keyHex, signature string, timestamp int64, body []byte) (bool, error) {
 	key, err := hex.DecodeString(keyHex)
 	if err != nil {
 		return false, fmt.Errorf("invalid key: %v", err)
 	}
 
-	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
-	timestamp := flagSet.Int64("timestamp", 0, "timestamp for verification")
-	flagSet.Parse(os.Args[2:])
-
-	if *timestamp == 0 {
-		return false, fmt.Errorf("timestamp is required for verification (use -timestamp)")
-	}
-
-	valid := hmacauth.Verify(key, *method, *path, *timestamp, body, signature)
+	valid := hmacauth.Verify(key, *method, *path, timestamp, body, signature)
 	return valid, nil
 }
 
-func remoteVerify(signature string, body []byte) error {
-	flagSet := flag.NewFlagSet("", flag.ContinueOnError)
-	timestamp := flagSet.Int64("timestamp", 0, "timestamp for verification")
-	version := flagSet.Int("version", 0, "optional key version")
-	flagSet.Parse(os.Args[2:])
-
-	if *timestamp == 0 {
-		return fmt.Errorf("timestamp is required for verification (use -timestamp)")
-	}
-
+func remoteVerify(signature string, timestamp int64, version int, body []byte) error {
 	reqBody := types.VerifyRequest{
 		Method:    *method,
 		Path:      *path,
-		Timestamp: *timestamp,
+		Timestamp: timestamp,
 		Body:      string(body),
 		Signature: signature,
 	}
 
-	if *version != 0 {
-		v := *version
+	if version != 0 {
+		v := version
 		reqBody.Version = &v
 	}
 
@@ -152,10 +135,12 @@ func usage() {
 	fmt.Fprintf(os.Stderr, "  %s local-verify [options] Verify signature locally with key\n", os.Args[0])
 	fmt.Fprintf(os.Stderr, "\nGlobal Options:\n")
 	flag.PrintDefaults()
-	fmt.Fprintf(os.Stderr, "\nLocal Sign/Verify Options:\n")
+	fmt.Fprintf(os.Stderr, "\nlocal-sign Options:\n")
 	fmt.Fprintf(os.Stderr, "  -key string     HMAC key (hex encoded)\n")
+	fmt.Fprintf(os.Stderr, "\nverify/local-verify Options:\n")
 	fmt.Fprintf(os.Stderr, "  -signature string  Signature to verify\n")
 	fmt.Fprintf(os.Stderr, "  -timestamp int  Timestamp for verification\n")
+	fmt.Fprintf(os.Stderr, "  -key string     HMAC key (hex encoded) for local-verify\n")
 	fmt.Fprintf(os.Stderr, "  -version int    Optional key version for remote verify\n")
 	fmt.Fprintf(os.Stderr, "\nExample:\n")
 	fmt.Fprintf(os.Stderr, "  echo 'hello world' | %s sign\n", os.Args[0])
@@ -172,6 +157,7 @@ func main() {
 	}
 
 	cmd := strings.ToLower(flag.Arg(0))
+	subArgs := flag.Args()[1:]
 
 	switch cmd {
 	case "sign":
@@ -188,7 +174,10 @@ func main() {
 	case "local-sign":
 		flagSet := flag.NewFlagSet("local-sign", flag.ContinueOnError)
 		keyFlag := flagSet.String("key", "", "HMAC key (hex encoded)")
-		flagSet.Parse(os.Args[2:])
+		if err := flagSet.Parse(subArgs); err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing arguments: %v\n", err)
+			os.Exit(1)
+		}
 
 		if *keyFlag == "" {
 			fmt.Fprintf(os.Stderr, "Error: -key is required for local-sign\n")
@@ -211,10 +200,19 @@ func main() {
 	case "verify":
 		flagSet := flag.NewFlagSet("verify", flag.ContinueOnError)
 		sigFlag := flagSet.String("signature", "", "signature to verify")
-		flagSet.Parse(os.Args[2:])
+		timestampFlag := flagSet.Int64("timestamp", 0, "timestamp for verification")
+		versionFlag := flagSet.Int("version", 0, "optional key version")
+		if err := flagSet.Parse(subArgs); err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing arguments: %v\n", err)
+			os.Exit(1)
+		}
 
 		if *sigFlag == "" {
 			fmt.Fprintf(os.Stderr, "Error: -signature is required for verify\n")
+			os.Exit(1)
+		}
+		if *timestampFlag == 0 {
+			fmt.Fprintf(os.Stderr, "Error: -timestamp is required for verify\n")
 			os.Exit(1)
 		}
 
@@ -224,7 +222,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		if err := remoteVerify(*sigFlag, body); err != nil {
+		if err := remoteVerify(*sigFlag, *timestampFlag, *versionFlag, body); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)
 		}
@@ -233,10 +231,18 @@ func main() {
 		flagSet := flag.NewFlagSet("local-verify", flag.ContinueOnError)
 		keyFlag := flagSet.String("key", "", "HMAC key (hex encoded)")
 		sigFlag := flagSet.String("signature", "", "signature to verify")
-		flagSet.Parse(os.Args[2:])
+		timestampFlag := flagSet.Int64("timestamp", 0, "timestamp for verification")
+		if err := flagSet.Parse(subArgs); err != nil {
+			fmt.Fprintf(os.Stderr, "Error parsing arguments: %v\n", err)
+			os.Exit(1)
+		}
 
 		if *keyFlag == "" || *sigFlag == "" {
 			fmt.Fprintf(os.Stderr, "Error: -key and -signature are required for local-verify\n")
+			os.Exit(1)
+		}
+		if *timestampFlag == 0 {
+			fmt.Fprintf(os.Stderr, "Error: -timestamp is required for local-verify\n")
 			os.Exit(1)
 		}
 
@@ -246,7 +252,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		valid, err := localVerify(*keyFlag, *sigFlag, body)
+		valid, err := localVerify(*keyFlag, *sigFlag, *timestampFlag, body)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			os.Exit(1)

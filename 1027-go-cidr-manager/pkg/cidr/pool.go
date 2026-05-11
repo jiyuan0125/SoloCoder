@@ -62,28 +62,47 @@ func splitCIDRByExclusion(available, exclude *CIDR) CIDRList {
 		return CIDRList{}
 	}
 
-	availableStart := ipToUint32(available.Network())
-	availableEnd := ipToUint32(available.Broadcast())
-	excludeStart := ipToUint32(exclude.Network())
-	excludeEnd := ipToUint32(exclude.Broadcast())
-
 	var result CIDRList
-
-	if excludeStart > availableStart {
-		leftCIDR, err := createCIDRFromRange(availableStart, excludeStart-1)
-		if err == nil && leftCIDR != nil {
-			result = append(result, leftCIDR)
-		}
-	}
-
-	if excludeEnd < availableEnd {
-		rightCIDR, err := createCIDRFromRange(excludeEnd+1, availableEnd)
-		if err == nil && rightCIDR != nil {
-			result = append(result, rightCIDR)
-		}
-	}
-
+	splitAndExcludeRecursive(available, exclude, &result)
 	return result
+}
+
+func splitAndExcludeRecursive(current, exclude *CIDR, result *CIDRList) {
+	if !current.Overlaps(exclude) {
+		*result = append(*result, current)
+		return
+	}
+
+	if exclude.ContainsCIDR(current) {
+		return
+	}
+
+	if current.Prefix >= 32 {
+		return
+	}
+
+	subnets := splitCIDRIntoTwo(current)
+	splitAndExcludeRecursive(subnets[0], exclude, result)
+	splitAndExcludeRecursive(subnets[1], exclude, result)
+}
+
+func splitCIDRIntoTwo(c *CIDR) [2]*CIDR {
+	newPrefix := c.Prefix + 1
+	start := ipToUint32(c.Network())
+	halfSize := uint32(1) << (32 - newPrefix)
+
+	return [2]*CIDR{
+		{
+			IP:      uint32ToIP(start),
+			Prefix:  newPrefix,
+			Version: c.Version,
+		},
+		{
+			IP:      uint32ToIP(start + halfSize),
+			Prefix:  newPrefix,
+			Version: c.Version,
+		},
+	}
 }
 
 func createCIDRFromRange(start, end uint32) (*CIDR, error) {

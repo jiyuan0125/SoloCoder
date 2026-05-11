@@ -263,9 +263,9 @@ func (t *BPTree) handleUnderflow(node *node) {
 	if nodeIdx > 0 {
 		leftSibling := parent.children[nodeIdx-1]
 		if node.isLeaf {
-			t.mergeLeaves(leftSibling, node, nodeIdx)
+			t.mergeLeaves(leftSibling, node, nodeIdx-1)
 		} else {
-			t.mergeInternals(leftSibling, node, nodeIdx)
+			t.mergeInternals(leftSibling, node, nodeIdx-1)
 		}
 	} else {
 		rightSibling := parent.children[nodeIdx+1]

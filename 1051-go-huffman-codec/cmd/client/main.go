@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-const serverURL = "http://localhost:8080"
+const serverURL = "http://localhost:8400"
 
 func main() {
 	if len(os.Args) < 2 {

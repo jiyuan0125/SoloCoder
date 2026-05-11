@@ -27,7 +27,7 @@ type TopologyFile struct {
 var config Config
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
+	serverURL := flag.String("server", "http://localhost:8600", "Server URL")
 	topologyFile := flag.String("topology", "", "Initial topology file")
 	flag.Parse()
 

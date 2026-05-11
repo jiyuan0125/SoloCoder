@@ -169,7 +169,7 @@ func writeError(w http.ResponseWriter, msg string, status int) {
 }
 
 func main() {
-	addr := flag.String("addr", ":8080", "address to listen on")
+	addr := flag.String("addr", ":8400", "address to listen on")
 	flag.Parse()
 
 	s := NewServer()

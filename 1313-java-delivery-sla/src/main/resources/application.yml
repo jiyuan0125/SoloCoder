@@ -1,0 +1,56 @@
+server:
+  port: 8503
+
+spring:
+  application:
+    name: delivery-management-system
+  datasource:
+    url: jdbc:h2:mem:deliverydb;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: GMT+8
+
+delivery:
+  fee:
+    base-distance: 3
+    base-fee: 15.0
+    per-km-extra: 2.0
+    base-weight: 5.0
+    per-kg-extra: 1.0
+    minimum-fee: 10.0
+    oversized:
+      max-length: 1.5
+      max-weight: 30.0
+      extra-fee: 50.0
+  time-slot:
+    morning-start: 9
+    morning-end: 12
+    afternoon-start: 13
+    afternoon-end: 18
+    evening-start: 18
+    evening-end: 21
+  compensation:
+    within-2-hours: 0.3
+    within-12-hours: 0.6
+    over-12-hours: 1.0
+  discount:
+    tier1-threshold: 10
+    tier1-discount: 0.9
+    tier2-threshold: 30
+    tier2-discount: 0.8

@@ -107,7 +107,7 @@ func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	addr := flag.String("addr", ":8080", "HTTP server address")
+	addr := flag.String("addr", ":8200", "HTTP server address")
 	flag.Parse()
 	s := NewServer()
 	mux := http.NewServeMux()

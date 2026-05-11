@@ -69,7 +69,7 @@ func main() {
 	http.HandleFunc("/health", handler.health)
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8302"
 	}
 	addr := ":" + port
 	fmt.Printf("Math Expression Evaluator Server running on http://localhost%s\n", addr)

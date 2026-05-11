@@ -162,6 +162,14 @@ func (c *InMemoryCoordinator) Commit(txID string) (*TransactionState, error) {
 		return nil, fmt.Errorf("transaction %s already aborted or rolled back", txID)
 	}
 
+	if txState.Status == Pending && len(txState.Operations) == 0 {
+		txState.Status = Committed
+		txState.UpdatedAt = time.Now()
+		c.logTransaction(txID, Committed)
+		c.mu.Unlock()
+		return txState, nil
+	}
+
 	if txState.Status != Prepared {
 		c.mu.Unlock()
 		return nil, fmt.Errorf("transaction %s is not in prepared state", txID)
@@ -268,6 +276,11 @@ func (c *InMemoryCoordinator) Rollback(txID string) (*TransactionState, error) {
 	if txState.Status == Committed {
 		c.mu.Unlock()
 		return nil, fmt.Errorf("transaction %s already committed", txID)
+	}
+
+	if txState.Status == Aborted {
+		c.mu.Unlock()
+		return nil, fmt.Errorf("transaction %s already aborted", txID)
 	}
 
 	if txState.Status == Pending {
@@ -458,7 +471,7 @@ func (c *InMemoryCoordinator) abortTransaction(txID string, reason string) (*Tra
 		}
 	}
 
-	return txState, nil
+	return txState, fmt.Errorf("transaction %s aborted: %s", txID, reason)
 }
 
 func (c *InMemoryCoordinator) logTransaction(txID string, status TransactionStatus) {

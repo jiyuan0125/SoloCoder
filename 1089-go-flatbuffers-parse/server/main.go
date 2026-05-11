@@ -13,8 +13,8 @@ func main() {
 	http.HandleFunc("/inspect", handleInspect)
 	http.HandleFunc("/health", handleHealth)
 
-	fmt.Println("FlatBuffers server starting on :8080...")
-	err := http.ListenAndServe(":8080", nil)
+	fmt.Println("FlatBuffers server starting on :8500...")
+	err := http.ListenAndServe(":8500", nil)
 	if err != nil {
 		fmt.Printf("Error starting server: %v\n", err)
 	}

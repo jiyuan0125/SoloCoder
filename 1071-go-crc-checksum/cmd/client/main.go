@@ -231,7 +231,7 @@ func printUsage() {
 	fmt.Println("  client verify [options]       Verify CRC value")
 	fmt.Println("  client variants               List available variants")
 	fmt.Println("\nCommon Options:")
-	fmt.Println("  --server <url>               Server URL (default: http://localhost:8080)")
+	fmt.Println("  --server <url>               Server URL (default: http://localhost:8303)")
 	fmt.Println("  --type <crc32|crc64>         CRC type (required for calculate/verify)")
 	fmt.Println("  --variant <name>             CRC variant name")
 	fmt.Println("  --data <string>              Input data string")
@@ -270,7 +270,7 @@ func main() {
 	fs := flag.NewFlagSet("client", flag.ExitOnError)
 	cfg := &clientConfig{mode: mode}
 
-	fs.StringVar(&cfg.serverURL, "server", "http://localhost:8080", "Server URL")
+	fs.StringVar(&cfg.serverURL, "server", "http://localhost:8303", "Server URL")
 	fs.StringVar(&cfg.crcType, "type", "crc32", "CRC type: crc32 or crc64")
 	fs.StringVar(&cfg.variant, "variant", "", "CRC variant name")
 	fs.StringVar(&cfg.data, "data", "", "Input data string")

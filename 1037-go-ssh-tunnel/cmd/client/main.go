@@ -138,7 +138,7 @@ func printCreateUsage() {
 	fmt.Println("  --remote-port     远程目标端口 (必填)")
 	fmt.Println("  --keepalive       Keepalive间隔秒数 (默认 30)")
 	fmt.Println("  --max-retry       最大重试间隔秒数 (默认 60)")
-	fmt.Println("  --server          服务端地址 (默认 http://localhost:8080)")
+	fmt.Println("  --server          服务端地址 (默认 http://localhost:8300)")
 }
 
 func cmdCreate(args []string) {
@@ -159,7 +159,7 @@ func cmdCreate(args []string) {
 	remotePort := fs.Int("remote-port", 0, "远程目标端口")
 	keepalive := fs.Int("keepalive", 30, "Keepalive间隔秒数")
 	maxRetry := fs.Int("max-retry", 60, "最大重试间隔秒数")
-	serverURL := fs.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := fs.String("server", "http://localhost:8300", "服务端地址")
 	
 	_ = fs.Parse(args)
 
@@ -211,7 +211,7 @@ func cmdCreate(args []string) {
 
 func cmdList(args []string) {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
-	serverURL := fs.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := fs.String("server", "http://localhost:8300", "服务端地址")
 	_ = fs.Parse(args)
 
 	client := NewClient(*serverURL)
@@ -236,7 +236,7 @@ func cmdList(args []string) {
 func cmdStop(args []string) {
 	fs := flag.NewFlagSet("stop", flag.ExitOnError)
 	id := fs.String("id", "", "隧道ID")
-	serverURL := fs.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := fs.String("server", "http://localhost:8300", "服务端地址")
 	_ = fs.Parse(args)
 
 	if *id == "" {
@@ -256,7 +256,7 @@ func cmdStop(args []string) {
 func cmdGet(args []string) {
 	fs := flag.NewFlagSet("get", flag.ExitOnError)
 	id := fs.String("id", "", "隧道ID")
-	serverURL := fs.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := fs.String("server", "http://localhost:8300", "服务端地址")
 	_ = fs.Parse(args)
 
 	if *id == "" {

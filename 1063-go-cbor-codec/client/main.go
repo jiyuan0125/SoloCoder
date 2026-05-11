@@ -12,7 +12,7 @@ import (
 	"github.com/example/cbor-codec/api"
 )
 
-const defaultServer = "http://localhost:8080"
+const defaultServer = "http://localhost:8110"
 
 func main() {
 	var (

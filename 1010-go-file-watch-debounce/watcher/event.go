@@ -1,6 +1,10 @@
 package watcher
 
-import "time"
+import (
+	"time"
+
+	"github.com/fsnotify/fsnotify"
+)
 
 type EventType string
 
@@ -16,35 +20,40 @@ type Event struct {
 	Path      string
 	OldPath   string
 	Type      EventType
-	RawTypes  []string
+	RawOps    []fsnotify.Op
 	Timestamp time.Time
 }
 
 type pendingEvent struct {
-	path         string
-	oldPath      string
-	eventTypes   map[string]struct{}
-	firstSeen    time.Time
+	path          string
+	oldPath       string
+	ops           fsnotify.Op
+	firstSeen     time.Time
 	debounceTimer *time.Timer
-	maxWaitTimer *time.Timer
+	maxWaitTimer  *time.Timer
 }
 
-func (p *pendingEvent) addEventType(eventType string) {
-	if p.eventTypes == nil {
-		p.eventTypes = make(map[string]struct{})
+func (p *pendingEvent) addOp(op fsnotify.Op) {
+	p.ops |= op
+}
+
+func (p *pendingEvent) hasOp(op fsnotify.Op) bool {
+	return p.ops&op != 0
+}
+
+func (p *pendingEvent) getRawOps() []fsnotify.Op {
+	var ops []fsnotify.Op
+	allOps := []fsnotify.Op{
+		fsnotify.Create,
+		fsnotify.Write,
+		fsnotify.Remove,
+		fsnotify.Rename,
+		fsnotify.Chmod,
 	}
-	p.eventTypes[eventType] = struct{}{}
-}
-
-func (p *pendingEvent) hasEventType(eventType string) bool {
-	_, exists := p.eventTypes[eventType]
-	return exists
-}
-
-func (p *pendingEvent) getRawTypes() []string {
-	types := make([]string, 0, len(p.eventTypes))
-	for t := range p.eventTypes {
-		types = append(types, t)
+	for _, op := range allOps {
+		if p.hasOp(op) {
+			ops = append(ops, op)
+		}
 	}
-	return types
+	return ops
 }

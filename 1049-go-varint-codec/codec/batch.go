@@ -86,7 +86,7 @@ func EncodeBatchUint64(values []uint64, mode EncodeMode) []byte {
 }
 
 func DecodeBatchInt32(data []byte, mode EncodeMode) ([]int32, error) {
-	var values []int32
+	values := []int32{}
 	offset := 0
 	for offset < len(data) {
 		var val int32
@@ -110,7 +110,7 @@ func DecodeBatchInt32(data []byte, mode EncodeMode) ([]int32, error) {
 }
 
 func DecodeBatchInt64(data []byte, mode EncodeMode) ([]int64, error) {
-	var values []int64
+	values := []int64{}
 	offset := 0
 	for offset < len(data) {
 		var val int64
@@ -134,7 +134,7 @@ func DecodeBatchInt64(data []byte, mode EncodeMode) ([]int64, error) {
 }
 
 func DecodeBatchUint32(data []byte, mode EncodeMode) ([]uint32, error) {
-	var values []uint32
+	values := []uint32{}
 	offset := 0
 	for offset < len(data) {
 		var val uint32
@@ -158,7 +158,7 @@ func DecodeBatchUint32(data []byte, mode EncodeMode) ([]uint32, error) {
 }
 
 func DecodeBatchUint64(data []byte, mode EncodeMode) ([]uint64, error) {
-	var values []uint64
+	values := []uint64{}
 	offset := 0
 	for offset < len(data) {
 		var val uint64

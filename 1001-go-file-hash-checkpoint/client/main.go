@@ -43,14 +43,14 @@ func printUsage() {
 	fmt.Println("  client verify <file> [flags]   - Verify file integrity")
 	fmt.Println()
 	fmt.Println("Common flags:")
-	fmt.Println("  -server <addr>   Server address (default: localhost:8080)")
+	fmt.Println("  -server <addr>   Server address (default: localhost:8100)")
 	fmt.Println("  -algo <md5|sha256>  Hash algorithm (default: sha256)")
 	fmt.Println("  -chunk <size>    Chunk size in bytes (default: 4194304)")
 }
 
 func parseCommonFlags(args []string) (string, string, int64) {
 	fs := flag.NewFlagSet("common", flag.ExitOnError)
-	server := fs.String("server", "localhost:8080", "server address")
+	server := fs.String("server", "localhost:8100", "server address")
 	algo := fs.String("algo", "sha256", "hash algorithm (md5|sha256)")
 	chunkSize := fs.Int64("chunk", common.DefaultChunkSize, "chunk size in bytes")
 	fs.Parse(args)

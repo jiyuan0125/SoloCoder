@@ -298,7 +298,7 @@ func (ec *ExecutionContext) expandSelections(typeName string, selSet ast.Selecti
 func (ec *ExecutionContext) executeField(ctx context.Context, source interface{}, parentType string, field *ast.Field) (interface{}, error) {
 	resolver, hasResolver := ec.Registry.GetResolver(parentType, field.Name)
 
-	if !hasResolver {
+	if !hasResolver || resolver == nil {
 		if source != nil {
 			rv := reflect.ValueOf(source)
 			if rv.Kind() == reflect.Ptr {
@@ -326,7 +326,10 @@ func (ec *ExecutionContext) executeField(ctx context.Context, source interface{}
 				}
 			}
 		}
-		return nil, fmt.Errorf("field %s not found on type %s", field.Name, parentType)
+		if !hasResolver {
+			return nil, fmt.Errorf("field %s not found on type %s", field.Name, parentType)
+		}
+		return nil, nil
 	}
 
 	args, err := ec.buildArgs(field.Arguments)

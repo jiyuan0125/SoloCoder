@@ -97,26 +97,6 @@ func renderListItem(block *Block) string {
 	var html strings.Builder
 	html.WriteString("<li>")
 	
-	var contentHTML strings.Builder
-	content := block.Content
-	
-	innerParser := &Parser{
-		lines: strings.Split(content, "\n"),
-		index: 0,
-	}
-	innerBlocks := innerParser.parseBlocks()
-	
-	if len(innerBlocks) == 1 && innerBlocks[0].Type == BlockParagraph {
-		para := innerBlocks[0]
-		paraContent := strings.ReplaceAll(para.Content, "\n", " ")
-		paraContent = parseInline(paraContent)
-		contentHTML.WriteString(paraContent)
-	} else {
-		for _, innerBlock := range innerBlocks {
-			contentHTML.WriteString(renderBlock(innerBlock))
-		}
-	}
-	
 	if block.HasCheckbox {
 		checked := ""
 		if block.Checked {
@@ -125,7 +105,30 @@ func renderListItem(block *Block) string {
 		html.WriteString("<input type=\"checkbox\"" + checked + " disabled> ")
 	}
 	
-	html.WriteString(contentHTML.String())
+	content := block.Content
+	if content != "" {
+		innerParser := &Parser{
+			lines: strings.Split(content, "\n"),
+			index: 0,
+		}
+		innerBlocks := innerParser.parseBlocks()
+		
+		if len(innerBlocks) == 1 && innerBlocks[0].Type == BlockParagraph {
+			para := innerBlocks[0]
+			paraContent := strings.ReplaceAll(para.Content, "\n", " ")
+			paraContent = parseInline(paraContent)
+			html.WriteString(paraContent)
+		} else {
+			for _, innerBlock := range innerBlocks {
+				html.WriteString(renderBlock(innerBlock))
+			}
+		}
+	}
+	
+	for _, nestedBlock := range block.Children {
+		html.WriteString(renderBlock(nestedBlock))
+	}
+	
 	html.WriteString("</li>\n")
 	return html.String()
 }

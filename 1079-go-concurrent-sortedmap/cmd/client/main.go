@@ -13,7 +13,7 @@ import (
 	"github.com/concurrent-sortedmap/internal/protocol"
 )
 
-const defaultServer = "http://localhost:8080"
+const defaultServer = "http://localhost:8800"
 
 type Client struct {
 	server string

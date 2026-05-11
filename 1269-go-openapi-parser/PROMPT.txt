@@ -10,5 +10,5 @@ components里可以定义schemas（数据模型）、parameters、requestBodies�
 
 HTTP服务端口8080，接口：POST /openapi/parse（上传YAML或JSON，返回解析后的结构化数据）、POST /openapi/validate（校验引用完整性和规范合规性）。CLI客户端：oapi check <file>（校验并输出问题列表）、oapi list-paths <file>（列出所有路径和操作）、oapi resolve <file> --ref "#/components/schemas/Pet"（解析并展开引用）。
 
-核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。服务端的监听端口应该支持通过命令行参数或环境变量来指定，不要硬编码。
 

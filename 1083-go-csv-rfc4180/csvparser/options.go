@@ -1,5 +1,9 @@
 package csvparser
 
+import "errors"
+
+var ErrUnclosedQuote = errors.New("unclosed quoted field")
+
 type ParserOption struct {
 	WithHeader bool
 }

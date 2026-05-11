@@ -135,6 +135,6 @@ func main() {
 	http.HandleFunc("/kthlargest", server.handleKthLargest)
 	http.HandleFunc("/size", server.handleSize)
 
-	fmt.Println("Server starting on :8080...")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server starting on :8100...")
+	http.ListenAndServe(":8100", nil)
 }

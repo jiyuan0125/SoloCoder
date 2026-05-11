@@ -1,0 +1,13 @@
+[package]
+name = "client"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+chrono = { workspace = true }
+uuid = { workspace = true }
+reqwest = { workspace = true }
+clap = { workspace = true }

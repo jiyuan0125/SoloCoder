@@ -135,8 +135,26 @@ func NewRaftNode(id int) *RaftNode {
 func (rn *RaftNode) setPeers(peers []*RaftNode, peerChans []chan interface{}) {
 	rn.mu.Lock()
 	defer rn.mu.Unlock()
+
+	oldPeerCount := len(rn.peers)
 	rn.peers = peers
 	rn.peerChans = peerChans
+
+	if rn.state == Leader {
+		newPeerCount := len(peers)
+		if newPeerCount > oldPeerCount {
+			newNextIndex := make([]int, newPeerCount)
+			newMatchIndex := make([]int, newPeerCount)
+			copy(newNextIndex, rn.nextIndex)
+			copy(newMatchIndex, rn.matchIndex)
+			for i := oldPeerCount; i < newPeerCount; i++ {
+				newNextIndex[i] = len(rn.log)
+				newMatchIndex[i] = -1
+			}
+			rn.nextIndex = newNextIndex
+			rn.matchIndex = newMatchIndex
+		}
+	}
 }
 
 func (rn *RaftNode) getPeerChan() chan interface{} {

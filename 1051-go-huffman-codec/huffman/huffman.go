@@ -174,7 +174,7 @@ func Decode(data []byte, paddingBits int, root *Node) (string, error) {
 	var bitString bytes.Buffer
 	for _, b := range data {
 		for i := 7; i >= 0; i-- {
-			if (b >> i) & 1 == 1 {
+			if (b>>i)&1 == 1 {
 				bitString.WriteByte('1')
 			} else {
 				bitString.WriteByte('0')
@@ -187,6 +187,14 @@ func Decode(data []byte, paddingBits int, root *Node) (string, error) {
 	effectiveBits := totalBits - paddingBits
 
 	var result bytes.Buffer
+
+	if root.IsLeaf {
+		for i := 0; i < effectiveBits; i++ {
+			result.WriteRune(root.Char)
+		}
+		return result.String(), nil
+	}
+
 	node := root
 	index := 0
 

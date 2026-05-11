@@ -1,0 +1,11 @@
+base1: &base1
+  color: red
+  size: M
+
+base2: &base2
+  size: L
+  weight: 100
+
+item:
+  <<: [*base1, *base2]
+  name: shirt

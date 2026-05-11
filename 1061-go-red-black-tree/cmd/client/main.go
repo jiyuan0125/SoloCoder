@@ -12,7 +12,7 @@ import (
 	"github.com/solocoder/rbtree/pkg/api"
 )
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:8100"
 
 func main() {
 	if len(os.Args) < 2 {

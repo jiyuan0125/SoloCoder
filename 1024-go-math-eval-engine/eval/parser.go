@@ -132,7 +132,7 @@ func (p *Parser) curPrecedence() int {
 func (p *Parser) ParseProgram() *Program {
 	program := &Program{}
 	program.Expression = p.parseExpression(LOWEST)
-	if !p.curTokenIs(TOKEN_EOF) {
+	if !p.peekTokenIs(TOKEN_EOF) {
 		p.errors = append(p.errors, "unexpected token after expression")
 	}
 	return program

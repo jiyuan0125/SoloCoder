@@ -188,7 +188,9 @@ func (t *Tree) deleteFixup(x *Node) {
 			if w.color == red {
 				w.color = black
 				x.parent.color = red
+				oldGP := x.parent.parent
 				t.leftRotate(x.parent)
+				t.updateSizeUp(oldGP)
 				w = x.parent.right
 			}
 			if w.left.color == black && w.right.color == black {
@@ -198,13 +200,17 @@ func (t *Tree) deleteFixup(x *Node) {
 				if w.right.color == black {
 					w.left.color = black
 					w.color = red
+					oldWParent := w.parent
 					t.rightRotate(w)
+					t.updateSizeUp(oldWParent)
 					w = x.parent.right
 				}
 				w.color = x.parent.color
 				x.parent.color = black
 				w.right.color = black
+				oldGP := x.parent.parent
 				t.leftRotate(x.parent)
+				t.updateSizeUp(oldGP)
 				x = t.root
 			}
 		} else {
@@ -212,7 +218,9 @@ func (t *Tree) deleteFixup(x *Node) {
 			if w.color == red {
 				w.color = black
 				x.parent.color = red
+				oldGP := x.parent.parent
 				t.rightRotate(x.parent)
+				t.updateSizeUp(oldGP)
 				w = x.parent.left
 			}
 			if w.right.color == black && w.left.color == black {
@@ -222,13 +230,17 @@ func (t *Tree) deleteFixup(x *Node) {
 				if w.left.color == black {
 					w.right.color = black
 					w.color = red
+					oldWParent := w.parent
 					t.leftRotate(w)
+					t.updateSizeUp(oldWParent)
 					w = x.parent.left
 				}
 				w.color = x.parent.color
 				x.parent.color = black
 				w.left.color = black
+				oldGP := x.parent.parent
 				t.rightRotate(x.parent)
+				t.updateSizeUp(oldGP)
 				x = t.root
 			}
 		}
@@ -237,7 +249,9 @@ func (t *Tree) deleteFixup(x *Node) {
 }
 
 func (t *Tree) updateSizeUp(n *Node) {
-	for n != t.nil {
+	visited := make(map[*Node]bool)
+	for n != t.nil && !visited[n] {
+		visited[n] = true
 		t.updateSize(n)
 		n = n.parent
 	}
@@ -262,14 +276,24 @@ func (t *Tree) Delete(key int) bool {
 	yOriginalColor := y.color
 	var x *Node
 
+	var nodesToUpdate []*Node
+
 	if z.left == t.nil {
 		x = z.right
 		t.transplant(z, z.right)
-		t.updateSizeUp(x.parent)
+		if x == t.nil {
+			nodesToUpdate = append(nodesToUpdate, z.parent)
+		} else {
+			nodesToUpdate = append(nodesToUpdate, x.parent)
+		}
 	} else if z.right == t.nil {
 		x = z.left
 		t.transplant(z, z.left)
-		t.updateSizeUp(x.parent)
+		if x == t.nil {
+			nodesToUpdate = append(nodesToUpdate, z.parent)
+		} else {
+			nodesToUpdate = append(nodesToUpdate, x.parent)
+		}
 	} else {
 		y = t.minimum(z.right)
 		yOriginalColor = y.color
@@ -278,15 +302,26 @@ func (t *Tree) Delete(key int) bool {
 			x.parent = y
 		} else {
 			t.transplant(y, y.right)
+			nodesToUpdate = append(nodesToUpdate, y.parent)
 			y.right = z.right
 			y.right.parent = y
-			t.updateSizeUp(x.parent)
 		}
 		t.transplant(z, y)
 		y.left = z.left
 		y.left.parent = y
 		y.color = z.color
-		t.updateSizeUp(y)
+		nodesToUpdate = append(nodesToUpdate, y)
+		nodesToUpdate = append(nodesToUpdate, y.parent)
+	}
+
+	updated := make(map[*Node]bool)
+	for _, n := range nodesToUpdate {
+		if n != t.nil && !updated[n] {
+			t.updateSizeUp(n)
+			for p := n; p != t.nil; p = p.parent {
+				updated[p] = true
+			}
+		}
 	}
 
 	t.size--

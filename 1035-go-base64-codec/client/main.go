@@ -53,7 +53,7 @@ func parseFlags() *Config {
 	config := &Config{
 		Mode:          pkg.ModeStandard,
 		Action:        "encode",
-		ServerURL:     "http://localhost:8080",
+		ServerURL:     "http://localhost:8200",
 		MIMELineWidth: 76,
 	}
 	
@@ -61,7 +61,7 @@ func parseFlags() *Config {
 	actionFlag := flag.String("action", "encode", "Action: encode or decode")
 	inputFlag := flag.String("input", "", "Input file (empty for stdin)")
 	outputFlag := flag.String("output", "", "Output file (empty for stdout)")
-	serverFlag := flag.String("server", "http://localhost:8080", "Server URL")
+	serverFlag := flag.String("server", "http://localhost:8200", "Server URL")
 	paddingFlag := flag.Bool("padding", true, "Include padding for URL-safe mode")
 	lineWidthFlag := flag.Int("linewidth", 76, "Line width for MIME mode")
 	

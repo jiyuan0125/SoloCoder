@@ -164,7 +164,7 @@ func main() {
 	http.HandleFunc("/decode", server.decodeHandler)
 	http.HandleFunc("/frequencies", server.frequencyHandler)
 
-	addr := ":8080"
+	addr := ":8400"
 	log.Printf("Server starting on %s", addr)
 	log.Printf("Endpoints:")
 	log.Printf("  POST /encode - Encode text")

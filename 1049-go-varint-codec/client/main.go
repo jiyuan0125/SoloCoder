@@ -22,7 +22,7 @@ func main() {
 	action := flag.String("action", "", "Action: encode, decode, validate, benchmark")
 	input := flag.String("input", "", "Input file path")
 	output := flag.String("output", "", "Output file path")
-	server := flag.String("server", "", "Server URL for remote mode (e.g., http://localhost:8080)")
+	server := flag.String("server", "", "Server URL for remote mode (e.g., http://localhost:8500)")
 	size := flag.Int("size", 10000, "Benchmark size")
 	flag.Parse()
 
@@ -73,7 +73,7 @@ func printUsage() {
   client -action encode -input numbers.txt -output encoded.bin
   client -action decode -input encoded.bin -output numbers.txt
   client -action validate -input encoded.bin
-  client -action benchmark -server http://localhost:8080 -size 100000
+  client -action benchmark -server http://localhost:8500 -size 100000
   
 Options:
   -action     encode|decode|validate|benchmark

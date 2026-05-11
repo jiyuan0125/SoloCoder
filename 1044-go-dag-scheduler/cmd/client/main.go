@@ -242,7 +242,7 @@ func printDependencyGraph(status *common.StatusResponse) {
 
 func main() {
 	var (
-		serverURL  = flag.String("server", "http://localhost:8080", "Server URL")
+		serverURL  = flag.String("server", "http://localhost:8202", "Server URL")
 		jsonFile   = flag.String("file", "", "JSON file containing task graph definition")
 		jobID      = flag.String("job", "", "Job ID for status/cancel operations")
 		operation  = flag.String("op", "run", "Operation: submit|start|status|cancel|run")

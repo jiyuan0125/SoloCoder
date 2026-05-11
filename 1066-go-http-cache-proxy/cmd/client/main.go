@@ -14,11 +14,11 @@ import (
 )
 
 var (
-	proxyServer = flag.String("server", "http://localhost:8080", "Cache proxy server address")
+	proxyServer = flag.String("server", "http://localhost:8300", "Cache proxy server address")
 	method      = flag.String("method", "GET", "HTTP method")
 	headers     = flag.String("headers", "", "HTTP headers (format: Key1:Value1,Key2:Value2)")
 	body        = flag.String("body", "", "Request body")
-	showHeaders = flag.Bool("headers", false, "Show response headers")
+	showHeaders = flag.Bool("show-headers", false, "Show response headers")
 	showStatus  = flag.Bool("status", false, "Show status code only")
 	verbose     = flag.Bool("v", false, "Verbose output")
 )

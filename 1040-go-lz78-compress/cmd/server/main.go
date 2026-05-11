@@ -147,14 +147,14 @@ func main() {
 	mux.HandleFunc("/api/dict", server.handleDictStatus)
 	mux.HandleFunc("/api/dict/reset", server.handleResetDict)
 
-	log.Println("LZ78 compression server starting on :8080...")
+	log.Println("LZ78 compression server starting on :8310...")
 	log.Println("Endpoints:")
 	log.Println("  POST /api/compress   - Compress text")
 	log.Println("  POST /api/decompress - Decompress indexes")
 	log.Println("  GET  /api/dict       - Get dictionary status")
 	log.Println("  POST /api/dict/reset - Reset dictionary")
 
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8310", mux); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

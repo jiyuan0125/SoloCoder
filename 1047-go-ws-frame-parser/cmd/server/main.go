@@ -16,8 +16,8 @@ import (
 )
 
 const (
-	websocketGUID       = "258EAFA5-E914-47DA-95CA-5AB5FCDB9CDC"
-	defaultPort         = ":8080"
+	websocketGUID       = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
+	defaultPort         = ":8410"
 	pingInterval        = 30 * time.Second
 	pongTimeout         = 10 * time.Second
 	maxMessageSize      = 1 << 20

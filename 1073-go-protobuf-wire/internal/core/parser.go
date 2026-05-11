@@ -43,7 +43,37 @@ func (p *Parser) Parse(data []byte, depth int) ([]*ParsedField, error) {
 		offset += bytesRead
 	}
 
-	return fields, nil
+	mergedFields := mergeRepeatedFields(fields)
+	return mergedFields, nil
+}
+
+func mergeRepeatedFields(fields []*ParsedField) []*ParsedField {
+	if len(fields) == 0 {
+		return fields
+	}
+
+	fieldMap := make(map[int]*ParsedField)
+	var result []*ParsedField
+
+	for _, f := range fields {
+		existing, found := fieldMap[f.FieldNumber]
+		if !found {
+			fieldMap[f.FieldNumber] = f
+			result = append(result, f)
+			continue
+		}
+
+		if !existing.Repeated {
+			existing.Repeated = true
+			existing.Values = []interface{}{existing.Value}
+		}
+
+		existing.Values = append(existing.Values, f.Value)
+		existing.RawBytes = append(existing.RawBytes, f.RawBytes...)
+		existing.RawByteSize += f.RawByteSize
+	}
+
+	return result
 }
 
 func (p *Parser) parseField(data []byte, depth int) (*ParsedField, int, error) {

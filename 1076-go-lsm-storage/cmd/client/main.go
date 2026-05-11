@@ -15,7 +15,7 @@ import (
 var serverURL string
 
 func main() {
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8700", "server URL")
 	flag.Parse()
 
 	args := flag.Args()

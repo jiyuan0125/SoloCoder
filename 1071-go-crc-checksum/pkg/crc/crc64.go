@@ -21,6 +21,15 @@ var (
 		Name:       "CRC-64/ECMA-182",
 		Polynomial: 0x42F0E1EBA9EA3693,
 		Init:       0xFFFFFFFFFFFFFFFF,
+		RefIn:      false,
+		RefOut:     false,
+		XorOut:     0xFFFFFFFFFFFFFFFF,
+	}
+
+	CRC64VariantWE = CRC64Variant{
+		Name:       "CRC-64/WE",
+		Polynomial: 0x42F0E1EBA9EA3693,
+		Init:       0xFFFFFFFFFFFFFFFF,
 		RefIn:      true,
 		RefOut:     true,
 		XorOut:     0xFFFFFFFFFFFFFFFF,
@@ -47,6 +56,7 @@ var (
 
 var CRC64Variants = map[string]CRC64Variant{
 	"ecma":  CRC64VariantECMA,
+	"we":    CRC64VariantWE,
 	"iso":   CRC64VariantISO,
 	"go":    CRC64VariantGO,
 }
@@ -59,35 +69,32 @@ func MakeTable64(poly uint64, refIn bool) (*CRC64Table, error) {
 	}
 
 	table := &CRC64Table{}
-	for i := 0; i < 256; i++ {
-		var crc uint64
-		if refIn {
-			crc = reverseBits64(uint64(i))
-		} else {
-			crc = uint64(i) << 56
-		}
 
-		for j := 0; j < 8; j++ {
-			if refIn {
+	if refIn {
+		reflectedPoly := reverseBits64(poly)
+		for i := 0; i < 256; i++ {
+			crc := uint64(i)
+			for j := 0; j < 8; j++ {
 				if (crc & 0x0000000000000001) != 0 {
-					crc = (crc >> 1) ^ poly
+					crc = (crc >> 1) ^ reflectedPoly
 				} else {
 					crc >>= 1
 				}
-			} else {
+			}
+			table[i] = crc
+		}
+	} else {
+		for i := 0; i < 256; i++ {
+			crc := uint64(i) << 56
+			for j := 0; j < 8; j++ {
 				if (crc & 0x8000000000000000) != 0 {
 					crc = (crc << 1) ^ poly
 				} else {
 					crc <<= 1
 				}
 			}
+			table[i] = crc
 		}
-
-		if refIn {
-			crc = reverseBits64(crc)
-		}
-
-		table[i] = crc
 	}
 
 	return table, nil
@@ -119,15 +126,17 @@ func CalculateCRC64(data []byte, variant CRC64Variant, table *CRC64Table) (uint6
 			index := byte(crc) ^ b
 			crc = (crc >> 8) ^ table[index]
 		}
+		if !variant.RefOut {
+			crc = reverseBits64(crc)
+		}
 	} else {
 		for _, b := range data {
 			index := byte(crc>>56) ^ b
 			crc = (crc << 8) ^ table[index]
 		}
-	}
-
-	if variant.RefOut {
-		crc = reverseBits64(crc)
+		if variant.RefOut {
+			crc = reverseBits64(crc)
+		}
 	}
 
 	return crc ^ variant.XorOut, nil
@@ -174,8 +183,14 @@ func CalculateCRC64Stream(reader io.Reader, variant CRC64Variant, table *CRC64Ta
 		}
 	}
 
-	if variant.RefOut {
-		crc = reverseBits64(crc)
+	if variant.RefIn {
+		if !variant.RefOut {
+			crc = reverseBits64(crc)
+		}
+	} else {
+		if variant.RefOut {
+			crc = reverseBits64(crc)
+		}
 	}
 
 	return crc ^ variant.XorOut, nil

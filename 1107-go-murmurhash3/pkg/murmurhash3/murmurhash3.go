@@ -61,123 +61,154 @@ func Hash32String(data string, seed uint32) uint32 {
 	return Hash32([]byte(data), seed)
 }
 
-func rotl64(x, r uint64) uint64 {
-	return (x << r) | (x >> (64 - r))
-}
-
-func fmix64(k uint64) uint64 {
-	k ^= k >> 33
-	k *= 0xff51afd7ed558ccd
-	k ^= k >> 33
-	k *= 0xc4ceb9fe1a85ec53
-	k ^= k >> 33
-	return k
-}
-
 func Hash128(data []byte, seed uint32) (uint64, uint64) {
 	const (
-		c1 uint64 = 0x239b961bab0e4347
-		c2 uint64 = 0x84cba2b9312b34c9
+		c1 uint32 = 0x239b961b
+		c2 uint32 = 0xab0e9789
+		c3 uint32 = 0x38b34ae5
+		c4 uint32 = 0xa1e38b93
 	)
 
-	var h1, h2 uint64
-	h1 = uint64(seed)
-	h2 = uint64(seed)
+	h1 := seed
+	h2 := seed
+	h3 := seed
+	h4 := seed
 	n := len(data)
 	nblocks := n / 16
 
 	for i := 0; i < nblocks; i++ {
 		idx := i * 16
-		var k1, k2 uint64
-		k1 = uint64(data[idx+0]) | uint64(data[idx+1])<<8 | uint64(data[idx+2])<<16 | uint64(data[idx+3])<<24 |
-			uint64(data[idx+4])<<32 | uint64(data[idx+5])<<40 | uint64(data[idx+6])<<48 | uint64(data[idx+7])<<56
-		k2 = uint64(data[idx+8]) | uint64(data[idx+9])<<8 | uint64(data[idx+10])<<16 | uint64(data[idx+11])<<24 |
-			uint64(data[idx+12])<<32 | uint64(data[idx+13])<<40 | uint64(data[idx+14])<<48 | uint64(data[idx+15])<<56
+		k1 := uint32(data[idx+0]) | uint32(data[idx+1])<<8 | uint32(data[idx+2])<<16 | uint32(data[idx+3])<<24
+		k2 := uint32(data[idx+4]) | uint32(data[idx+5])<<8 | uint32(data[idx+6])<<16 | uint32(data[idx+7])<<24
+		k3 := uint32(data[idx+8]) | uint32(data[idx+9])<<8 | uint32(data[idx+10])<<16 | uint32(data[idx+11])<<24
+		k4 := uint32(data[idx+12]) | uint32(data[idx+13])<<8 | uint32(data[idx+14])<<16 | uint32(data[idx+15])<<24
 
 		k1 *= c1
-		k1 = rotl64(k1, 31)
+		k1 = rotl32(k1, 15)
 		k1 *= c2
 		h1 ^= k1
-		h1 = rotl64(h1, 27)
+		h1 = rotl32(h1, 19)
 		h1 += h2
-		h1 = h1*5 + 0x52dce729
+		h1 = h1*5 + 0x561ccd1b
 
 		k2 *= c2
-		k2 = rotl64(k2, 33)
-		k2 *= c1
+		k2 = rotl32(k2, 16)
+		k2 *= c3
 		h2 ^= k2
-		h2 = rotl64(h2, 31)
-		h2 += h1
-		h2 = h2*5 + 0x38495ab5
+		h2 = rotl32(h2, 17)
+		h2 += h3
+		h2 = h2*5 + 0x0bcaa747
+
+		k3 *= c3
+		k3 = rotl32(k3, 17)
+		k3 *= c4
+		h3 ^= k3
+		h3 = rotl32(h3, 15)
+		h3 += h4
+		h3 = h3*5 + 0x96cd1c35
+
+		k4 *= c4
+		k4 = rotl32(k4, 18)
+		k4 *= c1
+		h4 ^= k4
+		h4 = rotl32(h4, 13)
+		h4 += h1
+		h4 = h4*5 + 0x32ac3b17
 	}
 
 	tail := nblocks * 16
-	var k1, k2 uint64
+	var k1, k2, k3, k4 uint32
 	switch n & 15 {
 	case 15:
-		k2 ^= uint64(data[tail+14]) << 48
+		k4 ^= uint32(data[tail+14]) << 16
 		fallthrough
 	case 14:
-		k2 ^= uint64(data[tail+13]) << 40
+		k4 ^= uint32(data[tail+13]) << 8
 		fallthrough
 	case 13:
-		k2 ^= uint64(data[tail+12]) << 32
+		k4 ^= uint32(data[tail+12])
+		k4 *= c4
+		k4 = rotl32(k4, 18)
+		k4 *= c1
+		h4 ^= k4
 		fallthrough
 	case 12:
-		k2 ^= uint64(data[tail+11]) << 24
+		k3 ^= uint32(data[tail+11]) << 24
 		fallthrough
 	case 11:
-		k2 ^= uint64(data[tail+10]) << 16
+		k3 ^= uint32(data[tail+10]) << 16
 		fallthrough
 	case 10:
-		k2 ^= uint64(data[tail+9]) << 8
+		k3 ^= uint32(data[tail+9]) << 8
 		fallthrough
 	case 9:
-		k2 ^= uint64(data[tail+8])
-		k2 *= c2
-		k2 = rotl64(k2, 33)
-		k2 *= c1
-		h2 ^= k2
+		k3 ^= uint32(data[tail+8])
+		k3 *= c3
+		k3 = rotl32(k3, 17)
+		k3 *= c4
+		h3 ^= k3
 		fallthrough
 	case 8:
-		k1 ^= uint64(data[tail+7]) << 56
+		k2 ^= uint32(data[tail+7]) << 24
 		fallthrough
 	case 7:
-		k1 ^= uint64(data[tail+6]) << 48
+		k2 ^= uint32(data[tail+6]) << 16
 		fallthrough
 	case 6:
-		k1 ^= uint64(data[tail+5]) << 40
+		k2 ^= uint32(data[tail+5]) << 8
 		fallthrough
 	case 5:
-		k1 ^= uint64(data[tail+4]) << 32
+		k2 ^= uint32(data[tail+4])
+		k2 *= c2
+		k2 = rotl32(k2, 16)
+		k2 *= c3
+		h2 ^= k2
 		fallthrough
 	case 4:
-		k1 ^= uint64(data[tail+3]) << 24
+		k1 ^= uint32(data[tail+3]) << 24
 		fallthrough
 	case 3:
-		k1 ^= uint64(data[tail+2]) << 16
+		k1 ^= uint32(data[tail+2]) << 16
 		fallthrough
 	case 2:
-		k1 ^= uint64(data[tail+1]) << 8
+		k1 ^= uint32(data[tail+1]) << 8
 		fallthrough
 	case 1:
-		k1 ^= uint64(data[tail+0])
+		k1 ^= uint32(data[tail+0])
 		k1 *= c1
-		k1 = rotl64(k1, 31)
+		k1 = rotl32(k1, 15)
 		k1 *= c2
 		h1 ^= k1
 	}
 
-	h1 ^= uint64(n)
-	h2 ^= uint64(n)
-	h1 += h2
-	h2 += h1
-	h1 = fmix64(h1)
-	h2 = fmix64(h2)
-	h1 += h2
-	h2 += h1
+	h1 ^= uint32(n)
+	h2 ^= uint32(n)
+	h3 ^= uint32(n)
+	h4 ^= uint32(n)
 
-	return h1, h2
+	h1 += h2
+	h1 += h3
+	h1 += h4
+	h2 += h1
+	h3 += h1
+	h4 += h1
+
+	h1 = fmix32(h1)
+	h2 = fmix32(h2)
+	h3 = fmix32(h3)
+	h4 = fmix32(h4)
+
+	h1 += h2
+	h1 += h3
+	h1 += h4
+	h2 += h1
+	h3 += h1
+	h4 += h1
+
+	high := (uint64(h4) << 32) | uint64(h3)
+	low := (uint64(h2) << 32) | uint64(h1)
+
+	return high, low
 }
 
 func Hash128String(data string, seed uint32) (uint64, uint64) {

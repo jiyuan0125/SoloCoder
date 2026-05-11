@@ -80,6 +80,10 @@ func Parse(reader io.ReadSeeker) (*EXIFData, error) {
 	}
 
 	if header[0] == 0xFF && header[1] == 0xD8 {
+		_, err := reader.Seek(0, io.SeekStart)
+		if err != nil {
+			return nil, err
+		}
 		return parseJPEG(reader)
 	}
 
@@ -93,6 +97,21 @@ func Parse(reader io.ReadSeeker) (*EXIFData, error) {
 	}
 
 	return nil, ErrInvalidFormat
+}
+
+func markerHasLength(markerType byte) bool {
+	switch {
+	case markerType == 0xD8:
+		return false
+	case markerType == 0xD9:
+		return false
+	case markerType >= 0xD0 && markerType <= 0xD7:
+		return false
+	case markerType == 0x01:
+		return false
+	default:
+		return true
+	}
 }
 
 func parseJPEG(reader io.ReadSeeker) (*EXIFData, error) {
@@ -112,6 +131,14 @@ func parseJPEG(reader io.ReadSeeker) (*EXIFData, error) {
 
 		if marker[1] == 0xDA {
 			return nil, ErrNoEXIF
+		}
+
+		if marker[1] == 0xD9 {
+			return nil, ErrNoEXIF
+		}
+
+		if !markerHasLength(marker[1]) {
+			continue
 		}
 
 		lengthBuf := make([]byte, 2)
@@ -135,9 +162,11 @@ func parseJPEG(reader io.ReadSeeker) (*EXIFData, error) {
 			continue
 		}
 
-		_, err = reader.Seek(int64(length-2), io.SeekCurrent)
-		if err != nil {
-			return nil, err
+		if length > 2 {
+			_, err = reader.Seek(int64(length-2), io.SeekCurrent)
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 }

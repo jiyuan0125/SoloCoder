@@ -194,7 +194,7 @@ func (l *Lexer) NextToken() (*Token, error) {
 		if err != nil {
 			return nil, err
 		}
-		tok = &Token{Type: TokenString, Literal: str, Line: l.line}
+		return &Token{Type: TokenString, Literal: str, Line: l.line}, nil
 	case 0:
 		tok = &Token{Type: TokenEOF, Literal: "", Line: l.line}
 	default:

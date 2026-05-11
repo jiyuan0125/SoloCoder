@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	DefaultServerURL = "http://localhost:8080"
+	DefaultServerURL = "http://localhost:8201"
 )
 
 type Client struct {

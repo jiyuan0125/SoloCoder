@@ -1,0 +1,17 @@
+[package]
+name = "insurance-claim-server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "insurance-claim-server"
+path = "src/main.rs"
+
+[dependencies]
+insurance-claim-core = { path = "../core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+rust_decimal = { workspace = true }
+axum = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }

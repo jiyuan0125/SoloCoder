@@ -11,7 +11,7 @@ import (
 
 func handleMask(args []string) {
 	fs := flag.NewFlagSet("mask", flag.ExitOnError)
-	serverURL := fs.String("server", "http://localhost:8080", "Server URL")
+	serverURL := fs.String("server", "http://localhost:8102", "Server URL")
 	phonePrefix := fs.Int("phone-prefix", -1, "Phone prefix keep")
 	phoneSuffix := fs.Int("phone-suffix", -1, "Phone suffix keep")
 	idcardPrefix := fs.Int("idcard-prefix", -1, "ID card prefix keep")

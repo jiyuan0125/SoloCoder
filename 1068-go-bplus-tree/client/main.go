@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8300"
 
 func main() {
 	if len(os.Args) < 2 {

@@ -75,14 +75,14 @@ func printUsage() {
 	fmt.Println("Examples:")
 	fmt.Println("  xclient -x //book/title books.xml")
 	fmt.Println("  xclient -x \"book[price>35]\" - < books.xml")
-	fmt.Println("  xclient -x //@id -s http://server:8080 data.xml")
+	fmt.Println("  xclient -x //@id -s http://server:8300 data.xml")
 }
 
 func main() {
 	flag.Usage = printUsage
 	
 	xpath := flag.String("x", "", "XPath expression (required)")
-	server := flag.String("s", "http://localhost:8080", "Server URL")
+	server := flag.String("s", "http://localhost:8300", "Server URL")
 	returnType := flag.String("t", "", "Return type: nodes|string|number|boolean")
 	nsFlag := flag.String("n", "", "Namespace mappings: prefix1=uri1,prefix2=uri2")
 	pretty := flag.Bool("p", false, "Pretty print output")

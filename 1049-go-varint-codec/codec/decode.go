@@ -1,5 +1,21 @@
 package codec
 
+func decodeLEB128Uint64WithLimit(data []byte, maxBytes int) (uint64, int, error) {
+	var result uint64
+	var shift uint
+	for i, b := range data {
+		if i >= maxBytes {
+			return 0, 0, ErrOverflow
+		}
+		result |= uint64(b&0x7F) << shift
+		if b&0x80 == 0 {
+			return result, i + 1, nil
+		}
+		shift += 7
+	}
+	return 0, 0, ErrTruncated
+}
+
 func DecodeVarintUint32(data []byte) (uint32, int, error) {
 	val, n, err := DecodeVarintUint64(data)
 	if err != nil {
@@ -44,7 +60,7 @@ func DecodeVarintInt64(data []byte) (int64, int, error) {
 }
 
 func DecodeLEB128Uint32(data []byte) (uint32, int, error) {
-	val, n, err := DecodeLEB128Uint64(data)
+	val, n, err := decodeLEB128Uint64WithLimit(data, maxLEB128Bytes64)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -55,31 +71,22 @@ func DecodeLEB128Uint32(data []byte) (uint32, int, error) {
 }
 
 func DecodeLEB128Int32(data []byte) (int32, int, error) {
-	val, n, err := DecodeLEB128Uint32(data)
+	val, n, err := decodeLEB128Uint64WithLimit(data, maxVarintBytes64)
 	if err != nil {
 		return 0, 0, err
 	}
-	return ZigZagDecodeUint32(val), n, nil
+	if val > uint64(uint32Max) {
+		return 0, 0, ErrOverflow
+	}
+	return ZigZagDecodeUint32(uint32(val)), n, nil
 }
 
 func DecodeLEB128Uint64(data []byte) (uint64, int, error) {
-	var result uint64
-	var shift uint
-	for i, b := range data {
-		if i >= maxLEB128Bytes64 {
-			return 0, 0, ErrOverflow
-		}
-		result |= uint64(b&0x7F) << shift
-		if b&0x80 == 0 {
-			return result, i + 1, nil
-		}
-		shift += 7
-	}
-	return 0, 0, ErrTruncated
+	return decodeLEB128Uint64WithLimit(data, maxLEB128Bytes64)
 }
 
 func DecodeLEB128Int64(data []byte) (int64, int, error) {
-	val, n, err := DecodeLEB128Uint64(data)
+	val, n, err := decodeLEB128Uint64WithLimit(data, maxVarintBytes64)
 	if err != nil {
 		return 0, 0, err
 	}

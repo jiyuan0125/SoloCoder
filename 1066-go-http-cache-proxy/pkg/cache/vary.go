@@ -70,29 +70,14 @@ func BuildCacheKey(method, url string) string {
 	return method + ":" + url
 }
 
-func MatchesVary(cachedHeader, requestHeader http.Header) bool {
-	varyFields := ParseVary(cachedHeader)
+func MatchesVary(cachedVaryHeaders, cachedRespHeader, requestHeader http.Header) bool {
+	varyFields := ParseVary(cachedRespHeader)
 	if len(varyFields) == 0 {
 		return true
 	}
 
-	for _, field := range varyFields {
-		cachedValues := cachedHeader.Values(field)
-		requestValues := requestHeader.Values(field)
+	cachedVaryKey := GenerateVaryKey(cachedVaryHeaders, varyFields)
+	requestVaryKey := GenerateVaryKey(requestHeader, varyFields)
 
-		if len(cachedValues) != len(requestValues) {
-			return false
-		}
-
-		sort.Strings(cachedValues)
-		sort.Strings(requestValues)
-
-		for i := range cachedValues {
-			if cachedValues[i] != requestValues[i] {
-				return false
-			}
-		}
-	}
-
-	return true
+	return cachedVaryKey == requestVaryKey
 }

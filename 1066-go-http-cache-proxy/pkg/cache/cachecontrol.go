@@ -97,7 +97,11 @@ func parseDirectives(value string) []string {
 }
 
 func (cc *CacheDirectives) ShouldNotCache() bool {
-	return cc.NoStore || cc.Private || (cc.MaxAge == 0 && !cc.NoCache)
+	return cc.NoStore || cc.Private
+}
+
+func (cc *CacheDirectives) ShouldRevalidate() bool {
+	return cc.MustRevalidateOnUse() || cc.GetMaxAge() == 0
 }
 
 func (cc *CacheDirectives) MustRevalidateOnUse() bool {

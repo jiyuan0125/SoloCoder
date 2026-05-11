@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	port := ":8080"
+	port := ":8500"
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		if !strings.HasPrefix(envPort, ":") {
 			port = ":" + envPort
@@ -21,8 +21,11 @@ func main() {
 	server := NewServer()
 
 	http.HandleFunc("/health", server.healthHandler)
-	http.HandleFunc("/instances", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/instances" {
+
+	handleInstances := func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		if path == "/instances" || path == "/instances/" {
 			if r.Method == http.MethodPost {
 				server.createInstanceHandler(w, r)
 			} else if r.Method == http.MethodGet {
@@ -33,7 +36,7 @@ func main() {
 			return
 		}
 
-		if strings.HasSuffix(r.URL.Path, "/operations") && r.Method == http.MethodPost {
+		if strings.HasSuffix(path, "/operations") && r.Method == http.MethodPost {
 			server.operationHandler(w, r)
 			return
 		}
@@ -44,7 +47,10 @@ func main() {
 		}
 
 		server.writeError(w, http.StatusMethodNotAllowed, "Method not allowed")
-	})
+	}
+
+	http.HandleFunc("/instances", handleInstances)
+	http.HandleFunc("/instances/", handleInstances)
 
 	http.HandleFunc("/merge", server.mergeHandler)
 

@@ -452,7 +452,7 @@ func (s *Server) Run() error {
 func main() {
 	var addr string
 	var storageDir string
-	flag.StringVar(&addr, "addr", ":8080", "server address")
+	flag.StringVar(&addr, "addr", ":8100", "server address")
 	flag.StringVar(&storageDir, "storage", "", "storage directory for uploaded files (optional)")
 	flag.Parse()
 	server := NewServer(addr, storageDir)

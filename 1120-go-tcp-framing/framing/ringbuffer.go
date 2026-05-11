@@ -1,156 +1,190 @@
 package framing
 
 type RingBuffer struct {
-	buf    []byte
-	rIndex int
-	wIndex int
+	buffer []byte
+	head   int
+	tail   int
 	count  int
 }
 
 func NewRingBuffer(capacity int) *RingBuffer {
+	if capacity <= 0 {
+		capacity = 4096
+	}
 	return &RingBuffer{
-		buf: make([]byte, capacity),
+		buffer: make([]byte, capacity),
+		head:   0,
+		tail:   0,
+		count:  0,
 	}
 }
 
 func (rb *RingBuffer) Capacity() int {
-	return len(rb.buf)
+	return len(rb.buffer)
 }
 
-func (rb *RingBuffer) Len() int {
+func (rb *RingBuffer) Length() int {
 	return rb.count
 }
 
 func (rb *RingBuffer) Free() int {
-	return len(rb.buf) - rb.count
+	return len(rb.buffer) - rb.count
 }
 
-func (rb *RingBuffer) Write(p []byte) (int, error) {
-	if len(p) == 0 {
-		return 0, nil
+func (rb *RingBuffer) ensureCapacity(need int) {
+	if rb.Free() >= need {
+		return
 	}
-	n := len(p)
-	if n > rb.Free() {
-		rb.growTo(rb.count + n)
-	}
-	for i := 0; i < n; i++ {
-		rb.buf[rb.wIndex] = p[i]
-		rb.wIndex = (rb.wIndex + 1) % len(rb.buf)
-		rb.count++
-	}
-	return n, nil
-}
-
-func (rb *RingBuffer) Read(p []byte) (int, error) {
-	if len(p) == 0 {
-		return 0, nil
-	}
-	n := len(p)
-	if n > rb.count {
-		n = rb.count
-	}
-	for i := 0; i < n; i++ {
-		p[i] = rb.buf[rb.rIndex]
-		rb.rIndex = (rb.rIndex + 1) % len(rb.buf)
-		rb.count--
-	}
-	return n, nil
-}
-
-func (rb *RingBuffer) Peek(p []byte) (int, error) {
-	if len(p) == 0 {
-		return 0, nil
-	}
-	n := len(p)
-	if n > rb.count {
-		n = rb.count
-	}
-	idx := rb.rIndex
-	for i := 0; i < n; i++ {
-		p[i] = rb.buf[idx]
-		idx = (idx + 1) % len(rb.buf)
-	}
-	return n, nil
-}
-
-func (rb *RingBuffer) Discard(n int) int {
-	if n <= 0 {
-		return 0
-	}
-	if n > rb.count {
-		n = rb.count
-	}
-	rb.rIndex = (rb.rIndex + n) % len(rb.buf)
-	rb.count -= n
-	return n
-}
-
-func (rb *RingBuffer) Bytes() []byte {
-	if rb.count == 0 {
-		return nil
-	}
-	result := make([]byte, rb.count)
-	idx := rb.rIndex
-	for i := 0; i < rb.count; i++ {
-		result[i] = rb.buf[idx]
-		idx = (idx + 1) % len(rb.buf)
-	}
-	return result
-}
-
-func (rb *RingBuffer) growTo(size int) {
-	newCap := len(rb.buf) * 2
-	if newCap < size {
-		newCap = size
+	newCap := len(rb.buffer) * 2
+	for newCap-rb.count < need {
+		newCap *= 2
 	}
 	newBuf := make([]byte, newCap)
 	if rb.count > 0 {
-		if rb.rIndex < rb.wIndex {
-			copy(newBuf, rb.buf[rb.rIndex:rb.wIndex])
+		if rb.head < rb.tail {
+			copy(newBuf, rb.buffer[rb.head:rb.tail])
 		} else {
-			n1 := len(rb.buf) - rb.rIndex
-			copy(newBuf, rb.buf[rb.rIndex:])
-			copy(newBuf[n1:], rb.buf[:rb.wIndex])
+			n1 := copy(newBuf, rb.buffer[rb.head:])
+			copy(newBuf[n1:], rb.buffer[:rb.tail])
 		}
 	}
-	rb.buf = newBuf
-	rb.rIndex = 0
-	rb.wIndex = rb.count
+	rb.buffer = newBuf
+	rb.head = 0
+	rb.tail = rb.count
 }
 
-func (rb *RingBuffer) Find(needle []byte) int {
-	if len(needle) == 0 || rb.count < len(needle) {
+func (rb *RingBuffer) Write(data []byte) int {
+	if len(data) == 0 {
+		return 0
+	}
+	rb.ensureCapacity(len(data))
+	n := len(data)
+	end := rb.tail + n
+	if end <= len(rb.buffer) {
+		copy(rb.buffer[rb.tail:], data)
+		rb.tail = end
+	} else {
+		first := len(rb.buffer) - rb.tail
+		copy(rb.buffer[rb.tail:], data[:first])
+		remaining := n - first
+		copy(rb.buffer[:remaining], data[first:])
+		rb.tail = remaining
+	}
+	rb.count += n
+	return n
+}
+
+func (rb *RingBuffer) Peek(n int) ([]byte, bool) {
+	if n <= 0 || n > rb.count {
+		return nil, false
+	}
+	result := make([]byte, n)
+	if rb.head+n <= len(rb.buffer) {
+		copy(result, rb.buffer[rb.head:rb.head+n])
+	} else {
+		first := len(rb.buffer) - rb.head
+		copy(result, rb.buffer[rb.head:])
+		copy(result[first:], rb.buffer[:n-first])
+	}
+	return result, true
+}
+
+func (rb *RingBuffer) Read(n int) ([]byte, bool) {
+	data, ok := rb.Peek(n)
+	if !ok {
+		return nil, false
+	}
+	rb.head = (rb.head + n) % len(rb.buffer)
+	rb.count -= n
+	return data, true
+}
+
+func (rb *RingBuffer) Discard(n int) bool {
+	if n < 0 || n > rb.count {
+		return false
+	}
+	rb.head = (rb.head + n) % len(rb.buffer)
+	rb.count -= n
+	return true
+}
+
+func (rb *RingBuffer) Index(sep []byte) int {
+	if len(sep) == 0 || rb.count < len(sep) {
 		return -1
 	}
-	n := len(needle)
-	maxStart := rb.count - n
-	for start := 0; start <= maxStart; start++ {
+	for i := 0; i <= rb.count-len(sep); i++ {
 		match := true
-		for i := 0; i < n; i++ {
-			idx := (rb.rIndex + start + i) % len(rb.buf)
-			if rb.buf[idx] != needle[i] {
+		for j := 0; j < len(sep); j++ {
+			pos := (rb.head + i + j) % len(rb.buffer)
+			if rb.buffer[pos] != sep[j] {
 				match = false
 				break
 			}
 		}
 		if match {
-			return start
+			return i
 		}
 	}
 	return -1
 }
 
-func (rb *RingBuffer) ReadAt(offset int, p []byte) int {
-	if offset < 0 || offset >= rb.count {
-		return 0
+func (rb *RingBuffer) IndexWithEscape(sep []byte, escapeByte byte) int {
+	if len(sep) == 0 || rb.count < len(sep) {
+		return -1
 	}
-	n := len(p)
-	if n > rb.count-offset {
-		n = rb.count - offset
+	for i := 0; i <= rb.count-len(sep); i++ {
+		if rb.isEscaped(i, escapeByte) {
+			continue
+		}
+		match := true
+		for j := 0; j < len(sep); j++ {
+			if i+j >= rb.count {
+				match = false
+				break
+			}
+			if rb.isEscaped(i+j, escapeByte) {
+				match = false
+				break
+			}
+			pos := (rb.head + i + j) % len(rb.buffer)
+			if rb.buffer[pos] != sep[j] {
+				match = false
+				break
+			}
+		}
+		if match {
+			return i
+		}
 	}
-	for i := 0; i < n; i++ {
-		idx := (rb.rIndex + offset + i) % len(rb.buf)
-		p[i] = rb.buf[idx]
+	return -1
+}
+
+func (rb *RingBuffer) isEscaped(idx int, escapeByte byte) bool {
+	if idx <= 0 {
+		return false
 	}
-	return n
+	escapeCount := 0
+	for i := idx - 1; i >= 0; i-- {
+		pos := (rb.head + i) % len(rb.buffer)
+		if rb.buffer[pos] == escapeByte {
+			escapeCount++
+		} else {
+			break
+		}
+	}
+	return escapeCount%2 == 1
+}
+
+func (rb *RingBuffer) ByteAt(idx int) (byte, bool) {
+	if idx < 0 || idx >= rb.count {
+		return 0, false
+	}
+	pos := (rb.head + idx) % len(rb.buffer)
+	return rb.buffer[pos], true
+}
+
+func (rb *RingBuffer) Reset() {
+	rb.head = 0
+	rb.tail = 0
+	rb.count = 0
 }

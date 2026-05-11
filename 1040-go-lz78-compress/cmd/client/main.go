@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultServerURL = "http://localhost:8080"
+	defaultServerURL = "http://localhost:8310"
 )
 
 type Client struct {
@@ -230,7 +230,7 @@ Commands:
   dict [--show-entries]                 Show dictionary status
 
 Options:
-  --server <url>  Server URL (default: http://localhost:8080)
+  --server <url>  Server URL (default: http://localhost:8310)
   --help          Show this help message
 
 Examples:
@@ -240,7 +240,7 @@ Examples:
   client decompress document.txt.lz78 document_restored.txt
   client dict
   client dict --show-entries
-  client --server http://localhost:8080 compress document.txt`)
+  client --server http://localhost:8310 compress document.txt`)
 }
 
 func main() {

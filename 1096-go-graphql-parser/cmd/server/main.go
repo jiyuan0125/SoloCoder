@@ -26,9 +26,12 @@ func NewServer() *Server {
 	reg := registry.New()
 	setupDemoSchema(reg)
 
-	if err := reg.CheckCyclicReferences(); err != nil {
-		fmt.Fprintf(os.Stderr, "Schema error: %v\n", err)
-		os.Exit(1)
+	if warnings := reg.CheckCyclicReferences(); len(warnings) > 0 {
+		fmt.Println("Schema warnings:")
+		for _, w := range warnings {
+			fmt.Printf("  - %s\n", w)
+		}
+		fmt.Println("  (cyclic references are allowed in GraphQL, but may cause N+1 issues)")
 	}
 
 	ec := executor.NewExecutionContext(reg)
@@ -414,7 +417,7 @@ func (s *Server) handleFormat(w http.ResponseWriter, r *http.Request) {
 func main() {
 	server := NewServer()
 
-	port := 8080
+	port := 8200
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		if p, err := strconv.Atoi(envPort); err == nil {
 			port = p

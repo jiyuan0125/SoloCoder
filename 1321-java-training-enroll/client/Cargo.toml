@@ -1,0 +1,11 @@
+[package]
+name = "client"
+version = { workspace = true }
+edition = { workspace = true }
+
+[dependencies]
+app_core = { path = "../core" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "blocking", "rustls-tls"] }
+clap = { version = "4.0", features = ["derive", "env"] }
+serde = { workspace = true }
+serde_json = { workspace = true }

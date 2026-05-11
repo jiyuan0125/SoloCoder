@@ -4,8 +4,9 @@
 
 第二个功能是mapping，基于diff的结果生成一份字段映射配置。这份配置用于在数据迁移时把旧格式的消息体转换为新格式。配置用JSON格式输出，包含每个字段的转换规则：直接映射（字段名和类型都没变）、类型转换（比如int32改为int64）、重命名映射（旧字段名到新字段名）、默认值填充（新增字段需要给一个默认值）。工具还要根据映射配置生成一段Go代码，实现旧结构体到新结构体的转换函数。
 
-有一个容易出错的地方：oneof字段的处理。oneof是一组互斥字段，只能设置其中一个。如果旧版本的oneof里有两个选项，新版本删除了一个，那旧消息体中包含被删除选项的数据怎么处理？需要在映射配置里给出处理策略。另一个坑是嵌套message和map类型的对比，嵌套message可能被移动到其他位置或者重命名，你需要用全限定名（比如PackageA.MessageB.FieldC）来做匹配而不是只用字段名。
+oneof字段的处理方面，oneof是一组互斥字段，只能设置其中一个。如果旧版本的oneof里有两个选项，新版本删除了一个，那旧消息体中包含被删除选项的数据怎么处理？需要在映射配置里给出处理策略。嵌套message和map类型的对比，嵌套message可能被移动到其他位置或者重命名，你需要用全限定名（比如PackageA.MessageB.FieldC）来做匹配而不是只用字段名。
 
 工具还需要一个额外功能：把proto文件中定义的message生成JSON Schema。这样前端团队可以用JSON Schema来校验接口数据格式。生成规则是把proto的message映射为JSON object，字段类型映射为JSON Schema的类型定义，repeated字段映射为array，optional字段标记为非required，enum映射为带有enum约束的string。map字段映射为additionalProperties的对象。
 
 代码架构用策略模式，diff和mapping各自是一套处理流程，共享proto文件的解析模块。proto解析不需要依赖protoc工具，自己写一个简易的proto3语法解析器就行，只需要能处理message、field、enum、oneof、map这几个关键字。
+Protobuf转JSON时如果消息中有oneof字段，只序列化实际设置了值的那个分支。

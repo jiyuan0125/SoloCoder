@@ -98,6 +98,9 @@ func (p *Parser) parseDefinition() ast.Definition {
 	switch p.curTok.Type {
 	case lexer.TokenQuery, lexer.TokenMutation:
 		return p.parseOperationDefinition()
+	case lexer.TokenSubscription:
+		p.curError(fmt.Sprintf("unsupported operation type: subscription"))
+		return nil
 	case lexer.TokenBraceL:
 		return p.parseOperationDefinition()
 	case lexer.TokenFragment:
@@ -147,7 +150,6 @@ func (p *Parser) parseOperationDefinition() ast.Definition {
 	}
 
 	if p.peekTokenIs(lexer.TokenParenL) {
-		p.nextToken()
 		op.Variables = p.parseVariableDefinitions()
 	}
 
@@ -165,19 +167,19 @@ func (p *Parser) parseVariableDefinitions() []ast.VariableDefinition {
 		return defs
 	}
 
+	p.nextToken()
+
 	for !p.curTokenIs(lexer.TokenParenR) && !p.curTokenIs(lexer.TokenEOF) {
 		def := p.parseVariableDefinition()
 		if def != nil {
 			defs = append(defs, *def)
 		}
-		if !p.peekTokenIs(lexer.TokenParenR) {
-			if !p.peekTokenIs(lexer.TokenComma) && !p.peekTokenIs(lexer.TokenParenR) {
-				p.peekError(lexer.TokenComma)
-				break
-			}
-			if p.peekTokenIs(lexer.TokenComma) {
-				p.nextToken()
-			}
+		if p.peekTokenIs(lexer.TokenParenR) {
+			p.nextToken()
+			break
+		}
+		if p.peekTokenIs(lexer.TokenComma) {
+			p.nextToken()
 		}
 		p.nextToken()
 	}
@@ -274,6 +276,10 @@ func (p *Parser) parseSelectionSet() ast.SelectionSet {
 	var set ast.SelectionSet
 
 	for !p.peekTokenIs(lexer.TokenBraceR) && !p.peekTokenIs(lexer.TokenEOF) {
+		if p.peekTokenIs(lexer.TokenComma) {
+			p.nextToken()
+			continue
+		}
 		p.nextToken()
 		sel := p.parseSelection()
 		if sel != nil {
@@ -310,7 +316,6 @@ func (p *Parser) parseField() ast.Selection {
 	}
 
 	if p.peekTokenIs(lexer.TokenParenL) {
-		p.nextToken()
 		field.Arguments = p.parseArguments()
 	}
 
@@ -364,15 +369,19 @@ func (p *Parser) parseArguments() []ast.Argument {
 		return args
 	}
 
+	p.nextToken()
+
 	for !p.curTokenIs(lexer.TokenParenR) && !p.curTokenIs(lexer.TokenEOF) {
 		arg := p.parseArgument()
 		if arg != nil {
 			args = append(args, *arg)
 		}
-		if !p.peekTokenIs(lexer.TokenParenR) {
-			if p.peekTokenIs(lexer.TokenComma) {
-				p.nextToken()
-			}
+		if p.peekTokenIs(lexer.TokenParenR) {
+			p.nextToken()
+			break
+		}
+		if p.peekTokenIs(lexer.TokenComma) {
+			p.nextToken()
 		}
 		p.nextToken()
 	}

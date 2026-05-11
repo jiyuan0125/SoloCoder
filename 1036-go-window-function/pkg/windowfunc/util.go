@@ -81,6 +81,28 @@ func compareValues(a, b interface{}) int {
 	if b == nil {
 		return 1
 	}
+	switch av := a.(type) {
+	case float64:
+		if bv, ok := b.(float64); ok {
+			if av < bv {
+				return -1
+			}
+			if av > bv {
+				return 1
+			}
+			return 0
+		}
+	case string:
+		if bv, ok := b.(string); ok {
+			if av < bv {
+				return -1
+			}
+			if av > bv {
+				return 1
+			}
+			return 0
+		}
+	}
 	aj, _ := json.Marshal(a)
 	bj, _ := json.Marshal(b)
 	return bytes.Compare(aj, bj)

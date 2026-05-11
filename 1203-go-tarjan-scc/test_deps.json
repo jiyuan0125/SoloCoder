@@ -1,0 +1,11 @@
+{
+  "nodes": ["moduleA", "moduleB", "moduleC", "moduleD", "moduleE"],
+  "edges": [
+    {"from": "moduleA", "to": "moduleB"},
+    {"from": "moduleB", "to": "moduleC"},
+    {"from": "moduleC", "to": "moduleA"},
+    {"from": "moduleA", "to": "moduleD"},
+    {"from": "moduleD", "to": "moduleE"},
+    {"from": "moduleE", "to": "moduleE"}
+  ]
+}

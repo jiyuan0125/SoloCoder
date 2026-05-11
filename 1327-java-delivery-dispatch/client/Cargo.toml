@@ -1,0 +1,13 @@
+[package]
+name = "delivery_dispatch_client"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+delivery_dispatch_core = { path = "../core" }
+clap = { version = "4.0", features = ["derive", "env"] }
+reqwest = { version = "0.12", features = ["json", "rustls-tls", "rustls-tls-native-roots"], default-features = false }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+uuid = { version = "1.0", features = ["v4", "serde"] }

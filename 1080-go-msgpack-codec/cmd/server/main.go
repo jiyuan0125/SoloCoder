@@ -90,7 +90,7 @@ func main() {
 	http.HandleFunc(protocol.EndpointDecode, decodeHandler)
 	http.HandleFunc(protocol.EndpointEncode, encodeHandler)
 
-	addr := ":8080"
+	addr := ":8801"
 	log.Printf("server listening on %s", addr)
 	log.Printf("  POST %s - decode msgpack to json", protocol.EndpointDecode)
 	log.Printf("  POST %s - encode json to msgpack", protocol.EndpointEncode)

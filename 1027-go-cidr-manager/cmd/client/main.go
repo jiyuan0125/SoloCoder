@@ -13,7 +13,7 @@ import (
 	"github.com/ip-manager/pkg/common"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8104"
 
 type Client struct {
 	serverURL string
@@ -61,7 +61,7 @@ Commands:
   pool exclude <pool_id> <cidr>   Exclude a CIDR from available pool
 
 Options:
-  --server <url>                  Server URL (default: http://localhost:8080)
+  --server <url>                  Server URL (default: http://localhost:8104)
   --help, -h                      Show this help message
 
 Examples:

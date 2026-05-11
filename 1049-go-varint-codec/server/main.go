@@ -17,8 +17,8 @@ func main() {
 	http.HandleFunc("/validate", handleValidate)
 	http.HandleFunc("/benchmark", handleBenchmark)
 
-	fmt.Println("Server starting on :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server starting on :8500")
+	http.ListenAndServe(":8500", nil)
 }
 
 func handleEncode(w http.ResponseWriter, r *http.Request) {

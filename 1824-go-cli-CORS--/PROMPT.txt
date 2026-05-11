@@ -16,6 +16,8 @@
 
 输出报告：每种检查结果显示通过/警告/失败状态，附上具体描述和建议。加--json输出JSON格式。
 
-有个容易出错的地方：预检请求的构造。Access-Control-Request-Method必须大写（如GET、POST），不能小写。Access-Control-Request-Headers是用逗号分隔的头名称列表，头名称不区分大小写但惯例用首字母大写（如Content-Type、Authorization）。
+预检请求的构造方面，Access-Control-Request-Method必须大写（如GET、POST），不能小写。Access-Control-Request-Headers是用逗号分隔的头名称列表，头名称不区分大小写但惯例用首字母大写（如Content-Type、Authorization）。
 
 如果目标服务器根本不返回CORS头（完全没有CORS配置），要明确告诉用户"服务器未配置CORS"，而不是显示一堆缺失头的警告。
+
+预检请求的结果如果在客户端缓存了（通过Access-Control-Max-Age），缓存过期后重新发送的预检不应该被工具忽略。

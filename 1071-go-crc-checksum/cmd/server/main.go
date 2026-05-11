@@ -354,7 +354,7 @@ func verifyHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	addr := flag.String("addr", ":8080", "Address to listen on")
+	addr := flag.String("addr", ":8303", "Address to listen on")
 	flag.Parse()
 
 	http.HandleFunc("/variants", variantsHandler)

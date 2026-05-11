@@ -1,0 +1,18 @@
+[package]
+name = "locker_server"
+version.workspace = true
+edition.workspace = true
+
+[[bin]]
+name = "locker_server"
+path = "src/main.rs"
+
+[dependencies]
+locker_core = { path = "../core" }
+axum.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+clap.workspace = true

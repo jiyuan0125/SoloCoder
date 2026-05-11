@@ -335,7 +335,7 @@ func main() {
 	http.HandleFunc("/pool/release", server.handleRelease)
 	http.HandleFunc("/pool/exclude", server.handleExclude)
 
-	port := ":8080"
+	port := ":8104"
 	log.Printf("IP Manager Server starting on %s...", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		log.Fatalf("server error: %v", err)

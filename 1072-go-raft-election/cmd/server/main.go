@@ -22,8 +22,8 @@ func main() {
 	http.HandleFunc("/api/log/submit", submitLogHandler)
 	http.HandleFunc("/api/election/trigger", triggerElectionHandler)
 
-	log.Println("Raft server starting on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Println("Raft server starting on :8501")
+	log.Fatal(http.ListenAndServe(":8501", nil))
 }
 
 func createClusterHandler(w http.ResponseWriter, r *http.Request) {

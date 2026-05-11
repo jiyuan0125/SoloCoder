@@ -140,25 +140,26 @@ func TestDelete(t *testing.T) {
 }
 
 func TestRandomOperations(t *testing.T) {
+	rng := rand.New(rand.NewSource(42))
 	tree := New()
 	values := []int{}
 
 	for i := 0; i < 100; i++ {
-		val := rand.Intn(100)
+		val := rng.Intn(100)
 		tree.Insert(val)
 		values = append(values, val)
 		if !tree.validateRBProperties() {
-			t.Error("RB properties violated after random insert")
+			t.Fatalf("RB properties violated after inserting %d", val)
 		}
 	}
 
 	for i := 0; i < 50; i++ {
-		idx := rand.Intn(len(values))
+		idx := rng.Intn(len(values))
 		val := values[idx]
 		tree.Delete(val)
 		values = append(values[:idx], values[idx+1:]...)
 		if !tree.validateRBProperties() {
-			t.Error("RB properties violated after random delete")
+			t.Fatalf("RB properties violated after deleting %d (iteration %d)", val, i)
 		}
 	}
 

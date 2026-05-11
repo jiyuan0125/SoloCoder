@@ -14,7 +14,7 @@ func main() {
 	http.HandleFunc("/decode", decodeHandler)
 	http.HandleFunc("/encode", encodeHandler)
 
-	port := ":8080"
+	port := ":8450"
 	fmt.Printf("ASN.1 DER Parser Server listening on %s\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }

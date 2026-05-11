@@ -1,0 +1,41 @@
+# 这是一个测试配置文件
+title = "Example Configuration"
+port = 8080
+debug = true
+rate = 3.14
+created_at = 2023-06-15T10:30:00Z
+
+# 包含连字符和点号的键
+api-key = "secret123"
+
+# 测试Go关键字
+type = "config"
+var = "test"
+
+# 普通表
+[database]
+username = "root"
+password = "password"
+port = 3306
+
+# 嵌套表
+[database.connection]
+timeout = 30
+max_connections = 100
+
+# 数组表
+[[servers]]
+name = "server1"
+ip = "192.168.1.1"
+port = 80
+
+[[servers]]
+name = "server2"
+ip = "192.168.1.2"
+port = 443
+
+# 数组
+tags = ["go", "toml", "config"]
+numbers = [1, 2, 3, 4, 5]
+mixed = [1, "string", true]
+empty_array = []

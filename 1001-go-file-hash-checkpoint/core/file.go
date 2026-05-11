@@ -100,6 +100,10 @@ func CalculateFinalHashFromChunks(filePath string, chunkSize int64, algorithm co
 	}
 	defer reader.Close()
 
+	if reader.FileSize() <= 0 {
+		return common.GetEmptyFileHash(algorithm), nil
+	}
+
 	totalChunks := CalculateTotalChunks(reader.FileSize(), chunkSize)
 	chunkHashes := make([]string, 0, totalChunks)
 

@@ -13,8 +13,8 @@ func main() {
 	http.HandleFunc("/resolve", handleResolve)
 	http.HandleFunc("/anchors", handleListAnchors)
 
-	fmt.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	fmt.Println("Server starting on :8201")
+	if err := http.ListenAndServe(":8201", nil); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }

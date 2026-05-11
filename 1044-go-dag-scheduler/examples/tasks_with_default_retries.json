@@ -1,0 +1,19 @@
+{
+  "tasks": [
+    {
+      "id": "A",
+      "dependencies": [],
+      "duration": 1,
+      "should_fail": true
+    },
+    {
+      "id": "B",
+      "dependencies": [],
+      "duration": 2,
+      "should_fail": false
+    }
+  ],
+  "max_concurrency": 4,
+  "default_retries": 2,
+  "default_retry_interval": 1
+}

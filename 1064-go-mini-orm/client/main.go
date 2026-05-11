@@ -14,7 +14,7 @@ import (
 	"mini-orm/common"
 )
 
-var serverURL = "http://localhost:8080"
+var serverURL = "http://localhost:8204"
 
 func sendRequest(endpoint string, reqBody interface{}, respBody interface{}) error {
 	var body io.Reader

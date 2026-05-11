@@ -1,21 +1,7 @@
-我们平台要对外提供Webhook能力，让第三方系统可以订阅我们平台的事件。需要做一个Webhook管理后台。后端Go，前端React，后端用Echo框架，前端用React搭配Jotai。
+帮我用 TypeScript 写一个Webhook管理服务的后端，处理事件订阅和回调投递。
 
-项目采用标准的Go+React前后端分离结构。后端在api/目录，前端在dashboard/目录。Go后端用模块名webhook-service。
+第三方开发者创建Webhook订阅，指定事件类型和回调URL。平台产生对应事件时向回调URL发HTTP POST请求，请求体包含event、data、timestamp和signature。签名用HMAC-SHA256计算，签名内容是timestamp加请求体JSON字符串，密钥是创建Webhook时分配的secret。同一个事件的多次重试timestamp保持事件产生时的时间不变。签名验证时timestamp要在5分钟以内，超过视为过期。
 
-Webhook的基本模型：第三方开发者创建一个Webhook订阅，指定要订阅的事件类型（如"order.created""payment.success""user.registered"）和回调URL。当平台产生对应事件时，系统向回调URL发送HTTP POST请求，请求体是JSON格式的事件数据。
+重试策略：回调返回非2xx或连接超时（10秒）时重试。间隔为1分钟、5分钟、30分钟、2小时、24小时。下次重试时间用上次投递时间加间隔来算。同一个Webhook的事件按产生顺序依次投递不能乱序。回调URL必须是HTTPS（localhost例外）。投递记录包含请求URL、请求体、响应状态码和响应体（截取前500字符）。
 
-回调请求的格式：HTTP POST，Content-Type为application/json，请求体包含event（事件类型）、data（事件数据）、timestamp（事件发生时间的Unix毫秒时间戳）和signature（签名）。签名用HMAC-SHA256算法计算，签名内容是timestamp加上请求体的JSON字符串，密钥是创建Webhook时分配的secret。
-
-签名验证：第三方在接收到回调后，用同样的算法和secret重新计算签名，和请求中的signature字段比对，一致才说明请求确实来自我们平台而不是伪造的。
-
-重试机制：如果回调URL返回非2xx状态码或连接超时（超时时间10秒），系统要进行重试。重试策略：第1次在1分钟后，第2次在5分钟后，第3次在30分钟后，第4次在2小时后，第5次在24小时后。5次都失败后标记为"投递失败"并发送告警。重试时要保证事件投递的顺序性，同一个Webhook的事件按产生顺序依次投递，不能乱序。
-
-事件投递记录：每次投递（包括重试）都记录一条日志，包含请求URL、请求体、响应状态码、响应体（截取前500字符）和投递时间。前端可以查看投递历史。
-
-安全方面：回调URL必须是HTTPS协议（本地开发可以用http://localhost例外）。每个Webhook订阅有一个secret，创建时自动生成，展示一次后不可查看。
-
-第一，重试间隔要用"下次重试时间=上次投递时间+间隔"来计算，不能用"下次重试时间=当前时间+间隔"，否则在系统暂停后恢复时会把积压的事件集中重试造成冲击。第二，签名验证中timestamp字段要检查是否在5分钟以内，超过5分钟的请求视为过期拒绝，防止重放攻击。第三，同一个事件的多次重试请求的timestamp应该相同（都是事件产生时的时间），不能每次重试都更新timestamp。
-
-前端页面：Webhook列表、创建/编辑Webhook、事件投递记录页（表格+筛选）、告警列表。
-
-后端预置5个Webhook订阅和50条投递记录。
+核心功能实现为独立模块。服务端用 Express 框架提供 HTTP 接口，客户端是命令行工具通过 HTTP 调用服务端。项目用 TypeScript 写，tsconfig 开启 strict 模式。npm install 后 npm run build 能编译通过，node dist/server.js 能启动服务端。服务端监听端口通过环境变量指定。

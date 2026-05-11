@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "Analysis server URL")
+	serverURL := flag.String("server", "http://localhost:8303", "Analysis server URL")
 	flag.Parse()
 	
 	if flag.NArg() != 1 {

@@ -37,7 +37,7 @@ func NewEncoder(minCodeSize int, w io.Writer) (*Encoder, error) {
 		writer: w,
 	}
 
-	for i := 0; i < int(clearCode); i++ {
+	for i := 0; i < 256; i++ {
 		enc.dict[string([]byte{byte(i)})] = uint16(i)
 	}
 
@@ -50,7 +50,6 @@ func NewEncoder(minCodeSize int, w io.Writer) (*Encoder, error) {
 }
 
 func (e *Encoder) reset() error {
-	clearCode := e.clearCode
 	eoiCode := e.eoiCode
 
 	e.dict = make(map[string]uint16, 4096)
@@ -58,11 +57,11 @@ func (e *Encoder) reset() error {
 	e.codeWidth = e.minCodeSize + 1
 	e.maxCode = 1 << (e.minCodeSize + 1)
 
-	for i := 0; i < int(clearCode); i++ {
+	for i := 0; i < 256; i++ {
 		e.dict[string([]byte{byte(i)})] = uint16(i)
 	}
 
-	return e.writeCode(clearCode)
+	return e.writeCode(e.clearCode)
 }
 
 func (e *Encoder) writeCode(code uint16) error {

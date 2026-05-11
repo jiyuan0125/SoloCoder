@@ -59,7 +59,7 @@ func cmdHash(args []string) {
 	fs := flag.NewFlagSet("hash", flag.ExitOnError)
 	seedFlag := fs.Uint("seed", 0, "hash seed")
 	hashTypeFlag := fs.String("type", "32", "hash type: 32 or 128")
-	serverFlag := fs.String("server", "http://localhost:8080", "server URL")
+	serverFlag := fs.String("server", "http://localhost:8410", "server URL")
 
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)
@@ -113,7 +113,7 @@ func cmdBenchmark(args []string) {
 	countFlag := fs.Int("count", 10000, "number of test entries")
 	hashTypeFlag := fs.String("type", "32", "hash type: 32 or 128")
 	bucketFlag := fs.Int("buckets", 256, "number of buckets")
-	serverFlag := fs.String("server", "http://localhost:8080", "server URL")
+	serverFlag := fs.String("server", "http://localhost:8410", "server URL")
 
 	if err := fs.Parse(args); err != nil {
 		os.Exit(2)

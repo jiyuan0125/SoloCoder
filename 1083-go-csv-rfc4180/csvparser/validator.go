@@ -98,14 +98,29 @@ func (v *validator) validate(text string) []*ValidationError {
 		column++
 	}
 
-	columnCount++
-	v.checkLineLength(line, columnCount)
+	if !endsWithNewline(text) {
+		columnCount++
+		v.checkLineLength(line, columnCount)
+	}
 
 	if inQuotes {
 		v.addError(line, column, "unclosed quoted field")
 	}
 
 	return v.errors
+}
+
+func endsWithNewline(text string) bool {
+	if len(text) == 0 {
+		return false
+	}
+	if text[len(text)-1] == '\n' {
+		return true
+	}
+	if text[len(text)-1] == '\r' {
+		return true
+	}
+	return false
 }
 
 func (v *validator) checkLineLength(line int, count int) {

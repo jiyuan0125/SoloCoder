@@ -20,10 +20,10 @@ func main() {
 	mux.HandleFunc("/api/normalize", handleNormalize)
 	mux.HandleFunc("/api/analyze", handleAnalyze)
 
-	fmt.Printf("Unicode Normalizer Server v%s starting on :8080\n", version)
+	fmt.Printf("Unicode Normalizer Server v%s starting on :8101\n", version)
 	fmt.Printf("Unicode Version: %s\n", uninorm.UnicodeVersion)
 	
-	if err := http.ListenAndServe(":8080", mux); err != nil {
+	if err := http.ListenAndServe(":8101", mux); err != nil {
 		log.Fatalf("Server failed to start: %v", err)
 	}
 }
@@ -110,9 +110,14 @@ func handleAnalyze(w http.ResponseWriter, r *http.Request) {
 			normalizedCodes = append(normalizedCodes, fmt.Sprintf("U+%04X", r))
 		}
 
+		originalCodes := make([]string, 0, len(change.OriginalRunes))
+		for _, r := range change.OriginalRunes {
+			originalCodes = append(originalCodes, fmt.Sprintf("U+%04X", r))
+		}
+
 		changeInfos = append(changeInfos, api.CharChangeInfo{
 			Original:        change.OriginalStr,
-			OriginalCode:    fmt.Sprintf("U+%04X", change.Original),
+			OriginalCode:    strings.Join(originalCodes, " "),
 			Normalized:      change.NormalizedStr,
 			NormalizedCodes: normalizedCodes,
 		})

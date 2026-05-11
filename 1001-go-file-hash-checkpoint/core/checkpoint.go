@@ -21,7 +21,7 @@ func NewCheckpointManager() *CheckpointManager {
 
 func CalculateTotalChunks(fileSize int64, chunkSize int64) int {
 	if fileSize <= 0 {
-		return 1
+		return 0
 	}
 	if chunkSize <= 0 {
 		chunkSize = common.DefaultChunkSize
@@ -156,6 +156,16 @@ func (cm *CheckpointManager) CompleteCheck(filePath string, modTime time.Time) (
 	progress, ok := cm.records[key]
 	if !ok {
 		return nil, "", nil
+	}
+
+	if progress.FileSize <= 0 {
+		if progress.FinalHash == "" {
+			progress.FinalHash = common.GetEmptyFileHash(progress.Algorithm)
+			progress.CompleteTime = time.Now()
+			progress.Status = common.StatusCompleted
+			progress.Percentage = 100.0
+		}
+		return progress, progress.FinalHash, nil
 	}
 
 	if progress.CompletedChunks != progress.TotalChunks {

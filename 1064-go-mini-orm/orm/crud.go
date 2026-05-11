@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+	"time"
 )
 
 func (db *DB) collectAllColumns(fields []*FieldInfo) []string {
@@ -51,6 +52,72 @@ func (db *DB) collectAllValues(model reflect.Value, fields []*FieldInfo) ([]inte
 	return values, nil
 }
 
+func isDefaultZeroValue(v reflect.Value) bool {
+	switch v.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return v.Int() == 0
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return v.Uint() == 0
+	case reflect.Float32, reflect.Float64:
+		return v.Float() == 0
+	case reflect.String:
+		return v.String() == ""
+	case reflect.Ptr, reflect.Interface:
+		return v.IsNil()
+	}
+	return false
+}
+
+func (db *DB) collectInsertColumnsAndValues(
+	modelVal reflect.Value,
+	fields []*FieldInfo,
+	pkColumn string,
+) ([]string, []interface{}, error) {
+	var columns []string
+	var values []interface{}
+
+	for _, field := range fields {
+		fieldValue := modelVal.FieldByName(field.Name)
+
+		if field.IsEmbedded {
+			var embedVal reflect.Value
+			if field.IsPointer {
+				if fieldValue.IsNil() {
+					for _, ef := range field.EmbeddedFields {
+						columns = append(columns, ef.ColumnName)
+						values = append(values, nil)
+					}
+					continue
+				}
+				embedVal = fieldValue.Elem()
+			} else {
+				embedVal = fieldValue
+			}
+			embedColumns, embedValues, err := db.collectInsertColumnsAndValues(
+				embedVal, field.EmbeddedFields, pkColumn,
+			)
+			if err != nil {
+				return nil, nil, err
+			}
+			columns = append(columns, embedColumns...)
+			values = append(values, embedValues...)
+			continue
+		}
+
+		if field.ColumnName == pkColumn && isDefaultZeroValue(fieldValue) {
+			continue
+		}
+
+		dbValue, err := db.toDBValue(field, fieldValue)
+		if err != nil {
+			return nil, nil, err
+		}
+		columns = append(columns, field.ColumnName)
+		values = append(values, dbValue)
+	}
+	return columns, values, nil
+}
+
 func (db *DB) Insert(model interface{}) error {
 	modelInfo, err := db.ParseModel(model)
 	if err != nil {
@@ -62,14 +129,14 @@ func (db *DB) Insert(model interface{}) error {
 		modelVal = modelVal.Elem()
 	}
 
-	columns := db.collectAllColumns(modelInfo.Fields)
-	if len(columns) == 0 {
-		return fmt.Errorf("no columns to insert")
-	}
-
-	values, err := db.collectAllValues(modelVal, modelInfo.Fields)
+	columns, values, err := db.collectInsertColumnsAndValues(
+		modelVal, modelInfo.Fields, modelInfo.PrimaryKey,
+	)
 	if err != nil {
 		return err
+	}
+	if len(columns) == 0 {
+		return fmt.Errorf("no columns to insert")
 	}
 
 	placeholders := make([]string, len(columns))
@@ -114,7 +181,7 @@ func (db *DB) GetByID(model interface{}, id interface{}) error {
 	}
 	modelVal = modelVal.Elem()
 
-	scanDest, err := db.prepareScanDest(modelVal, modelInfo.Fields)
+	scanDest, targets, err := db.prepareScanDest(modelInfo.Fields)
 	if err != nil {
 		return err
 	}
@@ -126,35 +193,112 @@ func (db *DB) GetByID(model interface{}, id interface{}) error {
 		return err
 	}
 
-	return db.afterScan(modelVal, modelInfo.Fields)
+	return db.applyScanResults(modelVal, targets)
 }
 
-func (db *DB) prepareScanDest(modelVal reflect.Value, fields []*FieldInfo) ([]interface{}, error) {
-	var dest []interface{}
+func (db *DB) prepareScanDestCount(fields []*FieldInfo) int {
+	count := 0
 	for _, field := range fields {
-		fieldValue := modelVal.FieldByName(field.Name)
-
 		if field.IsEmbedded {
-			if field.IsPointer {
-				if fieldValue.IsNil() {
-					fieldValue.Set(reflect.New(fieldValue.Type().Elem()))
-				}
-				fieldValue = fieldValue.Elem()
-			}
-			embeddedDest, err := db.prepareScanDest(fieldValue, field.EmbeddedFields)
+			count += db.prepareScanDestCount(field.EmbeddedFields)
+		} else {
+			count++
+		}
+	}
+	return count
+}
+
+func (db *DB) prepareScanDest(fields []*FieldInfo) ([]interface{}, []*scanTarget, error) {
+	var dest []interface{}
+	var targets []*scanTarget
+
+	for _, field := range fields {
+		if field.IsEmbedded {
+			embedDest, embedTargets, err := db.prepareScanDest(field.EmbeddedFields)
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
-			dest = append(dest, embeddedDest...)
+			dest = append(dest, embedDest...)
+			for _, t := range embedTargets {
+				t.embeddedPath = append([]string{field.Name}, t.embeddedPath...)
+				t.embeddedPointers = append([]bool{field.IsPointer}, t.embeddedPointers...)
+			}
+			targets = append(targets, embedTargets...)
 			continue
 		}
 
-		dest = append(dest, reflect.New(fieldValue.Type()).Interface())
+		var holder interface{}
+		if field.GoType == reflect.TypeOf(time.Time{}) {
+			holder = new(sql.NullString)
+		} else if field.IsPointer {
+			holder = new(interface{})
+		} else {
+			holder = new(interface{})
+		}
+
+		dest = append(dest, holder)
+		targets = append(targets, &scanTarget{
+			field:      field,
+			holder:     holder,
+		})
 	}
-	return dest, nil
+	return dest, targets, nil
 }
 
-func (db *DB) afterScan(modelVal reflect.Value, fields []*FieldInfo) error {
+type scanTarget struct {
+	field            *FieldInfo
+	holder           interface{}
+	embeddedPath     []string
+	embeddedPointers []bool
+}
+
+func (db *DB) applyScanResults(modelVal reflect.Value, targets []*scanTarget) error {
+	for _, t := range targets {
+		dest := modelVal
+		validPath := true
+
+		for i, fieldName := range t.embeddedPath {
+			embedField := dest.FieldByName(fieldName)
+			if !embedField.IsValid() {
+				validPath = false
+				break
+			}
+			if t.embeddedPointers[i] {
+				if embedField.IsNil() {
+					embedField.Set(reflect.New(embedField.Type().Elem()))
+				}
+				embedField = embedField.Elem()
+			}
+			dest = embedField
+		}
+
+		if !validPath {
+			continue
+		}
+
+		destField := dest.FieldByName(t.field.Name)
+		if !destField.IsValid() {
+			continue
+		}
+
+		var dbValue interface{}
+		switch h := t.holder.(type) {
+		case *sql.NullString:
+			if h.Valid {
+				dbValue = h.String
+			} else {
+				dbValue = nil
+			}
+		case *interface{}:
+			dbValue = *h
+		default:
+			dbValue = reflect.ValueOf(t.holder).Elem().Interface()
+		}
+
+		if err := db.fromDBValue(t.field, dbValue, destField); err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -280,12 +424,16 @@ func (db *DB) List(models interface{}, options *ListOptions) error {
 		newElem := reflect.New(elemType)
 		elemVal := newElem.Elem()
 
-		scanDest, err := db.prepareScanDest(elemVal, modelInfo.Fields)
+		scanDest, targets, err := db.prepareScanDest(modelInfo.Fields)
 		if err != nil {
 			return err
 		}
 
 		if err := rows.Scan(scanDest...); err != nil {
+			return err
+		}
+
+		if err := db.applyScanResults(elemVal, targets); err != nil {
 			return err
 		}
 

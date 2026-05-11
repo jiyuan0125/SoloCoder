@@ -11,10 +11,12 @@ import (
 	"strings"
 
 	"graphql-parser/internal/common"
+	"graphql-parser/internal/graphql/ast"
 	"graphql-parser/internal/graphql/executor"
+	"graphql-parser/internal/graphql/parser"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8200"
 
 type client struct {
 	serverURL string
@@ -179,6 +181,7 @@ func cmdFile(args []string) {
 
 func cmdLint(args []string) {
 	fs := flag.NewFlagSet("lint", flag.ExitOnError)
+	serverFlag := fs.String("server", "", "GraphQL server URL")
 	fs.Parse(args)
 
 	lintArgs := fs.Args()
@@ -214,6 +217,68 @@ func cmdLint(args []string) {
 	if formatErr == nil {
 		fmt.Println("\nFormatted query:")
 		fmt.Println(formatted)
+	}
+
+	client := newClient()
+	if *serverFlag != "" {
+		client.serverURL = *serverFlag
+	}
+
+	fmt.Println("\nRunning static analysis...")
+	nplus1Warnings := detectNPlus1Static(query)
+
+	fmt.Println("\nExecuting query for N+1 detection...")
+	req := common.GraphQLRequest{Query: query}
+	var execResp common.GraphQLResponse
+	execErr := client.postJSON("/api/graphql", &req, &execResp)
+	if execErr == nil {
+		for _, w := range execResp.Warnings {
+			if strings.Contains(w, "N+1") {
+				nplus1Warnings = append(nplus1Warnings, w)
+			}
+		}
+	} else {
+		fmt.Printf("  Note: Server execution failed (N+1 detection limited): %v\n", execErr)
+	}
+
+	if len(nplus1Warnings) > 0 {
+		fmt.Println("\nWarnings:")
+		for _, w := range nplus1Warnings {
+			fmt.Printf("  ! %s\n", w)
+		}
+	} else {
+		fmt.Println("\nNo N+1 issues detected")
+	}
+}
+
+func detectNPlus1Static(query string) []string {
+	warnings := []string{}
+	doc, err := parser.Parse(query)
+	if err != nil {
+		return warnings
+	}
+
+	fieldCounts := make(map[string]int)
+	for _, def := range doc.Definitions {
+		if op, ok := def.(*ast.OperationDefinition); ok {
+			countFieldsAtRoot(op.SelectionSet, fieldCounts)
+		}
+	}
+
+	for field, count := range fieldCounts {
+		if count > 1 {
+			warnings = append(warnings, fmt.Sprintf("Potential N+1: field '%s' accessed %d times at root level", field, count))
+		}
+	}
+
+	return warnings
+}
+
+func countFieldsAtRoot(selSet ast.SelectionSet, counts map[string]int) {
+	for _, sel := range selSet {
+		if field, ok := sel.(*ast.Field); ok {
+			counts[field.Name]++
+		}
 	}
 }
 
@@ -391,7 +456,7 @@ func printUsage() {
 	fmt.Println("  variables  Manage preset variables")
 	fmt.Println()
 	fmt.Println("Environment:")
-	fmt.Println("  GRAPHQL_SERVER_URL  Server URL (default: http://localhost:8080)")
+	fmt.Println("  GRAPHQL_SERVER_URL  Server URL (default: http://localhost:8200)")
 	fmt.Println()
 	fmt.Println("Examples:")
 	fmt.Println("  gqlc query '{ user(id: \"1\") { name } }'")

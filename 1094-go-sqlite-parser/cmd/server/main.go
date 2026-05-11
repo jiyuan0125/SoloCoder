@@ -23,8 +23,8 @@ func main() {
 	http.HandleFunc("/api/query", handleQuery)
 	http.HandleFunc("/api/header", handleHeader)
 
-	fmt.Println("Server starting on :8080")
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Server starting on :8103")
+	http.ListenAndServe(":8103", nil)
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {

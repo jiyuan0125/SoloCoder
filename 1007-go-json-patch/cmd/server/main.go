@@ -116,8 +116,8 @@ func main() {
 	http.HandleFunc("/apply", applyHandler)
 	http.HandleFunc("/validate", validateHandler)
 
-	fmt.Println("JSON Patch server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	fmt.Println("JSON Patch server starting on :8102")
+	if err := http.ListenAndServe(":8102", nil); err != nil {
 		fmt.Printf("server error: %v\n", err)
 	}
 }

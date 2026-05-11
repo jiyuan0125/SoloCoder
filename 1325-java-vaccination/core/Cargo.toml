@@ -1,0 +1,10 @@
+[package]
+name = "vaccination-core"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+chrono = { version = "0.4", features = ["serde"] }
+serde = { version = "1", features = ["derive"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+thiserror = "1"

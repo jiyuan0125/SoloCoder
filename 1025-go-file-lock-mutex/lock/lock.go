@@ -13,6 +13,7 @@ func NewLock(targetFilePath string) *Lock {
 	return &Lock{
 		filePath:     targetFilePath,
 		lockFilePath: targetFilePath + LockFileSuffix,
+		openFiles:    make([]*os.File, 0),
 	}
 }
 
@@ -25,111 +26,148 @@ func (l *Lock) LockShared(timeout time.Duration) error {
 }
 
 func (l *Lock) Unlock() error {
-	l.holdMu.Lock()
-	defer l.holdMu.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 
 	if l.holdCount <= 0 {
 		return ErrLockNotHeld
 	}
 
 	l.holdCount--
+
 	if l.holdCount > 0 {
-		if l.mode == LockModeExclusive {
-			l.mu.Unlock()
-		} else {
-			l.localMu.RUnlock()
+		return nil
+	}
+
+	if len(l.openFiles) == 0 {
+		l.heldMode = nil
+		return nil
+	}
+
+	firstFile := l.openFiles[0]
+
+	if err := writeHolderInfo(firstFile, nil); err != nil {
+		for _, f := range l.openFiles {
+			_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+			_ = f.Close()
 		}
-		return nil
-	}
-
-	if l.file == nil {
-		l.held = false
-		return nil
-	}
-
-	if err := writeHolderInfo(l.file, nil); err != nil {
-		_ = l.file.Close()
-		l.file = nil
-		l.held = false
-		l.mode = LockModeExclusive
+		l.openFiles = nil
+		l.heldMode = nil
+		l.holdCount = 0
 		return err
 	}
 
-	if err := syscall.Flock(int(l.file.Fd()), syscall.LOCK_UN); err != nil {
-		_ = l.file.Close()
-		l.file = nil
-		l.held = false
-		l.mode = LockModeExclusive
-		return err
+	for _, f := range l.openFiles {
+		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		_ = f.Close()
 	}
 
-	if err := l.file.Close(); err != nil {
-		l.file = nil
-		l.held = false
-		l.mode = LockModeExclusive
-		return err
-	}
-
-	l.file = nil
-	l.held = false
-	l.mode = LockModeExclusive
+	l.openFiles = nil
+	l.heldMode = nil
+	l.holdCount = 0
 	return nil
 }
 
 func (l *Lock) acquire(mode LockMode, timeout time.Duration) error {
-	config := DefaultConfig()
-
-	actualTimeout := timeout
-	if timeout <= 0 {
-		actualTimeout = config.Timeout
-	}
-
 	if mode != LockModeExclusive && mode != LockModeShared {
 		return ErrInvalidMode
 	}
 
-	l.holdMu.Lock()
-	if l.holdCount > 0 {
-		if l.mode == LockModeExclusive || l.mode == mode {
+	config := DefaultConfig()
+
+	var actualTimeout time.Duration
+	noWait := false
+
+	switch {
+	case timeout == 0:
+		noWait = true
+		actualTimeout = 0
+	case timeout < 0:
+		actualTimeout = config.Timeout
+	default:
+		actualTimeout = timeout
+	}
+
+	l.mu.Lock()
+
+	if l.holdCount > 0 && l.heldMode != nil {
+		held := *l.heldMode
+		compatible := false
+		if held == LockModeExclusive || held == mode {
+			compatible = true
+		}
+
+		if compatible {
 			l.holdCount++
-			l.holdMu.Unlock()
-			if l.mode == LockModeExclusive {
-				l.mu.Lock()
-				l.mu.Unlock()
-			} else {
-				l.localMu.RLock()
-				l.localMu.RUnlock()
-			}
+			l.mu.Unlock()
 			return nil
 		}
-		l.holdMu.Unlock()
+
+		l.mu.Unlock()
 		return ErrInvalidMode
 	}
-	l.holdMu.Unlock()
 
-	if mode == LockModeExclusive {
-		l.mu.Lock()
-	} else {
-		l.localMu.RLock()
+	l.mu.Unlock()
+
+	if noWait {
+		return l.doAcquireNoWait(mode)
 	}
 
-	if err := l.doAcquire(mode, actualTimeout, config.MaxWaitDuration); err != nil {
-		if mode == LockModeExclusive {
-			l.mu.Unlock()
-		} else {
-			l.localMu.RUnlock()
+	return l.doAcquireWithTimeout(mode, actualTimeout, config.MaxWaitDuration)
+}
+
+func (l *Lock) doAcquireNoWait(mode LockMode) error {
+	f, err := os.OpenFile(l.lockFilePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open lock file: %w", err)
+	}
+
+	lockHow := syscall.LOCK_SH
+	if mode == LockModeExclusive {
+		lockHow = syscall.LOCK_EX
+	}
+
+	err = syscall.Flock(int(f.Fd()), lockHow|syscall.LOCK_NB)
+	if err != nil {
+		_ = f.Close()
+		if err == syscall.EAGAIN || err == syscall.EWOULDBLOCK {
+			return ErrLockTimeout
 		}
+		return fmt.Errorf("flock failed: %w", err)
+	}
+
+	holderInfo, err := readAndCheckHolder(f)
+	if err != nil {
+		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		_ = f.Close()
 		return err
 	}
 
-	l.holdMu.Lock()
-	l.holdCount = 1
-	l.holdMu.Unlock()
+	newHolder := &LockHolderInfo{
+		PID:       os.Getpid(),
+		StartTime: time.Now(),
+		Mode:      modeToString(mode),
+	}
 
+	if err := writeHolderInfo(f, newHolder); err != nil {
+		_ = syscall.Flock(int(f.Fd()), syscall.LOCK_UN)
+		_ = f.Close()
+		return err
+	}
+
+	modeCopy := mode
+
+	l.mu.Lock()
+	l.heldMode = &modeCopy
+	l.holdCount = 1
+	l.openFiles = append(l.openFiles, f)
+	l.mu.Unlock()
+
+	_ = holderInfo
 	return nil
 }
 
-func (l *Lock) doAcquire(mode LockMode, timeout, maxWait time.Duration) error {
+func (l *Lock) doAcquireWithTimeout(mode LockMode, timeout, maxWait time.Duration) error {
 	startTime := time.Now()
 
 	lockHow := syscall.LOCK_SH
@@ -144,8 +182,8 @@ func (l *Lock) doAcquire(mode LockMode, timeout, maxWait time.Duration) error {
 
 	attemptStart := time.Now()
 	for {
-		elapsed := time.Since(startTime)
-		if elapsed > maxWait {
+		elapsedTotal := time.Since(startTime)
+		if elapsedTotal > maxWait {
 			_ = f.Close()
 			return ErrDeadlockDetected
 		}
@@ -177,9 +215,14 @@ func (l *Lock) doAcquire(mode LockMode, timeout, maxWait time.Duration) error {
 				return err
 			}
 
-			l.file = f
-			l.mode = mode
-			l.held = true
+			modeCopy := mode
+
+			l.mu.Lock()
+			l.heldMode = &modeCopy
+			l.holdCount = 1
+			l.openFiles = append(l.openFiles, f)
+			l.mu.Unlock()
+
 			_ = holderInfo
 			return nil
 		}
@@ -262,13 +305,18 @@ func (l *Lock) GetTargetFilePath() string {
 }
 
 func (l *Lock) IsHeld() bool {
-	l.holdMu.Lock()
-	defer l.holdMu.Unlock()
+	l.mu.Lock()
+	defer l.mu.Unlock()
 	return l.holdCount > 0
 }
 
 func (l *Lock) Mode() LockMode {
-	return l.mode
+	l.mu.Lock()
+	defer l.mu.Unlock()
+	if l.heldMode == nil {
+		return LockModeExclusive
+	}
+	return *l.heldMode
 }
 
 func GetLockFilePathFor(target string) string {

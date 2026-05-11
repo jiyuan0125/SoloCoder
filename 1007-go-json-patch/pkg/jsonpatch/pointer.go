@@ -26,15 +26,20 @@ func ParsePointer(s string) (Pointer, error) {
 	result := make([]string, 0, len(parts))
 	for _, part := range parts {
 		if strings.Contains(part, "~") {
-			if strings.Contains(part, "~") {
-				part = strings.ReplaceAll(part, "~1", "/")
-				part = strings.ReplaceAll(part, "~0", "~")
-			}
-			for _, r := range part {
-				if r == '~' {
-					return nil, ErrPointerInvalidEscape
+			for i := 0; i < len(part); i++ {
+				if part[i] == '~' {
+					if i+1 >= len(part) {
+						return nil, ErrPointerInvalidEscape
+					}
+					next := part[i+1]
+					if next != '0' && next != '1' {
+						return nil, ErrPointerInvalidEscape
+					}
+					i++
 				}
 			}
+			part = strings.ReplaceAll(part, "~1", "/")
+			part = strings.ReplaceAll(part, "~0", "~")
 		}
 		result = append(result, part)
 	}

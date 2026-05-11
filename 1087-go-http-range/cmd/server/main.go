@@ -12,7 +12,7 @@ func main() {
 	content := []byte("This is a test file for HTTP Range requests. It contains multiple lines of text to demonstrate various Range header scenarios. The file is long enough to test different range combinations including single ranges, suffix ranges, and multiple ranges.")
 
 	srv := server.NewServer(content)
-	port := ":8080"
+	port := ":8102"
 
 	fmt.Printf("Server starting on %s\n", port)
 	fmt.Printf("ETag: %s\n", srv.GetETag())

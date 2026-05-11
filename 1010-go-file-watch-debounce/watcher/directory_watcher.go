@@ -9,16 +9,21 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+type pendingRename struct {
+	fromPath string
+	timer    *time.Timer
+}
+
 type DirectoryWatcher struct {
-	config     WatchConfig
-	fsWatcher  *fsnotify.Watcher
-	pending    map[string]*pendingEvent
-	pendingMu  sync.Mutex
-	active     bool
-	activeMu   sync.RWMutex
-	stopChan   chan struct{}
-	renameFrom map[string]string
-	renameMu   sync.Mutex
+	config         WatchConfig
+	fsWatcher      *fsnotify.Watcher
+	pending        map[string]*pendingEvent
+	pendingMu      sync.Mutex
+	active         bool
+	activeMu       sync.RWMutex
+	stopChan       chan struct{}
+	pendingRenames map[string]*pendingRename
+	renameMu       sync.Mutex
 }
 
 func NewDirectoryWatcher(config WatchConfig) (*DirectoryWatcher, error) {
@@ -38,10 +43,10 @@ func NewDirectoryWatcher(config WatchConfig) (*DirectoryWatcher, error) {
 	}
 
 	w := &DirectoryWatcher{
-		config:     config,
-		pending:    make(map[string]*pendingEvent),
-		stopChan:   make(chan struct{}),
-		renameFrom: make(map[string]string),
+		config:         config,
+		pending:        make(map[string]*pendingEvent),
+		stopChan:       make(chan struct{}),
+		pendingRenames: make(map[string]*pendingRename),
 	}
 
 	return w, nil
@@ -147,33 +152,55 @@ func (w *DirectoryWatcher) handleEvent(event fsnotify.Event) {
 	}
 
 	if event.Op&fsnotify.Rename != 0 {
-		w.handleRenameEvent(eventName)
+		w.handleRenameSource(eventName)
 		return
 	}
 
-	w.processEvent(eventName, event.Op.String())
+	if event.Op&fsnotify.Create != 0 {
+		if w.tryMatchRenameTarget(eventName) {
+			return
+		}
+	}
+
+	w.processEvent(eventName, event.Op)
 }
 
-func (w *DirectoryWatcher) handleRenameEvent(path string) {
+func (w *DirectoryWatcher) handleRenameSource(fromPath string) {
 	w.renameMu.Lock()
 	defer w.renameMu.Unlock()
 
-	fromPath, exists := w.renameFrom[path]
-	if exists {
-		delete(w.renameFrom, path)
-		w.processRenameComplete(fromPath, path)
-	} else {
-		w.renameFrom[path] = path
-		go func() {
-			time.Sleep(100 * time.Millisecond)
-			w.renameMu.Lock()
-			if currentFrom, ok := w.renameFrom[path]; ok && currentFrom == path {
-				delete(w.renameFrom, path)
-				w.processEvent(path, "RENAME")
-			}
-			w.renameMu.Unlock()
-		}()
+	pr := &pendingRename{
+		fromPath: fromPath,
 	}
+
+	pr.timer = time.AfterFunc(100*time.Millisecond, func() {
+		w.renameMu.Lock()
+		if current, ok := w.pendingRenames[fromPath]; ok && current == pr {
+			delete(w.pendingRenames, fromPath)
+			w.renameMu.Unlock()
+			w.processEvent(fromPath, fsnotify.Rename)
+			return
+		}
+		w.renameMu.Unlock()
+	})
+
+	w.pendingRenames[fromPath] = pr
+}
+
+func (w *DirectoryWatcher) tryMatchRenameTarget(toPath string) bool {
+	w.renameMu.Lock()
+	defer w.renameMu.Unlock()
+
+	for fromPath, pr := range w.pendingRenames {
+		if pr.timer != nil {
+			pr.timer.Stop()
+		}
+		delete(w.pendingRenames, fromPath)
+		w.processRenameComplete(fromPath, toPath)
+		return true
+	}
+
+	return false
 }
 
 func (w *DirectoryWatcher) processRenameComplete(fromPath, toPath string) {
@@ -189,7 +216,7 @@ func (w *DirectoryWatcher) processRenameComplete(fromPath, toPath string) {
 	w.config.Callback(event)
 }
 
-func (w *DirectoryWatcher) processEvent(path string, eventType string) {
+func (w *DirectoryWatcher) processEvent(path string, op fsnotify.Op) {
 	w.pendingMu.Lock()
 	defer w.pendingMu.Unlock()
 
@@ -202,7 +229,7 @@ func (w *DirectoryWatcher) processEvent(path string, eventType string) {
 		w.pending[path] = p
 	}
 
-	p.addEventType(eventType)
+	p.addOp(op)
 
 	if p.debounceTimer != nil {
 		p.debounceTimer.Stop()
@@ -246,16 +273,16 @@ func (w *DirectoryWatcher) triggerEvent(path string) {
 }
 
 func (w *DirectoryWatcher) classifyEvent(p *pendingEvent) *Event {
-	hasCreate := p.hasEventType("CREATE")
-	hasWrite := p.hasEventType("WRITE")
-	hasRemove := p.hasEventType("REMOVE")
-	hasRename := p.hasEventType("RENAME")
-	hasChmod := p.hasEventType("CHMOD")
+	hasCreate := p.hasOp(fsnotify.Create)
+	hasWrite := p.hasOp(fsnotify.Write)
+	hasRemove := p.hasOp(fsnotify.Remove)
+	hasRename := p.hasOp(fsnotify.Rename)
+	hasChmod := p.hasOp(fsnotify.Chmod)
 
 	event := &Event{
 		Path:      p.path,
 		OldPath:   p.oldPath,
-		RawTypes:  p.getRawTypes(),
+		RawOps:    p.getRawOps(),
 		Timestamp: time.Now(),
 	}
 

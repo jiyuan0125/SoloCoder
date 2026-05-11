@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	url := flag.String("url", "http://localhost:8080", "Server URL")
+	url := flag.String("url", "http://localhost:8102", "Server URL")
 	rangeHeader := flag.String("range", "", "Range header value (e.g., bytes=0-100)")
 	ifRange := flag.String("if-range", "", "If-Range header value (ETag or last modified time)")
 	flag.Parse()

@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "server address")
+	addr := flag.String("addr", ":8700", "server address")
 	dataDir := flag.String("data", "./data", "data directory")
 	flag.Parse()
 

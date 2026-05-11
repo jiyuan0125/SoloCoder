@@ -8,14 +8,15 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"regexp"
 	"strings"
-	"testing"
 	"time"
 
 	"thompson-nfa/pkg/api"
+	"thompson-nfa/pkg/regex"
 )
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:8202"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -218,7 +219,7 @@ func handleBenchmark() {
 	fs := flag.NewFlagSet("benchmark", flag.ExitOnError)
 	pattern := fs.String("p", "", "Regex pattern")
 	input := fs.String("i", "", "Input string")
-	iterations := fs.Int("n", 1000, "Number of iterations")
+	iterations := fs.Int("n", 10000, "Number of iterations")
 	fs.Parse(os.Args[2:])
 
 	if *pattern == "" || *input == "" {
@@ -226,39 +227,54 @@ func handleBenchmark() {
 		os.Exit(1)
 	}
 
-	benchmarkStdlib := func(pattern, input string, n int) time.Duration {
-		start := time.Now()
-		for i := 0; i < n; i++ {
-			stdlibTest := testing.Benchmark(func(b *testing.B) {
-				b.ReportAllocs()
-				for i := 0; i < b.N; i++ {
-				}
-			})
-			_ = stdlibTest
-		}
-		return time.Since(start)
+	fmt.Printf("Benchmarking pattern '%s' on input '%s' (%d iterations)...\n\n", 
+		*pattern, *input, *iterations)
+
+	ourRe, err := regex.NewRegex(*pattern)
+	if err != nil {
+		fmt.Printf("Error compiling Thompson NFA pattern: %v\n", err)
+		os.Exit(1)
 	}
 
-	_ = benchmarkStdlib
+	stdRe, err := regexp.Compile(*pattern)
+	if err != nil {
+		fmt.Printf("Error compiling standard library pattern: %v\n", err)
+		os.Exit(1)
+	}
 
-	fmt.Printf("Benchmarking pattern '%s' on input '%s' (%d iterations)...\n\n", *pattern, *input, *iterations)
-
+	var ourResult bool
 	start := time.Now()
 	for i := 0; i < *iterations; i++ {
-		req := api.MatchRequest{Pattern: *pattern, Input: *input}
-		body, _ := json.Marshal(req)
-		resp, _ := http.Post(baseURL+"/api/regex/match", "application/json", bytes.NewBuffer(body))
-		if resp != nil {
-			data, _ := ioutil.ReadAll(resp.Body)
-			resp.Body.Close()
-			_ = data
-		}
+		ourResult = ourRe.MatchString(*input)
 	}
 	ourTime := time.Since(start)
 
-	fmt.Printf("Thompson NFA (via HTTP): %s\n", ourTime)
-	fmt.Printf("  Average per iteration: %s\n", ourTime/time.Duration(*iterations))
+	var stdResult bool
+	start = time.Now()
+	for i := 0; i < *iterations; i++ {
+		stdResult = stdRe.MatchString(*input)
+	}
+	stdTime := time.Since(start)
+
+	fmt.Println("=== Performance Comparison ===")
+	fmt.Printf("Thompson NFA Engine:  %s (avg: %s per call)\n", 
+		ourTime, ourTime/time.Duration(*iterations))
+	fmt.Printf("Go Standard Library:  %s (avg: %s per call)\n", 
+		stdTime, stdTime/time.Duration(*iterations))
+	
 	fmt.Println()
-	fmt.Println("Note: To compare with stdlib regexp, you need to run benchmarks directly")
-	fmt.Println("in your Go code. HTTP overhead dominates these results.")
+	fmt.Println("=== Results ===")
+	fmt.Printf("Thompson NFA match:   %v\n", ourResult)
+	fmt.Printf("Std Library match:    %v\n", stdResult)
+	
+	fmt.Println()
+	if ourTime < stdTime {
+		speedup := float64(stdTime) / float64(ourTime)
+		fmt.Printf("Thompson NFA is %.2fx faster\n", speedup)
+	} else if stdTime < ourTime {
+		speedup := float64(ourTime) / float64(stdTime)
+		fmt.Printf("Go Standard Library is %.2fx faster\n", speedup)
+	} else {
+		fmt.Println("Performance is approximately equal")
+	}
 }

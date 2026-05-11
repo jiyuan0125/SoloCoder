@@ -3,6 +3,7 @@ package xpathengine
 import (
 	"errors"
 	"strconv"
+	"strings"
 )
 
 type AxisType int
@@ -577,6 +578,59 @@ func (p *XPathParser) parseStep() (*Step, error) {
 		axis = AxisAttribute
 		if err := p.next(); err != nil {
 			return nil, err
+		}
+	}
+	
+	if p.cur.Type == TokenName {
+		peek1, err := p.peek()
+		if err == nil && peek1.Type == TokenColon {
+			backupPos := p.lexer.pos
+			backupReadPos := p.lexer.readPos
+			backupCh := p.lexer.ch
+			backupLine := p.lexer.line
+			backupPrev := p.prev
+			backupCur := p.cur
+			
+			axisName := strings.ToLower(p.cur.Literal)
+			if err := p.next(); err != nil {
+				return nil, err
+			}
+			
+			peek2, err := p.peek()
+			if err == nil && peek2.Type == TokenColon {
+				if err := p.next(); err != nil {
+					return nil, err
+				}
+				if err := p.next(); err != nil {
+					return nil, err
+				}
+				
+				switch axisName {
+				case "child":
+					axis = AxisChild
+				case "descendant":
+					axis = AxisDescendant
+				case "descendant-or-self":
+					axis = AxisDescendantOrSelf
+				case "parent":
+					axis = AxisParent
+				case "self":
+					axis = AxisSelf
+				case "attribute":
+					axis = AxisAttribute
+				case "following-sibling":
+					axis = AxisFollowingSibling
+				default:
+					return nil, errors.New("unsupported axis: " + axisName)
+				}
+			} else {
+				p.lexer.pos = backupPos
+				p.lexer.readPos = backupReadPos
+				p.lexer.ch = backupCh
+				p.lexer.line = backupLine
+				p.prev = backupPrev
+				p.cur = backupCur
+			}
 		}
 	}
 	

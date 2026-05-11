@@ -188,7 +188,9 @@ func (e *Encoder) encodeFloat64(v float64) error {
 func (e *Encoder) encodeString(v string) error {
 	length := len(v)
 	if length <= 31 {
-		return e.w.WriteByte(FixStrMin + uint8(length))
+		if err := e.w.WriteByte(FixStrMin + uint8(length)); err != nil {
+			return err
+		}
 	} else if length <= math.MaxUint8 {
 		if err := e.w.WriteByte(Str8Format); err != nil {
 			return err

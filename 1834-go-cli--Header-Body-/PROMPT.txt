@@ -4,4 +4,5 @@
 
 批量处理模式下，扫描一个目录下所有eml文件，提取指定字段后以CSV或JSON格式输出，方便导入Excel或者做进一步分析。支持按发件人、收件人、主题关键字、日期范围等条件过滤。
 
-实现这个工具的关键挑战在MIME解析。邮件可能有多层嵌套的multipart结构（multipart/mixed里面嵌套multipart/alternative，alternative里面又有text/plain和text/html），需要递归解析。Content-Transfer-Encoding有Base64、Quoted-Printable、7bit、8bit几种，不同编码的正文要正确解码。附件的文件名编码规则比较复杂，RFC 2231编码的参数（filename*=utf-8''xxx）和传统的RFC 2047编码（=?utf-8?B?xxx?=）都可能出现在Content-Disposition头里，两种都要处理。有些邮件的header字段会折行（用空格或tab开头的续行），解析时要把续行拼回去。邮件正文编码声明（charset=xxx）可能和实际编码不一致，解码后如果出现乱码要能检测并提示。
+实现这个工具的主要挑战在MIME解析。邮件可能有多层嵌套的multipart结构（multipart/mixed里面嵌套multipart/alternative，alternative里面又有text/plain和text/html），需要递归解析。Content-Transfer-Encoding有Base64、Quoted-Printable、7bit、8bit几种，不同编码的正文要正确解码。附件的文件名编码规则比较复杂，RFC 2231编码的参数（filename*=utf-8''xxx）和传统的RFC 2047编码（=?utf-8?B?xxx?=）都可能出现在Content-Disposition头里，两种都要处理。有些邮件的header字段会折行（用空格或tab开头的续行），解析时要把续行拼回去。邮件正文编码声明（charset=xxx）可能和实际编码不一致，解码后如果出现乱码要能检测并提示。
+邮件附件的文件名如果经过RFC 2231编码被拆成多段（很长的文件名），要能正确拼接还原为完整文件名。

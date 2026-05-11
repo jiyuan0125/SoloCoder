@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>会议室预约系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f0f2f5; min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 24px 30px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3); }
+        header h1 { font-size: 28px; font-weight: 600; margin-bottom: 8px; }
+        header p { opacity: 0.9; font-size: 14px; }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .tab { padding: 12px 24px; border: none; background: transparent; cursor: pointer; border-radius: 8px; font-size: 14px; font-weight: 500; color: #666; transition: all 0.2s; }
+        .tab:hover { background: #f0f2f5; }
+        .tab.active { background: #667eea; color: white; }
+        
+        .panel { display: none; }
+        .panel.active { display: block; }
+        
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .card h2 { font-size: 18px; margin-bottom: 20px; color: #333; }
+        
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+        .room-card { border: 2px solid #e8e8e8; border-radius: 10px; padding: 20px; transition: all 0.2s; cursor: pointer; }
+        .room-card:hover { border-color: #667eea; transform: translateY(-2px); }
+        .room-card.selected { border-color: #667eea; background: #f8f9ff; }
+        .room-code { font-size: 20px; font-weight: 700; color: #667eea; margin-bottom: 8px; }
+        .room-name { font-size: 15px; color: #333; margin-bottom: 12px; }
+        .room-info { font-size: 13px; color: #888; line-height: 1.8; }
+        
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+        .form-group input, .form-group select { padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: all 0.2s; }
+        .form-group input:focus, .form-group select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
+        .form-group.full { grid-column: span 2; }
+        
+        .btn { padding: 10px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 500; transition: all 0.2s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; }
+        .btn-secondary { background: #f0f2f5; color: #666; }
+        .btn-secondary:hover { background: #e4e6eb; }
+        .btn-danger { background: #ff4757; color: white; }
+        .btn-danger:hover { background: #e84150; }
+        .btn-success { background: #2ed573; color: white; }
+        .btn-success:hover { background: #26bd65; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .message { padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; display: none; }
+        .message.success { background: #d4edda; color: #155724; display: block; }
+        .message.error { background: #f8d7da; color: #721c24; display: block; }
+        
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #eee; }
+        .table th { background: #f8f9fa; font-size: 13px; color: #666; font-weight: 600; }
+        .table td { font-size: 14px; color: #333; }
+        .table tr:hover { background: #f8f9fa; }
+        
+        .status { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+        .status.booked { background: #e7f3ff; color: #2196f3; }
+        .status.checked_in { background: #e8f5e9; color: #4caf50; }
+        .status.cancelled { background: #ffebee; color: #f44336; }
+        .status.released { background: #fff3e0; color: #ff9800; }
+        
+        .action-buttons { display: flex; gap: 8px; }
+        .action-buttons .btn { padding: 6px 12px; font-size: 12px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>会议室预约系统</h1>
+        <p>轻松预约，高效协作</p>
+    </header>
+
+    <div class="tabs">
+        <button class="tab active" onclick="switchTab('book')">预约会议室</button>
+        <button class="tab" onclick="switchTab('my')">我的预约</button>
+        <button class="tab" onclick="switchTab('available')">查询可用</button>
+        <button class="tab" onclick="switchTab('rooms')">会议室列表</button>
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <div id="book" class="panel active card">
+        <h2>预约会议室</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>预约人</label>
+                <input type="text" id="booker" placeholder="请输入您的姓名">
+            </div>
+            <div class="form-group">
+                <label>会议主题</label>
+                <input type="text" id="topic" placeholder="请输入会议主题">
+            </div>
+            <div class="form-group">
+                <label>预约日期</label>
+                <input type="date" id="date">
+            </div>
+            <div class="form-group">
+                <label>会议室</label>
+                <select id="roomSelect"></select>
+            </div>
+            <div class="form-group">
+                <label>开始时间</label>
+                <input type="time" id="startTime">
+            </div>
+            <div class="form-group">
+                <label>结束时间</label>
+                <input type="time" id="endTime">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="createReservation()">立即预约</button>
+    </div>
+
+    <div id="my" class="panel card">
+        <h2>我的预约</h2>
+        <div class="form-grid" style="margin-bottom: 16px;">
+            <div class="form-group">
+                <label>查询预约人</label>
+                <input type="text" id="searchBooker" placeholder="输入姓名查询">
+            </div>
+            <div class="form-group" style="display: flex; align-items: flex-end;">
+                <button class="btn btn-secondary" onclick="searchMyReservations()">查询</button>
+            </div>
+        </div>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>会议室</th>
+                    <th>日期时间</th>
+                    <th>会议主题</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="myReservations"></tbody>
+        </table>
+    </div>
+
+    <div id="available" class="panel card">
+        <h2>查询可用会议室</h2>
+        <div class="form-grid">
+            <div class="form-group">
+                <label>日期</label>
+                <input type="date" id="availDate">
+            </div>
+            <div class="form-group"></div>
+            <div class="form-group">
+                <label>开始时间</label>
+                <input type="time" id="availStartTime">
+            </div>
+            <div class="form-group">
+                <label>结束时间</label>
+                <input type="time" id="availEndTime">
+            </div>
+        </div>
+        <button class="btn btn-primary" onclick="searchAvailable()" style="margin-bottom: 20px;">查询</button>
+        <div id="availableRooms" class="grid"></div>
+    </div>
+
+    <div id="rooms" class="panel card">
+        <h2>会议室列表</h2>
+        <div class="form-grid" style="margin-bottom: 16px;">
+            <div class="form-group">
+                <label>选择会议室</label>
+                <select id="roomListSelect"></select>
+            </div>
+            <div class="form-group">
+                <label>选择日期</label>
+                <input type="date" id="roomDate">
+            </div>
+        </div>
+        <button class="btn btn-secondary" onclick="viewRoomSchedule()" style="margin-bottom: 20px;">查看当天预约</button>
+        <h3 style="margin-bottom: 12px; font-size: 15px;">会议室基础信息</h3>
+        <div id="allRooms" class="grid"></div>
+        <h3 style="margin: 24px 0 12px; font-size: 15px;">当天预约情况</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>时间段</th>
+                    <th>预约人</th>
+                    <th>会议主题</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody id="roomSchedule"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const API = 'http://localhost:8088/api';
+    let currentRooms = [];
+
+    function showMessage(text, type) {
+        const el = document.getElementById('message');
+        el.textContent = text;
+        el.className = 'message ' + type;
+        setTimeout(() => { el.style.display = 'none'; }, 5000);
+    }
+
+    function switchTab(id) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        event.target.classList.add('active');
+        document.getElementById(id).classList.add('active');
+        document.getElementById('message').style.display = 'none';
+        if (id === 'rooms') loadAllRooms();
+    }
+
+    async function loadRooms() {
+        try {
+            const res = await fetch(API + '/rooms');
+            currentRooms = await res.json();
+            const select = document.getElementById('roomSelect');
+            const listSelect = document.getElementById('roomListSelect');
+            select.innerHTML = currentRooms.map(r => `<option value="${r.id}">${r.code} - ${r.name}</option>`).join('');
+            listSelect.innerHTML = currentRooms.map(r => `<option value="${r.id}">${r.code} - ${r.name}</option>`).join('');
+        } catch (e) {
+            showMessage('加载会议室失败', 'error');
+        }
+    }
+
+    async function loadAllRooms() {
+        await loadRooms();
+        const container = document.getElementById('allRooms');
+        container.innerHTML = currentRooms.map(r => `
+            <div class="room-card">
+                <div class="room-code">${r.code}</div>
+                <div class="room-name">${r.name}</div>
+                <div class="room-info">
+                    位置：${r.location}<br>
+                    容量：${r.capacity} 人
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async function createReservation() {
+        const booker = document.getElementById('booker').value.trim();
+        const topic = document.getElementById('topic').value.trim();
+        const date = document.getElementById('date').value;
+        const roomId = document.getElementById('roomSelect').value;
+        const startTime = document.getElementById('startTime').value;
+        const endTime = document.getElementById('endTime').value;
+
+        if (!booker || !topic || !date || !roomId || !startTime || !endTime) {
+            showMessage('请填写所有必填项', 'error');
+            return;
+        }
+
+        try {
+            const res = await fetch(API + '/reservations', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    roomId: parseInt(roomId),
+                    startTime: date + 'T' + startTime + ':00',
+                    endTime: date + 'T' + endTime + ':00',
+                    booker, topic
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showMessage('预约成功！', 'success');
+                ['booker', 'topic', 'startTime', 'endTime'].forEach(id => document.getElementById(id).value = '');
+            } else {
+                showMessage(typeof data === 'string' ? data : '预约失败', 'error');
+            }
+        } catch (e) {
+            showMessage('请求失败：' + e.message, 'error');
+        }
+    }
+
+    async function searchMyReservations() {
+        const booker = document.getElementById('searchBooker').value.trim();
+        if (!booker) { showMessage('请输入预约人姓名', 'error'); return; }
+        
+        try {
+            const res = await fetch(API + '/reservations/booker/' + encodeURIComponent(booker));
+            const data = await res.json();
+            const tbody = document.getElementById('myReservations');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">暂无预约记录</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(r => {
+                const date = new Date(r.startTime);
+                const dateStr = date.toLocaleDateString('zh-CN');
+                const timeStr = date.toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) 
+                    + ' - ' + new Date(r.endTime).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+                const statusClass = r.status.toLowerCase().replace('_', '_');
+                const statusText = getStatusText(r.status);
+                const canCancel = r.status === 'BOOKED' && new Date() < new Date(r.startTime) 
+                    && new Date() < new Date(new Date(r.startTime).getTime() - 10*60*1000);
+                const canCheckin = r.status === 'BOOKED' 
+                    && new Date() >= new Date(new Date(r.startTime).getTime() - 10*60*1000)
+                    && new Date() <= new Date(new Date(r.startTime).getTime() + 10*60*1000);
+                return `
+                    <tr>
+                        <td>${r.room.code} - ${r.room.name}</td>
+                        <td>${dateStr} ${timeStr}</td>
+                        <td>${r.topic}</td>
+                        <td><span class="status ${statusClass}">${statusText}</span></td>
+                        <td>
+                            <div class="action-buttons">
+                                ${canCheckin ? `<button class="btn btn-success" onclick="checkIn(${r.id})">签到</button>` : ''}
+                                ${canCancel ? `<button class="btn btn-danger" onclick="cancelReservation(${r.id})">取消</button>` : ''}
+                                ${!canCheckin && !canCancel ? '<span style="color:#999;font-size:12px;">无操作</span>' : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            showMessage('查询失败：' + e.message, 'error');
+        }
+    }
+
+    function getStatusText(s) {
+        const map = { 'BOOKED':'已预约', 'CHECKED_IN':'已签到', 'CANCELLED':'已取消', 'RELEASED':'已释放', 'COMPLETED':'已结束' };
+        return map[s] || s;
+    }
+
+    async function checkIn(id) {
+        try {
+            const res = await fetch(API + '/reservations/' + id + '/checkin', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) { showMessage('签到成功！', 'success'); searchMyReservations(); }
+            else { showMessage(typeof data === 'string' ? data : '签到失败', 'error'); }
+        } catch (e) {
+            showMessage('签到失败：' + e.message, 'error');
+        }
+    }
+
+    async function cancelReservation(id) {
+        try {
+            const res = await fetch(API + '/reservations/' + id + '/cancel', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) { showMessage('取消成功！', 'success'); searchMyReservations(); }
+            else { showMessage(typeof data === 'string' ? data : '取消失败', 'error'); }
+        } catch (e) {
+            showMessage('取消失败：' + e.message, 'error');
+        }
+    }
+
+    async function searchAvailable() {
+        const date = document.getElementById('availDate').value;
+        const startTime = document.getElementById('availStartTime').value;
+        const endTime = document.getElementById('availEndTime').value;
+        if (!date || !startTime || !endTime) { showMessage('请填写完整的时间段', 'error'); return; }
+        
+        try {
+            const res = await fetch(API + '/reservations/available', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    startTime: date + 'T' + startTime + ':00',
+                    endTime: date + 'T' + endTime + ':00'
+                })
+            });
+            const data = await res.json();
+            const container = document.getElementById('availableRooms');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div style="grid-column:span 4;text-align:center;color:#888;padding:40px;">该时间段没有可用会议室</div>';
+                return;
+            }
+            container.innerHTML = data.map(r => `
+                <div class="room-card">
+                    <div class="room-code">${r.code}</div>
+                    <div class="room-name">${r.name}</div>
+                    <div class="room-info">
+                        位置：${r.location}<br>
+                        容量：${r.capacity} 人<br>
+                        <span style="color:#2ed573;font-weight:600;">✓ 可用</span>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) {
+            showMessage('查询失败：' + e.message, 'error');
+        }
+    }
+
+    async function viewRoomSchedule() {
+        const roomId = document.getElementById('roomListSelect').value;
+        const date = document.getElementById('roomDate').value;
+        if (!roomId || !date) { showMessage('请选择会议室和日期', 'error'); return; }
+        
+        try {
+            const res = await fetch(API + '/reservations/room/' + roomId + '/date/' + date);
+            const data = await res.json();
+            const tbody = document.getElementById('roomSchedule');
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#888;padding:24px;">该日期暂无预约</td></tr>';
+                return;
+            }
+            tbody.innerHTML = data.map(r => {
+                const timeStr = new Date(r.startTime).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'}) 
+                    + ' - ' + new Date(r.endTime).toLocaleTimeString('zh-CN', {hour:'2-digit', minute:'2-digit'});
+                return `
+                    <tr>
+                        <td>${timeStr}</td>
+                        <td>${r.booker}</td>
+                        <td>${r.topic}</td>
+                        <td><span class="status ${r.status.toLowerCase().replace('_','_')}">${getStatusText(r.status)}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        } catch (e) {
+            showMessage('查询失败：' + e.message, 'error');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('date').value = today;
+        document.getElementById('availDate').value = today;
+        document.getElementById('roomDate').value = today;
+        loadRooms();
+    });
+</script>
+</body>
+</html>

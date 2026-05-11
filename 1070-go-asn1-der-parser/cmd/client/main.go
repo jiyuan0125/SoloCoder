@@ -15,7 +15,7 @@ import (
 	"github.com/asn1-der-parser/pkg/api"
 )
 
-var serverURL = "http://localhost:8080"
+var serverURL = "http://localhost:8450"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -52,12 +52,12 @@ func printUsage() {
 	fmt.Println("Decode Options:")
 	fmt.Println("  -f <file>     Read data from file")
 	fmt.Println("  -format <fmt> Input format: hex, base64, raw (default: auto)")
-	fmt.Println("  -url <url>    Server URL (default: http://localhost:8080)")
+	fmt.Println("  -url <url>    Server URL (default: http://localhost:8450)")
 	fmt.Println("  -json         Output JSON instead of human-readable dump")
 	fmt.Println()
 	fmt.Println("Encode Options:")
 	fmt.Println("  -f <file>     Read JSON from file")
-	fmt.Println("  -url <url>    Server URL (default: http://localhost:8080)")
+	fmt.Println("  -url <url>    Server URL (default: http://localhost:8450)")
 	fmt.Println("  -o <file>     Output file (default: stdout)")
 	fmt.Println("  -format <fmt> Output format: hex, base64, raw (default: hex)")
 }

@@ -38,12 +38,22 @@ func (jm *JobManager) Submit(req common.SubmitRequest) (*common.SubmitResponse, 
 
 	tasks := make([]*core.Task, len(req.Tasks))
 	for i, td := range req.Tasks {
+		retries := req.DefaultRetries
+		if td.Retries != nil {
+			retries = *td.Retries
+		}
+
+		retryInterval := req.DefaultRetryInterval
+		if td.RetryInterval != nil {
+			retryInterval = *td.RetryInterval
+		}
+
 		tasks[i] = &core.Task{
 			ID:            td.ID,
 			Dependencies:  td.Dependencies,
 			Duration:      td.Duration,
-			Retries:       td.Retries,
-			RetryInterval: td.RetryInterval,
+			Retries:       retries,
+			RetryInterval: retryInterval,
 			Status:        core.StatusPending,
 			ShouldFail:    td.ShouldFail,
 		}

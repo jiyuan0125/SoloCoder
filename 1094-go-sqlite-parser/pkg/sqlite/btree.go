@@ -301,14 +301,14 @@ func parseRecord(payload []byte, rowID uint64) (*Row, error) {
 		case st >= 12 && st%2 == 0:
 			size = int((st - 12) / 2)
 			if valuesOffset+size <= len(payload) {
-				value = string(payload[valuesOffset : valuesOffset+size])
-			}
-		case st >= 13:
-			size = int((st - 13) / 2)
-			if valuesOffset+size <= len(payload) {
 				blob := make([]byte, size)
 				copy(blob, payload[valuesOffset:valuesOffset+size])
 				value = blob
+			}
+		case st >= 13 && st%2 == 1:
+			size = int((st - 13) / 2)
+			if valuesOffset+size <= len(payload) {
+				value = string(payload[valuesOffset : valuesOffset+size])
 			}
 		default:
 			size = 0

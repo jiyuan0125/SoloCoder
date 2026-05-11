@@ -127,12 +127,6 @@ func (spf *SPFCalculator) findAllPaths(source, dest string, predecessors map[str
 	allPaths := make([][]string, 0)
 	currentPath := []string{dest}
 	spf.dfsPaths(source, dest, predecessors, currentPath, &allPaths)
-	for i, path := range allPaths {
-		for j, k := 0, len(path)-1; j < k; j, k = j+1, k-1 {
-			path[j], path[k] = path[k], path[j]
-		}
-		allPaths[i] = path
-	}
 	return allPaths
 }
 

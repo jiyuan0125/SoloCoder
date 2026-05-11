@@ -42,7 +42,7 @@ func main() {
 	http.HandleFunc("/api/participants/set-unavailable", handleSetParticipantUnavailable)
 
 	server := &http.Server{
-		Addr: ":8080",
+		Addr: ":8200",
 	}
 
 	sigCh := make(chan os.Signal, 1)
@@ -54,7 +54,7 @@ func main() {
 		os.Exit(0)
 	}()
 
-	log.Println("Server starting on port 8080...")
+	log.Println("Server starting on port 8200...")
 	if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("Server failed: %v", err)
 	}

@@ -12,16 +12,17 @@ const (
 )
 
 type CacheEntry struct {
-	Key         string
-	VaryKey     string
-	StatusCode  int
-	Header      http.Header
-	Body        []byte
-	RequestTime time.Time
-	ResponseTime time.Time
-	ExpiresAt   time.Time
-	ETag        *ETag
-	LastModified time.Time
+	Key              string
+	VaryKey          string
+	VaryRequestHeaders http.Header
+	StatusCode       int
+	Header           http.Header
+	Body             []byte
+	RequestTime      time.Time
+	ResponseTime     time.Time
+	ExpiresAt        time.Time
+	ETag             *ETag
+	LastModified     time.Time
 }
 
 type CacheStore struct {
@@ -78,22 +79,20 @@ func (s *CacheStore) GetAllVaryEntries(key string) map[string]*CacheEntry {
 
 	result := make(map[string]*CacheEntry)
 	for k, v := range entries {
-		if !time.Now().After(v.ExpiresAt) {
-			result[k] = v
-		}
+		result[k] = v
 	}
 
 	return result
 }
 
-func (s *CacheStore) Set(key, varyKey string, resp *http.Response, body []byte, requestTime, responseTime time.Time) {
+func (s *CacheStore) Set(key, varyKey string, resp *http.Response, body []byte, requestTime, responseTime time.Time, reqHeader http.Header) {
 	cc := ParseCacheControl(resp.Header)
 	if cc.ShouldNotCache() {
 		return
 	}
 
 	ttl := CalculateTTL(resp, cc, s.defaultTTL)
-	if ttl <= 0 {
+	if ttl < 0 {
 		return
 	}
 
@@ -121,17 +120,26 @@ func (s *CacheStore) Set(key, varyKey string, resp *http.Response, body []byte, 
 		header[k] = append([]string(nil), v...)
 	}
 
+	varyFields := ParseVary(resp.Header)
+	varyRequestHeaders := make(http.Header)
+	for _, field := range varyFields {
+		if values := reqHeader.Values(field); len(values) > 0 {
+			varyRequestHeaders[field] = append([]string(nil), values...)
+		}
+	}
+
 	entry := &CacheEntry{
-		Key:          key,
-		VaryKey:      varyKey,
-		StatusCode:   resp.StatusCode,
-		Header:       header,
-		Body:         append([]byte(nil), body...),
-		RequestTime:  requestTime,
-		ResponseTime: responseTime,
-		ExpiresAt:    responseTime.Add(time.Duration(ttl) * time.Second),
-		ETag:         etag,
-		LastModified: lastModified,
+		Key:                key,
+		VaryKey:            varyKey,
+		VaryRequestHeaders: varyRequestHeaders,
+		StatusCode:         resp.StatusCode,
+		Header:             header,
+		Body:               append([]byte(nil), body...),
+		RequestTime:        requestTime,
+		ResponseTime:       responseTime,
+		ExpiresAt:          responseTime.Add(time.Duration(ttl) * time.Second),
+		ETag:               etag,
+		LastModified:       lastModified,
 	}
 
 	if s.entries[key] == nil {

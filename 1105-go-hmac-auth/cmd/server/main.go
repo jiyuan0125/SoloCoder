@@ -148,7 +148,7 @@ func keyListHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	addr := flag.String("addr", ":8080", "server address")
+	addr := flag.String("addr", ":8203", "server address")
 	flag.Parse()
 
 	var err error

@@ -6,5 +6,5 @@
 
 HTTP服务端口8080，提供两个接口：POST /oidc/verify（接收JWT字符串，返回验证结果和解析出的claims）、POST /oidc/config（配置issuer和client_id）。CLI客户端支持命令：token verify <jwt-file>（从文件读取JWT并验证）、token parse <jwt-file>（仅解析不验证，打印所有claims）、token config set <key> <value>（设置配置）。
 
-核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。
+核心功能实现为一个独立package。在此基础上写两个程序：服务端引用核心库对外提供HTTP接口，客户端是命令行工具通过HTTP调用服务端。服务端和客户端各自独立main包，请求响应格式定义放在公共包。核心库、服务端、客户端各按职责分文件。先go mod init再开发，go build ./...能编译通过。服务端的监听端口应该支持通过命令行参数或环境变量来指定，不要硬编码。
 

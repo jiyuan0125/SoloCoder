@@ -1,0 +1,15 @@
+[package]
+name = "qa_server"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+qa_core = { path = "../core" }
+axum = "0.6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.0", features = ["serde", "v4"] }
+tokio = { version = "1.0", features = ["full"] }
+tower = "0.4"
+tower-http = { version = "0.4", features = ["cors"] }
+clap = { version = "4.0", features = ["derive", "env"] }

@@ -13,10 +13,10 @@ var globalKey *siphash.Key
 var globalMap *siphash.HashMap
 
 func main() {
-	port := flag.Int("port", 8080, "HTTP server port")
+	port := flag.Int("port", 8500, "HTTP server port")
 	flag.Parse()
 
-	key, err := siphash.NewKeyFromBytes([]byte("siphash_test_key_!"))
+	key, err := siphash.NewKeyFromBytes([]byte("0123456789abcdef"))
 	if err != nil {
 		log.Fatalf("Failed to create key: %v", err)
 	}

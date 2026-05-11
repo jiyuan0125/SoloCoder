@@ -14,6 +14,7 @@ Ping实现不要依赖系统的ping命令，直接用Go的net包发送ICMP Echo 
 
 历史记录导出：加--log参数，把每次ping的结果追加写入CSV文件。文件包含时间戳、目标、状态、延迟、丢包数等字段。这样可以用Grafana等工具做可视化。
 
-有个技术难点：发送ICMP包需要原始套接字（raw socket），在Linux上需要root权限或CAP_NET_RAW能力。如果当前用户没有权限，要给出明确的提示。可以提供一个--unprivileged参数，用UDP代替ICMP实现ping（参考Go标准库中的golang.org/x/net/icmp包的实现方式）。
+发送ICMP包需要原始套接字（raw socket），在Linux上需要root权限或CAP_NET_RAW能力。如果当前用户没有权限，要给出明确的提示。可以提供一个--unprivileged参数，用UDP代替ICMP实现ping（参考Go标准库中的golang.org/x/net/icmp包的实现方式）。
 
 有些服务器会禁用ICMP响应（防火墙丢弃ICMP包），这种情况下ping不通不代表服务器不可达。报告中要提示这个可能性。另外不同操作系统的ICMP包格式有细微差异，Linux和Windows的ping输出格式不同，工具内部处理就好，输出格式统一。
+ICMP包发送间隔如果系统负载高导致实际间隔超过设定值，统计时要用实际间隔计算而不是设定值。

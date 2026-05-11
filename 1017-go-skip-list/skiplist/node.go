@@ -9,6 +9,7 @@ type node struct {
 	key     string
 	value   []byte
 	forward []*node
+	span    []int
 }
 
 func newNode(key string, value []byte, level int) *node {
@@ -16,5 +17,6 @@ func newNode(key string, value []byte, level int) *node {
 		key:     key,
 		value:   value,
 		forward: make([]*node, level+1),
+		span:    make([]int, level+1),
 	}
 }

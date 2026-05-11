@@ -17,7 +17,7 @@ import (
 	"sqliteparser/pkg/shared"
 )
 
-const serverURL = "http://localhost:8080"
+const serverURL = "http://localhost:8103"
 
 func main() {
 	if len(os.Args) < 2 {

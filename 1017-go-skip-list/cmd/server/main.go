@@ -105,14 +105,14 @@ func main() {
 
 	api := r.PathPrefix("/skiplist").Subrouter()
 
+	api.HandleFunc("/range", s.rangeHandler).Methods("GET")
+	api.HandleFunc("/rank/{key}", s.rankHandler).Methods("GET")
 	api.HandleFunc("/{key}", s.putHandler).Methods("PUT")
 	api.HandleFunc("/{key}", s.getHandler).Methods("GET")
 	api.HandleFunc("/{key}", s.deleteHandler).Methods("DELETE")
-	api.HandleFunc("/range", s.rangeHandler).Methods("GET")
-	api.HandleFunc("/rank/{key}", s.rankHandler).Methods("GET")
 
-	log.Printf("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", r); err != nil {
+	log.Printf("Server starting on :8103")
+	if err := http.ListenAndServe(":8103", r); err != nil {
 		log.Fatal(err)
 	}
 }

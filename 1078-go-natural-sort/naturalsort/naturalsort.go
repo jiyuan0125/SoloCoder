@@ -135,6 +135,40 @@ func isLikelyVersion(segments []segment, idx int) bool {
 	return false
 }
 
+func isFloatingPointContext(runes []rune, i int) bool {
+	if i <= 0 || i >= len(runes) {
+		return false
+	}
+	
+	if !isDigit(runes[i-1]) {
+		return false
+	}
+	
+	if i+1 >= len(runes) || !isDigit(runes[i+1]) {
+		return false
+	}
+	
+	beforeDot := i - 1
+	for beforeDot >= 0 && isDigit(runes[beforeDot]) {
+		beforeDot--
+	}
+	
+	if beforeDot >= 0 && runes[beforeDot] == '.' {
+		return false
+	}
+	
+	afterDot := i + 1
+	for afterDot < len(runes) && isDigit(runes[afterDot]) {
+		afterDot++
+	}
+	
+	if afterDot < len(runes) && runes[afterDot] == '.' {
+		return false
+	}
+	
+	return true
+}
+
 func segmentize(s string) []segment {
 	var segments []segment
 	runes := []rune(s)
@@ -166,7 +200,7 @@ func segmentize(s string) []segment {
 			for i < n && isDigit(runes[i]) {
 				i++
 			}
-			if i < n && runes[i] == '.' && i+1 < n && isDigit(runes[i+1]) {
+			if i < n && runes[i] == '.' && isFloatingPointContext(runes, i) {
 				i++
 				for i < n && isDigit(runes[i]) {
 					i++
@@ -195,13 +229,10 @@ func segmentize(s string) []segment {
 			for i < n && isDigit(runes[i]) {
 				i++
 			}
-			if i < n && runes[i] == '.' && i+1 < n && isDigit(runes[i+1]) {
-				tempI := i + 1
-				for tempI < n && isDigit(runes[tempI]) {
-					tempI++
-				}
-				if tempI >= n || runes[tempI] != '.' {
-					i = tempI
+			if i < n && runes[i] == '.' && isFloatingPointContext(runes, i) {
+				i++
+				for i < n && isDigit(runes[i]) {
+					i++
 				}
 			}
 			numText := string(runes[start:i])
@@ -267,14 +298,6 @@ func compareSegments(a, b []segment, opts Options) int {
 			aIsVersion := isLikelyVersion(a, i)
 			bIsVersion := isLikelyVersion(b, i)
 			
-			if aIsVersion || bIsVersion {
-				cmp := strings.Compare(sa.text, sb.text)
-				if cmp != 0 {
-					return cmp
-				}
-				continue
-			}
-			
 			if sa.number == nil && sb.number == nil {
 				cmp := strings.Compare(sa.text, sb.text)
 				if cmp != 0 {
@@ -296,9 +319,12 @@ func compareSegments(a, b []segment, opts Options) int {
 			
 			if opts.KeepLeadingZeros {
 				if sa.leadingZeros != sb.leadingZeros {
-					return sa.leadingZeros - sb.leadingZeros
+					return sb.leadingZeros - sa.leadingZeros
 				}
 			}
+			
+			_ = aIsVersion
+			_ = bIsVersion
 			
 			continue
 		}

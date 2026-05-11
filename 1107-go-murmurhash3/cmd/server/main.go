@@ -126,7 +126,7 @@ func main() {
 	http.HandleFunc("/hash/128", hash128Handler)
 	http.HandleFunc("/distribution", distributionHandler)
 
-	port := 8080
+	port := 8410
 	fmt.Printf("Server listening on :%d\n", port)
 	if err := http.ListenAndServe(":"+strconv.Itoa(port), nil); err != nil {
 		panic(err)

@@ -125,7 +125,7 @@ func main() {
 	http.HandleFunc("/range", server.handleRange)
 	http.HandleFunc("/size", server.handleSize)
 
-	addr := ":8080"
+	addr := ":8800"
 	fmt.Printf("Server listening on %s\n", addr)
 	if err := http.ListenAndServe(addr, nil); err != nil {
 		log.Fatalf("Server failed: %v", err)

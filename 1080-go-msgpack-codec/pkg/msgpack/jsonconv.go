@@ -55,14 +55,39 @@ func ToJSONCompatible(v interface{}) interface{} {
 	}
 }
 
+func isIntegralFloat(f float64) bool {
+	return f == float64(int64(f))
+}
+
 func FromJSONCompatible(v interface{}) interface{} {
 	switch val := v.(type) {
-	case nil, bool, string, float64, int64:
+	case nil, bool, string, int64:
+		return val
+	case float64:
+		if isIntegralFloat(val) {
+			return int64(val)
+		}
 		return val
 	case float32:
 		return float64(val)
-	case int, int8, int16, int32, uint, uint8, uint16, uint32, uint64:
-		return int64(val.(int64))
+	case int:
+		return int64(val)
+	case int8:
+		return int64(val)
+	case int16:
+		return int64(val)
+	case int32:
+		return int64(val)
+	case uint:
+		return int64(val)
+	case uint8:
+		return int64(val)
+	case uint16:
+		return int64(val)
+	case uint32:
+		return int64(val)
+	case uint64:
+		return int64(val)
 	case map[string]interface{}:
 		if extType, ok := val["__ext_type__"].(float64); ok {
 			if data, ok := val["__ext_data__"].(string); ok {

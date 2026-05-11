@@ -267,8 +267,8 @@ func main() {
 	http.HandleFunc("/delete", deleteHandler)
 	http.HandleFunc("/list", listHandler)
 
-	log.Println("server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Println("server starting on :8204")
+	if err := http.ListenAndServe(":8204", nil); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

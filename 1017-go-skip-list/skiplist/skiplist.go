@@ -15,8 +15,12 @@ type SkipList struct {
 }
 
 func New() *SkipList {
+	header := newNode("", nil, maxLevel)
+	for i := 0; i <= maxLevel; i++ {
+		header.span[i] = 0
+	}
 	return &SkipList{
-		header: newNode("", nil, maxLevel),
+		header: header,
 		level:  0,
 		length: 0,
 		rand:   rand.New(rand.NewSource(time.Now().UnixNano())),
@@ -36,10 +40,17 @@ func (sl *SkipList) Put(key string, value []byte) {
 	defer sl.mu.Unlock()
 
 	update := make([]*node, maxLevel)
+	rank := make([]int, maxLevel)
 	current := sl.header
 
 	for i := sl.level; i >= 0; i-- {
+		if i == sl.level {
+			rank[i] = 0
+		} else {
+			rank[i] = rank[i+1]
+		}
 		for current.forward[i] != nil && current.forward[i].key < key {
+			rank[i] += current.span[i]
 			current = current.forward[i]
 		}
 		update[i] = current
@@ -56,6 +67,7 @@ func (sl *SkipList) Put(key string, value []byte) {
 
 	if newLevel > sl.level {
 		for i := sl.level + 1; i <= newLevel; i++ {
+			rank[i] = 0
 			update[i] = sl.header
 		}
 		sl.level = newLevel
@@ -65,7 +77,20 @@ func (sl *SkipList) Put(key string, value []byte) {
 
 	for i := 0; i <= newLevel; i++ {
 		newNode.forward[i] = update[i].forward[i]
+		if update[i].forward[i] != nil {
+			newNode.span[i] = update[i].span[i] - (rank[0] - rank[i])
+		} else {
+			newNode.span[i] = 0
+		}
+
 		update[i].forward[i] = newNode
+		update[i].span[i] = rank[0] - rank[i] + 1
+	}
+
+	for i := newLevel + 1; i <= sl.level; i++ {
+		if update[i].forward[i] != nil {
+			update[i].span[i]++
+		}
 	}
 
 	sl.length++
@@ -113,10 +138,12 @@ func (sl *SkipList) Delete(key string) bool {
 	}
 
 	for i := 0; i <= sl.level; i++ {
-		if update[i].forward[i] != current {
-			break
+		if update[i].forward[i] == current {
+			update[i].forward[i] = current.forward[i]
+			update[i].span[i] += current.span[i] - 1
+		} else {
+			update[i].span[i]--
 		}
-		update[i].forward[i] = current.forward[i]
 	}
 
 	for sl.level > 0 && sl.header.forward[sl.level] == nil {
@@ -175,7 +202,7 @@ func (sl *SkipList) Rank(key string) (int, bool) {
 
 	for i := sl.level; i >= 0; i-- {
 		for current.forward[i] != nil && current.forward[i].key < key {
-			rank += sl.countInLevel(current, i, key)
+			rank += current.span[i]
 			current = current.forward[i]
 		}
 	}
@@ -187,18 +214,6 @@ func (sl *SkipList) Rank(key string) (int, bool) {
 	}
 
 	return 0, false
-}
-
-func (sl *SkipList) countInLevel(start *node, level int, key string) int {
-	count := 0
-	current := start.forward[level]
-
-	for current != nil && current.key < key {
-		count++
-		current = current.forward[level]
-	}
-
-	return count
 }
 
 func (sl *SkipList) Length() int {

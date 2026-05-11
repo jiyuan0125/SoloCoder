@@ -16,8 +16,8 @@ func main() {
 	http.HandleFunc("/api/regex/visualize", handleVisualize)
 	http.HandleFunc("/api/regex/test", handleTest)
 
-	fmt.Println("Server starting on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	fmt.Println("Server starting on :8202")
+	if err := http.ListenAndServe(":8202", nil); err != nil {
 		fmt.Printf("Error starting server: %v\n", err)
 	}
 }

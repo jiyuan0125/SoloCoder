@@ -176,42 +176,50 @@ func (r *Registry) NPlus1Warnings() []string {
 	return result
 }
 
-func (r *Registry) CheckCyclicReferences() error {
+func (r *Registry) CheckCyclicReferences() []string {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
+	var warnings []string
+	checked := make(map[string]bool)
 	for typeName := range r.types {
+		if checked[typeName] {
+			continue
+		}
 		visited := make(map[string]bool)
-		if r.hasCycle(typeName, visited, []string{}) {
-			return fmt.Errorf("cyclic type reference detected for type: %s", typeName)
+		cycle, path := r.hasCycle(typeName, visited, checked, []string{})
+		if cycle {
+			pathStr := strings.Join(path, " -> ")
+			warnings = append(warnings, fmt.Sprintf("cyclic type reference detected: %s -> %s", pathStr, typeName))
 		}
 	}
-	return nil
+	return warnings
 }
 
-func (r *Registry) hasCycle(typeName string, visited map[string]bool, path []string) bool {
+func (r *Registry) hasCycle(typeName string, visited, checked map[string]bool, path []string) (bool, []string) {
+	checked[typeName] = true
 	if visited[typeName] {
 		for i := range path {
 			if path[i] == typeName {
-				return true
+				return true, path[i:]
 			}
 		}
-		return false
+		return false, nil
 	}
 	visited[typeName] = true
-	path = append(path, typeName)
+	newPath := append(path, typeName)
 	td, ok := r.types[typeName]
 	if !ok {
-		return false
+		return false, nil
 	}
 	for _, fd := range td.Fields {
 		fieldType := cleanType(fd.Type)
 		if _, ok := r.types[fieldType]; ok {
-			if r.hasCycle(fieldType, visited, path) {
-				return true
+			if cycle, cyclePath := r.hasCycle(fieldType, visited, checked, newPath); cycle {
+				return true, cyclePath
 			}
 		}
 	}
-	return false
+	return false, nil
 }
 
 func cleanType(t string) string {

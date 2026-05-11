@@ -24,6 +24,7 @@ const (
 	TokenEllipsis      TokenType = "..."
 	TokenQuery         TokenType = "query"
 	TokenMutation      TokenType = "mutation"
+	TokenSubscription  TokenType = "subscription"
 	TokenFragment      TokenType = "fragment"
 	TokenOn            TokenType = "on"
 	TokenTrue          TokenType = "true"
@@ -39,13 +40,14 @@ type Token struct {
 }
 
 var keywords = map[string]TokenType{
-	"query":    TokenQuery,
-	"mutation": TokenMutation,
-	"fragment": TokenFragment,
-	"on":       TokenOn,
-	"true":     TokenTrue,
-	"false":    TokenFalse,
-	"null":     TokenNull,
+	"query":        TokenQuery,
+	"mutation":     TokenMutation,
+	"subscription": TokenSubscription,
+	"fragment":     TokenFragment,
+	"on":           TokenOn,
+	"true":         TokenTrue,
+	"false":        TokenFalse,
+	"null":         TokenNull,
 }
 
 func LookupIdent(ident string) TokenType {

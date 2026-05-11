@@ -26,8 +26,10 @@ func NewResolver() *Resolver {
 }
 
 func (r *Resolver) Resolve(yamlText string) (*AnalysisResult, error) {
+	preprocessed := PreprocessYAML(yamlText)
+	
 	var doc yaml.Node
-	err := yaml.Unmarshal([]byte(yamlText), &doc)
+	err := yaml.Unmarshal([]byte(preprocessed), &doc)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse YAML: %w", err)
 	}
@@ -120,6 +122,23 @@ func (r *Resolver) collectAnchors(node *yaml.Node, path string) {
 			Reference: aliasPath,
 			IsMerge:   false,
 		})
+	case yaml.ScalarNode:
+		if isAlias, aliasName := IsAliasMarker(node.Value); isAlias {
+			aliasPath := path
+			if aliasPath == "" {
+				aliasPath = "<root>"
+			}
+			r.refs = append(r.refs, ReferenceInfo{
+				Name:       aliasName,
+				Location:   aliasPath,
+				IsMergeKey: false,
+			})
+			r.relations = append(r.relations, ReferenceRelation{
+				Anchor:    aliasName,
+				Reference: aliasPath,
+				IsMerge:   false,
+			})
+		}
 	}
 }
 
@@ -181,44 +200,68 @@ func (r *Resolver) expandReferences(node *yaml.Node, visitedChain []string) (*ya
 		mergedKeys := []string{}
 
 		for _, mergeValue := range mergeKeys {
-			expandedMerge, err := r.expandReferences(mergeValue, visitedChain)
-			if err != nil {
-				return nil, err
+			var itemsToMerge []*yaml.Node
+			
+			if mergeValue.Kind == yaml.SequenceNode {
+				itemsToMerge = mergeValue.Content
+			} else {
+				itemsToMerge = []*yaml.Node{mergeValue}
 			}
 
-			if expandedMerge.Kind == yaml.AliasNode {
-				targetAnchor := expandedMerge.Value
-				if contains(visitedChain, targetAnchor) {
-					return nil, &CircularReferenceError{Chain: append(visitedChain, targetAnchor)}
+			for _, item := range itemsToMerge {
+				var targetAnchor string
+				var needsExpansion bool
+
+				if item.Kind == yaml.AliasNode {
+					targetAnchor = item.Value
+					needsExpansion = true
+				} else if item.Kind == yaml.ScalarNode {
+					if isAlias, aliasName := IsAliasMarker(item.Value); isAlias {
+						targetAnchor = aliasName
+						needsExpansion = true
+					}
 				}
 
-				target, ok := r.anchors[targetAnchor]
-				if !ok {
-					r.warnings = append(r.warnings, fmt.Sprintf("undefined anchor reference: %s", targetAnchor))
+				var expandedMerge *yaml.Node
+				var err error
+
+				if needsExpansion {
+					if contains(visitedChain, targetAnchor) {
+						return nil, &CircularReferenceError{Chain: append(visitedChain, targetAnchor)}
+					}
+
+					target, ok := r.anchors[targetAnchor]
+					if !ok {
+						r.warnings = append(r.warnings, fmt.Sprintf("undefined anchor reference: %s", targetAnchor))
+						continue
+					}
+
+					newChain := append(visitedChain, targetAnchor)
+					expandedMerge, err = r.expandReferences(target, newChain)
+					if err != nil {
+						return nil, err
+					}
+				} else {
+					expandedMerge, err = r.expandReferences(item, visitedChain)
+					if err != nil {
+						return nil, err
+					}
+				}
+
+				if expandedMerge.Kind != yaml.MappingNode {
+					r.warnings = append(r.warnings, "merge key reference is not a mapping, ignoring")
 					continue
 				}
 
-				newChain := append(visitedChain, targetAnchor)
-				expandedTarget, err := r.expandReferences(target, newChain)
-				if err != nil {
-					return nil, err
+				for i := 0; i < len(expandedMerge.Content); i += 2 {
+					k := expandedMerge.Content[i]
+					v := expandedMerge.Content[i+1]
+					keyStr := nodeToString(k)
+					if !contains(mergedKeys, keyStr) {
+						mergedKeys = append(mergedKeys, keyStr)
+					}
+					mergedMap[keyStr] = v
 				}
-				expandedMerge = expandedTarget
-			}
-
-			if expandedMerge.Kind != yaml.MappingNode {
-				r.warnings = append(r.warnings, "merge key reference is not a mapping, ignoring")
-				continue
-			}
-
-			for i := 0; i < len(expandedMerge.Content); i += 2 {
-				k := expandedMerge.Content[i]
-				v := expandedMerge.Content[i+1]
-				keyStr := nodeToString(k)
-				if !contains(mergedKeys, keyStr) {
-					mergedKeys = append(mergedKeys, keyStr)
-				}
-				mergedMap[keyStr] = v
 			}
 		}
 
@@ -263,6 +306,20 @@ func (r *Resolver) expandReferences(node *yaml.Node, visitedChain []string) (*ya
 		return r.expandReferences(target, newChain)
 
 	case yaml.ScalarNode:
+		if isAlias, aliasName := IsAliasMarker(node.Value); isAlias {
+			targetAnchor := aliasName
+			if contains(visitedChain, targetAnchor) {
+				return nil, &CircularReferenceError{Chain: append(visitedChain, targetAnchor)}
+			}
+
+			target, ok := r.anchors[targetAnchor]
+			if !ok {
+				return nil, fmt.Errorf("undefined anchor reference: %s", targetAnchor)
+			}
+
+			newChain := append(visitedChain, targetAnchor)
+			return r.expandReferences(target, newChain)
+		}
 		result.Value = node.Value
 		result.Tag = node.Tag
 	}

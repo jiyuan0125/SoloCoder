@@ -11,7 +11,7 @@ import (
 	"naturalsort/naturalsort"
 )
 
-const defaultPort = "8080"
+const defaultPort = "8710"
 
 func main() {
 	port := os.Getenv("PORT")

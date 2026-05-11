@@ -1,0 +1,22 @@
+{
+  "phone": {
+    "prefix_keep": 2,
+    "suffix_keep": 3
+  },
+  "idcard": {
+    "prefix_keep": 3,
+    "suffix_keep": 4
+  },
+  "bankcard": {
+    "prefix_keep": 0,
+    "suffix_keep": 4
+  },
+  "email": {
+    "prefix_keep": 1,
+    "suffix_keep": 0
+  },
+  "name": {
+    "prefix_keep": 1,
+    "suffix_keep": 0
+  }
+}

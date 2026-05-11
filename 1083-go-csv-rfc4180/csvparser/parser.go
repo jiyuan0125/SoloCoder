@@ -21,10 +21,6 @@ func Parse(text string, opt ...ParserOption) (*ParseResult, error) {
 }
 
 func (p *Parser) Parse(text string) (*ParseResult, error) {
-	if text == "" {
-		return &ParseResult{Records: [][]string{}}, nil
-	}
-
 	records, err := p.parseRecords(text)
 	if err != nil {
 		return nil, err
@@ -101,7 +97,11 @@ func (p *Parser) parseRecords(text string) ([][]string, error) {
 		}
 	}
 
-	if currentField.Len() > 0 || len(currentRecord) > 0 {
+	if inQuotes {
+		return nil, ErrUnclosedQuote
+	}
+
+	if len(records) == 0 || currentField.Len() > 0 || len(currentRecord) > 0 {
 		currentRecord = append(currentRecord, currentField.String())
 		records = append(records, currentRecord)
 	}

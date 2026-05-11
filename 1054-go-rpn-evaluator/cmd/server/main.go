@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	port := flag.String("port", "8080", "server port")
+	port := flag.String("port", "8420", "server port")
 	flag.Parse()
 
 	server := NewServer()

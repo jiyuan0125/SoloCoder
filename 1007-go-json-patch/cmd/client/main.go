@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "JSON Patch server URL")
+	serverURL := flag.String("server", "http://localhost:8102", "JSON Patch server URL")
 	documentFile := flag.String("doc", "", "Path to the JSON document file (required for apply)")
 	patchFile := flag.String("patch", "", "Path to the JSON patch file (required)")
 	outputFile := flag.String("output", "", "Path to the output file (default: overwrite input document)")

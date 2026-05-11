@@ -125,7 +125,7 @@ func (c *Client) Status(filePath string) error {
 }
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "server URL")
+	serverURL := flag.String("server", "http://localhost:8400", "server URL")
 	timeout := flag.Duration("timeout", 30*time.Second, "lock acquisition timeout")
 	flag.Parse()
 
@@ -190,6 +190,6 @@ func printUsage() {
 	fmt.Println("  status <file_path>        Check lock status")
 	fmt.Println()
 	fmt.Println("Flags:")
-	fmt.Println("  -server string    Server URL (default http://localhost:8080)")
+	fmt.Println("  -server string    Server URL (default http://localhost:8400)")
 	fmt.Println("  -timeout duration Lock acquisition timeout (default 30s)")
 }

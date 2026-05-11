@@ -5,75 +5,162 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"math/big"
 )
 
 func ToJSON(v Value) ([]byte, error) {
 	buf := &bytes.Buffer{}
-	enc := json.NewEncoder(buf)
-	enc.SetEscapeHTML(false)
-	if err := enc.Encode(jsonValue(v)); err != nil {
+	enc := &jsonEncoder{w: buf}
+	if err := enc.encode(v); err != nil {
 		return nil, err
 	}
-	result := buf.Bytes()
-	if len(result) > 0 && result[len(result)-1] == '\n' {
-		result = result[:len(result)-1]
-	}
-	return result, nil
+	return buf.Bytes(), nil
 }
 
-func jsonValue(v Value) interface{} {
+type jsonEncoder struct {
+	w io.Writer
+}
+
+func (e *jsonEncoder) encode(v Value) error {
 	switch val := v.(type) {
 	case uint64:
-		return float64(val)
+		return e.writeFloat(float64(val))
 	case int64:
-		return float64(val)
-	case uint, uint8, uint16, uint32, int, int8, int16, int32:
-		return val
+		return e.writeFloat(float64(val))
+	case uint:
+		return e.writeInt(int64(val))
+	case uint8:
+		return e.writeInt(int64(val))
+	case uint16:
+		return e.writeInt(int64(val))
+	case uint32:
+		return e.writeInt(int64(val))
+	case int:
+		return e.writeInt(int64(val))
+	case int8:
+		return e.writeInt(int64(val))
+	case int16:
+		return e.writeInt(int64(val))
+	case int32:
+		return e.writeInt(int64(val))
 	case float32:
-		return float64(val)
+		return e.writeFloat(float64(val))
 	case float64:
-		return val
+		return e.writeFloat(val)
 	case bool:
-		return val
+		return e.writeBool(val)
 	case nil:
-		return nil
+		return e.writeNull()
 	case SimpleValue:
-		return fmt.Sprintf("simple:%d", val)
+		return e.writeString(fmt.Sprintf("simple:%d", val))
 	case []byte:
-		return base64.StdEncoding.EncodeToString(val)
+		return e.writeString(base64.StdEncoding.EncodeToString(val))
 	case string:
-		return val
+		return e.writeString(val)
 	case []Value:
-		arr := make([]interface{}, len(val))
-		for i, vv := range val {
-			arr[i] = jsonValue(vv)
-		}
-		return arr
+		return e.encodeArray(val)
 	case []interface{}:
-		arr := make([]interface{}, len(val))
+		arr := make([]Value, len(val))
 		for i, vv := range val {
-			arr[i] = jsonValue(vv)
+			arr[i] = vv
 		}
-		return arr
+		return e.encodeArray(arr)
 	case *Map:
-		obj := make(map[string]interface{})
-		keys := make([]string, 0, val.Len())
-		for _, entry := range val.Entries {
-			keyStr := keyToString(entry.Key)
-			keys = append(keys, keyStr)
-			obj[keyStr] = jsonValue(entry.Value)
-		}
-		return obj
+		return e.encodeMap(val)
 	case *BigInt:
 		if val.Negative {
 			n := new(big.Int).Neg(val.Int)
-			return n.String()
+			return e.writeString(n.String())
 		}
-		return val.Int.String()
+		return e.writeString(val.Int.String())
 	default:
-		return fmt.Sprintf("%v", v)
+		return e.writeString(fmt.Sprintf("%v", v))
 	}
+}
+
+func (e *jsonEncoder) writeInt(n int64) error {
+	_, err := fmt.Fprintf(e.w, "%d", n)
+	return err
+}
+
+func (e *jsonEncoder) writeFloat(f float64) error {
+	b, err := json.Marshal(f)
+	if err != nil {
+		return err
+	}
+	_, err = e.w.Write(b)
+	return err
+}
+
+func (e *jsonEncoder) writeBool(b bool) error {
+	if b {
+		_, err := e.w.Write([]byte("true"))
+		return err
+	}
+	_, err := e.w.Write([]byte("false"))
+	return err
+}
+
+func (e *jsonEncoder) writeNull() error {
+	_, err := e.w.Write([]byte("null"))
+	return err
+}
+
+func (e *jsonEncoder) writeString(s string) error {
+	b, err := json.Marshal(s)
+	if err != nil {
+		return err
+	}
+	_, err = e.w.Write(b)
+	return err
+}
+
+func (e *jsonEncoder) encodeArray(arr []Value) error {
+	if _, err := e.w.Write([]byte("[")); err != nil {
+		return err
+	}
+	for i, v := range arr {
+		if i > 0 {
+			if _, err := e.w.Write([]byte(",")); err != nil {
+				return err
+			}
+		}
+		if err := e.encode(v); err != nil {
+			return err
+		}
+	}
+	if _, err := e.w.Write([]byte("]")); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (e *jsonEncoder) encodeMap(m *Map) error {
+	if _, err := e.w.Write([]byte("{")); err != nil {
+		return err
+	}
+	for i, entry := range m.Entries {
+		if i > 0 {
+			if _, err := e.w.Write([]byte(",")); err != nil {
+				return err
+			}
+		}
+		keyStr := keyToString(entry.Key)
+		if err := e.writeString(keyStr); err != nil {
+			return err
+		}
+		if _, err := e.w.Write([]byte(":")); err != nil {
+			return err
+		}
+		if err := e.encode(entry.Value); err != nil {
+			return err
+		}
+	}
+	if _, err := e.w.Write([]byte("}")); err != nil {
+		return err
+	}
+	return nil
 }
 
 func keyToString(k Value) string {

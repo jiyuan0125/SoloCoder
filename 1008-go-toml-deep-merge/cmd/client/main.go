@@ -88,7 +88,7 @@ func main() {
 	var listFiles bool
 	var mergeMultiple string
 	var env string
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8100", "server URL")
 	flag.StringVar(&baseFile, "base", "", "base TOML file path")
 	flag.StringVar(&envFile, "env", "", "environment TOML file path")
 	flag.StringVar(&outputFile, "output", "", "output file path (default: stdout)")

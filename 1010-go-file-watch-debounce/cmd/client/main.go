@@ -143,10 +143,10 @@ func printUsage() {
 	fmt.Println("  --debounce duration     Debounce duration (default 500ms)")
 	fmt.Println("  --max-wait duration     Max wait duration (default 5s)")
 	fmt.Println("  --callback url          Callback URL for events")
-	fmt.Println("  --server url            Server URL (default http://localhost:8080)")
+	fmt.Println("  --server url            Server URL (default http://localhost:8101)")
 	fmt.Println()
 	fmt.Println("Options for other commands:")
-	fmt.Println("  --server url            Server URL (default http://localhost:8080)")
+	fmt.Println("  --server url            Server URL (default http://localhost:8101)")
 }
 
 func main() {
@@ -157,7 +157,7 @@ func main() {
 
 	command := os.Args[1]
 
-	serverURL := "http://localhost:8080"
+	serverURL := "http://localhost:8101"
 
 	switch command {
 	case "add":

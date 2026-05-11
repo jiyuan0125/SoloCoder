@@ -17,7 +17,7 @@ func printUsage() {
 	fmt.Println("  crdt-client [options]")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  -server <url>    Server URL (default: http://localhost:8080)")
+	fmt.Println("  -server <url>    Server URL (default: http://localhost:8500)")
 	fmt.Println()
 	fmt.Println("Interactive Commands:")
 	fmt.Println("  create <type>          Create a new CRDT instance (type: gcounter, pncounter, gset)")
@@ -33,7 +33,7 @@ func printUsage() {
 }
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
+	serverURL := flag.String("server", "http://localhost:8500", "Server URL")
 	flag.Parse()
 
 	client := NewClient(*serverURL)

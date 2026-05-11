@@ -10,8 +10,21 @@ const (
 )
 
 const (
-	DefaultChunkSize = 4 * 1024 * 1024
+	DefaultChunkSize   = 4 * 1024 * 1024
+	EmptyFileHashMD5   = "00000000000000000000000000000000"
+	EmptyFileHashSHA256 = "0000000000000000000000000000000000000000000000000000000000000000"
 )
+
+func GetEmptyFileHash(algorithm HashAlgorithm) string {
+	switch algorithm {
+	case AlgorithmMD5:
+		return EmptyFileHashMD5
+	case AlgorithmSHA256:
+		return EmptyFileHashSHA256
+	default:
+		return ""
+	}
+}
 
 type CheckStatus string
 

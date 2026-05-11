@@ -11,12 +11,32 @@ import (
 
 func toSnakeCase(s string) string {
 	var result strings.Builder
-	for i, r := range s {
-		if i > 0 && unicode.IsUpper(r) {
-			result.WriteByte('_')
+	runes := []rune(s)
+	n := len(runes)
+
+	for i := 0; i < n; i++ {
+		current := runes[i]
+		currentIsUpper := unicode.IsUpper(current)
+
+		if i > 0 && currentIsUpper {
+			prev := runes[i-1]
+			prevIsUpper := unicode.IsUpper(prev)
+
+			needUnderscore := false
+			if !prevIsUpper {
+				needUnderscore = true
+			} else if i+1 < n && unicode.IsLower(runes[i+1]) {
+				needUnderscore = true
+			}
+
+			if needUnderscore {
+				result.WriteByte('_')
+			}
 		}
-		result.WriteRune(unicode.ToLower(r))
+
+		result.WriteRune(unicode.ToLower(current))
 	}
+
 	return result.String()
 }
 
@@ -264,13 +284,47 @@ func (db *DB) fromDBValue(field *FieldInfo, dbValue interface{}, dest reflect.Va
 	}
 
 	if dest.Type() == reflect.TypeOf(time.Time{}) {
+		var timeStr string
 		switch v := dbValue.(type) {
 		case time.Time:
 			dest.Set(reflect.ValueOf(v))
+			return nil
 		case []byte:
-			return fmt.Errorf("time.Time conversion from []byte not implemented")
+			timeStr = string(v)
+		case string:
+			timeStr = v
+		default:
+			return fmt.Errorf("cannot convert %T to time.Time", dbValue)
 		}
-		return nil
+		for _, layout := range []string{
+			time.RFC3339,
+			time.RFC3339Nano,
+			"2006-01-02 15:04:05-07:00",
+			"2006-01-02 15:04:05.999999999-07:00",
+			"2006-01-02 15:04:05",
+			"2006-01-02 15:04:05.999999999",
+			"2006-01-02",
+		} {
+			if t, err := time.Parse(layout, timeStr); err == nil {
+				dest.Set(reflect.ValueOf(t))
+				return nil
+			}
+		}
+		return fmt.Errorf("cannot parse time from string: %s", timeStr)
+	}
+
+	if dest.Kind() == reflect.Bool {
+		switch v := dbValue.(type) {
+		case bool:
+			dest.SetBool(v)
+			return nil
+		case int64:
+			dest.SetBool(v != 0)
+			return nil
+		case int:
+			dest.SetBool(v != 0)
+			return nil
+		}
 	}
 
 	dbReflect := reflect.ValueOf(dbValue)

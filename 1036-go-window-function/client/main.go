@@ -225,13 +225,13 @@ Examples:
   client query -dataset sales -func "name=LAG;order_by=date;field=amount;offset=1"
 
 Options:
-  -server <addr>    Server address (default: localhost:8080)
+  -server <addr>    Server address (default: localhost:8200)
 `)
 }
 
 func main() {
 	fs := flag.NewFlagSet("client", flag.ExitOnError)
-	server := fs.String("server", "localhost:8080", "server address")
+	server := fs.String("server", "localhost:8200", "server address")
 	dataset := fs.String("dataset", "", "dataset name")
 	file := fs.String("file", "", "data file path for upload")
 	funcs := stringArray{}

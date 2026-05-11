@@ -23,9 +23,9 @@ type ContainsRequest struct {
 }
 
 type ContainsResponse struct {
-	Success bool   `json:"success"`
-	Error   string `json:"error,omitempty"`
-	Contained bool `json:"contained,omitempty"`
+	Success   bool   `json:"success"`
+	Error     string `json:"error,omitempty"`
+	Contained bool   `json:"contained"`
 }
 
 type MergeRequest struct {

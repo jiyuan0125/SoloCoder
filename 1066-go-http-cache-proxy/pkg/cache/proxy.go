@@ -38,15 +38,19 @@ func (p *Proxy) Handle(req *common.ProxyRequest) (*ProxyResult, error) {
 	}
 
 	cacheKey := BuildCacheKey(req.Method, req.URL)
+	reqHeader := cloneHeader(httpReq.Header)
 
 	if req.Method == http.MethodGet || req.Method == http.MethodHead {
-		cachedEntry, _ := p.findMatchingEntry(cacheKey, httpReq.Header)
+		cachedEntry, _ := p.findMatchingEntry(cacheKey, reqHeader)
 		if cachedEntry != nil {
-			return p.handleCachedEntry(cachedEntry, httpReq)
+			if p.canServeFromCache(cachedEntry) {
+				return p.handleCachedEntry(cachedEntry, httpReq)
+			}
+			return p.validateCachedEntry(cachedEntry, httpReq, req.Method, req.URL, reqHeader)
 		}
 	}
 
-	return p.forwardRequest(httpReq, req.Method, req.URL)
+	return p.forwardRequest(httpReq, req.Method, req.URL, reqHeader)
 }
 
 func (p *Proxy) findMatchingEntry(cacheKey string, reqHeader http.Header) (*CacheEntry, string) {
@@ -56,7 +60,7 @@ func (p *Proxy) findMatchingEntry(cacheKey string, reqHeader http.Header) (*Cach
 	}
 
 	for varyKey, entry := range entries {
-		if MatchesVary(entry.Header, reqHeader) {
+		if MatchesVary(entry.VaryRequestHeaders, entry.Header, reqHeader) {
 			return entry, varyKey
 		}
 	}
@@ -64,37 +68,20 @@ func (p *Proxy) findMatchingEntry(cacheKey string, reqHeader http.Header) (*Cach
 	return nil, ""
 }
 
+func (p *Proxy) canServeFromCache(entry *CacheEntry) bool {
+	cc := ParseCacheControl(entry.Header)
+	if cc.ShouldRevalidate() {
+		return false
+	}
+	return !time.Now().After(entry.ExpiresAt)
+}
+
 func (p *Proxy) handleCachedEntry(entry *CacheEntry, req *http.Request) (*ProxyResult, error) {
 	ccResp := ParseCacheControl(entry.Header)
 
 	if ccResp.MustRevalidateOnUse() {
-		validationReq := cloneRequest(req)
-		if entry.ETag != nil {
-			validationReq.Header.Set("If-None-Match", entry.ETag.String())
-		}
-		if !entry.LastModified.IsZero() {
-			validationReq.Header.Set("If-Modified-Since", entry.LastModified.UTC().Format(http.TimeFormat))
-		}
-
-		validationResp, err := p.client.Do(validationReq)
-		if err == nil && validationResp.StatusCode == http.StatusNotModified {
-			validationResp.Body.Close()
-
-			p.store.Update(entry.Key, entry.VaryKey, validationResp, time.Now(), time.Now())
-
-			age := entry.CalculateAge()
-			return &ProxyResult{
-				StatusCode: entry.StatusCode,
-				Header:     p.prepareResponseHeader(entry.Header, age),
-				Body:       entry.Body,
-				FromCache:  true,
-				CacheAge:   age,
-			}, nil
-		}
-
-		if err == nil {
-			return p.processResponse(validationResp, req.Method, req.URL.String())
-		}
+		reqHeader := cloneHeader(req.Header)
+		return p.validateCachedEntry(entry, req, req.Method, req.URL.String(), reqHeader)
 	}
 
 	age := entry.CalculateAge()
@@ -107,7 +94,40 @@ func (p *Proxy) handleCachedEntry(entry *CacheEntry, req *http.Request) (*ProxyR
 	}, nil
 }
 
-func (p *Proxy) forwardRequest(req *http.Request, method, url string) (*ProxyResult, error) {
+func (p *Proxy) validateCachedEntry(entry *CacheEntry, req *http.Request, method, url string, reqHeader http.Header) (*ProxyResult, error) {
+	validationReq := cloneRequest(req)
+
+	if entry.ETag != nil {
+		validationReq.Header.Set("If-None-Match", entry.ETag.String())
+	}
+	if !entry.LastModified.IsZero() {
+		validationReq.Header.Set("If-Modified-Since", entry.LastModified.UTC().Format(http.TimeFormat))
+	}
+
+	requestTime := time.Now()
+	validationResp, err := p.client.Do(validationReq)
+	if err != nil {
+		return nil, err
+	}
+	defer validationResp.Body.Close()
+
+	if validationResp.StatusCode == http.StatusNotModified {
+		p.store.Update(entry.Key, entry.VaryKey, validationResp, requestTime, time.Now())
+
+		age := entry.CalculateAge()
+		return &ProxyResult{
+			StatusCode: entry.StatusCode,
+			Header:     p.prepareResponseHeader(entry.Header, age),
+			Body:       entry.Body,
+			FromCache:  true,
+			CacheAge:   age,
+		}, nil
+	}
+
+	return p.processResponse(validationResp, method, url, reqHeader, requestTime)
+}
+
+func (p *Proxy) forwardRequest(req *http.Request, method, url string, reqHeader http.Header) (*ProxyResult, error) {
 	requestTime := time.Now()
 
 	resp, err := p.client.Do(req)
@@ -116,10 +136,10 @@ func (p *Proxy) forwardRequest(req *http.Request, method, url string) (*ProxyRes
 	}
 	defer resp.Body.Close()
 
-	return p.processResponse(resp, method, url, requestTime)
+	return p.processResponse(resp, method, url, reqHeader, requestTime)
 }
 
-func (p *Proxy) processResponse(resp *http.Response, method, url string, requestTime ...time.Time) (*ProxyResult, error) {
+func (p *Proxy) processResponse(resp *http.Response, method, url string, reqHeader http.Header, requestTime ...time.Time) (*ProxyResult, error) {
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -134,15 +154,9 @@ func (p *Proxy) processResponse(resp *http.Response, method, url string, request
 	if (method == http.MethodGet || method == http.MethodHead) && resp.StatusCode == http.StatusOK {
 		cacheKey := BuildCacheKey(method, url)
 		varyFields := ParseVary(resp.Header)
+		varyKey := GenerateVaryKey(reqHeader, varyFields)
 
-		dummyHeader := make(http.Header)
-		for _, field := range varyFields {
-			dummyHeader[field] = resp.Header.Values(field)
-		}
-
-		varyKey := GenerateVaryKey(dummyHeader, varyFields)
-
-		p.store.Set(cacheKey, varyKey, resp, body, reqTime, responseTime)
+		p.store.Set(cacheKey, varyKey, resp, body, reqTime, responseTime, reqHeader)
 	}
 
 	return &ProxyResult{

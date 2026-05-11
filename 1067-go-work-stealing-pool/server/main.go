@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "server address")
+	addr := flag.String("addr", ":8300", "server address")
 	workers := flag.Int("workers", 4, "initial worker count")
 	flag.Parse()
 

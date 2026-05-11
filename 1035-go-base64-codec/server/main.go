@@ -14,7 +14,7 @@ func main() {
 	http.HandleFunc("/api/encode", handleEncode)
 	http.HandleFunc("/api/decode", handleDecode)
 
-	port := ":8080"
+	port := ":8200"
 	fmt.Printf("Server starting on port %s...\n", port)
 	if err := http.ListenAndServe(port, nil); err != nil {
 		fmt.Printf("Server error: %v\n", err)

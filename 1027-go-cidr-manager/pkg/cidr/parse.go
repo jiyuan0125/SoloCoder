@@ -39,7 +39,7 @@ func Parse(cidr string) (*CIDR, error) {
 	}
 
 	if prefix < 0 || prefix > maxPrefix {
-		return nil, fmt.Errorf("invalid prefix length %d for %s, must be 0-%d", prefix, version, maxPrefix)
+		return nil, fmt.Errorf("invalid prefix length %d for IPv%d, must be 0-%d", prefix, version, maxPrefix)
 	}
 
 	result := &CIDR{

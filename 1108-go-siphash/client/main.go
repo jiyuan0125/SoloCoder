@@ -16,7 +16,7 @@ import (
 var serverURL string
 
 func main() {
-	urlFlag := flag.String("url", "http://localhost:8080", "SipHash server URL")
+	urlFlag := flag.String("url", "http://localhost:8500", "SipHash server URL")
 	flag.Parse()
 	serverURL = strings.TrimRight(*urlFlag, "/")
 
@@ -63,7 +63,7 @@ Commands:
 
 Options:
   -url string
-    Server URL (default "http://localhost:8080")`)
+    Server URL (default "http://localhost:8500")`)
 }
 
 func readStdin() []byte {

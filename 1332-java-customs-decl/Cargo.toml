@@ -1,0 +1,3 @@
+[workspace]
+members = ["decl_core", "server", "client"]
+resolver = "2"

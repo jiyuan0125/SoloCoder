@@ -162,13 +162,13 @@ func main() {
 	http.HandleFunc("/api/v1/proto-to-json", server.handleProtoToJSON)
 	http.HandleFunc("/api/v1/json-to-proto", server.handleJSONToProto)
 
-	fmt.Println("Server starting on :8080")
+	fmt.Println("Server starting on :8101")
 	fmt.Println("Endpoints:")
 	fmt.Println("  GET  /health")
 	fmt.Println("  POST /api/v1/proto-to-json")
 	fmt.Println("  POST /api/v1/json-to-proto")
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	if err := http.ListenAndServe(":8101", nil); err != nil {
 		fmt.Printf("Server error: %v\n", err)
 	}
 }

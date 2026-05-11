@@ -1,0 +1,22 @@
+{
+  "tree": {
+    "nodes": [
+      {"id": "A", "parent_id": null},
+      {"id": "B", "parent_id": "A"},
+      {"id": "C", "parent_id": "A"},
+      {"id": "D", "parent_id": "B"},
+      {"id": "E", "parent_id": "B"},
+      {"id": "F", "parent_id": "C"},
+      {"id": "G", "parent_id": "D"},
+      {"id": "H", "parent_id": "D"}
+    ]
+  },
+  "queries": [
+    {"node_a": "G", "node_b": "H"},
+    {"node_a": "G", "node_b": "E"},
+    {"node_a": "G", "node_b": "F"},
+    {"node_a": "A", "node_b": "G"},
+    {"node_a": "B", "node_b": "B"},
+    {"node_a": "D", "node_b": "G"}
+  ]
+}

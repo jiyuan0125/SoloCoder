@@ -24,7 +24,7 @@ func main() {
 
 	flag.StringVar(&filePath, "file", "", "Path to YAML file")
 	flag.StringVar(&yamlText, "text", "", "YAML text to parse")
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "Server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8201", "Server URL")
 	flag.StringVar(&outputFormat, "format", "json", "Output format: json or yaml")
 	flag.BoolVar(&listAnchors, "list", false, "List all anchors and references")
 	flag.BoolVar(&useLocal, "local", true, "Use local resolver (false to use server)")

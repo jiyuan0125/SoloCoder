@@ -10,6 +10,7 @@ ignorance clean命令用来清理已经被Git跟踪但应该被忽略的文件�
 
 加--global参数操作全局.gitignore文件（~/.gitignore_global），而不是项目级别的。加--template参数可以从内置模板快速生成，比如ignorance init --template golang直接生成Go项目的.gitignore而不需要交互选择。
 
-有个细节：生成的.gitignore文件如果已经存在，要提示用户是覆盖还是追加。追加的时候要检查是否有重复规则。
+生成的.gitignore文件如果已经存在，要提示用户是覆盖还是追加。追加的时候要检查是否有重复规则。
 
-另一个容易出错的地方：检查应该被忽略的文件时，有些文件看起来像临时文件但实际上是有用的。比如.env.example文件不应该被忽略，虽然.env应该被忽略。需要区分.env和.env.example。
+检查应该被忽略的文件时，有些文件看起来像临时文件但实际上是有用的。比如.env.example文件不应该被忽略，虽然.env应该被忽略。需要区分.env和.env.example。
+仓库如果包含Git子模块，标签操作时要同步检查子模块的当前指向是否和标签记录一致。

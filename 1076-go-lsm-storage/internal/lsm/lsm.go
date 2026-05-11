@@ -282,10 +282,10 @@ func (db *DB) Scan(start, end []byte) []*KVPair {
 	for it.Valid() {
 		key := it.Key()
 		if inRange(key, start, end) {
-			if !it.Tombstone() {
-				k := string(key)
-				if _, ok := seen[k]; !ok {
-					seen[k] = struct{}{}
+			k := string(key)
+			if _, ok := seen[k]; !ok {
+				seen[k] = struct{}{}
+				if !it.Tombstone() {
 					result = append(result, &KVPair{Key: key, Value: it.Value()})
 				}
 			}

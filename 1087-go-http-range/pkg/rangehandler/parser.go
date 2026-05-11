@@ -94,16 +94,16 @@ func parseSingleRange(rs string, size int64) (Range, error) {
 		}
 	}
 
-	if start > end {
-		return Range{}, ErrInvalidRangeFormat
-	}
-
 	if start >= size {
 		return Range{}, ErrRangeUnsatisfiable
 	}
 
 	if end >= size {
 		end = size - 1
+	}
+
+	if start > end {
+		return Range{}, ErrInvalidRangeFormat
 	}
 
 	return Range{Start: start, End: end}, nil

@@ -1,71 +1,40 @@
 package pool
 
 import (
+	"sync"
 	"time"
 )
 
 type Future struct {
-	result chan interface{}
-	err    chan error
+	result interface{}
+	err    error
 	done   chan struct{}
+	once   sync.Once
 }
 
 func newFuture() *Future {
 	return &Future{
-		result: make(chan interface{}, 1),
-		err:    make(chan error, 1),
-		done:   make(chan struct{}, 1),
+		done: make(chan struct{}),
 	}
 }
 
 func (f *Future) complete(res interface{}, err error) {
-	select {
-	case f.result <- res:
-	default:
-	}
-	select {
-	case f.err <- err:
-	default:
-	}
-	select {
-	case f.done <- struct{}{}:
-	default:
-	}
+	f.once.Do(func() {
+		f.result = res
+		f.err = err
+		close(f.done)
+	})
 }
 
 func (f *Future) Get() (interface{}, error) {
 	<-f.done
-	select {
-	case res := <-f.result:
-		var err error
-		select {
-		case err = <-f.err:
-		default:
-		}
-		return res, err
-	case err := <-f.err:
-		return nil, err
-	default:
-		return nil, nil
-	}
+	return f.result, f.err
 }
 
 func (f *Future) GetWithTimeout(timeout time.Duration) (interface{}, error) {
 	select {
 	case <-f.done:
-		select {
-		case res := <-f.result:
-			var err error
-			select {
-			case err = <-f.err:
-			default:
-			}
-			return res, err
-		case err := <-f.err:
-			return nil, err
-		default:
-			return nil, nil
-		}
+		return f.result, f.err
 	case <-time.After(timeout):
 		return nil, ErrTimeout
 	}

@@ -78,13 +78,13 @@ func GetFieldOffset(buf []byte, tablePos int, fieldIndex int) (uint16, error) {
 		return 0, err
 	}
 
-	vtableLen, err := readVOffsetT(buf, vtablePos)
+	vtableSize, err := readVOffsetT(buf, vtablePos+2)
 	if err != nil {
 		return 0, err
 	}
 
 	fieldEntryPos := vtablePos + 4 + fieldIndex*2
-	if fieldEntryPos+2 > vtablePos+int(vtableLen) {
+	if fieldEntryPos+2 > vtablePos+int(vtableSize) {
 		return 0, nil
 	}
 

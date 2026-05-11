@@ -62,11 +62,8 @@ func DefaultConfig() LockConfig {
 type Lock struct {
 	filePath     string
 	lockFilePath string
-	file         *os.File
-	mode         LockMode
-	held         bool
 	mu           sync.Mutex
-	localMu      sync.RWMutex
+	heldMode     *LockMode
 	holdCount    int
-	holdMu       sync.Mutex
+	openFiles    []*os.File
 }

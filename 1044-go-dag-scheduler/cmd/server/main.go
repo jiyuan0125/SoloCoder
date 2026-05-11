@@ -159,7 +159,7 @@ func main() {
 	http.HandleFunc("/status", s.statusHandler)
 	http.HandleFunc("/cancel", s.cancelHandler)
 
-	port := ":8080"
+	port := ":8202"
 	fmt.Printf("DAG Scheduler Server running on http://localhost%s\n", port)
 	log.Fatal(http.ListenAndServe(port, nil))
 }

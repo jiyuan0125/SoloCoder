@@ -4,4 +4,5 @@
 
 支持管道操作，上一个命令的输出可以直接作为下一个命令的输入，这样就能组合出复杂的URL处理流程。比如cat urls.txt | tool params -s page=1 | tool normalize。每个子命令都有help信息说明用法。
 
-实现中有几个容易出问题的点。URL解析时host部分可能包含端口号也可能不包含，还可能是IPv6地址（用方括号包裹），解析逻辑要覆盖这些情况。规范化path的时候，/a/b/..应该变成/a，但/a/b/../../应该变成/而不是空字符串，根路径的处理要小心。query参数解码时要考虑plus号转空格的规则（application/x-www-form-urlencoded格式中plus号代表空格），但完整的URL中query部分不一定遵循这个规则。URL中可能包含用户信息（user:pass@host），解析和规范化时要保留。某些URL的fragment部分包含特殊字符，规范化时不能破坏它的语义。
+实现中需要注意以下几点。URL解析时host部分可能包含端口号也可能不包含，还可能是IPv6地址（用方括号包裹），解析逻辑要覆盖这些情况。规范化path的时候，/a/b/..应该变成/a，但/a/b/../../应该变成/而不是空字符串，根路径的处理要小心。query参数解码时要考虑plus号转空格的规则（application/x-www-form-urlencoded格式中plus号代表空格），但完整的URL中query部分不一定遵循这个规则。URL中可能包含用户信息（user:pass@host），解析和规范化时要保留。某些URL的fragment部分包含特殊字符，规范化时不能破坏它的语义。
+URL中如果包含已编码的字符（如%20），再次编码时不应该对百分号本身再做一次编码。

@@ -16,7 +16,7 @@ func main() {
 	var serverURL string
 	var filePath string
 
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "protobuf wire parser server URL")
+	flag.StringVar(&serverURL, "server", "http://localhost:8100", "protobuf wire parser server URL")
 	flag.StringVar(&filePath, "file", "", "path to protobuf binary file")
 	flag.Parse()
 

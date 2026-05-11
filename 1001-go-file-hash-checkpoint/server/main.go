@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	addr := flag.String("addr", ":8080", "HTTP server address")
+	addr := flag.String("addr", ":8100", "HTTP server address")
 	flag.Parse()
 
 	manager := core.NewCheckpointManager()

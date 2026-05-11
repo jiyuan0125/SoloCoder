@@ -58,6 +58,7 @@ func InfixToRPN(expr string) ([]RPNTerm, error) {
 		case TokenIdentifier:
 			if i+1 < len(tokens) && tokens[i+1].Type == TokenLeftParen {
 				stack = append(stack, Token{Type: TokenIdentifier, Value: tok.Value})
+				stack = append(stack, Token{Type: TokenLeftParen, Value: "("})
 				parenDepth++
 				argCounts[parenDepth] = 1
 				i++

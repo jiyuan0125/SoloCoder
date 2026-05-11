@@ -15,7 +15,7 @@ import (
 	"raft-sim/internal/api"
 )
 
-const baseURL = "http://localhost:8080"
+const baseURL = "http://localhost:8501"
 
 func main() {
 	if len(os.Args) < 2 {

@@ -10,7 +10,7 @@ import (
 	"skip-list/common"
 )
 
-const baseURL = "http://localhost:8080/skiplist"
+const baseURL = "http://localhost:8103/skiplist"
 
 func main() {
 	if len(os.Args) < 2 {

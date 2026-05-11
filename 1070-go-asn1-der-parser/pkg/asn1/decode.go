@@ -157,34 +157,18 @@ func decodeOID(data []byte) (string, error) {
 
 	components := []int{}
 
-	first := data[0]
-	firstComp := int(first) / 40
-	secondComp := int(first) % 40
+	firstVal, pos, err := decodeBase128Int(data, 0)
+	if err != nil {
+		return "", err
+	}
 
-	if firstComp >= 2 {
-		if firstComp == 2 {
-			var val int
-			var valBytes []byte
-			for i := 0; i < len(data); i++ {
-				b := data[i]
-				valBytes = append(valBytes, b)
-				if (b & 0x80) == 0 {
-					break
-				}
-			}
-			if len(valBytes) == 1 && valBytes[0] >= 80 {
-				firstComp = 2
-				val = 0
-				for _, b := range valBytes {
-					val = (val << 7) | int(b&0x7F)
-				}
-				firstComp = val / 40
-				secondComp = val % 40
-				if firstComp > 2 {
-					return "", errors.New("invalid first OID component")
-				}
-			}
-		}
+	var firstComp, secondComp int
+	if firstVal < 80 {
+		firstComp = firstVal / 40
+		secondComp = firstVal % 40
+	} else {
+		firstComp = 2
+		secondComp = firstVal - 80
 	}
 
 	if firstComp > 2 {
@@ -193,21 +177,12 @@ func decodeOID(data []byte) (string, error) {
 
 	components = append(components, firstComp, secondComp)
 
-	pos := 1
-
 	for pos < len(data) {
-		val := 0
-		for {
-			if pos >= len(data) {
-				return "", errors.New("incomplete OID component")
-			}
-			b := data[pos]
-			pos++
-			val = (val << 7) | int(b&0x7F)
-			if (b & 0x80) == 0 {
-				break
-			}
+		val, newPos, err := decodeBase128Int(data, pos)
+		if err != nil {
+			return "", err
 		}
+		pos = newPos
 		components = append(components, val)
 	}
 
@@ -217,4 +192,23 @@ func decodeOID(data []byte) (string, error) {
 	}
 
 	return strings.Join(strs, "."), nil
+}
+
+func decodeBase128Int(data []byte, startPos int) (int, int, error) {
+	val := 0
+	pos := startPos
+
+	for {
+		if pos >= len(data) {
+			return 0, pos, errors.New("incomplete base-128 integer")
+		}
+		b := data[pos]
+		pos++
+		val = (val << 7) | int(b&0x7F)
+		if (b & 0x80) == 0 {
+			break
+		}
+	}
+
+	return val, pos, nil
 }

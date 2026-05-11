@@ -15,19 +15,19 @@ type complexityVisitor struct {
 	filename    string
 	fset        *token.FileSet
 	pkgName     string
-	results     []api.FunctionComplexity
-	insideFunc  bool
+	results     *[]api.FunctionComplexity
 }
 
 func AnalyzeComplexity(filename string, fset *token.FileSet, file *ast.File) []api.FunctionComplexity {
+	results := []api.FunctionComplexity{}
 	v := &complexityVisitor{
 		filename: filepath.Base(filename),
 		fset:     fset,
 		pkgName:  file.Name.Name,
-		results:  []api.FunctionComplexity{},
+		results:  &results,
 	}
 	ast.Walk(v, file)
-	return v.results
+	return results
 }
 
 func (v *complexityVisitor) Visit(node ast.Node) ast.Visitor {
@@ -39,7 +39,6 @@ func (v *complexityVisitor) Visit(node ast.Node) ast.Visitor {
 		if n.Body == nil {
 			return nil
 		}
-		v.insideFunc = true
 		complexity := 1 + countBranchComplexity(n.Body)
 		var funcName string
 		if n.Recv != nil && len(n.Recv.List) > 0 {
@@ -48,30 +47,21 @@ func (v *complexityVisitor) Visit(node ast.Node) ast.Visitor {
 		} else {
 			funcName = fmt.Sprintf("%s.%s", v.pkgName, n.Name.Name)
 		}
-		v.results = append(v.results, api.FunctionComplexity{
+		*v.results = append(*v.results, api.FunctionComplexity{
 			Name:       funcName,
 			Line:       v.fset.Position(n.Pos()).Line,
 			Complexity: complexity,
 		})
-		return &complexityVisitor{
-			filename:   v.filename,
-			fset:       v.fset,
-			pkgName:    v.pkgName,
-			results:    v.results,
-			insideFunc: false,
-		}
+		return v
 	case *ast.FuncLit:
-		if v.insideFunc {
-			return nil
-		}
 		complexity := 1 + countBranchComplexity(n.Body)
 		pos := v.fset.Position(n.Pos())
-		v.results = append(v.results, api.FunctionComplexity{
+		*v.results = append(*v.results, api.FunctionComplexity{
 			Name:       fmt.Sprintf("%s.literal@%d:%d", v.pkgName, pos.Line, pos.Column),
 			Line:       pos.Line,
 			Complexity: complexity,
 		})
-		return nil
+		return v
 	}
 	return v
 }

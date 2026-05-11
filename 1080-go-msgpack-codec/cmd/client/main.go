@@ -92,7 +92,7 @@ func main() {
 func parseFlags() config {
 	var cfg config
 
-	flag.StringVar(&cfg.serverURL, "server", "http://localhost:8080", "Server URL (default: http://localhost:8080)")
+	flag.StringVar(&cfg.serverURL, "server", "http://localhost:8801", "Server URL (default: http://localhost:8801)")
 	flag.StringVar(&cfg.operation, "op", "", "Operation: encode or decode")
 	flag.StringVar(&cfg.inputFile, "in", "", "Input file path")
 	flag.StringVar(&cfg.outputFile, "out", "", "Output file path (optional, auto-determined if not provided)")

@@ -128,3 +128,80 @@ func TestValidation(t *testing.T) {
 		t.Error("Expected invalid encoding for truncated data")
 	}
 }
+
+func TestZigZagLEB128LargeInt64(t *testing.T) {
+	const maxInt64 = int64(9223372036854775807)
+	const minInt64 = int64(-9223372036854775808)
+
+	tests := []int64{maxInt64, minInt64, maxInt64 - 1, minInt64 + 1}
+
+	for _, tt := range tests {
+		encoded := EncodeLEB128Int64(tt)
+		decoded, _, err := DecodeLEB128Int64(encoded)
+		if err != nil {
+			t.Errorf("DecodeLEB128Int64 failed for %d: %v", tt, err)
+			continue
+		}
+		if decoded != tt {
+			t.Errorf("ZigZag+LEB128 round-trip failed: %d -> %d", tt, decoded)
+		}
+	}
+}
+
+func TestZigZagLEB128LargeInt32(t *testing.T) {
+	const maxInt32 = int32(2147483647)
+	const minInt32 = int32(-2147483648)
+
+	tests := []int32{maxInt32, minInt32, maxInt32 - 1, minInt32 + 1}
+
+	for _, tt := range tests {
+		encoded := EncodeLEB128Int32(tt)
+		decoded, _, err := DecodeLEB128Int32(encoded)
+		if err != nil {
+			t.Errorf("DecodeLEB128Int32 failed for %d: %v", tt, err)
+			continue
+		}
+		if decoded != tt {
+			t.Errorf("ZigZag+LEB128 round-trip failed: %d -> %d", tt, decoded)
+		}
+	}
+}
+
+func TestEmptyBatchDecode(t *testing.T) {
+	emptyData := []byte{}
+
+	decoded, err := DecodeBatchInt64(emptyData, ModeVarint)
+	if err != nil {
+		t.Fatalf("DecodeBatchInt64 failed: %v", err)
+	}
+	if decoded == nil {
+		t.Error("Expected empty slice, got nil")
+	}
+	if len(decoded) != 0 {
+		t.Errorf("Expected length 0, got %d", len(decoded))
+	}
+
+	decoded32, err := DecodeBatchInt32(emptyData, ModeLEB128)
+	if err != nil {
+		t.Fatalf("DecodeBatchInt32 failed: %v", err)
+	}
+	if decoded32 == nil {
+		t.Error("Expected empty slice, got nil")
+	}
+
+	decodedU64, err := DecodeBatchUint64(emptyData, ModeVarint)
+	if err != nil {
+		t.Fatalf("DecodeBatchUint64 failed: %v", err)
+	}
+	if decodedU64 == nil {
+		t.Error("Expected empty slice, got nil")
+	}
+
+	decodedU32, err := DecodeBatchUint32(emptyData, ModeLEB128)
+	if err != nil {
+		t.Fatalf("DecodeBatchUint32 failed: %v", err)
+	}
+	if decodedU32 == nil {
+		t.Error("Expected empty slice, got nil")
+	}
+}
