@@ -7,7 +7,7 @@ import (
 )
 
 func getPort() string {
-	port := "8080"
+	port := "8907"
 
 	if envPort := os.Getenv("ETC_PORT"); envPort != "" {
 		port = envPort
@@ -21,7 +21,7 @@ func getPort() string {
 	}
 
 	if _, err := strconv.Atoi(port); err != nil {
-		port = "8080"
+		port = "8907"
 	}
 
 	return ":" + port

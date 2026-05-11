@@ -8,3 +8,7 @@ CSP策略支持hash和nonce两种方式来替代unsafe-inline。hash方式是对
 
 代码架构上，HTML解析用标准的HTML tokenizer，提取出所有资源引用后分类汇总，然后根据分类结果和策略模板生成CSP字符串。audit模式需要实现一个简化版的CSP匹配引擎，把CSP策略解析成结构化的指令集合，然后对每个资源引用做匹配检查。
 CSP策略中如果同时存在unsafe-inline和strict-dynamic，audit要指出这是矛盾的配置并给出建议。
+批量处理每100条自动保存进度，保存时也要读进度文件判断是否有旧进度要合并。
+备份完成自动验证完整性。验证工具不在PATH就跳过，日志里记录跳过原因。
+多级路径：tool process --input ./data --output ./result。相对绝对路径都支持。
+服务端端口通过命令行参数或环境变量指定。

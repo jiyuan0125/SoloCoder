@@ -21,7 +21,7 @@ struct Args {
     #[arg(long, env = "COMPLAINT_SERVER_HOST", default_value = "0.0.0.0")]
     host: String,
 
-    #[arg(short, long, env = "COMPLAINT_SERVER_PORT", default_value_t = 3000)]
+    #[arg(short, long, env = "COMPLAINT_SERVER_PORT", default_value_t = 8100)]
     port: u16,
 }
 

@@ -13,7 +13,7 @@ import (
 	"oacms/internal/api"
 )
 
-var baseURL = "http://localhost:8080"
+var baseURL = "http://localhost:9020"
 
 func main() {
 	if envURL := os.Getenv("OACMS_URL"); envURL != "" {
@@ -62,7 +62,7 @@ func printUsage() {
 	fmt.Println("  announcement 公告管理")
 	fmt.Println()
 	fmt.Println("环境变量:")
-	fmt.Println("  OACMS_URL    服务端地址 (默认: http://localhost:8080)")
+	fmt.Println("  OACMS_URL    服务端地址 (默认: http://localhost:9020)")
 }
 
 func handleOwner(args []string) {

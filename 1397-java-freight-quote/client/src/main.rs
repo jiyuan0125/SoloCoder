@@ -8,7 +8,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(author, version, about = "货运物流报价系统 CLI", long_about = None)]
 struct Cli {
-    #[arg(long, env = "FREIGHT_SERVER_URL", default_value = "http://127.0.0.1:3000")]
+    #[arg(long, env = "FREIGHT_SERVER_URL", default_value = "http://127.0.0.1:8607")]
     server: String,
 
     #[command(subcommand)]

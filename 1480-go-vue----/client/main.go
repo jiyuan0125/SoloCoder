@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8909"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -96,5 +96,5 @@ func printUsage() {
 	fmt.Println("Results: 合格, 不合格, 需复检")
 	fmt.Println()
 	fmt.Println("Environment:")
-	fmt.Println("  SERVER_URL   Server base URL (default: http://localhost:8080)")
+	fmt.Println("  SERVER_URL   Server base URL (default: http://localhost:8909)")
 }

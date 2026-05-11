@@ -37,7 +37,7 @@ func main() {
 }
 
 func getPort() string {
-	port := "8080"
+	port := "9010"
 
 	flagPort := flag.String("port", "", "服务端监听端口")
 	flag.Parse()

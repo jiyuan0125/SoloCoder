@@ -60,7 +60,7 @@ func getPort() string {
 		return envPort
 	}
 
-	return "8080"
+	return "8903"
 }
 
 func writeJSON(w http.ResponseWriter, status int, data interface{}) {

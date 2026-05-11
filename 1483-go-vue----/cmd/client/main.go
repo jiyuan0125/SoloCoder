@@ -11,7 +11,7 @@ import (
 	"insurance-claim/pkg/common"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:9003"
 
 func main() {
 	if len(os.Args) < 2 {

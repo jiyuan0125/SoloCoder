@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:9007"
 
 func main() {
 	if len(os.Args) < 2 {
@@ -85,7 +85,7 @@ func printUsage() {
 	fmt.Println("  availability  - Check available slots for a date")
 	fmt.Println("")
 	fmt.Println("Flags:")
-	fmt.Println("  -server <url> - Server URL (default: http://localhost:8080)")
+	fmt.Println("  -server <url> - Server URL (default: http://localhost:9007)")
 }
 
 func formatCents(cents int64) string {

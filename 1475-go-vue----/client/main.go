@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8904"
 
 func main() {
 	serverURL := flag.String("server", defaultServerURL, "Server URL")
@@ -66,7 +66,7 @@ func printUsage() {
 	fmt.Println("  client [flags] <command> [args]")
 	fmt.Println()
 	fmt.Println("Flags:")
-	fmt.Println("  -server string    Server URL (default: http://localhost:8080)")
+	fmt.Println("  -server string    Server URL (default: http://localhost:8904)")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  create-spot <id> <area> <number> <type>    Create a parking spot (type: normal/charging/accessible)")

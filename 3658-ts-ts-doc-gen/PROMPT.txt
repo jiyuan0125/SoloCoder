@@ -1,10 +1,5 @@
-用 TypeScript 写一个从 TypeScript 源码生成文档的命令行工具。
-扫描指定目录的ts文件，解析类型定义。
-包括interface、type、enum和函数签名。
-提取JSDoc注释作为描述文本。
-输出Markdown格式文档，按文件分章节。
-接口定义展示所有字段、类型和注释。
-函数展示参数表格和返回值说明。
-JSDoc中有example标签的把示例代码也输出。
-支持配置输出格式和包含排除的文件模式。
-生成的文档按字母顺序排列条目。
+Express + TypeScript 写一个 API 文档生成器。
+从 TypeScript 源码中提取接口定义，生成 Markdown 格式的 API 文档。支持从 JSDoc 注释中提取描述信息。
+接口定义变更后重新生成文档。之前手动补充的描述信息如果被新的 JSDoc 覆盖，以 JSDoc 为准。
+支持按模块分组生成。文档支持导出。
+SQLite 存数据，能正常编译启动就行。

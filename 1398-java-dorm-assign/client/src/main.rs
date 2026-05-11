@@ -6,7 +6,7 @@ use std::env;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, env = "DORM_SERVER_URL", default_value = "http://127.0.0.1:3000")]
+    #[arg(short, long, env = "DORM_SERVER_URL", default_value = "http://127.0.0.1:8608")]
     server_url: String,
 
     #[command(subcommand)]

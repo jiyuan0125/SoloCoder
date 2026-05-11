@@ -65,7 +65,7 @@ class InMemoryStorage:
             recall.id = str(uuid.uuid4())
         self._recalls[recall.id] = recall
         self._recalls_by_batch[recall.batch_number].append(recall.id)
-        if recall.status == Recall.Status.ACTIVE:
+        if recall.status == RecallStatus.ACTIVE:
             self._active_recalls_by_batch[recall.batch_number] = recall.id
         return recall
 
@@ -75,10 +75,10 @@ class InMemoryStorage:
         if recall is None:
             return None
         recall.status = status
-        if status != Recall.Status.ACTIVE:
+        if status != RecallStatus.ACTIVE:
             if self._active_recalls_by_batch.get(recall.batch_number) == recall_id:
                 del self._active_recalls_by_batch[recall.batch_number]
-        if status == Recall.Status.COMPLETED:
+        if status == RecallStatus.COMPLETED:
             recall.completed_at = datetime.now()
             recall.completed_by = completed_by
         return recall

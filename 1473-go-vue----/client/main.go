@@ -15,7 +15,7 @@ import (
 var baseURL string
 
 func main() {
-	flag.StringVar(&baseURL, "server", "http://localhost:8080", "Transit system server URL")
+	flag.StringVar(&baseURL, "server", "http://localhost:8902", "Transit system server URL")
 	flag.Parse()
 
 	if len(os.Args) < 2 {
@@ -52,7 +52,7 @@ func printUsage() {
 	fmt.Println("  client line-vehicles <code> [direction] - List vehicles on a line")
 	fmt.Println("  client help                  - Show this help message")
 	fmt.Println("\nOptions:")
-	fmt.Println("  -server <url>                - Server URL (default: http://localhost:8080)")
+	fmt.Println("  -server <url>                - Server URL (default: http://localhost:8902)")
 }
 
 func handleStations() {

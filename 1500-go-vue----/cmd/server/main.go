@@ -21,7 +21,7 @@ func main() {
 		}
 	}
 	if port == "" {
-		port = "8080"
+		port = "9020"
 	}
 
 	store := core.NewStore()

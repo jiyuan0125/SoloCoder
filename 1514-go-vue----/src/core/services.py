@@ -1,477 +1,588 @@
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
-from typing import Dict, List, Optional, Type
+from typing import List, Optional
 
 from .models import (
+    Appointment,
+    AppointmentStatus,
     Diagnosis,
-    Doctor,
-    Invoice,
-    InvoiceItem,
-    Medication,
-    MedicationReminder,
+    FeeItem,
+    FeeRecord,
+    MedicationCourse,
+    MedicationTodo,
     Owner,
     Pet,
-    Prescription,
     PrescriptionItem,
-    Reservation,
-    ReservationStatus,
+    Registration,
+    RegistrationStatus,
+    TodoStatus,
     Treatment,
-    TreatmentPlan,
-    Vaccination,
-    Visit,
-    VisitStatus,
-    WaitListEntry,
+    Vaccine,
+    VaccineRecord,
     WorkSlot,
+)
+from .repositories import (
+    AppointmentRepository,
+    DoctorRepository,
+    FeeRepository,
+    MedicationCourseRepository,
+    MedicationTodoRepository,
+    OwnerRepository,
+    PetRepository,
+    RegistrationRepository,
+    VaccineRecordRepository,
+    VaccineRepository,
+    WorkSlotRepository,
 )
 
 
-class DataStore:
-    def __init__(self):
-        self._data: Dict[Type, Dict[int, object]] = {
-            Owner: {},
-            Pet: {},
-            Doctor: {},
-            WorkSlot: {},
-            Reservation: {},
-            WaitListEntry: {},
-            Visit: {},
-            Diagnosis: {},
-            Medication: {},
-            Prescription: {},
-            Treatment: {},
-            TreatmentPlan: {},
-            MedicationReminder: {},
-            Vaccination: {},
-            Invoice: {},
-            InvoiceItem: {},
-        }
-        self._counters: Dict[Type, int] = {t: 0 for t in self._data}
-
-    def _next_id(self, model_cls: Type) -> int:
-        self._counters[model_cls] += 1
-        return self._counters[model_cls]
-
-    def create(self, model_cls: Type, data: dict) -> object:
-        obj_id = self._next_id(model_cls)
-        data["id"] = obj_id
-        obj = model_cls(**data)
-        self._data[model_cls][obj_id] = obj
-        return obj
-
-    def get(self, model_cls: Type, obj_id: int) -> Optional[object]:
-        return self._data[model_cls].get(obj_id)
-
-    def get_all(self, model_cls: Type) -> List[object]:
-        return list(self._data[model_cls].values())
-
-    def update(self, model_cls: Type, obj_id: int, updates: dict) -> Optional[object]:
-        existing = self._data[model_cls].get(obj_id)
-        if existing is None:
-            return None
-        model_data = existing.model_dump()
-        model_data.update(updates)
-        updated = model_cls(**model_data)
-        self._data[model_cls][obj_id] = updated
-        return updated
-
-    def delete(self, model_cls: Type, obj_id: int) -> bool:
-        if obj_id in self._data[model_cls]:
-            del self._data[model_cls][obj_id]
-            return True
-        return False
-
-    def query(self, model_cls: Type, **filters) -> List[object]:
-        results = []
-        for obj in self._data[model_cls].values():
-            match = True
-            for key, value in filters.items():
-                if getattr(obj, key, None) != value:
-                    match = False
-                    break
-            if match:
-                results.append(obj)
-        return results
-
-
-store = DataStore()
-
-
 class PetService:
-    @staticmethod
-    def create_owner(name: str, phone: str, address: Optional[str] = None) -> Owner:
-        return store.create(Owner, {
-            "name": name,
-            "phone": phone,
-            "address": address,
-        })
+    def __init__(
+        self,
+        pet_repo: PetRepository,
+        owner_repo: OwnerRepository,
+    ) -> None:
+        self.pet_repo = pet_repo
+        self.owner_repo = owner_repo
 
-    @staticmethod
-    def get_owner(owner_id: int) -> Optional[Owner]:
-        return store.get(Owner, owner_id)
+    def create_owner(self, name: str, phone: str, address: Optional[str] = None) -> Owner:
+        existing = self.owner_repo.find_by_phone(phone)
+        if existing:
+            return existing
+        owner = Owner(name=name, phone=phone, address=address)
+        return self.owner_repo.add(owner)
 
-    @staticmethod
-    def list_owners() -> List[Owner]:
-        return store.get_all(Owner)
-
-    @staticmethod
     def create_pet(
+        self,
         name: str,
         species: str,
-        gender: str,
-        owner_id: int,
+        owner_id: str,
         breed: Optional[str] = None,
+        gender: Optional[str] = None,
         birth_date: Optional[date] = None,
-        weight: Optional[float] = None,
     ) -> Pet:
-        owner = store.get(Owner, owner_id)
+        owner = self.owner_repo.get(owner_id)
         if not owner:
-            raise ValueError("主人不存在")
-        return store.create(Pet, {
-            "name": name,
-            "species": species,
-            "gender": gender,
-            "owner_id": owner_id,
-            "breed": breed,
-            "birth_date": birth_date,
-            "weight": weight,
-        })
+            raise ValueError(f"主人不存在: {owner_id}")
+        pet = Pet(
+            name=name,
+            species=species,
+            breed=breed,
+            gender=gender,
+            birth_date=birth_date,
+            owner_id=owner_id,
+        )
+        return self.pet_repo.add(pet)
 
-    @staticmethod
-    def get_pet(pet_id: int) -> Optional[Pet]:
-        return store.get(Pet, pet_id)
+    def get_owner(self, owner_id: str) -> Optional[Owner]:
+        return self.owner_repo.get(owner_id)
 
-    @staticmethod
-    def list_pets(owner_id: Optional[int] = None) -> List[Pet]:
-        if owner_id is not None:
-            return store.query(Pet, owner_id=owner_id)
-        return store.get_all(Pet)
+    def get_pet(self, pet_id: str) -> Optional[Pet]:
+        return self.pet_repo.get(pet_id)
 
-    @staticmethod
-    def create_doctor(name: str, specialization: Optional[str] = None, phone: Optional[str] = None) -> Doctor:
-        return store.create(Doctor, {
-            "name": name,
-            "specialization": specialization,
-            "phone": phone,
-        })
+    def list_owners(self) -> List[Owner]:
+        return self.owner_repo.get_all()
 
-    @staticmethod
-    def get_doctor(doctor_id: int) -> Optional[Doctor]:
-        return store.get(Doctor, doctor_id)
+    def list_pets(self) -> List[Pet]:
+        return self.pet_repo.get_all()
 
-    @staticmethod
-    def list_doctors() -> List[Doctor]:
-        return store.get_all(Doctor)
+    def get_pets_by_owner(self, owner_id: str) -> List[Pet]:
+        return self.pet_repo.find_by_owner(owner_id)
 
 
-class VisitService:
-    @staticmethod
-    def _has_pending_visit(pet_id: int, check_date: date) -> bool:
-        visits = store.query(Visit, pet_id=pet_id)
-        for v in visits:
-            v_date = v.check_in_time.date()
-            if v_date == check_date and v.status in (VisitStatus.WAITING, VisitStatus.IN_PROGRESS):
-                return True
-        return False
+class RegistrationService:
+    def __init__(
+        self,
+        registration_repo: RegistrationRepository,
+        pet_repo: PetRepository,
+        owner_repo: OwnerRepository,
+        doctor_repo: DoctorRepository,
+    ) -> None:
+        self.registration_repo = registration_repo
+        self.pet_repo = pet_repo
+        self.owner_repo = owner_repo
+        self.doctor_repo = doctor_repo
 
-    @staticmethod
-    def _get_next_queue_number(check_date: date) -> int:
-        today_visits = []
-        for v in store.get_all(Visit):
-            if v.check_in_time.date() == check_date:
-                today_visits.append(v)
-        return len(today_visits) + 1
-
-    @staticmethod
-    def create_visit(pet_id: int, owner_id: int) -> Visit:
-        pet = store.get(Pet, pet_id)
-        owner = store.get(Owner, owner_id)
+    def create_registration(
+        self,
+        pet_id: str,
+        owner_id: str,
+        symptoms: Optional[str] = None,
+        doctor_id: Optional[str] = None,
+    ) -> Registration:
+        pet = self.pet_repo.get(pet_id)
         if not pet:
-            raise ValueError("宠物不存在")
+            raise ValueError(f"宠物不存在: {pet_id}")
+        owner = self.owner_repo.get(owner_id)
         if not owner:
-            raise ValueError("主人不存在")
+            raise ValueError(f"主人不存在: {owner_id}")
+        if doctor_id:
+            doctor = self.doctor_repo.get(doctor_id)
+            if not doctor:
+                raise ValueError(f"医生不存在: {doctor_id}")
 
         today = date.today()
-        if VisitService._has_pending_visit(pet_id, today):
-            raise ValueError("该宠物今天已有候诊中的挂号，不能重复挂号")
+        existing_regs = self.registration_repo.find_by_pet_and_date(pet_id, today)
+        waiting_regs = [
+            r for r in existing_regs
+            if r.status == RegistrationStatus.WAITING
+        ]
+        if waiting_regs:
+            raise ValueError("该宠物当天已有候诊中的挂号，不允许重复挂号")
 
-        queue_number = VisitService._get_next_queue_number(today)
-        appointment = store.create(type("Appointment", (), {}), {
-            "id": 0,
-            "pet_id": pet_id,
-            "owner_id": owner_id,
-            "appointment_date": today,
-        }) if not hasattr(store, "_appointment_counter") else None
+        registration = Registration(
+            pet_id=pet_id,
+            owner_id=owner_id,
+            doctor_id=doctor_id,
+            symptoms=symptoms,
+        )
+        return self.registration_repo.add(registration)
 
-        return store.create(Visit, {
-            "appointment_id": 0,
-            "pet_id": pet_id,
-            "owner_id": owner_id,
-            "queue_number": queue_number,
-        })
+    def start_treatment(self, registration_id: str, doctor_id: str) -> Registration:
+        registration = self.registration_repo.get(registration_id)
+        if not registration:
+            raise ValueError(f"挂号记录不存在: {registration_id}")
+        if registration.status != RegistrationStatus.WAITING:
+            raise ValueError("只有候诊中的挂号可以开始接诊")
 
-    @staticmethod
-    def get_visit(visit_id: int) -> Optional[Visit]:
-        return store.get(Visit, visit_id)
-
-    @staticmethod
-    def list_visits(status: Optional[VisitStatus] = None) -> List[Visit]:
-        if status:
-            return store.query(Visit, status=status)
-        return store.get_all(Visit)
-
-    @staticmethod
-    def start_consultation(visit_id: int, doctor_id: int) -> Visit:
-        visit = store.get(Visit, visit_id)
-        if not visit:
-            raise ValueError("就诊记录不存在")
-        if visit.status != VisitStatus.WAITING:
-            raise ValueError("只有候诊中的挂号才能开始接诊")
-
-        doctor = store.get(Doctor, doctor_id)
+        doctor = self.doctor_repo.get(doctor_id)
         if not doctor:
-            raise ValueError("医生不存在")
+            raise ValueError(f"医生不存在: {doctor_id}")
 
-        return store.update(Visit, visit_id, {
-            "doctor_id": doctor_id,
-            "status": VisitStatus.IN_PROGRESS,
-        })
+        registration.status = RegistrationStatus.TREATING
+        registration.doctor_id = doctor_id
+        self.registration_repo.update(registration_id, registration)
+        return registration
 
-    @staticmethod
-    def add_diagnosis(visit_id: int, description: str, notes: Optional[str] = None) -> Diagnosis:
-        visit = store.get(Visit, visit_id)
-        if not visit:
-            raise ValueError("就诊记录不存在")
+    def complete_registration(self, registration_id: str) -> Registration:
+        registration = self.registration_repo.get(registration_id)
+        if not registration:
+            raise ValueError(f"挂号记录不存在: {registration_id}")
+        if registration.status != RegistrationStatus.TREATING:
+            raise ValueError("只有诊疗中的挂号可以完成")
 
-        return store.create(Diagnosis, {
-            "visit_id": visit_id,
-            "description": description,
-            "notes": notes,
-        })
+        registration.status = RegistrationStatus.COMPLETED
+        registration.completed_at = datetime.now()
+        self.registration_repo.update(registration_id, registration)
+        return registration
 
-    @staticmethod
-    def list_diagnoses(visit_id: int) -> List[Diagnosis]:
-        return store.query(Diagnosis, visit_id=visit_id)
+    def cancel_registration(self, registration_id: str) -> Registration:
+        registration = self.registration_repo.get(registration_id)
+        if not registration:
+            raise ValueError(f"挂号记录不存在: {registration_id}")
+
+        registration.status = RegistrationStatus.CANCELLED
+        self.registration_repo.update(registration_id, registration)
+        return registration
+
+    def get_registration(self, registration_id: str) -> Optional[Registration]:
+        return self.registration_repo.get(registration_id)
+
+    def list_registrations(self) -> List[Registration]:
+        return self.registration_repo.get_all()
+
+    def get_waiting_queue(self) -> List[Registration]:
+        return self.registration_repo.find_waiting_by_date(date.today())
+
+    def get_registrations_by_pet(self, pet_id: str) -> List[Registration]:
+        return self.registration_repo.find_by_pet(pet_id)
+
+
+class DiagnosisService:
+    def __init__(
+        self,
+        registration_repo: RegistrationRepository,
+        doctor_repo: DoctorRepository,
+        fee_repo: FeeRepository,
+        medication_service: "MedicationService",
+    ) -> None:
+        self.registration_repo = registration_repo
+        self.doctor_repo = doctor_repo
+        self.fee_repo = fee_repo
+        self.medication_service = medication_service
+
+    def create_diagnosis(
+        self,
+        registration_id: str,
+        doctor_id: str,
+        diagnosis_text: str,
+        prescription_items: Optional[List[PrescriptionItem]] = None,
+        treatments: Optional[List[Treatment]] = None,
+        remarks: Optional[str] = None,
+    ) -> Diagnosis:
+        import uuid
+
+        registration = self.registration_repo.get(registration_id)
+        if not registration:
+            raise ValueError(f"挂号记录不存在: {registration_id}")
+
+        doctor = self.doctor_repo.get(doctor_id)
+        if not doctor:
+            raise ValueError(f"医生不存在: {doctor_id}")
+
+        items = prescription_items or []
+        treatments_list = treatments or []
+
+        diagnosis_id = str(uuid.uuid4())
+
+        diagnosis = Diagnosis(
+            id=diagnosis_id,
+            registration_id=registration_id,
+            doctor_id=doctor_id,
+            diagnosis=diagnosis_text,
+            prescription_items=items,
+            treatments=treatments_list,
+            remarks=remarks,
+        )
+
+        fee_items: List[FeeItem] = []
+        total_amount = 0.0
+
+        for item in items:
+            is_charged = item.unit_price > 0
+            fee_item = FeeItem(
+                item_name=item.medicine_name,
+                item_type="medicine",
+                unit_price=item.unit_price,
+                quantity=item.quantity,
+                subtotal=item.subtotal,
+                is_charged=is_charged,
+            )
+            fee_items.append(fee_item)
+            total_amount += item.subtotal
+
+        for treatment in treatments_list:
+            is_charged = treatment.unit_price > 0
+            fee_item = FeeItem(
+                item_name=treatment.item_name,
+                item_type="treatment",
+                unit_price=treatment.unit_price,
+                quantity=treatment.quantity,
+                subtotal=treatment.subtotal,
+                is_charged=is_charged,
+            )
+            fee_items.append(fee_item)
+            total_amount += treatment.subtotal
+
+        fee_record = FeeRecord(
+            registration_id=registration_id,
+            diagnosis_id=diagnosis_id,
+            items=fee_items,
+            total_amount=total_amount,
+        )
+        self.fee_repo.add(fee_record)
+
+        for item in items:
+            if item.days > 1:
+                self.medication_service.create_course_from_prescription(
+                    pet_id=registration.pet_id,
+                    owner_id=registration.owner_id,
+                    diagnosis_id=diagnosis_id,
+                    medicine_name=item.medicine_name,
+                    dosage=item.dosage,
+                    days=item.days,
+                )
+
+        return diagnosis
+
+    def get_fee_record(self, registration_id: str) -> Optional[FeeRecord]:
+        return self.fee_repo.find_by_registration(registration_id)
+
+    def list_unpaid_fees(self) -> List[FeeRecord]:
+        return self.fee_repo.find_unpaid()
+
+    def pay_fee(self, fee_record_id: str) -> FeeRecord:
+        fee_record = self.fee_repo.get(fee_record_id)
+        if not fee_record:
+            raise ValueError(f"费用记录不存在: {fee_record_id}")
+        fee_record.paid = True
+        fee_record.paid_at = datetime.now()
+        self.fee_repo.update(fee_record_id, fee_record)
+        return fee_record
+
+
+class VaccineService:
+    def __init__(
+        self,
+        vaccine_repo: VaccineRepository,
+        vaccine_record_repo: VaccineRecordRepository,
+        pet_repo: PetRepository,
+    ) -> None:
+        self.vaccine_repo = vaccine_repo
+        self.vaccine_record_repo = vaccine_record_repo
+        self.pet_repo = pet_repo
+
+    def create_vaccine(
+        self,
+        name: str,
+        manufacturer: Optional[str] = None,
+        recommended_interval_days: Optional[int] = None,
+    ) -> Vaccine:
+        vaccine = Vaccine(
+            name=name,
+            manufacturer=manufacturer,
+            recommended_interval_days=recommended_interval_days,
+        )
+        return self.vaccine_repo.add(vaccine)
+
+    def record_vaccination(
+        self,
+        pet_id: str,
+        vaccine_id: str,
+        inoculation_date: date,
+        doctor_id: Optional[str] = None,
+        batch_number: Optional[str] = None,
+        next_inoculation_date: Optional[date] = None,
+        remarks: Optional[str] = None,
+    ) -> VaccineRecord:
+        pet = self.pet_repo.get(pet_id)
+        if not pet:
+            raise ValueError(f"宠物不存在: {pet_id}")
+
+        vaccine = self.vaccine_repo.get(vaccine_id)
+        if not vaccine:
+            raise ValueError(f"疫苗不存在: {vaccine_id}")
+
+        if next_inoculation_date and next_inoculation_date < inoculation_date:
+            raise ValueError("下次接种日期不能早于本次接种日期")
+
+        if next_inoculation_date is None and vaccine.recommended_interval_days:
+            next_inoculation_date = inoculation_date + timedelta(
+                days=vaccine.recommended_interval_days
+            )
+
+        record = VaccineRecord(
+            pet_id=pet_id,
+            vaccine_id=vaccine_id,
+            vaccine_name=vaccine.name,
+            doctor_id=doctor_id,
+            batch_number=batch_number,
+            inoculation_date=inoculation_date,
+            next_inoculation_date=next_inoculation_date,
+            remarks=remarks,
+        )
+        return self.vaccine_record_repo.add(record)
+
+    def get_vaccine_history(self, pet_id: str) -> List[VaccineRecord]:
+        return self.vaccine_record_repo.find_by_pet(pet_id)
+
+    def list_vaccines(self) -> List[Vaccine]:
+        return self.vaccine_repo.get_all()
+
+
+class AppointmentService:
+    def __init__(
+        self,
+        work_slot_repo: WorkSlotRepository,
+        appointment_repo: AppointmentRepository,
+        doctor_repo: DoctorRepository,
+        pet_repo: PetRepository,
+        owner_repo: OwnerRepository,
+    ) -> None:
+        self.work_slot_repo = work_slot_repo
+        self.appointment_repo = appointment_repo
+        self.doctor_repo = doctor_repo
+        self.pet_repo = pet_repo
+        self.owner_repo = owner_repo
+
+    def create_work_slot(
+        self,
+        doctor_id: str,
+        slot_date: date,
+        start_time: datetime,
+        end_time: datetime,
+        max_appointments: int = 1,
+    ) -> WorkSlot:
+        doctor = self.doctor_repo.get(doctor_id)
+        if not doctor:
+            raise ValueError(f"医生不存在: {doctor_id}")
+
+        slot = WorkSlot(
+            doctor_id=doctor_id,
+            date=slot_date,
+            start_time=start_time,
+            end_time=end_time,
+            max_appointments=max_appointments,
+        )
+        return self.work_slot_repo.add(slot)
+
+    def create_appointment(
+        self,
+        owner_id: str,
+        pet_id: str,
+        work_slot_id: str,
+        remarks: Optional[str] = None,
+    ) -> Appointment:
+        owner = self.owner_repo.get(owner_id)
+        if not owner:
+            raise ValueError(f"主人不存在: {owner_id}")
+
+        pet = self.pet_repo.get(pet_id)
+        if not pet:
+            raise ValueError(f"宠物不存在: {pet_id}")
+
+        slot = self.work_slot_repo.get(work_slot_id)
+        if not slot:
+            raise ValueError(f"时段不存在: {work_slot_id}")
+
+        if not slot.is_available:
+            waitlist = self.appointment_repo.find_waitlist_by_work_slot(work_slot_id)
+            waitlist_position = len(waitlist) + 1
+            status = AppointmentStatus.WAITLIST
+        else:
+            confirmed_count = len(
+                self.appointment_repo.find_confirmed_by_work_slot(work_slot_id)
+            )
+            if confirmed_count >= slot.max_appointments:
+                waitlist = self.appointment_repo.find_waitlist_by_work_slot(
+                    work_slot_id
+                )
+                waitlist_position = len(waitlist) + 1
+                status = AppointmentStatus.WAITLIST
+                slot.is_available = False
+                self.work_slot_repo.update(work_slot_id, slot)
+            else:
+                slot.current_appointments += 1
+                waitlist_position = None
+                status = AppointmentStatus.CONFIRMED
+                if slot.current_appointments >= slot.max_appointments:
+                    slot.is_available = False
+                self.work_slot_repo.update(work_slot_id, slot)
+
+        appointment = Appointment(
+            owner_id=owner_id,
+            pet_id=pet_id,
+            doctor_id=slot.doctor_id,
+            work_slot_id=work_slot_id,
+            appointment_date=slot.date,
+            start_time=slot.start_time,
+            end_time=slot.end_time,
+            status=status,
+            waitlist_position=waitlist_position,
+            remarks=remarks,
+        )
+        return self.appointment_repo.add(appointment)
+
+    def cancel_appointment(self, appointment_id: str) -> Appointment:
+        appointment = self.appointment_repo.get(appointment_id)
+        if not appointment:
+            raise ValueError(f"预约不存在: {appointment_id}")
+
+        appointment.status = AppointmentStatus.CANCELLED
+        self.appointment_repo.update(appointment_id, appointment)
+
+        if appointment.status == AppointmentStatus.CONFIRMED:
+            slot = self.work_slot_repo.get(appointment.work_slot_id)
+            if slot:
+                slot.current_appointments -= 1
+                slot.is_available = True
+                self.work_slot_repo.update(slot.id, slot)
+
+                waitlist = self.appointment_repo.find_waitlist_by_work_slot(
+                    slot.id
+                )
+                if waitlist:
+                    next_waiting = waitlist[0]
+                    next_waiting.status = AppointmentStatus.CONFIRMED
+                    next_waiting.waitlist_position = None
+                    self.appointment_repo.update(next_waiting.id, next_waiting)
+                    slot.current_appointments += 1
+                    if slot.current_appointments >= slot.max_appointments:
+                        slot.is_available = False
+                    self.work_slot_repo.update(slot.id, slot)
+
+                    for i, waiting in enumerate(waitlist[1:]):
+                        waiting.waitlist_position = i + 1
+                        self.appointment_repo.update(waiting.id, waiting)
+
+        return appointment
+
+    def list_work_slots(
+        self, doctor_id: Optional[str] = None, slot_date: Optional[date] = None
+    ) -> List[WorkSlot]:
+        if doctor_id and slot_date:
+            return self.work_slot_repo.find_by_doctor_and_date(doctor_id, slot_date)
+        elif slot_date:
+            return self.work_slot_repo.find_by_date(slot_date)
+        elif doctor_id:
+            slots = []
+            for s in self.work_slot_repo.get_all():
+                if s.doctor_id == doctor_id:
+                    slots.append(s)
+            slots.sort(key=lambda x: (x.date, x.start_time))
+            return slots
+        return self.work_slot_repo.get_all()
+
+    def list_appointments(
+        self, owner_id: Optional[str] = None, appointment_date: Optional[date] = None
+    ) -> List[Appointment]:
+        if owner_id:
+            return self.appointment_repo.find_by_owner(owner_id)
+        if appointment_date:
+            return self.appointment_repo.find_by_date(appointment_date)
+        return self.appointment_repo.get_all()
 
 
 class MedicationService:
-    @staticmethod
-    def create_medication(
-        name: str,
-        unit_price: float = 0.0,
-        stock: int = 0,
-        description: Optional[str] = None,
-    ) -> Medication:
-        return store.create(Medication, {
-            "name": name,
-            "unit_price": unit_price,
-            "stock": stock,
-            "description": description,
-        })
+    def __init__(
+        self,
+        course_repo: MedicationCourseRepository,
+        todo_repo: MedicationTodoRepository,
+    ) -> None:
+        self.course_repo = course_repo
+        self.todo_repo = todo_repo
 
-    @staticmethod
-    def get_medication(medication_id: int) -> Optional[Medication]:
-        return store.get(Medication, medication_id)
+    def create_course_from_prescription(
+        self,
+        pet_id: str,
+        owner_id: str,
+        diagnosis_id: str,
+        medicine_name: str,
+        dosage: str,
+        days: int,
+        frequency_per_day: int = 1,
+    ) -> MedicationCourse:
+        start_date = date.today()
+        course = MedicationCourse(
+            pet_id=pet_id,
+            owner_id=owner_id,
+            diagnosis_id=diagnosis_id,
+            medicine_name=medicine_name,
+            dosage=dosage,
+            total_days=days,
+            frequency_per_day=frequency_per_day,
+            start_date=start_date,
+        )
+        saved_course = self.course_repo.add(course)
 
-    @staticmethod
-    def list_medications() -> List[Medication]:
-        return store.get_all(Medication)
+        for day in range(days):
+            due_date = start_date + timedelta(days=day)
+            todo = MedicationTodo(
+                course_id=saved_course.id,
+                pet_id=pet_id,
+                owner_id=owner_id,
+                due_date=due_date,
+                medicine_name=medicine_name,
+                dosage=dosage,
+            )
+            self.todo_repo.add(todo)
 
-    @staticmethod
-    def create_prescription(
-        visit_id: int,
-        items: List[dict],
-    ) -> Prescription:
-        visit = store.get(Visit, visit_id)
-        if not visit:
-            raise ValueError("就诊记录不存在")
+        return saved_course
 
-        prescription_items = []
-        for item in items:
-            med_id = item["medication_id"]
-            med = store.get(Medication, med_id)
-            if not med:
-                raise ValueError(f"药品不存在: {med_id}")
+    def get_pending_todos(
+        self, owner_id: str, current_date: Optional[date] = None
+    ) -> List[MedicationTodo]:
+        if current_date is None:
+            current_date = date.today()
+        return self.todo_repo.find_pending_by_owner(owner_id, current_date)
 
-            prescription_items.append(PrescriptionItem(
-                medication_id=med_id,
-                medication_name=med.name,
-                quantity=item["quantity"],
-                unit_price=med.unit_price,
-                dosage=item["dosage"],
-                frequency=item["frequency"],
-                duration_days=item["duration_days"],
-            ))
+    def complete_todo(self, todo_id: str) -> MedicationTodo:
+        todo = self.todo_repo.get(todo_id)
+        if not todo:
+            raise ValueError(f"待办不存在: {todo_id}")
+        todo.status = TodoStatus.COMPLETED
+        todo.completed_at = datetime.now()
+        self.todo_repo.update(todo_id, todo)
+        return todo
 
-        prescription = store.create(Prescription, {
-            "visit_id": visit_id,
-            "items": prescription_items,
-        })
-
-        if prescription_items:
-            MedicationService._create_treatment_plan(visit, prescription, prescription_items)
-
-        return prescription
-
-    @staticmethod
-    def _create_treatment_plan(
-        visit: Visit,
-        prescription: Prescription,
-        items: List[PrescriptionItem],
-    ):
-        today = date.today()
-        plan = store.create(TreatmentPlan, {
-            "visit_id": visit.id,
-            "prescription_id": prescription.id,
-            "pet_id": visit.pet_id,
-            "owner_id": visit.owner_id,
-            "start_date": today,
-        })
-
-        for item in items:
-            if item.duration_days > 0:
-                for day_offset in range(item.duration_days):
-                    reminder_date = today + timedelta(days=day_offset)
-                    store.create(MedicationReminder, {
-                        "treatment_plan_id": plan.id,
-                        "pet_id": visit.pet_id,
-                        "owner_id": visit.owner_id,
-                        "medication_name": item.medication_name,
-                        "dosage": item.dosage,
-                        "frequency": item.frequency,
-                        "reminder_date": reminder_date,
-                    })
-
-    @staticmethod
-    def get_prescriptions(visit_id: int) -> List[Prescription]:
-        return store.query(Prescription, visit_id=visit_id)
-
-    @staticmethod
-    def get_today_reminders() -> List[MedicationReminder]:
-        today = date.today()
-        return store.query(MedicationReminder, reminder_date=today, is_sent=False)
-
-    @staticmethod
-    def mark_reminder_sent(reminder_id: int) -> Optional[MedicationReminder]:
-        return store.update(MedicationReminder, reminder_id, {"is_sent": True})
-
-    @staticmethod
-    def add_treatment(
-        visit_id: int,
-        description: str,
-        unit_price: float = 0.0,
-        notes: Optional[str] = None,
-    ) -> Treatment:
-        visit = store.get(Visit, visit_id)
-        if not visit:
-            raise ValueError("就诊记录不存在")
-
-        return store.create(Treatment, {
-            "visit_id": visit_id,
-            "description": description,
-            "unit_price": unit_price,
-            "notes": notes,
-        })
-
-    @staticmethod
-    def get_treatments(visit_id: int) -> List[Treatment]:
-        return store.query(Treatment, visit_id=visit_id)
-
-
-class InvoiceService:
-    @staticmethod
-    def generate_invoice(visit_id: int) -> Invoice:
-        visit = store.get(Visit, visit_id)
-        if not visit:
-            raise ValueError("就诊记录不存在")
-
-        existing = store.query(Invoice, visit_id=visit_id)
-        if existing:
-            return existing[0]
-
-        invoice = store.create(Invoice, {
-            "visit_id": visit_id,
-            "pet_id": visit.pet_id,
-            "owner_id": visit.owner_id,
-        })
-
-        prescriptions = MedicationService.get_prescriptions(visit_id)
-        treatments = MedicationService.get_treatments(visit_id)
-
-        invoice_items = []
-        total_amount = 0.0
-        item_counter = 0
-
-        for prescription in prescriptions:
-            for item in prescription.items:
-                unit_price = item.unit_price
-                quantity = item.quantity
-                if unit_price > 0:
-                    item_total = unit_price * quantity
-                    total_amount += item_total
-                else:
-                    item_total = 0.0
-
-                item_counter += 1
-                invoice_items.append(InvoiceItem(
-                    id=item_counter,
-                    invoice_id=invoice.id,
-                    item_type="prescription",
-                    item_name=item.medication_name,
-                    quantity=quantity,
-                    unit_price=unit_price,
-                    total_amount=item_total,
-                ))
-
-        for treatment in treatments:
-            unit_price = treatment.unit_price
-            if unit_price > 0:
-                item_total = unit_price
-                total_amount += item_total
-            else:
-                item_total = 0.0
-
-            item_counter += 1
-            invoice_items.append(InvoiceItem(
-                id=item_counter,
-                invoice_id=invoice.id,
-                item_type="treatment",
-                item_name=treatment.description,
-                quantity=1,
-                unit_price=unit_price,
-                total_amount=item_total,
-            ))
-
-        store.update(Invoice, invoice.id, {
-            "items": invoice_items,
-            "total_amount": total_amount,
-        })
-
-        store.update(Visit, visit_id, {"status": VisitStatus.COMPLETED})
-
-        return store.get(Invoice, invoice.id)
-
-    @staticmethod
-    def get_invoice(invoice_id: int) -> Optional[Invoice]:
-        return store.get(Invoice, invoice_id)
-
-    @staticmethod
-    def get_invoice_by_visit(visit_id: int) -> Optional[Invoice]:
-        results = store.query(Invoice, visit_id=visit_id)
-        return results[0] if results else None
-
-
-class VaccinationService:
-    @staticmethod
-    def record_vaccination(
-        pet_id: int,
-        vaccine_name: str,
-        vaccination_date: date,
-        next_due_date: Optional[date] = None,
-        notes: Optional[str] = None,
-    ) -> Vaccination:
-        pet = store.get(Pet, pet_id)
-        if not pet:
-            raise ValueError("宠物不存在")
-
-        if next_due_date and next_due_date < vaccination_date:
+    def get_todos_by_date(self, target_date: date) -> List[MedicationTodo]:
+        return self.todo_repo.find_by_date(target_date)

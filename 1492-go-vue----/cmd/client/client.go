@@ -69,5 +69,5 @@ func getBaseURL() string {
 	if envURL := os.Getenv("SERVER_URL"); envURL != "" {
 		return envURL
 	}
-	return "http://localhost:8080"
+	return "http://localhost:9012"
 }

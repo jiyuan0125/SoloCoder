@@ -95,5 +95,5 @@ func getServerURL() string {
 	if url := os.Getenv("SERVER_URL"); url != "" {
 		return url
 	}
-	return "http://localhost:8080"
+	return "http://localhost:9009"
 }

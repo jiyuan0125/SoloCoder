@@ -22,7 +22,7 @@ func main() {
 	}
 
 	if port == 0 {
-		port = 8080
+		port = 9009
 	}
 
 	service := lockservice.NewService()

@@ -59,7 +59,7 @@ func cmdCreateAccount(args []string) {
 	vehicleType := fs.Int("type", 1, "车辆类型: 1-客车, 2-货车")
 	seats := fs.Int("seats", 0, "客车座位数 (客车必填)")
 	loadWeight := fs.Float64("weight", 0, "货车载重量(吨) (货车必填)")
-	server := fs.String("server", "http://localhost:8080", "服务端地址")
+	server := fs.String("server", "http://localhost:8907", "服务端地址")
 
 	fs.Parse(args)
 
@@ -81,7 +81,7 @@ func cmdCreateAccount(args []string) {
 func cmdGetAccount(args []string) {
 	fs := flag.NewFlagSet("get-account", flag.ExitOnError)
 	licensePlate := fs.String("plate", "", "车牌号 (必填)")
-	server := fs.String("server", "http://localhost:8080", "服务端地址")
+	server := fs.String("server", "http://localhost:8907", "服务端地址")
 
 	fs.Parse(args)
 
@@ -104,7 +104,7 @@ func cmdRecharge(args []string) {
 	fs := flag.NewFlagSet("recharge", flag.ExitOnError)
 	licensePlate := fs.String("plate", "", "车牌号 (必填)")
 	amount := fs.Float64("amount", 0, "充值金额 (必填)")
-	server := fs.String("server", "http://localhost:8080", "服务端地址")
+	server := fs.String("server", "http://localhost:8907", "服务端地址")
 
 	fs.Parse(args)
 
@@ -130,7 +130,7 @@ func cmdPass(args []string) {
 	exitStation := fs.String("exit", "", "出口站 (必填)")
 	mileage := fs.Float64("mileage", 0, "行驶里程(公里) (必填)")
 	isFree := fs.Bool("free", false, "是否免费通行")
-	server := fs.String("server", "http://localhost:8080", "服务端地址")
+	server := fs.String("server", "http://localhost:8907", "服务端地址")
 
 	fs.Parse(args)
 
@@ -154,7 +154,7 @@ func cmdExport(args []string) {
 	startDate := fs.String("start", "", "开始日期 (YYYY-MM-DD) (必填)")
 	endDate := fs.String("end", "", "结束日期 (YYYY-MM-DD) (必填)")
 	outputFile := fs.String("output", "pass_records.csv", "输出文件名")
-	server := fs.String("server", "http://localhost:8080", "服务端地址")
+	server := fs.String("server", "http://localhost:8907", "服务端地址")
 
 	fs.Parse(args)
 

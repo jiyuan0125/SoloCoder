@@ -13,7 +13,7 @@ var store = core.NewStore()
 
 func main() {
 	var port string
-	flag.StringVar(&port, "port", "8080", "服务监听端口")
+	flag.StringVar(&port, "port", "8908", "服务监听端口")
 	flag.Parse()
 
 	if envPort := os.Getenv("SERVER_PORT"); envPort != "" {

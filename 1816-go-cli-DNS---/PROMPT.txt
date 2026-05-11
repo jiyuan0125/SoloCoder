@@ -18,3 +18,6 @@ DNS查询用UDP协议，但UDP响应超过512字节会被截断。需要支持�
 
 查询CNAME记录时，如果目标域名有CNAME链（A指向B，B指向C），要显示完整的链路，而不仅仅是最终目标。用--resolve参数可以控制是否解析CNAME到最终IP地址。
 DNS查询结果中同一个域名的A记录和AAAA记录要分别显示，不能混在一起。
+管道分阶段：提取-清洗-转换-加载。可跳过清洗但转换依赖清洗后的数据格式。
+子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
+服务端端口通过命令行参数或环境变量指定。

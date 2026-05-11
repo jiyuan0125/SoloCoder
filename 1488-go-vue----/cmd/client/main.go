@@ -14,7 +14,7 @@ import (
 	"housekeeping/internal/api"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:9008"
 
 type Client struct {
 	serverURL string
@@ -347,7 +347,7 @@ func printUsage() {
 	fmt.Println("\n用法:")
 	fmt.Println("  client [选项] <命令> [参数]")
 	fmt.Println("\n选项:")
-	fmt.Println("  -server <URL>    服务端地址 (默认: http://localhost:8080)")
+	fmt.Println("  -server <URL>    服务端地址 (默认: http://localhost:9008)")
 	fmt.Println("\n命令:")
 	fmt.Println("  aunt-register    阿姨入驻")
 	fmt.Println("  aunt-list        查看阿姨列表")

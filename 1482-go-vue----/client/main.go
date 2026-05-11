@@ -76,7 +76,7 @@ func printUsage() {
 	fmt.Println("  client [全局选项] <命令> [子命令] [参数]")
 	fmt.Println()
 	fmt.Println("全局选项:")
-	fmt.Println("  -server string  服务端地址 (默认 \"localhost:8080\")")
+	fmt.Println("  -server string  服务端地址 (默认 \"localhost:9002\")")
 	fmt.Println("  -help, -h       显示帮助信息")
 	fmt.Println()
 	fmt.Println("命令:")
@@ -606,7 +606,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	serverAddr := "localhost:8080"
+	serverAddr := "localhost:9002"
 	args := os.Args[1:]
 
 	for i, arg := range args {

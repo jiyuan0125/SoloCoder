@@ -12,3 +12,6 @@
 
 实现，生成的YAML要符合Kubernetes的最佳实践，比如给所有资源加上统一的标签（app名称、环境、版本号）、Deployment的Pod模板要有合理的anti-affinity规则避免所有Pod调度到同一个节点。ConfigMap和Secret的数据大小有1MB的限制，如果环境变量太多需要提示用户改用文件挂载的方式。Ingress的配置因Ingress Controller不同而不同（Nginx、Traefik等），需要支持多种Ingress模板。生成的YAML注释要清晰，标明哪些字段是工具自动生成的哪些是用户自定义的。资源名称要全局唯一，Service和Deployment用相同的选择器标签来关联。
 生成的YAML中Secret的Base64编码结果，解码后要和原始明文完全一致。
+转换完成后自动校验，校验要读刚写入的输出和原始输入做比对。不一致就自动重新执行。
+多级路径：tool process --input ./data --output ./result。相对绝对路径都支持。
+服务端端口通过命令行参数或环境变量指定。

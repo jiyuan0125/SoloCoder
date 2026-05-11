@@ -19,7 +19,7 @@ func main() {
 	if port == "" {
 		port = os.Getenv("SERVER_PORT")
 		if port == "" {
-			port = "8080"
+			port = "8909"
 		}
 	}
 

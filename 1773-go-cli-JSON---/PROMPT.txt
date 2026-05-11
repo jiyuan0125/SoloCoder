@@ -12,3 +12,6 @@ flatten子命令把嵌套的JSON对象展平为单层键值对。键名用点号
 
 validate子命令用JSON Schema验证JSON文件是否符合规范。接收JSON文件和Schema文件两个参数，输出验证结果和不符合规范的字段列表。
 flatten 后再 unflatten 回来的JSON，和原始JSON逐层对比要完全一致。
+转换完成自动校验行数。不一致注明原因。校验结果不影响退出码。
+多级路径：tool process --input ./data --output ./result。相对绝对路径都支持。
+服务端端口通过命令行参数或环境变量指定。

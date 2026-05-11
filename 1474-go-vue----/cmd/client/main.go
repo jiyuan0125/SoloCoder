@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "Server URL")
+	serverURL := flag.String("server", "http://localhost:8903", "Server URL")
 	flag.Parse()
 
 	args := flag.Args()
@@ -50,7 +50,7 @@ func printUsage() {
 	fmt.Println("  bike-client [flags] <command> [args]")
 	fmt.Println()
 	fmt.Println("Flags:")
-	fmt.Println("  -server string    Server URL (default \"http://localhost:8080\")")
+	fmt.Println("  -server string    Server URL (default \"http://localhost:8903\")")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  fence list")

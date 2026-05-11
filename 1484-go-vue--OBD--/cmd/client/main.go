@@ -14,7 +14,7 @@ import (
 	"obd-platform/pkg/api"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:9004"
 
 type Client struct {
 	serverURL string
@@ -260,7 +260,7 @@ Commands:
   health                                 Health check
 
 Flags:
-  -server URL    Server URL (default: http://localhost:8080)
+  -server URL    Server URL (default: http://localhost:9004)
   -help          Show this help`)
 }
 

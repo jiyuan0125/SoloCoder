@@ -1,8 +1,13 @@
-用 cobra 写一个 ASN.1 解析命令行工具。
-解析 DER 编码的 ASN.1 数据，支持常见类型：INTEGER、BIT STRING、OCTET STRING、NULL、OID、UTF8String、SEQUENCE、SET、UTCTime 等。
-输入可以是十六进制字符串或二进制文件。
-输出展示 ASN.1 结构树，包含标签类型、长度和值。
-能够解析嵌套的 SEQUENCE 和 SET 结构。遇到不认识的标签类型用十六进制展示原始值。
-支持解析 X.509 证书文件，提取证书的各个字段（主题、颁发者、有效期、公钥信息等）。
-输出格式支持文本树和 JSON。
-使用 encoding/asn1 和 crypto/x509 标准库。
+ASN.1解析系统的管理后台，Go + cobra。
+用 cobra 写一个 ASN.1 解析命令行工具
+解析 DER 编码的 ASN.1 数据，支持常见类型：INTEGER、BIT STRING、OCTET STRING、NULL、OID、UTF8String、SEQUENCE、SET、UTCTime 等
+每个操作有独立的接口路径：列表查询、详情查看、子项列表、子项操作。
+输入可以是十六进制字符串或二进制文件
+输出展示 ASN.1 结构树，包含标签类型、长度和值
+系统同时管理主实体和明细记录。明细的每次变动都关联到对应的主实体。
+能够解析嵌套的 SEQUENCE 和 SET 结构。遇到不认识的标签类型用十六进制展示原始值
+支持解析 X.509 证书文件，提取证书的各个字段（主题、颁发者、有效期、公钥信息等）
+输出格式支持文本树和 JSON
+流程按申请→初审→复审→批准→完成推进。每步有对应负责人。
+使用 encoding/asn1 和 crypto/x509 标准库
+做成命令行工具，编译成可执行文件。

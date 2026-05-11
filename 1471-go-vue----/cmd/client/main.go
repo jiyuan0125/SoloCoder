@@ -13,7 +13,7 @@ import (
 )
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := flag.String("server", "http://localhost:8900", "服务端地址")
 	flag.Parse()
 
 	args := flag.Args()

@@ -6,7 +6,7 @@ use std::fmt;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(long, env = "SERVER_URL", default_value = "http://127.0.0.1:3000")]
+    #[arg(long, env = "SERVER_URL", default_value = "http://127.0.0.1:8603")]
     server: String,
 
     #[command(subcommand)]

@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8905"
 
 type Client struct {
 	baseURL string
@@ -102,7 +102,7 @@ func printHelp() {
   restock-complete <id>       完成补货待办
 
 全局选项:
-  -server <url>               服务端地址 (默认: http://localhost:8080)
+  -server <url>               服务端地址 (默认: http://localhost:8905)
   -h, -help                   显示帮助
 
 示例:

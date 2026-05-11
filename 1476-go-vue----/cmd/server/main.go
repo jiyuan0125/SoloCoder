@@ -411,7 +411,7 @@ func (s *Server) completeRestockTodo(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) getPort() string {
-	port := "8080"
+	port := "8905"
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		port = envPort
 	}
@@ -423,7 +423,7 @@ func (s *Server) getPort() string {
 	}
 
 	if _, err := strconv.Atoi(port); err != nil {
-		port = "8080"
+		port = "8905"
 	}
 	return ":" + port
 }

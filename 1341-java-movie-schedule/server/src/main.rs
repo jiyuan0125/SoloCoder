@@ -24,7 +24,7 @@ async fn main() {
     let port = env::args()
         .nth(1)
         .or_else(|| env::var("PORT").ok())
-        .unwrap_or_else(|| "8080".to_string());
+        .unwrap_or_else(|| "8100".to_string());
     
     let addr: SocketAddr = format!("127.0.0.1:{}", port)
         .parse()

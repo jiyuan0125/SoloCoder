@@ -15,7 +15,7 @@ func main() {
 	port := flag.String("port", "", "服务端口 (也可通过环境变量 PORT 设置)")
 	flag.Parse()
 
-	listenPort := "8080"
+	listenPort := "8900"
 	if *port != "" {
 		listenPort = *port
 	} else if envPort := os.Getenv("PORT"); envPort != "" {

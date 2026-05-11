@@ -1,11 +1,14 @@
-用 Go 和 cobra 写一个 DNS 区域传送模拟工具。
-DNS 区域传送是主从 DNS 服务器之间同步区域数据的机制。
-使用 AXFR（全量）和 IXFR（增量）两种方式。
-工具模拟这个过程的客户端。
-
-需要构建 DNS 协议的消息格式（Header、Question、Answer、Authority、Additional 各 section）。
-支持常见的资源记录类型（A、AAAA、CNAME、MX、NS、SOA、TXT）。
-消息使用 TCP 传输，按 DNS 协议的二进制格式编码和解码。
-
-工具要有 axfr（请求全量传送）、ixfr（请求增量传送）、query（查询指定记录）三个子命令。
-区域数据从本地配置文件读取。
+我们最近需要一套DNS区域传送系统，用 Go + cobra 做。
+用 Go 和 cobra 写一个 DNS 区域传送模拟工具
+DNS 区域传送是主从 DNS 服务器之间同步区域数据的机制
+每个操作有独立的接口路径：列表查询、详情查看、子项列表、子项操作。
+使用 AXFR（全量）和 IXFR（增量）两种方式
+工具模拟这个过程的客户端
+需要构建 DNS 协议的消息格式（Header、Question、Answer、Authority、Additional 各 section）
+系统同时管理主实体和明细记录。明细的每次变动都关联到对应的主实体。
+支持常见的资源记录类型（A、AAAA、CNAME、MX、NS、SOA、TXT）
+消息使用 TCP 传输，按 DNS 协议的二进制格式编码和解码
+工具要有 axfr（请求全量传送）、ixfr（请求增量传送）、query（查询指定记录）三个子命令
+流程按申请→初审→复审→批准→完成推进。每步有对应负责人。
+区域数据从本地配置文件读取
+做成命令行工具，编译成可执行文件。

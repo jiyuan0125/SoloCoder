@@ -14,7 +14,7 @@ func printHelp() {
 用法: taxi-client [全局选项] <命令> [命令选项]
 
 全局选项:
-  -server <地址>    服务端地址 (默认: http://localhost:8080)
+  -server <地址>    服务端地址 (默认: http://localhost:8901)
 
 可用命令:
   vehicle           车辆管理
@@ -60,7 +60,7 @@ func main() {
 	}
 
 	var serverURL string
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "服务端地址")
+	flag.StringVar(&serverURL, "server", "http://localhost:8901", "服务端地址")
 	flag.Parse()
 
 	client := NewAPIClient(serverURL)

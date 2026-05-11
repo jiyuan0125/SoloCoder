@@ -10,3 +10,7 @@ oneof字段的处理方面，oneof是一组互斥字段，只能设置其中一�
 
 代码架构用策略模式，diff和mapping各自是一套处理流程，共享proto文件的解析模块。proto解析不需要依赖protoc工具，自己写一个简易的proto3语法解析器就行，只需要能处理message、field、enum、oneof、map这几个关键字。
 Protobuf转JSON时如果消息中有oneof字段，只序列化实际设置了值的那个分支。
+分析完成后自动生成摘要，摘要生成也要读中间数据。中间数据和结果存在同一个文件里。
+同步完成自动清理临时文件。已被手动删就跳过，同步结果不受影响。
+子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
+服务端端口通过命令行参数或环境变量指定。

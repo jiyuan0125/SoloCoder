@@ -8,7 +8,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(name = "team-activity-cli")]
 struct Args {
-    #[arg(short, long, env = "SERVER_URL", default_value = "http://localhost:3000")]
+    #[arg(short, long, env = "SERVER_URL", default_value = "http://localhost:8100")]
     server: String,
 
     #[command(subcommand)]

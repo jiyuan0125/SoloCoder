@@ -243,8 +243,8 @@ func getPort() int {
 		}
 	}
 
-	port := 8080
-	flag.IntVar(&port, "port", 8080, "server port (also from OBD_SERVER_PORT env)")
+	port := 9004
+	flag.IntVar(&port, "port", 9004, "server port (also from OBD_SERVER_PORT env)")
 	flag.Parse()
 
 	return port

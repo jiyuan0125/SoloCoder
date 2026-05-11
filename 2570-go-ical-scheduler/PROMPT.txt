@@ -1,5 +1,7 @@
 用 Gin 写一个 iCal 日程调度 API。
 
+流程走提交、初审、终审、完成几个环节，退回到上一个环节改完再继续（同时刷新关联汇总，汇总计算要读取这笔操作的数据）。
+
 解析 iCalendar 格式（.ics 文件）的日程数据，提取 VEVENT 组件中的摘要、开始时间、结束时间、重复规则（RRULE）和参与者。RRULE 支持 FREQ（DAILY/WEEKLY/MONTHLY/YEARLY）、INTERVAL、COUNT、UNTIL、BYDAY 等参数。
 
 根据 RRULE 展开重复事件为具体的日期时间序列。展开时排除 EXDATE 指定的日期。支持导入和导出 iCal 文件。日程冲突检测：新创建的事件如果和已有事件时间重叠，返回冲突列表。

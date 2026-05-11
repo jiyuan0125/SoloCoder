@@ -2,7 +2,7 @@
 
 管理 Prometheus 告警规则和记录规则。规则文件是 YAML 格式，包含 groups，每个 group 有 name、interval 和 rules 列表。每条 rule 有 expr（PromQL 表达式）、labels、annotations 和 for（告警持续时间）。
 
-服务支持规则的增删改查，修改后自动校验 PromQL 表达式语法。校验用 prometheus/promql 包解析表达式。规则有版本号，每次修改版本递增，保留历史版本。
+服务支持规则的增删改查，修改后自动校验 PromQL 表达式语法。修改后基于该参数的关联数据同步刷新。资源下的子操作用多级接口路径。校验用 prometheus/promql 包解析表达式。规则有版本号，每次修改版本递增，保留历史版本。
 
 支持规则的启用/停用，停用的规则不参与评估。规则分组管理：同一 group 的规则共享评估间隔。支持模拟评估：给定一组 metric 数据和规则，预测会触发哪些告警。规则变更时生成变更记录，包含操作人、时间和 diff。
 数据存 SQLite + YAML 文件，8080 端口。

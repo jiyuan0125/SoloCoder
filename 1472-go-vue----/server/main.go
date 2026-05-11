@@ -23,7 +23,7 @@ func main() {
 	}
 
 	if port == 0 {
-		port = 8080
+		port = 8901
 	}
 
 	server := NewServer()

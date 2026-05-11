@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 from .models import (
     Batch, BatchStatus, Breed, Breeding, BreedingStatus,
     Vaccination, VaccinationType, Slaughter, Reminder, ReminderType,
-    DashboardMetrics, BatchCreate, BreedingCreate, BreedingUpdate,
+    DashboardMetrics, BatchCreate, BatchUpdate, BreedingCreate, BreedingUpdate,
     VaccinationCreate, SlaughterCreate, ReminderUpdate
 )
 from .exceptions import (

@@ -7,7 +7,7 @@ import (
 	"parking-system/core"
 )
 
-const defaultPort = "8080"
+const defaultPort = "8904"
 
 func main() {
 	port := getPort()

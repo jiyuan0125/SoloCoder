@@ -16,7 +16,7 @@ use std::sync::Arc;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, env = "CHECKIN_PORT", default_value_t = 3000)]
+    #[arg(short, long, env = "CHECKIN_PORT", default_value_t = 8100)]
     port: u16,
 
     #[arg(short = 'H', long, env = "CHECKIN_HOST", default_value = "0.0.0.0")]

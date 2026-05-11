@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:8908"
 
 var serverURL string
 
@@ -51,7 +51,7 @@ func printUsage() {
 	fmt.Println("  client [选项] <命令> [子命令] [参数]")
 	fmt.Println()
 	fmt.Println("选项:")
-	fmt.Println("  -server string   服务端地址 (默认 \"http://localhost:8080\")")
+	fmt.Println("  -server string   服务端地址 (默认 \"http://localhost:8908\")")
 	fmt.Println()
 	fmt.Println("命令:")
 	fmt.Println("  student   学员管理")

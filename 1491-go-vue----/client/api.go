@@ -18,7 +18,7 @@ type Client struct {
 func newClient() *Client {
 	base := os.Getenv("SERVER_URL")
 	if base == "" {
-		base = "http://localhost:8080"
+		base = "http://localhost:9011"
 	}
 	return &Client{baseURL: base}
 }

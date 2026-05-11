@@ -12,7 +12,7 @@ import (
 )
 
 func main() {
-	serverURL := flag.String("server", "http://localhost:8080", "服务端地址")
+	serverURL := flag.String("server", "http://localhost:9017", "服务端地址")
 	flag.Parse()
 
 	client := NewAPIClient(*serverURL, "")

@@ -12,7 +12,7 @@ import (
 	"piperepair/api"
 )
 
-const defaultServerURL = "http://localhost:8080"
+const defaultServerURL = "http://localhost:9010"
 
 var serverURL string
 

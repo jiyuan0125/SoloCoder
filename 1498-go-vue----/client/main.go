@@ -13,7 +13,7 @@ import (
 	"housekeeping-training/common"
 )
 
-var baseURL = "http://localhost:8080/api"
+var baseURL = "http://localhost:9018/api"
 
 func setServerURL() {
 	if url := os.Getenv("SERVER_URL"); url != "" {

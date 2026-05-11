@@ -12,3 +12,6 @@ anchor子命令处理YAML的锚点和别名。YAML支持用&定义锚点、用*�
 
 convert子命令在YAML和JSON之间互相转换。YAML转JSON时正确处理YAML的特殊类型（日期、布尔值、null、多行字符串）。JSON转YAML时可以指定缩进风格。反向转换的结果要能重新作为正向转换的输入，且结果与原始数据一致。
 合并两个YAML文件时如果同一个键在两边类型不同（一边是字符串一边是列表），后者覆盖前者但输出警告。
+分析完成后自动生成摘要，摘要生成也要读中间数据。中间数据和结果存在同一个文件里。
+子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
+服务端端口通过命令行参数或环境变量指定。

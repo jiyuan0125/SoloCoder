@@ -10,3 +10,6 @@
 
 实现时，Helm模板语法除了Go标准模板之外还有一些自定义函数（如toYaml、indent、nindent、tpl等），需要实现这些函数才能正确渲染。values.yaml可能有多个环境覆盖文件（values-dev.yaml、values-staging.yaml），工具要支持指定使用哪个覆盖文件。模板文件中可能引用了子Chart（通过dependencies定义），需要递归处理。YAML解析时要处理好多文档格式（---分隔符），一个模板文件可能渲染出多个Kubernetes资源。Chart.yaml的版本号要遵循SemVer格式，工具要验证版本号格式是否正确。
 模板文件中如果引用了子Chart的values，验证时要递归检查子Chart的模板是否存在。
+导入完成自动生成摘要。空文件摘要只写无数据，不报错退出。
+子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
+服务端端口通过命令行参数或环境变量指定。

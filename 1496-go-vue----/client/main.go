@@ -15,7 +15,7 @@ import (
 var serverURL string
 
 func main() {
-	flag.StringVar(&serverURL, "server", "http://localhost:8080", "服务端地址")
+	flag.StringVar(&serverURL, "server", "http://localhost:9016", "服务端地址")
 	flag.Parse()
 
 	if len(flag.Args()) == 0 {
@@ -51,7 +51,7 @@ func printHelp() {
 	fmt.Println("用法: client [options] <command> [arguments]")
 	fmt.Println("")
 	fmt.Println("选项:")
-	fmt.Println("  -server <url>    服务端地址，默认 http://localhost:8080")
+	fmt.Println("  -server <url>    服务端地址，默认 http://localhost:9016")
 	fmt.Println("")
 	fmt.Println("命令:")
 	fmt.Println("  categories                          列出所有废品分类")

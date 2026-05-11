@@ -12,7 +12,7 @@ use complaint_core::{
 #[derive(Parser, Debug)]
 #[command(author, version, about = "客诉SLA时效管控系统 - 命令行客户端", long_about = None)]
 struct Cli {
-    #[arg(long, env = "COMPLAINT_SERVER_URL", default_value = "http://127.0.0.1:3000")]
+    #[arg(long, env = "COMPLAINT_SERVER_URL", default_value = "http://127.0.0.1:8100")]
     server: String,
 
     #[command(subcommand)]

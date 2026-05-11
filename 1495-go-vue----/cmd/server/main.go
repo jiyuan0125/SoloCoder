@@ -19,7 +19,7 @@ func main() {
 	if port == "" {
 		port = os.Getenv("PEST_CONTROL_PORT")
 		if port == "" {
-			port = ":8080"
+			port = ":9015"
 		}
 	}
 	if port[0] != ':' {

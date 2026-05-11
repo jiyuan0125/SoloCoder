@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultServerURL = "http://localhost:8080"
+	defaultServerURL = "http://localhost:9005"
 )
 
 func main() {
@@ -104,5 +104,5 @@ func printUsage() {
 	fmt.Println("      Types: sensor, stats, alerts")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  --server <url>  Server URL (default: http://localhost:8080)")
+	fmt.Println("  --server <url>  Server URL (default: http://localhost:9005)")
 }

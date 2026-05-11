@@ -19,7 +19,7 @@ use activity_core::{
 #[derive(Parser, Debug)]
 #[command(name = "team-activity-server")]
 struct Args {
-    #[arg(short, long, env = "SERVER_PORT", default_value_t = 3000)]
+    #[arg(short, long, env = "SERVER_PORT", default_value_t = 8100)]
     port: u16,
 
     #[arg(long, env = "SERVER_HOST", default_value = "0.0.0.0")]

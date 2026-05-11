@@ -17,7 +17,7 @@ type APIClient struct {
 
 func NewAPIClient(baseURL string) *APIClient {
 	if baseURL == "" {
-		baseURL = "http://localhost:8080"
+		baseURL = "http://localhost:9014"
 	}
 	return &APIClient{BaseURL: baseURL}
 }
@@ -58,7 +58,7 @@ func printJSON(data []byte) {
 }
 
 func main() {
-	baseURL := flag.String("server", "http://localhost:8080", "Server base URL")
+	baseURL := flag.String("server", "http://localhost:9014", "Server base URL")
 	flag.Parse()
 
 	if len(flag.Args()) < 1 {
@@ -98,7 +98,7 @@ func printUsage() {
 	fmt.Println("Usage: green-care [options] <command> [subcommand] [args]")
 	fmt.Println()
 	fmt.Println("Options:")
-	fmt.Println("  -server string    Server base URL (default: http://localhost:8080)")
+	fmt.Println("  -server string    Server base URL (default: http://localhost:9014)")
 	fmt.Println()
 	fmt.Println("Commands:")
 	fmt.Println("  zone list|create|get <id>")

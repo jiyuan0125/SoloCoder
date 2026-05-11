@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	defaultServerURL = "http://localhost:8080"
+	defaultServerURL = "http://localhost:8906"
 )
 
 type APIClient struct {
@@ -362,7 +362,7 @@ func printUsage() {
 	fmt.Println("  records <user_id>                  查看充电记录")
 	fmt.Println("  summary <user_id>                  查看月度统计")
 	fmt.Println("\n选项:")
-	fmt.Println("  --server URL                       服务端URL (默认: http://localhost:8080)")
+	fmt.Println("  --server URL                       服务端URL (默认: http://localhost:8906)")
 	fmt.Println("\n示例:")
 	fmt.Println("  client stations")
 	fmt.Println("  client reserve user-001 station-001 charger-001 14:00 15:00")

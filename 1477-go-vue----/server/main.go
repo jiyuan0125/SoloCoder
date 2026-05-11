@@ -317,7 +317,7 @@ func main() {
 		if envPort := os.Getenv("PORT"); envPort != "" {
 			*port = envPort
 		} else {
-			*port = "8080"
+			*port = "8906"
 		}
 	}
 	

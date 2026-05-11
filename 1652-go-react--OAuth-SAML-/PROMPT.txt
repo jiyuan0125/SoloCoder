@@ -1,7 +1,9 @@
-帮我用 TypeScript 写一个OAuth2授权服务的后端，实现标准的授权码流程。
+每个应用都自己搞一套登录太乱了，所以想做一个OAuth2授权服务，TypeScript 后端。
 
-客户端注册：第三方应用注册时填写应用名称、回调URL和权限范围。注册成功后获得client_id和client_secret。授权码流程：用户在第三方应用点击授权后跳转到授权服务，授权服务验证用户身份后展示授权确认页面。用户同意后生成授权码（有效期10分钟），回调到第三方应用的URL并携带授权码。第三方应用用授权码换取access_token。access_token有有效期（默认2小时）和刷新token。
+客户端注册时填应用名称、回调URL和权限范围，注册完给client_id和client_secret。授权码流程：用户在第三方点授权后跳到这边登录确认，确认后生成授权码（10分钟有效），回调到第三方并带上授权码，第三方拿授权码换access_token。access_token默认2小时有效，还有刷新token。
 
-token安全：refresh_token只能使用一次，使用后旧的refresh_token失效并颁发新的。授权码和token都用随机字符串生成，长度要足够避免碰撞。同一用户的同一应用可以同时有多个有效的access_token（不同设备登录场景）。权限范围控制：客户端请求时指定scope，授权后颁发的token只包含授权的scope。token验证接口检查token是否有效、是否过期和是否有对应scope。
+refresh_token只能用一次，用了之后旧的失效给个新的。授权码和token都要随机字符串生成，长度够长避免碰撞。同一用户的同一应用可以同时有多个有效access_token（不同设备场景）。权限范围控制：客户端请求时指定scope，颁发的token只包含授权的scope。
 
-核心功能实现为独立模块。服务端用 Express 框架提供 HTTP 接口，客户端是命令行工具通过 HTTP 调用服务端。项目用 TypeScript 写，tsconfig 开启 strict 模式。npm install 后 npm run build 能编译通过，node dist/server.js 能启动服务端。服务端监听端口通过环境变量指定。
+授权码换token的接口路径比较深，像 /oauth/authorize/{client_id}/callback 这种多级路径要确保能正确匹配。token刷新时旧token立即失效，如果旧的还在被使用中的请求要能正常完成。
+
+Express + TypeScript，npm run build 能编译通过就行。

@@ -88,7 +88,7 @@ func printUsage() {
 	fmt.Println("  list-techs                                列出所有师傅")
 	fmt.Println()
 	fmt.Println("环境变量:")
-	fmt.Println("  SERVER_URL                                服务端地址 (默认 http://localhost:8080)")
+	fmt.Println("  SERVER_URL                                服务端地址 (默认 http://localhost:9011)")
 }
 
 func printJSON(v interface{}) {

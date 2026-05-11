@@ -7,7 +7,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, env = "SERVER_URL", default_value = "http://localhost:3000")]
+    #[arg(short, long, env = "SERVER_URL", default_value = "http://localhost:8610")]
     server: String,
 
     #[command(subcommand)]

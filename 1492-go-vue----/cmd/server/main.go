@@ -168,7 +168,7 @@ func getPort() string {
 		return ":" + port
 	}
 
-	flagPort := flag.String("port", "8080", "server port")
+	flagPort := flag.String("port", "9012", "server port")
 	flag.Parse()
 
 	return ":" + *flagPort

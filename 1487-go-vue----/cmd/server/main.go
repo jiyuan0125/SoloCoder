@@ -9,7 +9,7 @@ import (
 	"moving-platform/pkg/core"
 )
 
-const defaultPort = 8080
+const defaultPort = 9007
 
 func main() {
 	port := getPort()

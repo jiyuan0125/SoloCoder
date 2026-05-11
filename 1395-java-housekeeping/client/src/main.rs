@@ -6,7 +6,7 @@ use serde_json::json;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = "家政服务平台管理系统命令行客户端")]
 struct Cli {
-    #[arg(short, long, default_value = "http://localhost:8080")]
+    #[arg(short, long, default_value = "http://localhost:8605")]
     server: String,
 
     #[command(subcommand)]

@@ -162,7 +162,7 @@ func (s *Server) handleHandleOverdue(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var port int
-	flag.IntVar(&port, "port", 8080, "Server port")
+	flag.IntVar(&port, "port", 9006, "Server port")
 	flag.Parse()
 
 	if envPort := os.Getenv("PORT"); envPort != "" {

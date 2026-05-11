@@ -13,7 +13,7 @@ import (
 func getPort() string {
 	port := os.Getenv("PORT")
 	if port == "" {
-		flagPort := flag.String("port", "8080", "服务监听端口")
+		flagPort := flag.String("port", "9017", "服务监听端口")
 		flag.Parse()
 		port = *flagPort
 	}

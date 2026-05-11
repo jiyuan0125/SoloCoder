@@ -14,7 +14,7 @@ use uuid::Uuid;
 #[command(name = "bid-procure-cli")]
 #[command(about = "竞价采购管理系统命令行客户端", long_about = None)]
 struct Cli {
-    #[arg(long, default_value = "http://localhost:8080")]
+    #[arg(long, default_value = "http://localhost:8606")]
     server: String,
 
     #[command(subcommand)]
@@ -96,7 +96,7 @@ struct ErrorResponse {
 }
 
 fn get_server_url() -> String {
-    env::var("SERVER_URL").unwrap_or_else(|_| "http://localhost:8080".to_string())
+    env::var("SERVER_URL").unwrap_or_else(|_| "http://localhost:8606".to_string())
 }
 
 async fn create_supplier(server: &str, name: &str, qualification: &str) -> Result<(), String> {
@@ -553,7 +553,7 @@ async fn evaluate_winner(server: &str, id: &str) -> Result<(), String> {
 #[tokio::main]
 async fn main() {
     let cli = Cli::parse();
-    let server = if cli.server == "http://localhost:8080" {
+    let server = if cli.server == "http://localhost:8606" {
         get_server_url()
     } else {
         cli.server

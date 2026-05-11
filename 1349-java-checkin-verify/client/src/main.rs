@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, env = "CHECKIN_SERVER", default_value = "http://localhost:3000")]
+    #[arg(short, long, env = "CHECKIN_SERVER", default_value = "http://localhost:8100")]
     server: String,
 
     #[command(subcommand)]

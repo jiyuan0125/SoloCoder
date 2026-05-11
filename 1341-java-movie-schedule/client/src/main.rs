@@ -7,7 +7,7 @@ use uuid::Uuid;
 use reqwest::Client;
 use serde::de::DeserializeOwned;
 
-const DEFAULT_BASE_URL: &str = "http://127.0.0.1:8080";
+const DEFAULT_BASE_URL: &str = "http://127.0.0.1:8100";
 
 struct ApiClient {
     client: Client,
@@ -79,7 +79,7 @@ fn print_help() {
     println!("  client help                       显示帮助");
     println!();
     println!("时间格式示例: 2024-01-15 19:00");
-    println!("环境变量: SERVER_URL (默认: http://127.0.0.1:8080)");
+    println!("环境变量: SERVER_URL (默认: http://127.0.0.1:8100)");
 }
 
 #[tokio::main]

@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-const defaultPort = "8080"
+const defaultPort = "9011"
 
 func main() {
 	var portFlag string

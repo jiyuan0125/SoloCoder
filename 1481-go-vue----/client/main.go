@@ -40,7 +40,7 @@ func printUsage() {
 func getServerURL() string {
 	server := os.Getenv("SERVER_URL")
 	if server == "" {
-		server = "http://localhost:8080"
+		server = "http://localhost:9001"
 	}
 	return server
 }

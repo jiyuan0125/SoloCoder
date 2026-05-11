@@ -280,7 +280,7 @@ func main() {
 	var port int
 	var envPort string
 
-	flag.IntVar(&port, "port", 8080, "Server port")
+	flag.IntVar(&port, "port", 9019, "Server port")
 	flag.Parse()
 
 	if envPort = os.Getenv("APP_PORT"); envPort != "" {

@@ -41,7 +41,7 @@ Settlement Commands:
   get-settlement <id>                                  Get settlement details
 
 Environment:
-  SERVER_URL   Server base URL (default: http://localhost:8080)
+  SERVER_URL   Server base URL (default: http://localhost:9012)
 `)
 }
 

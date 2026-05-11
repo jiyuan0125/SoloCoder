@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geology-project-management"
+version = "1.0.0"
+description = "地质勘探项目管理系统"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi==0.109.0",
+    "uvicorn[standard]==0.27.0",
+    "pydantic==2.5.3",
+    "requests==2.31.0",
+    "python-dateutil==2.8.2",
+]
+
+[project.scripts]
+geology-server = "src.server.__main__:main"
+geology-cli = "src.client.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

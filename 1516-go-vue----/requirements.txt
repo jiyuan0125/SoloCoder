@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pydantic
+requests
+typer
+python-dateutil

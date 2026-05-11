@@ -10,7 +10,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, env = "LEASE_SERVER_URL", default_value = "http://localhost:3000")]
+    #[arg(short, long, env = "LEASE_SERVER_URL", default_value = "http://localhost:8604")]
     server_url: String,
 
     #[command(subcommand)]

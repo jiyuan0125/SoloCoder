@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pet-boarding"
+version = "1.0.0"
+description = "宠物寄养中心管理系统"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi==0.111.0",
+    "uvicorn[standard]==0.30.1",
+    "pydantic==2.7.1",
+    "sqlalchemy==2.0.30",
+    "typer==0.12.3",
+    "requests==2.32.2",
+    "python-dateutil==2.9.0",
+]
+
+[project.scripts]
+pet-server = "server.__main__:main"
+pet-cli = "client.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-dir]
+"" = "src"

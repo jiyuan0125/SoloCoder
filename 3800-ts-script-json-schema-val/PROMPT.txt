@@ -1,8 +1,6 @@
-用 TypeScript 写一个 JSON Schema 校验器，纯 Node.js。
-自己实现一个简易的 JSON Schema 校验器（不依赖第三方校验库），支持 type、required、properties、items、minLength、maxLength、minimum、maximum、enum、pattern 这些关键字。
-支持嵌套的 object 和 array 类型校验。
-校验失败时给出详细的错误路径和原因，不是简单地说「校验失败」。
-校验结果包含：是否通过、错误列表（每个错误有路径和描述）、校验耗时。
-支持从一个目录批量校验多个 JSON 文件。
-支持 $ref 引用同一 schema 内的其他定义，实现 schema 内部复用。提供 CLI 入口，接收 schema 文件路径和待校验的 JSON 文件路径作为参数。
+最近在搞数据校验这块，需要一个JSON Schema校验器，纯 Node.js + TypeScript。
+自己实现一个简易校验器不依赖第三方库，支持 type、required、properties、items、minLength、maxLength、minimum、maximum、enum、pattern。
+支持嵌套的 object 和 array。校验失败时给出详细的错误路径和原因。
+支持从目录批量校验多个 JSON 文件。支持 $ref 引用 schema 内部定义。
+校验完成后自动输出统计：通过数、失败数、各错误类型分布。
 能跑起来就行。

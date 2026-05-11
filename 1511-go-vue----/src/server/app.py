@@ -1,211 +1,309 @@
-import os
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Query
-from typing import Optional, List
-from datetime import date
+from typing import Optional
+from fastapi import FastAPI, HTTPException, Depends
+from pydantic import BaseModel
+from datetime import date, datetime
 
-from ..core.models import (
-    Plot, PlotCreate,
-    HarvestPlan, HarvestPlanCreate,
-    HarvestRecord, HarvestRecordCreate,
-    ProcessingBatch, ProcessingBatchCreate, ProcessingBatchUpdate,
-    QualityEvaluation, QualityEvaluationCreate,
-    Alert, AlertType
+from sys import path
+from pathlib import Path
+
+src_path = str(Path(__file__).resolve().parent.parent.parent / "src")
+if src_path not in path:
+    path.insert(0, src_path)
+
+from core import (
+    Storage,
+    PlotService,
+    HarvestService,
+    ProcessingService,
+    SchedulerService,
+    FreshLeafGrade,
+    FinishedGrade,
+    TodoStatus,
+    AlertStatus,
+    ValidationException,
+    NotFoundException,
+    ConflictException,
 )
-from ..core.storage import storage
-from ..core.scheduler import scheduler
+from .config import settings
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    scheduler.start()
-    yield
-    scheduler.stop()
+_storage: Optional[Storage] = None
 
 
-app = FastAPI(
-    title="茶叶加工厂管理系统 API",
-    description="从采摘到分级的茶叶加工管理后端服务",
-    version="1.0.0",
-    lifespan=lifespan
-)
+def get_storage() -> Storage:
+    global _storage
+    if _storage is None:
+        _storage = Storage()
+    return _storage
 
 
-@app.get("/")
-def root():
-    return {"message": "茶叶加工厂管理系统 API 运行中", "status": "ok"}
+def get_services(storage: Storage = Depends(get_storage)):
+    return {
+        "plot": PlotService(storage),
+        "harvest": HarvestService(storage),
+        "processing": ProcessingService(storage),
+        "scheduler": SchedulerService(storage),
+    }
 
 
-@app.post("/plots/", response_model=Plot, status_code=201)
-def create_plot(plot_create: PlotCreate):
-    return storage.create_plot(plot_create)
+class PlotCreate(BaseModel):
+    name: str
+    location: str
+    area: float
 
 
-@app.get("/plots/", response_model=List[Plot])
-def list_plots():
-    return storage.list_plots()
+class PlotUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
+    area: Optional[float] = None
 
 
-@app.get("/plots/{plot_id}", response_model=Plot)
-def get_plot(plot_id: int):
-    plot = storage.get_plot(plot_id)
-    if not plot:
-        raise HTTPException(status_code=404, detail=f"茶园地块 ID {plot_id} 不存在")
-    return plot
+class HarvestPlanCreate(BaseModel):
+    plot_id: str
+    plan_date: date
+    expected_quantity: float
 
 
-@app.post("/harvest-plans/", response_model=HarvestPlan, status_code=201)
-def create_harvest_plan(plan_create: HarvestPlanCreate):
-    plot = storage.get_plot(plan_create.plot_id)
-    if not plot:
-        raise HTTPException(status_code=400, detail=f"茶园地块 ID {plan_create.plot_id} 不存在")
-    try:
-        return storage.create_harvest_plan(plan_create)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+class HarvestPlanUpdate(BaseModel):
+    plan_date: Optional[date] = None
+    expected_quantity: Optional[float] = None
 
 
-@app.get("/harvest-plans/", response_model=List[HarvestPlan])
-def list_harvest_plans(
-    plot_id: Optional[int] = Query(None, description="按地块筛选"),
-    plan_date: Optional[date] = Query(None, description="按计划日期筛选")
-):
-    return storage.list_harvest_plans(plot_id, plan_date)
+class HarvestRecordCreate(BaseModel):
+    plan_id: str
+    actual_quantity: float
+    fresh_leaf_grade: FreshLeafGrade
+    harvest_time: Optional[datetime] = None
 
 
-@app.get("/harvest-plans/{plan_id}", response_model=HarvestPlan)
-def get_harvest_plan(plan_id: int):
-    plan = storage.get_harvest_plan(plan_id)
-    if not plan:
-        raise HTTPException(status_code=404, detail=f"采摘计划 ID {plan_id} 不存在")
-    return plan
+class HarvestRecordUpdate(BaseModel):
+    actual_quantity: Optional[float] = None
+    fresh_leaf_grade: Optional[FreshLeafGrade] = None
+    harvest_time: Optional[datetime] = None
 
 
-@app.post("/harvest-records/", response_model=HarvestRecord, status_code=201)
-def create_harvest_record(record_create: HarvestRecordCreate):
-    plan = storage.get_harvest_plan(record_create.plan_id)
-    if not plan:
-        raise HTTPException(status_code=400, detail=f"采摘计划 ID {record_create.plan_id} 不存在")
-    return storage.create_harvest_record(record_create)
+class ProcessingBatchCreate(BaseModel):
+    harvest_record_id: str
+    input_quantity: float
+    start_time: Optional[datetime] = None
 
 
-@app.get("/harvest-records/", response_model=List[HarvestRecord])
-def list_harvest_records(
-    plan_id: Optional[int] = Query(None, description="按计划筛选")
-):
-    return storage.list_harvest_records(plan_id)
+class ProcessingBatchComplete(BaseModel):
+    output_quantity: float
 
 
-@app.get("/harvest-records/{record_id}", response_model=HarvestRecord)
-def get_harvest_record(record_id: int):
-    record = storage.get_harvest_record(record_id)
-    if not record:
-        raise HTTPException(status_code=404, detail=f"采摘记录 ID {record_id} 不存在")
-    return record
+class QualityRatingCreate(BaseModel):
+    batch_id: str
+    grade: FinishedGrade
+    sensory_description: str
 
 
-@app.post("/processing-batches/", response_model=ProcessingBatch, status_code=201)
-def create_processing_batch(batch_create: ProcessingBatchCreate):
-    record = storage.get_harvest_record(batch_create.harvest_record_id)
-    if not record:
-        raise HTTPException(status_code=400, detail=f"采摘记录 ID {batch_create.harvest_record_id} 不存在")
-    
-    if storage.has_processing_batch_for_harvest(batch_create.harvest_record_id):
-        raise HTTPException(
-            status_code=400,
-            detail=f"该采摘记录（ID {batch_create.harvest_record_id}）已存在炒制批次，无法重复创建"
+class QualityRatingUpdate(BaseModel):
+    grade: Optional[FinishedGrade] = None
+    sensory_description: Optional[str] = None
+
+
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title="茶叶加工厂管理系统",
+        description="从采摘到分级的全流程管理后端",
+        version="0.1.0"
+    )
+
+    @app.exception_handler(ValidationException)
+    async def validation_exception_handler(request, exc):
+        raise HTTPException(status_code=400, detail={"error": "ValidationError", "message": exc.message})
+
+    @app.exception_handler(NotFoundException)
+    async def not_found_exception_handler(request, exc):
+        raise HTTPException(status_code=404, detail={"error": "NotFound", "message": exc.message})
+
+    @app.exception_handler(ConflictException)
+    async def conflict_exception_handler(request, exc):
+        raise HTTPException(status_code=409, detail={"error": "Conflict", "message": exc.message})
+
+    @app.get("/")
+    def root():
+        return {"name": "茶叶加工厂管理系统", "version": "0.1.0"}
+
+    @app.get("/plots")
+    def list_plots(services: dict = Depends(get_services)):
+        return {"plots": services["plot"].list()}
+
+    @app.post("/plots")
+    def create_plot(data: PlotCreate, services: dict = Depends(get_services)):
+        return services["plot"].create(
+            name=data.name,
+            location=data.location,
+            area=data.area
         )
-    
-    return storage.create_processing_batch(batch_create)
 
+    @app.get("/plots/{plot_id}")
+    def get_plot(plot_id: str, services: dict = Depends(get_services)):
+        return services["plot"].get(plot_id)
 
-@app.get("/processing-batches/", response_model=List[ProcessingBatch])
-def list_processing_batches(
-    harvest_record_id: Optional[int] = Query(None, description="按采摘记录筛选")
-):
-    return storage.list_processing_batches(harvest_record_id)
+    @app.put("/plots/{plot_id}")
+    def update_plot(plot_id: str, data: PlotUpdate, services: dict = Depends(get_services)):
+        return services["plot"].update(
+            plot_id=plot_id,
+            name=data.name,
+            location=data.location,
+            area=data.area
+        )
 
+    @app.delete("/plots/{plot_id}")
+    def delete_plot(plot_id: str, services: dict = Depends(get_services)):
+        services["plot"].delete(plot_id)
+        return {"success": True}
 
-@app.get("/processing-batches/{batch_id}", response_model=ProcessingBatch)
-def get_processing_batch(batch_id: int):
-    batch = storage.get_processing_batch(batch_id)
-    if not batch:
-        raise HTTPException(status_code=404, detail=f"炒制批次 ID {batch_id} 不存在")
-    return batch
+    @app.get("/harvest-plans")
+    def list_harvest_plans(services: dict = Depends(get_services)):
+        return {"plans": services["harvest"].list_plans()}
 
+    @app.post("/harvest-plans")
+    def create_harvest_plan(data: HarvestPlanCreate, services: dict = Depends(get_services)):
+        return services["harvest"].create_plan(
+            plot_id=data.plot_id,
+            plan_date=data.plan_date,
+            expected_quantity=data.expected_quantity
+        )
 
-@app.put("/processing-batches/{batch_id}/complete", response_model=ProcessingBatch)
-def complete_processing_batch(batch_id: int, batch_update: ProcessingBatchUpdate):
-    batch = storage.get_processing_batch(batch_id)
-    if not batch:
-        raise HTTPException(status_code=404, detail=f"炒制批次 ID {batch_id} 不存在")
-    
-    if batch.is_completed:
-        raise HTTPException(status_code=400, detail=f"炒制批次 ID {batch_id} 已完成")
-    
-    try:
-        updated = storage.update_processing_batch(batch_id, batch_update)
-        if not updated:
-            raise HTTPException(status_code=404, detail=f"炒制批次 ID {batch_id} 不存在")
-        return updated
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    @app.get("/harvest-plans/{plan_id}")
+    def get_harvest_plan(plan_id: str, services: dict = Depends(get_services)):
+        return services["harvest"].get_plan(plan_id)
 
+    @app.put("/harvest-plans/{plan_id}")
+    def update_harvest_plan(plan_id: str, data: HarvestPlanUpdate, services: dict = Depends(get_services)):
+        return services["harvest"].update_plan(
+            plan_id=plan_id,
+            plan_date=data.plan_date,
+            expected_quantity=data.expected_quantity
+        )
 
-@app.post("/quality-evaluations/", response_model=QualityEvaluation, status_code=201)
-def create_quality_evaluation(eval_create: QualityEvaluationCreate):
-    batch = storage.get_processing_batch(eval_create.batch_id)
-    if not batch:
-        raise HTTPException(status_code=400, detail=f"炒制批次 ID {eval_create.batch_id} 不存在")
-    
-    if not batch.is_completed:
-        raise HTTPException(status_code=400, detail=f"炒制批次 ID {eval_create.batch_id} 尚未完成，无法评定等级")
-    
-    try:
-        return storage.create_quality_evaluation(eval_create)
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    @app.delete("/harvest-plans/{plan_id}")
+    def delete_harvest_plan(plan_id: str, services: dict = Depends(get_services)):
+        services["harvest"].delete_plan(plan_id)
+        return {"success": True}
 
+    @app.get("/harvest-records")
+    def list_harvest_records(services: dict = Depends(get_services)):
+        return {"records": services["harvest"].list_records()}
 
-@app.get("/quality-evaluations/", response_model=List[QualityEvaluation])
-def list_quality_evaluations(
-    batch_id: Optional[int] = Query(None, description="按炒制批次筛选")
-):
-    return storage.list_quality_evaluations(batch_id)
+    @app.post("/harvest-records")
+    def create_harvest_record(data: HarvestRecordCreate, services: dict = Depends(get_services)):
+        return services["harvest"].create_record(
+            plan_id=data.plan_id,
+            actual_quantity=data.actual_quantity,
+            fresh_leaf_grade=data.fresh_leaf_grade,
+            harvest_time=data.harvest_time
+        )
 
+    @app.get("/harvest-records/{record_id}")
+    def get_harvest_record(record_id: str, services: dict = Depends(get_services)):
+        return services["harvest"].get_record(record_id)
 
-@app.get("/quality-evaluations/{eval_id}", response_model=QualityEvaluation)
-def get_quality_evaluation(eval_id: int):
-    evaluation = storage.get_quality_evaluation(eval_id)
-    if not evaluation:
-        raise HTTPException(status_code=404, detail=f"质量评定 ID {eval_id} 不存在")
-    return evaluation
+    @app.put("/harvest-records/{record_id}")
+    def update_harvest_record(record_id: str, data: HarvestRecordUpdate, services: dict = Depends(get_services)):
+        return services["harvest"].update_record(
+            record_id=record_id,
+            actual_quantity=data.actual_quantity,
+            fresh_leaf_grade=data.fresh_leaf_grade,
+            harvest_time=data.harvest_time
+        )
 
+    @app.delete("/harvest-records/{record_id}")
+    def delete_harvest_record(record_id: str, services: dict = Depends(get_services)):
+        services["harvest"].delete_record(record_id)
+        return {"success": True}
 
-@app.get("/alerts/", response_model=List[Alert])
-def list_alerts(
-    alert_type: Optional[AlertType] = Query(None, description="按告警类型筛选"),
-    is_read: Optional[bool] = Query(None, description="按是否已读筛选")
-):
-    return storage.list_alerts(alert_type, is_read)
+    @app.get("/processing-batches")
+    def list_processing_batches(services: dict = Depends(get_services)):
+        return {"batches": services["processing"].list_batches()}
 
+    @app.post("/processing-batches")
+    def create_processing_batch(data: ProcessingBatchCreate, services: dict = Depends(get_services)):
+        return services["processing"].create_batch(
+            harvest_record_id=data.harvest_record_id,
+            input_quantity=data.input_quantity,
+            start_time=data.start_time
+        )
 
-@app.put("/alerts/{alert_id}/read", response_model=Alert)
-def mark_alert_read(alert_id: int):
-    alert = storage.mark_alert_read(alert_id)
-    if not alert:
-        raise HTTPException(status_code=404, detail=f"告警 ID {alert_id} 不存在")
-    return alert
+    @app.get("/processing-batches/{batch_id}")
+    def get_processing_batch(batch_id: str, services: dict = Depends(get_services)):
+        return services["processing"].get_batch(batch_id)
+
+    @app.post("/processing-batches/{batch_id}/complete")
+    def complete_processing_batch(batch_id: str, data: ProcessingBatchComplete, services: dict = Depends(get_services)):
+        return services["processing"].complete_batch(
+            batch_id=batch_id,
+            output_quantity=data.output_quantity
+        )
+
+    @app.delete("/processing-batches/{batch_id}")
+    def delete_processing_batch(batch_id: str, services: dict = Depends(get_services)):
+        services["processing"].delete_batch(batch_id)
+        return {"success": True}
+
+    @app.get("/quality-ratings")
+    def list_quality_ratings(services: dict = Depends(get_services)):
+        return {"ratings": services["processing"].list_ratings()}
+
+    @app.post("/quality-ratings")
+    def create_quality_rating(data: QualityRatingCreate, services: dict = Depends(get_services)):
+        return services["processing"].create_rating(
+            batch_id=data.batch_id,
+            grade=data.grade,
+            sensory_description=data.sensory_description
+        )
+
+    @app.get("/quality-ratings/{rating_id}")
+    def get_quality_rating(rating_id: str, services: dict = Depends(get_services)):
+        return services["processing"].get_rating(rating_id)
+
+    @app.put("/quality-ratings/{rating_id}")
+    def update_quality_rating(rating_id: str, data: QualityRatingUpdate, services: dict = Depends(get_services)):
+        return services["processing"].update_rating(
+            rating_id=rating_id,
+            grade=data.grade,
+            sensory_description=data.sensory_description
+        )
+
+    @app.delete("/quality-ratings/{rating_id}")
+    def delete_quality_rating(rating_id: str, services: dict = Depends(get_services)):
+        services["processing"].delete_rating(rating_id)
+        return {"success": True}
+
+    @app.post("/scheduler/run")
+    def run_scheduler(services: dict = Depends(get_services)):
+        return services["scheduler"].run_scheduler()
+
+    @app.get("/todos")
+    def list_todos(status: Optional[TodoStatus] = None, services: dict = Depends(get_services)):
+        return {"todos": services["scheduler"].list_todos(status)}
+
+    @app.post("/todos/{todo_id}/complete")
+    def complete_todo(todo_id: str, services: dict = Depends(get_services)):
+        return services["scheduler"].complete_todo(todo_id)
+
+    @app.get("/alerts")
+    def list_alerts(status: Optional[AlertStatus] = None, services: dict = Depends(get_services)):
+        return {"alerts": services["scheduler"].list_alerts(status)}
+
+    @app.post("/alerts/{alert_id}/resolve")
+    def resolve_alert(alert_id: str, services: dict = Depends(get_services)):
+        return services["scheduler"].resolve_alert(alert_id)
+
+    return app
 
 
 def main():
     import uvicorn
-    port = int(os.getenv("PORT", "8000"))
+    app = create_app()
+    port = settings.port_from_env
     uvicorn.run(
-        "src.server.app:app",
-        host="0.0.0.0",
-        port=port,
-        reload=False
+        app,
+        host=settings.host,
+        port=port
     )
 
 

@@ -8,7 +8,7 @@ use drug_trace_core::{InboundRequest, OutboundRequest, RecallRequest};
 #[derive(Parser, Debug)]
 #[command(author, version, about = "药品批号追踪和召回系统命令行工具", long_about = None)]
 struct Cli {
-    #[arg(long, env = "DRUG_TRACE_SERVER", default_value = "http://localhost:3000")]
+    #[arg(long, env = "DRUG_TRACE_SERVER", default_value = "http://localhost:8100")]
     server: String,
 
     #[command(subcommand)]

@@ -10,7 +10,7 @@ use booking_core::{CreateBookingRequest, SubmitFeedbackRequest, TimeSlot};
 #[command(name = "booking")]
 #[command(about = "预约试驾系统客户端")]
 struct Cli {
-    #[arg(long, env = "SERVER_URL", default_value = "http://127.0.0.1:8080")]
+    #[arg(long, env = "SERVER_URL", default_value = "http://127.0.0.1:8600")]
     server: String,
 
     #[command(subcommand)]

@@ -259,7 +259,7 @@ func main() {
 		printUsage()
 	}
 
-	baseURL := "http://localhost:8080"
+	baseURL := "http://localhost:9019"
 	if envURL := os.Getenv("APP_URL"); envURL != "" {
 		baseURL = envURL
 	}

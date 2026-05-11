@@ -1,7 +1,7 @@
-帮我用 TypeScript 写一个SDK版本管理服务的后端，管理多语言SDK的发布和下载。
+SDK版本管理的后端服务，TypeScript + Express。SDK太多版本太乱需要系统化管。
 
-每个SDK有唯一标识（如payment-sdk、user-sdk），支持多种编程语言。每个SDK的每种语言有独立的版本线，版本号遵循语义化规范。上传新版SDK时自动校验版本号是否合法（MAJOR.MINOR.PATCH格式，每段非负整数），还要校验新版本号是否大于当前最新版本。版本比较先比MAJOR再比MINOR最后比PATCH，全部按数值比较，解析时忽略前导零。
+每个SDK有唯一标识（如payment-sdk、user-sdk），支持多种编程语言。每个SDK的每种语言有独立的版本线，版本号遵循语义化规范。上传新版SDK时自动校验版本号是否合法（MAJOR.MINOR.PATCH格式，每段非负整数），还要校验新版本号是否大于当前最新版本，版本比较先比MAJOR再比MINOR最后比PATCH，全部按数值比较，解析时忽略前导零。
 
-下载记录按SDK+语言+版本三个维度统计下载次数。某个SDK的某个语言版本从未发布过时下载接口要明确提示。每个SDK有集成指南（Markdown格式），和SDK版本绑定。发布笔记记录新功能、Bug修复和Breaking Changes，历史版本按时间倒序排列。同一个SDK同一种语言上传相同版本号不会创建重复记录。
+下载记录按SDK加语言加版本三个维度统计下载次数。某个SDK的某个语言版本从未发布过时下载接口要明确提示。每个SDK有集成指南（Markdown格式），和SDK版本绑定，新版发布时如果没提供新的集成指南就沿用上一版本的。发布笔记记录新功能、Bug修复和Breaking Changes，历史版本按时间倒序排列。同一个SDK同一种语言上传相同版本号不会创建重复记录。SDK标记为弃用后所有已发布版本仍然可下载但不出现在搜索结果中。
 
-核心功能实现为独立模块。服务端用 Express 框架提供 HTTP 接口，客户端是命令行工具通过 HTTP 调用服务端。项目用 TypeScript 写，tsconfig 开启 strict 模式。npm install 后 npm run build 能编译通过，node dist/server.js 能启动服务端。服务端监听端口通过环境变量指定。
+npm run build 能编译通过，端口环境变量指定。

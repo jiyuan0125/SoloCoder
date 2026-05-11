@@ -9,7 +9,7 @@ use uuid::Uuid;
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(long, env = "DIALYSIS_SERVER_URL", default_value = "http://127.0.0.1:3000")]
+    #[arg(long, env = "DIALYSIS_SERVER_URL", default_value = "http://127.0.0.1:8609")]
     server_url: String,
 
     #[command(subcommand)]

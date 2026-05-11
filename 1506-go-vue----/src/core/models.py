@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from enum import Enum as PyEnum
 from sqlalchemy import (
     Column,
     Integer,
@@ -7,7 +8,6 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
-    Enum,
     Boolean,
     UniqueConstraint,
 )
@@ -54,7 +54,7 @@ class Ingredient(Base):
     alerts = relationship("LowStockAlert", back_populates="ingredient")
 
 
-class PurchaseOrderStatus(str, Enum):
+class PurchaseOrderStatus(str, PyEnum):
     PENDING = "pending"
     APPROVED = "approved"
     REJECTED = "rejected"

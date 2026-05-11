@@ -12,7 +12,7 @@ use claim_audit_core::{
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
-    #[arg(short, long, env = "SERVER_URL", default_value = "http://127.0.0.1:8080")]
+    #[arg(short, long, env = "SERVER_URL", default_value = "http://127.0.0.1:8100")]
     server_url: String,
 
     #[command(subcommand)]

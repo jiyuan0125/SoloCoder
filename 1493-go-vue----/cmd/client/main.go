@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const defaultServer = "http://localhost:8080"
+const defaultServer = "http://localhost:9013"
 
 type Client struct {
 	serverURL string
@@ -75,7 +75,7 @@ Usage:
   client [options] <command> [args]
 
 Options:
-  --server <url>    Server URL (default: http://localhost:8080)
+  --server <url>    Server URL (default: http://localhost:9013)
 
 Commands:
   help                        Show this help message

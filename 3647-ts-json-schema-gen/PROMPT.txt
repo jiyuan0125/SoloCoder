@@ -1,10 +1,5 @@
-用 TypeScript 写一个命令行 JSON Schema 生成工具。
-输入一个 JSON 文件，分析数据结构自动推断生成对应的 Schema。
-支持对象嵌套和数组类型，数组要检测元素类型。
-字符串值去重后可以生成枚举类型。
-生成的 Schema 要包含类型和必填字段。
-字段描述可以从字段名推断，比如 userName 推断为用户名称。
-可以选择输出 Draft-07 或 2020-12 版本的Schema。
-支持从多个JSON文件合并生成一个兼容所有文件结构的Schema。
-合并时字段取并集，类型取交集。
-输出格式化的JSON文件。
+Express + TypeScript 写一个 JSON Schema 生成器。
+输入一个 JSON 示例自动推断生成对应的 Schema。支持嵌套对象和数组。
+生成的 Schema 可以编辑和导出。如果输入的 JSON 包含 null 值，推断时默认忽略 null 字段。
+支持从多个 JSON 样本合并生成一个统一的 Schema，合并时取各样本字段类型的并集。
+SQLite 存数据，能正常编译启动就行。

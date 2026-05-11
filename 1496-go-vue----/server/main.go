@@ -40,7 +40,7 @@ func getPort() string {
 	}
 
 	if port == "" {
-		port = "8080"
+		port = "9016"
 	}
 
 	return port

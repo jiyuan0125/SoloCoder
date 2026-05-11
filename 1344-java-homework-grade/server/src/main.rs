@@ -20,7 +20,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
 struct Args {
-    #[arg(short, long, env = "PORT", default_value_t = 8080)]
+    #[arg(short, long, env = "PORT", default_value_t = 8100)]
     port: u16,
 }
 

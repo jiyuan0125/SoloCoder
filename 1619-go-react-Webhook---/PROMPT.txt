@@ -1,7 +1,7 @@
-帮我用 TypeScript 写一个Webhook管理服务的后端，处理事件订阅和回调投递。
+第三方接入那边提了个需求，要一套Webhook管理服务，TypeScript 实现。
 
-第三方开发者创建Webhook订阅，指定事件类型和回调URL。平台产生对应事件时向回调URL发HTTP POST请求，请求体包含event、data、timestamp和signature。签名用HMAC-SHA256计算，签名内容是timestamp加请求体JSON字符串，密钥是创建Webhook时分配的secret。同一个事件的多次重试timestamp保持事件产生时的时间不变。签名验证时timestamp要在5分钟以内，超过视为过期。
+第三方开发者创建Webhook订阅，指定事件类型和回调URL。平台产生对应事件时向回调URL发HTTP POST请求，请求体包含event、data、timestamp和signature。签名用HMAC-SHA256计算，签名内容是timestamp加请求体JSON字符串，密钥是创建Webhook时分配的secret。同一个事件的多次重试timestamp保持事件产生时的时间不变，签名验证时timestamp要在5分钟以内，超过视为过期。
 
-重试策略：回调返回非2xx或连接超时（10秒）时重试。间隔为1分钟、5分钟、30分钟、2小时、24小时。下次重试时间用上次投递时间加间隔来算。同一个Webhook的事件按产生顺序依次投递不能乱序。回调URL必须是HTTPS（localhost例外）。投递记录包含请求URL、请求体、响应状态码和响应体（截取前500字符）。
+重试策略：回调返回非2xx或连接超时（10秒）时重试，间隔为1分钟、5分钟、30分钟、2小时、24小时，下次重试时间用上次投递时间加间隔来算。同一个Webhook的事件按产生顺序依次投递不能乱序。回调URL必须是HTTPS（localhost例外）。投递记录包含请求URL、请求体、响应状态码和响应体（截取前500字符）。每个Webhook订阅有独立的投递记录查看接口，也能手动触发单条重试，操作路径类似 /webhooks/{id}/deliveries/{deliveryId}/retry。
 
-核心功能实现为独立模块。服务端用 Express 框架提供 HTTP 接口，客户端是命令行工具通过 HTTP 调用服务端。项目用 TypeScript 写，tsconfig 开启 strict 模式。npm install 后 npm run build 能编译通过，node dist/server.js 能启动服务端。服务端监听端口通过环境变量指定。
+Express + TypeScript + SQLite，npm run build 能跑起来就行。
