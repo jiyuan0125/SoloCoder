@@ -1,15 +1,11 @@
-用Go写一个Helm Chart模板验证和打包工具。我们团队的微服务都用Helm来部署，但每次修改Chart模板后手动验证很麻烦，helm template能渲染出YAML但不好对比前后差异，helm lint检查太粗不够细致。
+用Go写一个Helm Chart模板验证和打包工具，用 cobra 做子命令架构。我们团队的微服务都用Helm来部署，但每次修改Chart模板后手动验证很麻烦，helm template能渲染出YAML但不好对比前后差异，helm lint检查太粗不够细致。
 
-工具读取一个Helm Chart目录，解析其中的Chart.yaml（获取Chart名称、版本、依赖）和templates目录下的所有模板文件。用Go template引擎渲染这些模板，使用values.yaml中的默认值作为输入数据。渲染结果输出为标准Kubernetes YAML格式。
+工具读取一个Helm Chart目录，Chart目录不存在或不含Chart.yaml时退出码 1。解析其中的Chart.yaml（获取Chart名称、版本、依赖）和templates目录下的所有模板文件。用Go template引擎渲染这些模板，使用values.yaml中的默认值作为输入数据，values.yaml不存在时退出码 1。渲染结果输出为标准Kubernetes YAML格式。
 
-验证功能包括：检查渲染后的YAML是否是合法的Kubernetes资源（有apiVersion、kind、metadata等必要字段），检查资源名称是否符合Kubernetes命名规范（小写字母、数字和连字符），检查镜像标签是否使用了latest（通常不建议），检查是否有资源设置了过大的资源请求或限制（比如request cpu: 100），检查Service和Deployment的标签选择器是否匹配。
+验证功能包括：检查渲染后的YAML是否是合法的Kubernetes资源（有apiVersion、kind、metadata等必要字段），缺少必要字段时标记为错误并列出具体缺了什么。检查资源名称是否符合Kubernetes命名规范（小写字母、数字和连字符）。检查镜像标签是否使用了latest（标记为警告）。检查是否有资源设置了过大的资源请求或限制。检查Service和Deployment的标签选择器是否匹配（不匹配时标记为错误）。Chart.yaml的版本号不符合SemVer格式时退出码 1。有验证错误时退出码 3，只有警告时退出码 0。
 
-差异对比功能：渲染当前Chart的模板，再渲染另一个版本的模板（或者从Git仓库的另一个分支获取），对比两次渲染结果的差异。用类似diff的格式展示哪些资源被添加、删除或修改了。
+差异对比功能：渲染当前Chart的模板，再渲染另一个版本的模板，对比两次渲染结果的差异，用类似diff的格式展示哪些资源被添加、删除或修改了。对比的Chart目录不存在时退出码 1。
 
 打包功能：把Chart目录打包成tgz格式，文件名按Chart名称和版本号命名（比如myapp-1.2.3.tgz），同时生成一份包含所有渲染后YAML的说明文件。
 
-实现时，Helm模板语法除了Go标准模板之外还有一些自定义函数（如toYaml、indent、nindent、tpl等），需要实现这些函数才能正确渲染。values.yaml可能有多个环境覆盖文件（values-dev.yaml、values-staging.yaml），工具要支持指定使用哪个覆盖文件。模板文件中可能引用了子Chart（通过dependencies定义），需要递归处理。YAML解析时要处理好多文档格式（---分隔符），一个模板文件可能渲染出多个Kubernetes资源。Chart.yaml的版本号要遵循SemVer格式，工具要验证版本号格式是否正确。
-模板文件中如果引用了子Chart的values，验证时要递归检查子Chart的模板是否存在。
-导入完成自动生成摘要。空文件摘要只写无数据，不报错退出。
-子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
-服务端端口通过命令行参数或环境变量指定。
+Helm模板语法除了Go标准模板之外还有一些自定义函数（如toYaml、indent、nindent等），需要实现这些函数才能正确渲染。values.yaml可能有多个环境覆盖文件，工具要支持通过--values参数指定使用哪个覆盖文件。模板文件中可能引用了子Chart，需要递归处理，子Chart的模板不存在时退出码 1。YAML解析时要处理好多文档格式（---分隔符）。

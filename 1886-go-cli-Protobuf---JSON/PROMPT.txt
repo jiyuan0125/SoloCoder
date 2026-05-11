@@ -8,9 +8,4 @@ oneof字段的处理方面，oneof是一组互斥字段，只能设置其中一�
 
 工具还需要一个额外功能：把proto文件中定义的message生成JSON Schema。这样前端团队可以用JSON Schema来校验接口数据格式。生成规则是把proto的message映射为JSON object，字段类型映射为JSON Schema的类型定义，repeated字段映射为array，optional字段标记为非required，enum映射为带有enum约束的string。map字段映射为additionalProperties的对象。
 
-代码架构用策略模式，diff和mapping各自是一套处理流程，共享proto文件的解析模块。proto解析不需要依赖protoc工具，自己写一个简易的proto3语法解析器就行，只需要能处理message、field、enum、oneof、map这几个关键字。
-Protobuf转JSON时如果消息中有oneof字段，只序列化实际设置了值的那个分支。
-分析完成后自动生成摘要，摘要生成也要读中间数据。中间数据和结果存在同一个文件里。
-同步完成自动清理临时文件。已被手动删就跳过，同步结果不受影响。
-子命令：tool cmd subcmd [flags]。cmd有add/list/show/export，export有csv/json/pdf子格式。
-服务端端口通过命令行参数或环境变量指定。
+ 代码架构用策略模式，diff和mapping各自是一套处理流程，共享proto文件的解析模块。proto解析不需要依赖protoc工具，自己写一个简易的proto3语法解析器就行，只需要能处理message、field、enum、oneof、map这几个关键字。proto文件如果语法错误，退出码返回 1 并指出错误位置。Protobuf转JSON时如果消息中有oneof字段，只序列化实际设置了值的那个分支。diff如果两个文件完全一致，输出"proto文件无差异"退出码返回 0。字段编号变更时如果新版本复用了旧版本已删除字段的编号，标记为"高危：编号复用可能导致数据混淆"。mapping生成的Go代码如果能通过go vet检查，在输出末尾标注"代码检查通过"。嵌套message如果被重命名，用全限定名匹配并输出旧名到新名的映射。生成的JSON Schema如果字段有deprecated注释，在schema中标注deprecated: true。diff结果中如果所有变更都是新增（低危），退出码返回 0；如果有任何高危变更，退出码返回 1。

@@ -5,6 +5,6 @@
 每个版本下面列出 feat、fix、refactor 等不同类型的提交。
 支持 conventional commits 格式解析。
 没有标签的提交归到「未发布」分组。
-输出 Markdown 格式到标准输出或文件。
+输出 Markdown 格式到标准输出或文件。输出路径不可写时报错退出。
 使用 Click 框架。
-支持指定仓库路径。
+支持指定仓库路径。路径不是 git 仓库时报错退出。

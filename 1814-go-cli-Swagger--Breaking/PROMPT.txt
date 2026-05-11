@@ -1,22 +1,17 @@
-用Go写一个Swagger/OpenAPI契约验证命令行工具。微服务架构下后端API变更频繁，前端和测试团队需要知道API有没有breaking change。
+用Go写一个Swagger/OpenAPI契约验证命令行工具，用 cobra 做子命令架构。微服务架构下后端API变更频繁，前端和测试团队需要知道API有没有breaking change。
 
-工具叫apicheck，输入是一个Swagger 2.0或OpenAPI 3.0的JSON/YAML格式API定义文件。基本用法：apicheck check old-api.yaml new-api.yaml，对比两个版本的API定义，找出所有变更并分类为breaking change和non-breaking change。
+工具叫apicheck，输入是一个Swagger 2.0或OpenAPI 3.0的JSON/YAML格式API定义文件。基本用法：apicheck check old-api.yaml new-api.yaml，对比两个版本的API定义，找出所有变更并分类为breaking change和non-breaking change。输入文件不存在时退出码 1。文件格式不是有效的 YAML/JSON 时退出码 1 并打印解析错误。
 
 Breaking change检测包括以下情况：删除了已有的接口路径。删除了已有的请求方法。修改了接口路径（路径从/api/users变成/api/v2/users）。在请求参数中删除了必填字段。在请求参数中把必填字段改成了选填字段。在响应中删除了已有字段。修改了字段的数据类型（string改成integer）。修改了字段的格式约束（比如之前是email格式现在改成了任意字符串）。删除了已有的枚举值。
 
 Non-breaking change包括：新增接口路径。新增请求方法。新增可选的请求参数。在响应中新增字段。放宽字段约束（比如之前字符串最长50现在放宽到100）。新增枚举值。
 
-输出格式：先显示一个概要，breaking change的数量和non-breaking change的数量。然后详细列出每个变更，包含变更类型、所在位置（路径+字段）、具体描述、变更前后的值。
+输出格式：先显示一个概要，breaking change的数量和non-breaking change的数量。然后详细列出每个变更，包含变更类型、所在位置（路径+字段）、具体描述、变更前后的值。有 breaking change 时退出码 3，只有 non-breaking change 时退出码 0。两个文件完全相同退出码 0 并输出"无变更"。
 
-加--allow-breaking参数可以指定允许的breaking change列表，白名单中的变更不报错。这在实际项目中很有用，因为有些breaking change是计划内的，只需要通知下游而不是阻止发布。
+加--allow-breaking参数可以指定允许的breaking change列表（逗号分隔的变更类型），白名单中的变更不报错。这在实际项目中很有用，因为有些breaking change是计划内的，只需要通知下游而不是阻止发布。
 
-还有一个功能是验证API定义文件本身的规范性。apicheck lint api.yaml，检查是否所有接口都有描述、是否有未定义的引用类型、命名是否规范等。这个用JSON Schema验证就行。
+apicheck lint api.yaml 命令验证API定义文件本身的规范性。检查是否所有接口都有描述、是否有未定义的引用类型、命名是否规范等。lint 发现问题时退出码 3 并列出问题详情。
 
 加--markdown参数可以输出Markdown格式的变更报告，适合贴到PR里做代码审查。报告中自动生成一个变更摘要表格。
 
-对比两个API定义时，需要处理复杂的嵌套结构。OpenAPI定义中引用类型（$ref）可能指向其他文件或文件内的其他位置，需要先解析引用展开成完整结构再做对比。推荐用go-openapi或kinopenapi这些Go库来解析OpenAPI定义，不要自己手写解析器。
-
-如果两个文件的OpenAPI版本不同（一个是2.0一个是3.0），要先提示版本不一致，再尝试做基本的对比。不需要完美处理跨版本对比，但至少不能崩溃。
-流程：验证-备份-部署-验证部署-完成。部署失败自动回滚。回滚后也要验证。
-同步完成自动清理临时文件。已被手动删就跳过，同步结果不受影响。
-服务端端口通过命令行参数或环境变量指定。
+对比两个API定义时，需要处理复杂的嵌套结构。OpenAPI定义中引用类型（$ref）可能指向其他文件或文件内的其他位置，需要先解析引用展开成完整结构再做对比。$ref 指向的文件不存在时退出码 1 并打印引用路径。如果两个文件的OpenAPI版本不同（一个是2.0一个是3.0），要先提示版本不一致，再尝试做基本的对比。

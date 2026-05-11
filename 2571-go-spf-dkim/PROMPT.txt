@@ -8,4 +8,5 @@ DKIM 检查：从邮件头提取 DKIM-Signature 字段，解析出签名域名�
 
 DNS 查询使用标准库 net.LookupTXT。SPF 的 include 引用可能嵌套多层，要递归解析并设置深度上限。DKIM 签名的 body hash 和 header hash 都要验证。结果返回 SPF 通过/失败/软失败/无记录、DKIM 通过/失败/无签名。
 基础配置数据被主业务流程引用。
+SPF 无记录返回对应状态。DKIM 无签名返回对应状态。include 嵌套设置深度上限防止循环。DNS 查询失败给出明确错误。
 8080 端口。

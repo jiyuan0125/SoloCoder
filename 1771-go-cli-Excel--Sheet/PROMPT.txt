@@ -7,8 +7,4 @@ convert子命令把Excel文件（.xlsx格式）转换为CSV。支持指定要转
 sheet子命令操作Excel的Sheet。list操作列出所有Sheet的名称和索引。rename操作重命名指定Sheet。copy操作复制一个Sheet到同一个文件或另一个Excel文件。delete操作删除指定Sheet。merge操作把多个Sheet合并为一个（按行追加，列名相同的列对齐合并）。split操作把一个Sheet按某列的值拆分成多个Sheet（比如按部门列拆分，每个部门一个Sheet）。
 
 query子命令用类似SQL的语法查询Excel数据。支持SELECT指定列、WHERE条件过滤、ORDER BY排序、LIMIT限制行数。条件支持等于、大于、小于、包含等操作符。查询结果输出为表格或CSV。
-合并多个Sheet时如果列名有重复，第二个出现的列名自动加序号后缀区分，不能丢数据。
-批量处理每100条自动保存进度，保存时也要读进度文件判断是否有旧进度要合并。
-备份完成自动验证完整性。验证工具不在PATH就跳过，日志里记录跳过原因。
-多级路径：tool process --input ./data --output ./result。相对绝对路径都支持。
-服务端端口通过命令行参数或环境变量指定。
+convert 子命令 Excel 文件不存在或不是有效 xlsx 格式时报错退出码 1。sheet merge 合并多个 Sheet 时列名有重复加序号后缀区分不能丢数据。CSV 转 Excel 时纯数字文本列（手机号、身份证号）要正确处理为文本类型避免精度丢失。大文件流式读取时内存占用不超过 200MB，超过就分批处理。query 子命令条件语法错误时退出码 2 并输出具体的语法错误位置。

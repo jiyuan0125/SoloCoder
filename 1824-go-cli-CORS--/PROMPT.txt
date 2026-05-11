@@ -1,26 +1,15 @@
-用Go写一个CORS（跨域资源共享）配置检查命令行工具。前后端分离的项目里CORS配置经常出问题，要么前端请求被浏览器拦截，要么配置太宽松有安全风险。
+用Go写一个CORS（跨域资源共享）配置检查命令行工具，用 cobra 做子命令架构。前后端分离的项目里CORS配置经常出问题，要么前端请求被浏览器拦截，要么配置太宽松有安全风险。
 
-工具叫corscheck，基本用法：corscheck --origin https://frontend.example.com --url https://api.example.com/users。模拟浏览器发送跨域请求，检查服务器的CORS配置是否正确。
+工具叫corscheck，基本用法：corscheck --origin https://frontend.example.com --url https://api.example.com/users。origin 或 url 参数缺失时退出码 1，格式不合法时退出码 1。模拟浏览器发送跨域请求，检查服务器的CORS配置是否正确。
 
-检查流程是这样的：先发送一个OPTIONS预检请求（preflight request），携带Origin头、Access-Control-Request-Method头和Access-Control-Request-Headers头。然后检查响应中的CORS相关头。
+检查流程是这样的：先发送一个OPTIONS预检请求（preflight request），携带Origin头、Access-Control-Request-Method头和Access-Control-Request-Headers头。然后检查响应中的CORS相关头。连接失败时退出码 2。
 
-需要检查的CORS响应头包括以下这些。Access-Control-Allow-Origin：检查是否允许请求的Origin。值可以是具体的域名（如https://frontend.example.com）或*（允许所有来源）。如果值是*，标记为黄色警告（太宽松）。如果值和请求的Origin不匹配，标记为红色错误。Access-Control-Allow-Methods：检查是否允许请求的HTTP方法。Access-Control-Allow-Headers：检查是否允许请求的自定义头。Access-Control-Allow-Credentials：如果请求携带了凭证（Cookie、Authorization头），这个值必须是true。但要当Allow-Credentials为true时，Allow-Origin不能是*。如果违反了这个规则，标记为红色错误。Access-Control-Max-Age：检查预检结果缓存时间，建议至少600秒（10分钟）减少预检请求次数。Access-Control-Expose-Headers：检查是否暴露了前端需要读取的响应头。
+需要检查的CORS响应头包括以下这些。Access-Control-Allow-Origin：检查是否允许请求的Origin。值可以是具体的域名或*（标记为黄色警告太宽松）。如果值和请求的Origin不匹配，标记为红色错误。Access-Control-Allow-Methods：检查是否允许请求的HTTP方法。Access-Control-Allow-Headers：检查是否允许请求的自定义头。Access-Control-Allow-Credentials：如果请求携带了凭证，这个值必须是true，但Allow-Credentials为true时Allow-Origin不能是*，违反这个规则标记为红色错误。Access-Control-Max-Age：建议至少600秒减少预检请求次数。Access-Control-Expose-Headers：检查是否暴露了前端需要读取的响应头。
 
-然后发送实际的GET请求（或用户指定的方法），检查实际响应中的CORS头是否和预检响应一致。有些服务器只对OPTIONS请求返回CORS头，实际请求不返回，这在某些浏览器中可能导致问题。
+然后发送实际的GET请求（或用户指定的方法），检查实际响应中的CORS头是否和预检响应一致。有些服务器只对OPTIONS请求返回CORS头，实际请求不返回，这在某些浏览器中可能导致问题，要检测出来并标记。
 
-批量检查功能：corscheck batch --config cors-config.yaml。配置文件定义多组检查：每组包含origin、url、method和headers。并发执行所有检查。
+批量检查功能：corscheck batch --config cors-config.yaml。配置文件定义多组检查，文件不存在时退出码 1。并发执行所有检查，每个检查结果独立。
 
-加--credentials参数在请求中携带凭证信息（模拟带Cookie的跨域请求），检查服务器是否正确处理了凭证相关的CORS配置。
+加--credentials参数在请求中携带凭证信息，检查服务器是否正确处理了凭证相关的CORS配置。检查多个Origin时对每个Origin分别发送预检请求。有些服务器的CORS配置会动态反射请求的Origin（直接把请求的Origin值返回为Allow-Origin），这是一个已知的安全风险，工具要检测到并标记警告。
 
-还有一个场景是检查多个Origin：corscheck --origins "https://a.com,https://b.com" --url https://api.example.com。对每个Origin分别发送预检请求，检查服务器是否正确区分了不同的Origin。有些服务器的CORS配置会动态反射请求的Origin（直接把请求的Origin值返回为Allow-Origin），这是一个已知的安全风险，工具要检测到并标记警告。
-
-输出报告：每种检查结果显示通过/警告/失败状态，附上具体描述和建议。加--json输出JSON格式。
-
-预检请求的构造方面，Access-Control-Request-Method必须大写（如GET、POST），不能小写。Access-Control-Request-Headers是用逗号分隔的头名称列表，头名称不区分大小写但惯例用首字母大写（如Content-Type、Authorization）。
-
-如果目标服务器根本不返回CORS头（完全没有CORS配置），要明确告诉用户"服务器未配置CORS"，而不是显示一堆缺失头的警告。
-
-预检请求的结果如果在客户端缓存了（通过Access-Control-Max-Age），缓存过期后重新发送的预检不应该被工具忽略。
-处理完每个文件后调用校验检查输出，校验也要读取同一个输入文件做比对。大批量时校验是自动的。
-处理分三步：扫描-分析-输出。可指定从某步开始。如果从分析开始但扫描未执行，用空数据继续。
-服务端端口通过命令行参数或环境变量指定。
+输出报告：每种检查结果显示通过/警告/失败状态，附上具体描述和建议。加--json输出JSON格式。有失败项时退出码 3，只有警告时退出码 0。如果目标服务器根本不返回CORS头（完全没有CORS配置），明确告诉用户"服务器未配置CORS"，而不是显示一堆缺失头的警告。

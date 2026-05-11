@@ -3,4 +3,7 @@ TypeScript 做一个 Sitemap 生成脚本，纯 Node.js。
 支持设置 changefreq 和 priority。自动计算 lastmod 为文件修改时间。
 如果目录下没有 HTML 文件给出提示不生成空 sitemap。
 生成的 XML 要符合 sitemap 协议格式。
+
+输入文件不存在时报错退出。编码异常时跳过有问题的记录不中断整个处理流程。处理过程中遇到格式错误的数据跳过继续，最后汇总跳过的数量。
+
 能运行就行。

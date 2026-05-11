@@ -1,9 +1,9 @@
 每个应用都自己搞一套登录太乱了，所以想做一个OAuth2授权服务，TypeScript 后端。
 
-客户端注册时填应用名称、回调URL和权限范围，注册完给client_id和client_secret。授权码流程：用户在第三方点授权后跳到这边登录确认，确认后生成授权码（10分钟有效），回调到第三方并带上授权码，第三方拿授权码换access_token。access_token默认2小时有效，还有刷新token。
+客户端注册时填应用名称、回调URL和权限范围，注册完给client_id和client_secret，应用名称已存在返回 409。授权码流程：用户在第三方点授权后跳到这边登录确认，确认后生成授权码（10分钟有效），回调到第三方并带上授权码，第三方拿授权码换access_token。授权码过期后使用返回 400 和"授权码已过期"，授权码被重复使用返回 400 并立即撤销该授权码颁发的所有token。access_token默认2小时有效，还有刷新token。
 
-refresh_token只能用一次，用了之后旧的失效给个新的。授权码和token都要随机字符串生成，长度够长避免碰撞。同一用户的同一应用可以同时有多个有效access_token（不同设备场景）。权限范围控制：客户端请求时指定scope，颁发的token只包含授权的scope。
+refresh_token只能用一次，用了之后旧的失效给个新的，重复使用旧的refresh_token返回 400 并撤销该refresh_token关联的所有token视为泄露。授权码和token都要随机字符串生成，长度够长避免碰撞。同一用户的同一应用可以同时有多个有效access_token（不同设备场景）。权限范围控制：客户端请求时指定scope，颁发的token只包含授权的scope，请求了未注册的scope返回 400。
 
-授权码换token的接口路径比较深，像 /oauth/authorize/{client_id}/callback 这种多级路径要确保能正确匹配。token刷新时旧token立即失效，如果旧的还在被使用中的请求要能正常完成。
+授权码换token的接口路径比较深，像 /oauth/authorize/{client_id}/callback 这种多级路径要确保能正确匹配，client_id不存在返回 404，路径格式不对返回 404 而不是 500。token刷新时旧token立即失效，如果旧的还在被使用中的请求要能正常完成——旧token的失效标记和新token的创建要原子性操作，不能出现新旧都不可用的空窗期。撤销token时token不存在返回 404，格式不合法返回 400。
 
 Express + TypeScript，npm run build 能编译通过就行。

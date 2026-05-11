@@ -1,17 +1,13 @@
-用Go写一个Kubernetes部署YAML生成和管理工具。我们每次上线新服务都要写一堆Kubernetes YAML文件（Deployment、Service、ConfigMap、Secret、Ingress等），其中大部分内容是重复的模板代码，每次手动复制粘贴再修改很容易出错。
+用Go写一个Kubernetes部署YAML生成和管理工具，用 cobra 做子命令架构。我们每次上线新服务都要写一堆Kubernetes YAML文件（Deployment、Service、ConfigMap、Secret、Ingress等），其中大部分内容是重复的模板代码，每次手动复制粘贴再修改很容易出错。
 
-工具通过交互式问答或者配置文件来收集部署所需的信息（应用名称、镜像地址、副本数、端口、环境变量、资源限制等），然后自动生成一套完整的Kubernetes YAML文件。
+工具通过交互式问答或者配置文件来收集部署所需的信息（应用名称、镜像地址、副本数、端口、环境变量、资源限制等），配置文件用YAML格式，配置文件不存在时退出码 1，语法错误时退出码 1 并打印行号。然后自动生成一套完整的Kubernetes YAML文件。
 
-生成的YAML包含以下资源：Deployment（包含健康检查探针liveness和readiness、资源请求和限制、滚动更新策略）、Service（根据端口配置自动生成ClusterIP或NodePort类型）、ConfigMap（存放非敏感的环境变量配置）、Secret（存放敏感信息，Base64编码）、HorizontalPodAutoscaler（根据CPU使用率自动扩缩容）。
+生成的YAML包含以下资源：Deployment（包含健康检查探针liveness和readiness、资源请求和限制、滚动更新策略）、Service（根据端口配置自动生成ClusterIP或NodePort类型）、ConfigMap（存放非敏感的环境变量配置）、Secret（存放敏感信息，Base64编码）、HorizontalPodAutoscaler（根据CPU使用率自动扩缩容）。Secret的Base64编码结果，解码后要和原始明文完全一致。
 
 滚动更新功能：修改配置后重新生成YAML，和当前的YAML做对比，只应用有变化的资源，没有变化的资源不触发更新。还能生成kubectl apply命令的脚本。
 
-模板管理功能：维护几套通用的部署模板（比如Java应用的模板、Go应用的模板、前端静态资源的模板），生成时选择对应模板，不同模板的默认值不同（Java应用默认内存大一些、前端应用不需要健康检查端口等）。
+模板管理功能：维护几套通用的部署模板（比如Java应用的模板、Go应用的模板、前端静态资源的模板），生成时选择对应模板，模板名不存在时退出码 1 并列出可用模板。不同模板的默认值不同（Java应用默认内存大一些、前端应用不需要健康检查端口等）。
 
-另外支持批量部署功能：从一个配置文件中读取多个服务的部署信息，一次性生成所有服务的YAML文件，输出到指定目录，目录结构按服务名组织。
+批量部署功能：从一个配置文件中读取多个服务的部署信息，一次性生成所有服务的YAML文件，输出到指定目录，目录结构按服务名组织，输出目录不存在时自动创建。
 
-实现，生成的YAML要符合Kubernetes的最佳实践，比如给所有资源加上统一的标签（app名称、环境、版本号）、Deployment的Pod模板要有合理的anti-affinity规则避免所有Pod调度到同一个节点。ConfigMap和Secret的数据大小有1MB的限制，如果环境变量太多需要提示用户改用文件挂载的方式。Ingress的配置因Ingress Controller不同而不同（Nginx、Traefik等），需要支持多种Ingress模板。生成的YAML注释要清晰，标明哪些字段是工具自动生成的哪些是用户自定义的。资源名称要全局唯一，Service和Deployment用相同的选择器标签来关联。
-生成的YAML中Secret的Base64编码结果，解码后要和原始明文完全一致。
-转换完成后自动校验，校验要读刚写入的输出和原始输入做比对。不一致就自动重新执行。
-多级路径：tool process --input ./data --output ./result。相对绝对路径都支持。
-服务端端口通过命令行参数或环境变量指定。
+生成的YAML要符合Kubernetes的最佳实践，比如给所有资源加上统一的标签（app名称、环境、版本号）。ConfigMap和Secret的数据大小有1MB的限制，如果环境变量太多需要提示用户改用文件挂载的方式。Ingress的配置因Ingress Controller不同而不同（Nginx、Traefik等），需要通过--ingress-type参数支持多种模板，默认Nginx。生成的YAML注释要清晰，标明哪些字段是工具自动生成的。资源名称要全局唯一，Service和Deployment用相同的选择器标签来关联。

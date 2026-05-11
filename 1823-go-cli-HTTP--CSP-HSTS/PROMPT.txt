@@ -1,23 +1,15 @@
-用Go写一个HTTP安全头检查命令行工具。安全合规要求我们检查所有对外的Web服务是否配置了正确的安全响应头。
+用Go写一个HTTP安全头检查命令行工具，用 cobra 做子命令架构。安全合规要求我们检查所有对外的Web服务是否配置了正确的安全响应头。
 
-工具叫headerscan，基本用法：headerscan https://example.com。向目标URL发送HTTP请求，检查响应头中是否包含推荐的安全头，以及安全头的值是否正确配置。
+工具叫headerscan，基本用法：headerscan https://example.com。URL格式不合法时退出码 1。向目标URL发送HTTP请求，检查响应头中是否包含推荐的安全头，以及安全头的值是否正确配置。连接失败时退出码 2 并打印错误。
 
-检查的安全头包括以下这些。Content-Security-Policy（CSP）：检查是否配置了内容安全策略，如果有就解析出其中的指令（script-src、style-src、img-src等），检查是否使用了unsafe-inline或unsafe-eval（这两个会削弱CSP的保护效果）。Strict-Transport-Security（HSTS）：检查是否启用了HSTS，max-age是否足够长（建议至少6个月即15552000秒），是否包含includeSubDomains。X-Content-Type-Options：值应该是nosniff。X-Frame-Options：值应该是DENY或SAMEORIGIN，不能是ALLOWALL。X-XSS-Protection：虽然这个头已经不推荐使用（现代浏览器用CSP代替），但检查是否设置为0（正确做法）还是1（可能引入安全问题）。Referrer-Policy：检查是否设置了引用策略，推荐值是strict-origin-when-cross-origin。Permissions-Policy：检查是否限制了浏览器API的使用权限。
+检查的安全头包括以下这些。Content-Security-Policy（CSP）：检查是否配置了内容安全策略，如果有就解析出其中的指令，检查是否使用了unsafe-inline或unsafe-eval。Strict-Transport-Security（HSTS）：检查是否启用了HSTS，max-age是否足够长（建议至少6个月即15552000秒），是否包含includeSubDomains。X-Content-Type-Options：值应该是nosniff。X-Frame-Options：值应该是DENY或SAMEORIGIN，不能是ALLOWALL。X-XSS-Protection：检查是否设置为0（正确做法）。Referrer-Policy：推荐值是strict-origin-when-cross-origin。Permissions-Policy：检查是否限制了浏览器API的使用权限。
 
-每个安全头给出三种结果：绿色表示已正确配置，黄色表示已配置但值不够安全或可以改进，红色表示缺失或配置有误。缺少的安全头标记为红色"缺失"。
+每个安全头给出三种结果：绿色表示已正确配置，黄色表示已配置但值不够安全或可以改进，红色表示缺失或配置有误。有红色问题时退出码 3，只有黄色时退出码 0。
 
-批量检查功能：headerscan batch --file urls.txt。从文件读取URL列表，并发检查。并发数默认10。
+批量检查功能：headerscan batch --file urls.txt。从文件读取URL列表，文件不存在时退出码 1。并发检查，并发数默认10。一个URL检查失败不影响其他URL，失败的URL在报告中标注错误原因。
 
-报告输出：默认终端表格，每个安全头一列，每个URL一行，用颜色标记状态。加--json输出JSON格式。加--markdown输出Markdown格式的报告，适合贴到文档或PR中。
+报告输出：默认终端表格，每个安全头一列，每个URL一行，用颜色标记状态。加--json输出JSON格式。加--markdown输出Markdown格式的报告。CSP深度分析：加--csp-detail参数，详细分析CSP策略的强度，报告CSP的总体安全评分。
 
-CSP深度分析：加--csp-detail参数，详细分析CSP策略的强度。检查是否有过于宽松的指令（如default-src *），是否有允许不安全来源的配置，报告CSP的总体安全评分。
+HTTP重定向方面，有些URL会重定向到另一个域名，需要跟踪重定向（限制最大重定向次数为5次），检查最终响应的安全头。同时检查每个中间跳转响应的安全头，重定向链中每次跳转的安全头都要独立检查。有些安全头的值很长（特别是CSP），在终端表格中显示会截断，需要在表格下方完整显示被截断的内容。
 
-HTTP重定向方面，有些URL会重定向到另一个域名，安全头可能在重定向后的响应中才有。需要跟踪重定向（但限制最大重定向次数为5次），检查最终响应的安全头。同时检查每个中间跳转响应的安全头。
-
-有些安全头的值很长（特别是CSP），在终端表格中显示会截断。需要在表格下方完整显示被截断的内容。
-
-加--proxy参数可以通过HTTP代理发送请求，用于检查内网环境中的服务。
-重定向链中每次跳转的安全头都要独立检查，不能只检查最终目标页面的响应头。
-流程：验证-备份-部署-验证部署-完成。部署失败自动回滚。回滚后也要验证。
-备份完成自动验证完整性。验证工具不在PATH就跳过，日志里记录跳过原因。
-服务端端口通过命令行参数或环境变量指定。
+加--proxy参数可以通过HTTP代理发送请求。请求超时默认10秒，可通过--timeout参数调整。
