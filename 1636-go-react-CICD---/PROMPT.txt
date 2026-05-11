@@ -1,7 +1,9 @@
-最近在搞DevOps，需要一个CI/CD流水线管理系统，TypeScript 后端。管理构建任务和部署流程。
+最近在搞 DevOps，需要一个 CI/CD 流水线管理系统，TypeScript 后端。管理构建任务和部署流程。
 
-流水线由多个阶段组成，每个阶段包含若干任务。阶段之间串行执行，同一阶段内的任务并行执行。任务类型支持：代码拉取、构建、测试、部署和通知，每个任务记录开始时间、结束时间、状态（成功/失败/跳过）和输出日志。阶段完成检查时要同步更新流水线的整体状态，流水线状态变更时还要触发通知模块。
+流水线由多个阶段组成，每个阶段包含若干任务。阶段之间串行执行，同阶段内任务并行执行。任务类型支持 code_pull、build、test、deploy 和 notify，每个任务记录开始时间、结束时间、状态（success/failure/skipped）和输出日志。需要这些接口：POST /pipelines 创建流水线、POST /pipelines/{id}/trigger 触发执行（支持 manual/schedule/webhook 三种方式）、GET /pipelines/{id} 查详情、POST /pipelines/{id}/stages/{stageId}/retry 重试阶段、POST /pipelines/{id}/stages/{stageId}/tasks/{taskId}/retry 重试单个任务、GET /pipelines/{id}/logs 查日志。
 
-流水线触发方式支持：手动触发、定时触发和Webhook触发（模拟Git push事件），Webhook触发时要验证来源合法性。流水线执行时如果某个阶段有任务失败后续阶段不执行。失败的流水线可以重试，重试时从失败的任务开始而不是从头开始。部署任务需要记录目标环境和部署版本，同一个环境同一时间只能有一个部署在进行中防止并发部署冲突。流水线各阶段的操作有独立接口，路径类似 /pipelines/{id}/stages/{stageId}/retry。
+阶段完成时同步更新流水线整体状态，流水线状态变更时触发通知模块（记录通知内容和时间）。Webhook 触发时要验证来源，来源不合法返回 401 和 "invalid webhook source"。某个阶段有任务失败则后续阶段不执行，流水线状态标记为 failed。重试从失败的任务开始，已成功的阶段和任务不重新执行。同一个环境同一时间只能有一个 deploy 任务运行中，并发部署请求返回 409 和 "deployment already in progress for environment {env}"。
+
+流水线不存在时返回 404 和 "pipeline not found"。任务状态只能是 success/failure/skipped，其他值返回 400 和 "invalid task status"。
 
 Express + TypeScript + SQLite，npm run build 通过就行。

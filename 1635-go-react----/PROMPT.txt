@@ -1,7 +1,9 @@
 用 TypeScript 写一个变更管理系统。生产环境变更太随意了需要规范化流程。
 
-变更申请包含变更标题、变更类型（发布/配置修改/扩容/迁移）、影响范围、变更计划描述、回滚方案和计划执行时间。变更提交后进入审批流程，需要至少两个审批人通过才能执行，审批人按变更类型和影响范围从预配置的审批人列表中选择。
+变更申请包含变更标题、变更类型（release/config/scale/migrate）、影响范围、变更计划描述、回滚方案和计划执行时间。提交后进入审批流程，至少两个审批人通过才能执行。需要这些接口：POST /changes 创建变更、GET /changes 列表查询、PUT /changes/{id} 更新变更内容、POST /changes/{id}/approve 审批通过、POST /changes/{id}/reject 审批拒绝、POST /changes/{id}/execute 开始执行、POST /changes/{id}/rollback 执行回滚、POST /changes/{id}/confirm 确认完成、GET /changes/{id}/observe 查看观察期状态。
 
-变更状态：待审批→已批准→执行中→已完成/已回滚，执行中如果发现问题可以执行回滚，回滚后记录回滚原因。变更执行后24小时内标记为观察期，观察期内如果相关服务出现故障自动关联到该变更记录。同一时间窗口内（默认2小时）只能有一个变更在执行中防止多个变更交叉影响排障。变更完成后要填写执行结果确认，变更记录永久保留不能删除。观察期内关联的故障记录如果后来被确认为误报，该变更的观察期标记不影响。
+变更状态只允许 pending→approved→executing→completed 或 executing→rolled_back，非法跳转返回 400 和 "invalid status transition from {from} to {to}"。执行中的变更如果发现问题可以回滚，回滚要写明原因，回滚后状态变为 rolled_back。同一时间窗口（默认 2 小时）内只能有一个变更处于 executing 状态，第二个请求返回 409 和 "another change is currently executing, conflict window ends at {time}"。
+
+变更完成后进入 24 小时观察期，观察期内关联的故障记录自动绑定到该变更。变更记录永久保留，DELETE 请求返回 405 和 "change records cannot be deleted"。已 approved 状态的变更如果还没到计划执行时间，调用 execute 返回 400 和 "cannot execute before scheduled time"。观察期内关联的故障如果被标记为误报，不影响变更的观察期状态。
 
 Express + TypeScript + SQLite，npm run build 能跑起来就行。

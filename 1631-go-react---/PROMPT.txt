@@ -1,7 +1,9 @@
 分布式链路追踪排障系统，TypeScript + Express 后端。微服务调用链太长出了问题定位不到根因。
 
-每个请求在入口处生成一个traceId，经过的每个服务在调用时传递traceId并生成spanId。每个span记录：traceId、spanId、父spanId、服务名称、操作名称、开始时间、结束时间和标签（键值对），同一请求的多个span通过traceId关联。
+每个请求在入口处生成一个 traceId，经过的每个服务传递 traceId 并生成 spanId。每个 span 记录 traceId、spanId、父 spanId、服务名称、操作名称、开始时间、结束时间和标签（键值对）。需要这些接口：POST /spans 提交 span 数据、GET /traces/{traceId} 按 traceId 查完整调用链、GET /traces 按服务名/操作名/时间范围模糊查询、GET /traces/{traceId}/spans 查某个 trace 的 span 列表（分页，参数 page 和 pageSize，默认每页 50）、GET /stats/services 按服务统计平均响应时间和错误率、GET /traces/slow 慢查询列表（参数 threshold 毫秒，按耗时降序）。
 
-链路查询支持按traceId精确查询完整调用链，也支持按服务名称、操作名称和时间范围模糊查询。调用链展示时按时间排序成树形结构，每个节点的子节点按开始时间排序。按服务维度统计平均响应时间、错误率和吞吐量。慢查询分析筛选响应时间超过阈值的trace列表按耗时从高到低排序。每个trace有独立的详情页接口，span数据也可以按服务维度查询，同一个trace的span数据量可能很大查询时要用分页。追踪数据保留最近7天的，过期数据后台定时清理，清理时不能阻塞正常的数据写入和查询。
+span 提交时 traceId 和 spanId 缺失返回 400 和 "traceId and spanId are required"。调用链按时间排成树形结构，子节点按开始时间排序。查询不存在的 traceId 返回 404 和 "trace not found"。span 数据量大的查询必须分页，超出范围的页码返回空数组而不是报错。
+
+追踪数据保留最近 7 天，过期数据后台定时清理。清理过程中如果有新的 span 写入，写入不能被阻塞或丢失。
 
 npm run build 能编译通过，端口环境变量指定。

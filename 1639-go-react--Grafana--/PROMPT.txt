@@ -1,7 +1,9 @@
-我们监控团队需要一个指标采集和可视化服务，TypeScript 后端。类似Grafana的数据查询能力。
+我们监控团队需要一个指标采集和可视化服务，TypeScript 后端。类似 Grafana 的数据查询能力。
 
-指标数据模型：每个指标有名称、标签（键值对集合）和数值，按时间序列存储，每条记录包含时间戳和值。数据写入时按指标名称和标签组合做去重，相同名称和标签的指标在同一个时间戳只保留最新值。
+指标有名称、标签（键值对集合）和数值，按时间序列存储，每条记录包含时间戳和值。相同名称加标签组合在同一时间戳只保留最新值。需要这些接口：POST /metrics 写入指标数据、GET /metrics/{name}/points 按名称查询数据点（参数 tags、start、end、interval）、GET /metrics/{name}/aggregation 聚合查询（参数 func 支持 avg/sum/max/min/count/percentile、tags、start、end、interval）、POST /templates 创建指标模板、GET /templates 列出模板、GET /templates/{id}/queries 用模板查询、PUT /templates/{id} 更新模板、DELETE /templates/{id} 删除模板。
 
-查询接口支持按指标名称、标签筛选条件和时间范围查询。聚合函数支持avg、sum、max、min、count和percentile。时间范围查询时按指定间隔分组聚合（如每5分钟一个数据点），如果某个间隔内没有数据点可以选择返回null或用前一个值填充。指标模板功能：管理员可以创建指标模板定义一组常用指标的查询配置，模板可以共享给多个用户。查询大量时间序列数据时要用分页限制返回的数据点数量。指标的聚合查询、模板管理和数据写入各有独立的接口路径，类似 /metrics/{name}/aggregation、/templates/{id}/queries 这种。
+聚合查询按指定 interval 分组，某个间隔无数据点时返回 null。分页参数 page 和 pageSize（默认每页 1000 个数据点），超出范围的页码返回空数组。写入指标时名称为空返回 400 和 "metric name is required"，标签值包含非法字符（非字母数字下划线横线）返回 400 和 "invalid tag value"。
+
+模板中引用的指标名称不存在时，查询返回 404 和 "metric {name} referenced in template not found"。删除模板时如果正在被其他用户共享引用，返回 409 和 "template is shared and in use"。聚合函数 percentile 需要额外参数 p（0-100 之间的数值），缺失返回 400 和 "percentile function requires parameter p"。
 
 Express + TypeScript + SQLite，npm run build 能编译通过就行。

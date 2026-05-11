@@ -1,7 +1,7 @@
 SDK版本管理的后端服务，TypeScript + Express。SDK太多版本太乱需要系统化管。
 
-每个SDK有唯一标识（如payment-sdk、user-sdk），支持多种编程语言。每个SDK的每种语言有独立的版本线，版本号遵循语义化规范。上传新版SDK时自动校验版本号是否合法（MAJOR.MINOR.PATCH格式，每段非负整数），还要校验新版本号是否大于当前最新版本，版本比较先比MAJOR再比MINOR最后比PATCH，全部按数值比较，解析时忽略前导零。
+提供SDK的创建、查询、更新、删除接口（/sdks CRUD）。每个SDK有唯一标识（如payment-sdk），支持多种编程语言，提供SDK语言维度的管理接口 GET /sdks/{sdkId}/languages。上传新版SDK接口 POST /sdks/{sdkId}/languages/{lang}/versions，自动校验版本号格式（MAJOR.MINOR.PATCH，每段非负整数不超过65535，格式不对返回400），新版本号不大于当前最新版本时返回400和当前最新版本号，版本比较先比MAJOR再比MINOR最后比PATCH按数值，解析时忽略前导零（01.02.03等同于1.2.3）。
 
-下载记录按SDK加语言加版本三个维度统计下载次数。某个SDK的某个语言版本从未发布过时下载接口要明确提示。每个SDK有集成指南（Markdown格式），和SDK版本绑定，新版发布时如果没提供新的集成指南就沿用上一版本的。发布笔记记录新功能、Bug修复和Breaking Changes，历史版本按时间倒序排列。同一个SDK同一种语言上传相同版本号不会创建重复记录。SDK标记为弃用后所有已发布版本仍然可下载但不出现在搜索结果中。
+下载接口 GET /sdks/{sdkId}/languages/{lang}/versions/{version}/download 增加下载计数。某个SDK的某种语言从未发布过版本时下载接口返回404和"该SDK该语言无已发布版本"。SDK有集成指南（Markdown格式），和版本绑定，新版本发布时没提供新集成指南就沿用上一版本的。发布笔记记录新功能、Bug修复和Breaking Changes，历史版本按时间倒序。同一个SDK同一种语言上传相同版本号不会创建重复记录，返回409和已有版本信息。SDK标记为弃用后所有已发布版本仍可下载但不出现在搜索结果中。删除SDK时如果还有已发布版本则返回409。
 
 npm run build 能编译通过，端口环境变量指定。

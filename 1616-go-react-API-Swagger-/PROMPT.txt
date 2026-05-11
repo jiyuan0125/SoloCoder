@@ -1,7 +1,7 @@
-帮我做一套统一API文档平台，TypeScript 后端。微服务太多Swagger文件散落各处需要统一管理和在线调试。
+帮我做一套统一API文档平台，TypeScript + Express 后端。微服务太多Swagger文件散落各处需要统一管理和在线调试。
 
-管理员上传微服务的Swagger JSON文件（支持OpenAPI 3.0），后端解析提取所有API路径、方法、请求参数和响应格式。Swagger文件解析要容错，很多团队的文件不规范，解析失败时跳过有问题的API并记录警告，不能导致整个服务崩溃。每个微服务有独立的API列表，每个API有独立的调试接口，调试结果也能单独查看。
+提供微服务的注册、查询、更新、删除接口（/services CRUD）。管理员上传微服务的Swagger JSON文件（支持OpenAPI 3.0），后端解析提取所有API路径、方法、请求参数和响应格式，上传接口 POST /services/{serviceId}/swagger。Swagger文件解析容错：不规范的API定义跳过并记录警告（返回响应体中包含skipped_apis数组说明跳过了哪些和原因），不导致整个服务崩溃。每个微服务有独立的API列表接口 GET /services/{serviceId}/apis，每个API的详情接口 GET /services/{serviceId}/apis/{apiId}。
 
-在线调试功能：后端提供代理接口转发请求到目标服务。代理转发设置默认30秒超时，支持自定义。目标服务不可达时返回明确的错误信息。代码分析功能：解析Swagger时统计每个API的标签分组、必填参数的类型分布和响应状态码覆盖情况。配置如代理超时、最大请求体等支持通过配置文件加载，修改后热生效不需要重启。每个微服务下每个API的操作路径设计成 /services/{serviceId}/apis/{apiId}/debug 这种多层级的。
+在线调试：后端提供代理接口 POST /services/{serviceId}/apis/{apiId}/debug 转发请求到目标服务，代理转发默认30秒超时支持自定义，超时返回504和耗时信息。目标服务不可达时返回502和错误详情。代码分析接口 GET /services/{serviceId}/analysis 统计每个API的标签分组、必填参数类型分布和响应状态码覆盖情况。配置如代理超时、最大请求体等通过 PUT /config 接口修改后立即生效不重启。删除微服务时如果还有调试记录则返回409。上传非法JSON格式的Swagger文件返回400和解析错误位置。查询服务列表为空时返回空数组。
 
 Express + TypeScript + SQLite，npm run build 能跑起来。

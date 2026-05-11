@@ -1,7 +1,7 @@
-第三方接入那边提了个需求，要一套Webhook管理服务，TypeScript 实现。
+第三方接入那边提了个需求，要一套Webhook管理服务，TypeScript + Express 实现。
 
-第三方开发者创建Webhook订阅，指定事件类型和回调URL。平台产生对应事件时向回调URL发HTTP POST请求，请求体包含event、data、timestamp和signature。签名用HMAC-SHA256计算，签名内容是timestamp加请求体JSON字符串，密钥是创建Webhook时分配的secret。同一个事件的多次重试timestamp保持事件产生时的时间不变，签名验证时timestamp要在5分钟以内，超过视为过期。
+提供Webhook订阅的创建、查询、更新、删除接口（/webhooks CRUD）。创建时指定事件类型和回调URL，回调URL只能是HTTPS开头（localhost和127.0.0.1例外），非HTTPS返回400。平台产生事件时向回调URL发HTTP POST，请求体包含event、data、timestamp和signature字段。签名用HMAC-SHA256计算，签名内容是timestamp加请求体JSON字符串拼接，密钥是创建Webhook时分配的secret。接收方校验时timestamp超过5分钟的视为过期。
 
-重试策略：回调返回非2xx或连接超时（10秒）时重试，间隔为1分钟、5分钟、30分钟、2小时、24小时，下次重试时间用上次投递时间加间隔来算。同一个Webhook的事件按产生顺序依次投递不能乱序。回调URL必须是HTTPS（localhost例外）。投递记录包含请求URL、请求体、响应状态码和响应体（截取前500字符）。每个Webhook订阅有独立的投递记录查看接口，也能手动触发单条重试，操作路径类似 /webhooks/{id}/deliveries/{deliveryId}/retry。
+重试策略：回调返回非2xx或连接超时（10秒）时重试，间隔1分钟、5分钟、30分钟、2小时、24小时，下次重试时间用上次投递时间加间隔计算。重试5次仍然失败后标记为最终失败不再重试。同一个Webhook的事件按产生顺序投递不能乱序。每个Webhook的投递记录查看接口 GET /webhooks/{id}/deliveries，单条重试接口 POST /webhooks/{id}/deliveries/{deliveryId}/retry。投递记录包含请求URL、请求体、响应状态码和响应体（截取前500字符）。删除Webhook时如果还有投递中的事件则返回409。投递记录查询为空时返回空数组。事件类型不存在时创建Webhook返回400。
 
 Express + TypeScript + SQLite，npm run build 能跑起来就行。

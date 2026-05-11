@@ -1,7 +1,9 @@
 制品管理的后端服务，TypeScript + Express。构建产物的存储和版本管理太散了需要统一。
 
-制品按项目组织，每个制品有名称、类型（Docker镜像/JAR包/NPM包/静态文件）、版本号和存储路径。制品上传时自动计算SHA256校验和，上传完成后和客户端提供的校验和比对不一致则拒绝。同一个制品名称加版本号的组合不能重复上传。
+制品按项目组织，每个制品有名称、类型（docker/jar/npm/static）、版本号和存储路径。需要这些接口：POST /projects 创建项目、POST /projects/{id}/artifacts 上传制品、GET /projects/{id}/artifacts 列表查询（支持按类型和名称筛选）、GET /artifacts/{id} 查详情、DELETE /artifacts/{id} 删除制品、POST /artifacts/{id}/tag-latest 标记为 latest、GET /artifacts/{id}/download 下载、GET /projects/{id}/storage 查存储用量。
 
-制品仓库支持快照版本和发布版本两种类型，快照版本可以被覆盖更新，发布版本不可覆盖。制品可以被标记为latest，标记latest时自动解除之前同类型同名称的latest标记，但被引用的旧latest如果正在被下载流程使用则不能立即移除。制品下载时记录下载次数和下载者。存储空间管理：统计每个项目的制品总大小超过配额时禁止上传新制品。制品可以设置保留策略比如只保留最近10个快照版本，超出的自动清理，清理时正在被下载的版本跳过。
+制品上传时自动计算 SHA256，和客户端提供的校验和不一致返回 400 和 "checksum mismatch, expected {expected} got {actual}"。同一名称加版本号组合不能重复上传，返回 409 和 "artifact version already exists"。快照版本（版本号含 SNAPSHOT）可覆盖更新，发布版本不可覆盖（返回 403 和 "release version cannot be overwritten"）。
+
+标记 latest 时自动解除之前同类型同名称的 latest 标记。下载时记录下载次数。项目存储超配额时禁止上传，返回 403 和 "project storage quota exceeded, limit {limit} bytes"。制品保留策略：只保留最近 N 个快照版本，超出的自动清理。删除制品时如果该制品是 latest 标记返回 400 和 "cannot delete latest artifact, remove tag first"。
 
 Express + TypeScript + SQLite，npm run build 能跑起来就行。

@@ -1,7 +1,7 @@
 可观测性团队那边提了个需求，要一套分布式追踪数据收集服务，TypeScript 实现。类似Jaeger的功能。
 
-追踪数据由trace组成，每个trace包含多个span。每个span有traceId、spanId、父spanId、操作名称、服务名称、开始时间、持续时间和标签集合。数据通过接口批量上报，每次最多500个span。
+追踪数据由trace组成，每个trace包含多个span。每个span有traceId、spanId、父spanId、操作名称、服务名称、开始时间、持续时间和标签集合。span上报时traceId和spanId为必填，缺少任一个返回400并说明哪个字段缺失。数据通过接口 POST /spans/batch 批量上报，每次超过500个span的请求返回400提示超出上限。
 
-查询功能支持按traceId精确查询和按条件搜索（服务名称、操作名称、时间范围、最小持续时间），搜索结果按开始时间倒序返回支持分页。服务依赖图：根据追踪数据自动生成服务之间的调用关系图，统计每对服务之间的调用量和平均延迟，调用关系是单向的A调B和B调A是两条独立的边。追踪数据保留最近7天的，过期数据后台定时清理，清理时不能阻塞正常的数据写入和查询。每个trace有独立的span查询接口和详情接口，路径类似 /traces/{traceId}/spans/{spanId}。
+查询功能支持按traceId精确查询 GET /traces/{traceId} 和按条件搜索 GET /traces/search（参数：服务名称、操作名称、时间范围起止、最小持续时间），搜索结果按开始时间倒序返回，支持分页参数page和pageSize默认20条。服务依赖图接口 GET /dependencies 根据追踪数据生成服务间调用关系，统计每对服务间的调用量和平均延迟，调用关系是单向的——A调B和B调A算两条独立记录。每个trace的span列表接口 GET /traces/{traceId}/spans，单个span详情接口 GET /traces/{traceId}/spans/{spanId}，spanId不存在时返回404。追踪数据保留最近7天的，过期数据后台定时清理，清理不影响正常写入和查询。
 
 Express + TypeScript + SQLite，npm run build 能跑起来就行。
