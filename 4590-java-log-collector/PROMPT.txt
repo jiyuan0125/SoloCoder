@@ -1,0 +1,7 @@
+各个服务的日志格式不统一，有的用 JSON 有的用纯文本，查日志像大海捞针。用 Spring Boot 2.x（JDK 17，Maven）写一个日志收集和分析服务。
+
+各服务通过 HTTP 接口推送日志，日志体是 JSON，要求有 service、level、timestamp 三个字段，其他字段任意。如果缺少必填字段，整批拒绝并返回具体哪些字段缺失。服务端收到后做规范化处理：timestamp 统一转成 ISO 8601 格式，level 统一转成大写（INFO/WARN/ERROR 等），额外字段原样保留。
+
+日志按天存储到本地文件（JSON Lines 格式），文件名格式 logs-{service}-{date}.jsonl。查询接口支持按 service、level、时间范围、关键字搜索。关键字匹配 message 字段。结果分页返回，默认按时间倒序。
+
+还有个聚合接口，统计指定时间范围内每个 service 的 error 数量、平均响应时间（从日志的 duration 字段取）。聚合结果可以按小时或按天分组。日志保留 7 天，有个后台任务每天凌晨清理过期文件。端口环境变量 PORT 指定，能编译启动就行。
