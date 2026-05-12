@@ -1,4 +1,4 @@
-Go Gin 写一个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。
+看个 QPS 还得登服务器翻日志。Go Gin 搞个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。
 指标通过接口上报：Counter 累加、Gauge 设置值、Histogram 记录观测值。每次上报带时间戳和标签（键值对）。
 查询接口：按指标名查最新值、按标签聚合、按时间范围查时序数据。Histogram 还要返回分位数（P50、P95、P99）。
 指标可以按名称前缀分组管理。删除一组指标时，相关的时序数据也清理。
