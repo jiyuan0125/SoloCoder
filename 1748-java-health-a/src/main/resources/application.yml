@@ -1,0 +1,16 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: health-check-center
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+healthcheck:
+  history-size: 100
+  default-webhook: http://localhost:9000/webhook

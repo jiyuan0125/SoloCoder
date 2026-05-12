@@ -1,4 +1,4 @@
-各种数据源的连接管理太混乱，Spring Boot 做统一的连接池管理。利用 java.util.concurrent 的 Semaphore 和 BlockingQueue 管理连接。
+MySQL、Redis、MQ 三种数据源，每个都自己 new 连接自己关，连接泄漏了都不知道是哪个服务干的。Spring Boot 做统一的连接池管理。利用 java.util.concurrent 的 Semaphore 和 BlockingQueue 管理连接。
 
 每种数据源维护独立的连接池，参数：最大连接数、最小空闲数、获取超时。数据源通过接口注册，注册时提供名称和配置。
 

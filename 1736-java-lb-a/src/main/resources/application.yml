@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: load-balancer
+
+loadbalancer:
+  warmup-seconds: 30
+  strategy: WEIGHTED_ROUND_ROBIN

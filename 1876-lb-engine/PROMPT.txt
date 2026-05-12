@@ -1,4 +1,4 @@
-后端服务有好几个实例，FastAPI 做负载均衡引擎，包含 balancer、checker、registry、stats 四个模块。
+三个后端节点权重配的一样，但其中一台磁盘 IO 慢三倍，拖累了整体响应时间。FastAPI 做负载均衡引擎，包含 balancer、checker、registry、stats 四个模块，支持按权重分配流量。
 
 registry 模块管理后端节点注册，支持权重配置。checker 模块定时做健康检查，间隔和阈值可配。balancer 模块按加权轮询分配请求。stats 模块记录每个节点的请求量和响应时间。
 

@@ -1,4 +1,4 @@
-业务指标需要统一采集，Rust axum 做指标引擎。
+Prometheus 太重，我们只想采集十几个业务指标。Rust axum 做一个轻量指标引擎，支持 Counter、Gauge、Histogram 三种类型。
 
 支持 Counter、Gauge、Histogram 三种类型。每个指标有名称和标签组。类型注册后不能改。上报值可能是负数、零、超大值、NaN 之类的异常输入，引擎要正确处理。
 

@@ -1,4 +1,4 @@
-系统之间需要解耦，用 FastAPI 写一个进程内的消息队列服务。支持 Topic 和 Consumer Group。
+订单服务直接调库存服务，库存挂了订单也跟着挂，连锁反应一波带走三个服务。FastAPI 写一个进程内消息队列，用 Topic 和 Consumer Group 把上下游解耦。
 
 同一个 Topic 可以有多个 Consumer Group，每个 Group 内消息只投递给一个消费者，不同 Group 独立消费。多个生产者同时往同一个 Topic 发消息，多个消费者同时拉消息。
 

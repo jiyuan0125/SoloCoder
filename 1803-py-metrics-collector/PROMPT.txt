@@ -1,9 +1,7 @@
-FastAPI 指标采集。Counter 累加、Gauge 设值、Histogram 分桶。
+监控面板需要拉取各服务的运行指标，用 FastAPI 写个采集服务。三种指标类型：Counter 只增、Gauge 可设值、Histogram 做分桶分布。
 
-指标通过接口上报。查询接口返回所有指标的当前值。
+指标带多维度标签，查询时可以按标签过滤。/metrics 端点输出 Prometheus 文本格式，方便 Grafana 直连。
 
-/metrics 端点输出 Prometheus 格式。async 处理。
-
-指标标签支持多维度。查询时可以按标签过滤。
+上报和查询都走 HTTP 接口，async 处理保证高并发下不卡。
 
 端口用 PORT 环境变量。

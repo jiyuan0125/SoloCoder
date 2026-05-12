@@ -1,9 +1,7 @@
-Rust/tokio 做链路追踪。异步记录 Span。
+Rust/tokio 写一个轻量链路追踪。Span 用 Arc<Mutex<HashMap>> 存，并发安全但不用外部存储。
 
-Span 用 Arc<Mutex<HashMap>> 存储。并发安全。
+每个 Span 可以打 tags（key-value 形式），后续通过 tag 搜索关联的 Span。
 
-每个 Span 有 tags（key-value）。可以通过 tag 搜索 Span。
+接口支持按 trace ID 查完整链路和按 tag 模糊搜索。
 
-提供接口按 trace ID 查询和按 tag 搜索。
-
-端口通过 PORT 环境变量配置，Cargo build 能过。
+PORT 环境变量配端口，Cargo build 能编译通过。

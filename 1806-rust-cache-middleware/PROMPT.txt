@@ -1,9 +1,7 @@
-Rust/tokio 做缓存服务。支持 Read-Through 模式——缓存未命中时自动从配置的数据源加载。
+Read-Through 缓存，Rust/tokio 实现。和普通缓存不同，miss 时自动从数据源加载，调用方不用关心缓存是否存在。
 
-数据源是 HTTP 接口，URL 模板里可以用 key 做替换。比如 http://backend/api/data/{key}。
+数据源是 HTTP 接口，URL 支持模板替换——比如 http://backend/api/data/{key}，请求时 {key} 自动替换成实际值。加载成功的结果写入缓存再返回；加载失败不缓存，直接透传错误。
 
-加载结果缓存后返回。加载失败不缓存，直接返回错误。
+接口管理数据源配置和缓存内容。
 
-提供接口配置数据源和管理缓存。
-
-端口通过 PORT 环境变量配置，Cargo build 能过。
+PORT 环境变量配端口，Cargo build 能编译通过。

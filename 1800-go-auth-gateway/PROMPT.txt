@@ -1,11 +1,9 @@
-Go net/http 做认证网关。支持 JWT 和 API Key 两种认证方式。
+前后端分离后，所有接口都得过一道认证。Go net/http 写个认证网关，同时支持 JWT 和 API Key。
 
-JWT 验证签名和过期时间。签名密钥通过环境变量配置。过期 JWT 返回 401。
+JWT 校验签名和过期，密钥从环境变量读。过期 Token 返回 401。API Key 存内存 map，每个 key 绑一组路径前缀作为权限范围。
 
-API Key 存内存 map。每个 key 绑定权限范围。权限范围是一组路径前缀。
+Token 刷新机制：过期前 5 分钟允许用旧换新，但同一个 Token 1 分钟内只能刷新一次，防止刷新风暴。
 
-Token 刷新：JWT 过期前 5 分钟内可以用旧 Token 换新 Token。刷新有冷却时间——同一个 Token 1 分钟内只能刷新一次。
+接口包括：登录拿 JWT、刷新 Token、增删查 API Key。
 
-提供接口：登录获取 JWT、刷新 Token、管理 API Key。
-
-端口通过 PORT 环境变量配置。项目能 go build 通过，能正常启动就行。
+PORT 环境变量指定端口，go build 能过。

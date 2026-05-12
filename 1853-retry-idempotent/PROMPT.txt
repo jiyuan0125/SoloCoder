@@ -1,4 +1,4 @@
-调外部服务经常失败，Go 标准库 net/http 做一个重试调度服务，包含 scheduler、executor、store、query 四个模块。
+调第三方支付接口超时率 15%，不重试丢钱，重试了怕重复扣款。Go 标准库 net/http 做一个重试调度服务，包含 scheduler、executor、store、query 四个模块。
 
 客户端提交任务时指定目标 URL、请求体、最大重试次数、间隔策略（固定或指数退避）。任务提交后后台执行不阻塞。指数退避加抖动，公式 base * 2^attempt + jitter。
 
