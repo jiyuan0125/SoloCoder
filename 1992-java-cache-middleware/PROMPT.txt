@@ -1,0 +1,5 @@
+之前用过 Redis 做缓存，这次换 Spring Boot 自建一个缓存中间件试试。主要给内部服务用，单机内存缓存。
+缓存按 namespace 隔离，每个 namespace 可以独立配置 TTL、最大容量、淘汰策略（LRU 或 LFU）。同一个 namespace 下 key 不能重复，value 最大 1MB。
+写入的时候如果 namespace 容量满了，按淘汰策略淘汰最老的。TTL 到期的 key 惰性删除，查询的时候顺便清。也提供手动清除某个 namespace 或某个 key 的接口。
+支持批量操作：一次写入多个 key-value 对，一次查询多个 key。批量操作要么全部成功要么全部失败。缓存命中率统计按 namespace 分开计数。
+客户端可以订阅某个 namespace 的 key 变更通知。通知通过客户端注册的回调 URL 推送。回调如果连续失败 3 次，暂停该客户端的通知 5 分钟。Maven 构建，端口配置文件指定。

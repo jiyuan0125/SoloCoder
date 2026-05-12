@@ -1,0 +1,5 @@
+线上的日志全靠人肉 ssh 上去 tail，出问题排查特别慢。Python aiohttp 做一个集中式日志聚合服务，各个服务把结构化日志推过来统一存和查。
+日志条目包含 timestamp、service_name、level、message、tags 几个字段。level 支持 DEBUG/INFO/WARN/ERROR 四级。写入的时候按 service_name 分片，每个服务保留最近 10 万条。支持按时间范围、level、service_name、tags 组合查询。
+分级过滤这块，每个服务可以独立配置最低输出级别，比如服务 A 只收 WARN 以上，服务 B 收全部。配置变更后立即生效，已有的低级别日志不删。
+批量写入接口一次最多收 1000 条，超出的截断。日志之间可以建立关联，比如一次请求的入口日志和各服务处理日志用同一个 trace_id 串起来，查一条能把整条链路拉出来。
+标签聚合统计接口，按标签 key 分组计数，返回 top N 的标签值。端口用 PORT 环境变量。
