@@ -1,0 +1,5 @@
+V2 版本月底上线，先把链路聚合追踪服务做了，Java Netty。
+多个服务实例上报Span数据到这个服务。服务按TraceID聚合所有Span。聚合后构建调用树，计算每个节点的耗时和总耗时。
+Span数据包含：TraceID、SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签。标签是KV对，可以放任意数据。
+调用树中如果某个Span的耗时占整个Trace的80%以上，标记为热点。热点Span的标签中如果有error标签，标记为异常热点。聚合后的调用树可以按服务名、操作名查询。
+Span数据接收后先存缓冲区，异步聚合。缓冲区满的时候丢弃最早的Span。丢弃的Span不计入统计。至少包含 receiver、aggregator、builder、query 四个模块。

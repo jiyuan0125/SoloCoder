@@ -1,0 +1,5 @@
+后端有个老系统只认 Protobuf，前端新系统用 JSON。Go Fiber 写一个协议转换网关。
+JSON→Protobuf：JSON请求体根据proto定义转成Protobuf二进制。字段类型要严格匹配，整数不能传字符串。嵌套消息正确处理。bytes字段从Base64解码。
+Protobuf→JSON：后端返回的Protobuf二进制转成JSON。枚举值转成字符串而不是数字。timestamp转ISO 8601。空字段默认不输出。
+proto文件通过接口上传和管理。上传后解析出message定义，自动生成对应的转换路由。proto文件有版本管理，新版本上传后老版本的转换仍然可用。
+用户通过接口上传的proto文件内容要做安全检查，不允许包含文件路径或者特殊字符。至少包含 gateway、converter、proto、registry 四个模块。

@@ -1,0 +1,5 @@
+之前买的Nacos功能太多我们用不到，Spring Boot 自建一个热加载配置中心。
+配置KV存储。Value支持字符串、数字、布尔、JSON对象四种类型。应用启动时拉取配置。运行时通过长连接接收变更推送。
+配置变更有版本号。每次修改版本号加一。可以查询某个Key的历史值和版本号。可以回滚到指定版本。回滚也增加版本号。
+应用可以订阅Key的变更。订阅信息记录：应用名、实例IP、订阅的Key列表。推送失败时记入重试队列。重试超过3次标记该实例为推送异常，不再推送但保留订阅关系。
+配置项的增删改查通过REST接口。接口路径包含 /configs、/configs/{key}、/configs/{key}/history、/subscriptions 等多个层级。至少包含 config、version、push、subscription 四个模块。Maven 构建。
