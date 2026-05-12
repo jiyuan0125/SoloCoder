@@ -1,9 +1,0 @@
-之前用 conventional-changelog 这个 npm 包生成 Changelog，但功能太死板还依赖 Node 环境。Go 写个 releasetool，cobra 框架。
-
-在 Git 仓库中运行。releasetool new v1.2.0 创建新版本，自动分析从上个版本标签到 HEAD 的所有提交，按类型分类整理 Changelog。
-
-分类规则基于 Conventional Commits：feat→新功能，fix→Bug 修复，docs→文档，refactor→重构，perf→性能优化，test→测试，chore→其他。不符合格式的归"未分类"给警告。每条取提交消息第一行去掉前缀。有 Issue 编号（#123）的标注链接。
-
-写入 CHANGELOG.md 采用 Keep a Changelog 标准，最新版本在顶部。已存在则在顶部插入保留历史不变。版本号管理：检查 SemVer 格式、重复版本号（退出码 1）、是否有新提交（无新变更退出码 1）。版本号排序要正确解析 major.minor.patch 不能按字符串排（v1.10 > v1.2）。
-
-releasetool diff v1.1.0 v1.2.0 预览差异不写入。--dry-run 预览不写入不标签。--template 自定义模板。从没打过标签时所有历史提交纳入第一个版本。创建标签失败退出码 2 回滚 CHANGELOG 变更。

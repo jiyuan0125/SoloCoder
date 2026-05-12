@@ -1,5 +1,0 @@
-市面上的 CSP 工具要么太专业要么不好用，用 Go 自己写一个，能根据 HTML 分析资源引用自动生成策略也能验证现有策略。
-
-analyze 模式扫描 HTML 文件的所有资源引用（script src、link href、img src、内联 style/script 等），自动生成 CSP 策略。全同源用 self，引用了 CDN 加域名，有内联脚本加 unsafe-inline 并警告建议提取外部文件。支持 hash 方式（SHA256/384/512）替代 unsafe-inline。audit 模式接收 HTML 和 CSP 策略字符串，模拟浏览器检查每个资源是否违反策略，报告冲突和修复建议。
-
-HTML 解析用标准 tokenizer。CSP 匹配引擎简化版，解析策略为结构化指令集合。HTML 不存在退出码 1。策略为空退出码 1。无外部资源输出 default-src self。unsafe-inline 和 strict-dynamic 同时存在指出矛盾。缺 default-src 标注警告。策略超 4096 字节警告。nonce 用 crypto/rand 不用 math/rand。

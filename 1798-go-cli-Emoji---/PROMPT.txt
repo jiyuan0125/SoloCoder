@@ -1,6 +1,0 @@
-产品和运营要在文案里用 Emoji 但经常找不到想要的，也不知道怎么输入。Go 写个 Emoji 搜索和编码转换工具。
-
-search 通过关键词搜索 Emoji，内置数据库包含字符、名称、关键词、分类。支持中英文搜索，模糊匹配名称和关键词。比如搜"笑"列出 😀😁😂🤣😃😄😅😆。--category 按分类筛选（笑脸、动物、食物、旅行、活动、物品、符号、旗帜）。list 列出所有或指定分类 Emoji，分页输出。info 显示 Emoji 详情：字符、码点、CLDR 短名称（中英文）、关键词、分类、Unicode 版本、是否组合 Emoji。
-
-encode 把 Emoji 转各种编码：Unicode 码点、UTF-8/UTF-16 编码、Java/JSON 转义、HTML 实体。decode 反向操作。count 统计文本中 Emoji 数量，组合 Emoji（👨‍👩‍👧‍👦 由 ZWJ 连接）计为 1 个不是 4 个。skin-tone 为支持肤色变体的 Emoji 生成不同肤色版本。remove 移除文本中所有 Emoji 包括组合和带修饰符的。replace 用 CLDR 短名称替换 Emoji（如 😂→[face with tears of joy]）。copy 复制到剪贴板。random 随机输出。
-search 无匹配退出码 0 输出空列表。info 非有效 Emoji 退出码 1。count 组合 Emoji 计为 1 个，肤色变体和基础分别计数。remove 后不留多余空格或 ZWJ。encode 再 decode 回来和原始完全一致。

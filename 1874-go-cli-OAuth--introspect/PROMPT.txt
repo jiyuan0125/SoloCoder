@@ -1,5 +1,0 @@
-对接了好几个第三方平台的 OAuth，access_token 过期刷新逻辑散落各处，用 Go 统一管起来。
-
-config 子命令管理平台配置（名称、token 端点、client_id、secret、refresh_token），存本地 JSON，客户端密钥用 AES 加密，密钥从环境变量读。refresh 子命令刷新令牌，POST grant_type=refresh_token，支持 --dry-run 模拟。status 显示所有平台令牌状态，快过期的醒目标记。introspect 通过 RFC 7662 端点检查令牌活跃状态，没有端点的按本地过期时间判断。batch-refresh 后台定时刷新。
-
-刷新失败保留旧 token 不删除，记录失败日志。网络超时 10 秒重试一次，两次失败退出码 1。环境变量无加密密钥退出码 1 不明文存储。多平台并发刷新但同平台不并发，用文件锁。batch-refresh 捕获 SIGINT 退出前完成当前操作。平台不存在退出码 1 列出已配置的。配置为空退出码 0 提示未配置。

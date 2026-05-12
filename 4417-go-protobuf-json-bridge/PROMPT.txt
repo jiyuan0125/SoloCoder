@@ -1,0 +1,6 @@
+之前用 JSON 做内部通信太臃肿了，换 Protobuf。Go 标准库做一个 Protobuf-JSON 协议桥。
+协议转换：接收 JSON 请求，转换成 Protobuf 发到上游。接收 Protobuf 响应，转换成 JSON 返回。上游地址可配。转换用的 .proto 定义通过接口上传。
+编解码：支持 Protobuf 3 语法。嵌套消息、repeated 字段、enum 都要处理。oneof 字段转 JSON 时只序列化设置的那个。map 字段转 JSON 用对象表示。
+路径映射：外部路径和内部 Protobuf service/method 的映射关系可配。比如 POST /api/users 对应 UserService.CreateUser。映射规则通过接口管理，支持路径参数提取。
+转换失败时返回详细的错误信息，指出是哪个字段出了问题。空请求体和非法 JSON 要能正确处理。
+至少包含 codec、mapping、proxy、proto_store 四个模块。端口 PORT 环境变量，go build 能过。

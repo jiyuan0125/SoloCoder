@@ -1,9 +1,0 @@
-之前用过 Python 的 ping 批量脚本，并发太差，换 Go 重写一个。运维要定期检查一批服务器的网络可达性和延迟，系统 ping 一次只能一个。Go 写个 pingmon，cobra 框架。
-
---targets servers.txt，每行一个目标（IP 或域名），支持竖线加别名如 192.168.1.10|web-server-01。每次发 3 个 ICMP 包取平均延迟。显示每个目标：是否可达/平均延迟/最小延迟/最大延迟/丢包率。
-
-Ping 不依赖系统命令直接用 Go net 包发 ICMP Echo Request。支持 IPv4 和 IPv6。Linux 上需要 root 或 CAP_NET_RAW，没权限明确提示。--unprivileged 用 UDP 代替 ICMP。批量并发默认 50。结果按延迟排序。全部不可达退出码 2，部分不可达退出码 0 标注数量。
-
---warn 警告阈值默认 50ms，--critical 严重阈值默认 100ms。丢包率超 --packet-loss（默认 10%）也报警。watch 连续监控 --interval 默认 10s，ANSI 清屏重绘不追加。Ctrl+C 退出输出汇总统计。异常时告警日志写 stderr 不干扰 stdout 表格。--log 追加 CSV 文件。
-
-有些服务器禁 ICMP，标注"ICMP 可能被过滤"。统计用实际间隔不是设定值。

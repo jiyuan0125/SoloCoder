@@ -1,8 +1,0 @@
-每次季度考核要写技术贡献汇报，手动翻 Git 日志太痛苦了。Go 写个 gitlogstats，cobra 框架。
-
-在 Git 仓库目录下运行，解析 git log 输出。指定时间范围（--since/--until，支持 2024-01-01 和 2024-01 月份格式）。统计每个作者的提交次数、新增行、删除行、净增行。
-
-输出贡献度排行榜按净增行降序：作者名、邮箱、提交数、新增/删除/净增行、占比百分比。净增总和为 0 时百分比全显示 0。--period 按周/月/季度分组看趋势。--by-file 统计修改最频繁的文件 top 20 和被最多不同人修改的文件。--message-stats 分析提交消息格式：是否符合 Conventional Commits（feat:/fix:/docs: 等前缀），统计合规率和平均长度。
-
---output 指定输出文件，--format csv 导出。
-大型仓库可能有几十万条提交。分批获取用 --skip 和 --max-count 分页。解析 git log 输出用结构化格式 --pretty=format: 比默认文本可靠。git 命令失败退出码 1。默认跳过合并提交（--no-merges），加 --include-merges 包含。作者名不一致问题通过 --mailmap 合并同一个人不同身份。mailmap 文件不存在退出码 1，格式错打印警告跳过该行。

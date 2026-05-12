@@ -1,5 +1,0 @@
-Go 的 crypto 和 encoding 库做 JWT 处理很方便，写个命令行工具来签发、验证和解析 JWT 令牌，微服务之间排查问题的时候用。
-
-sign 子命令签发令牌，载荷支持 JSON 或 key=value 格式，自动加 iss/iat/exp。签名支持 HS256/384/512（--secret 传密钥）和 RS256（--private-key 传 PEM 私钥）。verify 验证签名和过期时间，通过输出载荷 JSON，失败输出具体原因。decode 只解码不验证，快速查看令牌内容。inspect 显示详细信息包括字节长度、算法、过期倒计时。
-
-JWT 格式不对（段数不是 3）退出码 1。exp/iat 值超大（超当前时间+100年）警告可能用了毫秒并自动除以 1000。RSA 密钥 PEM 格式不支持退出码 1。签名有效但过期退出码 1 显示过期时间。sign 同时指定 secret 和 private-key 退出码 1。decode 载荷非标准 JSON 仍输出标注异常。inspect 已过期显示过期天数小时数。

@@ -1,9 +1,0 @@
-client-go 库的能力刚好能解决我们 kubectl 操作太繁琐的问题，拿来写一个 Kubernetes 资源管理工具。查某个 namespace 下所有 Pod 日志、批量重启 Deployment 的 Pod、快速端口转发这些常用操作每次都要敲很长的命令。
-
-工具通过 Kubernetes API（client-go 库）实现，不依赖 kubectl。kubeconfig 找不到退出码 1 提示设置 KUBECONFIG 或检查 ~/.kube/config。资源查询：列出指定 namespace 下 Pod/Deployment/Service 等，namespace 不存在退出码 1。日志查看：获取指定 Pod 日志，支持选择容器、按时间范围过滤、自动跟踪最新日志。多 Pod 日志聚合：把同一个 Deployment 下所有 Pod 日志按时间排序输出，每行前面标注来源 Pod 名称，Pod 数量多时做并发控制和分批获取。
-
-端口转发：快速建立本地端口到 Pod 端口的转发，支持同时转发多个端口，本地端口被占用退出码 1。批量操作：对一组资源执行同一操作，比如重启某个 Deployment 所有 Pod、删除所有标签 env=test 的 Pod。Pod 可能在操作中被删除或重建，要处理 ResourceNotFound 错误跳过继续处理其余 Pod。
-
-配置导出：把一个 namespace 下所有资源导出为 YAML 文件。导出时过滤系统自动添加的注解和标签（如 kubectl.kubernetes.io/ 开头的），只保留用户定义部分。导出目录不存在自动创建。
-
-不同版本 K8s API 字段可能不同，工具兼容主流版本。API 调用超时默认 30 秒可通过 --timeout 调整。加 --json 输出 JSON。操作失败退出码 2，API Server 不可达退出码 1。

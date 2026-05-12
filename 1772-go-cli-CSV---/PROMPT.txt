@@ -1,8 +1,0 @@
-闲着没事想做一个 CSV 数据处理工具自己用，Go 写服务端。平时处理日志和报表都是 CSV 格式，Excel 打不开大文件，Python 脚本启动又慢。
-
-工具叫 csvkit，cobra 框架，八个字命令：head、tail、select、filter、agg、join、sort、stat。
-
-head 和 tail 看前/后 N 行，默认 10 行，输出自动对齐列宽。select 选列输出，支持按列名或列号，可以重命名。filter 按条件过滤行，语法是"列名 操作符 值"，支持等于/不等于/大于/小于/包含/正则，多条件用 AND/OR 连。agg 做聚合，数值列支持 sum/avg/max/min/median/stddev，支持 GROUP BY 分组后聚合，还有 COUNT DISTINCT。join 合并两个 CSV，支持 INNER/LEFT/RIGHT JOIN，关联列重名自动加后缀。sort 按列排序，数值列按数值排不是字符串，支持多列。stat 输出整体统计：总行列数、每列类型、空值数。
-
-大文件全部子命令都流式读取。排序和聚合用外部排序或分桶。join 用哈希连接，小文件先加载建索引。
-文件不存在退出码 1。空文件退出码 0 正常处理。filter 条件语法错退出码 2 并输出哪里写错了。join 关联列不存在退出码 3 并列出可用列。输出 CSV 要兼容 Excel 中文，带 BOM 和不带 BOM 都支持。聚合结果保留原始精度不做不必要的四舍五入。

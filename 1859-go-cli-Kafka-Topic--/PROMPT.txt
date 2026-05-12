@@ -1,9 +1,0 @@
-业务上遇到个问题：Kafka Topic 管理太分散了，几个集群几十个 Topic 靠自带脚本管不过来。打算用 Go 搞个统一管理工具，直接用 sarama 库连 Kafka。
-
-topic 子命令管理 Topic：列出所有 Topic 显示名称、分区数、副本因子、消息数量和创建时间。--create 创建指定名称、分区数和副本数。--describe 查看详细信息包括每个分区 leader、ISR 和副本分布。--delete 删除 Topic，需要服务端配了 delete.topic.enable=true，没配要提示。
-
-consumer 子命令管理消费者组：列出所有组显示组名、消费的 Topic、每个分区消费 offset、最新 offset 和 lag。--reset 重置消费者组 offset 到最早或最新。
-
-produce 和 consume 子命令用于测试。produce 往 Topic 发消息（从标准输入或直接传入），consume 从 Topic 消费打印到标准输出。
-
-Kafka 可能配了 SASL 认证（PLAIN 或 SCRAM），工具要支持认证参数，认证失败退出码 1 提示检查密码，不能把密码打到日志里。连接超时 30 秒，某个 Broker 不可用标记为不可达但继续查其他 Broker，全部不可达退出码 1。消费者组 lag 超过 1 万用"X.X 万"格式，超过 1 亿用"X.X 亿"。输出末尾标注"统计时间：YYYY-MM-DD HH:mm:ss"。创建 Topic 副本数超过 Broker 数退出码 1。Topic 配置从 3 副本改 1 副本打印警告要求输入"YES"确认。consumer --reset 要求指定消费者组名和目标 Topic 不能重置整组。produce 发消息 Topic 不存在且没开自动创建退出码 1。consume 指定 --from-beginning 但 Topic 没消息不报错打印"等待消息中..."阻塞等待。

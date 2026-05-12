@@ -1,5 +1,0 @@
-安全团队那边提了个需求，富文本编辑器保存的 HTML 片段要做安全清洗再展示到各终端，Go 命令行工具处理 XSS 防护。
-
-接收 HTML 文件或标准输入，基于白名单净化。默认允许 p/br/div/span/strong/em/a/img/ul/ol/li/h1-h6/table 系列标签。a 允许 href+title，img 允许 src+alt+width，其他只允许 class+style。href 的 javascript 协议（含大小写混合和编码绕过）移除整个 a 标签不是清空 href。style 移除 expression 和 url 函数。支持自定义白名单 JSON 配置文件。
-
-HTML 实体编码绕过要先解码再判断协议。属性值里含换行符制表符的也要检测（浏览器忽略空白照样执行）。自闭合标签和不闭合标签 onerror 也要能检测到。嵌套注释绕过要处理。净化后再净化一次结果不变，变了退出码 1。输入空输出空。配置 JSON 不合法退出码 1。未闭合标签输出要补全。超大文件流式解析。img 无 src 整个移除。a 相对路径保留。

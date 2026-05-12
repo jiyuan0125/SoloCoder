@@ -1,5 +1,0 @@
-之前用 protoc 手动对比 proto 文件差异，微服务多了以后完全管不过来，用 Go 写个字段映射和版本管理命令行工具。
-
-diff 功能对比两个 .proto 文件（旧版和新版），输出新增/删除的 message 和字段、类型和编号变更。字段编号变更是高危（Protobuf 靠编号识别字段），类型变更中危，新增低危，删除中危。mapping 功能基于 diff 生成 JSON 字段映射配置（直接映射、类型转换、重命名、默认值填充）和 Go 转换函数代码。还能把 proto message 生成 JSON Schema 给前端用：repeated→array、optional→非 required、enum→带约束 string、map→additionalProperties。
-
-proto 解析自己写简易 parser 处理 message/field/enum/oneof/map。proto 语法错误退出码 1。oneof 删除选项映射配置要给处理策略。嵌套 message 用全限定名匹配。diff 无差异退出码 0。编号复用标记高危。生成 Go 代码过 go vet 标注通过。deprecated 字段 JSON Schema 标注 deprecated:true。

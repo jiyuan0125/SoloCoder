@@ -1,9 +1,0 @@
-安全团队那边提了个需求，要一个 CORS 配置检查和测试工具，用 Go 写。前端调后端接口经常遇到跨域问题，但到底是浏览器拦截还是后端配置不对，每次排查都很费时间。
-
-check 子命令向指定 URL 发送一个带 Origin 头的预检请求（OPTIONS），分析响应中的 CORS 相关头部：Access-Control-Allow-Origin、Access-Control-Allow-Methods、Access-Control-Allow-Headers、Access-Control-Allow-Credentials、Access-Control-Max-Age、Access-Control-Expose-Headers。检查配置是否正确、是否有安全风险（比如 Allow-Origin 设置为 * 同时 Allow-Credentials 为 true 是不合法的组合）。URL 格式不合法时退出码返回 1。
-
-test 子命令模拟浏览器的跨域请求行为。用户指定源域名（Origin）和目标 URL，工具模拟简单请求和预检请求两种场景，分别检查响应头是否允许跨域。这样可以确认某个跨域调用在浏览器端是否会被拦截，以及拦截的具体原因。
-
-compare 子命令比较两个环境的 CORS 配置差异，比如对比 staging 和 production 的响应头，输出哪些头不一致。
-
-请求的 Origin 可以通过 --origin 参数指定，不指定则用一个默认的测试 Origin。允许的 HTTP 方法逐个测试，确认 Allow-Methods 声明和实际行为一致。有些服务器对不同路径的 CORS 配置不同，工具支持指定多个路径分别测试。请求超时默认 10 秒。HTTPS 证书错误时退出码返回 1。批量测试多个 URL 时某个失败不影响其余，最后汇总结果。支持输出 JSON 格式。CORS 头的值如果是多个域名用空格分隔，工具逐个解析。

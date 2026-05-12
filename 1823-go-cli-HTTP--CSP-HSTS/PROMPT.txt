@@ -1,9 +1,0 @@
-做一个 HTTP 安全头检查命令行工具，Go 实现。运维团队需要定期检查线上服务的安全响应头配置，确保 CSP、HSTS、X-Frame-Options 这些头部都正确设置了。
-
-scan 子命令向指定 URL 发请求，获取响应头，检查以下安全头的配置情况：Content-Security-Policy（CSP）、Strict-Transport-Security（HSTS）、X-Frame-Options、X-Content-Type-Options、X-XSS-Protection、Referrer-Policy、Permissions-Policy。每个安全头给出配置是否正确、是否有安全隐患的评估。URL 格式不合法时退出码返回 1。
-
-CSP 解析是核心功能。工具要把 CSP 的各个指令（default-src、script-src、style-src、img-src 等）拆开分析，检查是否配置了不安全的值（如 'unsafe-inline'、'unsafe-eval'、data: 源）。HSTS 检查 max-age 是否足够长（建议至少 31536000 秒即一年），是否包含 includeSubDomains 和 preload。
-
-report 子命令生成检查报告，支持纯文本和 JSON 格式。输出每个安全头的状态：已设置且安全（绿色）、已设置但有风险（黄色）、未设置（红色）。最后给出一个总体安全评分（满分 100，每个安全头占一定权重）。
-
-batch 子命令从文件读取 URL 列表批量检查，输出汇总表格。支持 --min-score 参数指定最低分数阈值，低于阈值时退出码返回 2。HTTP 请求超时默认 10 秒。如果服务返回 3xx 重定向，工具跟踪重定向后检查最终响应的头，但报告里标注经过了重定向。HTTPS 证书错误时退出码返回 1 并提示证书问题。有些安全头在开发环境和生产环境的合理配置不同，工具通过 --env 参数区分（dev/prod），默认按 prod 标准检查。

@@ -1,9 +1,0 @@
-每次新建项目都要手写 .gitignore，经常遗漏该忽略的文件，不同语言不同框架要不同规则。Go 写个 ignorance 工具，cobra 框架。
-
-ignorance init 交互式生成 .gitignore。先检测项目类型（看 go.mod/package.json/pom.xml/requirements.txt），列出推荐忽略规则让用户选择。规则按类分组：语言相关（Go 忽略 vendor/.exe/覆盖率，Node 忽略 node_modules/dist/.next，Java 忽略 target/.class）、IDE 相关（.vscode/.idea/.swp）、系统相关（.DS_Store/Thumbs.db/*~）。
-
-ignorance check 检查当前目录是否有该忽略但还没忽略的文件。扫描未跟踪文件分析是否匹配常见应忽略模式。
-
-ignorance clean 清理已被 Git 跟踪但应该忽略的文件。列出匹配文件用户确认后执行 git rm --cached 从索引移除不删实际文件。必须 --confirm 才执行不加只预览。git rm 失败跳过继续，最后汇总失败数。
-
---global 操作全局 .gitignore。--template 从内置模板快速生成比如 ignorance init --template golang。已存在的 .gitignore 要提示覆盖还是追加，追加时跳过重复规则汇总说明。

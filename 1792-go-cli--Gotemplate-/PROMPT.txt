@@ -1,6 +1,0 @@
-V2 版本要在月底上线，先把配置渲染工具做了，Go 实现。基于 Go 标准库 text/template 和 html/template，提供更好的命令行接口。
-
-render 渲染模板文件，--data 传入 JSON 或 YAML 数据文件。支持 if/else、range、with、define、block 标准动作和管道操作。内置函数：upper、lower、trim、replace、now、format（Go 时间格式）、env（读环境变量）、default（空值用默认）。用户可以 --func 注册额外模板函数，格式 name=body。validate 只检查模板语法不渲染。extract 提取模板中所有变量名，方便确认数据文件是否完整。
-
-output 指定渲染输出格式：默认纯文本，--html 用 html/template 自动转义，--json 输出 JSON。pipe 从标准输入读模板和数据（--- 分隔），渲染输出到标准输出，方便管道。watch 监听文件变更自动重新渲染。目录模板：如果模板路径是目录，遍历所有文件保持子目录结构渲染，跳过二进制和隐藏文件。
-render 数据 JSON 格式错退出码 1，模板语法错退出码 2。validate 正确退出码 0，有错退出码 1 输出行号。extract 无变量退出码 0 输出空列表。目录模板某文件失败不影响其他，最后汇总失败列表。html 模式自动转义，纯文本不转义。

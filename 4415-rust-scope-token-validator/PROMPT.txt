@@ -1,0 +1,7 @@
+Rust actix-web 做一个带 Scope 校验的 Token 验证网关。有 Token 不够，还得有权限。
+Token 管理：通过接口创建 Token，指定允许的 scope 列表和过期时间。Token 有唯一 ID 和密钥。Token 过期后自动失效。Scope 是字符串列表，比如 ["read:users", "write:orders"]。
+请求验证：请求进来时从 Authorization 头提取 Token。验证签名和过期时间。验证通过后检查请求需要的 scope。Token 没有所需 scope 返回 403。验证失败返回 401。
+Scope 继承：write scope 自动包含对应的 read scope。比如 "write:orders" 隐含 "read:orders"。路径和方法的映射关系可配：GET 请求需要 read scope，POST/PUT/DELETE 需要 write scope。
+Token 撤销：通过接口可以提前撤销 Token。撤销后即使没过期也不能用。撤销操作记录撤销时间和操作者。
+Token 的 scope 列表为空时拒绝所有请求。超长的 scope 名称（超过 128 字符）在创建时拒绝。
+至少包含 token、validator、scope、revocation 四个模块。Cargo build，PORT 环境变量。

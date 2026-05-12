@@ -1,9 +1,0 @@
-市面上 API Mock 工具要么太重（WireMock）要么太简单（json-server），Go 写个折中方案 mockapi。cobra 框架。
-
-配置文件 YAML 格式定义 API 接口和 Mock 响应。每个接口定义：请求方法（GET/POST/PUT/DELETE）、路径（支持 :id 路径参数）、响应状态码/头/体。响应体支持静态内容和动态模板。模板语法：{{randomInt 1 100}}、{{randomString 10}}、{{randomEmail}}、{{randomDate}}、{{now}}。
-
-录制模式：mockapi record --proxy http://real-backend:8080，代理请求到真实后端同时录制请求响应保存为 YAML 配置。后端不可达不阻塞 Mock 启动，未录制路径返回 502。
-
-延迟模拟：配置中可设固定延迟或随机延迟范围模拟网络慢。状态管理：stateful: true 标记的接口维护简单状态，比如 POST 创建后 GET 能返回之前的数据，状态存内存重启清空。
-
-路由匹配要准确：路径参数匹配、查询参数匹配、请求体字段匹配。多匹配时最具体的优先。/users/:id 匹配 /users/123 不匹配 /users/123/posts。多余查询参数不导致匹配失败。未注册路径返回 404。--watch 热加载不丢状态数据。录制时自动过滤敏感头和响应体中 password/secret/token 字段。

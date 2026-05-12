@@ -1,7 +1,0 @@
-下载了一堆文件不知道具体格式扩展名可能是错的，需要批量识别归档。Go加cobra写一个叫filetype，identify和organize两个子命令。
-
-identify扫描目录通过读文件头部魔术字节识别真实类型不依赖扩展名。支持：图片（JPEG、PNG、GIF、BMP、WebP、TIFF、SVG）、文档（PDF、ZIP、DOCX、XLSX）、压缩（GZ、BZ2、XZ、7Z、RAR）、代码文本（UTF-8文本、XML、JSON）、音视频（MP3、MP4、AVI、MKV）、可执行（ELF、PE、Mach-O）。无魔术字节的格式（如纯文本）通过内容特征综合判断。复合格式（DOCX本质ZIP包含XML）正确识别外层。空文件归unknown。输出路径、扩展名、实际类型、扩展名是否匹配不匹配感叹号标记。
-
-organize在识别基础上按类型移动到子目录：images/、documents/、archives/、code/、media/、executables/、unknown/。扩展名和实际类型不匹配自动修正。移动前显示计划等确认。同名冲突自动加编号从1递增不覆盖已有。软链接跟随检查目标类型。跨文件系统用复制加删除代替直接移动。
-
-identify文件不存在1无法读取2。organize目标目录创建失败整个操作中止不能出现一部分移了一部分没移。同名自动加编号不覆盖。软链接移动后保持链接属性不跟随移动目标内容。

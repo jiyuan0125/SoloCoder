@@ -1,7 +1,0 @@
-Go 标准库解析文本的能力挺适合做 Nginx 配置分析的，拿来写一个配置管理和检查工具。运维管几十台服务器的 Nginx 配置，经常要查语法、看结构和做批量修改。
-
-工具不启动 Nginx 服务，纯粹对配置文件做解析、检查和修改。
-
-parse 子命令解析配置输出树形结构。Nginx 配置是嵌套 block（http 里 server 里 location），工具用缩进树形图展示，每个 block 显示指令名和参数值。check 子命令检查语法：大括号配对、指令名拼写（内置常见指令列表比对）、重复指令是否允许、include 引用的文件是否存在。diff 子命令语义化对比两个配置文件，理解结构后区分实质性变化和格式/位置变化。extract 子命令提取关键信息：upstream、server（端口和域名）、location（路径和代理目标）。hotreload 子命令修改配置后发 HUP 信号给 Nginx master 热重载，先做语法检查再发信号。
-
-include 指令引入的文件要递归解析，路径不存在时 check 报错指出哪一行引用了缺失文件退出码 1。注释在 diff 时不算实质性变化。指令参数格式特殊（正则、引号字符串）要正确处理。parse 文件不存在退出码 1。check 大括号不配对指出第一个不匹配的行号和缺的是左还是右括号。hotreload 发 HUP 后等 3 秒读 error.log 最后几行，出现 test failed 退出码 1。diff 结构一致只差注释和空行输出"配置语义一致，仅格式/注释不同"。extract 没找到 upstream 输出"无 upstream 配置"不是空输出，server 和 location 同理。check 同一 server block 多个 listen 用相同地址端口打印警告指出行号。

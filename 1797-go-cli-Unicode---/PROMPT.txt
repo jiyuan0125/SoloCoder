@@ -1,6 +1,0 @@
-上个月线上出了个 Unicode 编码事故，某个特殊字符导致解析崩溃花了一天才排查到。现在要上一个 Unicode 字符查询工具，Go 命令行实现。
-
-info 查询字符的 Unicode 信息。输入可以是字符、码点（十六进制如 4E2D 或 U+4E2D）或字符名称。输出：字符本身、码点（十六进制和十进制）、UTF-8 编码字节、UTF-16 编码、英文名称、所属区块、Unicode 类别、是否可打印。block 列出指定区块所有字符，--name 支持模糊匹配（输入 CJK 列出所有 CJK 相关区块）。category 按 Unicode 通用类别筛选（Lu/Ll/Nd/Po/Sm/So 等）。name 搜索字符名称支持模糊匹配。
-
-range 输出指定码点范围的字符列表。encode 显示字符各种编码表示：Unicode 转义、HTML 实体、URL 编码、CSS content 值。decode 反向操作。font 检查字符是否属于常见字体覆盖范围，可能无法显示的给警告。batch 从文件批量查询每行一个字符或码点，输出结果表格。stat 统计输入文本各 Unicode 区块和类别的字符分布。
-info 码点超出有效范围（超过 0x10FFFF）退出码 1。search 结果按码点顺序排列。encode 再 decode 回来要和原始一致。batch 某字符查询失败不影响其他最后汇总。font 在所有常见字体都不存在时 stderr 警告但退出码 0。

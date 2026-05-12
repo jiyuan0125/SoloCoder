@@ -1,5 +1,0 @@
-GraphQL Schema 文件越来越多，不同开发者定义了重复字段和命名不一致的类型，Go 命令行工具来分析并生成 TypeScript 类型。
-
-lint 子命令检查命名规范（类型大驼峰、字段小驼峰、枚举全大写下划线）、未使用类型、重复字段定义。stats 子命令输出 Query/Mutation/Type/Enum 数量、最深嵌套层级、Type 热度排名。generate 子命令为每个 Type 生成 TypeScript interface：String→string、Int/Float→number、Boolean→boolean、ID→string、列表→数组。互相引用用 import。Fragment 先展开再生成。
-
-Schema 语法错误退出码 1 指出位置。lint 有 error 退出码 1，只有 warning 退出码 0。generate 目标目录不存在自动创建。循环引用在 stats 中单独列出。Fragment 展开后再生成避免不完整 interface。循环 import 用注释标注。嵌套深度检测循环（User→Posts→Author→User）要报告。

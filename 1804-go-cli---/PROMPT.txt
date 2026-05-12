@@ -1,7 +1,0 @@
-之前用过 SonarQube 做代码审查觉得太重了，我们只需要基于规则的简单检查但规则要全面。Go 写个 checkcode 工具，cobra 框架。
-
-扫描 Go 源码按预定义规则检查输出审查报告。规则分几大类。安全类：硬编码密码密钥 Token（匹配 password=、secret=、apikey= 模式但排除测试和示例代码）、SQL 拼接（字符串连接构建 SQL 但 ORM 方法调用不报）、HTTP 禁用 TLS 验证（InsecureSkipVerify: true）。硬编码检查时 os.Getenv 引用不报。
-
-性能类：循环里字符串追加（应用 strings.Builder）、循环中创建不关闭的资源、slice 知道大小不预分配。代码质量类：函数超 50 行警告、圈复杂度超 10 警告、if 嵌套超 4 层、未使用的导入变量、error 返回值不能被忽略（用 _ 接收也不行除非函数名明确可忽略）。
-
-每条规则输出：文件路径:行号:列号 [严重级别] 规则名: 描述。级别分 error/warning/info。源码语法错误跳过汇总中列出。配置文件 YAML 管理规则，子目录级别关闭的规则不受父目录全局设置影响。--json 输出 JSON。--fail-on-error 有 error 级别问题退出码 3 做 CI 门禁。

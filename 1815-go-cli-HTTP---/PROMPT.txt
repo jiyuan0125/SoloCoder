@@ -1,9 +1,0 @@
-我们后端服务性能优化需要一个轻量级压测工具，wrk 太复杂 ab 功能不够。Go 写个 httpbench，cobra 框架。
-
-基本用法：httpbench --url http://localhost:8080/api/users --method GET --concurrency 50 --duration 30s。请求构造支持自定义头（--header）、请求体（--body 从文件 @data.json 或直接传）。请求体支持模板变量 {{uuid}}、{{randomInt}} 避免缓存影响。
-
-压测中实时显示：已完成请求数、QPS、平均响应时间、P50/P90/P99 延迟。用终端控制符原地更新不刷屏。结束后输出完整报告：总数/成功/失败/成功率/总耗时、响应时间分布（min/max/avg/median/P90/P95/P99）、QPS 时间趋势、按状态码分类、失败请求前 20 条详情。
-
---ramp-up 预热阶段慢慢增加并发。--timeout 单请求超时。阶梯压测：--steps "10,20,50,100,200" --step-duration 10s，每个阶梯不同并发对比性能找拐点。
-
-性能实现：goroutine 池控制并发，WaitGroup + context.WithTimeout 控制超时。响应时间打点用 time.Now()，统计用 atomic 累加。响应分布用分桶统计（预定义桶边界）不存所有时间值防内存爆。3xx 默认不跟随重定向。服务重启断连已采数据不丢。有失败退出码 2，全成功退出码 0。--json 输出 JSON 报告。

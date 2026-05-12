@@ -1,6 +1,0 @@
-给前端同事的小工具写个 Lorem Ipsum 生成器，Go 命令行实现。目前只有英文 Lorem Ipsum 生成器，缺少中文版本。
-
-cn 生成中文占位文本。内置中文语料库，涵盖技术文档、新闻、产品描述风格。--chars 指定字符数默认 500，--paragraphs 指定段落数默认 5。同时指定时字符数优先，段落数大致控制分段。生成文本要像正常中文文章，有完整句子结构，句号逗号使用自然。en 生成传统拉丁文 Lorem Ipsum，参数同上。mix 混合中英文，--ratio 指定中文比例默认 50。word 按词数生成。sentence 生成指定数量完整句子，长度随机 15-40 字。title 生成随机标题，--style 选风格（新闻/技术/产品名）。
-
-json 以 JSON 输出包含 text、char_count、word_count、paragraph_count。seed 指定随机种子，相同种子相同文本。copy 直接复制到系统剪贴板（通过 xclip 或 xsel）。
-cn 同一句子不连续出现两次，段落间不重复。seed 相同种子文本完全一致不同种子不同。json 的 char_count 和实际字符数精确匹配。mix 中英文不在句子中间切换语言。copy 没有剪贴板工具退出码 3 提示安装。

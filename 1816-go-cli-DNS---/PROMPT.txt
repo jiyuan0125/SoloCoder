@@ -1,8 +1,0 @@
-最近在搞 DNS 配置迁移，批量查域名记录用 dig 一个一个查太慢了。Go 写个 dnsprobe，cobra 框架。
-
-query 查指定域名 DNS 记录。支持 A/AAAA/CNAME/MX/NS/TXT/SOA/SRV，默认 A，--type ALL 查所有。输出域名/记录类型/TTL/值。多 A 记录全列。域名不存在（NXDOMAIN）退出码 0 明确标注，和超时区分。--json 输出 JSON。
-
-batch 从文件批量查域名列表，并发查询。--concurrency 默认 20。结果按文件顺序输出。空行和错误格式行跳过不影响其他。--server 指定 DNS 服务器（8.8.8.8/1.1.1.1），--doh 用 DNS over HTTPS。缓存功能：内存缓存 TTL 跟随记录最长 5 分钟，--no-cache 禁用。
-
-trace 从根域名服务器逐级追踪解析链路，显示每级结果和耗时。超时标注继续下一级。propagate 向多个公共 DNS 查同一域名 A 记录检查传播一致性，不一致的列出实际值。
-UDP 查询响应超 512 字节自动降 TCP。批量查询速率限制默认每秒 50。CNAME 链要显示完整链路。--resolve 控制是否解析到最终 IP。A 和 AAAA 分别显示不混在一起。

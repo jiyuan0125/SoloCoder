@@ -1,5 +1,0 @@
-Go 做 JSON Schema 验证效率不错，写个离线命令行工具来验证数据格式和生成测试样本，支持 Draft-07 核心关键字。
-
-验证功能：接收 Schema 文件和 JSON 数据文件，输出每个不符合项的路径、期望约束和实际值。支持 type/required/properties/items/enum/minimum/maximum/minLength/maxLength/pattern/additionalProperties/allOf/anyOf/oneOf/$ref。生成功能：字符串按 pattern 或字段名生成有意义的值，数字在范围内随机，数组按 minItems/maxItems，required 全生成 optional 随机，oneOf 随机选，allOf 合并所有字段。
-
-$ref 循环检测用已访问路径栈，遇到重复用 null 兜底。additionalProperties false 但 JSON 有未定义字段验证时报错。allOf 合并矛盾直接报错。default 值在生成时使用，验证时视为通过。pattern 正则多层转义正确处理。Schema JSON 不合法退出码 1。全通过退出码 0，有失败退出码 1。正则不合法退出码 1。生成值 NaN 用 null 替换。
