@@ -1,4 +1,4 @@
 Rust axum 做一个基于 Header 匹配的 API 网关。不同 Header 组合路由到不同后端。
 路由规则：规则包含 Header 匹配条件和目标地址。匹配支持精确值、前缀、正则。多条规则按优先级排序，先匹配到的生效。
 Header 操作：匹配到的请求可以在转发前添加、删除、修改 Header。操作定义在路由规则中。比如匹配到移动端 UA 后添加 X-Client-Type: mobile。
-规则管理：路由规则通过接口增删改。规则变更不需要重启。规则变更后打印变更日志。至少包含 router、matcher、forwarder、admin 四个模块。Cargo build，PORT 环境变量。
+规则管理：路由规则通过接口增删改。规则变更不需要重启。规则变更后打印变更日志。模块划分为 router、matcher、forwarder、admin。Cargo build，PORT 环境变量。

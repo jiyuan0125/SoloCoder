@@ -1,4 +1,4 @@
 老系统迁移到新系统，URL 结构变了。Rust axum 写一个带路径改写的反向代理。
 路径改写：请求进来匹配规则，匹配到的改写路径后转发。支持正则捕获组替换。比如 /old/{id}/detail 改写为 /api/v2/items/{id}。
 查询参数处理：改写时可以添加、删除、重命名查询参数。参数值支持模板替换。
-改写规则管理：规则通过接口管理。规则有优先级。规则变更不需要重启。至少包含 proxy、rewriter、rule、admin 四个模块。Cargo build，PORT 环境变量。
+改写规则管理：规则通过接口管理。规则有优先级。规则变更不需要重启。模块划分为 proxy、rewriter、rule、admin。Cargo build，PORT 环境变量。

@@ -1,6 +1,4 @@
-缓存要做读写分离和多级缓存。Rust tokio 做一个支持多级缓存的缓存服务。
-两级缓存：L1 在进程内（内存），L2 也是内存但独立管理。读取时先查 L1，没有查 L2，都没有返回 miss。写入时两级都写。L1 容量小但快，L2 容量大但稍慢。
-两级缓存的 TTL 独立配置，L1 的 TTL 通常比 L2 短。L1 过期后查 L2，L2 还在就回填 L1 并返回。
-缓存更新策略：客户端可以设置写策略——write-through（同步写两级）或 write-behind（先写 L1，异步刷到 L2）。write-behind 时如果刷写失败，L1 的数据标记为脏数据。
-缓存预热：启动时可以从外部数据源批量加载。加载进度可查询，加载完成前部分 key 可能 miss。
-统计接口：L1 命中率、L2 命中率、总命中率、脏数据数量。至少包含 cache、storage、stats、config 四个模块。Cargo build，PORT 环境变量。
+单层缓存在高并发下扛不住，需要多级。Rust tokio 做两级缓存：L1 进程内内存（容量小但快），L2 独立管理的内存层（容量大稍慢）。读时先查 L1，miss 查 L2，都没有才返回 miss。写时两级都写。两级 TTL 独立配，L1 通常比 L2 短，L1 过期后查 L2 还在就回填 L1。
+
+写策略可选：write-through（同步写两级）或 write-behind（先写 L1 异步刷 L2）。write-behind 刷写失败时 L1 数据标为脏。缓存预热：启动时从外部数据源批量加载，进度可查询，加载完成前部分 key 可能 miss。
+统计接口：L1 命中率、L2 命中率、总命中率、脏数据数量。至少包含 cache、storage、stats、config 四个模块。Cargo build 通过，PORT 环境变量。

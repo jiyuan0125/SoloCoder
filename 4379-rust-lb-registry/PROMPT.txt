@@ -1,4 +1,4 @@
 Rust actix-web 写一个服务注册中心，带内置负载均衡查询。客户端查服务时直接返回一个实例，不需要自己做负载均衡。
 服务注册：实例启动时注册。注册信息有服务名、地址、端口、权重、元数据。实例定期续约，续约超时自动注销。
 查询接口：按服务名查询。返回策略可选：轮询、随机、权重随机。查询结果只返回健康实例。
-实例变更通知：实例上线或下线时通知订阅者。通知通过 WebSocket 推送。至少包含 registry、balancer、notifier、lease 四个模块。Cargo build，PORT 环境变量。
+实例变更通知：实例上线或下线时通知订阅者。通知通过 WebSocket 推送。内部包含 registry、balancer、notifier、lease。Cargo build，PORT 环境变量。

@@ -1,4 +1,4 @@
 各服务日志散落在不同机器上排查问题很麻烦。Spring Boot 写一个日志聚合服务。
 日志采集：服务通过接口上报结构化日志。日志包含 timestamp、level、service、traceId、message。采集端批量提交，服务端批量写入。
 日志查询：按时间范围、服务名、级别、traceId 查询。支持全文搜索 message 字段。查询结果分页返回。
-日志告警：配置规则，某服务 ERROR 级别日志在 N 分钟内超过 M 条触发告警。告警通过回调 URL 通知。至少包含 collector、store、query、alerter 四个模块。Maven 构建，端口配置文件。
+日志告警：配置规则，某服务 ERROR 级别日志在 N 分钟内超过 M 条触发告警。告警通过回调 URL 通知。collector、store、query、alerter 四块。Maven 构建，端口配置文件。

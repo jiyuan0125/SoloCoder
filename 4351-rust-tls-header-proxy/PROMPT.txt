@@ -1,4 +1,4 @@
 之前用 Nginx 做的反向代理改 Header 总出问题，这次用 Rust tokio 自己写一个。请求进来后根据 TLS SNI 字段和 Host Header 决定转发到哪个上游，转发前要改写 X-Forwarded-For 和 X-Real-IP。
 上游有主备两组。主组优先，主组全部不可用时切到备组。健康检查通过 TCP 连接探测，每 5 秒一次，连续 3 次失败标为 down。主组恢复后自动切回。
 改写规则可以动态配置，不需要重启。每个请求记录改写前后的 Header 和目标地址。日志按分钟聚合，聚合结果可以通过接口查。
-上游地址和改写规则通过接口管理，系统启动时从配置文件加载初始值。至少包含 proxy、rewriter、upstream、logger 四个模块。Cargo build 能过，PORT 环境变量。
+上游地址和改写规则通过接口管理，系统启动时从配置文件加载初始值。模块拆成 proxy、rewriter、upstream、logger。Cargo build 能过，PORT 环境变量。

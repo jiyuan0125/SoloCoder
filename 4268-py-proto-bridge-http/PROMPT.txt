@@ -1,4 +1,4 @@
 新接了个项目需要把老系统的 HTTP 接口包装成新格式，FastAPI 搞。
-协议适配：接收一种格式的请求，转换后转发给后端，后端的响应再转换回来。支持的格式转换：JSON↔XML、JSON↔Form URL-Encoded。转换规则按接口路径配置。
-字段映射：源格式的字段名映射到目标格式。映射支持嵌套路径（如 source.data.name → target.user.userName）。类型转换：字符串数字互转、日期格式转换（ISO8601↔Unix 时间戳）。
-转换失败时记录原始请求和错误信息。转换日志按接口路径分组查询。空值字段在转换时可以选择保留或丢弃。嵌套层级特别深的 JSON（20 层以上）也要能处理。至少包含 adapter、mapper、converter、logger 四个模块。端口 PORT 环境变量。
+收一种格式的请求，转换后转发给后端，后端的响应再转回来。JSON↔XML、JSON↔Form URL-Encoded 都得支持。转换规则按接口路径配。
+字段名可以映射，嵌套路径也行（source.data.name → target.user.userName）。字符串和数字互转，日期格式 ISO8601↔Unix 时间戳 互转。
+转换失败要记下原始请求和错误信息。日志按接口路径分组查。空值字段可以选保留或丢弃。嵌套 20 层以上的 JSON 也不能趴下。模块拆 adapter、mapper、converter、logger。端口 PORT 环境变量。

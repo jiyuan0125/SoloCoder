@@ -1,5 +1,5 @@
-消息队列要加访问控制。Spring Boot 做。
+有人往消息队列里灌垃圾数据把服务搞崩了，完全没有权限控制。Spring Boot 写一个带 ACL 的消息队列，谁能发、谁能收都管起来。
 Topic 管理：创建 topic 时指定 owner、消息 schema（JSON Schema）、ACL 规则。ACL 控制哪些客户端可以发布和订阅。客户端用 client_id 标识。
 消息发布：客户端发布消息到 topic。发布前校验客户端是否有发布权限，消息是否符 schema。不符合的拒绝并返回具体错误字段。消息存储到内存队列。
 消息订阅：客户端订阅 topic。订阅前校验是否有订阅权限。订阅后新消息推送给订阅者（HTTP 回调）。推送失败重试 3 次。
-死信处理：推送失败超过 3 次的消息进入死信队列。死信队列的消息可以查看和重新投递。Topic 的 owner 可以管理 ACL。至少包含 broker、acl、schema、deadletter 四个模块。Maven 构建，端口配置文件。
+死信处理：推送失败超过 3 次的消息进入死信队列。死信队列的消息可以查看和重新投递。Topic 的 owner 可以管理 ACL。broker、acl、schema、deadletter 四个模块。Maven 构建，端口配置文件。

@@ -1,5 +1,5 @@
-Rust actix-web 做一个缓存代理服务，在应用和数据库之间做一层缓存。
+数据库扛不住了，读写都打到 db 上去了。Rust actix-web 做一层缓存代理，挡在应用和数据库之间。
 支持的缓存操作：GET（查缓存）、SET（写缓存）、DEL（删缓存）。缓存 key 支持前缀匹配删除，比如 del prefix:user:* 删除所有 user 开头的 key。
 缓存项有 TTL。TTL 精度到秒。过期后访问返回 miss。后台任务每分钟清理一次过期项。清理期间不影响正常读写。
 缓存穿透防护：查询不存在的 key 时缓存一个空值标记（TTL 较短），避免反复穿透到数据库。空值标记和正常值在存储结构上要区分开。
-缓存预热：启动时从文件加载预定义的热点 key。热点 key 列表通过接口配置。至少包含 cache、proxy、guard、loader 四个模块。Cargo build，PORT 环境变量。
+缓存预热：启动时从文件加载预定义的热点 key。热点 key 列表通过接口配置。模块拆 cache、proxy、guard、loader。Cargo build，PORT 环境变量。

@@ -1,6 +1,4 @@
-Spring Boot 做一个依赖级联健康检查。一个服务依赖的其他服务挂了，它自己也不算健康。
-健康探针：每个服务可以注册 HTTP 和 TCP 两种探针。探针配置包含地址、端口、路径（HTTP 类型）、超时、间隔。探针状态有 UP、DOWN、UNKNOWN。
-依赖关系：服务之间的依赖通过接口配置。A 依赖 B 意味着 B DOWN 时 A 也标记为 DEGRADED。DEGRADED 不是 DOWN，服务还在运行但功能受影响。依赖链可以多层，A→B→C，C DOWN 时 B DEGRADED，A 也 DEGRADED。
-状态聚合：某个服务有多个探针时，全部 UP 才是 UP。任何一个 DOWN 就是 DOWN。聚合状态包含具体哪个探针失败的信息。
-查询接口返回某个服务的健康状态和它所有依赖的状态。也支持批量查询一批服务的状态。探针地址格式支持域名和 IP，不带端口时用默认端口。
-至少包含 probe、dependency、aggregator、query 四个模块。Maven 构建，端口配置文件。
+一个服务依赖的其他服务挂了，它自己也不算健康。Spring Boot 做一个依赖级联健康检查。
+探针管理——每个服务可以注册 HTTP 和 TCP 两种探针，配置包含地址、端口、路径（HTTP 类型）、超时、间隔。探针状态有 UP、DOWN、UNKNOWN。服务之间的依赖通过接口配置：A 依赖 B 意味着 B DOWN 时 A 也标记为 DEGRADED。DEGRADED 不是 DOWN，服务还在运行但功能受影响。依赖链可以多层，A→B→C，C DOWN 时 B DEGRADED，A 也 DEGRADED。
+某个服务有多个探针时，全部 UP 才是 UP，任何一个 DOWN 就是 DOWN。聚合状态包含具体哪个探针失败的信息。查询接口返回某个服务的健康状态和它所有依赖的状态，也支持批量查询。探针地址格式支持域名和 IP，不带端口时用默认端口。
+probe、dependency、aggregator、query 四个模块。Maven 构建，端口配置文件。

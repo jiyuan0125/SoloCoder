@@ -1,6 +1,13 @@
 Rust axum 做一个分布式 Trace Context 传播器。请求在服务之间传递时 trace 信息不能丢。
-Context 注入：请求进来时从 Header 提取 traceparent 和 tracestate。提取成功创建 span context。提取失败生成新的 root context。context 信息存在请求扩展里。
-Context 传播：发往下游的请求自动注入当前 context。注入格式遵循 W3C Trace Context 标准。传播时生成新的 span ID 但保留 trace ID。父 span ID 记录在本地。
-Span 收集：每个请求处理完成后上报 span 信息。span 包含 trace ID、span ID、parent span ID、操作名、耗时。批量上报攒够 100 条或超时 5 秒发送。
-采样控制：不是所有 trace 都上报。采样率可配。采样的 trace 所有 span 都上报。不采样的 trace span 不上报但 context 照常传播。
-上报目标地址不存在时 span 数据先缓存到本地文件。至少包含 context、propagator、collector、sampler 四个模块。Cargo build，PORT 环境变量。
+
+请求进来时从 Header 提取 traceparent 和 tracestate。提取成功创建 span context。提取失败生成新的 root context。context 信息存在请求扩展里。
+
+发往下游的请求自动注入当前 context。注入格式遵循 W3C Trace Context 标准。传播时生成新的 span ID 但保留 trace ID。父 span ID 记录在本地。
+
+每个请求处理完成后上报 span 信息。span 包含 trace ID、span ID、parent span ID、操作名、耗时。批量上报攒够 100 条或超时 5 秒发送。
+
+不是所有 trace 都上报。采样率可配。采样的 trace 所有 span 都上报。不采样的 trace span 不上报但 context 照常传播。
+
+上报目标地址不存在时 span 数据先缓存到本地文件。
+
+context、propagator、collector、sampler 四个模块。Cargo build，PORT 环境变量。

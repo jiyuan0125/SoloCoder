@@ -1,6 +1,4 @@
-链路追踪要加耗时分析和异常标注。Spring Boot 做一个增强版的链路追踪服务。
-Span 除了基本信息外，还要记录：标签（tag，key-value）、日志事件（时间戳+消息）、关联的异常信息（类型+消息+堆栈摘要）。
-查询接口支持按 TraceID 查完整调用链，返回 Span 树。树中的异常 Span 要高亮标注。支持按服务名查最近 N 条慢 Trace，按耗时降序。
-耗时分析：给定一个 TraceID，返回关键路径（耗时最长的链路）和每个 Span 的耗时占比。父子 Span 之间的间隙也要计算（gap time）。
-Span 上报接口要能处理乱序上报：子 Span 可能比父 Span 先到。后到的父 Span 要正确挂到已有的子 Span 上。
-至少包含 trace、span、analytics、storage 四个模块。Maven 构建，端口配置文件。
+链路追踪能查到调用链了，但看不出哪一步最慢、哪些 Span 有异常。Spring Boot 增强版：Span 除了基本信息外加上标签（tag，key-value）、日志事件（时间戳+消息）、关联异常信息（类型+消息+堆栈摘要）。查询时异常 Span 要高亮标注，支持按服务名查最近 N 条慢 Trace（按耗时降序）。
+
+耗时分析：给定 TraceID 返回关键路径（耗时最长的链路）和每个 Span 耗时占比。父子 Span 之间的间隙（gap time）也要算出来。Span 上报要处理乱序——子 Span 可能比父 Span 先到，后到的父 Span 要正确挂到已有子 Span 上。
+至少包含 trace、span、analytics、storage 四个模块。Maven 构建，端口走配置文件。

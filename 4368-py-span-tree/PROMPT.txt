@@ -1,4 +1,4 @@
 FastAPI 写一个链路追踪采集器。每个请求生成 TraceID，跨服务调用时 TraceID 通过 Header 传递。
 Span 采集：服务通过接口上报 Span。Span 包含 traceId、spanId、parentSpanId、operationName、startTime、duration。Span 之间通过 parentSpanId 形成树结构。
 链路查询：按 traceId 查询完整调用链。返回 Span 树。可以按 operationName 和耗时过滤。耗时超过阈值的链路标为慢调用。
-服务拓扑：根据 Span 数据自动生成服务调用关系图。每个服务的平均响应时间和错误率实时计算。至少包含 collector、store、query、topology 四个模块。端口 PORT 环境变量。
+服务拓扑：根据 Span 数据自动生成服务调用关系图。每个服务的平均响应时间和错误率实时计算。collector、store、query、topology 各一块。端口 PORT 环境变量。

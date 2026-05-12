@@ -1,4 +1,4 @@
 Spring Boot 写一个滑动窗口熔断器。固定窗口的边界问题太明显。
 滑动窗口：统计最近 N 秒的请求。每秒一个桶，滑动时丢弃最旧的桶。失败率 = 失败数 / 总数。失败率超阈值触发熔断。
 熔断恢复：OPEN 持续一段时间后 HALF_OPEN。HALF_OPEN 放一个请求探测。成功恢复，失败继续 OPEN。
-多服务独立熔断：每个下游服务独立统计和熔断。互不影响。至少包含 breaker、window、recovery、monitor 四个模块。Maven 构建，端口配置文件。
+多服务独立熔断：每个下游服务独立统计和熔断。互不影响。breaker、window、recovery、monitor。Maven 构建，端口配置文件。

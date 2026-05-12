@@ -1,4 +1,4 @@
-限流器要能按请求内容做差异化限流。Rust actix-web 做一个内容感知限流器。
+限流 key 不一定是 IP 或路由——有些接口要从请求 body 里提取 tenant_id 做差异化限流，VIP 租户和普通租户的 QPS 上限差十倍。Rust actix-web 做一个内容感知限流器。
 
 限流维度不限于 IP 和路由，还可以从请求 body 或 header 里提取字段作为限流 key。比如按请求里的 tenant_id 做限流。提取规则用 JSONPath 表达式。
 

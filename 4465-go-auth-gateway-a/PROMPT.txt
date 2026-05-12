@@ -1,9 +1,9 @@
-Go 标准库做一个认证网关。其他服务把 JWT 相关的事都交给这个网关处理。
+Go 标准库实现一个认证网关。其他服务把 JWT 相关的事全丢给这里处理。
 
-Token 签发：客户端用用户名密码换取 Token。签发 Access Token（短效，15 分钟）和 Refresh Token（长效，7 天）。Token 里包含用户 ID 和角色列表。
+【签发】客户端用用户名密码换 Token。Access Token 短效 15 分钟，Refresh Token 长效 7 天。Token 里带用户 ID 和角色列表。
 
-Token 刷新：Access Token 过期前可以用 Refresh Token 换新的。Refresh Token 只能用一次，用了之后旧的失效。Refresh Token 过期了必须重新登录。
+【刷新】Access Token 过期前可以用 Refresh Token 换新的。Refresh Token 只能用一次，用了旧的立马失效。Refresh Token 也过期了，那就重新登录。
 
-黑名单机制：通过接口把 Token 加入黑名单。黑名单 Token 的请求直接返回 401。管理员可以强制某个用户的所有 Token 失效。黑名单定期清理过期的条目。
+【黑名单】通过接口把 Token 拉黑，黑名单里的请求直接 401。管理员可以强制某用户全部 Token 失效。过期的黑名单条目定期清理。
 
-至少包含 issuer、refresher、blacklist、verify 四个模块。端口 PORT 环境变量，go build 能过。
+模块至少包含 issuer、refresher、blacklist、verify，端口 PORT 环境变量，go build 能过。

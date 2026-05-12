@@ -1,4 +1,4 @@
-协议转换要支持消息格式自动检测。Go Gin 做一个自动检测消息格式的转换网关。
+前端团队用 JSON，后端团队用 Protobuf，另一个团队用 XML——每种格式各写一套转换逻辑，维护成本爆炸。Go Gin 做一个自动检测格式的转换网关。
 
 请求进来后自动检测 Content-Type，支持 JSON、XML、Protobuf、MessagePack 四种格式。检测规则：先看 Content-Type header，没有的话根据 body 内容猜测（JSON 以 { 开头、XML 以 < 开头等）。
 

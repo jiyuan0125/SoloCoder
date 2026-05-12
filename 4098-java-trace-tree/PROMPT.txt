@@ -1,4 +1,4 @@
-链路追踪要支持自定义标签和跨服务传播。Spring Boot 做一个支持自定义标签的追踪系统。
+查某个订单的调用链，但 Span 里只有 trace_id 和 span_id——没有 order_id，根本定位不了。Spring Boot 做一个追踪系统，Span 上可以附加业务标签，通过 HTTP header 传播。
 
 自定义标签：业务可以在 Span 上附加自定义标签（如 order_id、tenant_id）。标签通过 HTTP header X-Trace-Tags 传播。标签在查询时可以作为过滤条件。
 

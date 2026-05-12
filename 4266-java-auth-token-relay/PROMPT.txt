@@ -1,5 +1,5 @@
 线上的认证服务不支持多租户 Token 转换，重写一个，Spring Boot 实现。
-Token 签发：用户登录后签发 JWT。Token 包含用户 ID、角色、租户 ID。签发时用租户的密钥签名。密钥通过接口管理，每个租户独立密钥。
-Token 验证：请求到达后验证 JWT 签名和过期时间。验证通过后提取用户信息注入到请求上下文。Token 过期时可以用 Refresh Token 换新的。Refresh Token 有效期 7 天。
-Token 转换：把外部系统的 Token 转换成内部 Token。转换规则按租户配置。外部 Token 的用户标识通过映射表对应到内部用户。用户信息从外部系统的接口获取。
-转换后的 Token 里不包含敏感信息。Token 黑名单支持按租户隔离。至少包含 issuer、validator、converter、blacklist 四个模块。Maven 构建，端口配置文件。
+用户登录后签发 JWT，里面放用户 ID、角色和租户 ID。签名用租户自己的密钥，密钥走接口管理，各租户互不干扰。
+请求来了验签名和过期时间，过了就把用户信息塞进请求上下文。Token 过期了可以用 Refresh Token 换新的，Refresh Token 管七天。
+还得把外部系统的 Token 转成内部的。转换规则按租户配，外部用户标识通过映射表对应到内部用户，用户信息从外部系统接口拿。
+转换后的 Token 不能带敏感信息。黑名单也要按租户隔离。模块拆 issuer、validator、converter、blacklist。Maven 构建，端口写配置文件。

@@ -1,6 +1,11 @@
-Spring Boot 做一个带指标导出的健康检查面板。服务挂了要能从 Prometheus 看到曲线。
-探针管理：注册 HTTP/TCP 探针。每个探针有名称、目标、间隔、超时、阈值。探针可以分组。分组后可以按组查询状态。
-探测执行：后台线程池执行探测。探测结果记录状态和耗时。连续失败 N 次触发告警。告警通过回调通知。探测结果存最近 100 条。
-状态面板：按探针或分组查当前状态。状态包含 UP/WARN/DOWN。WARN 是连续失败但还没到阈值。DOWN 是达到阈值。历史趋势图的数据通过接口提供。
-Prometheus 导出：每个探针作为一个 metric 暴露。metric 包含状态值（1=UP, 0.5=WARN, 0=DOWN）和探测耗时。导出格式符合 text exposition。
-探针配置变更时不影响正在执行的探测。至少包含 probe、executor、dashboard、exporter 四个模块。Maven 构建，端口配置文件。
+Spring Boot 做一个带指标导出的健康检查面板。服务挂了要能从 Prometheus 看到曲线，不能光靠人盯。
+
+注册 HTTP/TCP 探针。每个探针有名称、目标、间隔、超时、阈值。探针可以分组，分组后可以按组查询状态。
+
+后台线程池执行探测。探测结果记录状态和耗时。连续失败 N 次触发告警。告警通过回调通知。探测结果存最近 100 条。
+
+按探针或分组查当前状态。状态包含 UP、WARN、DOWN。WARN 是连续失败但还没到阈值。DOWN 是达到阈值。历史趋势图的数据通过接口提供。
+
+每个探针作为一个 metric 暴露。metric 包含状态值（1=UP, 0.5=WARN, 0=DOWN）和探测耗时。导出格式符合 Prometheus text exposition。探针配置变更时不影响正在执行的探测。
+
+probe、executor、dashboard、exporter 四个模块。Maven 构建，端口走配置文件。

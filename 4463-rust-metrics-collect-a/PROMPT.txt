@@ -1,9 +1,7 @@
-Rust actix-web 做一个指标采集和导出服务。应用上报指标，服务收集并提供查询。
+Rust actix-web 写一个指标采集与导出服务。应用往上报指标，这里收着、存着、查着。
 
-指标类型：Counter（只增不减，如请求总数）、Gauge（可增可减，如当前连接数）、Histogram（分布统计，如请求延迟）。每种类型有不同的上报接口。指标通过名称和标签维度唯一确定。
+三种指标类型各有各的接口：Counter 只增不减（比如请求总数），Gauge 可增可减（比如当前连接数），Histogram 算分布（比如请求延迟）。指标由名称加标签维度唯一确定。
 
-数据收集：应用通过接口上报指标值。Counter 上报增量。Gauge 上报绝对值。Histogram 上报观测值。服务维护每个指标的当前值和历史时序数据。
+Counter 上报增量，Gauge 上报绝对值，Histogram 上报观测值。服务维护每个指标的当前值和历史时序。
 
-导出查询：支持 Prometheus exposition format 输出。可以按指标名前缀过滤导出。可以查询某个指标在指定时间段的时序数据。标签维度支持按部分标签聚合。
-
-至少包含 collector、series、exporter、registry 四个模块。Cargo build，端口 PORT 环境变量。
+导出走 Prometheus exposition format，可以按指标名前缀过滤，也可以查某个指标在指定时间段的时序。标签维度支持按部分标签聚合。至少拆 collector、series、exporter、registry 四个模块，Cargo build，端口 PORT 环境变量。

@@ -1,4 +1,4 @@
-认证网关要支持细粒度的 API 级别权限控制。Rust actix-web 做一个 API 级别的认证网关。
+GET /api/users 是公开接口，POST /api/users 要管理员权限，DELETE /api/users/:id 要超级管理员——每个接口权限不同，硬编码维护不过来。Rust actix-web 做一个 API 级别的认证网关。
 
 API 权限按 HTTP 方法和路径组合定义。比如 GET /api/users 是公开的，POST /api/users 需要管理员权限。权限配置存在网关里，不需要每次查后端。
 

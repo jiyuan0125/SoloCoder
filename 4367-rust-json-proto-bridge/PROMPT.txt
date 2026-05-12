@@ -1,4 +1,4 @@
 前端用 JSON 后端用 Protobuf，中间需要转换。Rust tokio 写一个协议转换代理。
 JSON→Protobuf：接收 JSON 请求，按预定义的 Protobuf schema 转换后转发。转换失败返回 400。字段名映射通过配置文件定义。
 Protobuf→JSON：后端返回的 Protobuf 响应转成 JSON 返回给前端。嵌套消息、repeated 字段、enum 都要处理。时间戳字段转成 ISO 8601 格式。
-Schema 管理：Protobuf schema 通过接口上传和管理。schema 变更后自动重新加载。至少包含 converter、schema、proxy、mapper 四个模块。Cargo build，PORT 环境变量。
+Schema 管理：Protobuf schema 通过接口上传和管理。schema 变更后自动重新加载。代码组织为 converter、schema、proxy、mapper。Cargo build，PORT 环境变量。

@@ -2,4 +2,4 @@
 指标注册：应用启动时注册指标。指标类型 Counter（只增）、Gauge（可增可减）、Histogram（分布）。每个指标有名称和标签（key-value 对）。名称和标签组合唯一标识一个指标序列。
 数据采集：通过接口上报指标值。Counter 类型只接受正数。Gauge 类型接受任意数。Histogram 类型接受一个采样值，内部维护分位数。
 聚合计算：按时间窗口聚合。窗口大小可配（1 分钟、5 分钟、1 小时）。Counter 类型计算增量。Gauge 类型计算平均值、最大值、最小值。Histogram 计算 P50、P90、P99。
-同一个指标同时有多个标签组合时，聚合可以按指定标签维度合并。合并后的值要正确。Prometheus 格式导出。至少包含 collector、rollup、exporter、registry 四个模块。Maven 构建，端口配置文件。
+同一个指标同时有多个标签组合时，聚合可以按指定标签维度合并。合并后的值要正确。Prometheus 格式导出。代码结构上分 collector、rollup、exporter、registry 四个模块。Maven 构建，端口配置文件。

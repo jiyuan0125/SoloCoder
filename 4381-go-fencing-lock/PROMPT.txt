@@ -1,4 +1,4 @@
 Go/Gin 写一个分布式锁，带 fencing token。获取锁时返回递增的 fencing token。下游服务通过比较 fencing token 判断请求先后。
 锁获取：请求获取锁时返回 fencing token。token 是全局递增的。同一个锁同一时间只有一个持有者。获取失败可以选择排队等待。
 锁释放：正常释放和超时释放。正常释放时 token 失效。超时释放后 token 仍然递增，新持有者拿到更大的 token。
-监控：锁的持有者、fencing token 值、等待队列长度。至少包含 lock、token、queue、monitor 四个模块。go build 能过，PORT 环境变量。
+监控：锁的持有者、fencing token 值、等待队列长度。代码分 lock、token、queue、monitor 几个模块。go build 能过，PORT 环境变量。

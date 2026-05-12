@@ -1,4 +1,4 @@
 微服务调用链太长了，出问题不知道卡在哪。Spring Boot 写一个链路追踪服务。
 每个请求进来生成一个 TraceID。跨服务调用时通过 HTTP Header 传播 TraceID。每个操作创建一个 Span，记录开始时间、结束时间、操作名称。Span 有父子关系，形成调用树。
 用户自定义的 Baggage 数据也在调用链上传播。每个服务可以读取和添加 Baggage。Baggage 大小有限制，超过1KB的截断。
-调用树按 TraceID 查询。展示每个 Span 的耗时和层级关系。慢请求（总耗时超过阈值）自动标记。Span 数据存内存，保留最近一万条 Trace。至少包含 tracer、span、baggage、querier 四个模块。Maven 构建。
+调用树按 TraceID 查询。展示每个 Span 的耗时和层级关系。慢请求（总耗时超过阈值）自动标记。Span 数据存内存，保留最近一万条 Trace。tracer / span / baggage / querier。Maven 构建。

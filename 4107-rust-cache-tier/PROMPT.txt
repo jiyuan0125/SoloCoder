@@ -2,4 +2,4 @@
 查询时先查 L1，命中直接返回。L1 没命中查 L2，命中后回填 L1 并返回。L2 也没命中返回 miss。回填 L1 时如果 L1 容量满了触发淘汰，淘汰策略支持 LRU 和 LFU 两种，运行时切换。
 缓存项有 TTL，过期后查到返回 miss 并删除。后台每秒扫描一次过期项。缓存项支持手动标记为"锁定"，锁定的项不参与淘汰。
 L1 到 L2 的数据同步：写入时双写，删除时双删。L2 文件格式用 bincode 序列化。
-缓存状态流转：empty → warming（加载中）→ hot（正常）→ cold（快过期）→ expired。至少包含 tier、policy、store、handler 四个模块。Cargo build，PORT 环境变量。
+缓存状态流转：empty → warming（加载中）→ hot（正常）→ cold（快过期）→ expired。拆出 tier、policy、store、handler 四个模块。Cargo build，PORT 环境变量。

@@ -1,6 +1,5 @@
-Go Fiber 做一个 MsgPack-HTTP 协议转换器。有些内部服务用 MsgPack 通信，外部只认 JSON。
-请求转换：外部请求 JSON 格式进来。网关把 JSON body 转成 MsgPack 发到内部服务。内部服务响应 MsgPack 转成 JSON 返回给外部。转换规则基于配置的字段映射。
-字段映射：JSON 的字段名和 MsgPack 的字段名可能不一样。映射关系通过接口配置。支持嵌套字段映射，比如 JSON 的 user.name 映射到 MsgPack 的 u.n。数组类型的字段逐个转换。映射中遇到未知字段默认透传。
-批量接口：支持批量请求，一个 JSON 请求包含多个操作。每个操作独立转换和执行。部分失败不影响其他操作。批量结果用 JSON 数组返回。
+有些内部服务用 MsgPack 通信，外部只认 JSON，中间得转换。Go Fiber 做一个 MsgPack-HTTP 协议转换器。
+外部请求 JSON 格式进来，网关把 JSON body 转成 MsgPack 发到内部服务。内部服务响应 MsgPack 转成 JSON 返回给外部。转换规则基于配置的字段映射。JSON 的字段名和 MsgPack 的字段名可能不一样，映射关系通过接口配置。支持嵌套字段映射，比如 JSON 的 user.name 映射到 MsgPack 的 u.n。数组类型的字段逐个转换。映射中遇到未知字段默认透传。
+支持批量请求，一个 JSON 请求包含多个操作。每个操作独立转换和执行，部分失败不影响其他操作，批量结果用 JSON 数组返回。
 配置中字段映射缺失的按原名称透传。空请求体直接转发不做转换。MsgPack 解码失败返回 400 和具体错误位置。
-至少包含 converter、mapping、batch、proxy 四个模块。端口 PORT 环境变量，go build 能过。
+converter 处理转换，mapping 管字段映射，batch 做批量，proxy 做转发。端口 PORT 环境变量，go build 能过。

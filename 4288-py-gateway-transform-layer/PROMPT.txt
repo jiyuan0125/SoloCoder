@@ -1,5 +1,5 @@
 老系统是 SOAP 协议的，新系统要 JSON，FastAPI 写一个协议转换层。
-JSON→XML 转换：接收 JSON 请求，转换成 SOAP XML 格式转发给后端。转换规则按接口路径配置。字段映射表定义 JSON 字段和 XML 节点的对应关系。
-XML→JSON 转换：后端返回 XML，转换成 JSON 返回给客户端。支持 SOAP Envelope 解析。XML 属性映射成 JSON 字段（加 _attr 前缀）。CDATA 内容原样保留。
-错误处理：转换失败记录原始请求。SOAP Fault 转换成 JSON 错误格式。用户提交的查询参数直接用于构造 XPath 表达式。
-转换日志按接口路径分组。可以查询每个接口的转换成功率和平均耗时。至少包含 adapter、soap_parser、mapper、logger 四个模块。端口 PORT 环境变量。
+收 JSON 请求，转成 SOAP XML 格式丢给后端。转换规则按接口路径配，字段映射表定义 JSON 字段和 XML 节点的对应关系。
+后端返回 XML，转成 JSON 还给客户端。SOAP Envelope 要能解析。XML 属性映射成 JSON 字段时加 _attr 前缀，CDATA 内容原样保留。
+转换失败了记下原始请求。SOAP Fault 转成 JSON 错误格式。注意：用户提交的查询参数直接拿去构造 XPath 表达式了。
+转换日志按接口路径分组，能查每个接口的成功率和平均耗时。模块拆 adapter、soap_parser、mapper、logger。端口 PORT 环境变量。

@@ -1,4 +1,4 @@
 Rust axum 做一个带 HDR Histogram 的指标服务。普通的平均值掩盖了长尾延迟问题。
 Histogram 采集：服务上报耗时指标。服务端用 HDR Histogram 记录分布。可以查 P50/P90/P95/P99/P999。桶的精度可配。
 Counter 和 Gauge：Counter 只增不减，用于请求计数。Gauge 可增可减，用于当前连接数。所有指标带 labels 标签。
-指标查询：按 name 和 labels 查询。支持时间范围查询。返回 JSON 格式的指标数据。至少包含 collector、histogram、store、query 四个模块。Cargo build，PORT 环境变量。
+指标查询：按 name 和 labels 查询。支持时间范围查询。返回 JSON 格式的指标数据。collector、histogram、store、query 各司其职。Cargo build，PORT 环境变量。

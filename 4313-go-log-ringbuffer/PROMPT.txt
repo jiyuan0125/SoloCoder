@@ -1,6 +1,11 @@
-Prometheus 要配一堆 exporter 太麻烦了。Go 标准库做一个自定义指标聚合网关。
-指标注册：通过接口注册指标。注册时指定名称、类型（counter/gauge/histogram）、标签列表。名称全局唯一，重复注册覆盖。counter 只增。gauge 可增可减。histogram 记录分布。
-数据上报：通过接口上报指标值。counter 类型累加。gauge 类型设置。histogram 类型记录观察值。上报时可以带标签键值对。相同名称相同标签的是同一个指标实例。
-指标查询：按名称查询指标当前值。可以按标签过滤。histogram 类型返回分位数和桶分布。所有指标的类型信息也可以批量查询。
-导出格式：Prometheus text exposition format。通过 /metrics 端点暴露。每个指标注册时如果没有对应的数据上报过，导出时也要体现出来。
-至少包含 registry、reporter、querier、exporter 四个模块。端口 PORT 环境变量，go build 能过。
+Prometheus 要配一堆 exporter 太麻烦了。用 Go 标准库做一个自定义指标聚合网关，把指标收拢到一个地方。
+
+通过接口注册指标，注册时指定名称、类型（counter/gauge/histogram）、标签列表。名称全局唯一，重复注册覆盖。counter 只增，gauge 可增可减，histogram 记录分布。
+
+数据上报也走接口。counter 类型累加，gauge 类型设置，histogram 类型记录观察值。上报时可以带标签键值对。相同名称相同标签的是同一个指标实例。
+
+按名称查询指标当前值，可以按标签过滤。histogram 类型返回分位数和桶分布。所有指标的类型信息也可以批量查询。
+
+导出格式用 Prometheus text exposition format，走 /metrics 端点暴露。每个指标注册时如果没有对应的数据上报过，导出时也要体现出来。
+
+registry、reporter、querier、exporter 这套得完整。端口 PORT 环境变量，go build 能过。

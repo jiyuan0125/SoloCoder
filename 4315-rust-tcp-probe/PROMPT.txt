@@ -1,6 +1,11 @@
 Rust tokio 写一个 JWT 认证网关。请求进来先验 token，合法的才转发。
-Token 验证：请求带 Authorization Header，格式 Bearer {token}。网关解析 JWT，验证签名和过期时间。签名密钥通过环境变量传入。过期 token 返回 401。
-Token 刷新：客户端可以用刷新 token 换新的访问 token。刷新 token 有独立的过期时间和签名。刷新后旧的访问 token 立即失效。刷新 token 只能用一次。
-路由白名单：不是所有路径都需要认证。白名单路径直接放行。白名单通过接口配置。新增白名单项立即生效。
-用户信息注入：验证通过后把用户信息（用户 ID、角色）注入请求 Header 转发给上游。上游服务不需要再做认证。
-客户端信息（用户列表、密钥）的初始化方式后面再定。至少包含 verifier、refresh、whitelist、forwarder 四个模块。Cargo build，PORT 环境变量。
+
+请求带 Authorization Header，格式 Bearer {token}。网关解析 JWT，验证签名和过期时间。签名密钥通过环境变量传入。过期 token 返回 401。
+
+客户端可以用刷新 token 换新的访问 token。刷新 token 有独立的过期时间和签名。刷新后旧的访问 token 立即失效。刷新 token 只能用一次。
+
+不是所有路径都需要认证——白名单路径直接放行。白名单通过接口配置，新增项立即生效。
+
+验证通过后把用户信息（用户 ID、角色）注入请求 Header 转发给上游。上游服务不需要再做认证。
+
+客户端信息（用户列表、密钥）的初始化方式后面再定。verifier、refresh、whitelist、forwarder 得拆开。Cargo build，PORT 环境变量。

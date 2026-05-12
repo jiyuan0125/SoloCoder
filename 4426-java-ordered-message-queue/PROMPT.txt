@@ -1,6 +1,4 @@
-Spring Boot 做一个有序消息队列。消息的顺序在某些业务场景下很重要。
-消息发布：生产者通过接口发消息到 topic。消息有 payload、partition key、时间戳。同一个 partition key 的消息保证有序投递。不同 partition key 的消息可以并行。
-消费组：消费者以组为单位订阅 topic。一个 partition key 同一时间只分配给组内一个消费者。消费者掉线后它的 partition 重新分配。分配过程中消息不丢失。
-消费进度：每个消费组记录每个 partition 的消费偏移。手动提交偏移。未提交的偏移在重启后重新投递。偏移信息持久化存储。
-消息堆积超过容量限制时，新消息覆盖最旧的。覆盖的消息如果还没消费，消费者会收到一个跳过通知。Topic 创建和删除通过接口管理。
-至少包含 producer、consumer_group、offset、partition 四个模块。Maven 构建，端口配置文件。
+有些业务场景消息的顺序很重要，乱序会出大问题。Spring Boot 做一个有序消息队列。
+生产者通过接口发消息到 topic，消息有 payload、partition key、时间戳。同一个 partition key 的消息保证有序投递，不同 partition key 的可以并行。消费者以组为单位订阅 topic。一个 partition key 同一时间只分配给组内一个消费者。消费者掉线后它的 partition 重新分配，分配过程中消息不丢失。
+每个消费组记录每个 partition 的消费偏移，手动提交。未提交的偏移在重启后重新投递，偏移信息持久化存储。消息堆积超过容量限制时新消息覆盖最旧的，覆盖的消息如果还没消费消费者会收到跳过通知。Topic 创建和删除通过接口管理。
+producer 发消息，consumer_group 管理消费组，offset 跟踪偏移，partition 管理分区。Maven 构建，端口配置文件。

@@ -1,6 +1,4 @@
-排查线上问题的时候经常不知道请求在哪个服务卡住了。Spring Boot 做一个简单的链路追踪服务。
-每个请求分配一个全局唯一的 TraceID，在服务间传递用 X-Trace-Id Header。每个服务内部的操作生成 Span，Span 有父子关系，组成一棵树。
-Span 记录操作名称、开始时间、结束时间、标签（key-value 对）。客户端（各个微服务）通过接口上报 Span 数据。
-查询接口支持按 TraceID 查完整调用链，返回 Span 树结构。也支持按服务名和时间范围查询慢请求（耗时超过阈值的 Trace）。
-Span 树的深度可能很深（10+层），查询结果要正确展示层级关系。如果有孤立 Span（没有父 Span 但也不是根 Span），也要能查到。
-Maven 构建，端口配置文件指定，至少包含 trace、span、storage、query 四个模块。
+线上一个请求要经过七八个服务，哪一步卡住了全靠猜。Spring Boot 写一个简单链路追踪：每个请求分配全局唯一 TraceID，在服务间通过 X-Trace-Id Header 传递。每个服务内部的操作生成 Span，Span 有父子关系组成一棵树。
+
+Span 记录操作名称、起止时间、标签（key-value）。各微服务通过接口上报 Span 数据。查询支持按 TraceID 查完整调用链（返回 Span 树），也支持按服务名和时间范围查慢请求（耗时超阈值的 Trace）。Span 树可能深达 10+ 层，查询结果要正确展示层级。孤立 Span（没有父 Span 也不是根 Span）也要能查到。
+至少包含 trace、span、storage、query 四个模块。Maven 构建，端口走配置文件。

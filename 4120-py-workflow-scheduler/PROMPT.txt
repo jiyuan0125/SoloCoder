@@ -1,5 +1,5 @@
-想用 Python FastAPI 做一个工作流调度引擎。不是简单的定时任务，是 DAG 风格的依赖调度。
+现在 ETL 任务全靠 cron 硬编码执行顺序，改一个依赖关系要改一堆脚本。Python FastAPI 做一个工作流调度引擎，DAG 风格的依赖调度，不是简单的定时任务。
 工作流由多个任务节点组成，节点之间有依赖关系（有向无环图）。一个节点的前置节点全部完成后才能开始执行。执行失败的节点不会阻塞不依赖它的后续节点。
 任务执行就是调用一个 HTTP 接口，把任务参数 POST 过去。执行结果根据 HTTP 状态码判断。接口超时算失败。
 工作流可以手动触发也可以定时触发。定时用 cron 表达式。同个工作流同时只能有一个实例在跑，重复触发跳过。
-任务节点支持超时设置和重试策略。重试间隔指数退避。工作流状态：idle → running → success / partial_success / failed。至少包含 dag、executor、trigger、monitor 四个模块。端口 PORT 环境变量。
+任务节点支持超时设置和重试策略。重试间隔指数退避。工作流状态：idle → running → success / partial_success / failed。dag、executor、trigger、monitor 四个模块。端口 PORT 环境变量。

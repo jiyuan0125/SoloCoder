@@ -1,4 +1,4 @@
 Rust axum 做一个指标采集和导出服务。服务上报指标，导出 Prometheus 格式。
 指标类型：Counter（只增不减）、Gauge（可增可减）、Histogram（分布统计）。每种类型的聚合逻辑不同。指标通过接口上报，包含 name、type、value、labels。
 指标存储：内存存储，按 name+labels 聚合。相同 name+labels 的 Counter 值累加。Gauge 值覆盖。Histogram 维护桶分布。
-导出接口：/metrics 端点输出 Prometheus text format。指标可以按 name 前缀过滤导出。至少包含 collector、store、exporter、registry 四个模块。Cargo build，PORT 环境变量。
+导出接口：/metrics 端点输出 Prometheus text format。指标可以按 name 前缀过滤导出。collector、store、exporter、registry 各司其职。Cargo build，PORT 环境变量。

@@ -1,4 +1,4 @@
-服务注册要支持标签路由和权重调整。Go 标准库 net/http 做一个带标签路由的注册中心。
+查服务实例只能按服务名查？不够——灰度发布时要查 version=v2 的实例，异地多活时要查 region=east 的实例。Go 标准库 net/http 做一个带标签路由的注册中心。
 
 实例注册时除了 IP 和端口，还可以打标签（如 version=v2, env=canary, region=east）。查询时按标签过滤，比如查所有 version=v2 的实例。标签支持多值（一个实例可以有多个 version 标签）。
 

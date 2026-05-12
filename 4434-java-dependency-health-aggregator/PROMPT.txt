@@ -1,6 +1,5 @@
-Java Netty 做一个依赖健康聚合器。不依赖 Spring，纯 Netty HTTP。
-探针管理：通过接口注册健康探针。探针有名称、类型（HTTP/TCP）、目标地址、检查间隔、超时。探针状态 UNKNOWN → HEALTHY → UNHEALTHY。探针检查在后台定时执行。
-依赖图：通过接口配置服务之间的依赖关系。依赖图是有向图。图中的循环要在配置时检测并拒绝。每个服务可以有多个依赖。
-状态传播：某个服务 UNHEALTHY 时，依赖它的服务状态变为 DEGRADED。DEGRADED 的服务如果还有其他依赖也 UNHEALTHY，状态保持 DEGRADED 不是变成 UNHEALTHY。UNHEALTHY 的服务恢复后，DEGRADED 的服务自动恢复。
-查询接口：查某个服务的状态和它所有依赖的状态。查整个依赖图的健康概况。查某个探针的检查历史（最近 100 次）。查询结果用 JSON 返回。
-至少包含 probe、graph、propagate、query 四个模块。Maven 构建，端口配置文件。
+不依赖 Spring，纯 Netty HTTP 做一个依赖健康聚合器。
+通过接口注册健康探针，探针有名称、类型（HTTP/TCP）、目标地址、检查间隔、超时。探针状态 UNKNOWN → HEALTHY → UNHEALTHY，检查在后台定时执行。通过接口配置服务之间的依赖关系形成有向图。图中的循环要在配置时检测并拒绝。每个服务可以有多个依赖。
+某个服务 UNHEALTHY 时，依赖它的服务状态变为 DEGRADED。DEGRADED 的服务如果还有其他依赖也 UNHEALTHY 状态保持 DEGRADED 不是变成 UNHEALTHY。UNHEALTHY 的服务恢复后 DEGRADED 的服务自动恢复。
+查询接口：查某个服务的状态和它所有依赖的状态、查整个依赖图的健康概况、查某个探针的检查历史（最近 100 次）。查询结果用 JSON 返回。
+probe、graph、propagate、query 四个模块。Maven 构建，端口配置文件。
