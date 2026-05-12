@@ -1,0 +1,1 @@
+Spring Boot 做一个健康检查服务。HTTP 探测用 RestTemplate 加自定义的 RequestConfig 设置超时。TCP 探测用 java.net.Socket 加 connect timeout。探测调度用 ThreadPoolTaskScheduler。状态判断用自定义的 StateMachine。Webhook 通知用 RestTemplate 发 POST。状态聚合用 Spring 的 Aggregator pattern。端口 PORT 指定。

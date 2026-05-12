@@ -1,0 +1,1 @@
+Rust/axum 写一个认证网关。模块拆分：AuthEngine（统一认证引擎，支持多种方式）、TokenManager（JWT 签发验证刷新）、RateLimiter（IP 级别失败计数和封禁）、AuditLogger（认证日志记录）。AuthEngine 认证成功后调用 TokenManager 签发，失败调用 RateLimiter 记录检查封禁。RateLimiter 触发封禁通知 AuditLogger 记录安全事件。TokenManager 刷新时旧 token 加入黑名单，黑名单由独立定时任务清理。端口环境变量指定。

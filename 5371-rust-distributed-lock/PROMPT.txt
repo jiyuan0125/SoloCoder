@@ -1,0 +1,1 @@
+Rust/actix-web 写一个分布式锁。锁状态用 std::sync::RwLock 保护内部 HashMap。等待队列用 tokio::sync::broadcast channel 做通知。租约管理用 tokio::time::delay_queue 做自动过期。可重入锁的计数用递归结构。HTTP 接口用 actix-web 的 web::Resource 做路由。序列化用 serde_json。端口环境变量指定。

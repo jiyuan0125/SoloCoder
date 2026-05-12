@@ -1,0 +1,1 @@
+Java/Netty 写一个链路追踪服务。组件化：SpanReceiver（接收 Span 上报）、TraceAssembler（把 Span 组装成 Trace 树）、StorageEngine（持久化存储）、QueryService（查询接口）。SpanReceiver 接收后按 TraceID 分组交给 TraceAssembler。TraceAssembler 检测一棵 Trace 树是否完整，完整的交给 StorageEngine 存储。QueryService 从 StorageEngine 查询。TraceAssembler 和 StorageEngine 通过异步队列通信避免阻塞接收。端口 PORT 指定。

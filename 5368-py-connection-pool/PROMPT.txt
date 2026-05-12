@@ -1,0 +1,1 @@
+FastAPI 写一个连接池。用 asyncio.create_connection 管理底层 TCP 连接。健康检查用 asyncio.open_connection 测试可达性。连接池用 asyncio.Queue 管理空闲连接。泄漏检测用 asyncio.create_task 后台定期扫描。统计数据用 contextvars 在并发请求间隔离。配置用 pydantic BaseModel 做校验。监控接口用 FastAPI 的 dependency injection 返回池状态。端口 PORT 指定。

@@ -1,0 +1,1 @@
+aiohttp 做一个日志聚合服务。拆成四个模块：IngestionService（接收日志、解析、校验）、IndexEngine（建立时间索引和全文索引）、StorageLayer（持久化存储和过期清理）、SearchService（查询和聚合）。IngestionService 接收后写入缓冲队列通知 IndexEngine 建索引。IndexEngine 建完后通知 StorageLayer 落盘。SearchService 查询先走 IndexEngine 定位再从 StorageLayer 读数据。过期清理由 StorageLayer 独立定时执行，清理完通知 IndexEngine 删索引。端口 PORT 指定。

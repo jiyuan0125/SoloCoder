@@ -1,0 +1,1 @@
+Go/Gin 写一个服务注册中心。服务信息存到 sync.Map 里。心跳用 time.Ticker 定时检查，过期检测用 map 加时间戳排序。通知机制用 channel 做 pub/sub。查询接口支持按服务名、标签、版本三种条件组合过滤。负载策略用 sort.Slice 做权重排序，用 crypto/rand 做随机选择。DNS 解析用 net.LookupIP。健康探测用 net.DialTimeout。端口 PORT 指定。

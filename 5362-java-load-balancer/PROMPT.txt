@@ -1,0 +1,1 @@
+Spring Boot 做一个负载均衡器。拆分：InstanceRegistry（管理实例注册注销元数据）、HealthEngine（定时探测状态维护）、LoadBalancer（根据策略选择实例）。注册和健康引擎通过事件通信：注册新实例触发健康检查启动，注销触发停止。LoadBalancer 只从 InstanceRegistry 获取健康实例。实例状态由两者共同维护，不一致时以健康检查结果为准。每块有独立数据模型和 API。端口 PORT 指定。

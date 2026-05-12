@@ -1,0 +1,1 @@
+Spring Boot 写一个消息队列。消息持久化用 MapDB 的本地嵌入式数据库。消费者组的重平衡逻辑用一致性哈希（自己实现）。消息确认用 CompletableFuture 做异步回调。重投延迟用 ScheduledExecutorService。配置热更新用 Spring Cloud Config 的 @RefreshScope 思路自己实现。消息序列化用 Jackson 的 ObjectMapper 自定义模块。端口 PORT 指定。

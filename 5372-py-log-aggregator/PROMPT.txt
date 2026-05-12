@@ -1,0 +1,1 @@
+aiohttp 写一个日志聚合服务。用 aiohttp.web 做服务端。日志写入用 aiofiles 做异步文件 IO。全文索引用自己实现的倒排索引。时间索引用 bisect 模块做有序插入。搜索用 re 模块做正则匹配。统计用 collections.Counter 做聚合。配置用 dataclasses 加 JSON 文件。端口 PORT 环境变量指定。

@@ -1,0 +1,5 @@
+用 Go/Fiber 写一个协议转换网关。接收 JSON 格式的 HTTP 请求，转换成 Protobuf 格式转发给后端 gRPC 服务，再把响应转回 JSON。转换规则通过配置文件定义，支持字段映射、类型转换和默认值填充。
+
+数组类型字段要特殊处理，JSON 数组转 repeated 字段。嵌套对象递归转换。同一接口同时支持 JSON 和 Form 两种输入格式，Form 格式先用 key.subkey 展平再转 JSON 再转 Protobuf。
+
+转换失败的请求返回具体哪个字段有问题。端口 PORT 环境变量指定。

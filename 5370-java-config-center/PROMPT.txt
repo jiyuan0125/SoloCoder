@@ -1,0 +1,1 @@
+Spring Boot 做一个配置中心。配置存储用 Spring 的 Resource 抽象读取文件系统。版本管理用 git（用 JGit 操作本地 git 仓库做版本历史）。推送通知用 Spring 的 ApplicationEvent 加 @EventListener 在进程内通信，对外用 RestTemplate 发 HTTP 回调。重试用 Spring Retry 的 @Retryable。配置加密用 jasypt。导出用 Spring Actuator 的 endpoint 思路自己实现。端口 PORT 指定。

@@ -1,0 +1,1 @@
+Rust/axum 写一个缓存中间件。存储引擎用 std::collections::HashMap 配合 DashMap 做并发安全的分片存储。TTL 管理用 tokio::time 做定时扫描。LRU 淘汰用自己实现的双向链表加 HashMap。异步刷新用 tokio::spawn 启动后台任务，去重用 tokio::sync::OnceCell。数据加载用 reqwest 做远程调用。端口环境变量指定，cargo run 能跑。

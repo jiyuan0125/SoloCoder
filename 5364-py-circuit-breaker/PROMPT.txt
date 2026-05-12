@@ -1,0 +1,1 @@
+FastAPI 写一个熔断器。项目分三层：CircuitStateMachine（管理状态流转 CLOSED→OPEN→HALF_OPEN→CLOSED）、MetricsCollector（统计成功失败数和延迟）、FallbackEngine（管理降级策略和缓存）。状态机变更通知 MetricsCollector 重置计数同时通知 FallbackEngine 切换策略。MetricsCollector 定时检查是否触发阈值，触发时调用状态机 open 方法。三层通过事件总线解耦，降级策略可动态注册。端口 PORT 指定。
