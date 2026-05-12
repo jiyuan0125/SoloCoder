@@ -1,0 +1,9 @@
+Rust/tokio 偏做二进制协议解析器。自定义 TLV 格式：Tag(1B) + Length(2B) + Value。
+
+支持嵌套 TLV——Value 里可以包含子 TLV。
+
+解析器校验长度是否匹配。超过最大深度（10层）返回错误。
+
+提供接口执行解析和序列化。
+
+端口通过 PORT 环境变量配置，Cargo build 能过。

@@ -1,0 +1,9 @@
+Spring Boot 做协议转换网关。HTTP JSON 转成自定义二进制格式。
+
+二进制格式用 ByteBuffer 构建。字段按固定偏移写入：magic(2B) + version(1B) + type(1B) + length(4B) + payload。
+
+解析时先校验 magic 和 version。不匹配返回错误。
+
+转换规则按接口路径配置。提供接口管理规则和查看转换日志。Maven 构建。
+
+端口用 server.port 配置，Maven 构建。

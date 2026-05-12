@@ -1,0 +1,9 @@
+FastAPI 做 API 网关。路由表支持精确和前缀匹配，前缀越长优先级越高。
+
+认证中间件支持 API Key（Header 传）和 JWT 两种方式。不同路由可以要求不同认证。
+
+聚合接口：POST /aggregate 接收服务列表，用 httpx 异步并行调用后合并 JSON 返回。
+
+路由变更通过接口操作。async 处理。
+
+端口用 PORT 环境变量。

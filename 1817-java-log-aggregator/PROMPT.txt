@@ -1,0 +1,9 @@
+Spring Boot 日志聚合。日志按服务名和时间索引。支持全文关键词搜索。
+
+日志级别：DEBUG/INFO/WARN/ERROR。查询时可按级别过滤。
+
+日志上下文关联：同一条 trace_id 的日志可以串成链。
+
+提供接口批量上报和查询。查询结果按时间倒序。Maven 构建。
+
+端口用 server.port 配置，Maven 构建。
