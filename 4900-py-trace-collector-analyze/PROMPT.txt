@@ -1,0 +1,9 @@
+写一个轻量链路追踪服务，用 FastAPI。重点在可视化的数据。
+
+Span 上报通过 HTTP API。每个 Span 包含：trace_id、span_id、parent_span_id、service、operation、start_time、duration_ms、status、tags。
+
+Trace 组装：所有 Span 上报后，服务自动按 trace_id 分组并构建调用树。调用树支持 JSON 格式导出，格式为树结构：根节点是第一个 Span（parent_span_id 为空），子节点是下游调用。
+
+统计分析：最近 1 小时内各服务的请求数、平均耗时、错误率。按操作名分组统计。错误 Span（status=error）单独列出并统计错误原因（从 tags 中提取）。
+
+Trace 过期清理：超过 24 小时的 Trace 数据自动删除。管理接口查看统计和手动触发清理。端口 PORT 环境变量。

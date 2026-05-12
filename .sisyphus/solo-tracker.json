@@ -22671,6 +22671,1006 @@
       "prompt": "aiohttp 做事件调度器。多个调度任务可能同时到期触发。\n\n每个任务执行是独立的 coroutine。任务之间不能互相影响。一个任务失败不影响其他任务调度。\n\n同一个任务不能并发执行：如果上一次执行还没结束，新的触发要排队等待。\n\n任务有并发上限：全局最多同时执行 N 个任务。N 可配置。超过上限的排队。\n\n队列中的任务按优先级排序。同优先级按触发时间排序。\n\n管理接口创建/管理任务，查看当前执行中和排队中的任务。\n\n端口 PORT 环境变量。",
       "status": "pending",
       "rounds": []
+    },
+    {
+      "id": 4801,
+      "name": "cache-middleware",
+      "folder": "4801-go-cache-middleware-ttl",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/缓存中间件",
+      "prompt": "用 net/http 写一个缓存中间件。提供类似 Redis 的 GET/SET/DELETE 操作。\n\n缓存项有 TTL（秒），SET 时指定，到期自动删除。过期清理用惰性删除：GET 时检查是否过期，过期则删除并返回 miss。同时每 60 秒做一次主动扫描，清理一批过期 key。\n\n内存满时（配置的最大内存，默认 512MB）用 LRU 淘汰最久未访问的缓存项。淘汰时每次释放 10% 的空间。支持批量操作：MGET/MSET。\n\n管理接口：查看缓存项总数、内存使用量、命中率（GET 命中次数/GET 总次数）、最近 1 小时的操作次数统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4802,
+      "name": "traffic-tint",
+      "folder": "4802-java-traffic-tint-canary",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/流量染色",
+      "prompt": "用 Netty 写一个流量染色网关。实现灰度发布和金丝雀发布。\n\n流量染色规则：按请求头中的用户ID或客户端IP做哈希，落入指定范围的请求标记为灰度流量，路由到灰度版本的实例。染色比例可以配置（如 5% 灰度）。\n\n灰度实例通过注册 API 管理：和服务发现类似，但标记为灰度版本。正常流量只路由到正常实例，灰度流量优先路由到灰度实例（灰度实例不可用时降级到正常实例）。\n\n灰度监控：独立统计灰度流量的成功率、平均响应时间、错误数。和正常流量的指标做对比，如果灰度错误率超过正常的 2 倍，自动触发告警（Webhook 通知）。\n\n管理接口：配置染色规则和比例、查看灰度和正常的指标对比、手动切换灰度比例。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4803,
+      "name": "health-check",
+      "folder": "4803-rust-health-check-probe",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/健康检查",
+      "prompt": "用 tokio 写一个健康检查服务。监控一组后端服务的可用性。\n\n每个被监控的服务配置：名称、探针类型（HTTP/TCP）、目标地址、检查间隔（秒）、超时时间（秒）、不健康阈值（连续失败几次标记不健康）、健康阈值（连续成功几次恢复健康）。\n\nHTTP 探针：GET 请求，期望返回 2xx 状态码。TCP 探针：尝试建立 TCP 连接，成功即为健康。探针超时视为失败。\n\n状态变更时触发通知：配置 Webhook URL，状态从不健康变为健康或反过来时 POST 通知。通知包含服务名、新状态、变更时间、最近一次检查的结果。\n\n级联状态：可以配置依赖关系（A 依赖 B），如果 B 不健康，A 标记为降级（不是不健康，但提示依赖异常）。管理接口查看所有服务状态和检查历史。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4804,
+      "name": "trace-collector",
+      "folder": "4804-py-trace-collector-tree",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/链路追踪",
+      "prompt": "用 aiohttp 写一个分布式链路追踪服务。\n\n每个请求有一个全局唯一的 TraceID。请求经过的每个服务产生一个 Span：包含 SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签（键值对）。\n\nSpan 通过 API 上报到追踪服务。追踪服务按 TraceID 聚合所有 Span，构建调用树（根据 ParentSpanID 关系）。查询接口：按 TraceID 查询完整调用链，返回调用树和各 Span 的详细信息。\n\n耗时分析：自动计算每个 Span 的耗时和占总耗时的比例。标记慢 Span（耗时超过配置阈值的）。\n\n服务拓扑：基于 Span 数据统计服务之间的调用关系和频率。管理接口查看服务拓扑图数据、最近慢请求列表。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4805,
+      "name": "cache-middleware",
+      "folder": "4805-go-cache-middleware-ttl",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/缓存中间件",
+      "prompt": "用 Gin 写一个缓存中间件。提供类似 Redis 的 GET/SET/DELETE 操作。\n\n缓存项有 TTL（秒），SET 时指定，到期自动删除。过期清理用惰性删除：GET 时检查是否过期，过期则删除并返回 miss。同时每 60 秒做一次主动扫描，清理一批过期 key。\n\n内存满时（配置的最大内存，默认 512MB）用 LRU 淘汰最久未访问的缓存项。淘汰时每次释放 10% 的空间。支持批量操作：MGET/MSET。\n\n管理接口：查看缓存项总数、内存使用量、命中率（GET 命中次数/GET 总次数）、最近 1 小时的操作次数统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4806,
+      "name": "connection-pool",
+      "folder": "4806-java-connection-pool-generic",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/连接池",
+      "prompt": "用 Spring Boot 2.x 写一个通用连接池服务。管理对后端数据库（TCP 连接）的连接复用。\n\n池配置：最大连接数、最小空闲连接数、连接最大空闲时间（超时回收）、连接最大生命周期（到期强制关闭重建）。通过 API 管理配置。\n\n获取连接：池中有空闲连接则直接返回，没有且未达上限则新建。已达上限则等待（最多 5 秒），超时返回错误。归还连接：标记为空闲，如果池满则关闭。\n\n连接健康检查：每次获取时做一次 ping（TCP connect 测试），不健康的连接丢弃并补充新的。后台每 30 秒扫描空闲连接，超过最大空闲时间的关闭，低于最小空闲数的补充。\n\n管理接口查看：活跃连接数、空闲连接数、等待获取的请求数、累计创建/关闭/健康检查失败次数。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4807,
+      "name": "event-scheduler",
+      "folder": "4807-rust-event-scheduler-cron",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/事件调度器",
+      "prompt": "用 axum 写一个事件调度器。管理定时任务和延迟任务。\n\nCron 任务：通过 API 创建，指定 Cron 表达式、回调 URL、超时时间。调度器按 Cron 表达式触发，HTTP POST 到回调 URL。\n\n延迟任务：创建时指定延迟秒数，到期后触发回调。支持取消延迟任务（在到期前通过任务ID取消）。\n\n任务执行记录：每次触发的结果（成功/失败/超时）、回调响应、耗时。执行失败的任务根据配置决定是否重试（最多 3 次，间隔递增）。\n\n并发控制：同一时间最多执行 N 个任务（配置），超出的排队等待。任务执行超时（默认 30 秒）强制取消并标记为超时。\n\n管理接口：查看所有任务、执行历史、当前运行中的任务数、排队数。支持手动触发和暂停任务。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4808,
+      "name": "log-aggregator",
+      "folder": "4808-py-log-aggregator-query",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/日志聚合",
+      "prompt": "用 FastAPI 写一个日志聚合服务。收集多个服务的结构化日志。\n\n日志通过 HTTP API 提交（POST JSON）。每条日志包含：服务名、级别（DEBUG/INFO/WARN/ERROR）、时间戳、消息体、额外字段（键值对）。日志按服务名和级别建立索引，存到本地文件（按天分文件）。\n\n查询 API：按服务名、级别范围、时间范围、关键词搜索。关键词搜索支持消息体的全文匹配。查询结果分页返回，按时间倒序。\n\n日志级别过滤：每个服务可以独立配置最低接收级别（如只接收 WARN 以上）。低于配置级别的日志直接丢弃，不存储。级别配置通过管理 API 动态修改。\n\n统计：每小时统计各服务各级别的日志数量。管理接口查看统计和级别配置。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4809,
+      "name": "metrics-collector",
+      "folder": "4809-go-metrics-collector-counter",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/指标采集",
+      "prompt": "用 net/http 写一个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。\n\nCounter（计数器）：只能递增，记录事件总数。Gauge（仪表盘）：可增可减，记录当前值（如在线用户数）。Histogram（直方图）：记录值的分布，配置分位数（如 P50/P90/P99）。\n\n指标通过 API 上报：POST /metrics，body 是指标名、类型、值、标签（键值对）。相同指标名 + 相同标签的多次上报，Counter 累加、Gauge 取最后值、Histogram 记录所有值。\n\n查询接口：按指标名和标签过滤查询当前值。Histogram 查询返回各分位数值。Prometheus 格式导出接口：/metrics/prometheus。\n\n指标过期：超过 5 分钟没有上报的指标标记为过期，查询时不返回但保留历史数据。管理接口查看所有指标列表和最近上报时间。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4810,
+      "name": "load-balancer",
+      "folder": "4810-java-load-balancer-roundrobin",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/负载均衡",
+      "prompt": "用 Spring Boot 2.x 写一个负载均衡器。支持轮询、加权轮询、最少连接数三种策略，通过配置选择。\n\n后端服务实例通过 API 注册和注销。每个实例有地址、权重（默认1）、当前活跃连接数。加权轮询按权重比例分配请求，权重为 0 的实例不参与分配。最少连接数策略选当前连接数最少的实例，相同连接数时随机选。\n\n请求到达时增加目标实例的活跃连接计数，请求完成后（无论成功失败）减少计数。如果目标实例连接超时或返回 5xx，标记为异常，异常实例在连续失败 3 次后暂时从候选列表移除 30 秒。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4811,
+      "name": "service-registry",
+      "folder": "4811-rust-service-registry-heartbeat",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/服务注册与发现",
+      "prompt": "用 actix-web 写一个服务注册与发现中心。\n\n服务实例启动时通过注册 API 上报自己的服务名、地址、端口、元数据（如版本号、权重）。注册后需要每 15 秒发一次心跳，连续 3 次心跳超时则自动注销。注销后该实例从服务列表中移除。\n\n服务发现：客户端通过 API 按服务名查询可用实例列表。返回的实例列表包含地址、端口、健康状态、元数据。查询结果可以缓存 10 秒。\n\n服务变更通知：客户端可以订阅某个服务名的变更事件（注册/注销/心跳异常），通过 WebSocket 推送。管理接口查看所有服务、各服务下的实例列表和健康状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4812,
+      "name": "traffic-tint",
+      "folder": "4812-py-traffic-tint-canary",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/流量染色",
+      "prompt": "用 aiohttp 写一个流量染色网关。实现灰度发布和金丝雀发布。\n\n流量染色规则：按请求头中的用户ID或客户端IP做哈希，落入指定范围的请求标记为灰度流量，路由到灰度版本的实例。染色比例可以配置（如 5% 灰度）。\n\n灰度实例通过注册 API 管理：和服务发现类似，但标记为灰度版本。正常流量只路由到正常实例，灰度流量优先路由到灰度实例（灰度实例不可用时降级到正常实例）。\n\n灰度监控：独立统计灰度流量的成功率、平均响应时间、错误数。和正常流量的指标做对比，如果灰度错误率超过正常的 2 倍，自动触发告警（Webhook 通知）。\n\n管理接口：配置染色规则和比例、查看灰度和正常的指标对比、手动切换灰度比例。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4813,
+      "name": "cache-middleware",
+      "folder": "4813-go-cache-middleware-ttl",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/缓存中间件",
+      "prompt": "用 Fiber 写一个缓存中间件。提供类似 Redis 的 GET/SET/DELETE 操作。\n\n缓存项有 TTL（秒），SET 时指定，到期自动删除。过期清理用惰性删除：GET 时检查是否过期，过期则删除并返回 miss。同时每 60 秒做一次主动扫描，清理一批过期 key。\n\n内存满时（配置的最大内存，默认 512MB）用 LRU 淘汰最久未访问的缓存项。淘汰时每次释放 10% 的空间。支持批量操作：MGET/MSET。\n\n管理接口：查看缓存项总数、内存使用量、命中率（GET 命中次数/GET 总次数）、最近 1 小时的操作次数统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4814,
+      "name": "health-check",
+      "folder": "4814-java-health-check-probe",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/健康检查",
+      "prompt": "用 Netty 写一个健康检查服务。监控一组后端服务的可用性。\n\n每个被监控的服务配置：名称、探针类型（HTTP/TCP）、目标地址、检查间隔（秒）、超时时间（秒）、不健康阈值（连续失败几次标记不健康）、健康阈值（连续成功几次恢复健康）。\n\nHTTP 探针：GET 请求，期望返回 2xx 状态码。TCP 探针：尝试建立 TCP 连接，成功即为健康。探针超时视为失败。\n\n状态变更时触发通知：配置 Webhook URL，状态从不健康变为健康或反过来时 POST 通知。通知包含服务名、新状态、变更时间、最近一次检查的结果。\n\n级联状态：可以配置依赖关系（A 依赖 B），如果 B 不健康，A 标记为降级（不是不健康，但提示依赖异常）。管理接口查看所有服务状态和检查历史。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4815,
+      "name": "service-registry",
+      "folder": "4815-rust-service-registry-heartbeat",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/服务注册与发现",
+      "prompt": "用 axum 写一个服务注册与发现中心。\n\n服务实例启动时通过注册 API 上报自己的服务名、地址、端口、元数据（如版本号、权重）。注册后需要每 15 秒发一次心跳，连续 3 次心跳超时则自动注销。注销后该实例从服务列表中移除。\n\n服务发现：客户端通过 API 按服务名查询可用实例列表。返回的实例列表包含地址、端口、健康状态、元数据。查询结果可以缓存 10 秒。\n\n服务变更通知：客户端可以订阅某个服务名的变更事件（注册/注销/心跳异常），通过 WebSocket 推送。管理接口查看所有服务、各服务下的实例列表和健康状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4816,
+      "name": "event-scheduler",
+      "folder": "4816-py-event-scheduler-cron",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/事件调度器",
+      "prompt": "用 FastAPI 写一个事件调度器。管理定时任务和延迟任务。\n\nCron 任务：通过 API 创建，指定 Cron 表达式、回调 URL、超时时间。调度器按 Cron 表达式触发，HTTP POST 到回调 URL。\n\n延迟任务：创建时指定延迟秒数，到期后触发回调。支持取消延迟任务（在到期前通过任务ID取消）。\n\n任务执行记录：每次触发的结果（成功/失败/超时）、回调响应、耗时。执行失败的任务根据配置决定是否重试（最多 3 次，间隔递增）。\n\n并发控制：同一时间最多执行 N 个任务（配置），超出的排队等待。任务执行超时（默认 30 秒）强制取消并标记为超时。\n\n管理接口：查看所有任务、执行历史、当前运行中的任务数、排队数。支持手动触发和暂停任务。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4817,
+      "name": "metrics-collector",
+      "folder": "4817-go-metrics-collector-counter",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/指标采集",
+      "prompt": "用 Gin 写一个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。\n\nCounter（计数器）：只能递增，记录事件总数。Gauge（仪表盘）：可增可减，记录当前值（如在线用户数）。Histogram（直方图）：记录值的分布，配置分位数（如 P50/P90/P99）。\n\n指标通过 API 上报：POST /metrics，body 是指标名、类型、值、标签（键值对）。相同指标名 + 相同标签的多次上报，Counter 累加、Gauge 取最后值、Histogram 记录所有值。\n\n查询接口：按指标名和标签过滤查询当前值。Histogram 查询返回各分位数值。Prometheus 格式导出接口：/metrics/prometheus。\n\n指标过期：超过 5 分钟没有上报的指标标记为过期，查询时不返回但保留历史数据。管理接口查看所有指标列表和最近上报时间。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4818,
+      "name": "config-center",
+      "folder": "4818-java-config-center-watch",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/配置中心",
+      "prompt": "用 Spring Boot 2.x 写一个配置中心。管理微服务的动态配置。\n\n配置按 namespace + key 组织。每个配置项有：key、value（字符串）、版本号、更新时间、更新人。配置项的 value 最大 64KB。\n\n配置变更历史保留所有版本，可以回滚到任意历史版本。回滚时生成新版本（值等于历史版本的值），不是真的覆盖。\n\nWatch 机制：客户端可以订阅某个 namespace 的变更通知。配置变更时，注册中心主动通知所有订阅者（HTTP POST 到客户端注册的回调 URL）。通知失败时重试 3 次，间隔 10/30/60 秒。3 次都失败则记入通知失败日志。\n\n管理接口：CRUD 配置、查看变更历史、查看订阅者列表、手动触发通知。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4819,
+      "name": "service-registry",
+      "folder": "4819-rust-service-registry-heartbeat",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/服务注册与发现",
+      "prompt": "用 actix-web 写一个服务注册与发现中心。\n\n服务实例启动时通过注册 API 上报自己的服务名、地址、端口、元数据（如版本号、权重）。注册后需要每 15 秒发一次心跳，连续 3 次心跳超时则自动注销。注销后该实例从服务列表中移除。\n\n服务发现：客户端通过 API 按服务名查询可用实例列表。返回的实例列表包含地址、端口、健康状态、元数据。查询结果可以缓存 10 秒。\n\n服务变更通知：客户端可以订阅某个服务名的变更事件（注册/注销/心跳异常），通过 WebSocket 推送。管理接口查看所有服务、各服务下的实例列表和健康状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4820,
+      "name": "health-check",
+      "folder": "4820-py-health-check-probe",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/健康检查",
+      "prompt": "用 FastAPI 写一个健康检查服务。监控一组后端服务的可用性。\n\n每个被监控的服务配置：名称、探针类型（HTTP/TCP）、目标地址、检查间隔（秒）、超时时间（秒）、不健康阈值（连续失败几次标记不健康）、健康阈值（连续成功几次恢复健康）。\n\nHTTP 探针：GET 请求，期望返回 2xx 状态码。TCP 探针：尝试建立 TCP 连接，成功即为健康。探针超时视为失败。\n\n状态变更时触发通知：配置 Webhook URL，状态从不健康变为健康或反过来时 POST 通知。通知包含服务名、新状态、变更时间、最近一次检查的结果。\n\n级联状态：可以配置依赖关系（A 依赖 B），如果 B 不健康，A 标记为降级（不是不健康，但提示依赖异常）。管理接口查看所有服务状态和检查历史。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4821,
+      "name": "circuit-breaker",
+      "folder": "4821-go-circuit-breaker-timeout",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/熔断器",
+      "prompt": "微服务调用链上需要熔断保护，用 net/http 做一个熔断中间件。\n\n每个下游服务一个熔断器实例。请求失败的定义：HTTP 5xx 或响应时间超过 2 秒。失败比例（最近 20 次请求中失败的比例）超过 50% 触发熔断。熔断后直接返回降级响应（配置的默认值），不再调用下游。\n\n熔断器从打开恢复到半开的等待时间不是固定的：第一次 10 秒，第二次 20 秒，第三次 40 秒，指数递增，最大 5 分钟。半开时放 1 个请求试探，成功则恢复，失败则继续熔断并加倍等待时间。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4822,
+      "name": "message-queue",
+      "folder": "4822-java-message-queue-poll",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/消息队列",
+      "prompt": "需要一个异步消息中间件，用 Netty。\n\n消息按 Topic 分类，生产者 POST 发送消息，消费者 GET 拉取。如果 Topic 没有新消息，消费者可以长轮询等待（最多 30 秒）。消息确认机制：消费者拉取后必须 ACK，超过 60 秒未 ACK 的消息重新变为待消费状态。\n\n消息有优先级（high/normal/low），同 Topic 内高优先级先投递。支持延迟消息：发送时指定延迟秒数，到期后才可被消费。\n\n管理接口：查看各 Topic 的堆积量（待消费消息数）、消费者列表和在线状态、最近 1 小时的生产/消费速率。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4823,
+      "name": "connection-pool",
+      "folder": "4823-rust-connection-pool-http",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/连接池",
+      "prompt": "需要一个 HTTP 连接池管理服务，用 tokio。\n\n为多个上游服务分别维护连接池。每个上游有独立配置：最大连接数、连接超时、读写超时。请求到达时从对应上游的池中取连接，用完归还。\n\n连接池按上游地址隔离。连接空闲超过 60 秒自动关闭。如果上游地址变了（配置更新），旧连接全部关闭重建。连接建立失败时重试 2 次，间隔递增。\n\n请求排队机制：如果池满，请求进入等待队列（FIFO），有连接归还时通知队首的请求。等待超时 10 秒后返回 503。\n\n管理接口：查看各上游的连接池状态、排队情况、历史统计（每分钟吞吐量、平均延迟）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4824,
+      "name": "api-gateway",
+      "folder": "4824-py-api-gateway-auth",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/API网关",
+      "prompt": "需要一个 API 网关来统一管理内部服务的接口，用 aiohttp。\n\n网关维护一个路由表：每条规则包含路径前缀、上游地址、是否需要认证、限流配置。路由匹配按最长前缀优先。\n\n认证模块支持两种方式：API Key（在请求头 X-API-Key 中传递）和 JWT。每条路由可以指定用哪种认证方式或不需要认证。限流按路由维度：每条路由每分钟最大请求数。超限返回 429。\n\n网关本身提供一个健康检查接口 /health，返回路由表加载状态和上游连通性。上游连通性通过每 30 秒的 TCP 探测判断。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4825,
+      "name": "health-check",
+      "folder": "4825-go-health-check-group",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/健康检查",
+      "prompt": "做一个健康检查中心，用 Gin。支持多种探针协议。\n\n探针类型：HTTP（支持配置期望状态码和响应体关键字）、TCP（端口连通性）、DNS（域名解析是否正常）。每种探针独立配置检查参数。\n\n服务分组：多个相关服务可以组成一个分组。分组有整体健康状态：全部健康=健康，部分不健康=降级，全部不健康=故障。分组状态变更时通知。\n\n维护窗口：可以为服务设置维护时间段（如每天凌晨 2:00-3:00 系统维护），维护期间不检查也不发通知。维护窗口通过管理 API 配置。\n\n检查结果保留最近 100 次的历史记录。管理接口查看检查历史和 SLA 统计（最近 24 小时的可用率百分比）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4826,
+      "name": "load-balancer",
+      "folder": "4826-java-load-balancer-hashring",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/负载均衡",
+      "prompt": "做一个基于一致性哈希的负载均衡器，用 Spring Boot 2.x。适合有状态服务（比如 WebSocket 长连接），同一个客户端 IP 的请求始终落到同一个后端。\n\n后端实例通过 API 管理（增删）。一致性哈希环上每个实例放 150 个虚拟节点。实例下线后，它的流量按哈希顺时针分配到下一个实例。新实例上线时，只接管对应哈希范围的流量，不影响其他实例。\n\n如果哈希到的实例不可用（健康检查失败），临时转到下一个可用实例，同时记录转发日志。健康检查每 10 秒一次，TCP 连接成功即为健康。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4827,
+      "name": "log-aggregator",
+      "folder": "4827-rust-log-aggregator-alert",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/日志聚合",
+      "prompt": "做一个日志聚合平台，用 axum。要支持日志告警。\n\n日志接收：批量提交（一次最多 500 条），异步写入存储。存储用文件：按 服务名/日期/小时 分目录组织。\n\n告警规则：配置条件（服务名 + 级别 + 时间窗口 + 阈值），比如「服务A 在 5 分钟内 ERROR 超过 10 条则告警」。告警触发后调用配置的 Webhook URL 通知。同一规则 5 分钟内不重复告警。\n\n告警历史保留 7 天。管理接口：配置告警规则、查看告警历史、测试告警规则（模拟触发）。\n\n日志保留策略：每个服务可以配置保留天数（默认 7 天）。过期日志每天凌晨自动清理。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4828,
+      "name": "load-balancer",
+      "folder": "4828-py-load-balancer-hashring",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/负载均衡",
+      "prompt": "做一个基于一致性哈希的负载均衡器，用 FastAPI。适合有状态服务（比如 WebSocket 长连接），同一个客户端 IP 的请求始终落到同一个后端。\n\n后端实例通过 API 管理（增删）。一致性哈希环上每个实例放 150 个虚拟节点。实例下线后，它的流量按哈希顺时针分配到下一个实例。新实例上线时，只接管对应哈希范围的流量，不影响其他实例。\n\n如果哈希到的实例不可用（健康检查失败），临时转到下一个可用实例，同时记录转发日志。健康检查每 10 秒一次，TCP 连接成功即为健康。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4829,
+      "name": "reverse-proxy",
+      "folder": "4829-go-reverse-proxy-mirror",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/反向代理",
+      "prompt": "有个场景需要把外部请求代理到内部多个服务。用 net/http 做一个代理网关。\n\n路由表是配置文件加载的：每条规则包含域名、路径前缀、上游地址列表。请求进来后按域名匹配到规则组，再按最长前缀匹配到具体规则，然后把请求转发到上游列表中的一个（随机选）。如果上游返回 5xx 或连接失败，自动尝试下一个上游。\n\n代理需要记录每次转发的日志：请求时间、客户端IP、目标上游、响应状态码、耗时毫秒。日志写文件，按小时滚动。环境变量 PORT 指定端口。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4830,
+      "name": "traffic-tint",
+      "folder": "4830-java-traffic-tint-ab",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/流量染色",
+      "prompt": "做一个 A/B 测试的流量染色服务，用 Spring Boot 2.x。\n\n实验配置：每个实验有名称、变体列表（每个变体有名称和流量比例）。比例之和必须为 100%。请求到达时根据用户ID做确定性分配（同一用户始终进同一个变体）。\n\n实验指标采集：每个变体独立统计转化事件。转化事件通过 API 上报（用户ID + 事件名 + 值）。实验结果查看：各变体的转化率、样本量、统计显著性（简化计算，不需要精确的贝叶斯/频率学派方法）。\n\n实验生命周期：创建→运行中→已停止。运行中可以调整流量比例，调整后用户可能重新分配到不同变体。停止后不再染色，所有流量走默认变体。\n\n管理接口：CRUD 实验、查看实验结果、启停实验。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4831,
+      "name": "message-queue",
+      "folder": "4831-rust-message-queue-poll",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/消息队列",
+      "prompt": "需要一个异步消息中间件，用 actix-web。\n\n消息按 Topic 分类，生产者 POST 发送消息，消费者 GET 拉取。如果 Topic 没有新消息，消费者可以长轮询等待（最多 30 秒）。消息确认机制：消费者拉取后必须 ACK，超过 60 秒未 ACK 的消息重新变为待消费状态。\n\n消息有优先级（high/normal/low），同 Topic 内高优先级先投递。支持延迟消息：发送时指定延迟秒数，到期后才可被消费。\n\n管理接口：查看各 Topic 的堆积量（待消费消息数）、消费者列表和在线状态、最近 1 小时的生产/消费速率。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4832,
+      "name": "reverse-proxy",
+      "folder": "4832-py-reverse-proxy-mirror",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/反向代理",
+      "prompt": "有个场景需要把外部请求代理到内部多个服务。用 aiohttp 做一个代理网关。\n\n路由表是配置文件加载的：每条规则包含域名、路径前缀、上游地址列表。请求进来后按域名匹配到规则组，再按最长前缀匹配到具体规则，然后把请求转发到上游列表中的一个（随机选）。如果上游返回 5xx 或连接失败，自动尝试下一个上游。\n\n代理需要记录每次转发的日志：请求时间、客户端IP、目标上游、响应状态码、耗时毫秒。日志写文件，按小时滚动。环境变量 PORT 指定端口。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4833,
+      "name": "config-center",
+      "folder": "4833-go-config-center-gray",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/配置中心",
+      "prompt": "做一个配置中心，配置需要灰度发布能力，用 Fiber。\n\n每个配置项有一个「草稿」值和一个「正式」值。修改草稿不影响线上。发布操作把草稿推送到正式。灰度发布：先推给指定比例的实例（按 IP 哈希），观察一段时间后全量推送。\n\n灰度期间，客户端拉取配置时根据自己 IP 的哈希决定拿到的是正式值还是灰度值。灰度推送 30 分钟后如果没有人手动确认，自动回滚到正式值。\n\n配置变更审计日志：谁、什么时候、改了什么、是草稿修改还是正式发布。审计日志不可删除。管理接口查看灰度进度和审计日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4834,
+      "name": "connection-pool",
+      "folder": "4834-java-connection-pool-http",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/连接池",
+      "prompt": "需要一个 HTTP 连接池管理服务，用 Netty。\n\n为多个上游服务分别维护连接池。每个上游有独立配置：最大连接数、连接超时、读写超时。请求到达时从对应上游的池中取连接，用完归还。\n\n连接池按上游地址隔离。连接空闲超过 60 秒自动关闭。如果上游地址变了（配置更新），旧连接全部关闭重建。连接建立失败时重试 2 次，间隔递增。\n\n请求排队机制：如果池满，请求进入等待队列（FIFO），有连接归还时通知队首的请求。等待超时 10 秒后返回 503。\n\n管理接口：查看各上游的连接池状态、排队情况、历史统计（每分钟吞吐量、平均延迟）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4835,
+      "name": "metrics-collector",
+      "folder": "4835-rust-metrics-collector-middleware",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/指标采集",
+      "prompt": "做一个运行时指标采集器，用 axum。主要采集 HTTP 服务的性能指标。\n\n作为中间件集成：拦截 HTTP 请求，自动记录每个路由的请求数、错误数、响应时间。响应时间用 Histogram 统计，计算 P50/P95/P99。\n\n指标按路由和状态码分组。支持自定义标签：应用可以在请求上下文中设置额外标签，指标自动携带。\n\n指标数据存储在内存中的时间序列（按分钟聚合，保留 2 小时）。也支持注册回调函数把指标推送到外部存储（如文件）。\n\n管理接口：查看各路由的实时指标、历史趋势（每分钟的 QPS 和延迟分布）。支持导出为 JSON。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4836,
+      "name": "circuit-breaker",
+      "folder": "4836-py-circuit-breaker-timeout",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/熔断器",
+      "prompt": "微服务调用链上需要熔断保护，用 FastAPI 做一个熔断中间件。\n\n每个下游服务一个熔断器实例。请求失败的定义：HTTP 5xx 或响应时间超过 2 秒。失败比例（最近 20 次请求中失败的比例）超过 50% 触发熔断。熔断后直接返回降级响应（配置的默认值），不再调用下游。\n\n熔断器从打开恢复到半开的等待时间不是固定的：第一次 10 秒，第二次 20 秒，第三次 40 秒，指数递增，最大 5 分钟。半开时放 1 个请求试探，成功则恢复，失败则继续熔断并加倍等待时间。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4837,
+      "name": "reverse-proxy",
+      "folder": "4837-go-reverse-proxy-mirror",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/反向代理",
+      "prompt": "有个场景需要把外部请求代理到内部多个服务。用 Gin 做一个代理网关。\n\n路由表是配置文件加载的：每条规则包含域名、路径前缀、上游地址列表。请求进来后按域名匹配到规则组，再按最长前缀匹配到具体规则，然后把请求转发到上游列表中的一个（随机选）。如果上游返回 5xx 或连接失败，自动尝试下一个上游。\n\n代理需要记录每次转发的日志：请求时间、客户端IP、目标上游、响应状态码、耗时毫秒。日志写文件，按小时滚动。环境变量 PORT 指定端口。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4838,
+      "name": "auth-gateway",
+      "folder": "4838-java-auth-gateway-apikey",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/认证网关",
+      "prompt": "做一个 API Key 认证网关，用 Spring Boot 2.x。\n\n每个 API Key 绑定一个租户ID和权限范围（允许访问的路由前缀列表）。请求到达时从 X-API-Key 头部读取 key，校验有效性、过期时间和权限。无效返回 401，无权限返回 403。\n\nAPI Key 管理：通过管理接口创建/吊销/续期 Key。创建时自动生成唯一 key（32 字符随机字符串）。续期延长过期时间，不改变 key 值。已吊销的 key 不能续期。\n\nKey 使用统计：每个 key 的请求次数（按天）、最近使用时间、来源IP。统计信息通过管理接口查询。\n\n限流集成：每个 key 可以配置独立的限流（每分钟最大请求数），超过限流返回 429。管理接口查看限流配置和当前使用情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4839,
+      "name": "metrics-collector",
+      "folder": "4839-rust-metrics-collector-middleware",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/指标采集",
+      "prompt": "做一个运行时指标采集器，用 actix-web。主要采集 HTTP 服务的性能指标。\n\n作为中间件集成：拦截 HTTP 请求，自动记录每个路由的请求数、错误数、响应时间。响应时间用 Histogram 统计，计算 P50/P95/P99。\n\n指标按路由和状态码分组。支持自定义标签：应用可以在请求上下文中设置额外标签，指标自动携带。\n\n指标数据存储在内存中的时间序列（按分钟聚合，保留 2 小时）。也支持注册回调函数把指标推送到外部存储（如文件）。\n\n管理接口：查看各路由的实时指标、历史趋势（每分钟的 QPS 和延迟分布）。支持导出为 JSON。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4840,
+      "name": "reverse-proxy",
+      "folder": "4840-py-reverse-proxy-mirror",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/反向代理",
+      "prompt": "有个场景需要把外部请求代理到内部多个服务。用 FastAPI 做一个代理网关。\n\n路由表是配置文件加载的：每条规则包含域名、路径前缀、上游地址列表。请求进来后按域名匹配到规则组，再按最长前缀匹配到具体规则，然后把请求转发到上游列表中的一个（随机选）。如果上游返回 5xx 或连接失败，自动尝试下一个上游。\n\n代理需要记录每次转发的日志：请求时间、客户端IP、目标上游、响应状态码、耗时毫秒。日志写文件，按小时滚动。环境变量 PORT 指定端口。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4841,
+      "name": "service-registry",
+      "folder": "4841-go-service-registry-version",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/服务注册与发现",
+      "prompt": "用 net/http 实现一个带版本管理的服务注册中心。\n\n服务注册时指定版本号。客户端发现服务时可以指定需要的版本范围（如 >=2.0.0 <3.0.0）。注册中心返回匹配版本的实例列表。\n\n实例可以处于多种状态：注册中、运行中、停止中、已注销。状态通过 API 或心跳管理。运行中的实例如果不发心跳（30 秒超时），自动变为停止中。\n\n服务元数据变更历史保留：每次注册/注销/状态变更都记录日志，包含时间戳、实例ID、旧状态、新状态。管理接口查看变更历史和服务拓扑（哪些服务调用了哪些服务，基于查询日志统计）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4842,
+      "name": "message-queue",
+      "folder": "4842-java-message-queue-broadcast",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/消息队列",
+      "prompt": "用 Netty 实现一个带广播功能的消息队列。\n\nTopic 支持两种模式：队列模式（每条消息只被一个消费者处理）和广播模式（每条消息推送给所有订阅者）。模式在创建 Topic 时指定。\n\n广播模式的消息投递是推送型的：消费者订阅时提供回调 URL，有新消息时队列服务主动 POST 到回调 URL。推送失败（连接超时或非 2xx 响应）时重试 3 次，间隔 5/15/45 秒。3 次都失败则记入死信日志。\n\n队列模式用拉取方式，消费者主动 GET。消息持久化到 SQLite。管理接口查看 Topic 列表和各消费者状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4843,
+      "name": "health-check",
+      "folder": "4843-rust-health-check-cascade",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/健康检查",
+      "prompt": "用 tokio 实现一个带依赖图的级联健康检查系统。\n\n服务之间的依赖关系通过 API 配置（DAG 形式）。检查某个服务时，如果它的上游依赖不健康，该服务标记为「受影响」状态。状态级别：健康→受影响→不健康→未知（从未检查过）。\n\n依赖图可视化数据接口：返回图结构（节点和边），客户端可以用来渲染。支持查询从某个不健康节点出发的影响范围（哪些下游服务受影响）。\n\n探针结果缓存：同一服务在检查间隔内的结果缓存，避免重复检查。缓存可以手动失效。\n\n管理接口：查看依赖图、各服务状态、影响分析。支持手动标记服务状态（覆盖自动检查结果，用于测试）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4844,
+      "name": "trace-collector",
+      "folder": "4844-py-trace-collector-span",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/链路追踪",
+      "prompt": "用 aiohttp 实现一个带 Span 传播的链路追踪服务。\n\n跨服务传播：支持 HTTP Header 和 gRPC metadata 两种传播方式。传播的 Header 包含：trace-id、span-id、parent-span-id、采样标记、baggage（用户自定义键值对）。\n\nBaggage 传播：用户可以在请求链路中设置 baggage（键值对），自动传播到所有下游 Span。Baggage 有大小限制（总大小不超过 2KB），超限截断。\n\nSpan 数据存储在文件中（按 TraceID 的前两位分目录）。内存中维护最近 1 小时的 TraceID 索引。\n\n搜索接口：按服务名、操作名、耗时范围、时间范围搜索 Trace。搜索结果返回 TraceID 列表，可以进一步查看详情。管理接口查看存储使用情况和索引状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4845,
+      "name": "distributed-lock",
+      "folder": "4845-go-distributed-lock-downgrade",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/分布式锁",
+      "prompt": "用 Gin 实现一个带锁降级的分布式锁。\n\n正常情况下锁存储在内存中。可以配置锁的持久化：开启后锁状态同步写入磁盘文件。服务重启时从磁盘恢复锁状态。\n\n锁降级：当锁服务负载过高（等待队列超过 100 个请求）时，新获取锁的请求直接失败（快速失败模式），避免雪崩。负载恢复后自动回到正常模式。\n\n锁统计：每把锁的获取次数、平均持有时间、最大等待时间。统计信息按分钟聚合，保留 1 小时。\n\n管理接口：查看各锁的统计信息、当前模式（正常/降级）、手动切换模式。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4846,
+      "name": "message-queue",
+      "folder": "4846-java-message-queue-broadcast",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/消息队列",
+      "prompt": "用 Spring Boot 2.x 实现一个带广播功能的消息队列。\n\nTopic 支持两种模式：队列模式（每条消息只被一个消费者处理）和广播模式（每条消息推送给所有订阅者）。模式在创建 Topic 时指定。\n\n广播模式的消息投递是推送型的：消费者订阅时提供回调 URL，有新消息时队列服务主动 POST 到回调 URL。推送失败（连接超时或非 2xx 响应）时重试 3 次，间隔 5/15/45 秒。3 次都失败则记入死信日志。\n\n队列模式用拉取方式，消费者主动 GET。消息持久化到 SQLite。管理接口查看 Topic 列表和各消费者状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4847,
+      "name": "cache-middleware",
+      "folder": "4847-rust-cache-middleware-lfu",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/缓存中间件",
+      "prompt": "用 axum 实现一个带 LFU 淘汰的缓存服务。\n\n缓存项除了 TTL 还有访问频率计数。内存满时淘汰访问频率最低的项。频率统计用 Count-Min Sketch 近似算法，减少内存开销。新插入的项初始频率为 1，每次 GET 加 1。\n\n支持命名空间：不同业务使用不同的缓存空间，互不影响。每个命名空间独立配置最大容量和默认 TTL。淘汰在各命名空间内独立进行。\n\n提供 API：GET/SET/DELETE/FLUSH（清空某个命名空间）、STATS（查看各命名空间的统计信息：项数、命中率、平均 TTL）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4848,
+      "name": "reverse-proxy",
+      "folder": "4848-py-reverse-proxy-canary",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/反向代理",
+      "prompt": "帮我们做一个 API 代理，用 FastAPI。老的微服务要迁移到新架构，过渡期同一个路径要同时转发到新旧两个上游，新旧各处理一部分流量。\n\n路由配置通过 API 动态添加：路径 + 新上游地址 + 旧上游地址 + 流量比例（比如 70% 走新、30% 走旧）。代理按比例随机选上游。如果选中的上游超时（3 秒），不重试，直接返回 502。\n\n有个管理接口可以查看当前所有路由规则、各上游的最近一次健康状态、每条规则今天的请求数统计。管理接口独立端口，也通过环境变量 ADMIN_PORT 配置。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4849,
+      "name": "load-balancer",
+      "folder": "4849-go-load-balancer-zone",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/负载均衡",
+      "prompt": "后端有多个区域部署的服务，需要一个就近路由的负载均衡器。用 net/http。\n\n实例注册时带上区域标签（如 cn-east、cn-south）。请求进来时根据请求头中的区域标识，优先路由到同区域实例。同区域没有可用实例时，路由到其他区域。每个区域内用轮询策略。\n\n实例健康检查：HTTP GET /health，超时 2 秒。不健康实例在候选列表中标记但不移除。每个实例的权重可以独立设置，权重为 0 等于手动下线。管理接口可以查看各区域的实例列表和健康状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4850,
+      "name": "trace-collector",
+      "folder": "4850-java-trace-collector-span",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/链路追踪",
+      "prompt": "用 Spring Boot 2.x 实现一个带 Span 传播的链路追踪服务。\n\n跨服务传播：支持 HTTP Header 和 gRPC metadata 两种传播方式。传播的 Header 包含：trace-id、span-id、parent-span-id、采样标记、baggage（用户自定义键值对）。\n\nBaggage 传播：用户可以在请求链路中设置 baggage（键值对），自动传播到所有下游 Span。Baggage 有大小限制（总大小不超过 2KB），超限截断。\n\nSpan 数据存储在文件中（按 TraceID 的前两位分目录）。内存中维护最近 1 小时的 TraceID 索引。\n\n搜索接口：按服务名、操作名、耗时范围、时间范围搜索 Trace。搜索结果返回 TraceID 列表，可以进一步查看详情。管理接口查看存储使用情况和索引状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4851,
+      "name": "trace-collector",
+      "folder": "4851-rust-trace-collector-span",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/链路追踪",
+      "prompt": "用 actix-web 实现一个带 Span 传播的链路追踪服务。\n\n跨服务传播：支持 HTTP Header 和 gRPC metadata 两种传播方式。传播的 Header 包含：trace-id、span-id、parent-span-id、采样标记、baggage（用户自定义键值对）。\n\nBaggage 传播：用户可以在请求链路中设置 baggage（键值对），自动传播到所有下游 Span。Baggage 有大小限制（总大小不超过 2KB），超限截断。\n\nSpan 数据存储在文件中（按 TraceID 的前两位分目录）。内存中维护最近 1 小时的 TraceID 索引。\n\n搜索接口：按服务名、操作名、耗时范围、时间范围搜索 Trace。搜索结果返回 TraceID 列表，可以进一步查看详情。管理接口查看存储使用情况和索引状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4852,
+      "name": "proto-convert",
+      "folder": "4852-py-proto-convert-ws",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/协议转换",
+      "prompt": "用 aiohttp 实现一个 WebSocket 桥接服务。\n\nHTTP 客户端通过 REST API 和 WebSocket 服务通信。客户端发 HTTP POST，网关把请求通过 WebSocket 转发给后端。后端通过 WebSocket 回复，网关把回复转为 HTTP 响应返回。\n\n也支持反向：后端通过 WebSocket 主动推送消息，网关把消息存入队列，客户端通过长轮询 API 拉取未读消息。\n\nWebSocket 连接管理：维护到后端的连接池。连接断开时自动重连（指数退避，最大 30 秒）。消息序列化格式：JSON。\n\n消息超时：HTTP 请求转发到 WebSocket 后，如果 10 秒内没收到回复，返回 504。管理接口查看连接状态和消息统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4853,
+      "name": "event-scheduler",
+      "folder": "4853-go-event-scheduler-priority",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/事件调度器",
+      "prompt": "用 Fiber 实现一个延迟队列服务。\n\n消息投递：生产者发送消息时指定延迟秒数。消息在延迟队列中等待，到期后推送到消费者的回调 URL。\n\n消息优先级：同一时间到期的多条消息，高优先级先推送。优先级 1-5（1 最高）。\n\n消息持久化：所有待处理消息写入磁盘文件。服务重启后从文件恢复未到期的消息。已推送但未确认的消息也恢复并重新推送。\n\n消费者确认机制：推送后等待消费者返回 2xx。非 2xx 或超时（10 秒）视为推送失败，重试 3 次（间隔 30/120/300 秒）。3 次都失败进入死信队列。\n\n管理接口：查看队列深度（各优先级）、死信数量、各消费者的推送成功/失败统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4854,
+      "name": "log-aggregator",
+      "folder": "4854-java-log-aggregator-trace",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/日志聚合",
+      "prompt": "用 Netty 实现一个带关联ID追踪的日志聚合器。\n\n每条日志可以带 trace_id 字段。同一个 trace_id 的日志属于同一次请求链路。查询时可以按 trace_id 获取完整请求链路的日志，按时间排序展示。\n\n日志存储用文件，按 trace_id 建立倒排索引（存在内存中，定期持久化到磁盘）。服务重启时从磁盘加载索引。\n\n日志去重：相同服务名 + 相同消息体 + 1 分钟内视为重复，只保留一条并标记重复次数。去重配置可以按服务开关。\n\n管理接口：查看各服务的日志量趋势、去重比例、索引内存占用。支持按 trace_id 下载完整链路日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4855,
+      "name": "circuit-breaker",
+      "folder": "4855-rust-circuit-breaker-metrics",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/熔断器",
+      "prompt": "用 axum 做一个带指标采集的熔断器。\n\n每个被保护的服务端点有独立的熔断器。熔断器统计滑动窗口内的请求：成功数、失败数、超时数、平均响应时间。当滑动窗口（最近 1 分钟）内失败数超过阈值（可配置，默认 10）且失败率超过 60%，触发熔断。\n\n熔断状态下请求直接返回 503 和错误信息。半开状态每 15 秒放一个请求。提供 Prometheus 格式的指标暴露接口，包含每个端点的请求数、失败数、熔断状态。管理接口可以查看和手动控制熔断状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4856,
+      "name": "connection-pool",
+      "folder": "4856-py-connection-pool-elastic",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/连接池",
+      "prompt": "用 FastAPI 做一个带弹性的连接池。可以根据负载自动扩缩容。\n\n连接池有基础大小和最大大小。监控每秒的请求数，如果等待队列连续 10 秒不为空，自动扩展 20% 的连接（不超过最大值）。如果空闲连接连续 60 秒超过 50%，自动缩减 20%（不低于基础值）。\n\n每次扩展/缩减都记录事件日志：时间、操作（扩/缩）、调整前后的连接数、触发原因。连接创建时如果目标不可达，标记该上游为不健康，5 分钟内不再创建新连接。\n\n管理接口可以手动触发扩缩、查看扩缩历史、当前连接数和等待数。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4857,
+      "name": "proto-convert",
+      "folder": "4857-go-proto-convert-ws",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/协议转换",
+      "prompt": "用 Gin 实现一个 WebSocket 桥接服务。\n\nHTTP 客户端通过 REST API 和 WebSocket 服务通信。客户端发 HTTP POST，网关把请求通过 WebSocket 转发给后端。后端通过 WebSocket 回复，网关把回复转为 HTTP 响应返回。\n\n也支持反向：后端通过 WebSocket 主动推送消息，网关把消息存入队列，客户端通过长轮询 API 拉取未读消息。\n\nWebSocket 连接管理：维护到后端的连接池。连接断开时自动重连（指数退避，最大 30 秒）。消息序列化格式：JSON。\n\n消息超时：HTTP 请求转发到 WebSocket 后，如果 10 秒内没收到回复，返回 504。管理接口查看连接状态和消息统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4858,
+      "name": "config-center",
+      "folder": "4858-java-config-center-encrypt",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/配置中心",
+      "prompt": "用 Spring Boot 2.x 实现一个带加密存储的配置中心。\n\n敏感配置项（如数据库密码、API 密钥）在存储时用 AES-256-GCM 加密。配置项有一个 sensitive 标记。标记为 sensitive 的值在 API 返回时掩码显示（只显示前后 4 位）。\n\n配置项可以引用其他配置项：value 中用 {namespace:key} 语法引用，拉取时自动展开。循环引用检测：如果 A 引用 B，B 又引用 A，拉取时返回错误。\n\n配置分组管理：同一 namespace 下的配置可以按 group 分组，拉取时可以指定 group 获取一组配置。管理接口支持批量操作。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4859,
+      "name": "distributed-lock",
+      "folder": "4859-rust-distributed-lock-downgrade",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/分布式锁",
+      "prompt": "用 actix-web 实现一个带锁降级的分布式锁。\n\n正常情况下锁存储在内存中。可以配置锁的持久化：开启后锁状态同步写入磁盘文件。服务重启时从磁盘恢复锁状态。\n\n锁降级：当锁服务负载过高（等待队列超过 100 个请求）时，新获取锁的请求直接失败（快速失败模式），避免雪崩。负载恢复后自动回到正常模式。\n\n锁统计：每把锁的获取次数、平均持有时间、最大等待时间。统计信息按分钟聚合，保留 1 小时。\n\n管理接口：查看各锁的统计信息、当前模式（正常/降级）、手动切换模式。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4860,
+      "name": "event-scheduler",
+      "folder": "4860-py-event-scheduler-priority",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/事件调度器",
+      "prompt": "用 FastAPI 实现一个延迟队列服务。\n\n消息投递：生产者发送消息时指定延迟秒数。消息在延迟队列中等待，到期后推送到消费者的回调 URL。\n\n消息优先级：同一时间到期的多条消息，高优先级先推送。优先级 1-5（1 最高）。\n\n消息持久化：所有待处理消息写入磁盘文件。服务重启后从文件恢复未到期的消息。已推送但未确认的消息也恢复并重新推送。\n\n消费者确认机制：推送后等待消费者返回 2xx。非 2xx 或超时（10 秒）视为推送失败，重试 3 次（间隔 30/120/300 秒）。3 次都失败进入死信队列。\n\n管理接口：查看队列深度（各优先级）、死信数量、各消费者的推送成功/失败统计。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4861,
+      "name": "cache-middleware",
+      "folder": "4861-go-cache-middleware-tiered",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/缓存中间件",
+      "prompt": "用 net/http 写一个二级缓存服务：L1 内存缓存 + L2 文件缓存。\n\nGET 时先查 L1，命中直接返回。L1 未命中查 L2（磁盘文件），命中则加载到 L1 并返回。L2 也没有则返回 miss。\n\nSET 时同时写入 L1 和 L2。L1 用 LRU 淘汰（配置最大项数）。L2 用文件存储，每个缓存项一个文件，文件名是 key 的哈希。L2 过期文件通过后台清理协程每 5 分钟扫描一次。\n\nL1 和 L2 的数据一致性：SET/DELETE 操作先写 L2 再更新 L1。如果 L2 写入失败，不更新 L1（保证数据不丢）。管理接口查看各级缓存命中率和容量。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4862,
+      "name": "auth-gateway",
+      "folder": "4862-java-auth-gateway-mfa",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/认证网关",
+      "prompt": "用 Netty 写一个带多因素认证的网关。\n\n基本认证：用户名密码校验。多因素：密码正确后还需要 TOTP 验证码（Google Authenticator 兼容）。TOTP 密钥在用户注册时生成，用户需要绑定到 Authenticator App。\n\n认证流程：先提交用户名密码，密码正确返回一个临时 session token（5 分钟有效）。用 session token 提交 TOTP 验证码，验证通过后返回正式 access token。\n\n登录保护：同一用户名连续 5 次密码错误，锁定 15 分钟。锁定期间即使密码正确也不允许登录。\n\n管理接口：用户管理（启用/禁用 MFA、解锁账户）、查看登录日志（包含成功/失败、来源IP）、查看锁定状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4863,
+      "name": "log-aggregator",
+      "folder": "4863-rust-log-aggregator-format",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/日志聚合",
+      "prompt": "用 tokio 写一个多格式日志采集器。\n\n支持接收三种格式的日志：JSON（结构化）、Syslog（RFC5424）、单行文本（需要正则提取字段）。格式通过提交接口的 Content-Type 区分。单行文本需要预配置正则模式（如提取时间、级别、消息），模式通过管理 API 配置。\n\n所有格式最终统一转换为内部 JSON 结构存储。转换失败的日志存到单独的错误文件中，不丢失。\n\n日志采样：当日志量超过配置的每秒阈值时，按比例丢弃部分 INFO/DEBUG 日志（ERROR/WARN 不丢弃）。采样比例动态调整。\n\n管理接口查看：各格式日志的接收量、转换失败数、采样比例。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4864,
+      "name": "distributed-lock",
+      "folder": "4864-py-distributed-lock-rw",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/分布式锁",
+      "prompt": "用 aiohttp 写一个读写锁服务。支持并发读、互斥写。\n\n获取读锁：没有写锁时可以并发获取多个读锁。获取写锁：必须等所有读锁和写锁释放后才能获取。写锁有更高优先级：有写锁等待时，新读锁请求排队（防止写饿死）。\n\n锁有 TTL（默认 60 秒），到期自动释放。获取锁时返回 token，释放和续期需要 token。续期延长 TTL，但不能超过最大 TTL（默认 5 分钟）。\n\n锁升级：持有读锁的客户端可以升级为写锁。升级时如果没有其他读锁则立即成功，否则等待其他读锁释放。升级过程中读锁保持有效。管理接口查看锁状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4865,
+      "name": "log-aggregator",
+      "folder": "4865-go-log-aggregator-format",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/日志聚合",
+      "prompt": "用 Gin 写一个多格式日志采集器。\n\n支持接收三种格式的日志：JSON（结构化）、Syslog（RFC5424）、单行文本（需要正则提取字段）。格式通过提交接口的 Content-Type 区分。单行文本需要预配置正则模式（如提取时间、级别、消息），模式通过管理 API 配置。\n\n所有格式最终统一转换为内部 JSON 结构存储。转换失败的日志存到单独的错误文件中，不丢失。\n\n日志采样：当日志量超过配置的每秒阈值时，按比例丢弃部分 INFO/DEBUG 日志（ERROR/WARN 不丢弃）。采样比例动态调整。\n\n管理接口查看：各格式日志的接收量、转换失败数、采样比例。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4866,
+      "name": "distributed-lock",
+      "folder": "4866-java-distributed-lock-rw",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/分布式锁",
+      "prompt": "用 Spring Boot 2.x 写一个读写锁服务。支持并发读、互斥写。\n\n获取读锁：没有写锁时可以并发获取多个读锁。获取写锁：必须等所有读锁和写锁释放后才能获取。写锁有更高优先级：有写锁等待时，新读锁请求排队（防止写饿死）。\n\n锁有 TTL（默认 60 秒），到期自动释放。获取锁时返回 token，释放和续期需要 token。续期延长 TTL，但不能超过最大 TTL（默认 5 分钟）。\n\n锁升级：持有读锁的客户端可以升级为写锁。升级时如果没有其他读锁则立即成功，否则等待其他读锁释放。升级过程中读锁保持有效。管理接口查看锁状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4867,
+      "name": "retry-idempotent",
+      "folder": "4867-rust-retry-idempotent-async",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/重试与幂等",
+      "prompt": "用 axum 写一个异步重试调度器。\n\n失败的 HTTP 请求记录到重试队列（包含：目标URL、方法、请求体、重试次数、下次重试时间）。后台调度器定期扫描队列，到时间的请求重新发送。\n\n退避策略：重试间隔递增（1min/5min/30min/2h/12h）。达到最大重试次数（默认 5）后移入死信队列，不再重试。\n\n重试成功后从队列移除。重试时如果目标返回特定状态码（如 4xx 客户端错误），不重试，直接移入死信。\n\n管理接口：查看重试队列大小、各状态码的重试次数分布、死信队列。支持手动触发重试和从死信恢复到重试队列。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4868,
+      "name": "retry-idempotent",
+      "folder": "4868-py-retry-idempotent-async",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/重试与幂等",
+      "prompt": "用 FastAPI 写一个异步重试调度器。\n\n失败的 HTTP 请求记录到重试队列（包含：目标URL、方法、请求体、重试次数、下次重试时间）。后台调度器定期扫描队列，到时间的请求重新发送。\n\n退避策略：重试间隔递增（1min/5min/30min/2h/12h）。达到最大重试次数（默认 5）后移入死信队列，不再重试。\n\n重试成功后从队列移除。重试时如果目标返回特定状态码（如 4xx 客户端错误），不重试，直接移入死信。\n\n管理接口：查看重试队列大小、各状态码的重试次数分布、死信队列。支持手动触发重试和从死信恢复到重试队列。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4869,
+      "name": "metrics-collector",
+      "folder": "4869-go-metrics-collector-aggregate",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/指标采集",
+      "prompt": "用 net/http 写一个指标聚合网关。多个服务实例上报指标，网关做聚合。\n\n每个服务实例定时（每 10 秒）推送自己的指标到网关。网关按指标名 + 标签做聚合：Counter 求和，Gauge 取平均/最大/最小，Histogram 合并分桶。\n\n聚合后的指标暴露为 Prometheus 格式。如果某个实例超过 30 秒没上报，它的 Counter 值保留但标记为 stale，不参与聚合。\n\n实例维度也可以查询单个实例的指标。标签自动注入实例ID，聚合时可以选择是否按实例分组。\n\n管理接口：查看已注册的实例列表、各实例最近上报时间、指标聚合状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4870,
+      "name": "auth-gateway",
+      "folder": "4870-java-auth-gateway-mfa",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/认证网关",
+      "prompt": "用 Spring Boot 2.x 写一个带多因素认证的网关。\n\n基本认证：用户名密码校验。多因素：密码正确后还需要 TOTP 验证码（Google Authenticator 兼容）。TOTP 密钥在用户注册时生成，用户需要绑定到 Authenticator App。\n\n认证流程：先提交用户名密码，密码正确返回一个临时 session token（5 分钟有效）。用 session token 提交 TOTP 验证码，验证通过后返回正式 access token。\n\n登录保护：同一用户名连续 5 次密码错误，锁定 15 分钟。锁定期间即使密码正确也不允许登录。\n\n管理接口：用户管理（启用/禁用 MFA、解锁账户）、查看登录日志（包含成功/失败、来源IP）、查看锁定状态。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4871,
+      "name": "proto-convert",
+      "folder": "4871-rust-proto-convert-data",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/协议转换",
+      "prompt": "用 actix-web 写一个数据格式转换网关。\n\n支持 JSON、XML、YAML、CSV 四种格式之间的互转。转换接口：指定源格式和目标格式，POST 源数据，返回转换后的数据。\n\nJSON↔XML：XML 属性映射为 JSON 对象的 @attr 字段。XML 文本内容映射为 #text 字段。数组元素需要特殊的类型提示（通过配置指定哪些 XML 元素是数组）。\n\nJSON↔CSV：CSV 的列名从 JSON 对象的 key 生成（第一行是表头）。嵌套 JSON 展平为点号分隔的列名（如 address.city）。数组类型的 JSON 转换为多行 CSV。\n\n转换配置：每种格式对可以独立配置转换规则（字段映射、默认值、格式化选项）。配置通过管理 API 管理。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4872,
+      "name": "rate-limiter",
+      "folder": "4872-py-rate-limiter-tiered",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/限流器",
+      "prompt": "用 aiohttp 写一个分级限流器。不同等级的用户有不同的限流策略。\n\n用户等级从请求头的 X-User-Tier 读取（free/pro/enterprise），没有该头部按 free 处理。free 每分钟 30 次，pro 每分钟 120 次，enterprise 每分钟 600 次。等级配置可以通过管理接口修改，修改后立即对新请求生效。\n\n所有被限流的请求记日志：用户ID、等级、当前计数、限制值、时间戳。日志异步批量写入文件（每 100 条或每秒刷新一次）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4873,
+      "name": "connection-pool",
+      "folder": "4873-go-connection-pool-monitor",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/连接池",
+      "prompt": "用 Fiber 实现一个连接池，要能监控每个连接的使用情况。\n\n池中每个连接有唯一ID、创建时间、最后使用时间、累计使用次数、累计传输字节数。连接使用超过一定次数（默认 10000）或超过最大生命周期（默认 1 小时）后自动关闭替换。\n\n连接泄漏检测：如果连接被借出超过 30 秒未归还，标记为可能泄漏，记入日志。超过 60 秒强制回收。管理接口可以查看每个连接的详细状态。\n\n支持优先级：某些请求可以标记为高优先级，高优先级请求在等待队列中优先获取连接。队列中高优先级请求排在低优先级前面。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4874,
+      "name": "service-registry",
+      "folder": "4874-java-service-registry-graceful",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/服务注册与发现",
+      "prompt": "用 Netty 做一个服务注册中心，要支持优雅上下线。\n\n实例注册时状态为「上线中」，此时不参与服务发现（客户端查不到）。实例准备好后调用「上线确认」API，状态变为「运行中」，开始被服务发现。\n\n下线时先调用「下线准备」API，状态变为「下线中」。下线中的实例仍然在服务列表中，但带有标记，客户端可以选择不再发新请求给它。下线中实例等待 30 秒（让进行中的请求完成），然后自动注销。\n\n如果实例直接消失（不发心跳也不调下线），和普通心跳超时一样处理。管理接口查看所有实例状态、手动触发上下线。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4875,
+      "name": "config-center",
+      "folder": "4875-rust-config-center-diff",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/配置中心",
+      "prompt": "用 axum 做一个配置中心，配置要支持版本回滚和 diff。\n\n每次配置变更生成一个新版本号（递增整数）。客户端拉取配置时可以指定版本号，不指定则返回最新版。提供 diff 接口：传入两个版本号，返回差异内容（哪些 key 的 value 变了、旧值和新值）。\n\n配置变更后自动通知订阅者。通知方式：长轮询和 WebSocket 两种。长轮询：客户端请求时带上当前版本号，如果服务端版本更新则立即返回，否则阻塞等待最多 30 秒。\n\n配置导入导出：支持把整个 namespace 的配置导出为 JSON 文件，以及从 JSON 文件导入（导入时校验格式）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4876,
+      "name": "traffic-tint",
+      "folder": "4876-py-traffic-tint-label",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/流量染色",
+      "prompt": "用 FastAPI 写一个按标签路由的流量染色服务。\n\n每个服务实例注册时带上标签（如 version=v2, region=east, env=canary）。路由规则：匹配请求特征（路径、Header、Cookie）到对应的标签组合。满足标签组合的实例作为候选。\n\n规则优先级：更具体的规则优先（匹配条件更多的优先）。同一个请求可能匹配多条规则，取优先级最高的。没有匹配规则的请求走默认路由（无标签过滤）。\n\n标签变更：实例标签可以动态修改。修改后立即影响新请求的路由（进行中的请求不受影响）。\n\n管理接口：查看路由规则、实例标签、各规则的流量统计。规则变更审计日志：谁在什么时候改了什么。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4877,
+      "name": "load-balancer",
+      "folder": "4877-go-load-balancer-fuse",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/负载均衡",
+      "prompt": "用 Gin 写一个带熔断能力的负载均衡器。后端服务实例通过注册 API 管理。\n\n负载均衡策略默认轮询，但每个实例独立维护一个错误计数器。请求失败（超时或 5xx）时计数加 1，成功时归零。连续 5 次失败触发该实例的熔断：30 秒内不再往该实例转发请求。熔断恢复后先放少量请求试探（每 10 秒放 1 个），如果成功逐步恢复流量。\n\n管理接口可以手动触发某个实例的熔断和恢复。查看每个实例的当前状态（正常/熔断中/试探中）、总请求数、失败数、平均响应时间。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4878,
+      "name": "api-gateway",
+      "folder": "4878-java-api-gateway-plugin",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/API网关",
+      "prompt": "用 Spring Boot 2.x 实现一个带插件机制的 API 网关。\n\n路由规则：路径前缀匹配，支持通配符。每个路由可以挂载多个插件，插件按顺序执行。内置插件：认证（JWT 校验）、限流（令牌桶）、日志（记录请求响应）、CORS（注入跨域头）、请求改写（修改头部和路径）。\n\n插件通过配置 API 为每个路由独立启用和配置参数。插件执行链中任一插件返回错误（如认证失败），直接中断并返回对应错误码。日志插件异步写入，不阻塞请求。\n\n管理接口可以查看路由列表、每个路由的插件配置、插件执行统计（调用次数、失败次数、平均耗时）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4879,
+      "name": "api-gateway",
+      "folder": "4879-rust-api-gateway-plugin",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/API网关",
+      "prompt": "用 actix-web 实现一个带插件机制的 API 网关。\n\n路由规则：路径前缀匹配，支持通配符。每个路由可以挂载多个插件，插件按顺序执行。内置插件：认证（JWT 校验）、限流（令牌桶）、日志（记录请求响应）、CORS（注入跨域头）、请求改写（修改头部和路径）。\n\n插件通过配置 API 为每个路由独立启用和配置参数。插件执行链中任一插件返回错误（如认证失败），直接中断并返回对应错误码。日志插件异步写入，不阻塞请求。\n\n管理接口可以查看路由列表、每个路由的插件配置、插件执行统计（调用次数、失败次数、平均耗时）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4880,
+      "name": "config-center",
+      "folder": "4880-py-config-center-diff",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/配置中心",
+      "prompt": "用 FastAPI 做一个配置中心，配置要支持版本回滚和 diff。\n\n每次配置变更生成一个新版本号（递增整数）。客户端拉取配置时可以指定版本号，不指定则返回最新版。提供 diff 接口：传入两个版本号，返回差异内容（哪些 key 的 value 变了、旧值和新值）。\n\n配置变更后自动通知订阅者。通知方式：长轮询和 WebSocket 两种。长轮询：客户端请求时带上当前版本号，如果服务端版本更新则立即返回，否则阻塞等待最多 30 秒。\n\n配置导入导出：支持把整个 namespace 的配置导出为 JSON 文件，以及从 JSON 文件导入（导入时校验格式）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4881,
+      "name": "rate-limiter",
+      "folder": "4881-go-rate-limiter-dual",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/限流器",
+      "prompt": "系统需要同时支持全局限流和单用户限流，用 net/http。\n\n全局限流：所有请求合计每秒最多 1000 次，超限返回 503。单用户限流：每个用户 ID 每分钟最多 100 次，超限返回 429。全局限流用固定窗口（每秒一个窗口），单用户用滑动窗口。\n\n全局限流触发时，响应头带 Retry-After。单用户限流触发时，响应头带 X-RateLimit-Limit 和 X-RateLimit-Remaining。两种限流独立判断，全局限流优先级更高（全局满了直接 503，不检查用户配额）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4882,
+      "name": "event-scheduler",
+      "folder": "4882-java-event-scheduler-trigger",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/事件调度器",
+      "prompt": "写一个事件调度引擎，用 Netty。基于事件触发而非定时。\n\n规则配置：每条规则指定事件类型（如 order.created、user.registered）、条件表达式（简单比较：字段名 op 值）、触发动作（HTTP 回调）。\n\n事件提交：通过 API 提交事件（类型 + 数据）。调度器匹配所有规则，找到满足条件的规则，执行对应的动作。多个规则匹配时并行执行。\n\n动作执行结果记录：成功/失败/超时。失败的动作按配置重试（默认 3 次，指数退避）。\n\n事件去重：相同事件类型 + 相同事件数据 + 1 分钟内视为重复，只处理第一次。去重缓存定期清理。\n\n规则优先级：多个规则匹配时可以按优先级排序执行（高优先级先执行，执行结果作为低优先级规则的输入上下文）。管理接口 CRUD 规则、查看执行日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4883,
+      "name": "retry-idempotent",
+      "folder": "4883-rust-retry-idempotent-cas",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/重试与幂等",
+      "prompt": "写一个幂等性保障服务，用 tokio。\n\n为业务接口提供幂等拦截：业务接口处理前先调用本服务检查幂等键。本服务用 CAS（Compare-And-Swap）保证并发安全：多个相同幂等键的请求同时到达时，只有一个能获取到执行权。\n\n获取到执行权的请求在业务处理完成后回调本服务记录结果。未获取到执行权的请求等待结果（长轮询，最多 30 秒）或直接返回冲突。\n\n幂等键的生命周期：创建→锁定→完成/失败。锁定超过配置时间（默认 60 秒）自动释放，允许重新执行。完成状态保留 24 小时。\n\n批量检查接口：一次提交多个幂等键，返回各键的状态。管理接口查看全局统计和锁定情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4884,
+      "name": "retry-idempotent",
+      "folder": "4884-py-retry-idempotent-cas",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/重试与幂等",
+      "prompt": "写一个幂等性保障服务，用 aiohttp。\n\n为业务接口提供幂等拦截：业务接口处理前先调用本服务检查幂等键。本服务用 CAS（Compare-And-Swap）保证并发安全：多个相同幂等键的请求同时到达时，只有一个能获取到执行权。\n\n获取到执行权的请求在业务处理完成后回调本服务记录结果。未获取到执行权的请求等待结果（长轮询，最多 30 秒）或直接返回冲突。\n\n幂等键的生命周期：创建→锁定→完成/失败。锁定超过配置时间（默认 60 秒）自动释放，允许重新执行。完成状态保留 24 小时。\n\n批量检查接口：一次提交多个幂等键，返回各键的状态。管理接口查看全局统计和锁定情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4885,
+      "name": "distributed-lock",
+      "folder": "4885-go-distributed-lock-orchestrate",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/分布式锁",
+      "prompt": "写一个分布式锁协调器，用 Gin。支持锁编排。\n\n锁编排：一次业务操作可能需要同时获取多把锁。直接逐把获取容易死锁（A 等 B 的锁，B 等 A 的锁）。协调器接受一个锁列表，按固定顺序（锁名排序）获取所有锁，全部获取成功才返回成功，否则释放已获取的锁并重试。\n\n获取超时：整组锁的获取超时时间（默认 30 秒）。超时后释放所有已获取的锁并返回失败。\n\n锁的等待情况统计：每把锁的平均等待时间、最大等待时间、等待中的请求数。编排操作的整体成功率统计。\n\n管理接口：查看当前活跃的编排操作、各锁的使用热度和等待情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4886,
+      "name": "traffic-tint",
+      "folder": "4886-java-traffic-tint-bluegreen",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/流量染色",
+      "prompt": "写一个流量染色服务，支持蓝绿部署切换，用 Spring Boot 2.x。\n\n两套环境：蓝（当前生产）和绿（待发布版本）。通过一个全局开关决定流量去向。切换时所有流量瞬间切到另一套环境。\n\n切换过程：先切 1% 流量到新环境，观察 5 分钟。如果错误率没有异常，逐步增加（1%→5%→25%→50%→100%），每步观察 3 分钟。任何一步出错，自动回滚到蓝环境。\n\n健康检查：每套环境独立做健康检查。不健康的环境不能作为切换目标。切换前强制检查目标环境健康。\n\n管理接口：查看当前活跃环境、切换进度、手动触发切换/回滚、查看两套环境的实时指标对比。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4887,
+      "name": "circuit-breaker",
+      "folder": "4887-rust-circuit-breaker-failover",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/熔断器",
+      "prompt": "系统里有多个外部 API 供应商，需要一个统一的熔断管理服务，用 axum。\n\n每个供应商一个熔断器，独立统计成功失败。当某个供应商熔断后，请求自动切换到备用供应商（如果配置了的话）。所有供应商都熔断时返回 503。\n\n供应商的优先级可以配置：正常情况下按优先级选，高优先级熔断后自动切到下一个。熔断恢复后自动切回高优先级。提供管理接口：查看所有供应商状态、手动熔断/恢复、修改优先级。所有状态变更记录审计日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4888,
+      "name": "rate-limiter",
+      "folder": "4888-py-rate-limiter-dual",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/限流器",
+      "prompt": "系统需要同时支持全局限流和单用户限流，用 FastAPI。\n\n全局限流：所有请求合计每秒最多 1000 次，超限返回 503。单用户限流：每个用户 ID 每分钟最多 100 次，超限返回 429。全局限流用固定窗口（每秒一个窗口），单用户用滑动窗口。\n\n全局限流触发时，响应头带 Retry-After。单用户限流触发时，响应头带 X-RateLimit-Limit 和 X-RateLimit-Remaining。两种限流独立判断，全局限流优先级更高（全局满了直接 503，不检查用户配额）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4889,
+      "name": "retry-idempotent",
+      "folder": "4889-go-retry-idempotent-cas",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/重试与幂等",
+      "prompt": "写一个幂等性保障服务，用 net/http。\n\n为业务接口提供幂等拦截：业务接口处理前先调用本服务检查幂等键。本服务用 CAS（Compare-And-Swap）保证并发安全：多个相同幂等键的请求同时到达时，只有一个能获取到执行权。\n\n获取到执行权的请求在业务处理完成后回调本服务记录结果。未获取到执行权的请求等待结果（长轮询，最多 30 秒）或直接返回冲突。\n\n幂等键的生命周期：创建→锁定→完成/失败。锁定超过配置时间（默认 60 秒）自动释放，允许重新执行。完成状态保留 24 小时。\n\n批量检查接口：一次提交多个幂等键，返回各键的状态。管理接口查看全局统计和锁定情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4890,
+      "name": "proto-convert",
+      "folder": "4890-java-proto-convert-adapter",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/协议转换",
+      "prompt": "写一个消息协议适配器，用 Spring Boot 2.x。\n\n适配不同消息格式的系统之间的通信。内置适配器：JSON-RPC、XML-RPC、SOAP（简化版，只支持基本操作）。\n\n适配规则配置：源协议 + 目标协议 + 方法映射表。方法映射把源协议的方法名和参数映射到目标协议的方法名和参数。参数映射支持重命名、类型转换、默认值填充。\n\n适配过程记录日志：源请求、转换后的目标请求、目标响应、转换后的源响应。日志异步写入文件。\n\n错误适配：如果源请求中的方法在目标协议中没有映射，返回 404。参数类型不匹配尝试自动转换（字符串数字互转），转换失败返回 400。管理接口查看适配统计和错误日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4891,
+      "name": "message-queue",
+      "folder": "4891-rust-message-queue-partition",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/消息队列",
+      "prompt": "用 actix-web 写一个消息中间件，主要用在服务间异步通信。\n\nTopic 创建时指定分区数（默认 4）。消息按 key 的哈希值路由到固定分区，相同 key 的消息保证顺序。没有 key 的消息轮询分配到各分区。\n\n每个分区独立存储（一个目录下按序号命名的文件）。消费者可以指定消费某个 Topic 的特定分区或全部分区。消费 offset 存在文件中，每 1000 条消息持久化一次 offset。\n\n消息大小限制 1MB，超限拒绝。管理接口：创建/删除 Topic、查看分区分布、查看消费者 offset。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4892,
+      "name": "api-gateway",
+      "folder": "4892-py-api-gateway-light",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/API网关",
+      "prompt": "做个轻量 API 网关，用 aiohttp。主要做路由和认证。\n\n路由表从 JSON 配置文件加载（启动时读取），也支持通过管理 API 热更新。每条路由有：路径模式（支持 /api/:version/:resource 形式的参数）、上游地址、是否需要认证。\n\n认证用 API Key 方式：每个 key 绑定一个租户ID和权限列表（允许的路由前缀）。请求到达时校验 key，然后检查该 key 是否有权限访问当前路由。无 key 或权限不足返回 403。\n\n每个租户有独立的请求计数统计（按小时），管理接口可以查看各租户的使用情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4893,
+      "name": "auth-gateway",
+      "folder": "4893-go-auth-gateway-sso",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/认证网关",
+      "prompt": "写一个认证网关，支持 SSO 单点登录，用 Fiber。\n\n用户登录一次后，token 在多个关联服务之间共享。网关维护一个 SSO session：用户登录时创建 session，关联的各个服务（通过配置的回调 URL）都收到 session 创建通知。\n\n任一服务发起登出时，网关清除 session 并通知所有关联服务。SSO session 有效期可配置（默认 8 小时）。\n\nToken 格式：JWT，payload 包含用户ID、角色、session ID、签发时间。角色权限通过配置 API 管理：每个角色对应一组允许的路由前缀。\n\n审计日志：所有认证事件（登录、登出、token 刷新、认证失败）都记录日志，包含时间、用户、来源IP、事件类型。审计日志不可删除，保留 90 天。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4894,
+      "name": "api-gateway",
+      "folder": "4894-java-api-gateway-light",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/API网关",
+      "prompt": "做个轻量 API 网关，用 Netty。主要做路由和认证。\n\n路由表从 JSON 配置文件加载（启动时读取），也支持通过管理 API 热更新。每条路由有：路径模式（支持 /api/:version/:resource 形式的参数）、上游地址、是否需要认证。\n\n认证用 API Key 方式：每个 key 绑定一个租户ID和权限列表（允许的路由前缀）。请求到达时校验 key，然后检查该 key 是否有权限访问当前路由。无 key 或权限不足返回 403。\n\n每个租户有独立的请求计数统计（按小时），管理接口可以查看各租户的使用情况。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4895,
+      "name": "circuit-breaker",
+      "folder": "4895-rust-circuit-breaker-failover",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/熔断器",
+      "prompt": "系统里有多个外部 API 供应商，需要一个统一的熔断管理服务，用 axum。\n\n每个供应商一个熔断器，独立统计成功失败。当某个供应商熔断后，请求自动切换到备用供应商（如果配置了的话）。所有供应商都熔断时返回 503。\n\n供应商的优先级可以配置：正常情况下按优先级选，高优先级熔断后自动切到下一个。熔断恢复后自动切回高优先级。提供管理接口：查看所有供应商状态、手动熔断/恢复、修改优先级。所有状态变更记录审计日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4896,
+      "name": "rate-limiter",
+      "folder": "4896-py-rate-limiter-dual",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/限流器",
+      "prompt": "系统需要同时支持全局限流和单用户限流，用 FastAPI。\n\n全局限流：所有请求合计每秒最多 1000 次，超限返回 503。单用户限流：每个用户 ID 每分钟最多 100 次，超限返回 429。全局限流用固定窗口（每秒一个窗口），单用户用滑动窗口。\n\n全局限流触发时，响应头带 Retry-After。单用户限流触发时，响应头带 X-RateLimit-Limit 和 X-RateLimit-Remaining。两种限流独立判断，全局限流优先级更高（全局满了直接 503，不检查用户配额）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4897,
+      "name": "proto-convert",
+      "folder": "4897-go-proto-convert-adapter",
+      "tech_stack": "Go（net/http / Gin / Fiber）",
+      "business_domain": "中间件/协议转换",
+      "prompt": "写一个消息协议适配器，用 Gin。\n\n适配不同消息格式的系统之间的通信。内置适配器：JSON-RPC、XML-RPC、SOAP（简化版，只支持基本操作）。\n\n适配规则配置：源协议 + 目标协议 + 方法映射表。方法映射把源协议的方法名和参数映射到目标协议的方法名和参数。参数映射支持重命名、类型转换、默认值填充。\n\n适配过程记录日志：源请求、转换后的目标请求、目标响应、转换后的源响应。日志异步写入文件。\n\n错误适配：如果源请求中的方法在目标协议中没有映射，返回 404。参数类型不匹配尝试自动转换（字符串数字互转），转换失败返回 400。管理接口查看适配统计和错误日志。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4898,
+      "name": "auth-gateway",
+      "folder": "4898-java-auth-gateway-sso",
+      "tech_stack": "Java（Spring Boot 2.x / Netty）",
+      "business_domain": "中间件/认证网关",
+      "prompt": "写一个认证网关，支持 SSO 单点登录，用 Spring Boot 2.x。\n\n用户登录一次后，token 在多个关联服务之间共享。网关维护一个 SSO session：用户登录时创建 session，关联的各个服务（通过配置的回调 URL）都收到 session 创建通知。\n\n任一服务发起登出时，网关清除 session 并通知所有关联服务。SSO session 有效期可配置（默认 8 小时）。\n\nToken 格式：JWT，payload 包含用户ID、角色、session ID、签发时间。角色权限通过配置 API 管理：每个角色对应一组允许的路由前缀。\n\n审计日志：所有认证事件（登录、登出、token 刷新、认证失败）都记录日志，包含时间、用户、来源IP、事件类型。审计日志不可删除，保留 90 天。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4899,
+      "name": "rate-limiter",
+      "folder": "4899-rust-rate-limiter-dual",
+      "tech_stack": "Rust（actix-web / axum / tokio）",
+      "business_domain": "中间件/限流器",
+      "prompt": "系统需要同时支持全局限流和单用户限流，用 actix-web。\n\n全局限流：所有请求合计每秒最多 1000 次，超限返回 503。单用户限流：每个用户 ID 每分钟最多 100 次，超限返回 429。全局限流用固定窗口（每秒一个窗口），单用户用滑动窗口。\n\n全局限流触发时，响应头带 Retry-After。单用户限流触发时，响应头带 X-RateLimit-Limit 和 X-RateLimit-Remaining。两种限流独立判断，全局限流优先级更高（全局满了直接 503，不检查用户配额）。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
+    },
+    {
+      "id": 4900,
+      "name": "trace-collector",
+      "folder": "4900-py-trace-collector-analyze",
+      "tech_stack": "Python（FastAPI / aiohttp async）",
+      "business_domain": "中间件/链路追踪",
+      "prompt": "写一个轻量链路追踪服务，用 FastAPI。重点在可视化的数据。\n\nSpan 上报通过 HTTP API。每个 Span 包含：trace_id、span_id、parent_span_id、service、operation、start_time、duration_ms、status、tags。\n\nTrace 组装：所有 Span 上报后，服务自动按 trace_id 分组并构建调用树。调用树支持 JSON 格式导出，格式为树结构：根节点是第一个 Span（parent_span_id 为空），子节点是下游调用。\n\n统计分析：最近 1 小时内各服务的请求数、平均耗时、错误率。按操作名分组统计。错误 Span（status=error）单独列出并统计错误原因（从 tags 中提取）。\n\nTrace 过期清理：超过 24 小时的 Trace 数据自动删除。管理接口查看统计和手动触发清理。端口 PORT 环境变量。",
+      "status": "pending",
+      "rounds": []
     }
   ]
 }

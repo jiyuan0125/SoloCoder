@@ -1,0 +1,9 @@
+用 Gin 实现一个 WebSocket 桥接服务。
+
+HTTP 客户端通过 REST API 和 WebSocket 服务通信。客户端发 HTTP POST，网关把请求通过 WebSocket 转发给后端。后端通过 WebSocket 回复，网关把回复转为 HTTP 响应返回。
+
+也支持反向：后端通过 WebSocket 主动推送消息，网关把消息存入队列，客户端通过长轮询 API 拉取未读消息。
+
+WebSocket 连接管理：维护到后端的连接池。连接断开时自动重连（指数退避，最大 30 秒）。消息序列化格式：JSON。
+
+消息超时：HTTP 请求转发到 WebSocket 后，如果 10 秒内没收到回复，返回 504。管理接口查看连接状态和消息统计。端口 PORT 环境变量。
