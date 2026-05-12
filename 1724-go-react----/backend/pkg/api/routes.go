@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"teaching-evaluation-system/pkg/database"
 	"teaching-evaluation-system/pkg/models"
 	"teaching-evaluation-system/pkg/services"
 )
@@ -17,6 +18,42 @@ func SetupRoutes(r *gin.Engine) {
 
 	api := r.Group("/api")
 	{
+		colleges := api.Group("/colleges")
+		{
+			colleges.GET("", listColleges)
+			colleges.POST("", createCollege)
+			colleges.GET("/:id", getCollege)
+			colleges.PUT("/:id", updateCollege)
+			colleges.DELETE("/:id", deleteCollege)
+		}
+
+		teachers := api.Group("/teachers")
+		{
+			teachers.GET("", listTeachers)
+			teachers.POST("", createTeacher)
+			teachers.GET("/:id", getTeacher)
+			teachers.PUT("/:id", updateTeacher)
+			teachers.DELETE("/:id", deleteTeacher)
+		}
+
+		students := api.Group("/students")
+		{
+			students.GET("", listStudents)
+			students.POST("", createStudent)
+			students.GET("/:id", getStudent)
+			students.PUT("/:id", updateStudent)
+			students.DELETE("/:id", deleteStudent)
+		}
+
+		courses := api.Group("/courses")
+		{
+			courses.GET("", listCourses)
+			courses.POST("", createCourse)
+			courses.GET("/:id", getCourse)
+			courses.PUT("/:id", updateCourse)
+			courses.DELETE("/:id", deleteCourse)
+		}
+
 		tasks := api.Group("/tasks")
 		{
 			tasks.GET("", listTasks)
@@ -329,4 +366,288 @@ func updateFeedbackStatus(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "状态更新成功"})
+}
+
+func listColleges(c *gin.Context) {
+	var colleges []models.College
+	if err := database.DB.Find(&colleges).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, colleges)
+}
+
+func createCollege(c *gin.Context) {
+	var college models.College
+	if err := c.ShouldBindJSON(&college); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Create(&college).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, college)
+}
+
+func getCollege(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var college models.College
+	if err := database.DB.First(&college, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "学院不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, college)
+}
+
+func updateCollege(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var college models.College
+	if err := database.DB.First(&college, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "学院不存在"})
+		return
+	}
+	if err := c.ShouldBindJSON(&college); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Save(&college).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, college)
+}
+
+func deleteCollege(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	if err := database.DB.Delete(&models.College{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
+}
+
+func listTeachers(c *gin.Context) {
+	var teachers []models.Teacher
+	if err := database.DB.Preload("College").Find(&teachers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, teachers)
+}
+
+func createTeacher(c *gin.Context) {
+	var teacher models.Teacher
+	if err := c.ShouldBindJSON(&teacher); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Create(&teacher).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, teacher)
+}
+
+func getTeacher(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var teacher models.Teacher
+	if err := database.DB.Preload("College").First(&teacher, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "教师不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, teacher)
+}
+
+func updateTeacher(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var teacher models.Teacher
+	if err := database.DB.First(&teacher, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "教师不存在"})
+		return
+	}
+	if err := c.ShouldBindJSON(&teacher); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Save(&teacher).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, teacher)
+}
+
+func deleteTeacher(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	if err := database.DB.Delete(&models.Teacher{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
+}
+
+func listStudents(c *gin.Context) {
+	var students []models.Student
+	if err := database.DB.Find(&students).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, students)
+}
+
+func createStudent(c *gin.Context) {
+	var student models.Student
+	if err := c.ShouldBindJSON(&student); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Create(&student).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, student)
+}
+
+func getStudent(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var student models.Student
+	if err := database.DB.First(&student, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "学生不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, student)
+}
+
+func updateStudent(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var student models.Student
+	if err := database.DB.First(&student, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "学生不存在"})
+		return
+	}
+	if err := c.ShouldBindJSON(&student); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Save(&student).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, student)
+}
+
+func deleteStudent(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	if err := database.DB.Delete(&models.Student{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
+}
+
+func listCourses(c *gin.Context) {
+	var courses []models.Course
+	if err := database.DB.Preload("Teacher").Preload("College").Find(&courses).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, courses)
+}
+
+func createCourse(c *gin.Context) {
+	var course models.Course
+	if err := c.ShouldBindJSON(&course); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Create(&course).Error; err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusCreated, course)
+}
+
+func getCourse(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var course models.Course
+	if err := database.DB.Preload("Teacher").Preload("College").First(&course, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "课程不存在"})
+		return
+	}
+	c.JSON(http.StatusOK, course)
+}
+
+func updateCourse(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	var course models.Course
+	if err := database.DB.First(&course, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "课程不存在"})
+		return
+	}
+	if err := c.ShouldBindJSON(&course); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	if err := database.DB.Save(&course).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, course)
+}
+
+func deleteCourse(c *gin.Context) {
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的ID"})
+		return
+	}
+	if err := database.DB.Delete(&models.Course{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
 }

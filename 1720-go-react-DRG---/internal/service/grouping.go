@@ -55,8 +55,33 @@ func (s *GroupingService) CreateGroupingRule(rule model.GroupingRule) (*model.Gr
 
 func (s *GroupingService) ClassifyRecord(record model.MedicalRecord) string {
 	rules := s.repo.ListGroupingRules()
-	
+
+	mccRules := make([]model.GroupingRule, 0)
+	ccRules := make([]model.GroupingRule, 0)
+	noneRules := make([]model.GroupingRule, 0)
+
 	for _, rule := range rules {
+		switch rule.CCFlag {
+		case model.CCFlagMCC:
+			mccRules = append(mccRules, rule)
+		case model.CCFlagCC:
+			ccRules = append(ccRules, rule)
+		default:
+			noneRules = append(noneRules, rule)
+		}
+	}
+
+	var priorityRules []model.GroupingRule
+	switch record.CCFlag {
+	case model.CCFlagMCC:
+		priorityRules = append(mccRules, append(ccRules, noneRules...)...)
+	case model.CCFlagCC:
+		priorityRules = append(ccRules, noneRules...)
+	default:
+		priorityRules = noneRules
+	}
+
+	for _, rule := range priorityRules {
 		if rule.DiagnosisPrefix != "" && !strings.HasPrefix(record.MainDiagnosis, rule.DiagnosisPrefix) {
 			continue
 		}
@@ -77,6 +102,6 @@ func (s *GroupingService) ClassifyRecord(record model.MedicalRecord) string {
 		}
 		return rule.DRGGroupCode
 	}
-	
+
 	return "未分组"
 }

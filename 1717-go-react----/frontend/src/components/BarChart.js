@@ -15,7 +15,7 @@ function BarChart({ data, width = 800, height = 300, threshold = 2.0 }) {
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
-  const maxValue = Math.max(...data.map(d => d.infection_rate), threshold * 1.5);
+  const maxValue = Math.max(...data.map(d => d.InfectionRate), threshold * 1.5);
   const minValue = 0;
 
   const barWidth = Math.min(60, (chartWidth / data.length) * 0.6);
@@ -38,7 +38,7 @@ function BarChart({ data, width = 800, height = 300, threshold = 2.0 }) {
       show: true,
       x: event.clientX - rect.left + 10,
       y: event.clientY - rect.top - 40,
-      content: `${item.department_name}\n${item.infection_rate.toFixed(2)}%\n${item.infection_count}例/${item.discharge_count}人`,
+      content: `${item.DepartmentName}\n${item.InfectionRate.toFixed(2)}%\n${item.InfectionCount}例/${item.DischargeCount}人`,
     });
   };
 
@@ -95,14 +95,14 @@ function BarChart({ data, width = 800, height = 300, threshold = 2.0 }) {
 
         {data.map((item, i) => {
           const x = getX(i);
-          const barHeight = chartHeight - (getY(item.infection_rate) - padding.top);
-          const exceeded = item.infection_rate > threshold;
+          const barHeight = chartHeight - (getY(item.InfectionRate) - padding.top);
+          const exceeded = item.InfectionRate > threshold;
 
           return (
             <g key={i}>
               <rect
                 x={x}
-                y={getY(item.infection_rate)}
+                y={getY(item.InfectionRate)}
                 width={barWidth}
                 height={barHeight}
                 className={`bar-chart-bar ${exceeded ? 'exceeded' : ''}`}
@@ -113,13 +113,13 @@ function BarChart({ data, width = 800, height = 300, threshold = 2.0 }) {
               />
               <text
                 x={x + barWidth / 2}
-                y={getY(item.infection_rate) - 8}
+                y={getY(item.InfectionRate) - 8}
                 textAnchor="middle"
                 fontSize="10"
                 fill={exceeded ? '#e53e3e' : '#3182ce'}
                 fontWeight="600"
               >
-                {item.infection_rate.toFixed(2)}%
+                {item.InfectionRate.toFixed(2)}%
               </text>
               <text
                 x={x + barWidth / 2}
@@ -128,7 +128,7 @@ function BarChart({ data, width = 800, height = 300, threshold = 2.0 }) {
                 fontSize="11"
                 fill="#4a5568"
               >
-                {item.department_name}
+                {item.DepartmentName}
               </text>
             </g>
           );

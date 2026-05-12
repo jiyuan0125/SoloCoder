@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
-	"medical-quality-system/internal/app"
 	"medical-quality-system/internal/middleware"
 	"medical-quality-system/internal/model"
+	"medical-quality-system/pkg/db"
 
 	"gorm.io/gorm"
 )
@@ -18,7 +18,7 @@ func NewMeetingService() *MeetingService {
 }
 
 func (s *MeetingService) Create(meeting *model.Meeting, actionItems []model.ActionItem) error {
-	tx := app.DB.Begin()
+	tx := db.DB.Begin()
 
 	if err := tx.Create(meeting).Error; err != nil {
 		tx.Rollback()
@@ -53,13 +53,13 @@ func (s *MeetingService) Create(meeting *model.Meeting, actionItems []model.Acti
 
 func (s *MeetingService) List() ([]model.Meeting, error) {
 	var meetings []model.Meeting
-	err := app.DB.Order("date DESC").Find(&meetings).Error
+	err := db.DB.Order("date DESC").Find(&meetings).Error
 	return meetings, err
 }
 
 func (s *MeetingService) Get(id uint) (*model.Meeting, error) {
 	var meeting model.Meeting
-	err := app.DB.First(&meeting, id).Error
+	err := db.DB.First(&meeting, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, middleware.NewAppError(http.StatusNotFound, "会议记录不存在")
 	}
@@ -71,7 +71,7 @@ func (s *MeetingService) Update(id uint, meeting *model.Meeting) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Model(existing).Updates(meeting).Error
+	return db.DB.Model(existing).Updates(meeting).Error
 }
 
 func (s *MeetingService) Delete(id uint) error {
@@ -79,11 +79,11 @@ func (s *MeetingService) Delete(id uint) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Delete(&model.Meeting{}, id).Error
+	return db.DB.Delete(&model.Meeting{}, id).Error
 }
 
 func (s *MeetingService) GetActionItems(meetingID uint) ([]model.ActionItem, error) {
 	var items []model.ActionItem
-	err := app.DB.Where("meeting_id = ?", meetingID).Find(&items).Error
+	err := db.DB.Where("meeting_id = ?", meetingID).Find(&items).Error
 	return items, err
 }

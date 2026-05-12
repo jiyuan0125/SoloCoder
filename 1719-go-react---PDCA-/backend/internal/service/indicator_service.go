@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"medical-quality-system/internal/app"
 	"medical-quality-system/internal/middleware"
 	"medical-quality-system/internal/model"
+	"medical-quality-system/pkg/db"
 
 	"gorm.io/gorm"
 )
@@ -26,24 +26,24 @@ func (s *IndicatorService) Create(indicator *model.Indicator) error {
 	}
 
 	var existing model.Indicator
-	if err := app.DB.Where("code = ?", indicator.Code).First(&existing).Error; err == nil {
+	if err := db.DB.Where("code = ?", indicator.Code).First(&existing).Error; err == nil {
 		return middleware.NewAppError(http.StatusConflict, "指标编号已存在")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
 		return err
 	}
 
-	return app.DB.Create(indicator).Error
+	return db.DB.Create(indicator).Error
 }
 
 func (s *IndicatorService) List() ([]model.Indicator, error) {
 	var indicators []model.Indicator
-	err := app.DB.Find(&indicators).Error
+	err := db.DB.Find(&indicators).Error
 	return indicators, err
 }
 
 func (s *IndicatorService) Get(id uint) (*model.Indicator, error) {
 	var indicator model.Indicator
-	err := app.DB.First(&indicator, id).Error
+	err := db.DB.First(&indicator, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, middleware.NewAppError(http.StatusNotFound, "指标不存在")
 	}
@@ -58,12 +58,12 @@ func (s *IndicatorService) Update(id uint, indicator *model.Indicator) error {
 
 	if indicator.Code != "" && indicator.Code != existing.Code {
 		var dup model.Indicator
-		if err := app.DB.Where("code = ? AND id != ?", indicator.Code, id).First(&dup).Error; err == nil {
+		if err := db.DB.Where("code = ? AND id != ?", indicator.Code, id).First(&dup).Error; err == nil {
 			return middleware.NewAppError(http.StatusConflict, "指标编号已存在")
 		}
 	}
 
-	return app.DB.Model(existing).Updates(indicator).Error
+	return db.DB.Model(existing).Updates(indicator).Error
 }
 
 func (s *IndicatorService) UpdateTarget(id uint, newTarget float64, reason, approvedBy string) error {
@@ -89,7 +89,7 @@ func (s *IndicatorService) UpdateTarget(id uint, newTarget float64, reason, appr
 		EffectiveMonth: effectiveMonth,
 	}
 
-	tx := app.DB.Begin()
+	tx := db.DB.Begin()
 	if err := tx.Create(&history).Error; err != nil {
 		tx.Rollback()
 		return err
@@ -108,17 +108,17 @@ func (s *IndicatorService) Delete(id uint) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Delete(&model.Indicator{}, id).Error
+	return db.DB.Delete(&model.Indicator{}, id).Error
 }
 
 func (s *IndicatorService) GetTargetForMonth(indicatorID uint, month string) (float64, error) {
 	var history model.IndicatorTargetHistory
-	err := app.DB.Where("indicator_id = ? AND effective_month <= ?", indicatorID, month).
+	err := db.DB.Where("indicator_id = ? AND effective_month <= ?", indicatorID, month).
 		Order("effective_month DESC").
 		First(&history).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		var indicator model.Indicator
-		if err := app.DB.First(&indicator, indicatorID).Error; err != nil {
+		if err := db.DB.First(&indicator, indicatorID).Error; err != nil {
 			return 0, err
 		}
 		return indicator.TargetValue, nil
@@ -128,7 +128,7 @@ func (s *IndicatorService) GetTargetForMonth(indicatorID uint, month string) (fl
 
 func (s *IndicatorService) CreateData(data *model.IndicatorData) error {
 	var indicator model.Indicator
-	if err := app.DB.First(&indicator, data.IndicatorID).Error; err != nil {
+	if err := db.DB.First(&indicator, data.IndicatorID).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return middleware.NewAppError(http.StatusNotFound, "指标不存在")
 		}
@@ -147,7 +147,7 @@ func (s *IndicatorService) CreateData(data *model.IndicatorData) error {
 	data.IsTargetMet = data.Value >= target
 	data.IsWarning = data.Value < indicator.WarningValue
 
-	if err := app.DB.Create(data).Error; err != nil {
+	if err := db.DB.Create(data).Error; err != nil {
 		return err
 	}
 
@@ -162,12 +162,12 @@ func (s *IndicatorService) CreateData(data *model.IndicatorData) error {
 
 func (s *IndicatorService) createImprovementTodo(data *model.IndicatorData) error {
 	var indicator model.Indicator
-	if err := app.DB.First(&indicator, data.IndicatorID).Error; err != nil {
+	if err := db.DB.First(&indicator, data.IndicatorID).Error; err != nil {
 		return err
 	}
 
 	var existing model.Todo
-	err := app.DB.Where(
+	err := db.DB.Where(
 		"type = ? AND indicator_id = ? AND status IN ? AND deleted_at IS NULL",
 		model.TodoTypeImprovement,
 		data.IndicatorID,
@@ -192,18 +192,18 @@ func (s *IndicatorService) createImprovementTodo(data *model.IndicatorData) erro
 		Status:      model.TodoStatusPending,
 	}
 
-	return app.DB.Create(&todo).Error
+	return db.DB.Create(&todo).Error
 }
 
 func (s *IndicatorService) ListData(indicatorID uint) ([]model.IndicatorData, error) {
 	var dataList []model.IndicatorData
-	err := app.DB.Preload("Indicator").Where("indicator_id = ?", indicatorID).Order("month DESC").Find(&dataList).Error
+	err := db.DB.Preload("Indicator").Where("indicator_id = ?", indicatorID).Order("month DESC").Find(&dataList).Error
 	return dataList, err
 }
 
 func (s *IndicatorService) GetTrend(indicatorID uint, months int) ([]map[string]interface{}, error) {
 	var dataList []model.IndicatorData
-	err := app.DB.Where("indicator_id = ?", indicatorID).Order("month DESC").Limit(months).Find(&dataList).Error
+	err := db.DB.Where("indicator_id = ?", indicatorID).Order("month DESC").Limit(months).Find(&dataList).Error
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (s *IndicatorService) GetTrend(indicatorID uint, months int) ([]map[string]
 
 func (s *IndicatorService) GetAverageValue(indicatorID uint, fromMonth, toMonth string) (float64, int, error) {
 	var dataList []model.IndicatorData
-	err := app.DB.Where("indicator_id = ? AND month >= ? AND month <= ?", indicatorID, fromMonth, toMonth).Find(&dataList).Error
+	err := db.DB.Where("indicator_id = ? AND month >= ? AND month <= ?", indicatorID, fromMonth, toMonth).Find(&dataList).Error
 	if err != nil {
 		return 0, 0, err
 	}

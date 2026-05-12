@@ -6,8 +6,7 @@ use std::time::{Duration, Instant};
 use dashmap::DashMap;
 use parking_lot::Mutex;
 use tokio::net::TcpStream;
-use tokio::sync::{broadcast, mpsc, Semaphore};
-use tokio::time::interval;
+use tokio::sync::{broadcast, Semaphore};
 use tracing::{info, warn, error};
 use uuid::Uuid;
 
@@ -58,6 +57,7 @@ struct Connection {
     last_used: Instant,
     health_failures: u32,
     borrowed_at: Option<Instant>,
+    last_health_check: Instant,
 }
 
 impl Connection {
@@ -69,6 +69,7 @@ impl Connection {
             last_used: Instant::now(),
             health_failures: 0,
             borrowed_at: None,
+            last_health_check: Instant::now(),
         }
     }
 
@@ -223,12 +224,16 @@ impl ConnectionPool {
         let backend = self.get_or_create_backend(target);
         let config = self.inner.config.lock().clone();
 
-        let permit = backend
+        let permit = match backend
             .lock()
             .semaphore
             .clone()
             .acquire_owned()
-            .map_err(|e| format!("semaphore closed: {}", e))?;
+            .await
+        {
+            Ok(p) => p,
+            Err(e) => return Err(format!("semaphore closed: {}", e)),
+        };
 
         let idle_conn = {
             let mut be = backend.lock();
@@ -278,7 +283,7 @@ impl ConnectionPool {
             be.remove_borrowed(&conn_id)
         };
 
-        if let Some(mut conn) = conn {
+        if let Some(conn) = conn {
             {
                 let mut be = backend.lock();
                 be.add_idle(conn);
@@ -346,13 +351,15 @@ impl ConnectionPool {
             tx.as_ref().unwrap().subscribe()
         };
 
+        let mut cleanup_interval = tokio::time::interval(Duration::from_secs(30));
+        let mut health_interval = tokio::time::interval(Duration::from_secs(30));
+
         loop {
-            let config = pool.get_config();
             tokio::select! {
-                _ = tokio::time::sleep(config.idle_timeout / 2) => {
+                _ = cleanup_interval.tick() => {
                     pool.cleanup_idle_connections();
                 }
-                _ = tokio::time::sleep(config.health_check_interval) => {
+                _ = health_interval.tick() => {
                     pool.run_health_checks().await;
                 }
                 _ = shutdown_rx.recv() => {
@@ -389,37 +396,43 @@ impl ConnectionPool {
         for target in targets {
             if let Some(backend) = self.inner.backends.get(&target) {
                 let backend = backend.value().clone();
-                let to_check: Vec<Connection> = {
-                    let be = backend.lock();
-                    be.idle.clone()
+
+                let mut to_check: Vec<Connection> = {
+                    let mut be = backend.lock();
+                    std::mem::take(&mut be.idle)
                 };
 
-                for mut conn in to_check {
+                let mut kept = Vec::new();
+
+                while let Some(mut conn) = to_check.pop() {
                     if conn.stream.is_some() {
                         let stream = conn.stream.as_mut().unwrap();
                         match stream.ready(tokio::io::Interest::WRITABLE).await {
                             Ok(_) => {
                                 conn.reset_health();
+                                conn.last_health_check = Instant::now();
+                                kept.push(conn);
                             }
                             Err(_) => {
                                 conn.record_health_failure();
                                 warn!("health check failed for {} (id={}, failures={})",
                                       target, conn.id, conn.health_failures);
-                            }
-                        }
 
-                        if conn.should_remove(config.max_health_failures) {
-                            warn!("removing unhealthy connection {} (id={}) after {} failures",
-                                  target, conn.id, config.max_health_failures);
-                            let mut be = backend.lock();
-                            be.idle.retain(|c| c.id != conn.id);
-                        } else {
-                            let mut be = backend.lock();
-                            if let Some(pos) = be.idle.iter().position(|c| c.id == conn.id) {
-                                be.idle[pos] = conn;
+                                if conn.should_remove(config.max_health_failures) {
+                                    warn!("removing unhealthy connection {} (id={}) after {} failures",
+                                          target, conn.id, config.max_health_failures);
+                                } else {
+                                    conn.last_health_check = Instant::now();
+                                    kept.push(conn);
+                                }
                             }
                         }
                     }
+                }
+
+                {
+                    let mut be = backend.lock();
+                    be.idle = kept;
                 }
             }
         }

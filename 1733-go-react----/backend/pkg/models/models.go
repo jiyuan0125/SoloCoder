@@ -1,7 +1,5 @@
 package models
 
-import "time"
-
 type Title string
 
 const (

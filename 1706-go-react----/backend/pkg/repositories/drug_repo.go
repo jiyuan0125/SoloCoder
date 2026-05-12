@@ -3,6 +3,8 @@ package repositories
 import (
 	"hospital-pharmacy/pkg/database"
 	"hospital-pharmacy/pkg/models"
+
+	"gorm.io/gorm"
 )
 
 func CreateDrug(drug *models.Drug) error {
@@ -34,6 +36,10 @@ func ListDrugs(search string) ([]models.Drug, error) {
 
 func UpdateDrug(drug *models.Drug) error {
 	return database.DB.Save(drug).Error
+}
+
+func UpdateDrugWithTx(tx *gorm.DB, drug *models.Drug) error {
+	return tx.Save(drug).Error
 }
 
 func DeleteDrug(id uint) error {

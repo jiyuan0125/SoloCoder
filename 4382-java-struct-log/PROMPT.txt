@@ -1,4 +1,7 @@
-日志格式不统一查起来很痛苦。Spring Boot 写一个结构化日志聚合服务。所有服务按统一格式上报日志。
-日志格式：timestamp、level、service、traceId、spanId、message、tags（KV 对）。tags 可以自由扩展。level 有 DEBUG/INFO/WARN/ERROR。
-日志处理：接收日志后按 level 过滤。低于配置级别的不存储。ERROR 级别的日志自动触发告警评估。同一 traceId 的日志聚合展示。
-敏感数据：日志中的手机号、身份证等自动脱敏。脱敏规则通过正则配置。receiver、filter、alerter、masker 四块。Maven 构建，端口配置文件。
+几十个服务的日志格式五花八门——有的用 JSON 有的用纯文本，字段名也不统一。排查跨服务问题时得人工对时间戳。Spring Boot 写一个结构化日志聚合服务，所有服务按统一格式上报，查询时按 traceId 一键串起来。
+
+日志格式是强制的 JSON 结构：timestamp（ISO 8601）、level（DEBUG/INFO/WARN/ERROR）、service（服务名）、traceId（链路 ID）、spanId（当前 span）、message（日志内容）、tags（KV 对，可自由扩展，比如 {\"request_id\": \"abc\", \"user_id\": \"123\"}）。不符合格式的日志拒绝接收并返回 400。
+
+日志接收后先按 level 过滤。低于配置级别的不存储——比如配了 WARN，DEBUG 和 INFO 就直接丢。ERROR 级别的日志自动触发告警评估：统计该 service 最近 5 分钟内的 ERROR 数量，超过阈值通过 HTTP 回调通知。同一 traceId 的日志自动按 spanId 组织成调用链视图，一次查询看到整条链路上的所有日志。
+
+敏感数据脱敏不能少。日志中的手机号（1 开头 11 位数字）、身份证号（18 位）自动检测并替换为前 3 后 4 位中间加星号。脱敏规则通过正则配置，支持自定义模式。receiver 管接收和校验、filter 管级别过滤和告警、alerter 管告警触发、masker 管脱敏。Maven 构建，端口写在配置文件里。

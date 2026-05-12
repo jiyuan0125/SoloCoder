@@ -1,5 +1,9 @@
-内部系统裸奔了半年，谁都能调任何接口。Go 标准库写一个带鉴权的 API 网关，请求到达后先验身份再放行。
-鉴权方式：API Key（从 Header 或 Query 参数提取）、JWT（Bearer Token）、IP 白名单。三种方式可以组合，满足任一即可。API Key 存在内存里，通过管理接口增删。
-权限模型：每个 API Key 绑定一组允许访问的路径前缀。不在允许列表里的路径返回 403。路径匹配支持通配符。JWT 里的 claims 可以作为路径参数的默认值。
-请求日志：记录每个请求的来源 IP、请求路径、使用的认证方式、响应状态码。日志写入本地文件。用户提交的查询参数直接拼到日志里。
-后端服务配置：多个后端服务，按路径前缀路由。后端服务可以配置超时时间。gateway、auth、router、logger 四个模块。端口 PORT 环境变量，go build。
+内部系统裸奔了半年，谁都能调任何接口——直到有人误删了生产数据才意识到问题严重。Go 标准库写一个带鉴权的 API 网关，请求到达后先验身份再放行。
+
+鉴权方式三种可以组合。API Key 从 Header（X-API-Key）或 Query 参数（api_key）提取。JWT 从 Authorization Header 的 Bearer token 提取。IP 白名单匹配客户端源 IP（支持 CIDR）。三种方式满足任一即通过——比如内网 IP 白名单直接放行不走 JWT，外网必须带 JWT。API Key 存在内存里通过 POST /keys 增删、GET /keys 列表查看。
+
+权限模型。每个 API Key 绑定一组允许访问的路径前缀。请求路径不在允许列表里返回 403 Forbidden。路径匹配支持通配符——/api/users/* 匹配所有用户相关接口。JWT 里的 claims 可以作为路径参数的默认值——比如 JWT 里的 user_id 自动填充到 /api/users/{user_id}/orders 的路径参数里。
+
+请求日志。记录每个请求的来源 IP、请求路径、使用的认证方式（apikey/jwt/ip_whitelist）、响应状态码和耗时毫秒。日志写入本地文件 gateway.log，JSON 格式一行一条。日志文件按天滚动，保留 7 天。
+
+后端服务配置。多个后端服务按路径前缀路由——/api/users/* 转到 user-service:8080，/api/orders/* 转到 order-service:8080。后端超时可配默认 30 秒。

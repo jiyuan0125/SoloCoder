@@ -59,12 +59,21 @@ func StockIn(req StockInRequest) error {
 		SupplierCode:   req.SupplierCode,
 	}
 
-	if err := repositories.CreateStockItem(stockItem); err != nil {
+	tx := repositories.BeginTransaction()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	if err := repositories.CreateStockItemWithTx(tx, stockItem); err != nil {
+		tx.Rollback()
 		return err
 	}
 
 	drug.CurrentStock += req.Quantity
-	if err := repositories.UpdateDrug(drug); err != nil {
+	if err := repositories.UpdateDrugWithTx(tx, drug); err != nil {
+		tx.Rollback()
 		return err
 	}
 
@@ -82,7 +91,12 @@ func StockIn(req StockInRequest) error {
 		Operator2:       req.Operator2,
 	}
 
-	if err := repositories.CreateTransaction(nil, transaction); err != nil {
+	if err := repositories.CreateTransaction(tx, transaction); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return err
 	}
 
@@ -177,7 +191,7 @@ func StockOut(req StockOutRequest) error {
 	}
 
 	drug.CurrentStock -= req.Quantity
-	if err := repositories.UpdateDrug(drug); err != nil {
+	if err := repositories.UpdateDrugWithTx(tx, drug); err != nil {
 		tx.Rollback()
 		return err
 	}

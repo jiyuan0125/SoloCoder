@@ -104,6 +104,11 @@ func CreateUnit(c *gin.Context) {
 		return
 	}
 
+	if err := storage.DB.Where("name = ?", req.Name).First(&existingUnit).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "企业名称重复"})
+		return
+	}
+
 	unit := models.SupervisedUnit{
 		CreditCode:            req.CreditCode,
 		Name:                  req.Name,
@@ -148,7 +153,12 @@ func UpdateUnit(c *gin.Context) {
 		return
 	}
 
-	if req.Name != "" {
+	if req.Name != "" && req.Name != unit.Name {
+		var existingUnit models.SupervisedUnit
+		if err := storage.DB.Where("name = ? AND id != ?", req.Name, unit.ID).First(&existingUnit).Error; err == nil {
+			c.JSON(http.StatusConflict, gin.H{"error": "企业名称重复"})
+			return
+		}
 		unit.Name = req.Name
 	}
 	if req.Type != "" {

@@ -275,7 +275,6 @@ func (h *ExamHandler) SubmitAnswer(c *gin.Context) {
 	}
 
 	var usedQuestionIDs []uint
-	var existingExamQuestions []models.ExamQuestion
 	database.DB.Where("exam_id = ?", examID).Pluck("question_id", &usedQuestionIDs)
 
 	pool, err := h.adaptive.GetQuestionPool(exam.CurrentDifficulty, usedQuestionIDs)

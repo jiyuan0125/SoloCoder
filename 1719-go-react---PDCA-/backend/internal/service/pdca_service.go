@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"medical-quality-system/internal/app"
 	"medical-quality-system/internal/middleware"
 	"medical-quality-system/internal/model"
+	"medical-quality-system/pkg/db"
 
 	"gorm.io/gorm"
 )
@@ -46,18 +46,18 @@ func (s *PDCAService) Create(pdca *model.PDCA) error {
 	pdca.CurrentPhase = model.PhasePlan
 	pdca.Status = model.StatusPlanning
 
-	return app.DB.Create(pdca).Error
+	return db.DB.Create(pdca).Error
 }
 
 func (s *PDCAService) List() ([]model.PDCA, error) {
 	var pdcaList []model.PDCA
-	err := app.DB.Preload("Indicator").Preload("ParentPDCA").Order("created_at DESC").Find(&pdcaList).Error
+	err := db.DB.Preload("Indicator").Preload("ParentPDCA").Order("created_at DESC").Find(&pdcaList).Error
 	return pdcaList, err
 }
 
 func (s *PDCAService) Get(id uint) (*model.PDCA, error) {
 	var pdca model.PDCA
-	err := app.DB.Preload("Indicator").Preload("ParentPDCA").First(&pdca, id).Error
+	err := db.DB.Preload("Indicator").Preload("ParentPDCA").First(&pdca, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, middleware.NewAppError(http.StatusNotFound, "PDCA项目不存在")
 	}
@@ -69,7 +69,7 @@ func (s *PDCAService) Update(id uint, pdca *model.PDCA) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Model(existing).Updates(pdca).Error
+	return db.DB.Model(existing).Updates(pdca).Error
 }
 
 func (s *PDCAService) Delete(id uint) error {
@@ -77,7 +77,7 @@ func (s *PDCAService) Delete(id uint) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Delete(&model.PDCA{}, id).Error
+	return db.DB.Delete(&model.PDCA{}, id).Error
 }
 
 func (s *PDCAService) CreatePhaseDetail(detail *model.PDCAPhaseDetail) error {
@@ -86,7 +86,7 @@ func (s *PDCAService) CreatePhaseDetail(detail *model.PDCAPhaseDetail) error {
 	}
 
 	var existing model.PDCAPhaseDetail
-	err := app.DB.Where("pdca_id = ? AND phase = ?", detail.PDCAID, detail.Phase).First(&existing).Error
+	err := db.DB.Where("pdca_id = ? AND phase = ?", detail.PDCAID, detail.Phase).First(&existing).Error
 	if err == nil {
 		return middleware.NewAppError(http.StatusConflict, "该阶段已存在")
 	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -94,12 +94,12 @@ func (s *PDCAService) CreatePhaseDetail(detail *model.PDCAPhaseDetail) error {
 	}
 
 	detail.Completed = false
-	return app.DB.Create(detail).Error
+	return db.DB.Create(detail).Error
 }
 
 func (s *PDCAService) UpdatePhaseDetail(pdcaID uint, phase model.PDCAPhase, updates *model.PDCAPhaseDetail) error {
 	var existing model.PDCAPhaseDetail
-	err := app.DB.Where("pdca_id = ? AND phase = ?", pdcaID, phase).First(&existing).Error
+	err := db.DB.Where("pdca_id = ? AND phase = ?", pdcaID, phase).First(&existing).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return middleware.NewAppError(http.StatusNotFound, "阶段不存在")
 	}
@@ -114,7 +114,7 @@ func (s *PDCAService) UpdatePhaseDetail(pdcaID uint, phase model.PDCAPhase, upda
 		existing.Evidence = updates.Evidence
 	}
 
-	return app.DB.Save(&existing).Error
+	return db.DB.Save(&existing).Error
 }
 
 func (s *PDCAService) NextPhase(pdcaID uint) error {
@@ -128,7 +128,7 @@ func (s *PDCAService) NextPhase(pdcaID uint) error {
 	}
 
 	var currentDetail model.PDCAPhaseDetail
-	if err := app.DB.Where("pdca_id = ? AND phase = ?", pdcaID, pdca.CurrentPhase).First(&currentDetail).Error; err != nil {
+	if err := db.DB.Where("pdca_id = ? AND phase = ?", pdcaID, pdca.CurrentPhase).First(&currentDetail).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return middleware.NewAppError(http.StatusBadRequest, "当前阶段未填写内容")
 		}
@@ -140,7 +140,7 @@ func (s *PDCAService) NextPhase(pdcaID uint) error {
 	}
 
 	currentDetail.Completed = true
-	if err := app.DB.Save(&currentDetail).Error; err != nil {
+	if err := db.DB.Save(&currentDetail).Error; err != nil {
 		return err
 	}
 
@@ -164,7 +164,7 @@ func (s *PDCAService) NextPhase(pdcaID uint) error {
 		}
 	}
 
-	return app.DB.Save(pdca).Error
+	return db.DB.Save(pdca).Error
 }
 
 func (s *PDCAService) checkImprovement(indicatorID uint) (bool, error) {
@@ -173,7 +173,7 @@ func (s *PDCAService) checkImprovement(indicatorID uint) (bool, error) {
 	prevMonth := time.Date(now.Year(), now.Month()-1, 1, 0, 0, 0, 0, time.UTC).Format("2006-01")
 
 	var currentData, prevData model.IndicatorData
-	err := app.DB.Where("indicator_id = ? AND month = ?", indicatorID, currentMonth).First(&currentData).Error
+	err := db.DB.Where("indicator_id = ? AND month = ?", indicatorID, currentMonth).First(&currentData).Error
 	if err != nil {
 		if !errors.Is(err, gorm.ErrRecordNotFound) {
 			return false, err
@@ -184,7 +184,7 @@ func (s *PDCAService) checkImprovement(indicatorID uint) (bool, error) {
 		}
 	}
 
-	err = app.DB.Where("indicator_id = ? AND month = ?", indicatorID, prevMonth).First(&prevData).Error
+	err = db.DB.Where("indicator_id = ? AND month = ?", indicatorID, prevMonth).First(&prevData).Error
 	if err != nil {
 		return false, nil
 	}
@@ -218,12 +218,12 @@ func (s *PDCAService) StartNextCycle(parentID uint) (*model.PDCA, error) {
 		ParentPDCAID: &parentID,
 	}
 
-	if err := app.DB.Create(newPDCA).Error; err != nil {
+	if err := db.DB.Create(newPDCA).Error; err != nil {
 		return nil, err
 	}
 
 	parent.Status = model.StatusClosed
-	if err := app.DB.Save(parent).Error; err != nil {
+	if err := db.DB.Save(parent).Error; err != nil {
 		return nil, err
 	}
 
@@ -232,6 +232,6 @@ func (s *PDCAService) StartNextCycle(parentID uint) (*model.PDCA, error) {
 
 func (s *PDCAService) GetPhaseDetails(pdcaID uint) ([]model.PDCAPhaseDetail, error) {
 	var details []model.PDCAPhaseDetail
-	err := app.DB.Where("pdca_id = ?", pdcaID).Find(&details).Error
+	err := db.DB.Where("pdca_id = ?", pdcaID).Find(&details).Error
 	return details, err
 }

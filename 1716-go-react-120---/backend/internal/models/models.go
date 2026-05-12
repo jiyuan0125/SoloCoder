@@ -183,6 +183,37 @@ func ValidSeverity(level SeverityLevel) bool {
 	}
 }
 
+func ParseSeverity(input string) (SeverityLevel, bool) {
+	input = trimSpace(input)
+	
+	if ValidSeverity(SeverityLevel(input)) {
+		return SeverityLevel(input), true
+	}
+
+	switch input {
+	case "1", "一级", "一级濒危":
+		return SeverityLevel1, true
+	case "2", "二级", "二级危重":
+		return SeverityLevel2, true
+	case "3", "三级", "三级急症":
+		return SeverityLevel3, true
+	case "4", "四级", "四级非急症":
+		return SeverityLevel4, true
+	default:
+		return "", false
+	}
+}
+
+func trimSpace(s string) string {
+	result := []rune{}
+	for _, r := range s {
+		if r != ' ' && r != '\t' && r != '\n' && r != '\r' {
+			result = append(result, r)
+		}
+	}
+	return string(result)
+}
+
 func ValidVehicleStatusTransition(from, to VehicleStatus) bool {
 	switch from {
 	case VehicleStatusIdle:

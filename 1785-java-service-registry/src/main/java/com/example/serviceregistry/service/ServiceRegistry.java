@@ -1,16 +1,23 @@
 package com.example.serviceregistry.service;
 
 import com.example.serviceregistry.dto.RegisterRequest;
+import com.example.serviceregistry.event.ServiceChangedEvent;
 import com.example.serviceregistry.model.ServiceInstance;
 import com.example.serviceregistry.model.Subscriber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -19,7 +26,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ServiceRegistry {
 
-    private final NotificationService notificationService;
+    private final ApplicationEventPublisher eventPublisher;
 
     private final Map<String, Map<String, ServiceInstance>> registry = new ConcurrentHashMap<>();
     private final Map<String, Set<Subscriber>> subscribers = new ConcurrentHashMap<>();
@@ -43,7 +50,7 @@ public class ServiceRegistry {
 
         log.info("Service registered: {} - {}:{}", request.getServiceName(), request.getIp(), request.getPort());
 
-        notificationService.notifySubscribers(request.getServiceName(), getHealthyInstances(request.getServiceName()));
+        eventPublisher.publishEvent(new ServiceChangedEvent(this, request.getServiceName(), getHealthyInstances(request.getServiceName())));
 
         return instance;
     }
@@ -69,7 +76,7 @@ public class ServiceRegistry {
         if (instances != null) {
             instances.remove(instanceId);
             log.info("Service deregistered: {} - {}", serviceName, instanceId);
-            notificationService.notifySubscribers(serviceName, getHealthyInstances(serviceName));
+            eventPublisher.publishEvent(new ServiceChangedEvent(this, serviceName, getHealthyInstances(serviceName)));
         }
     }
 
@@ -85,9 +92,9 @@ public class ServiceRegistry {
         }
         return getAllInstances().stream()
                 .filter(instance -> {
-            Map<String, String> instanceTags = instance.getTags();
-            return tags.entrySet().stream()
-                    .allMatch(entry -> entry.getValue().equals(instanceTags.get(entry.getKey())));
+                    Map<String, String> instanceTags = instance.getTags();
+                    return tags.entrySet().stream()
+                            .allMatch(entry -> entry.getValue().equals(instanceTags.get(entry.getKey())));
                 })
                 .collect(Collectors.toList());
     }
@@ -166,6 +173,6 @@ public class ServiceRegistry {
         });
 
         servicesToNotify.forEach(serviceName ->
-                notificationService.notifySubscribers(serviceName, getHealthyInstances(serviceName)));
+                eventPublisher.publishEvent(new ServiceChangedEvent(this, serviceName, getHealthyInstances(serviceName))));
     }
 }

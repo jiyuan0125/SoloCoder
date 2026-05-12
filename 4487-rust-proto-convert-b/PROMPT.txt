@@ -1,5 +1,10 @@
-有些客户端只能用 WebSocket，但后端只提供 HTTP 接口。用 Rust actix-web 做一个 WebSocket 到 HTTP 的桥接服务架在中间。
+有些客户端只能用 WebSocket 长连接——老式浏览器、嵌入式设备、游戏客户端，但后端只提供 REST HTTP 接口。Rust actix-web 做一个 WebSocket 到 HTTP 的桥接服务架在中间，两边都能说自己的语言。
 
-WebSocket 客户端连到桥接服务，每个连接分配唯一 ConnectionID。断了自动清理，支持同时多个客户端。收到的 WebSocket 消息解析为 HTTP 请求——消息里包含目标 URL、Method、Headers、Body。桥接服务发 HTTP 请求到目标，响应转成 WebSocket 消息回传。
+WebSocket 客户端连到桥接服务后每个连接分配唯一 ConnectionID。断了自动清理资源，支持同时多个客户端连接。收到的 WebSocket 消息解析为 HTTP 请求——消息格式是 JSON，包含目标 URL、Method（GET/POST/PUT/DELETE）、Headers 和 Body。桥接服务发起 HTTP 请求到目标后端，响应转成 WebSocket 消息回传给客户端。
 
-后端也能主动推消息给客户端：通过接口指定 ConnectionID 和消息内容。客户端不在线时暂存，重连后推送。至少拆 wsconn、forward、pushback、buffer 四个模块，Cargo build，端口 PORT 环境变量。
+后端也能主动推消息给客户端：通过接口指定 ConnectionID 和消息内容。客户端不在线时消息暂存在内存缓冲区，等客户端重连后推送暂存的消息。缓冲区有上限防止内存爆炸——超过 1000 条就丢弃最早的。
+
+wsconn 管 WebSocket 连接管理和 ConnectionID 分配，forward 管消息解析和 HTTP 请求转发，pushback 管后端主动推送，buffer 管离线消息暂存。Cargo build，端口 PORT 环境变量。
+
+
+WebSocket 消息格式约定：请求消息是 JSON 包含 request_id、url、method、headers、body 五个字段。响应消息也是 JSON 包含 request_id、status_code、headers、body。request_id 用来匹配请求和响应。

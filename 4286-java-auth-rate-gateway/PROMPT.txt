@@ -1,5 +1,4 @@
-线上认证服务被打爆过好几次了，Spring Boot 写一个带限流的认证网关。
-请求来了先验 Token（API Key 或 JWT），JWT 要支持多种签名算法。验过了提用户信息，验失败记下来源和原因。
-按 IP 和按用户分别限流。同一个 IP 短时间大量失败请求（像是暴力破解）直接封，封多久可以配。白名单 IP 不受限制。
-Token 签发和刷新。Refresh Token 一次性的，用完旧的进黑名单，黑名单带 TTL。
-坑：同一个用户在多个设备上同时刷新 Token 时，只有第一个能成功。模块拆 auth、limiter、issuer、blacklist。Maven 构建，端口写配置文件。
+线上认证服务被打爆过好几次——有人写了个脚本暴力猜密码，一秒上千次请求，把正常用户的登录全堵了。Spring Boot 写一个带限流的认证网关，限流和认证绑在一起。请求来了先验 Token：支持 API Key（请求头 X-API-Key）和 JWT（Authorization: Bearer xxx）两种。JWT 要支持 HS256 和 RS256 签名算法，密钥和公钥走接口配。验过了提用户信息塞进上下文，验失败记下来源 IP、请求路径和失败原因。
+按 IP 和按用户分别限流——IP 维度用客户端真实 IP（从 X-Forwarded-For 取最左边那个），用户维度用 Token 里的用户 ID。同一个 IP 短时间大量失败请求——比如 1 分钟内失败 20 次——像是暴力破解，直接封，封多久可以配（默认 1 小时）。白名单 IP 不受限制，走接口管。
+Token 签发和刷新分开。签发走 POST /auth/token，返回 access_token（15 分钟有效）和 refresh_token（7 天有效）。刷新走 POST /auth/refresh，Refresh Token 一次性的，用完旧的进黑名单，黑名单带 TTL 自动过期。
+坑：同一个用户在多个设备上同时刷新 Token 时，只有第一个能成功，后面的返回 409 Conflict——Refresh Token 已被使用。模块拆 auth、limiter、issuer、blacklist。Maven 构建，端口写配置文件。

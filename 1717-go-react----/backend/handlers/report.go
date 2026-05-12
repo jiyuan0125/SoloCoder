@@ -13,14 +13,14 @@ import (
 )
 
 type GenerateReportRequest struct {
-	ReportType string `json:"report_type" binding:"required"`
-	Month      string `json:"month"`
-	Year       int    `json:"year"`
+	ReportType string `json:"ReportType" binding:"required"`
+	Month      string `json:"Month"`
+	Year       int    `json:"Year"`
 }
 
 type ReportApprovalRequest struct {
-	Operator string `json:"operator" binding:"required"`
-	Comment  string `json:"comment"`
+	Operator string `json:"Operator" binding:"required"`
+	Comment  string `json:"Comment"`
 }
 
 const (
@@ -163,11 +163,11 @@ func calculateMonthlyStats(month string) StatisticsResponse {
 	}
 
 	return StatisticsResponse{
-		HospitalRate:       hospitalRate,
-		DepartmentRates:    departmentRates,
-		SiteDistribution:   siteDist,
+		HospitalRate:         hospitalRate,
+		DepartmentRates:      departmentRates,
+		SiteDistribution:     siteDist,
 		PathogenDistribution: pathogenDist,
-		Month:              month,
+		Month:                month,
 	}
 }
 
@@ -176,11 +176,17 @@ func GetReports(c *gin.Context) {
 	query := database.DB
 
 	reportType := c.Query("type")
+	if reportType == "" {
+		reportType = c.Query("ReportType")
+	}
 	if reportType != "" {
 		query = query.Where("report_type = ?", reportType)
 	}
 
 	status := c.Query("status")
+	if status == "" {
+		status = c.Query("ApprovalStatus")
+	}
 	if status != "" {
 		query = query.Where("approval_status = ?", status)
 	}
@@ -310,10 +316,4 @@ func DeleteReport(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "删除成功"})
-}
-
-func GetDepartments(c *gin.Context) {
-	var departments []models.Department
-	database.DB.Find(&departments)
-	c.JSON(http.StatusOK, departments)
 }

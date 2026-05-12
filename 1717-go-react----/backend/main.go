@@ -27,7 +27,14 @@ func main() {
 
 	api := r.Group("/api")
 
-	api.GET("/departments", handlers.GetDepartments)
+	departments := api.Group("/departments")
+	{
+		departments.GET("", handlers.GetDepartments)
+		departments.GET("/:id", handlers.GetDepartment)
+		departments.POST("", handlers.CreateDepartment)
+		departments.PUT("/:id", handlers.UpdateDepartment)
+		departments.DELETE("/:id", handlers.DeleteDepartment)
+	}
 
 	infection := api.Group("/infections")
 	{

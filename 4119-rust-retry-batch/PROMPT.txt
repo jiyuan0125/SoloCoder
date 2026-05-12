@@ -1,5 +1,11 @@
-凌晨跑批任务挂了 30 多个，手动重试到天亮。用 Rust axum 写个批量重试管理器，以后这种事交给机器。
-任务有状态：pending → running → success / failed → retrying → success / dead。失败的任务根据重试策略决定是否重试。重试策略配置最大次数和退避间隔（固定、指数、自定义）。
-同一个任务的重试次数达到上限后进入 dead 状态。dead 状态的任务可以手动重新触发。任务分组管理，可以按组暂停和恢复重试。
-幂等保证：每个任务有唯一 ID，同一 ID 不重复执行。执行结果缓存，重试时如果缓存中有成功结果直接返回。
-并发执行的任务数有上限，等待的排队。拆成 task、retry、queue、store 四个模块。Cargo build，PORT 环境变量。
+凌晨跑批任务挂了 30 多个，手动一个一个重试到天亮。Rust axum 写个批量重试管理器，以后这种事交给机器处理。
+
+第一步，任务注册。POST /task 创建任务，参数包含 task_id（全局唯一标识）、payload（任务内容，JSON 格式）、execute_url（执行接口，POST 调用）、max_retries（最大重试次数，默认 3）、group（分组名，可选）。创建后进入 pending 状态。
+
+第二步，执行。pending 状态的任务被 worker 取走执行——POST payload 到 execute_url。执行结果按 HTTP 状态码判断：2xx 进入 success，5xx 进入 failed，4xx 视为业务拒绝不算失败直接进入 rejected。超时（默认 30 秒，可按任务配置）算失败。正在执行的任务通过 GET /task/{id} 可以看到状态为 running 加上开始时间。
+
+第三步，重试策略。支持三种退避：fixed（固定间隔，每次等 N 秒）、exponential（指数退避，10s→20s→40s→80s）、custom（自定义间隔数组，比如 [5, 30, 120]）。同一个任务重试次数达到上限后进入 dead 状态。dead 任务可以通过 POST /task/{id}/revive 手动重新触发，重置重试计数器。
+
+第四步，幂等保证。每个任务有唯一 ID，同一 ID 不重复执行。执行结果缓存 1 小时，重试时如果缓存中有成功结果直接返回不重新执行。
+
+第五步，并发控制。同时执行的任务数有上限（默认 20），超出的排队。

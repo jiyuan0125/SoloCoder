@@ -1,0 +1,13 @@
+server:
+  port: 8080
+
+logging:
+  level:
+    com.example.connectionpool: INFO
+
+pool:
+  defaults:
+    max-connections: 20
+    wait-timeout-ms: 5000
+    leak-threshold-seconds: 60
+    max-queue-size: 50

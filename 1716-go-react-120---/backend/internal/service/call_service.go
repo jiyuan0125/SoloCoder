@@ -35,7 +35,8 @@ func (s *CallService) CreateCall(req *CreateCallRequest) (*models.EmergencyCall,
 		return nil, errors.New("主诉症状不能为空")
 	}
 
-	if !models.ValidSeverity(req.SeverityLevel) {
+	parsedSeverity, ok := models.ParseSeverity(string(req.SeverityLevel))
+	if !ok {
 		return nil, errors.New("病情严重程度不在有效范围内")
 	}
 
@@ -48,7 +49,7 @@ func (s *CallService) CreateCall(req *CreateCallRequest) (*models.EmergencyCall,
 	call.PatientGender = req.PatientGender
 	call.PatientAgeGroup = req.PatientAgeGroup
 	call.ChiefComplaint = req.ChiefComplaint
-	call.SeverityLevel = req.SeverityLevel
+	call.SeverityLevel = parsedSeverity
 	call.BillID = req.BillID
 	call.Amount = req.Amount
 

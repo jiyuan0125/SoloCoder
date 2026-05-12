@@ -1,5 +1,7 @@
-协议转换要支持 XML 和 JSON 互转，还要做 Schema 校验。Spring Boot 做。
-XML ↔ JSON 转换：请求 Content-Type 是 XML 时自动转成 JSON 给后端。后端返回的 JSON 转成 XML 给客户端。转换规则处理数组、属性、命名空间。属性用 @前缀，文本用 #text。
-Schema 管理：可以上传 XSD（XML Schema）和 JSON Schema。转换前用对应的 Schema 校验。校验失败返回错误详情。Schema 版本管理，新版本上传后旧版本保留。
-自定义映射：默认映射不够时可以自定义字段映射规则。比如 XML 里的 user_name 映射到 JSON 里的 userName。映射规则支持多级嵌套路径。
-批量转换：支持一次提交多条数据批量转换。部分转换失败不影响成功的。至少包含 bridge、converter、schema、handler 四个模块。Maven 构建，端口配置文件。
+1. 新接手一个遗留系统，对外接口是 SOAP/XML，内部新服务全是 JSON。中间必须有一层转换。Spring Boot 做一个 XML-JSON 协议桥接服务，自动转换还带 Schema 校验。
+
+bridge 模块是入口，判断请求方向：Content-Type 是 application/xml 时，把请求体转成 JSON 传给后端，后端返回 JSON 再转回 XML 给客户端。反向同理。converter 模块处理具体的转换逻辑——数组怎么表示、属性怎么处理、命名空间怎么办。约定用 @ 前缀标属性、#text 标文本内容。遇到无法自动映射的节点，保留原始结构不丢数据。
+
+schema 模块管理校验规则。可以上传 XSD 和 JSON Schema 两种格式。转换前用对应的 Schema 校验输入数据，校验失败返回详细的错误位置和原因。Schema 支持版本管理，新版本上传后旧版本保留，可以按版本号切换。自定义映射是另一个维度——默认映射规则不够用时，配置字段映射覆盖。比如 XML 的 user_name 映射到 JSON 的 userName，支持多级嵌套路径。
+
+handler 模块包装批量转换能力，一次提交多条数据批量处理。部分失败的不影响成功的，每条独立返回状态。Maven 构建，端口写在配置文件里。

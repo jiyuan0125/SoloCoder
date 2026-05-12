@@ -102,7 +102,7 @@ export default function FollowUpManagement() {
   const displayedFollowUps = activeTab === 'pending' ? pendingFollowUps : completedFollowUps;
 
   function handleSelectAll() {
-    if (selectedIds.length === displayedFollowUps.length ? 
+    if (selectedIds.length === displayedFollowUps.length) {
       setSelectedIds([]);
     } else {
       setSelectedIds(displayedFollowUps.map(f => f.id));
@@ -205,13 +205,13 @@ export default function FollowUpManagement() {
         <div className="card-header">
           <div className="follow-up-tabs">
             <div
-              className={`follow-up-tab ${activeTab === 'pending' ? 'active' : ''}
+              className={`follow-up-tab ${activeTab === 'pending' ? 'active' : ''}`}
               onClick={() => { setActiveTab('pending'); setSelectedIds([]); }}
             >
               待回访 ({pendingFollowUps.length})
             </div>
             <div
-              className={`follow-up-tab ${activeTab === 'completed' ? 'active' : ''}
+              className={`follow-up-tab ${activeTab === 'completed' ? 'active' : ''}`}
               onClick={() => { setActiveTab('completed'); setSelectedIds([]); }}
             >
               已完成 ({completedFollowUps.length})

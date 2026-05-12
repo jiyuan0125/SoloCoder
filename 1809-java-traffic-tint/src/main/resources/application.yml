@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+canary:
+  ratio: 0
+  gray-backend: http://localhost:8081
+  prod-backend: http://localhost:8082

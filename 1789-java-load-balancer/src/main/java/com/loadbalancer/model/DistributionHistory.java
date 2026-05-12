@@ -22,12 +22,4 @@ public class DistributionHistory {
         this.requestPath = requestPath;
         this.timestamp = timestamp;
     }
-
-    public DistributionHistory(String nodeId, String reason, String requestPath, Instant timestamp, String routeRuleId) {
-        this.nodeId = nodeId;
-        this.reason = reason;
-        this.requestPath = requestPath;
-        this.timestamp = timestamp;
-        this.routeRuleId = routeRuleId;
-    }
 }

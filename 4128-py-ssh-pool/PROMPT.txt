@@ -1,5 +1,9 @@
-我们管 200 多台服务器，每台都要 SSH 上去执行命令。连接建了断、断了建，效率极低。Python FastAPI 写个 SSH 连接池管理服务，把连接复用起来。
-每个目标机器独立维护一个连接池。池子参数：最大连接数、连接超时、命令执行超时、空闲回收时间。连接建立后执行一个简单的 echo 命令验证可用性。
-执行命令接口：指定目标机器和命令，从池子取连接执行，执行完归还。执行结果包含 stdout、stderr、exit_code。超时的命令强制终止并返回部分结果。
-连接健康检查：后台定期对空闲连接执行 echo 测试，失败的连接关闭并从池子移除。检查间隔可配置。
-目标机器信息管理：通过接口添加和删除目标机器。删除机器时先关闭该机器的所有连接。拆分成 pool、executor、checker、manager。端口 PORT 环境变量。
+管 200 多台服务器，每台都要 SSH 上去执行命令——连接建了断断了建，效率极低。Python FastAPI 写个 SSH 连接池管理服务，把连接复用起来。
+
+每个目标机器独立维护一个连接池。POST /target 注册目标机器，参数包含 host、port（默认 22）、username、auth_type（password 或 key）、auth_value（密码或密钥路径）、pool_size（最大连接数默认 10）。注册后自动建立最小空闲数（默认 2）的初始连接。每个连接建立后执行 echo hello 验证可用性，验证失败的丢弃不放池子。
+
+执行命令接口 POST /exec——指定 target（host 或注册时的别名）和 command（字符串），从池子取连接执行，执行完归还。返回结果四个字段：stdout（标准输出）、stderr（标准错误）、exit_code（退出码）、exec_time_ms（执行耗时毫秒）。超时的命令强制终止并返回已收集的部分结果，exit_code 设为 -1。超时阈值通过 exec_timeout 参数指定，默认 60 秒。
+
+连接健康检查。后台每 check_interval 秒（默认 30）对空闲连接执行 echo test，失败的关闭并移除，然后补建新连接到最小空闲数。补建失败记 warning 日志不影响其他机器。GET /pool/{host}/status 返回该机器的连接池详情——active_count、idle_count、total_created、total_errors、last_error。
+
+目标机器管理。

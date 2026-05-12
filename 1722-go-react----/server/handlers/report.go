@@ -1,16 +1,12 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
-	"sort"
-	"time"
 
 	"smart-exam/database"
 	"smart-exam/models"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type ReportHandler struct{}

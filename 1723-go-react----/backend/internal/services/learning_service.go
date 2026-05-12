@@ -4,6 +4,7 @@ import (
 	"learning-platform/internal/models"
 	"learning-platform/internal/storage"
 	"learning-platform/internal/utils"
+	"learning-platform/pkg/dag"
 	"math/rand"
 	"sort"
 	"time"
@@ -48,7 +49,7 @@ func (s *LearningService) StartLearning(studentID, courseID string) error {
 		return &storage.NotFoundError{ID: studentID, Type: "student"}
 	}
 
-	course, exists := s.storage.GetCourse(courseID)
+	_, exists = s.storage.GetCourse(courseID)
 	if !exists {
 		return &storage.NotFoundError{ID: courseID, Type: "course"}
 	}

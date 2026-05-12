@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
-	"medical-quality-system/internal/app"
 	"medical-quality-system/internal/middleware"
 	"medical-quality-system/internal/model"
+	"medical-quality-system/pkg/db"
 
 	"gorm.io/gorm"
 )
@@ -20,7 +20,7 @@ func NewTodoService() *TodoService {
 
 func (s *TodoService) List(status model.TodoStatus, todoType model.TodoType) ([]model.Todo, error) {
 	var todos []model.Todo
-	query := app.DB.Preload("Indicator").Preload("PDCA")
+	query := db.DB.Preload("Indicator").Preload("PDCA")
 
 	if status != "" {
 		query = query.Where("status = ?", status)
@@ -35,7 +35,7 @@ func (s *TodoService) List(status model.TodoStatus, todoType model.TodoType) ([]
 
 func (s *TodoService) Get(id uint) (*model.Todo, error) {
 	var todo model.Todo
-	err := app.DB.Preload("Indicator").Preload("PDCA").First(&todo, id).Error
+	err := db.DB.Preload("Indicator").Preload("PDCA").First(&todo, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, middleware.NewAppError(http.StatusNotFound, "待办不存在")
 	}
@@ -47,7 +47,7 @@ func (s *TodoService) Update(id uint, todo *model.Todo) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Model(existing).Updates(todo).Error
+	return db.DB.Model(existing).Updates(todo).Error
 }
 
 func (s *TodoService) UpdateStatus(id uint, status model.TodoStatus) error {
@@ -56,7 +56,7 @@ func (s *TodoService) UpdateStatus(id uint, status model.TodoStatus) error {
 		return err
 	}
 	todo.Status = status
-	return app.DB.Save(todo).Error
+	return db.DB.Save(todo).Error
 }
 
 func (s *TodoService) Delete(id uint) error {
@@ -64,13 +64,13 @@ func (s *TodoService) Delete(id uint) error {
 	if err != nil {
 		return err
 	}
-	return app.DB.Delete(&model.Todo{}, id).Error
+	return db.DB.Delete(&model.Todo{}, id).Error
 }
 
 func (s *TodoService) CheckOverdue() error {
 	now := time.Now().Format("2006-01-02")
 	var todos []model.Todo
-	err := app.DB.Where("status IN ? AND due_date < ? AND deleted_at IS NULL",
+	err := db.DB.Where("status IN ? AND due_date < ? AND deleted_at IS NULL",
 		[]model.TodoStatus{model.TodoStatusPending, model.TodoStatusProgress},
 		now,
 	).Find(&todos).Error
@@ -80,7 +80,7 @@ func (s *TodoService) CheckOverdue() error {
 
 	for _, todo := range todos {
 		todo.Status = model.TodoStatusOverdue
-		app.DB.Save(&todo)
+		db.DB.Save(&todo)
 	}
 
 	return nil

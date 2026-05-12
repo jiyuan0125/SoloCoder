@@ -14,34 +14,34 @@ import (
 )
 
 type MonthlyRate struct {
-	DepartmentID   uint    `json:"department_id"`
-	DepartmentName string  `json:"department_name"`
-	Month          string  `json:"month"`
-	InfectionCount int     `json:"infection_count"`
-	DischargeCount int     `json:"discharge_count"`
-	InfectionRate  float64 `json:"infection_rate"`
-	Threshold      float64 `json:"threshold"`
-	Exceeded       bool    `json:"exceeded"`
+	DepartmentID   uint    `json:"DepartmentID"`
+	DepartmentName string  `json:"DepartmentName"`
+	Month          string  `json:"Month"`
+	InfectionCount int     `json:"InfectionCount"`
+	DischargeCount int     `json:"DischargeCount"`
+	InfectionRate  float64 `json:"InfectionRate"`
+	Threshold      float64 `json:"Threshold"`
+	Exceeded       bool    `json:"Exceeded"`
 }
 
 type SiteDistribution struct {
-	Site  models.InfectionSite `json:"site"`
-	Count int                   `json:"count"`
-	Ratio float64               `json:"ratio"`
+	Site  models.InfectionSite `json:"Site"`
+	Count int                   `json:"Count"`
+	Ratio float64               `json:"Ratio"`
 }
 
 type PathogenDistribution struct {
-	Pathogen string  `json:"pathogen"`
-	Count    int     `json:"count"`
-	Ratio    float64 `json:"ratio"`
+	Pathogen string  `json:"Pathogen"`
+	Count    int     `json:"Count"`
+	Ratio    float64 `json:"Ratio"`
 }
 
 type StatisticsResponse struct {
-	HospitalRate       float64               `json:"hospital_rate"`
-	DepartmentRates    []MonthlyRate         `json:"department_rates"`
-	SiteDistribution   []SiteDistribution    `json:"site_distribution"`
-	PathogenDistribution []PathogenDistribution `json:"pathogen_distribution"`
-	Month              string                `json:"month"`
+	HospitalRate         float64               `json:"HospitalRate"`
+	DepartmentRates      []MonthlyRate         `json:"DepartmentRates"`
+	SiteDistribution     []SiteDistribution    `json:"SiteDistribution"`
+	PathogenDistribution []PathogenDistribution `json:"PathogenDistribution"`
+	Month                string                `json:"Month"`
 }
 
 func getDefaultThreshold() float64 {
@@ -50,6 +50,9 @@ func getDefaultThreshold() float64 {
 
 func CalculateMonthlyRates(c *gin.Context) {
 	month := c.Query("month")
+	if month == "" {
+		month = c.Query("Month")
+	}
 	if month == "" {
 		now := time.Now()
 		month = fmt.Sprintf("%d-%02d", now.Year(), now.Month())
@@ -118,18 +121,18 @@ func CalculateMonthlyRates(c *gin.Context) {
 	hospitalRate = math.Round(hospitalRate*100) / 100
 
 	c.JSON(http.StatusOK, StatisticsResponse{
-		HospitalRate:       hospitalRate,
-		DepartmentRates:    departmentRates,
-		SiteDistribution:   siteDist,
+		HospitalRate:         hospitalRate,
+		DepartmentRates:      departmentRates,
+		SiteDistribution:     siteDist,
 		PathogenDistribution: pathogenDist,
-		Month:              month,
+		Month:                month,
 	})
 }
 
 func Get12MonthTrend(c *gin.Context) {
 	type TrendPoint struct {
-		Month         string  `json:"month"`
-		InfectionRate float64 `json:"infection_rate"`
+		Month         string  `json:"Month"`
+		InfectionRate float64 `json:"InfectionRate"`
 	}
 
 	var trend []TrendPoint
@@ -300,13 +303,13 @@ func checkConsecutiveMonths(departmentID uint, currentMonth string) {
 
 		if existingIntervention.ID == 0 {
 			intervention := models.Alert{
-				DepartmentID:  departmentID,
-				AlertType:     models.AlertNeedIntervention,
-				Month:         currentMonth,
-				Message:       "连续两个月感染率超标，需要进行干预",
-				Status:        "active",
-				Notified:      true,
-				CreatedAt:     time.Now(),
+				DepartmentID: departmentID,
+				AlertType:    models.AlertNeedIntervention,
+				Month:        currentMonth,
+				Message:      "连续两个月感染率超标，需要进行干预",
+				Status:       "active",
+				Notified:     true,
+				CreatedAt:    time.Now(),
 			}
 			database.DB.Create(&intervention)
 		}
@@ -318,11 +321,17 @@ func GetAlerts(c *gin.Context) {
 	query := database.DB.Preload("Department")
 
 	status := c.Query("status")
+	if status == "" {
+		status = c.Query("Status")
+	}
 	if status != "" {
 		query = query.Where("status = ?", status)
 	}
 
 	alertType := c.Query("type")
+	if alertType == "" {
+		alertType = c.Query("AlertType")
+	}
 	if alertType != "" {
 		query = query.Where("alert_type = ?", alertType)
 	}

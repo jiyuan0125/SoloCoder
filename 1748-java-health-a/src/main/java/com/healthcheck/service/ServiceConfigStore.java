@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
@@ -14,8 +15,14 @@ public class ServiceConfigStore {
     
     private final Map<String, ServiceConfig> configs = new ConcurrentHashMap<>();
     
-    public void registerService(ServiceConfig config) {
-        configs.put(config.getServiceId(), config);
+    public String registerService(ServiceConfig config) {
+        String serviceId = config.getServiceId();
+        if (serviceId == null || serviceId.trim().isEmpty()) {
+            serviceId = UUID.randomUUID().toString();
+            config.setServiceId(serviceId);
+        }
+        configs.put(serviceId, config);
+        return serviceId;
     }
     
     public void unregisterService(String serviceId) {

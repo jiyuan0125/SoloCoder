@@ -1,11 +1,9 @@
-微服务调用链太长，出问题不知道卡在哪。Spring Boot 做一个简易链路追踪。
+微服务调用链太长了——一个请求经过网关、用户服务、订单服务、库存服务、支付服务，出问题不知道卡在哪。上次线上故障排查了三个小时才定位到是库存服务超时。Spring Boot 做一个简易链路追踪。
 
-服务上报 span 数据。每个 span 包含 trace ID、span ID、父 span ID、服务名、操作名、开始时间、耗时。采集接口批量接收。
+服务上报 span 数据，POST /api/spans/batch。每个 span 包含 trace ID、span ID、父 span ID、服务名、操作名、开始时间、耗时毫秒。trace ID 是整个调用链的唯一标识，span ID 是单个调用的标识，父 span ID 把调用链串起来。
 
-按 trace ID 查完整调用链，返回 span 树结构。按服务名查最近 N 条 trace。按耗时排序查慢请求。查询结果可以按条件过滤。
+按 trace ID 查完整调用链，返回 span 树结构。父 span ID 为空的是根 span，根据父子关系递归构建调用树。按服务名查最近 N 条 trace（GET /api/traces?service=order&limit=20）。按耗时排序查慢请求（GET /api/traces?sort=duration&order=desc）。查询支持时间范围过滤。
 
-同一个 trace ID 的所有 span 自动关联。父 span ID 为空的是根 span。根据父子关系构建调用树。调用树的最大深度没有限制。
+不是所有请求都采集——采样率可配，比如 10%。但错误请求 100% 采集，慢请求（超过阈值）100% 采集。采样率变更后之前采集的 trace 数据保留，不删。三种采集策略各自独立判断，任一命中就采集。
 
-不是所有请求都采集。采样率可配（比如 10%）。错误请求 100% 采集。慢请求（超过阈值）100% 采集。采样率变更后之前的 trace 数据要保留。
-
-collector、querier、tree、sampler 四个模块。Maven 构建，端口走配置文件。
+collector 管接收和存储、querier 管各种查询、tree 管调用树构建、sampler 管采样策略。Maven 构建，端口走配置文件。

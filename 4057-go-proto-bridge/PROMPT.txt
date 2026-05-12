@@ -1,9 +1,7 @@
-后台服务之间混用 gRPC 和 REST，需要一个协议转换层。Go Gin 做一个 HTTP↔gRPC 桥接服务。
+后台有五个服务用 gRPC 通信，前端和第三方对接却只认 REST。每次加接口都要两边各写一遍，维护成本翻倍。用 Go Gin 做一个 HTTP 到 gRPC 的协议桥接服务，前端只管发 JSON，桥接层负责翻译。
 
-REST 请求进来后转换成 gRPC 调用转发给后端。请求参数从 JSON 映射到 protobuf 字段，响应从 protobuf 转回 JSON。字段映射规则在配置文件里定义，支持字段名转换（snake_case ↔ camelCase）和嵌套展开。
+1. REST 请求进来后转成 gRPC 调用转发给后端。请求参数从 JSON 映射到 protobuf 字段，响应从 protobuf 转回 JSON。字段映射规则在 YAML 配置文件里定义，支持字段名格式转换——snake_case 和 camelCase 互转，以及嵌套字段的展开和平铺。配置改了热加载不用重启。
 
-gRPC 的 streaming 在 HTTP 侧用 SSE（Server-Sent Events）对接。客户端订阅 SSE 后持续接收 gRPC stream 的消息，stream 结束时关闭 SSE 连接。
+2. gRPC 的 server streaming 在 HTTP 侧用 SSE 对接。客户端发起 GET 请求设置 Accept: text/event-stream，桥接层收到后持续把 gRPC stream 的消息以 SSE 事件推送出去，stream 结束时发送完成事件并关闭连接。客户端中途断开，桥接层主动关闭 gRPC stream 释放资源。
 
-支持批量操作：一个 HTTP 请求可以触发多个 gRPC 调用，结果聚合成一个响应返回。批量调用之间有依赖关系的要按顺序执行，没有依赖的并行执行。
-
-转换过程中的错误要映射到合适的 HTTP 状态码，gRPC 的 NOT_FOUND 映射 404，ALREADY_EXISTS 映射 409 等。至少包含 router、converter、grpc-client、config 四个模块。端口 PORT 环境变量，go build 能过。
+批量操作：一个 HTTP POST 可以触发多个 gRPC 调用，结果聚合成一个 JSON 数组返回。批量调用之间有依赖关系的按顺序串行执行，没有依赖的并行执行——依赖关系在配置里声明。转换过程中的错误映射到 HTTP 状态码，NOT_FOUND 映射 404，ALREADY_EXISTS 映射 409，DEADLINE_EXCEEDED 映射 504。架构分路由层、转换层、gRPC 客户端层、配置管理层，端口 PORT 环境变量，go build 能过。

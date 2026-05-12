@@ -1,11 +1,11 @@
-Rust tokio 写一个 JWT 认证网关。请求进来先验 token，合法的才转发。
+你有没有遇到过这种场景——上游服务挂了，网关还在傻乎乎地转发请求，每个请求都要等超时才返回，前端等半天看到一个 504？如果网关能知道上游挂了，直接返回 503 多好。Rust tokio 写一个 JWT 认证网关，认证和上游健康绑定在一起。
 
-请求带 Authorization Header，格式 Bearer {token}。网关解析 JWT，验证签名和过期时间。签名密钥通过环境变量传入。过期 token 返回 401。
+请求进来带 Authorization Header，格式 Bearer {token}。网关解析 JWT，验证签名（RS256）和过期时间。签名密钥通过环境变量 JWT_SECRET 传入。过期 token 返回 401。请求完全不带 token 也返回 401，除非路径在白名单里。
 
-客户端可以用刷新 token 换新的访问 token。刷新 token 有独立的过期时间和签名。刷新后旧的访问 token 立即失效。刷新 token 只能用一次。
+token 里带角色信息（roles 字段）。不同路径要求不同角色，路径和角色的映射通过接口配置（POST /api/permissions）。角色不足返回 403。白名单通过 POST /api/whitelist 配置，新增项立即生效。
 
-不是所有路径都需要认证——白名单路径直接放行。白名单通过接口配置，新增项立即生效。
+关键是上游健康检查——定期检测上游服务的 gRPC 健康状态（发 HealthCheck 请求）。上游不健康时所有请求直接返回 503，不再转发也不认证了，省得浪费 CPU。上游恢复后自动开始正常转发。
 
-验证通过后把用户信息（用户 ID、角色）注入请求 Header 转发给上游。上游服务不需要再做认证。
+每个请求的认证结果都记下来：请求路径、token 用户信息、认证结果、耗时毫秒数。失败的认证日志单独标记，方便安全审计。
 
-客户端信息（用户列表、密钥）的初始化方式后面再定。verifier、refresh、whitelist、forwarder 得拆开。Cargo build，PORT 环境变量。
+auth 管认证和鉴权、permission 管角色映射、probe 管上游健康检查、logger 管认证日志。Cargo build，PORT 环境变量。

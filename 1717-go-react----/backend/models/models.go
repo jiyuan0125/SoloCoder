@@ -7,24 +7,24 @@ import (
 )
 
 type Department struct {
-	ID   uint   `json:"id" gorm:"primaryKey"`
-	Name string `json:"name" gorm:"uniqueIndex"`
+	ID   uint   `json:"ID" gorm:"primaryKey"`
+	Name string `json:"Name" gorm:"uniqueIndex"`
 }
 
 type Patient struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	PatientID string    `json:"patient_id" gorm:"uniqueIndex"`
-	Name      string    `json:"name"`
-	Gender    string    `json:"gender"`
-	Age       int       `json:"age"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        uint      `json:"ID" gorm:"primaryKey"`
+	PatientID string    `json:"PatientID" gorm:"uniqueIndex"`
+	Name      string    `json:"Name"`
+	Gender    string    `json:"Gender"`
+	Age       int       `json:"Age"`
+	CreatedAt time.Time `json:"CreatedAt"`
+	UpdatedAt time.Time `json:"UpdatedAt"`
 }
 
 type InfectionType string
 
 const (
-	InfectionTypeCommunity InfectionType = "community"
+	InfectionTypeCommunity  InfectionType = "community"
 	InfectionTypeNosocomial InfectionType = "nosocomial"
 )
 
@@ -40,22 +40,22 @@ const (
 )
 
 type InfectionCase struct {
-	ID              uint          `json:"id" gorm:"primaryKey"`
-	PatientID       string        `json:"patient_id"`
-	PatientName     string        `json:"patient_name"`
-	Gender          string        `json:"gender"`
-	Age             int           `json:"age"`
-	DepartmentID    uint          `json:"department_id"`
-	Department      Department    `json:"department" gorm:"foreignKey:DepartmentID"`
-	AdmissionDate   time.Time     `json:"admission_date"`
-	InfectionDate   time.Time     `json:"infection_date"`
-	InfectionSite   InfectionSite `json:"infection_site"`
-	InfectionType   InfectionType `json:"infection_type"`
-	Pathogen        string        `json:"pathogen"`
-	DrugSensitivity bool          `json:"drug_sensitivity"`
-	Status          string        `json:"status"`
-	CreatedAt       time.Time     `json:"created_at"`
-	UpdatedAt       time.Time     `json:"updated_at"`
+	ID              uint          `json:"ID" gorm:"primaryKey"`
+	PatientID       string        `json:"PatientID"`
+	PatientName     string        `json:"PatientName"`
+	Gender          string        `json:"Gender"`
+	Age             int           `json:"Age"`
+	DepartmentID    uint          `json:"DepartmentID"`
+	Department      Department    `json:"Department" gorm:"foreignKey:DepartmentID"`
+	AdmissionDate   time.Time     `json:"AdmissionDate"`
+	InfectionDate   time.Time     `json:"InfectionDate"`
+	InfectionSite   InfectionSite `json:"InfectionSite"`
+	InfectionType   InfectionType `json:"InfectionType"`
+	Pathogen        string        `json:"Pathogen"`
+	DrugSensitivity bool          `json:"DrugSensitivity"`
+	Status          string        `json:"Status"`
+	CreatedAt       time.Time     `json:"CreatedAt"`
+	UpdatedAt       time.Time     `json:"UpdatedAt"`
 	DeletedAt       gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
@@ -70,102 +70,102 @@ const (
 )
 
 type PreventionMeasure struct {
-	ID              uint            `json:"id" gorm:"primaryKey"`
-	InfectionCaseID uint            `json:"infection_case_id"`
-	InfectionCase   InfectionCase   `json:"infection_case" gorm:"foreignKey:InfectionCaseID"`
-	MeasureType     MeasureType     `json:"measure_type"`
-	DepartmentID    uint            `json:"department_id"`
-	Department      Department      `json:"department" gorm:"foreignKey:DepartmentID"`
-	Executor        string          `json:"executor"`
-	ExecuteDate     time.Time       `json:"execute_date"`
-	Status          string          `json:"status"`
-	CreatedAt       time.Time       `json:"created_at"`
-	UpdatedAt       time.Time       `json:"updated_at"`
+	ID              uint            `json:"ID" gorm:"primaryKey"`
+	InfectionCaseID uint            `json:"InfectionCaseID"`
+	InfectionCase   InfectionCase   `json:"InfectionCase" gorm:"foreignKey:InfectionCaseID"`
+	MeasureType     MeasureType     `json:"MeasureType"`
+	DepartmentID    uint            `json:"DepartmentID"`
+	Department      Department      `json:"Department" gorm:"foreignKey:DepartmentID"`
+	Executor        string          `json:"Executor"`
+	ExecuteDate     time.Time       `json:"ExecuteDate"`
+	Status          string          `json:"Status"`
+	CreatedAt       time.Time       `json:"CreatedAt"`
+	UpdatedAt       time.Time       `json:"UpdatedAt"`
 	DeletedAt       gorm.DeletedAt  `json:"-" gorm:"index"`
 }
 
 type TargetMonitoring struct {
-	ID                   uint        `json:"id" gorm:"primaryKey"`
-	DepartmentID         uint        `json:"department_id"`
-	Department           Department  `json:"department" gorm:"foreignKey:DepartmentID"`
-	Month                string      `json:"month"`
-	HospitalizationDays  int         `json:"hospitalization_days"`
-	VentilatorDays       int         `json:"ventilator_days"`
-	VAPCases             int         `json:"vap_cases"`
-	CentralLineDays      int         `json:"central_line_days"`
-	CLABSICases          int         `json:"clabsi_cases"`
-	CatheterDays         int         `json:"catheter_days"`
-	CAUTICases          int         `json:"cauti_cases"`
-	CreatedAt            time.Time   `json:"created_at"`
-	UpdatedAt            time.Time   `json:"updated_at"`
-	DeletedAt            gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                  uint           `json:"ID" gorm:"primaryKey"`
+	DepartmentID        uint           `json:"DepartmentID"`
+	Department          Department     `json:"Department" gorm:"foreignKey:DepartmentID"`
+	Month               string         `json:"Month"`
+	HospitalizationDays int            `json:"HospitalizationDays"`
+	VentilatorDays      int            `json:"VentilatorDays"`
+	VAPCases            int            `json:"VAPCases"`
+	CentralLineDays     int            `json:"CentralLineDays"`
+	CLABSICases         int            `json:"CLABSICases"`
+	CatheterDays        int            `json:"CatheterDays"`
+	CAUTICases          int            `json:"CAUTICases"`
+	CreatedAt           time.Time      `json:"CreatedAt"`
+	UpdatedAt           time.Time      `json:"UpdatedAt"`
+	DeletedAt           gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 type AlertType string
 
 const (
-	AlertRateExceeded    AlertType = "rate_exceeded"
+	AlertRateExceeded     AlertType = "rate_exceeded"
 	AlertNeedIntervention AlertType = "need_intervention"
 )
 
 type Alert struct {
-	ID           uint        `json:"id" gorm:"primaryKey"`
-	DepartmentID uint        `json:"department_id"`
-	Department   Department  `json:"department" gorm:"foreignKey:DepartmentID"`
-	AlertType    AlertType   `json:"alert_type"`
-	Month        string      `json:"month"`
-	InfectionRate float64    `json:"infection_rate"`
-	Threshold    float64     `json:"threshold"`
-	Message      string      `json:"message"`
-	Status       string      `json:"status"`
-	Notified     bool        `json:"notified"`
-	CreatedAt    time.Time   `json:"created_at"`
+	ID            uint       `json:"ID" gorm:"primaryKey"`
+	DepartmentID  uint       `json:"DepartmentID"`
+	Department    Department `json:"Department" gorm:"foreignKey:DepartmentID"`
+	AlertType     AlertType  `json:"AlertType"`
+	Month         string     `json:"Month"`
+	InfectionRate float64    `json:"InfectionRate"`
+	Threshold     float64    `json:"Threshold"`
+	Message       string     `json:"Message"`
+	Status        string     `json:"Status"`
+	Notified      bool       `json:"Notified"`
+	CreatedAt     time.Time  `json:"CreatedAt"`
 }
 
 type ApprovalStatus string
 
 const (
-	ApprovalStatusSubmitted ApprovalStatus = "submitted"
-	ApprovalStatusFirstReview ApprovalStatus = "first_review"
+	ApprovalStatusSubmitted    ApprovalStatus = "submitted"
+	ApprovalStatusFirstReview  ApprovalStatus = "first_review"
 	ApprovalStatusSecondReview ApprovalStatus = "second_review"
-	ApprovalStatusFinalReview ApprovalStatus = "final_review"
-	ApprovalStatusApproved ApprovalStatus = "approved"
-	ApprovalStatusRejected ApprovalStatus = "rejected"
+	ApprovalStatusFinalReview  ApprovalStatus = "final_review"
+	ApprovalStatusApproved     ApprovalStatus = "approved"
+	ApprovalStatusRejected     ApprovalStatus = "rejected"
 )
 
 type Report struct {
-	ID             uint           `json:"id" gorm:"primaryKey"`
-	ReportType     string         `json:"report_type"`
-	Month          string         `json:"month"`
-	Year           int            `json:"year"`
-	HospitalRate   float64        `json:"hospital_rate"`
-	DepartmentRates string        `json:"department_rates"`
-	SiteDistribution string      `json:"site_distribution"`
-	PathogenDistribution string   `json:"pathogen_distribution"`
-	AntibioticUsage string       `json:"antibiotic_usage"`
-	ApprovalStatus ApprovalStatus `json:"approval_status"`
-	ApprovedBy     string         `json:"approved_by"`
-	ApprovedAt     *time.Time     `json:"approved_at"`
-	CreatedAt      time.Time      `json:"created_at"`
-	UpdatedAt      time.Time      `json:"updated_at"`
-	DeletedAt      gorm.DeletedAt `json:"-" gorm:"index"`
+	ID                   uint           `json:"ID" gorm:"primaryKey"`
+	ReportType           string         `json:"ReportType"`
+	Month                string         `json:"Month"`
+	Year                 int            `json:"Year"`
+	HospitalRate         float64        `json:"HospitalRate"`
+	DepartmentRates      string         `json:"DepartmentRates"`
+	SiteDistribution     string         `json:"SiteDistribution"`
+	PathogenDistribution string         `json:"PathogenDistribution"`
+	AntibioticUsage      string         `json:"AntibioticUsage"`
+	ApprovalStatus       ApprovalStatus `json:"ApprovalStatus"`
+	ApprovedBy           string         `json:"ApprovedBy"`
+	ApprovedAt           *time.Time     `json:"ApprovedAt"`
+	CreatedAt            time.Time      `json:"CreatedAt"`
+	UpdatedAt            time.Time      `json:"UpdatedAt"`
+	DeletedAt            gorm.DeletedAt `json:"-" gorm:"index"`
 }
 
 type ApprovalHistory struct {
-	ID         uint           `json:"id" gorm:"primaryKey"`
-	ReportID   uint           `json:"report_id"`
-	Status     ApprovalStatus `json:"status"`
-	Operator   string         `json:"operator"`
-	Comment    string         `json:"comment"`
-	CreatedAt  time.Time      `json:"created_at"`
+	ID        uint           `json:"ID" gorm:"primaryKey"`
+	ReportID  uint           `json:"ReportID"`
+	Status    ApprovalStatus `json:"Status"`
+	Operator  string         `json:"Operator"`
+	Comment   string         `json:"Comment"`
+	CreatedAt time.Time      `json:"CreatedAt"`
 }
 
 type PriceHistory struct {
-	ID        uint      `json:"id" gorm:"primaryKey"`
-	EntityType string   `json:"entity_type"`
-	EntityID  uint      `json:"entity_id"`
-	OldPrice  float64   `json:"old_price"`
-	NewPrice  float64   `json:"new_price"`
-	ChangedBy string    `json:"changed_by"`
-	CreatedAt time.Time `json:"created_at"`
+	ID         uint      `json:"ID" gorm:"primaryKey"`
+	EntityType string    `json:"EntityType"`
+	EntityID   uint      `json:"EntityID"`
+	OldPrice   float64   `json:"OldPrice"`
+	NewPrice   float64   `json:"NewPrice"`
+	ChangedBy  string    `json:"ChangedBy"`
+	CreatedAt  time.Time `json:"CreatedAt"`
 }

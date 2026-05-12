@@ -1,4 +1,7 @@
-FastAPI 写一个链路追踪采集器。每个请求生成 TraceID，跨服务调用时 TraceID 通过 Header 传递。
-Span 采集：服务通过接口上报 Span。Span 包含 traceId、spanId、parentSpanId、operationName、startTime、duration。Span 之间通过 parentSpanId 形成树结构。
-链路查询：按 traceId 查询完整调用链。返回 Span 树。可以按 operationName 和耗时过滤。耗时超过阈值的链路标为慢调用。
-服务拓扑：根据 Span 数据自动生成服务调用关系图。每个服务的平均响应时间和错误率实时计算。collector、store、query、topology 各一块。端口 PORT 环境变量。
+链路追踪数据量一大，逐条看 span 就不太现实了。得有聚合视角——哪个服务最慢、哪条链路错误率最高、服务之间的调用拓扑长什么样。FastAPI 写一个链路追踪采集器，先收数据再做聚合分析。
+
+每个请求入口生成一个 TraceID（UUID），跨服务调用时 TraceID 通过 X-Trace-Id Header 传递。每个服务内部生成 SpanID，上报 Span 时带上 traceId、spanId、parentSpanId、operationName、startTime（毫秒时间戳）、duration（毫秒）。Span 之间通过 parentSpanId 形成树结构——根 Span 的 parentSpanId 为空。
+
+查询接口按 traceId 查完整调用链，返回 Span 树的 JSON 表示。可以按 operationName 过滤，也可以按耗时过滤——比如只看 duration > 500ms 的慢调用。慢调用的判定阈值通过接口配置，默认 1000ms。慢调用链路自动标红，方便一眼定位。
+
+服务拓扑自动生成。根据 Span 数据里的调用关系，统计每对服务之间的调用量、平均响应时间、错误率。这些数据实时计算，按分钟聚合。拓扑数据通过接口查询，返回节点（服务）和边（调用关系）的列表。collector 管 Span 接收、store 管存储和索引、query 管链路查询、topology 管拓扑生成。端口 PORT 环境变量。

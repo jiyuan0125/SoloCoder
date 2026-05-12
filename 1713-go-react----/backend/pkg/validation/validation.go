@@ -84,6 +84,30 @@ func IsValidUSCC(code string) bool {
 	return verifyUSCCChecksum(code)
 }
 
+func GenerateTestUSCC() string {
+	chars := "0123456789ABCDEFGHJKLMNPQRTUWXY"
+	weights := []int{1, 3, 9, 27, 19, 26, 16, 17, 20, 29, 25, 13, 8, 24, 10, 30, 28}
+	charValues := make(map[rune]int)
+	for i, c := range chars {
+		charValues[c] = i
+	}
+
+	code := "91110108MA0084XN1"
+	sum := 0
+	for i := 0; i < 17; i++ {
+		c := rune(code[i])
+		val := charValues[c]
+		sum += val * weights[i]
+	}
+
+	mod := 31
+	checkVal := mod - (sum % mod)
+	if checkVal == mod {
+		checkVal = 0
+	}
+	return code + string(chars[checkVal])
+}
+
 func verifyUSCCChecksum(code string) bool {
 	weights := []int{1, 3, 9, 27, 19, 26, 16, 17, 20, 29, 25, 13, 8, 24, 10, 30, 28}
 	chars := "0123456789ABCDEFGHJKLMNPQRTUWXY"

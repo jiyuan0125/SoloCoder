@@ -1,5 +1,4 @@
-想用 Rust actix-web 练手日志处理这块，做个日志聚合索引器。
-HTTP 批量收日志，每条带 level、timestamp、message、source 四个字段。source 是来源服务的标识，timestamp 精度到毫秒。一次最多收 1000 条。
-按 source 分索引，message 做分词建倒排，level 和 timestamp 建排序索引。数据全放内存。
-查询按时间范围、级别、来源过滤，支持关键词搜索，结果按时间排。聚合可以按级别统计数量、按来源统计数量、按时间段统计数量。
-日志默认保留 7 天，超了自动清，索引跟着一起清。查询统计反映的都是当前还活着的数据。模块拆 receiver、indexer、querier、janitor。Cargo build，端口 PORT 环境变量。
+Rust actix-web 练手日志处理——不是做日志采集，是做日志聚合索引。线上十个服务每天产生几百万条日志，查起来靠 grep 太慢了。HTTP 批量收日志，每条带 level、timestamp、message、source 四个字段。source 是来源服务的标识，比如 order-service、payment-service。timestamp 精度到毫秒。一次最多收 1000 条，超了返回 400。level 只认 DEBUG、INFO、WARN、ERROR 四种。
+按 source 分索引，message 做分词建倒排——分词按空格和标点拆就行，不用上中文分词。level 和 timestamp 建排序索引，方便按级别过滤和按时间排序。数据全放内存，重启清零，持久化不是重点。
+查询按时间范围、级别、来源过滤，支持关键词搜索——关键词走倒排索引查，比遍历快。结果按时间排，分页返回，默认每页 50 条。聚合可以按级别统计数量、按来源统计数量、按时间段（分钟/小时）统计数量，聚合结果缓存 10 秒。
+日志默认保留 7 天，超了自动清，索引跟着一起清——后台线程每小时扫一次。查询统计反映的都是当前还活着的数据，清掉的就查不到了。模块拆 receiver、indexer、querier、janitor。Cargo build，端口 PORT 环境变量。

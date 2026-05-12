@@ -1,5 +1,4 @@
-老系统是 SOAP 协议的，新系统要 JSON，FastAPI 写一个协议转换层。
-收 JSON 请求，转成 SOAP XML 格式丢给后端。转换规则按接口路径配，字段映射表定义 JSON 字段和 XML 节点的对应关系。
-后端返回 XML，转成 JSON 还给客户端。SOAP Envelope 要能解析。XML 属性映射成 JSON 字段时加 _attr 前缀，CDATA 内容原样保留。
-转换失败了记下原始请求。SOAP Fault 转成 JSON 错误格式。注意：用户提交的查询参数直接拿去构造 XPath 表达式了。
-转换日志按接口路径分组，能查每个接口的成功率和平均耗时。模块拆 adapter、soap_parser、mapper、logger。端口 PORT 环境变量。
+老系统是 SOAP 协议的，新系统要 JSON——中间得有个转换层。FastAPI 写一个。收 JSON 请求，转成 SOAP XML 格式丢给后端。转换规则按接口路径配——每个路径有独立的映射表。映射表定义 JSON 字段和 XML 节点的对应关系——简单的字段名映射，加上嵌套路径支持（json.user.name → XML 的 /User/FullName）。
+后端返回 XML，转成 JSON 还给客户端。SOAP Envelope 要能解析——去掉 Envelope 和 Body 包装，只提取业务数据。XML 属性映射成 JSON 字段时加 _attr 前缀（比如 <item id="1"> 变成 {"_attr_id": "1", "#text": "内容"}），CDATA 内容原样保留。
+转换失败了记下原始请求和错误信息，包含完整的请求体和转换到哪一步失败的。日志按接口路径分组，能查每个接口的成功率、平均耗时和最近的失败原因。
+注意安全：用户提交的查询参数直接拿去构造 XPath 表达式了——得做参数转义，防止 XPath 注入。SOAP Fault 转成 JSON 错误格式——faultcode 映射到 error_code，faultstring 映射到 error_message，detail 原样保留。XML 外部实体攻击（XXE）也得防，解析时禁用 DTD 和外部实体。模块拆 adapter、soap_parser、mapper、logger。端口 PORT 环境变量。

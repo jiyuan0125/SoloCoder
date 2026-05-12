@@ -1,5 +1,7 @@
-去年有个人改了线上配置，直接把支付超时时间从 30 秒改成 3 毫秒，全站交易全失败。Spring Boot 做一个带审批工作流的配置中心，配置变更必须走流程。
-配置项状态：draft → submitted → approved → published。也可以 rejected 退回 draft 重新编辑。提交审批后由审批人审批。审批人按配置项的环境分配（dev 谁都能批，prod 要 TL 批）。
-published 的配置推送到客户端。推送方式：客户端轮询 + 服务端主动通知。推送确认：客户端收到后要 ack，没 ack 的定期重推。
-配置回滚：published 的配置可以回滚到上一个版本。回滚也要走审批。配置版本号自增，回滚后版本号继续增长不回退。
-配置项有依赖关系：改了 A 配置可能需要同步改 B 配置。依赖关系通过接口配置。workflow、publisher、version、dependency 四个模块。Maven 构建，端口配置文件。
+还记得那次事故吗？有人把线上支付超时从 30 秒改成 3 毫秒，全站交易失败。连个审批流程都没有，谁都能改生产配置。Spring Boot 做一个带审批工作流的配置中心，配置变更必须走流程。
+
+配置项状态流转：draft → submitted → approved → published，也可以 rejected 退回 draft 重新编辑。提交审批 POST /config/{key}/submit。审批人按环境分配——dev 谁都能批，staging 需要 TL，prod 需要指定审批人列表（通过 POST /env/{env}/approvers 配置）。POST /config/{key}/approve 批准，POST /config/{key}/reject 驳回（必须填 reason）。
+
+published 的配置推送到客户端。推送两种方式：客户端轮询 GET /config?env=prod&labels=canary=true（30 秒间隔）和服务端 SSE 长连接 GET /config/stream。推送确认——客户端收到后调 POST /config/ack/{version}，没 ack 的配置每 60 秒重推。GET /config/push-status 查看各客户端的确认状态。
+
+配置回滚。published 的配置可以回滚到上一个版本，POST /config/{key}/rollback?version=N。回滚也要走审批流程。配置版本号自增不回退。

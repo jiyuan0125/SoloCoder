@@ -218,6 +218,14 @@ func (h *ExaminationHandler) RecordResult(w http.ResponseWriter, r *http.Request
 		factorNames = append(factorNames, ef.FactorName)
 	}
 
+	if len(factorNames) == 0 {
+		var factors []models.HazardFactor
+		db.GetDB().Where("enterprise_id = ? AND post_name = ?", exam.EnterpriseID, worker.PostName).Find(&factors)
+		for _, f := range factors {
+			factorNames = append(factorNames, f.FactorName)
+		}
+	}
+
 	for _, item := range data.ExamItems {
 		if item.ItemCode != "" && !validation.IsValidExamItemCode(item.ItemCode, factorNames) {
 			http.Error(w, `{"error":"体检项目 "+item.ItemCode+" 不在允许的列表中"}`, http.StatusBadRequest)
@@ -266,8 +274,8 @@ func (h *ExaminationHandler) RecordResult(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	for _, item := range exam.ExamItems {
-		if err := tx.Save(&item).Error; err != nil {
+	for i := range exam.ExamItems {
+		if err := tx.Save(&exam.ExamItems[i]).Error; err != nil {
 			tx.Rollback()
 			http.Error(w, `{"error":"保存项目结果失败"}`, http.StatusInternalServerError)
 			return

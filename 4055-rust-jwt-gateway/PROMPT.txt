@@ -1,9 +1,7 @@
-Rust actix-web 写一个 Token 验证网关，放在业务服务前面做认证。
+你有没有遇到过这种情况——五个后端服务各自实现了一套 Token 验证逻辑，改个签名算法要改五处代码？用 actix-web 做一个 Token 验证网关，放在所有业务服务前面统一做认证，后端只管业务逻辑。
 
-支持 JWT 和 opaque token 两种格式。JWT 验证签名和过期时间，opaque token 需要调用内部接口校验。两种 token 可以共存，通过 header 里的前缀区分（Bearer vs Token）。
+支持 JWT 和 opaque token 两种格式。JWT 验签名和过期时间，opaque token 调内部接口校验。两种 token 共存，通过 Authorization header 的前缀区分——Bearer 打头的是 JWT，Token 打头的是 opaque。JWT 签名算法支持 HS256 和 RS256，密钥通过配置文件加载。
 
-Token 刷新机制：客户端拿 refresh token 换新的 access token。refresh token 有使用次数限制，用一次失效，同时签发新的 refresh token。旧的 refresh token 在刷新后加入黑名单，黑名单 TTL 和 refresh token 的有效期一致。
+Token 刷新：客户端拿 refresh token 换新的 access token。refresh token 有使用次数限制，用一次就失效，同时签发新的 refresh token 返回给客户端。旧的 refresh token 刷新后加入黑名单，黑名单 TTL 和 refresh token 有效期一致，过期自动清理。刷新接口本身也需要认证——必须提供有效的 refresh token 才能换新的。
 
-请求转发时把验证过的用户信息（user_id、roles）注入到 header 里传给后端。后端可以直接信任这些 header，不需要再验证。
-
-未认证的请求返回 401，权限不足返回 403。错误响应格式要统一，包含错误码和描述。路径 /api/auth/{provider}/token 下的走认证流程，其他路径做 token 校验。Cargo build，PORT 环境变量。
+验证通过的请求转发时把用户信息注入 header——X-User-Id、X-User-Roles 传给后端。后端直接信任这些 header 不需要再验。未认证返回 401，权限不足返回 403，响应格式统一包含 error_code 和 message。/api/auth/{provider}/token 走认证流程，其余路径做 token 校验。Cargo build，PORT 环境变量。你觉得一个网关够用还是需要按业务域拆分？

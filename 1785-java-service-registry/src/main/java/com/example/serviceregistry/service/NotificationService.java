@@ -1,13 +1,16 @@
 package com.example.serviceregistry.service;
 
+import com.example.serviceregistry.event.ServiceChangedEvent;
 import com.example.serviceregistry.model.ServiceInstance;
 import com.example.serviceregistry.model.Subscriber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -17,8 +20,12 @@ public class NotificationService {
     private final ServiceRegistry serviceRegistry;
     private final RestClient restClient;
 
-    public void notifySubscribers(String serviceName, List<ServiceInstance> healthyInstances) {
-        var subscribers = serviceRegistry.getSubscribers(serviceName);
+    @EventListener
+    public void handleServiceChanged(ServiceChangedEvent event) {
+        String serviceName = event.getServiceName();
+        List<ServiceInstance> healthyInstances = event.getHealthyInstances();
+
+        Set<Subscriber> subscribers = serviceRegistry.getSubscribers(serviceName);
         if (subscribers.isEmpty()) {
             return;
         }

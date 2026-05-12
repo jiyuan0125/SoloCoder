@@ -98,6 +98,18 @@ func applyPrivacy(s *models.Sample, role models.Role) *models.Sample {
 	} else if role == models.RoleSubmitter {
 		copied.Patient.IDCard = maskIDCard(copied.Patient.IDCard)
 		copied.Patient.Phone = maskPhone(copied.Patient.Phone)
+		maskedItems := make([]models.TestItem, len(s.TestItems))
+		for i, item := range s.TestItems {
+			maskedItems[i] = models.TestItem{
+				Code:           item.Code,
+				Name:           item.Name,
+				ResultSummary:  item.ResultSummary,
+				RiskLevel:      item.RiskLevel,
+				RiskConclusion: item.RiskConclusion,
+				Completed:      item.Completed,
+			}
+		}
+		copied.TestItems = maskedItems
 	}
 	return &copied
 }
@@ -460,35 +472,36 @@ func updateSampleStatus(c *gin.Context) {
 	}
 
 	samplesMu.Lock()
+	defer samplesMu.Unlock()
+
 	s, ok := samples[id]
 	if !ok {
-		samplesMu.Unlock()
 		c.JSON(http.StatusNotFound, gin.H{"error": "sample not found"})
 		return
 	}
 
 	if !isValidStatusTransition(s.Status, req.NewStatus) {
-		samplesMu.Unlock()
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid status transition"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("cannot transition from %s to %s", s.Status, req.NewStatus)})
 		return
 	}
 
-	s.Status = req.NewStatus
-
 	if req.NewStatus == models.SampleStatusTestComplete {
-		allComplete := true
 		for _, item := range s.TestItems {
 			if !item.Completed {
-				allComplete = false
-				break
+				c.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("test item %s not completed", item.Code)})
+				return
 			}
 		}
-		if !allComplete {
-			samplesMu.Unlock()
-			c.JSON(http.StatusBadRequest, gin.H{"error": "not all test items completed"})
+	}
+
+	if req.NewStatus == models.SampleStatusReportGenerating {
+		if s.Status != models.SampleStatusTestComplete {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "must be test_complete before generating report"})
 			return
 		}
 	}
+
+	s.Status = req.NewStatus
 
 	if req.NewStatus == models.SampleStatusReportGenerating {
 		generateReportForSample(s)
@@ -501,7 +514,6 @@ func updateSampleStatus(c *gin.Context) {
 		createTodo(models.TodoNotifyClient, s.ID, s.SampleCode, "客服人员")
 	}
 
-	samplesMu.Unlock()
 	c.JSON(http.StatusOK, gin.H{"status": s.Status})
 }
 

@@ -1,4 +1,7 @@
-Rust actix-web 写一个服务注册中心，带内置负载均衡查询。客户端查服务时直接返回一个实例，不需要自己做负载均衡。
-服务注册：实例启动时注册。注册信息有服务名、地址、端口、权重、元数据。实例定期续约，续约超时自动注销。
-查询接口：按服务名查询。返回策略可选：轮询、随机、权重随机。查询结果只返回健康实例。
-实例变更通知：实例上线或下线时通知订阅者。通知通过 WebSocket 推送。内部包含 registry、balancer、notifier、lease。Cargo build，PORT 环境变量。
+先注册服务实例，然后客户端查询时服务端直接返回一个实例——内置负载均衡，客户端不用自己实现选实例的逻辑。Rust actix-web 写一个这样的服务注册中心。
+
+实例启动时通过 POST /register 注册，注册信息包含服务名、IP、端口、权重（默认 1）和元数据（KV 对，比如 version=2.1、zone=a）。实例每隔 heartbeatInterval（默认 10 秒）发一次续约请求。续约超时（默认 30 秒）标记为不健康，再过 30 秒自动注销并清除数据。
+
+查询接口 GET /services/{name} 返回一个健康实例。返回策略可选：round-robin（轮询）、random（随机）、weighted-random（按权重随机）。请求时通过 ?strategy= 参数指定策略。查询结果只返回健康实例，不健康的过滤掉。同一个服务名下的所有实例也可以通过 GET /services/{name}/all 列出来。
+
+实例变更通知通过 WebSocket 推送。客户端连接 ws://host/ws 后订阅感兴趣的服务名，该服务的实例上线或下线时推送变更事件——包含实例信息和变更类型（register/deregister/health_change）。内部包含 registry（注册数据管理）、balancer（负载均衡策略）、notifier（WebSocket 推送）、lease（续约和超时）。Cargo build，PORT 环境变量。

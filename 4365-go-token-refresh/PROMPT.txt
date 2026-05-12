@@ -1,4 +1,7 @@
-Go/Gin 写一个认证网关。请求进来先验证 Token，合法的转发到后端，不合法的拒绝。
-Token 验证：支持 JWT 验证。检查签名、过期时间、issuer。验证失败返回 401。Token 过期前 5 分钟自动在响应 Header 中附带新 Token。
-黑白名单：路径白名单不需要验证 Token。IP 黑名单直接拒绝。黑白名单通过接口动态管理。
-Token 刷新：客户端可以用旧 Token 换新 Token。旧 Token 刷新后立即失效，防止重复刷新。刷新记录保留日志。模块化成 verifier、revoker、whitelist、refresh。go build 能过，PORT 环境变量。
+后端有几十个微服务，每个都要自己验证 Token 重复造轮子。统一在网关层做认证，后端只管业务。用 Go/Gin 写一个认证网关。
+
+请求进来第一步验证 Token。支持两种方式：JWT 和 API Key。JWT 从 Authorization Header 的 Bearer 字段取，验证签名（HMAC-SHA256）、过期时间、issuer。API Key 从 X-API-Key Header 取，查本地配置的有效 Key 列表。验证失败返回 401，响应体带上失败原因（token expired / invalid signature / unknown key）。
+
+Token 快过期时自动续期是个好体验。过期前 5 分钟，网关在响应 Header 里附带 X-New-Token，客户端下次请求直接用新 Token。客户端也可以主动调 POST /auth/refresh 用旧 Token 换新 Token。旧 Token 刷新后立即加入黑名单，防止重复刷新。刷新记录保留日志。
+
+路径白名单让部分接口不需要 Token——比如 /health、/metrics、/public/*。IP 黑名单直接拒绝，连验证都不做。黑白名单通过接口动态管理，不需要重启网关。模块化成 verifier（Token 验证）、revoker（黑名单管理）、whitelist（路径白名单）、refresh（Token 刷新）。go build 能过，PORT 环境变量。

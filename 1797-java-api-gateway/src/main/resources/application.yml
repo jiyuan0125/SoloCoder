@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+gateway:
+  forward:
+    timeout: 10000
+  admin:
+    prefix: /admin

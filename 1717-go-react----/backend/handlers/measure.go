@@ -11,12 +11,15 @@ import (
 )
 
 type RecommendedMeasure struct {
-	MeasureType models.MeasureType `json:"measure_type"`
-	Description string            `json:"description"`
+	MeasureType models.MeasureType `json:"MeasureType"`
+	Description string             `json:"Description"`
 }
 
 func GetRecommendedMeasures(c *gin.Context) {
 	site := models.InfectionSite(c.Query("site"))
+	if site == "" {
+		site = models.InfectionSite(c.Query("Site"))
+	}
 	if site == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "请提供感染部位"})
 		return
@@ -72,11 +75,11 @@ func getRecommendationsBySite(site models.InfectionSite) []RecommendedMeasure {
 }
 
 type CreatePreventionMeasureRequest struct {
-	InfectionCaseID uint            `json:"infection_case_id" binding:"required"`
-	MeasureType     models.MeasureType `json:"measure_type" binding:"required"`
-	DepartmentID    uint            `json:"department_id" binding:"required"`
-	Executor        string          `json:"executor" binding:"required"`
-	ExecuteDate     time.Time       `json:"execute_date"`
+	InfectionCaseID uint              `json:"InfectionCaseID" binding:"required"`
+	MeasureType     models.MeasureType `json:"MeasureType" binding:"required"`
+	DepartmentID    uint              `json:"DepartmentID" binding:"required"`
+	Executor        string            `json:"Executor" binding:"required"`
+	ExecuteDate     time.Time         `json:"ExecuteDate"`
 }
 
 func CreatePreventionMeasure(c *gin.Context) {
@@ -126,11 +129,17 @@ func GetPreventionMeasures(c *gin.Context) {
 	query := database.DB.Preload("InfectionCase").Preload("Department")
 
 	caseID := c.Query("case_id")
+	if caseID == "" {
+		caseID = c.Query("CaseID")
+	}
 	if caseID != "" {
 		query = query.Where("infection_case_id = ?", caseID)
 	}
 
 	departmentID := c.Query("department_id")
+	if departmentID == "" {
+		departmentID = c.Query("DepartmentID")
+	}
 	if departmentID != "" {
 		query = query.Where("department_id = ?", departmentID)
 	}

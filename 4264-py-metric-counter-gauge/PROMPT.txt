@@ -1,5 +1,4 @@
-最近在搞可观测性，需要一个指标采集服务，FastAPI 实现。
-三种指标类型：Counter 只增不减，Gauge 可增可减，Histogram 做分布统计。每种各有独立的写入接口。指标带名称和标签（键值对）。
-Counter 按步长递增，Gauge 可以设值也可以增减，Histogram 记一个观测值后自动算分位数。同一个名称加同一组标签，多次写入时 Gauge 会覆盖、Counter 会累加。
-查询可以按名称和标签过滤。导出走 Prometheus text format，Counter 带 _total 后缀，Histogram 带 _bucket、_sum、_count。
-并发写入同一个 Counter 时数值不能丢。数据存内存，重启清零。模块拆 collector、store、exporter、querier。端口 PORT 环境变量。
+先搞清楚三种指标类型的语义：Counter 只增不减，比如请求总数；Gauge 可增可减，比如当前连接数；Histogram 做分布统计，比如请求耗时。最近在搞可观测性，需要一个指标采集服务，FastAPI 实现。每种各有独立的写入接口，POST /metrics/counter、POST /metrics/gauge、POST /metrics/histogram。指标带名称和标签（键值对），比如 http_requests_total{method="GET",path="/api/users"}。
+Counter 按步长递增，每次写入一个 delta 值。Gauge 可以设绝对值也可以增减。Histogram 记一个观测值后自动算分位数——P50、P90、P95、P99。同一个名称加同一组标签，多次写入时 Gauge 会覆盖、Counter 会累加，标签的顺序不影响唯一性。
+查询可以按名称和标签过滤，支持模糊匹配标签值。导出走 Prometheus text format，Counter 带 _total 后缀，Histogram 带 _bucket、_sum、_count，格式要严格符合 Prometheus 规范。
+并发写入同一个 Counter 时数值不能丢——用原子操作或加锁。数据存内存，重启清零，不要求持久化。每个指标的最后一次更新时间要记录，查询时可以按时间过滤不活跃的指标。模块拆 collector、store、exporter、querier。端口 PORT 环境变量。

@@ -1,0 +1,25 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: circuit-breaker-demo
+
+circuit-breaker:
+  default-config:
+    failure-threshold: 5
+    open-duration: 30000
+    half-open-permitted-calls: 3
+  services:
+    payment-service:
+      failure-threshold: 3
+      open-duration: 60000
+      half-open-permitted-calls: 2
+    inventory-service:
+      failure-threshold: 5
+      open-duration: 30000
+      half-open-permitted-calls: 3
+
+logging:
+  level:
+    com.example.circuitbreaker: DEBUG

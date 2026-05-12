@@ -15,7 +15,7 @@ function LineChart({ data, width = 800, height = 300 }) {
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
 
-  const values = data.map(d => d.infection_rate);
+  const values = data.map(d => d.InfectionRate);
   const maxValue = Math.max(...values, 5);
   const minValue = 0;
 
@@ -26,9 +26,9 @@ function LineChart({ data, width = 800, height = 300 }) {
 
   const points = data.map((d, i) => ({
     x: getX(i),
-    y: getY(d.infection_rate),
-    month: d.month,
-    rate: d.infection_rate,
+    y: getY(d.InfectionRate),
+    month: d.Month,
+    rate: d.InfectionRate,
   }));
 
   const pathData = points.map((p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `L ${p.x} ${p.y}`)).join(' ');

@@ -1,5 +1,9 @@
-浏览器端用 WebSocket，后端只提供 HTTP 接口，中间缺个翻译。Go 标准库写一个桥接服务，WebSocket 客户端发消息，桥接服务转成 HTTP 请求打到后端。
-桥接规则：WebSocket 消息的某个字段（比如 action）映射到 HTTP 的路径和方法。消息的其他字段作为 HTTP 请求 body 或 query 参数。映射规则通过配置接口管理。
-WebSocket 连接管理：支持多个客户端同时连接。每个连接有独立的订阅列表。服务端主动推送：HTTP 响应可以反向推送到订阅了的 WebSocket 客户端。
-消息序号：每个 WebSocket 消息有递增序号。客户端可以用序号检测消息丢失。桥接服务保证消息按序号顺序转发。
-连接超时：客户端 60 秒不发消息就断开。断开后清理该连接的订阅。bridge、manager、subscrier、config 四个模块。端口 PORT 环境变量，go build。
+浏览器端用 WebSocket，后端只提供 HTTP REST 接口，中间缺个翻译层——前端团队不想改 WebSocket 协议，后端也不想为了前端单独开个 WebSocket 端口。Go 标准库写一个桥接服务，WebSocket 客户端发消息自动转成 HTTP 请求打到后端。
+
+桥接规则。WebSocket 消息的 action 字段映射到 HTTP 的路径和方法。比如 action=create_order 映射到 POST /api/orders。消息的其他字段作为 HTTP 请求 body（JSON 格式）。映射规则通过 POST /bridge/rules 管理，每条规则包含 action、http_method、http_path、backend_url 四个字段。
+
+1. WebSocket 连接管理。支持多个客户端同时连接，每个连接分配唯一 connection_id。每个连接维护独立的订阅列表——客户端通过发送 subscribe 类型的消息订阅特定事件。GET /bridge/connections 查看当前所有活跃连接和订阅。
+
+2. 服务端推送。HTTP 响应可以反向推送到订阅了的 WebSocket 客户端。后端调 POST /bridge/push 参数包含 topic 和 data，桥接服务把 data 推送给所有订阅了该 topic 的 WebSocket 连接。推送失败（连接已断开）静默跳过。
+
+3. 消息序号。每个 WebSocket 消息有递增序号 seq。客户端可以用序号检测消息丢失——如果收到的序号不连续，说明中间有消息丢了。桥接服务保证消息按序号顺序转发，不做乱序优化。

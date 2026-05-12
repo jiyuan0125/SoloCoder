@@ -8,15 +8,15 @@ function TargetMonitoringPage() {
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    department_id: '',
-    month: '',
-    hospitalization_days: '',
-    ventilator_days: '',
-    vap_cases: '',
-    central_line_days: '',
-    clabsi_cases: '',
-    catheter_days: '',
-    cauti_cases: '',
+    DepartmentID: '',
+    Month: '',
+    HospitalizationDays: '',
+    VentilatorDays: '',
+    VAPCases: '',
+    CentralLineDays: '',
+    CLABSICases: '',
+    CatheterDays: '',
+    CAUTICases: '',
   });
 
   useEffect(() => {
@@ -45,14 +45,14 @@ function TargetMonitoringPage() {
     try {
       const data = {
         ...formData,
-        department_id: parseInt(formData.department_id),
-        hospitalization_days: parseInt(formData.hospitalization_days) || 0,
-        ventilator_days: parseInt(formData.ventilator_days) || 0,
-        vap_cases: parseInt(formData.vap_cases) || 0,
-        central_line_days: parseInt(formData.central_line_days) || 0,
-        clabsi_cases: parseInt(formData.clabsi_cases) || 0,
-        catheter_days: parseInt(formData.catheter_days) || 0,
-        cauti_cases: parseInt(formData.cauti_cases) || 0,
+        DepartmentID: parseInt(formData.DepartmentID),
+        HospitalizationDays: parseInt(formData.HospitalizationDays) || 0,
+        VentilatorDays: parseInt(formData.VentilatorDays) || 0,
+        VAPCases: parseInt(formData.VAPCases) || 0,
+        CentralLineDays: parseInt(formData.CentralLineDays) || 0,
+        CLABSICases: parseInt(formData.CLABSICases) || 0,
+        CatheterDays: parseInt(formData.CatheterDays) || 0,
+        CAUTICases: parseInt(formData.CAUTICases) || 0,
       };
       await monitoringAPI.create(data);
       setShowModal(false);
@@ -75,21 +75,21 @@ function TargetMonitoringPage() {
 
   const resetForm = () => {
     setFormData({
-      department_id: '',
-      month: '',
-      hospitalization_days: '',
-      ventilator_days: '',
-      vap_cases: '',
-      central_line_days: '',
-      clabsi_cases: '',
-      catheter_days: '',
-      cauti_cases: '',
+      DepartmentID: '',
+      Month: '',
+      HospitalizationDays: '',
+      VentilatorDays: '',
+      VAPCases: '',
+      CentralLineDays: '',
+      CLABSICases: '',
+      CatheterDays: '',
+      CAUTICases: '',
     });
   };
 
   const getDepartmentName = (id) => {
-    const dept = departments.find(d => d.id === id);
-    return dept?.name || '未知';
+    const dept = departments.find(d => d.ID === id);
+    return dept?.Name || '未知';
   };
 
   return (
@@ -134,18 +134,18 @@ function TargetMonitoringPage() {
               </thead>
               <tbody>
                 {monitorings.map((m) => (
-                  <tr key={m.id}>
-                    <td>{m.department_name || getDepartmentName(m.department_id)}</td>
-                    <td>{m.month}</td>
-                    <td>{m.hospitalization_days}</td>
-                    <td>{m.ventilator_usage_rate}%</td>
-                    <td>{m.vap_rate}‰</td>
-                    <td>{m.central_line_usage_rate}%</td>
-                    <td>{m.clabsi_rate}‰</td>
-                    <td>{m.catheter_usage_rate}%</td>
-                    <td>{m.cauti_rate}‰</td>
+                  <tr key={m.ID}>
+                    <td>{m.DepartmentName || getDepartmentName(m.DepartmentID)}</td>
+                    <td>{m.Month}</td>
+                    <td>{m.HospitalizationDays}</td>
+                    <td>{m.VentilatorUsageRate}%</td>
+                    <td>{m.VAPRate}‰</td>
+                    <td>{m.CentralLineUsageRate}%</td>
+                    <td>{m.CLABSIRate}‰</td>
+                    <td>{m.CatheterUsageRate}%</td>
+                    <td>{m.CAUTIRate}‰</td>
                     <td>
-                      <button className="btn btn-danger" onClick={() => handleDelete(m.id)}>
+                      <button className="btn btn-danger" onClick={() => handleDelete(m.ID)}>
                         删除
                       </button>
                     </td>
@@ -169,13 +169,13 @@ function TargetMonitoringPage() {
                 <div className="form-group">
                   <label>科室 *</label>
                   <select
-                    value={formData.department_id}
-                    onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                    value={formData.DepartmentID}
+                    onChange={(e) => setFormData({ ...formData, DepartmentID: e.target.value })}
                     required
                   >
                     <option value="">请选择科室</option>
                     {departments.map(d => (
-                      <option key={d.id} value={d.id}>{d.name}</option>
+                      <option key={d.ID} value={d.ID}>{d.Name}</option>
                     ))}
                   </select>
                 </div>
@@ -183,8 +183,8 @@ function TargetMonitoringPage() {
                   <label>月份 *</label>
                   <input
                     type="month"
-                    value={formData.month}
-                    onChange={(e) => setFormData({ ...formData, month: e.target.value })}
+                    value={formData.Month}
+                    onChange={(e) => setFormData({ ...formData, Month: e.target.value })}
                     required
                   />
                 </div>
@@ -197,8 +197,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.hospitalization_days}
-                    onChange={(e) => setFormData({ ...formData, hospitalization_days: e.target.value })}
+                    value={formData.HospitalizationDays}
+                    onChange={(e) => setFormData({ ...formData, HospitalizationDays: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -206,8 +206,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.ventilator_days}
-                    onChange={(e) => setFormData({ ...formData, ventilator_days: e.target.value })}
+                    value={formData.VentilatorDays}
+                    onChange={(e) => setFormData({ ...formData, VentilatorDays: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -215,8 +215,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.vap_cases}
-                    onChange={(e) => setFormData({ ...formData, vap_cases: e.target.value })}
+                    value={formData.VAPCases}
+                    onChange={(e) => setFormData({ ...formData, VAPCases: e.target.value })}
                   />
                 </div>
               </div>
@@ -228,8 +228,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.central_line_days}
-                    onChange={(e) => setFormData({ ...formData, central_line_days: e.target.value })}
+                    value={formData.CentralLineDays}
+                    onChange={(e) => setFormData({ ...formData, CentralLineDays: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -237,8 +237,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.clabsi_cases}
-                    onChange={(e) => setFormData({ ...formData, clabsi_cases: e.target.value })}
+                    value={formData.CLABSICases}
+                    onChange={(e) => setFormData({ ...formData, CLABSICases: e.target.value })}
                   />
                 </div>
               </div>
@@ -250,8 +250,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.catheter_days}
-                    onChange={(e) => setFormData({ ...formData, catheter_days: e.target.value })}
+                    value={formData.CatheterDays}
+                    onChange={(e) => setFormData({ ...formData, CatheterDays: e.target.value })}
                   />
                 </div>
                 <div className="form-group">
@@ -259,8 +259,8 @@ function TargetMonitoringPage() {
                   <input
                     type="number"
                     min="0"
-                    value={formData.cauti_cases}
-                    onChange={(e) => setFormData({ ...formData, cauti_cases: e.target.value })}
+                    value={formData.CAUTICases}
+                    onChange={(e) => setFormData({ ...formData, CAUTICases: e.target.value })}
                   />
                 </div>
               </div>

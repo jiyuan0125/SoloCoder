@@ -19,6 +19,10 @@ func CreateStockItem(item *models.StockItem) error {
 	return database.DB.Create(item).Error
 }
 
+func CreateStockItemWithTx(tx *gorm.DB, item *models.StockItem) error {
+	return tx.Create(item).Error
+}
+
 func UpdateStockItem(item *models.StockItem) error {
 	return database.DB.Save(item).Error
 }

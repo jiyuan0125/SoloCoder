@@ -1,6 +1,9 @@
-安全审计要求每个入口请求必须经过四级校验：IP 白名单、API Key、JWT、权限。Rust actix-web 实现，请求像过安检一样一层层走。
-认证链由多个处理器组成：IP 白名单 → API Key 校验 → JWT 解析 → 权限校验。每个处理器独立配置是否启用。链的顺序固定，前面的通过才到后面。
-每个处理器有自己的状态：bypassed（跳过）、passed（通过）、failed（失败）。任何一个失败，整个请求直接拒绝。所有通过则在 header 里注入认证结果。
-JWT 支持 RS256 和 HS256 两种签名算法。密钥通过配置接口上传，支持轮换。旧密钥在过期前仍然有效。
-登录令牌有刷新机制：token 过期前 5 分钟内可以刷新，刷新后旧 token 立即失效。过期超过 24 小时的 token 不允许刷新。
-模块分 chain、handler、token、config。Cargo build，端口从 PORT 环境变量读。
+安全审计提了个硬要求——每个入口请求必须过四级校验：IP 白名单、API Key、JWT、权限。四个检查各自独立但必须按顺序走，前一个不过后面的都不看。Rust actix-web 实现，请求像过安检一样一层层走。
+
+认证链四个处理器顺序固定：IP 白名单 → API Key 校验 → JWT 解析 → 权限校验。每个处理器可以通过 PUT /auth/chain/{name}/toggle 独立启用或禁用。链的入口是一个统一 middleware，每个请求进来后依次经过每个活跃的处理器。
+
+每个处理器三种结果：bypassed（跳过，该处理器被禁用）、passed（通过，附带提取的信息）、failed（失败，附带错误原因）。任何一个 failed 整个请求直接 401 加上失败原因。全部通过后在 header 注入认证结果：X-Auth-User（用户 ID）、X-Auth-Roles（角色列表，逗号分隔）、X-Auth-Chain（经过了哪些处理器，比如 ip,apikey,jwt,perm）。
+
+JWT 两种签名算法：RS256（非对称，推荐生产用）和 HS256（对称，开发方便）。密钥通过 POST /auth/keys 上传，支持同时存在多个密钥做轮换。新密钥上传后旧的保留到 expires_at 时间，过渡期两种密钥都能验签。GET /auth/keys 查看当前所有有效密钥和过期时间。
+
+Token 刷新：过期前 5 分钟内可以调 POST /auth/refresh，用当前 token 换新 token。刷新后旧 token 立即加入黑名单，再用旧 token 请求返回 401。

@@ -1,13 +1,13 @@
-Rust axum 做一个分布式 Trace Context 传播器。请求在服务之间传递时 trace 信息不能丢。
+先说问题场景。一个请求从网关进来到最后落到数据库，中间经过四五个服务。排查问题的时候发现 trace ID 到某个服务就断了——那个服务没做 context 传播。Rust axum 做一个分布式 Trace Context 传播器，让 trace 信息在服务间传递时不断。
 
-请求进来时从 Header 提取 traceparent 和 tracestate。提取成功创建 span context。提取失败生成新的 root context。context 信息存在请求扩展里。
+请求进来时从 Header 提取 traceparent 和 tracestate（W3C Trace Context 标准）。提取成功创建 span context。提取失败（没有这些 Header 或者格式不对）生成新的 root context——新的 trace ID 和 span ID。context 信息存在请求扩展（request extension）里。
 
-发往下游的请求自动注入当前 context。注入格式遵循 W3C Trace Context 标准。传播时生成新的 span ID 但保留 trace ID。父 span ID 记录在本地。
+发往下游的请求自动注入当前 context。注入格式遵循 W3C Trace Context 标准。传播时生成新的 span ID，但保留 trace ID。父 span ID 记录在本地，用于构建调用树。
 
-每个请求处理完成后上报 span 信息。span 包含 trace ID、span ID、parent span ID、操作名、耗时。批量上报攒够 100 条或超时 5 秒发送。
+每个请求处理完成后上报 span 信息——trace ID、span ID、parent span ID、操作名、耗时毫秒。批量上报攒够 100 条或超时 5 秒发送，POST /api/spans/batch。
 
-不是所有 trace 都上报。采样率可配。采样的 trace 所有 span 都上报。不采样的 trace span 不上报但 context 照常传播。
+采样率可配（PUT /api/config/sampling），比如 10%。采样的 trace 所有 span 都上报。不采样的 trace span 不上报，但 context 照常传播——下游服务不受影响。
 
-上报目标地址不存在时 span 数据先缓存到本地文件。
+上报目标地址不存在时 span 数据先缓存到本地文件，不丢。目标恢复后重试发送。
 
-context、propagator、collector、sampler 四个模块。Cargo build，PORT 环境变量。
+context 管解析和生成、propagator 管注入和提取、collector 管批量上报、sampler 管采样策略。Cargo build，PORT 环境变量。

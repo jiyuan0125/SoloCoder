@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-dom';
 import AppointmentCalendar from './pages/AppointmentCalendar';
 import ClinicWorkbench from './pages/ClinicWorkbench';
-import FollowUpManagement from './pages/FollowUpManagement';
+import FollowUpManagement from './pages/FollowupManagement';
 
 export default function App() {
   return (

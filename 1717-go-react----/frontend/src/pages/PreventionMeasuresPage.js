@@ -18,11 +18,11 @@ function PreventionMeasuresPage() {
   const [error, setError] = useState('');
   const [recommended, setRecommended] = useState([]);
   const [formData, setFormData] = useState({
-    infection_case_id: '',
-    measure_type: '',
-    department_id: '',
-    executor: '',
-    execute_date: '',
+    InfectionCaseID: '',
+    MeasureType: '',
+    DepartmentID: '',
+    Executor: '',
+    ExecuteDate: '',
   });
 
   useEffect(() => {
@@ -48,12 +48,12 @@ function PreventionMeasuresPage() {
   };
 
   const handleCaseChange = async (caseId) => {
-    setFormData({ ...formData, infection_case_id: caseId });
+    setFormData({ ...formData, InfectionCaseID: caseId });
     if (caseId) {
-      const infCase = infections.find(c => c.id === parseInt(caseId));
+      const infCase = infections.find(c => c.ID === parseInt(caseId));
       if (infCase) {
         try {
-          const res = await measureAPI.getRecommended(infCase.infection_site);
+          const res = await measureAPI.getRecommended(infCase.InfectionSite);
           setRecommended(res.data);
         } catch (err) {
           console.error('Failed to get recommendations:', err);
@@ -70,9 +70,9 @@ function PreventionMeasuresPage() {
     try {
       const data = {
         ...formData,
-        infection_case_id: parseInt(formData.infection_case_id),
-        department_id: parseInt(formData.department_id),
-        execute_date: formData.execute_date ? new Date(formData.execute_date) : undefined,
+        InfectionCaseID: parseInt(formData.InfectionCaseID),
+        DepartmentID: parseInt(formData.DepartmentID),
+        ExecuteDate: formData.ExecuteDate ? new Date(formData.ExecuteDate) : undefined,
       };
       await measureAPI.create(data);
       setShowModal(false);
@@ -95,23 +95,23 @@ function PreventionMeasuresPage() {
 
   const resetForm = () => {
     setFormData({
-      infection_case_id: '',
-      measure_type: '',
-      department_id: '',
-      executor: '',
-      execute_date: '',
+      InfectionCaseID: '',
+      MeasureType: '',
+      DepartmentID: '',
+      Executor: '',
+      ExecuteDate: '',
     });
     setRecommended([]);
   };
 
   const getCaseInfo = (caseId) => {
-    const c = infections.find(c => c.id === caseId);
-    return c ? `${c.patient_id} - ${c.patient_name}` : '未知';
+    const c = infections.find(c => c.ID === caseId);
+    return c ? `${c.PatientID} - ${c.PatientName}` : '未知';
   };
 
   const getDepartmentName = (id) => {
-    const dept = departments.find(d => d.id === id);
-    return dept?.name || '未知';
+    const dept = departments.find(d => d.ID === id);
+    return dept?.Name || '未知';
   };
 
   return (
@@ -145,18 +145,18 @@ function PreventionMeasuresPage() {
               </thead>
               <tbody>
                 {measures.map((m) => (
-                  <tr key={m.id}>
-                    <td>{getCaseInfo(m.infection_case_id)}</td>
+                  <tr key={m.ID}>
+                    <td>{getCaseInfo(m.InfectionCaseID)}</td>
                     <td>
-                      <span className={`badge ${MEASURE_TYPES[m.measure_type]?.class}`}>
-                        {MEASURE_TYPES[m.measure_type]?.label || m.measure_type}
+                      <span className={`badge ${MEASURE_TYPES[m.MeasureType]?.class}`}>
+                        {MEASURE_TYPES[m.MeasureType]?.label || m.MeasureType}
                       </span>
                     </td>
-                    <td>{getDepartmentName(m.department_id)}</td>
-                    <td>{m.executor}</td>
-                    <td>{new Date(m.execute_date).toLocaleDateString()}</td>
+                    <td>{getDepartmentName(m.DepartmentID)}</td>
+                    <td>{m.Executor}</td>
+                    <td>{new Date(m.ExecuteDate).toLocaleDateString()}</td>
                     <td>
-                      <button className="btn btn-danger" onClick={() => handleDelete(m.id)}>
+                      <button className="btn btn-danger" onClick={() => handleDelete(m.ID)}>
                         删除
                       </button>
                     </td>
@@ -179,14 +179,14 @@ function PreventionMeasuresPage() {
               <div className="form-group">
                 <label>感染病例 *</label>
                 <select
-                  value={formData.infection_case_id}
+                  value={formData.InfectionCaseID}
                   onChange={(e) => handleCaseChange(e.target.value)}
                   required
                 >
                   <option value="">请选择病例</option>
                   {infections.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.patient_id} - {c.patient_name} ({new Date(c.infection_date).toLocaleDateString()})
+                    <option key={c.ID} value={c.ID}>
+                      {c.PatientID} - {c.PatientName} ({new Date(c.InfectionDate).toLocaleDateString()})
                     </option>
                   ))}
                 </select>
@@ -198,7 +198,7 @@ function PreventionMeasuresPage() {
                   <ul style={{ listStyle: 'none', padding: 0 }}>
                     {recommended.map((r, i) => (
                       <li key={i} style={{ padding: '6px 0', color: '#4a5568' }}>
-                        • {r.description}
+                        • {r.Description}
                       </li>
                     ))}
                   </ul>
@@ -208,8 +208,8 @@ function PreventionMeasuresPage() {
               <div className="form-group">
                 <label>措施类型 *</label>
                 <select
-                  value={formData.measure_type}
-                  onChange={(e) => setFormData({ ...formData, measure_type: e.target.value })}
+                  value={formData.MeasureType}
+                  onChange={(e) => setFormData({ ...formData, MeasureType: e.target.value })}
                   required
                 >
                   <option value="">请选择</option>
@@ -221,13 +221,13 @@ function PreventionMeasuresPage() {
               <div className="form-group">
                 <label>执行科室 *</label>
                 <select
-                  value={formData.department_id}
-                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  value={formData.DepartmentID}
+                  onChange={(e) => setFormData({ ...formData, DepartmentID: e.target.value })}
                   required
                 >
                   <option value="">请选择科室</option>
                   {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
+                    <option key={d.ID} value={d.ID}>{d.Name}</option>
                   ))}
                 </select>
               </div>
@@ -236,8 +236,8 @@ function PreventionMeasuresPage() {
                   <label>执行人 *</label>
                   <input
                     type="text"
-                    value={formData.executor}
-                    onChange={(e) => setFormData({ ...formData, executor: e.target.value })}
+                    value={formData.Executor}
+                    onChange={(e) => setFormData({ ...formData, Executor: e.target.value })}
                     required
                   />
                 </div>
@@ -245,8 +245,8 @@ function PreventionMeasuresPage() {
                   <label>执行日期</label>
                   <input
                     type="date"
-                    value={formData.execute_date}
-                    onChange={(e) => setFormData({ ...formData, execute_date: e.target.value })}
+                    value={formData.ExecuteDate}
+                    onChange={(e) => setFormData({ ...formData, ExecuteDate: e.target.value })}
                   />
                 </div>
               </div>

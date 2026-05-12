@@ -11,35 +11,35 @@ import (
 )
 
 type CreateTargetMonitoringRequest struct {
-	DepartmentID        uint    `json:"department_id" binding:"required"`
-	Month               string  `json:"month" binding:"required"`
-	HospitalizationDays int     `json:"hospitalization_days"`
-	VentilatorDays      int     `json:"ventilator_days"`
-	VAPCases            int     `json:"vap_cases"`
-	CentralLineDays     int     `json:"central_line_days"`
-	CLABSICases         int     `json:"clabsi_cases"`
-	CatheterDays        int     `json:"catheter_days"`
-	CAUTICases          int     `json:"cauti_cases"`
+	DepartmentID        uint   `json:"DepartmentID" binding:"required"`
+	Month               string `json:"Month" binding:"required"`
+	HospitalizationDays int    `json:"HospitalizationDays"`
+	VentilatorDays      int    `json:"VentilatorDays"`
+	VAPCases            int    `json:"VAPCases"`
+	CentralLineDays     int    `json:"CentralLineDays"`
+	CLABSICases         int    `json:"CLABSICases"`
+	CatheterDays        int    `json:"CatheterDays"`
+	CAUTICases          int    `json:"CAUTICases"`
 }
 
 type TargetMonitoringIndicators struct {
-	ID                   uint    `json:"id"`
-	DepartmentID         uint    `json:"department_id"`
-	DepartmentName       string  `json:"department_name"`
-	Month                string  `json:"month"`
-	HospitalizationDays  int     `json:"hospitalization_days"`
-	VentilatorDays       int     `json:"ventilator_days"`
-	VAPCases             int     `json:"vap_cases"`
-	CentralLineDays      int     `json:"central_line_days"`
-	CLABSICases          int     `json:"clabsi_cases"`
-	CatheterDays         int     `json:"catheter_days"`
-	CAUTICases          int     `json:"cauti_cases"`
-	VentilatorUsageRate  float64 `json:"ventilator_usage_rate"`
-	CentralLineUsageRate float64 `json:"central_line_usage_rate"`
-	CatheterUsageRate    float64 `json:"catheter_usage_rate"`
-	VAPRate              float64 `json:"vap_rate"`
-	CLABSIRate           float64 `json:"clabsi_rate"`
-	CAUTIRate            float64 `json:"cauti_rate"`
+	ID                   uint    `json:"ID"`
+	DepartmentID         uint    `json:"DepartmentID"`
+	DepartmentName       string  `json:"DepartmentName"`
+	Month                string  `json:"Month"`
+	HospitalizationDays  int     `json:"HospitalizationDays"`
+	VentilatorDays       int     `json:"VentilatorDays"`
+	VAPCases             int     `json:"VAPCases"`
+	CentralLineDays      int     `json:"CentralLineDays"`
+	CLABSICases          int     `json:"CLABSICases"`
+	CatheterDays         int     `json:"CatheterDays"`
+	CAUTICases           int     `json:"CAUTICases"`
+	VentilatorUsageRate  float64 `json:"VentilatorUsageRate"`
+	CentralLineUsageRate float64 `json:"CentralLineUsageRate"`
+	CatheterUsageRate    float64 `json:"CatheterUsageRate"`
+	VAPRate              float64 `json:"VAPRate"`
+	CLABSIRate           float64 `json:"CLABSIRate"`
+	CAUTIRate            float64 `json:"CAUTIRate"`
 }
 
 func CreateTargetMonitoring(c *gin.Context) {
@@ -101,11 +101,17 @@ func GetTargetMonitorings(c *gin.Context) {
 	query := database.DB.Preload("Department")
 
 	departmentID := c.Query("department_id")
+	if departmentID == "" {
+		departmentID = c.Query("DepartmentID")
+	}
 	if departmentID != "" {
 		query = query.Where("department_id = ?", departmentID)
 	}
 
 	month := c.Query("month")
+	if month == "" {
+		month = c.Query("Month")
+	}
 	if month != "" {
 		query = query.Where("month = ?", month)
 	}

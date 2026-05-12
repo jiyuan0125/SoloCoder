@@ -1,4 +1,9 @@
-线上微服务调用链经常找不到是哪个环节慢。Spring Boot 做一个带 Baggage 传播的链路追踪。
-服务通过接口上报 Span 数据——每个 Span 有 trace ID、span ID、父 span ID、服务名、操作名、开始时间、耗时。批量上报每次最多 500 个 Span。Span 可以携带 Baggage（跨服务传递的键值对），Baggage 在调用链中自动透传，下游服务可以读取上游设置的 Baggage，key 不区分大小写。
-Trace 查询：按 trace ID 查完整调用链返回树形结构，按服务名查最近 N 条 trace，按耗时排序查慢请求。查询支持时间范围过滤。采样率可配（比如 10%），采样决策在根 Span 做出，采样后的请求所有 Span 都要采集。错误请求的采样率独立配置通常更高。
-collector 采集 Span，baggage 管理透传，query 处理查询，sampler 做采样。Maven 构建，端口配置文件。
+线上微服务调用链经常找不到是哪个环节慢——一个请求经过七八个服务，出了问题只能靠猜。Spring Boot 做一个带 Baggage 传播的链路追踪，把整条链路串起来。
+
+服务通过接口上报 Span 数据——每个 Span 有 trace ID、span ID、父 span ID、服务名、操作名、开始时间、耗时。批量上报每次最多 500 个 Span，超出部分拒绝。Span 可以携带 Baggage（跨服务传递的键值对），Baggage 在调用链中自动透传，下游服务可以读取上游设置的 Baggage，key 不区分大小写。Baggage 的值有长度上限，超过 1KB 的截断。
+
+Trace 查询——按 trace ID 查完整调用链返回树形结构，按服务名查最近 N 条 trace，按耗时排序查慢请求。查询支持时间范围过滤。采样率可配，比如 10%，采样决策在根 Span 做出，采样后的请求所有 Span 都要采集。错误请求的采样率独立配置通常更高。
+
+Span 的开始时间和耗时都用微秒精度。trace ID 和 span ID 的格式不做限制但空值拒绝。同一个 trace ID 的 Span 可以分多批上报，不影响聚合。
+
+collector 采集 Span，baggage 管透传，query 处理查询，sampler 做采样。Maven 构建，端口走配置文件。

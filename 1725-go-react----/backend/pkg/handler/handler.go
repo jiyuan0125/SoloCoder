@@ -12,6 +12,62 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type MeetingCreateRequest struct {
+	Name                   string      `json:"name"`
+	Abbreviation           string      `json:"abbreviation"`
+	StartDate              string      `json:"start_date"`
+	EndDate                string      `json:"end_date"`
+	Location               string      `json:"location"`
+	Topics                 interface{} `json:"topics"`
+	SubmissionDeadline     string      `json:"submission_deadline"`
+	ReviewDeadline         string      `json:"review_deadline"`
+	NotificationDeadline   string      `json:"notification_deadline"`
+	Status                 string      `json:"status"`
+	ChairID                *uint       `json:"chair_id"`
+	ResponsibleID          *uint       `json:"responsible_id"`
+}
+
+func normalizeTopics(topics interface{}) string {
+	if topics == nil {
+		return ""
+	}
+	
+	switch v := topics.(type) {
+	case string:
+		return v
+	case []interface{}:
+		items := make([]string, 0, len(v))
+		for _, item := range v {
+			if s, ok := item.(string); ok {
+				items = append(items, s)
+			}
+		}
+		return strings.Join(items, ",")
+	case []string:
+		return strings.Join(v, ",")
+	default:
+		return ""
+	}
+}
+
+func parseTimeStr(s string) time.Time {
+	if s == "" {
+		return time.Time{}
+	}
+	formats := []string{
+		"2006-01-02T15:04:05Z07:00",
+		"2006-01-02T15:04:05",
+		"2006-01-02 15:04:05",
+		"2006-01-02",
+	}
+	for _, format := range formats {
+		if t, err := time.Parse(format, s); err == nil {
+			return t
+		}
+	}
+	return time.Time{}
+}
+
 type Handler struct {
 	meetingService    *service.MeetingService
 	paperService      *service.PaperService
@@ -127,13 +183,28 @@ func (h *Handler) GetMeeting(c *gin.Context) {
 }
 
 func (h *Handler) CreateMeeting(c *gin.Context) {
-	var meeting model.Meeting
-	if err := c.ShouldBindJSON(&meeting); err != nil {
+	var req MeetingCreateRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if err := h.meetingService.Create(&meeting); err != nil {
+	meeting := &model.Meeting{
+		Name:                 req.Name,
+		Abbreviation:         req.Abbreviation,
+		StartDate:            parseTimeStr(req.StartDate),
+		EndDate:              parseTimeStr(req.EndDate),
+		Location:             req.Location,
+		Topics:               normalizeTopics(req.Topics),
+		SubmissionDeadline:   parseTimeStr(req.SubmissionDeadline),
+		ReviewDeadline:       parseTimeStr(req.ReviewDeadline),
+		NotificationDeadline: parseTimeStr(req.NotificationDeadline),
+		Status:               model.MeetingStatus(req.Status),
+		ChairID:              req.ChairID,
+		ResponsibleID:        req.ResponsibleID,
+	}
+
+	if err := h.meetingService.Create(meeting); err != nil {
 		if strings.Contains(err.Error(), "UNIQUE") {
 			c.JSON(http.StatusConflict, gin.H{"error": "meeting abbreviation already exists"})
 			return
@@ -160,6 +231,10 @@ func (h *Handler) UpdateMeeting(c *gin.Context) {
 	if err := c.ShouldBindJSON(&updates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
+	}
+
+	if topics, ok := updates["topics"]; ok {
+		updates["topics"] = normalizeTopics(topics)
 	}
 
 	if err := h.meetingService.Update(id, updates); err != nil {

@@ -1,3 +1,5 @@
-最近一次上线把一个单体拆成了用户、订单、支付三个独立服务，前端还指望着统一入口访问。Go 标准库 net/http 搞一个反向代理，按路径前缀把 /api/users/*、/api/orders/*、/api/payments/* 分别转发到对应的子服务，多级路径像 /api/users/123/profile 也要匹配上。
-转发时注入 X-Forwarded-For 和 X-Request-ID（全局唯一）。后端列表放内存，接口可以动态增删。后端挂了暂时不往那转发——用 HTTP GET /health 探活，10 秒一轮，连续 3 次失败标记不可用，连续 2 次成功恢复。
-go build 能过，启动端口从 PORT 环境变量读。
+上周上线把一个大而全的单体拆成了用户、订单、支付三个独立服务，前端团队还指望着统一入口访问。运维用 Nginx 配了一版，但每加一个后端就要改配置再 reload——测试环境一天改八回。干脆 Go 标准库 net/http 自己写反向代理路由，按路径前缀把请求分发到各子服务。
+
+路由规则：`/api/users/*` 转到用户服务，`/api/orders/*` 转到订单服务，`/api/payments/*` 转到支付服务，多级路径像 `/api/users/123/profile` 也得匹配上。没命中的返回 404，Body 用 JSON 写清楚请求路径和已有路由列表。转发时注入 `X-Forwarded-For`（客户端真实 IP）和 `X-Request-ID`（UUID v4 全局追踪 ID）。后端响应里的内部 Header 如 `X-Powered-By`，代理层删掉再返回。
+
+后端列表存内存，POST `/backends` 添加地址，DELETE `/backends/:id` 移除，GET `/backends` 查看列表和各后端健康状态，不用重启。后端挂了不能干等——定时 HTTP GET `/health` 探活，10 秒一轮，连续 3 次失败标记不可用并移出转发列表，探活不停，连续 2 次成功自动恢复。所有后端都不可用时返回 503。每次转发记访问日志：时间、客户端 IP、目标后端、路径、状态码、耗时。`go build` 编译，`PORT` 环境变量读端口。

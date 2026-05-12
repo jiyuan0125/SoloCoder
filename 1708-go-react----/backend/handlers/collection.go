@@ -4,6 +4,7 @@ import (
 	"blood-management-system/config"
 	"blood-management-system/models"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -80,7 +81,7 @@ func (h *CollectionHandler) Create(c *gin.Context) {
 		return
 	}
 	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "距上次献血不足" + string(rune(daysLeft+48)) + "天"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "距上次献血不足" + fmt.Sprintf("%d", daysLeft) + "天"})
 		return
 	}
 

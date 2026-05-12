@@ -1,4 +1,7 @@
-改一个数据库连接参数要重启五个服务，这种日子到头了。Spring Boot 写配置中心：配置按环境（dev/staging/prod）和项目分组，key-value 格式，同一个 key 在不同环境可以不同值。接口支持 CRUD 和按环境/项目批量查询。
+改一个数据库连接参数要重启五个服务，这种日子还能过多久？Spring Boot 写配置中心，把配置变更做到热生效。
 
-每次修改存快照、支持回滚到任意版本，版本间差异也能查。客户端可以 watch 某个 key 或某个项目下所有 key——变更时 POST 到客户端注册的回调 URL。回调失败（连接超时、非 200）记录日志并重试 2 次；回调 URL 多次失败后停止重试，别无限循环。
-Maven 构建，端口走配置文件。
+配置按环境（dev/staging/prod）和项目分组管理，key-value 格式。同一个 key 在不同环境可以不同值。GET `/configs/{env}/{project}` 批量查询某个项目在某个环境的全部配置，POST `/configs` 新增，PUT `/configs/{id}` 修改，DELETE `/configs/{id}` 删除。每次修改自动存快照，版本号递增，GET `/configs/{id}/history` 查变更历史，POST `/configs/{id}/rollback?version=N` 回滚到指定版本，版本间差异通过 GET `/configs/{id}/diff?from=N&to=M` 查看。
+
+客户端能订阅配置变更——POST `/watches` 注册回调 URL，指定要 watch 的 key 或项目。变更时 POST 到回调 URL，超时 5 秒、非 200 视为失败，重试 2 次（间隔 5 秒、15 秒），3 次都失败停止重试。回调投递记录可查，包含时间、状态码、响应 Body。订阅关系可以随时取消。
+
+Maven 构建，端口走配置文件。配置数据存内存，重启从快照文件恢复。

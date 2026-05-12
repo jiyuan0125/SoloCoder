@@ -7,17 +7,16 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/spf13/cobra"
 )
 
-const baseURL = "http://localhost:8300/api"
+const baseURL = "http://localhost:8080/api"
 
 func main() {
 	rootCmd := &cobra.Command{
-		Use:   "hospital-infection",
+		Use:   "hicli",
 		Short: "医院感染监测系统CLI",
 	}
 
@@ -25,6 +24,8 @@ func main() {
 	rootCmd.AddCommand(addMeasureCmd())
 	rootCmd.AddCommand(generateReportCmd())
 	rootCmd.AddCommand(showRatesCmd())
+	rootCmd.AddCommand(createDeptCmd())
+	rootCmd.AddCommand(listDeptsCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -46,16 +47,16 @@ func reportInfectionCmd() *cobra.Command {
 			infection, _ := time.Parse("2006-01-02", infectionDate)
 
 			data := map[string]interface{}{
-				"patient_id":       patientID,
-				"patient_name":     patientName,
-				"gender":           gender,
-				"age":              age,
-				"department_id":    departmentID,
-				"admission_date":   admission,
-				"infection_date":   infection,
-				"infection_site":   infectionSite,
-				"pathogen":         pathogen,
-				"drug_sensitivity": drugSensitivity,
+				"PatientID":       patientID,
+				"PatientName":     patientName,
+				"Gender":          gender,
+				"Age":             age,
+				"DepartmentID":    departmentID,
+				"AdmissionDate":   admission,
+				"InfectionDate":   infection,
+				"InfectionSite":   infectionSite,
+				"Pathogen":        pathogen,
+				"DrugSensitivity": drugSensitivity,
 			}
 
 			resp, err := postRequest(baseURL+"/infections", data)
@@ -68,16 +69,24 @@ func reportInfectionCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().StringVar(&patientID, "patient-id", "", "患者住院号")
-	cmd.Flags().StringVar(&patientName, "name", "", "患者姓名")
+	cmd.Flags().StringVar(&patientID, "patient-id", "", "患者住院号 (必填)")
+	cmd.Flags().StringVar(&patientName, "name", "", "患者姓名 (必填)")
 	cmd.Flags().StringVar(&gender, "gender", "", "性别")
 	cmd.Flags().IntVar(&age, "age", 0, "年龄")
-	cmd.Flags().IntVar(&departmentID, "dept", 0, "科室ID")
-	cmd.Flags().StringVar(&admissionDate, "admission", "", "入院日期 (YYYY-MM-DD)")
-	cmd.Flags().StringVar(&infectionDate, "infection", "", "感染日期 (YYYY-MM-DD)")
-	cmd.Flags().StringVar(&infectionSite, "site", "", "感染部位")
-	cmd.Flags().StringVar(&pathogen, "pathogen", "", "病原体")
-	cmd.Flags().BoolVar(&drugSensitivity, "sensitivity", false, "药敏试验")
+	cmd.Flags().IntVar(&departmentID, "dept", 0, "科室ID (必填)")
+	cmd.Flags().StringVar(&admissionDate, "admission", "", "入院日期 (YYYY-MM-DD, 必填)")
+	cmd.Flags().StringVar(&infectionDate, "infection", "", "感染日期 (YYYY-MM-DD, 必填)")
+	cmd.Flags().StringVar(&infectionSite, "site", "", "感染部位: respiratory/surgical_incision/urinary_tract/bloodstream/digestive/skin_soft_tissue (必填)")
+	cmd.Flags().StringVar(&pathogen, "pathogen", "", "病原体 (必填)")
+	cmd.Flags().BoolVar(&drugSensitivity, "sensitivity", false, "已做药敏试验")
+
+	cmd.MarkFlagRequired("patient-id")
+	cmd.MarkFlagRequired("name")
+	cmd.MarkFlagRequired("dept")
+	cmd.MarkFlagRequired("admission")
+	cmd.MarkFlagRequired("infection")
+	cmd.MarkFlagRequired("site")
+	cmd.MarkFlagRequired("pathogen")
 
 	return cmd
 }
@@ -91,15 +100,15 @@ func addMeasureCmd() *cobra.Command {
 		Short: "添加防控措施",
 		Run: func(cmd *cobra.Command, args []string) {
 			data := map[string]interface{}{
-				"infection_case_id": caseID,
-				"measure_type":      measureType,
-				"department_id":     departmentID,
-				"executor":          executor,
+				"InfectionCaseID": caseID,
+				"MeasureType":     measureType,
+				"DepartmentID":    departmentID,
+				"Executor":        executor,
 			}
 
 			if executeDate != "" {
 				date, _ := time.Parse("2006-01-02", executeDate)
-				data["execute_date"] = date
+				data["ExecuteDate"] = date
 			}
 
 			resp, err := postRequest(baseURL+"/measures", data)
@@ -112,11 +121,16 @@ func addMeasureCmd() *cobra.Command {
 		},
 	}
 
-	cmd.Flags().IntVar(&caseID, "case-id", 0, "感染病例ID")
-	cmd.Flags().StringVar(&measureType, "type", "", "措施类型")
-	cmd.Flags().IntVar(&departmentID, "dept", 0, "执行科室ID")
-	cmd.Flags().StringVar(&executor, "executor", "", "执行人")
+	cmd.Flags().IntVar(&caseID, "case-id", 0, "感染病例ID (必填)")
+	cmd.Flags().StringVar(&measureType, "type", "", "措施类型: isolation/hand_hygiene/environment_clean/antibiotic_adjust/equipment_sterile (必填)")
+	cmd.Flags().IntVar(&departmentID, "dept", 0, "执行科室ID (必填)")
+	cmd.Flags().StringVar(&executor, "executor", "", "执行人 (必填)")
 	cmd.Flags().StringVar(&executeDate, "date", "", "执行日期 (YYYY-MM-DD)")
+
+	cmd.MarkFlagRequired("case-id")
+	cmd.MarkFlagRequired("type")
+	cmd.MarkFlagRequired("dept")
+	cmd.MarkFlagRequired("executor")
 
 	return cmd
 }
@@ -130,14 +144,14 @@ func generateReportCmd() *cobra.Command {
 		Short: "生成报告",
 		Run: func(cmd *cobra.Command, args []string) {
 			data := map[string]interface{}{
-				"report_type": reportType,
+				"ReportType": reportType,
 			}
 
 			if month != "" {
-				data["month"] = month
+				data["Month"] = month
 			}
 			if year != 0 {
-				data["year"] = year
+				data["Year"] = year
 			}
 
 			resp, err := postRequest(baseURL+"/reports/generate", data)
@@ -151,8 +165,8 @@ func generateReportCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&reportType, "type", "monthly", "报告类型: monthly 或 yearly")
-	cmd.Flags().StringVar(&month, "month", "", "月份 (YYYY-MM)")
-	cmd.Flags().IntVar(&year, "year", 0, "年份")
+	cmd.Flags().StringVar(&month, "month", "", "月份 (YYYY-MM, 月报必填)")
+	cmd.Flags().IntVar(&year, "year", 0, "年份 (年报必填)")
 
 	return cmd
 }
@@ -166,7 +180,7 @@ func showRatesCmd() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			url := baseURL + "/statistics/rates"
 			if month != "" {
-				url += "?month=" + month
+				url += "?Month=" + month
 			}
 
 			resp, err := getRequest(url)
@@ -178,22 +192,23 @@ func showRatesCmd() *cobra.Command {
 			var result map[string]interface{}
 			json.Unmarshal([]byte(resp), &result)
 
-			fmt.Printf("全院感染率: %.2f%%\n", result["hospital_rate"])
+			hospitalRate, _ := result["HospitalRate"].(float64)
+			fmt.Printf("全院感染率: %.2f%%\n", hospitalRate)
 			fmt.Println("\n各科室感染率排名:")
 
-			depts := result["department_rates"].([]interface{})
+			depts := result["DepartmentRates"].([]interface{})
 			for i, d := range depts {
 				dept := d.(map[string]interface{})
 				exceeded := ""
-				if dept["exceeded"].(bool) {
+				if dept["Exceeded"].(bool) {
 					exceeded = " [超标]"
 				}
 				fmt.Printf("%d. %s: %.2f%% (%d例/%d人)%s\n",
 					i+1,
-					dept["department_name"],
-					dept["infection_rate"],
-					int(dept["infection_count"].(float64)),
-					int(dept["discharge_count"].(float64)),
+					dept["DepartmentName"],
+					dept["InfectionRate"],
+					int(dept["InfectionCount"].(float64)),
+					int(dept["DischargeCount"].(float64)),
 					exceeded,
 				)
 			}
@@ -201,6 +216,59 @@ func showRatesCmd() *cobra.Command {
 	}
 
 	cmd.Flags().StringVar(&month, "month", "", "月份 (YYYY-MM)")
+
+	return cmd
+}
+
+func createDeptCmd() *cobra.Command {
+	var name string
+
+	cmd := &cobra.Command{
+		Use:   "create-dept",
+		Short: "创建科室",
+		Run: func(cmd *cobra.Command, args []string) {
+			data := map[string]interface{}{
+				"Name": name,
+			}
+
+			resp, err := postRequest(baseURL+"/departments", data)
+			if err != nil {
+				fmt.Println("错误:", err)
+				return
+			}
+			fmt.Println("科室创建成功:")
+			fmt.Println(resp)
+		},
+	}
+
+	cmd.Flags().StringVar(&name, "name", "", "科室名称 (必填)")
+	cmd.MarkFlagRequired("name")
+
+	return cmd
+}
+
+func listDeptsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "list-depts",
+		Short: "查看所有科室",
+		Run: func(cmd *cobra.Command, args []string) {
+			resp, err := getRequest(baseURL + "/departments")
+			if err != nil {
+				fmt.Println("错误:", err)
+				return
+			}
+
+			var depts []map[string]interface{}
+			json.Unmarshal([]byte(resp), &depts)
+
+			fmt.Println("科室列表:")
+			fmt.Println("ID\t名称")
+			fmt.Println("--\t----")
+			for _, d := range depts {
+				fmt.Printf("%.0f\t%s\n", d["ID"], d["Name"])
+			}
+		},
+	}
 
 	return cmd
 }
@@ -238,8 +306,4 @@ func getRequest(url string) (string, error) {
 	}
 
 	return string(body), nil
-}
-
-func _unused() {
-	_ = strconv.Itoa(0)
 }

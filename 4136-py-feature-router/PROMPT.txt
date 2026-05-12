@@ -1,5 +1,9 @@
-每次发新功能都是全量上线，出问题了全量回滚。Python aiohttp 写一个 Feature Flag 路由服务，按用户特征灰度放量，出问题只关开关。
-Feature Flag 配置：每个 flag 有名称、启用百分比、用户白名单、用户属性规则。规则支持组合：年龄 > 18 AND 地区 = CN。属性值从请求 header 里提取。
-流量分配：百分比按用户 ID 取 hash 后分配。同一个用户每次命中结果一致。白名单用户始终命中。
-Flag 依赖：一个 flag 可以依赖另一个 flag。父 flag 关闭时子 flag 也关闭。依赖关系不能循环。
-变更实时生效：修改 flag 配置后下一个请求立刻按新配置判断。变更历史记录在内存里，可以回滚。拆成 flag、matcher、router、history。端口 PORT 环境变量。
+每次发新功能都是全量上线，出问题了全量回滚——上个版本的推荐算法灰度到一半发现效果不好，回滚又影响了已经适应新算法的用户。Python aiohttp 写一个 Feature Flag 路由服务，按用户特征灰度放量。
+
+Feature Flag 配置。每个 flag 通过 POST /flag 创建，参数包含 name（标识名）、enabled（总开关）、percentage（放量百分比 0-100）、whitelist（用户白名单列表）、rules（用户属性规则列表）。规则支持组合——年龄大于 18 且地区等于 CN。属性值从请求的 X-User-Attrs header 里提取，格式是 key=value 用分号分隔。
+
+流量分配。百分比按用户 ID 的 hash 值分配——同一个用户每次命中结果一致，不会出现刷新一下功能就变了的情况。hash 算法用 FNV-1a，分布均匀。白名单用户始终命中不管百分比设多少。GET /flag/{name}/check?user_id=xxx 查询某用户是否命中指定 flag。
+
+Flag 依赖。一个 flag 可以依赖另一个 flag。POST /flag/{name}/depends 配置依赖关系。父 flag 关闭时子 flag 自动关闭，不管子 flag 自己的开关状态。依赖关系不能循环——A 依赖 B，B 不能再依赖 A。循环依赖在配置时直接拒绝返回 422。
+
+变更实时生效。修改 flag 配置后下一个请求立刻按新配置判断。变更历史记录在内存里，GET /flag/{name}/history 返回最近 50 条变更记录。

@@ -144,8 +144,8 @@ def create_app() -> FastAPI:
 
     init_default_data()
 
-    app.add_middleware(ColoringMiddleware)
     app.add_middleware(RoutingMiddleware)
+    app.add_middleware(ColoringMiddleware)
 
     app.include_router(routes_router)
     app.include_router(stats_router)

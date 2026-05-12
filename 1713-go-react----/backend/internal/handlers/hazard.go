@@ -153,9 +153,7 @@ func (h *HazardHandler) Update(w http.ResponseWriter, r *http.Request) {
 		factor.HazardLevel = updateData.HazardLevel
 	}
 	factor.ProtectiveMeasures = updateData.ProtectiveMeasures
-	if updateData.LastMonitorValue != 0 {
-		factor.LastMonitorValue = updateData.LastMonitorValue
-	}
+	factor.LastMonitorValue = updateData.LastMonitorValue
 	if !updateData.LastMonitorDate.IsZero() {
 		factor.LastMonitorDate = updateData.LastMonitorDate
 	}

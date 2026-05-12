@@ -1,5 +1,5 @@
-后端有个老系统只认 Protobuf，前端新系统用 JSON。Go Fiber 写一个协议转换网关。
-JSON→Protobuf：JSON请求体根据proto定义转成Protobuf二进制。字段类型要严格匹配，整数不能传字符串。嵌套消息正确处理。bytes字段从Base64解码。
-Protobuf→JSON：后端返回的Protobuf二进制转成JSON。枚举值转成字符串而不是数字。timestamp转ISO 8601。空字段默认不输出。
-proto文件上传到服务端统一管理。上传后解析出message定义，自动生成对应的转换路由。proto文件有版本管理，新版本上传后老版本的转换仍然可用。
-上传的proto文件内容要做安全检查，不允许包含文件路径或者特殊字符。gateway / converter / proto / registry。
+后端有个老系统只认 Protobuf，前端新系统用 JSON——两个系统对接全靠手动写转换代码，每次 proto 文件改了都要同步改转换逻辑，烦透了。Go Fiber 写一个协议转换网关，自动处理 JSON 和 Protobuf 的双向转换。
+1. JSON→Protobuf：JSON 请求体根据 proto 定义转成 Protobuf 二进制。字段类型要严格匹配——整数不能传字符串，字符串不能传数字。嵌套消息正确处理（支持多层嵌套）。bytes 字段从 Base64 解码。枚举值同时支持名字（"SUCCESS"）和数字（0）两种方式传入，不在枚举范围内的值返回400和字段级错误。
+2. Protobuf→JSON：后端返回的 Protobuf 二进制转成 JSON。枚举值转成字符串而不是数字（可读性优先）。timestamp 转成 ISO 8601 字符串。默认值字段默认不输出（omitempty 语义）。google.protobuf.Any 类型转成带 @type 字段的 JSON 对象。转换失败返回400和具体的错误路径。
+3. proto 文件通过接口上传到服务端统一管理。上传后解析出 message 定义，自动生成对应的 REST 路由。同一个 proto 文件可以多次上传（版本更新），新版本路由覆盖旧版本。上传的 proto 文件要做安全检查——不允许包含文件路径或特殊字符，文件大小限制 1MB。
+gateway（请求入口和路由）、converter（编解码转换引擎）、proto（文件解析和版本管理）、registry（路由注册）。

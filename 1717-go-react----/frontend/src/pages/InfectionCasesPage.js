@@ -21,18 +21,18 @@ function InfectionCasesPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [error, setError] = useState('');
-  const [filters, setFilters] = useState({ department_id: '', type: '' });
+  const [filters, setFilters] = useState({ DepartmentID: '', type: '' });
   const [formData, setFormData] = useState({
-    patient_id: '',
-    patient_name: '',
-    gender: '',
-    age: '',
-    department_id: '',
-    admission_date: '',
-    infection_date: '',
-    infection_site: '',
-    pathogen: '',
-    drug_sensitivity: false,
+    PatientID: '',
+    PatientName: '',
+    Gender: '',
+    Age: '',
+    DepartmentID: '',
+    AdmissionDate: '',
+    InfectionDate: '',
+    InfectionSite: '',
+    Pathogen: '',
+    DrugSensitivity: false,
   });
 
   useEffect(() => {
@@ -61,10 +61,10 @@ function InfectionCasesPage() {
     try {
       const data = {
         ...formData,
-        age: parseInt(formData.age) || 0,
-        department_id: parseInt(formData.department_id),
-        admission_date: new Date(formData.admission_date),
-        infection_date: new Date(formData.infection_date),
+        Age: parseInt(formData.Age) || 0,
+        DepartmentID: parseInt(formData.DepartmentID),
+        AdmissionDate: new Date(formData.AdmissionDate),
+        InfectionDate: new Date(formData.InfectionDate),
       };
       await infectionAPI.create(data);
       setShowModal(false);
@@ -87,22 +87,22 @@ function InfectionCasesPage() {
 
   const resetForm = () => {
     setFormData({
-      patient_id: '',
-      patient_name: '',
-      gender: '',
-      age: '',
-      department_id: '',
-      admission_date: '',
-      infection_date: '',
-      infection_site: '',
-      pathogen: '',
-      drug_sensitivity: false,
+      PatientID: '',
+      PatientName: '',
+      Gender: '',
+      Age: '',
+      DepartmentID: '',
+      AdmissionDate: '',
+      InfectionDate: '',
+      InfectionSite: '',
+      Pathogen: '',
+      DrugSensitivity: false,
     });
   };
 
   const getDepartmentName = (id) => {
-    const dept = departments.find(d => d.id === id);
-    return dept?.name || '未知';
+    const dept = departments.find(d => d.ID === id);
+    return dept?.Name || '未知';
   };
 
   return (
@@ -119,12 +119,12 @@ function InfectionCasesPage() {
       <div className="card">
         <div className="filter-bar">
           <select
-            value={filters.department_id}
-            onChange={(e) => setFilters({ ...filters, department_id: e.target.value })}
+            value={filters.DepartmentID}
+            onChange={(e) => setFilters({ ...filters, DepartmentID: e.target.value })}
           >
             <option value="">全部科室</option>
             {departments.map(d => (
-              <option key={d.id} value={d.id}>{d.name}</option>
+              <option key={d.ID} value={d.ID}>{d.Name}</option>
             ))}
           </select>
           <select
@@ -160,22 +160,22 @@ function InfectionCasesPage() {
               </thead>
               <tbody>
                 {cases.map((c) => (
-                  <tr key={c.id}>
-                    <td>{c.patient_id}</td>
-                    <td>{c.patient_name}</td>
-                    <td>{c.age}</td>
-                    <td>{getDepartmentName(c.department_id)}</td>
-                    <td>{new Date(c.admission_date).toLocaleDateString()}</td>
-                    <td>{new Date(c.infection_date).toLocaleDateString()}</td>
-                    <td>{INFECTION_SITES.find(s => s.value === c.infection_site)?.label || c.infection_site}</td>
+                  <tr key={c.ID}>
+                    <td>{c.PatientID}</td>
+                    <td>{c.PatientName}</td>
+                    <td>{c.Age}</td>
+                    <td>{getDepartmentName(c.DepartmentID)}</td>
+                    <td>{new Date(c.AdmissionDate).toLocaleDateString()}</td>
+                    <td>{new Date(c.InfectionDate).toLocaleDateString()}</td>
+                    <td>{INFECTION_SITES.find(s => s.value === c.InfectionSite)?.label || c.InfectionSite}</td>
                     <td>
-                      <span className={`badge ${INFECTION_TYPES[c.infection_type]?.class}`}>
-                        {INFECTION_TYPES[c.infection_type]?.label}
+                      <span className={`badge ${INFECTION_TYPES[c.InfectionType]?.class}`}>
+                        {INFECTION_TYPES[c.InfectionType]?.label}
                       </span>
                     </td>
-                    <td>{c.pathogen}</td>
+                    <td>{c.Pathogen}</td>
                     <td>
-                      <button className="btn btn-danger" onClick={() => handleDelete(c.id)}>
+                      <button className="btn btn-danger" onClick={() => handleDelete(c.ID)}>
                         删除
                       </button>
                     </td>
@@ -200,8 +200,8 @@ function InfectionCasesPage() {
                   <label>住院号 *</label>
                   <input
                     type="text"
-                    value={formData.patient_id}
-                    onChange={(e) => setFormData({ ...formData, patient_id: e.target.value })}
+                    value={formData.PatientID}
+                    onChange={(e) => setFormData({ ...formData, PatientID: e.target.value })}
                     required
                   />
                 </div>
@@ -209,8 +209,8 @@ function InfectionCasesPage() {
                   <label>姓名 *</label>
                   <input
                     type="text"
-                    value={formData.patient_name}
-                    onChange={(e) => setFormData({ ...formData, patient_name: e.target.value })}
+                    value={formData.PatientName}
+                    onChange={(e) => setFormData({ ...formData, PatientName: e.target.value })}
                     required
                   />
                 </div>
@@ -219,8 +219,8 @@ function InfectionCasesPage() {
                 <div className="form-group">
                   <label>性别</label>
                   <select
-                    value={formData.gender}
-                    onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                    value={formData.Gender}
+                    onChange={(e) => setFormData({ ...formData, Gender: e.target.value })}
                   >
                     <option value="">请选择</option>
                     <option value="男">男</option>
@@ -231,21 +231,21 @@ function InfectionCasesPage() {
                   <label>年龄</label>
                   <input
                     type="number"
-                    value={formData.age}
-                    onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                    value={formData.Age}
+                    onChange={(e) => setFormData({ ...formData, Age: e.target.value })}
                   />
                 </div>
               </div>
               <div className="form-group">
                 <label>入院科室 *</label>
                 <select
-                  value={formData.department_id}
-                  onChange={(e) => setFormData({ ...formData, department_id: e.target.value })}
+                  value={formData.DepartmentID}
+                  onChange={(e) => setFormData({ ...formData, DepartmentID: e.target.value })}
                   required
                 >
                   <option value="">请选择科室</option>
                   {departments.map(d => (
-                    <option key={d.id} value={d.id}>{d.name}</option>
+                    <option key={d.ID} value={d.ID}>{d.Name}</option>
                   ))}
                 </select>
               </div>
@@ -254,8 +254,8 @@ function InfectionCasesPage() {
                   <label>入院日期 *</label>
                   <input
                     type="date"
-                    value={formData.admission_date}
-                    onChange={(e) => setFormData({ ...formData, admission_date: e.target.value })}
+                    value={formData.AdmissionDate}
+                    onChange={(e) => setFormData({ ...formData, AdmissionDate: e.target.value })}
                     required
                   />
                 </div>
@@ -263,8 +263,8 @@ function InfectionCasesPage() {
                   <label>感染日期 *</label>
                   <input
                     type="date"
-                    value={formData.infection_date}
-                    onChange={(e) => setFormData({ ...formData, infection_date: e.target.value })}
+                    value={formData.InfectionDate}
+                    onChange={(e) => setFormData({ ...formData, InfectionDate: e.target.value })}
                     required
                   />
                 </div>
@@ -273,8 +273,8 @@ function InfectionCasesPage() {
                 <div className="form-group">
                   <label>感染部位 *</label>
                   <select
-                    value={formData.infection_site}
-                    onChange={(e) => setFormData({ ...formData, infection_site: e.target.value })}
+                    value={formData.InfectionSite}
+                    onChange={(e) => setFormData({ ...formData, InfectionSite: e.target.value })}
                     required
                   >
                     <option value="">请选择</option>
@@ -287,8 +287,8 @@ function InfectionCasesPage() {
                   <label>病原体 *</label>
                   <input
                     type="text"
-                    value={formData.pathogen}
-                    onChange={(e) => setFormData({ ...formData, pathogen: e.target.value })}
+                    value={formData.Pathogen}
+                    onChange={(e) => setFormData({ ...formData, Pathogen: e.target.value })}
                     required
                   />
                 </div>
@@ -297,8 +297,8 @@ function InfectionCasesPage() {
                 <label>
                   <input
                     type="checkbox"
-                    checked={formData.drug_sensitivity}
-                    onChange={(e) => setFormData({ ...formData, drug_sensitivity: e.target.checked })}
+                    checked={formData.DrugSensitivity}
+                    onChange={(e) => setFormData({ ...formData, DrugSensitivity: e.target.checked })}
                   />
                   {' '}已做药敏试验
                 </label>

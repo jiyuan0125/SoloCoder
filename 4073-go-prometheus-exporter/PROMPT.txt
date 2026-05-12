@@ -1,9 +1,7 @@
-Go Gin 做一个兼容 Prometheus 的指标网关，接收远程服务 push 过来的指标数据。
+Go Gin 做一个兼容 Prometheus 的指标网关——服务端自身不主动采集，只接收远程服务 push 过来的指标数据，给那些不方便暴露 /metrics 端点的批处理任务和短生命周期进程用。
 
-服务端自身不主动采集，只接收 push 过来的数据。push 接口兼容 Prometheus pushgateway 格式。数据进来后按 job 和 instance 分组存储。
+push 接口兼容 Prometheus pushgateway 格式，已有的 Push 客户端不需要改动就能对接。数据进来后按 job 和 instance 分组存储，同一 group 的多次 push 合并——相同名称和标签的指标取最新值。
 
-指标类型支持 Counter、Gauge、Histogram、Summary 四种。Summary 类型要计算分位数（p50、p90、p99），使用浮点数插值算法。
+指标类型支持 Counter、Gauge、Histogram、Summary 四种。Summary 类型要计算分位数——p50、p90、p99，使用浮点数插值算法。分位数计算在查询时实时进行，不预计算。
 
-指标过期：每个 group 可以配置过期时间。超过过期时间没收到新的 push 数据，该 group 的所有指标标记为 stale。stale 的指标在 /metrics 输出时带空值。查询时 stale 指标可选是否包含。
-
-支持指标的 relabel：对 push 过来的 label 做改写（重命名、合并、删除）。relabel 规则按 group 配置。指标数量上限可配置，超限拒绝新的 push。至少包含 push、storage、relabel、export 四个模块。端口 PORT 环境变量，go build 能过。
+指标过期：每个 group 可以配置过期时间。超过过期时间没收到新的 push 数据，该 group 的所有指标标记为 stale。stale 的指标在 /metrics 输出时带空值，查询时 stale 指标可选是否包含。支持指标的 relabel——对 push 过来的 label 做改写，包括重命名、合并、删除。relabel 规则按 group 配置。指标数量上限可配置，超限拒绝新的 push 并记录告警。端口 PORT 环境变量，go build 能过。

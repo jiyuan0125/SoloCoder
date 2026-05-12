@@ -1,11 +1,11 @@
-Go/Gin 做一个 HTTP 到 gRPC 的协议桥接。前端发 HTTP，后端是 gRPC 服务。
+前端团队只会调 HTTP 接口，后端那帮人非要用 gRPC，两边协议对不上天天扯皮。Go/Gin 做一个 HTTP 到 gRPC 的协议桥接，前端发 HTTP JSON，桥接层转成 gRPC 调后端，响应再转回 JSON。
 
-HTTP 请求的路径映射到 gRPC 的方法，映射关系通过接口配置。HTTP JSON body 自动转成 protobuf 字段。字段名按 camelCase 到 snake_case 转换。
+HTTP 请求的路径映射到 gRPC 的方法，映射关系通过接口配置（POST /api/mappings）。HTTP JSON body 自动转成 protobuf 字段，字段名从 camelCase 转 snake_case。嵌套对象递归转换，数组递归转换。
 
-gRPC 响应的 protobuf 转成 JSON 返回。嵌套消息递归转换。枚举值用字符串不用数字。repeated 字段转 JSON 数组。bytes 字段转 base64。
+gRPC 响应的 protobuf 转成 JSON 返回。枚举值用字符串不用数字——STATUS_OK 而不是 1。repeated 字段转 JSON 数组。bytes 字段转 base64 编码的字符串。嵌套消息递归转换。
 
-gRPC 的 status code 要映射到 HTTP 状态码：NOT_FOUND → 404，PERMISSION_DENIED → 403，INVALID_ARGUMENT → 400。未知状态码统一返回 500。
+gRPC 的 status code 要映射到 HTTP 状态码：NOT_FOUND → 404，PERMISSION_DENIED → 403，INVALID_ARGUMENT → 400，UNAVAILABLE → 503，DEADLINE_EXCEEDED → 504。没在映射表里的状态码统一返回 500。
 
-映射规则要支持新增方法，不用重启。gRPC 服务的 proto 定义文件通过接口上传。
+映射规则要支持动态新增方法，不用重启服务。gRPC 服务的 proto 定义文件通过接口上传（POST /api/proto/upload），上传后自动解析出方法和字段映射。
 
-bridge、mapper、converter、handler 四个模块。端口 PORT 环境变量，go build 能过。
+bridge 管整体桥接逻辑、mapper 管 HTTP 路径到 gRPC 方法的映射、converter 管 JSON 和 protobuf 的互相转换、handler 管 HTTP 接口。端口 PORT 环境变量，go build 能过。

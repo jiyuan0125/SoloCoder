@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,40 +13,107 @@ import (
 	"epidemic-management/services"
 )
 
-type CreateReportRequest struct {
-	PatientName string `json:"patientName"`
-	PatientID   string `json:"patientId"`
-	DiseaseName string `json:"diseaseName"`
-	Region      string `json:"region"`
-	District    string `json:"district"`
-	OnsetTime   string `json:"onsetTime"`
-	ReportTime  string `json:"reportTime"`
+type rawJSON map[string]interface{}
+
+func getStr(m rawJSON, keys ...string) string {
+	for _, k := range keys {
+		if v, ok := m[k]; ok {
+			if s, ok := v.(string); ok {
+				return s
+			}
+		}
+	}
+	return ""
+}
+
+func getUint(m rawJSON, keys ...string) uint {
+	for _, k := range keys {
+		if v, ok := m[k]; ok {
+			switch val := v.(type) {
+			case float64:
+				return uint(val)
+			case int:
+				return uint(val)
+			case uint:
+				return val
+			}
+		}
+	}
+	return 0
+}
+
+func getInt(m rawJSON, keys ...string) int {
+	for _, k := range keys {
+		if v, ok := m[k]; ok {
+			switch val := v.(type) {
+			case float64:
+				return int(val)
+			case int:
+				return val
+			}
+		}
+	}
+	return 0
+}
+
+func toSnake(s string) string {
+	var sb strings.Builder
+	for i, r := range s {
+		if i > 0 && 'A' <= r && r <= 'Z' {
+			sb.WriteByte('_')
+		}
+		sb.WriteByte(byte(r | 32))
+	}
+	return sb.String()
 }
 
 func CreateOutbreakReport(c *gin.Context) {
-	var req CreateReportRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "读取请求体失败"})
 		return
 	}
 
-	onset, err := parseTime(req.OnsetTime)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "发病时间格式错误"})
+	var raw rawJSON
+	if err = json.Unmarshal(body, &raw); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON格式错误"})
 		return
 	}
-	report, err := parseTime(req.ReportTime)
+
+	patientName := getStr(raw, "patientName", "patient_name")
+	patientID := getStr(raw, "patientId", "patient_id", "patientID")
+	diseaseName := getStr(raw, "diseaseName", "disease_name")
+	region := getStr(raw, "region")
+	district := getStr(raw, "district")
+	reportTimeStr := getStr(raw, "reportTime", "report_time")
+	onsetTimeStr := getStr(raw, "onsetTime", "onset_time")
+
+	if patientName == "" || patientID == "" || diseaseName == "" || region == "" || district == "" || reportTimeStr == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "缺少必填字段"})
+		return
+	}
+
+	report, err := parseTime(reportTimeStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "报告时间格式错误"})
 		return
 	}
 
+	onset := report
+	if onsetTimeStr != "" {
+		onset, err = parseTime(onsetTimeStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "发病时间格式错误"})
+			return
+		}
+	}
+
 	r := &models.OutbreakReport{
-		PatientName: req.PatientName,
-		PatientID:   req.PatientID,
-		DiseaseName: req.DiseaseName,
-		Region:      req.Region,
-		District:    req.District,
+		PatientName: patientName,
+		PatientID:   patientID,
+		DiseaseName: diseaseName,
+		Region:      region,
+		District:    district,
 		OnsetTime:   onset,
 		ReportTime:  report,
 	}
@@ -156,33 +226,46 @@ func UpdateContactStatus(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "状态更新成功"})
 }
 
-type CreateInvestigationRequest struct {
-	ReportID    uint   `json:"reportId"`
-	PatientName string `json:"patientName"`
-	OnsetTime   string `json:"onsetTime"`
-	VisitTime   string `json:"visitTime"`
-	ConfirmTime string `json:"confirmTime"`
-	Clinical    string `json:"clinical"`
-}
-
 func CreateInvestigation(c *gin.Context) {
-	var req CreateInvestigationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	body, err := ioutil.ReadAll(c.Request.Body)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "读取请求体失败"})
 		return
 	}
 
-	onset, _ := parseTime(req.OnsetTime)
-	visit, _ := parseTime(req.VisitTime)
-	confirm, _ := parseTime(req.ConfirmTime)
+	var raw rawJSON
+	if err = json.Unmarshal(body, &raw); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "JSON格式错误"})
+		return
+	}
+
+	reportID := getUint(raw, "reportId", "report_id", "reportID")
+	patientName := getStr(raw, "patientName", "patient_name")
+	onsetTimeStr := getStr(raw, "onsetTime", "onset_time")
+	visitTimeStr := getStr(raw, "visitTime", "visit_time")
+	confirmTimeStr := getStr(raw, "confirmTime", "confirm_time")
+	clinical := getStr(raw, "clinical")
 
 	inv := &models.Investigation{
-		ReportID:    req.ReportID,
-		PatientName: req.PatientName,
-		OnsetTime:   onset,
-		VisitTime:   visit,
-		ConfirmTime: confirm,
-		Clinical:    req.Clinical,
+		ReportID:    reportID,
+		PatientName: patientName,
+		Clinical:    clinical,
+	}
+
+	if onsetTimeStr != "" {
+		if t, err := parseTime(onsetTimeStr); err == nil {
+			inv.OnsetTime = t
+		}
+	}
+	if visitTimeStr != "" {
+		if t, err := parseTime(visitTimeStr); err == nil {
+			inv.VisitTime = t
+		}
+	}
+	if confirmTimeStr != "" {
+		if t, err := parseTime(confirmTimeStr); err == nil {
+			inv.ConfirmTime = t
+		}
 	}
 
 	if err := services.CreateInvestigation(inv); err != nil {

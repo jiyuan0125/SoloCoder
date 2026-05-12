@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"medical-quality-system/internal/app"
 	"medical-quality-system/internal/model"
+	"medical-quality-system/pkg/db"
 )
 
 type AggregationService struct{}
@@ -39,14 +39,14 @@ func (s *AggregationService) ByDepartment(month string) ([]DepartmentAggregation
 	}
 
 	var indicators []model.Indicator
-	if err := app.DB.Find(&indicators).Error; err != nil {
+	if err := db.DB.Find(&indicators).Error; err != nil {
 		return nil, err
 	}
 
 	deptMap := make(map[string][]IndicatorDepartmentStat)
 	for _, indicator := range indicators {
 		var data model.IndicatorData
-		err := app.DB.Where("indicator_id = ? AND month = ?", indicator.ID, month).First(&data).Error
+		err := db.DB.Where("indicator_id = ? AND month = ?", indicator.ID, month).First(&data).Error
 		if err != nil {
 			continue
 		}
@@ -124,7 +124,7 @@ func (s *AggregationService) ByCategory(fromMonth, toMonth string) ([]CategoryAg
 	}
 
 	var indicators []model.Indicator
-	if err := app.DB.Find(&indicators).Error; err != nil {
+	if err := db.DB.Find(&indicators).Error; err != nil {
 		return nil, err
 	}
 
@@ -145,7 +145,7 @@ func (s *AggregationService) ByCategory(fromMonth, toMonth string) ([]CategoryAg
 		agg.TotalIndicators++
 
 		var dataList []model.IndicatorData
-		app.DB.Where("indicator_id = ? AND month >= ? AND month <= ?", indicator.ID, fromMonth, toMonth).Find(&dataList)
+		db.DB.Where("indicator_id = ? AND month >= ? AND month <= ?", indicator.ID, fromMonth, toMonth).Find(&dataList)
 
 		for _, data := range dataList {
 			agg.DataCount++
@@ -267,20 +267,20 @@ func (s *AggregationService) ByTime(periodType string, fromTime, toTime string) 
 
 func (s *AggregationService) getDataByMonth(month string) ([]model.IndicatorData, error) {
 	var dataList []model.IndicatorData
-	err := app.DB.Where("month = ?", month).Find(&dataList).Error
+	err := db.DB.Where("month = ?", month).Find(&dataList).Error
 	return dataList, err
 }
 
 func (s *AggregationService) getDataByQuarter(quarter string) ([]model.IndicatorData, error) {
 	months := getQuarterMonths(quarter)
 	var dataList []model.IndicatorData
-	err := app.DB.Where("month IN ?", months).Find(&dataList).Error
+	err := db.DB.Where("month IN ?", months).Find(&dataList).Error
 	return dataList, err
 }
 
 func (s *AggregationService) getDataByYear(year string) ([]model.IndicatorData, error) {
 	var dataList []model.IndicatorData
-	err := app.DB.Where("month LIKE ?", year+"-%").Find(&dataList).Error
+	err := db.DB.Where("month LIKE ?", year+"-%").Find(&dataList).Error
 	return dataList, err
 }
 

@@ -1,9 +1,12 @@
-Go 标准库实现一个认证网关。其他服务把 JWT 相关的事全丢给这里处理。
+Go 标准库实现一个认证网关，其他服务把 JWT 相关的事全丢过来——签发、刷新、校验、拉黑，一条龙。
 
-【签发】客户端用用户名密码换 Token。Access Token 短效 15 分钟，Refresh Token 长效 7 天。Token 里带用户 ID 和角色列表。
+签发流程：客户端用用户名密码换 Token。Access Token 短效 15 分钟，Refresh Token 长效 7 天。Token 里带用户 ID 和角色列表，角色是字符串数组比如 ["admin", "editor"]，上游服务拿这个做权限判断。
 
-【刷新】Access Token 过期前可以用 Refresh Token 换新的。Refresh Token 只能用一次，用了旧的立马失效。Refresh Token 也过期了，那就重新登录。
+刷新流程：Access Token 过期前可以用 Refresh Token 换新的 Access Token。Refresh Token 只能用一次，用了之后旧的立马失效，防止 Token 被盗后持续可用。Refresh Token 也过期了那就得重新走登录流程，没有捷径。
 
-【黑名单】通过接口把 Token 拉黑，黑名单里的请求直接 401。管理员可以强制某用户全部 Token 失效。过期的黑名单条目定期清理。
+黑名单机制：通过接口把某个 Token 拉黑，黑名单里的请求直接 401。管理员可以强制某用户全部 Token 失效，用于用户改密码或被封号的场景。过期的黑名单条目定期清理，不会无限膨胀。
 
-模块至少包含 issuer、refresher、blacklist、verify，端口 PORT 环境变量，go build 能过。
+issuer 管 Token 签发，refresher 管刷新和旧 Token 失效，blacklist 管黑名单存储和查询，verify 管请求拦截和 Token 校验。端口 PORT 环境变量，go build 能过。
+
+
+Token 里的角色列表支持动态更新——用户权限变了之后，下次刷新 Token 时新角色就写进去了。已经签发的 Access Token 不会变，但 15 分钟就过期了，影响不大。如果需要立刻踢掉某用户，走黑名单接口。

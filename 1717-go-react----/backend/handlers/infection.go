@@ -11,17 +11,17 @@ import (
 )
 
 type CreateInfectionCaseRequest struct {
-	PatientID       string    `json:"patient_id" binding:"required"`
-	PatientName     string    `json:"patient_name" binding:"required"`
-	Gender          string    `json:"gender"`
-	Age             int       `json:"age"`
-	DepartmentID    uint      `json:"department_id" binding:"required"`
-	AdmissionDate   time.Time `json:"admission_date" binding:"required"`
-	InfectionDate   time.Time `json:"infection_date" binding:"required"`
-	InfectionSite   models.InfectionSite `json:"infection_site" binding:"required"`
-	Pathogen        string    `json:"pathogen" binding:"required"`
-	DrugSensitivity bool      `json:"drug_sensitivity"`
-	InfectionType   string    `json:"infection_type"`
+	PatientID       string                `json:"PatientID" binding:"required"`
+	PatientName     string                `json:"PatientName" binding:"required"`
+	Gender          string                `json:"Gender"`
+	Age             int                   `json:"Age"`
+	DepartmentID    uint                  `json:"DepartmentID" binding:"required"`
+	AdmissionDate   time.Time             `json:"AdmissionDate" binding:"required"`
+	InfectionDate   time.Time             `json:"InfectionDate" binding:"required"`
+	InfectionSite   models.InfectionSite  `json:"InfectionSite" binding:"required"`
+	Pathogen        string                `json:"Pathogen" binding:"required"`
+	DrugSensitivity bool                  `json:"DrugSensitivity"`
+	InfectionType   string                `json:"InfectionType"`
 }
 
 func CreateInfectionCase(c *gin.Context) {
@@ -54,7 +54,7 @@ func CreateInfectionCase(c *gin.Context) {
 	if req.InfectionType != "" {
 		automaticType := calculateInfectionType(req.AdmissionDate, req.InfectionDate)
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "感染类型由系统自动判断，不能手动指定",
+			"error":          "感染类型由系统自动判断，不能手动指定",
 			"automatic_type": automaticType,
 		})
 		return
@@ -94,12 +94,18 @@ func GetInfectionCases(c *gin.Context) {
 	var cases []models.InfectionCase
 	query := database.DB.Preload("Department")
 
-	departmentID := c.Query("department_id")
+	departmentID := c.Query("DepartmentID")
+	if departmentID == "" {
+		departmentID = c.Query("department_id")
+	}
 	if departmentID != "" {
 		query = query.Where("department_id = ?", departmentID)
 	}
 
-	infectionType := c.Query("type")
+	infectionType := c.Query("Type")
+	if infectionType == "" {
+		infectionType = c.Query("type")
+	}
 	if infectionType != "" {
 		query = query.Where("infection_type = ?", infectionType)
 	}
