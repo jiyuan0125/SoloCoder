@@ -1,0 +1,11 @@
+用 Go Fiber 做一个指标采集和导出服务。
+
+支持三种指标类型：Counter（只增计数器）、Gauge（可增可减的仪表盘）、Histogram（直方图，记录分布）。客户端通过 HTTP 接口注册指标和上报数据。Counter 用 inc 接口增加，Gauge 用 set/inc/dec 操作，Histogram 用 observe 接口记录一个观测值。
+
+每个指标有名称和一组标签（labels），同名不同标签组合是不同的时间序列。比如 http_requests_total{method="GET", path="/api"} 和 http_requests_total{method="POST", path="/api"} 是两条序列。
+
+导出接口以 Prometheus text format 输出所有指标。Histogram 导出时要计算 count、sum 和各 bucket 的累计值。
+
+有个聚合功能：可以对一组指标做求和、平均、最大最小值的实时计算。聚合规则通过管理接口配置。
+
+项目分模块写：指标定义、存储、聚合逻辑、导出格式、API 路由。端口从 PORT 环境变量读取。

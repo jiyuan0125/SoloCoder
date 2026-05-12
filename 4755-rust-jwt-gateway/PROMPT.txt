@@ -1,0 +1,11 @@
+用 Rust axum 写一个认证网关，挡在业务服务前面做身份校验。
+
+客户端请求带 Authorization: Bearer {token} 头，网关验证 JWT 的签名和有效期。验证通过后把用户信息（从 token 的 payload 提取）注入到请求头里再转发给后端。验证失败直接返回 401。
+
+Token 过期时间我不太确定设多少合适，你定一个合理的值。过期后客户端拿 refresh_token 换新的 access_token。refresh_token 的有效期比 access_token 长。
+
+支持黑名单机制：管理员可以把某个 token 加入黑名单，黑名单里的 token 即使没过期也拒绝。
+
+用户信息里有个 role 字段，不同 role 能访问的路径不一样。这个权限映射表可以动态配置。有些路径是公开的不需要认证（比如 /health、/login）。
+
+数据库用 SQLite 或纯内存都行。端口从 PORT 环境变量读取。

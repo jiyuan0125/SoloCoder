@@ -1,0 +1,9 @@
+用 FastAPI（async）做一个熔断器管理面板。
+
+熔断器有三个状态：closed（正常放行）、open（直接拒绝）、half_open（放行一个探测请求试探）。状态流转是 closed → open → half_open → closed 或 half_open → open。closed 状态下连续 N 次失败（默认 5 次）触发熔断变成 open。open 状态保持 T 秒（默认 30）后变成 half_open。half_open 状态下发一个请求试探，成功就回 closed，失败就回 open。
+
+每个被保护的服务有自己的熔断器实例，用服务名标识。可以创建新的熔断器、修改参数（失败阈值、超时时间）、手动重置状态。
+
+有个查询接口返回指定服务当前状态和最近的调用记录（最近 100 条，包含时间戳、结果、耗时）。
+
+数据库用 SQLite，异步驱动。端口从环境变量 PORT 读取。

@@ -1,0 +1,11 @@
+后端团队有个 gRPC 服务，但前端只认 REST。用 Go Gin 写一个协议转换网关。
+
+网关提供 RESTful 接口，收到请求后转换成 gRPC 调用转发给后端，再把 gRPC 响应转成 JSON 返回。接口路径和 gRPC 方法的映射关系通过配置文件定义。
+
+gRPC 的 message 字段有嵌套结构（比如 Order 里有 Customer 对象，Customer 里有 Address），JSON 也要对应嵌套。枚举字段在 JSON 里用字符串表示（比如 "ACTIVE"），gRPC 里是数字。
+
+支持 gRPC streaming 转 JSON：服务端流式响应转成 newline-delimited JSON 返回。客户端流式请求比较复杂，先不支持。
+
+gRPC 服务的 proto 文件和地址通过配置加载，不硬编码。如果后端 gRPC 服务不可用，返回 503。
+
+项目能 go build 编译通过，端口从 PORT 环境变量读取。

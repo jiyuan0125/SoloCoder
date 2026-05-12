@@ -1,0 +1,11 @@
+用 Spring Boot 2.x（JDK 17，Maven）做一个分布式链路追踪服务。
+
+每个请求有一个全局唯一的 TraceID，经过的每个服务生成一个 SpanID。Span 之间有父子关系，形成一棵调用树。服务之间通过 HTTP Header 传递 TraceID 和 ParentSpanID。
+
+SDK 部分（给业务服务用的）：拦截 HTTP 请求，自动创建 Span，记录开始时间和结束时间。调用下游服务时自动注入追踪 Header。SDK 做成一个独立的 Java 包，业务服务加依赖就能用。
+
+收集服务：接收各个服务上报的 Span 数据，按 TraceID 聚合，构建完整的调用链。存储用 SQLite。查询接口支持按 TraceID 查完整链路、按服务名查最近调用、按耗时排序找慢请求。
+
+展示调用链的耗时树，包含每个 Span 的服务名、操作名、开始时间、耗时。能看出哪个环节最慢。
+
+端口用 server.port 配置。
