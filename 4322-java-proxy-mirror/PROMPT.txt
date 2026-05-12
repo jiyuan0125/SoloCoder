@@ -1,0 +1,5 @@
+Spring Boot 做一个带故障转移的负载均衡器。后端挂了不能等人工切。
+实例管理：通过接口管理后端实例。实例包含地址、端口、权重、状态。状态有 active、draining、down。active 正常接收流量。draining 不接收新请求但处理完已有的。down 不接收流量。
+请求分发：按权重分发到 active 实例。权重为 0 的不选。选到的实例请求失败（超时或 5xx）标记为 suspect。连续 suspect 3 次变 down。down 的实例定期探测恢复。
+故障转移：请求失败时自动重试其他实例。重试最多 2 次。3 次都失败返回 503。故障转移的请求不记录为 3 次独立请求，算 1 次。
+实例从 down 恢复到 active 后权重先给个低值慢慢恢复。至少包含 balancer、failover、detector、manager 四个模块。Maven 构建，端口配置文件。

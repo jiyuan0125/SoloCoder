@@ -1,0 +1,6 @@
+Go 标准库写一个带自动注销的服务注册中心。服务挂了不能一直占着位置。
+服务注册：服务启动时注册，提供名称、地址、端口、元数据。注册返回一个 token。后续心跳和注销需要这个 token。服务名可以有多个实例。
+心跳机制：注册后定期发心跳。默认间隔 10 秒。3 次没收到心跳自动注销。注销事件广播给所有订阅者。心跳间隔可以按服务自定义。
+服务查询：按名称查询所有健康实例。按名称+元数据过滤查询。查询结果包含实例 ID、地址、状态、最后心跳时间。
+实例状态：HEALTHY → UNHEALTHY → DEREGISTERED。心跳正常是 HEALTHY。心跳超时是 UNHEALTHY。自动注销后是 DEREGISTERED。UNHEALTHY 恢复心跳变回 HEALTHY。
+至少包含 registry、heartbeat、query、broadcaster 四个模块。端口 PORT 环境变量，go build 能过。

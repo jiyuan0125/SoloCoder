@@ -1,0 +1,6 @@
+Spring Boot 写一个 WebSocket 到 HTTP 的协议桥。浏览器连 WebSocket，服务端转发到后端 HTTP。
+连接管理：客户端通过 WebSocket 连接。每个连接分配唯一连接 ID。连接建立时认证（token 验证）。连接断开时清理资源。最大连接数可配。
+消息转换：WebSocket 文本消息转为 HTTP POST 请求。消息格式约定为 JSON，包含 path 和 body。path 对应后端 HTTP 路径。body 对应请求体。转换失败返回错误消息。
+响应回传：后端 HTTP 响应通过 WebSocket 回传。响应格式是 JSON，包含 status 和 body。后端超时时回传超时错误。多个请求的响应按顺序回传。
+心跳保活：WebSocket 连接空闲超过 30 秒发 ping。连续 3 次 ping 无响应断开。断开后客户端需要重连。
+后端路径如果不存在，错误信息格式先简单处理就行。至少包含 bridge、converter、connection、heartbeat 四个模块。Maven 构建，端口配置文件。
