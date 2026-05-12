@@ -48,9 +48,12 @@ export async function createTestRecord(
   const id = generateId();
   const flowInvestigation = req.result === 'positive';
 
-  await db.run('BEGIN TRANSACTION');
+  let transactionActive = false;
 
   try {
+    await db.run('BEGIN TRANSACTION');
+    transactionActive = true;
+
     await db.run(
       'INSERT INTO test_records (id, person_id, isolation_id, test_day, test_date, result) VALUES (?, ?, ?, ?, ?, ?)',
       id,
@@ -73,6 +76,7 @@ export async function createTestRecord(
     }
 
     await db.run('COMMIT');
+    transactionActive = false;
 
     const testRecord = await db.get<TestRecord>('SELECT * FROM test_records WHERE id = ?', id);
 
@@ -82,7 +86,9 @@ export async function createTestRecord(
       startedIsolation: req.result === 'positive',
     };
   } catch (error) {
-    await db.run('ROLLBACK');
+    if (transactionActive) {
+      await db.run('ROLLBACK');
+    }
     throw error;
   }
 }

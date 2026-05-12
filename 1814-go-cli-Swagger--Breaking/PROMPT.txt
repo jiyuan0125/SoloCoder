@@ -1,17 +1,10 @@
-用Go写一个Swagger/OpenAPI契约验证命令行工具，用 cobra 做子命令架构。微服务架构下后端API变更频繁，前端和测试团队需要知道API有没有breaking change。
+试了三个现成的 API diff 工具都不支持 OpenAPI 3.0 的 $ref 引用展开，只能 Go 自己写。apicheck 做 Swagger/OpenAPI 契约验证，cobra 框架。
 
-工具叫apicheck，输入是一个Swagger 2.0或OpenAPI 3.0的JSON/YAML格式API定义文件。基本用法：apicheck check old-api.yaml new-api.yaml，对比两个版本的API定义，找出所有变更并分类为breaking change和non-breaking change。输入文件不存在时退出码 1。文件格式不是有效的 YAML/JSON 时退出码 1 并打印解析错误。
+基本用法：apicheck check old-api.yaml new-api.yaml，对比两个版本 API 定义找 breaking/non-breaking change。
 
-Breaking change检测包括以下情况：删除了已有的接口路径。删除了已有的请求方法。修改了接口路径（路径从/api/users变成/api/v2/users）。在请求参数中删除了必填字段。在请求参数中把必填字段改成了选填字段。在响应中删除了已有字段。修改了字段的数据类型（string改成integer）。修改了字段的格式约束（比如之前是email格式现在改成了任意字符串）。删除了已有的枚举值。
+Breaking change：删除接口路径、删除请求方法、修改路径、删除必填请求参数、必填改选填、删除响应字段、修改字段类型、修改格式约束、删除枚举值。Non-breaking：新增路径/方法/可选参数/响应字段、放宽约束、新增枚举。
 
-Non-breaking change包括：新增接口路径。新增请求方法。新增可选的请求参数。在响应中新增字段。放宽字段约束（比如之前字符串最长50现在放宽到100）。新增枚举值。
+输出先概要再详细：变更类型、位置（路径+字段）、描述、前后值。有 breaking 退出码 3，只有 non-breaking 退出码 0，完全相同退出码 0。--allow-breaking 白名单不报错。
 
-输出格式：先显示一个概要，breaking change的数量和non-breaking change的数量。然后详细列出每个变更，包含变更类型、所在位置（路径+字段）、具体描述、变更前后的值。有 breaking change 时退出码 3，只有 non-breaking change 时退出码 0。两个文件完全相同退出码 0 并输出"无变更"。
-
-加--allow-breaking参数可以指定允许的breaking change列表（逗号分隔的变更类型），白名单中的变更不报错。这在实际项目中很有用，因为有些breaking change是计划内的，只需要通知下游而不是阻止发布。
-
-apicheck lint api.yaml 命令验证API定义文件本身的规范性。检查是否所有接口都有描述、是否有未定义的引用类型、命名是否规范等。lint 发现问题时退出码 3 并列出问题详情。
-
-加--markdown参数可以输出Markdown格式的变更报告，适合贴到PR里做代码审查。报告中自动生成一个变更摘要表格。
-
-对比两个API定义时，需要处理复杂的嵌套结构。OpenAPI定义中引用类型（$ref）可能指向其他文件或文件内的其他位置，需要先解析引用展开成完整结构再做对比。$ref 指向的文件不存在时退出码 1 并打印引用路径。如果两个文件的OpenAPI版本不同（一个是2.0一个是3.0），要先提示版本不一致，再尝试做基本的对比。
+apicheck lint api.yaml 验证定义文件规范性（接口描述、未定义引用、命名规范），有 problem 退出码 3。--markdown 输出 PR 友好的变更报告含摘要表格。
+对比时 $ref 引用要先解析展开成完整结构。$ref 指向的文件不存在退出码 1。两个文件 OpenAPI 版本不同（一个 2.0 一个 3.0）先提示再尝试基本对比。

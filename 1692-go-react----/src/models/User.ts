@@ -43,7 +43,7 @@ export class User {
   @Column({ type: 'text', nullable: true })
   teachingExperience: string | null;
 
-  @Column({ type: 'decimal', precision: 3, scale: 2, default: 0, nullable: true })
+  @Column({ type: 'decimal', precision: 3, scale: 2, default: null, nullable: true })
   averageRating: number | null;
 
   @Column({ default: 0 })

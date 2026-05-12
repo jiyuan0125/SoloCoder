@@ -1,13 +1,9 @@
-用Go写一个许可证合规扫描命令行工具，用 cobra 做子命令架构。我们公司对外发布软件产品，法务要求确保所有用到的第三方库许可证都合规，不能混入GPL这种传染性许可证。
+法务那边提了个需求，要一套许可证合规扫描工具，确保所有第三方库没有混入 GPL 这种传染性许可证。Go 写个 licensecheck，cobra 框架。
 
-工具叫licensecheck，用法：licensecheck 项目路径。路径不存在时退出码 1。扫描项目中的所有依赖，识别每个依赖的许可证类型，检查是否违反许可证策略。
+扫描项目依赖识别许可证检查合规。先识别项目类型（Go 看 go.mod、Node.js 看 package.json、Java 看 pom.xml/build.gradle、Python 看 requirements.txt），支持多语言项目同时扫描。没有可识别项目文件退出码 1。
 
-扫描策略是这样的：先识别项目类型（Go项目看go.mod，Node.js项目看package.json，Java项目看pom.xml或build.gradle，Python项目看requirements.txt），然后根据项目类型解析依赖列表。目录下没有任何可识别的项目文件时退出码 1 并提示不支持的项目类型。支持多语言项目的意思是如果根目录同时有go.mod和package.json，两种依赖都扫描。
+许可证识别是核心。对每个依赖在本地源码找 LICENSE 文件（文件名可能是 LICENSE/LICENSE.md/LICENSE.txt/COPYING 等）。通过 SPDX 标准文本匹配（内置常见许可证全文模板计算相似度）加关键词匹配。两种方法都无法识别标记"未知"。组合许可证（如 Apache-2.0 OR MIT）要正确解析不能当未知处理。
 
-许可证识别是核心功能。对每个依赖，在本地缓存或下载的源码中查找LICENSE文件。文件名可能是LICENSE、LICENSE.md、LICENSE.txt、COPYING、COPYING.md等。找到后解析文件内容，识别许可证类型。识别方法通过SPDX标准许可证文本匹配，内置常见SPDX许可证的全文模板，计算文本相似度来判断。同时通过关键词匹配，比如文件中出现"MIT License"、"Apache License"等关键字。如果两种方法都无法识别，标记为"未知许可证"。有些依赖的LICENSE文件是多个许可证的组合，比如"Apache-2.0 OR MIT"表示用户可以选择其中任一许可证，这种情况要正确解析，不能把整个文本当成一个未知许可证。
+策略通过配置文件定义白名单黑名单。默认白名单含 MIT/Apache-2.0/BSD/ISC，默认黑名单含 GPL/AGPL/SSPL。
 
-许可证策略通过配置文件定义。配置文件指定许可证白名单和黑名单。白名单中的许可证是允许使用的，黑名单中的是禁止使用的。默认白名单包含MIT、Apache-2.0、BSD-2-Clause、BSD-3-Clause、ISC、0BSD。默认黑名单包含GPL-2.0、GPL-3.0、AGPL-3.0、SSPL-1.0。配置文件语法错误时退出码 1 并打印行号。
-
-输出报告分三部分。许可证汇总表，列出所有发现的许可证类型和对应的依赖数量。违规依赖列表，列出了使用黑名单许可证或不在白名单中的依赖。未知许可证列表，列出无法识别许可证类型的依赖，需要人工审核。有违规依赖时退出码 3，有未知许可证但无违规时退出码 0 并打印提示人工审核。
-
-加--recursive参数时，递归扫描子目录中的嵌套项目（比如monorepo中有多个子项目）。扫描monorepo中多个子项目时，同一个依赖在不同子项目中用的版本不同要分别报告。加--format参数选择输出格式，支持text、json、csv三种。有些依赖的许可证信息写在README或者包管理器的元数据中而不是独立的LICENSE文件。比如npm包的package.json里可能有license字段。要优先看独立LICENSE文件，没有的话再看元数据。
+输出报告三部分：许可证汇总表、违规依赖列表、未知许可证列表。有违规退出码 3，只有未知但无违规退出码 0。--recursive 扫描 monorepo 子项目，同依赖不同版本分别报告。--format 支持 text/json/csv。npm 包优先看 LICENSE 文件没有再看 package.json 的 license 字段。

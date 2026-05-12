@@ -67,6 +67,9 @@ class EnvironmentStore {
   }
 
   checkQuota(projectId: string, type: EnvironmentType): void {
+    if (!projectId || !projectId.trim()) {
+      throw new ApiError(400, 'projectId is required');
+    }
     const current = this.countByProjectAndType(projectId, type);
     const limit = ENVIRONMENT_QUOTAS[type];
     if (current >= limit) {
@@ -92,8 +95,8 @@ class EnvironmentStore {
   async withLock<T>(id: string, operation: () => T | Promise<T>): Promise<T> {
     this.acquireLock(id);
     try {
-      const result = await operation();
-      return result;
+      const result = operation();
+      return await result;
     } finally {
       this.releaseLock(id);
     }

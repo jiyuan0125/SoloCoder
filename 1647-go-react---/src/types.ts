@@ -20,9 +20,16 @@ export enum InstanceStatus {
   TERMINATED = 'terminated'
 }
 
+export interface OnRejectJump {
+  jumpTo: string;
+}
+
+export type OnRejectConfig = 'terminate' | OnRejectJump;
+
 export interface ApprovalNodeConfig {
   approvers: string[];
-  onReject: 'terminate' | { jumpTo: string };
+  onReject: OnRejectConfig;
+  nextNodeId?: string;
 }
 
 export interface ConditionBranch {

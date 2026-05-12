@@ -60,6 +60,31 @@ const getLastCompletedResult = (userId: string, scaleId: string): Promise<Assess
   });
 };
 
+const getActiveAssessment = (userId: string, scaleId: string): Promise<Assessment | null> => {
+  return new Promise((resolve, reject) => {
+    db.get(
+      `SELECT * FROM assessments 
+       WHERE user_id = ? AND scale_id = ? AND status IN ('in_progress', 'paused')
+       ORDER BY start_time DESC 
+       LIMIT 1`,
+      [userId, scaleId],
+      (err, row: any) => {
+        if (err) reject(err);
+        else if (!row) resolve(null);
+        else resolve({
+          id: row.id,
+          userId: row.user_id,
+          scaleId: row.scale_id,
+          startTime: row.start_time,
+          status: row.status,
+          answers: JSON.parse(row.answers || '[]'),
+          lastActiveTime: row.last_active_time
+        });
+      }
+    );
+  });
+};
+
 const updateAssessment = (assessment: Assessment): Promise<void> => {
   return new Promise((resolve, reject) => {
     db.run(
@@ -90,6 +115,15 @@ router.post('/start', async (req: Request, res: Response) => {
     const scale = await getScaleById(scaleId);
     if (!scale) {
       res.status(404).json({ error: 'Scale not found' });
+      return;
+    }
+
+    const activeAssessment = await getActiveAssessment(userId, scaleId);
+    if (activeAssessment && !isAssessmentExpired(activeAssessment.lastActiveTime)) {
+      res.status(409).json({ 
+        error: 'Cannot retake the same scale within 30 days',
+        activeAssessmentId: activeAssessment.id 
+      });
       return;
     }
 

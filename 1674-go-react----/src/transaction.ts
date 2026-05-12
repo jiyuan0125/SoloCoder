@@ -7,8 +7,8 @@ const generateId = (): string => {
   return 'tx_' + Math.random().toString(36).substring(2, 15);
 };
 
-const SINGLE_TRANSACTION_LIMIT_USD = 50000 * 100;
-const DAILY_LIMIT_USD = 100000 * 100;
+const SINGLE_TRANSACTION_LIMIT_USD = 50000;
+const DAILY_LIMIT_USD = 100000;
 
 const getDailyUsdVolume = async (): Promise<number> => {
   const now = Date.now();

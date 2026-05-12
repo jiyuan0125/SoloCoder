@@ -11,20 +11,21 @@ export async function generateDischargeNotification(
   db: Database,
   isolationId: string
 ): Promise<DischargeNotification> {
-  await db.run('BEGIN TRANSACTION');
+  let transactionActive = false;
 
   try {
+    await db.run('BEGIN TRANSACTION');
+    transactionActive = true;
+
     const isolation = await getIsolationById(db, isolationId);
 
     if (!isolation) {
-      await db.run('ROLLBACK');
       const err = new Error('隔离记录不存在');
       (err as any).status = 404;
       throw err;
     }
 
     if (isolation.status !== 'active' && isolation.status !== 'pending_discharge') {
-      await db.run('ROLLBACK');
       const err = new Error('隔离记录状态不正确，无法生成解除通知');
       (err as any).status = 400;
       throw err;
@@ -39,7 +40,8 @@ export async function generateDischargeNotification(
     );
 
     if (existing) {
-      await db.run('ROLLBACK');
+      await db.run('COMMIT');
+      transactionActive = false;
       return existing;
     }
 
@@ -60,10 +62,13 @@ export async function generateDischargeNotification(
     await updateIsolationStatus(db, isolationId, 'pending_discharge');
 
     await db.run('COMMIT');
+    transactionActive = false;
 
     return db.get<DischargeNotification>('SELECT * FROM discharge_notifications WHERE id = ?', id) as Promise<DischargeNotification>;
   } catch (error) {
-    await db.run('ROLLBACK');
+    if (transactionActive) {
+      await db.run('ROLLBACK');
+    }
     throw error;
   }
 }
@@ -122,9 +127,12 @@ export async function confirmDischargeNotification(
     };
   }
 
-  await db.run('BEGIN TRANSACTION');
+  let transactionActive = false;
 
   try {
+    await db.run('BEGIN TRANSACTION');
+    transactionActive = true;
+
     const confirmedAt = new Date().toISOString();
 
     await db.run(
@@ -137,6 +145,7 @@ export async function confirmDischargeNotification(
     await updateIsolationStatus(db, notification.isolation_id, 'discharged');
 
     await db.run('COMMIT');
+    transactionActive = false;
 
     const updatedNotification = await getDischargeNotificationById(db, notificationId);
     const isolation = await getIsolationById(db, notification.isolation_id);
@@ -146,7 +155,9 @@ export async function confirmDischargeNotification(
       isolation: isolation as IsolationRecord,
     };
   } catch (error) {
-    await db.run('ROLLBACK');
+    if (transactionActive) {
+      await db.run('ROLLBACK');
+    }
     throw error;
   }
 }

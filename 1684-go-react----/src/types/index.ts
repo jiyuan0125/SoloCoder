@@ -86,7 +86,7 @@ export interface CareRecord {
 
 export interface CareRecordRequest {
   recordDate?: string;
-  temperature: number;
+  temperature: number | string;
   bloodPressure: string;
   diet?: string;
   specialNotes?: string;

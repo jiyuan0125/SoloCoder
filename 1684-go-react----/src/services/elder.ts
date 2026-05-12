@@ -22,10 +22,10 @@ export class ElderService {
     return runInTransaction(() => {
       const insertElder = this.db.prepare(`
         INSERT INTO elders 
-          (name, idCard, birthDate, emergencyContact, emergencyContactPhone, 
+          (name, idCard, gender, birthDate, emergencyContact, emergencyContactPhone, 
            medicalHistory, careLevel, status, checkInDate, roomNumber, bedNumber, 
            depositAmount, createdAt)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       const result = insertElder.run(

@@ -1,13 +1,9 @@
-用Go写一个.gitignore规则生成和管理命令行工具，用 cobra 做子命令架构。每次新建项目都要手写.gitignore，经常遗漏该忽略的文件。而且不同语言、不同框架的项目需要不同的忽略规则。
+每次新建项目都要手写 .gitignore，经常遗漏该忽略的文件，不同语言不同框架要不同规则。Go 写个 ignorance 工具，cobra 框架。
 
-工具叫ignorance，基本用法：ignorance init，交互式地生成.gitignore文件。不在 Git 仓库中运行时退出码 1。工具先检测当前目录的项目类型（通过检查是否存在go.mod、package.json、pom.xml、requirements.txt等特征文件），然后列出推荐的忽略规则让用户选择。
+ignorance init 交互式生成 .gitignore。先检测项目类型（看 go.mod/package.json/pom.xml/requirements.txt），列出推荐忽略规则让用户选择。规则按类分组：语言相关（Go 忽略 vendor/.exe/覆盖率，Node 忽略 node_modules/dist/.next，Java 忽略 target/.class）、IDE 相关（.vscode/.idea/.swp）、系统相关（.DS_Store/Thumbs.db/*~）。
 
-推荐的忽略规则按类别分组显示。语言相关规则：比如Go项目忽略vendor目录、.exe文件、test覆盖率文件；Node.js项目忽略node_modules、dist、.next；Java项目忽略target、.class文件。IDE相关规则：VSCode的.vscode目录、JetBrains的.idea目录、Vim的.swp文件。操作系统相关规则：macOS的.DS_Store、Windows的Thumbs.db、Linux的*~备份文件。用户可以用空格键选择或取消选择每个规则组。
+ignorance check 检查当前目录是否有该忽略但还没忽略的文件。扫描未跟踪文件分析是否匹配常见应忽略模式。
 
-生成.gitignore后，还可以用ignorance check命令检查当前目录中是否有应该被忽略但还没被忽略的文件。检查逻辑是：扫描工作目录中所有未被Git跟踪的文件（git ls-files --others --exclude-standard），然后分析这些文件是否匹配常见的应该忽略的模式。检查结果中发现的文件数量为 0 时退出码 0 并输出"无问题"，有应该忽略的文件时退出码 0 但列出具体文件。
+ignorance clean 清理已被 Git 跟踪但应该忽略的文件。列出匹配文件用户确认后执行 git rm --cached 从索引移除不删实际文件。必须 --confirm 才执行不加只预览。git rm 失败跳过继续，最后汇总失败数。
 
-ignorance clean命令用来清理已经被Git跟踪但应该被忽略的文件。这个操作要谨慎，需要用户确认。先列出匹配的文件，用户确认后再执行git rm --cached把这些文件从Git索引中移除（不删除实际文件）。git rm --cached 失败时（比如文件正在被使用）跳过该文件继续处理其余文件，最后汇总失败数。clean 命令必须有 --confirm 参数才能执行，不加参数时只预览不执行。
-
-加--global参数操作全局.gitignore文件（~/.gitignore_global），而不是项目级别的。加--template参数可以从内置模板快速生成，比如ignorance init --template golang直接生成Go项目的.gitignore而不需要交互选择。模板名不存在时退出码 1 并列出可用模板。
-
-生成的.gitignore文件如果已经存在，要提示用户是覆盖还是追加。追加的时候要检查是否有重复规则，重复规则跳过不追加，在汇总中说明跳过了几条重复规则。检查应该被忽略的文件时，有些文件看起来像临时文件但实际上是有用的。比如.env.example文件不应该被忽略，虽然.env应该被忽略。需要区分.env和.env.example。
+--global 操作全局 .gitignore。--template 从内置模板快速生成比如 ignorance init --template golang。已存在的 .gitignore 要提示覆盖还是追加，追加时跳过重复规则汇总说明。

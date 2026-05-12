@@ -1,11 +1,5 @@
-帮我用Go写一个JSON Schema验证和数据生成的命令行工具。我们团队的API接口用JSON Schema来定义请求和响应的数据格式，需要一个离线工具来验证JSON数据是否符合给定的Schema，同时还能根据Schema自动生成测试用的JSON样本数据。
+Go 做 JSON Schema 验证效率不错，写个离线命令行工具来验证数据格式和生成测试样本，支持 Draft-07 核心关键字。
 
-工具接收一个JSON Schema文件（.json格式）和一个或多个待验证的JSON数据文件。对每个数据文件做Schema验证，输出验证结果：通过则显示valid，不通过则列出所有不符合的地方，包括字段路径、期望的类型或约束、实际值。验证要支持JSON Schema Draft-07的核心关键字：type、required、properties、items、enum、minimum/maximum、minLength/maxLength、pattern、additionalProperties、allOf/anyOf/oneOf、$ref。其中allOf需要同时满足所有子schema，anyOf满足至少一个，oneOf恰好满足一个。
+验证功能：接收 Schema 文件和 JSON 数据文件，输出每个不符合项的路径、期望约束和实际值。支持 type/required/properties/items/enum/minimum/maximum/minLength/maxLength/pattern/additionalProperties/allOf/anyOf/oneOf/$ref。生成功能：字符串按 pattern 或字段名生成有意义的值，数字在范围内随机，数组按 minItems/maxItems，required 全生成 optional 随机，oneOf 随机选，allOf 合并所有字段。
 
-生成功能根据给定的Schema自动生成一个符合约束的JSON样本。生成策略：字符串类型如果pattern是邮箱格式就生成一个合理的邮箱，如果是日期格式就生成一个近期日期，其他情况用字段名做基础生成。数字类型如果同时有minimum和maximum就在范围内随机取值，如果只有exclusiveMinimum就取该值加1。数组类型根据minItems和maxItems决定生成几个元素。对象类型把所有required字段都生成，optional字段随机决定是否生成。如果遇到$ref就解析引用生成对应子schema的数据。对于oneOf，随机选一个子schema来生成。对于allOf，合并所有子schema的字段后生成。
-
-这个工具$ref引用的循环问题。比如SchemaA的某个字段$ref指向SchemaB，SchemaB又有字段$ref指向SchemaA，如果不做循环检测就会无限递归。你需要维护一个已访问路径的栈，遇到重复引用就停止深入，用null或者空对象作为兜底。另一个问题是additionalProperties的处理：如果Schema设置了additionalProperties为false，但实际的JSON数据中有Schema里没定义的字段，验证时应该报错。如果同时使用了allOf合并了多个schema，每个schema都有自己的additionalProperties设置，合并后的行为需要正确处理。
-
-还有一个细节：JSON Schema中的default关键字。如果字段定义了default值且JSON数据中没有该字段，验证时应该视为通过（因为使用了默认值），但在生成样本数据时应该使用这个default值。pattern关键字的正则匹配需要考虑JSON字符串中的转义字符，比如Schema里写pattern是"\\d+"，在JSON文件中实际存储的是"\\\\d+"，解析时要正确处理多层转义。
-
- 代码上把Schema解析和验证引擎、数据生成器、命令行界面分成三个独立的部分。验证引擎用递归下降的方式遍历Schema树和数据树做匹配检查。Schema文件如果JSON格式不合法，退出码返回 1 并指出解析错误位置。$ref形成循环引用时生成样本数据遇到已访问路径用null兜底，验证时遇到循环引用跳过不再深入。验证结果如果所有数据都通过，退出码返回 0；任何一条数据验证失败，退出码返回 1。pattern正则表达式如果语法不合法，退出码返回 1 并提示具体哪个pattern有问题。生成的样本数据如果JSON序列化失败（比如生成出了NaN），用null替换并标注"该字段生成值无效"。数据文件如果不存在退出码返回 1。验证输出中每个错误项包含JSON路径（用$.field.subfield格式）、期望约束和实际值。allOf合并时如果子schema之间有矛盾（比如一个要求type:string另一个要求type:number），验证该字段直接报错。
+$ref 循环检测用已访问路径栈，遇到重复用 null 兜底。additionalProperties false 但 JSON 有未定义字段验证时报错。allOf 合并矛盾直接报错。default 值在生成时使用，验证时视为通过。pattern 正则多层转义正确处理。Schema JSON 不合法退出码 1。全通过退出码 0，有失败退出码 1。正则不合法退出码 1。生成值 NaN 用 null 替换。

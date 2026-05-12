@@ -78,9 +78,22 @@ export class CareService {
   }
 
   createCareRecord(elderId: number, request: CareRecordRequest): { record: CareRecord; warning?: HealthWarning } {
+    let temperatureValue: number;
     if (request.temperature === undefined || request.temperature === null) {
       throw new Error('BAD_REQUEST: 体温不能为空');
     }
+    if (typeof request.temperature === 'string') {
+      if (request.temperature.trim() === '') {
+        throw new Error('BAD_REQUEST: 体温不能为空');
+      }
+      temperatureValue = Number(request.temperature);
+      if (Number.isNaN(temperatureValue)) {
+        throw new Error('BAD_REQUEST: 体温必须是有效的数字');
+      }
+    } else {
+      temperatureValue = request.temperature;
+    }
+
     if (!request.bloodPressure || request.bloodPressure.trim() === '') {
       throw new Error('BAD_REQUEST: 血压不能为空');
     }
@@ -98,7 +111,7 @@ export class CareService {
       const result = insertStmt.run(
         elderId,
         recordDate,
-        request.temperature,
+        temperatureValue,
         request.bloodPressure,
         request.diet || null,
         request.specialNotes || null,
@@ -109,7 +122,7 @@ export class CareService {
       const record = this.db.prepare('SELECT * FROM careRecords WHERE id = ?').get(Number(result.lastInsertRowid)) as CareRecord;
 
       let warning: HealthWarning | undefined;
-      if (request.temperature > TEMPERATURE_THRESHOLD) {
+      if (temperatureValue > TEMPERATURE_THRESHOLD) {
         warning = this.checkAndCreateHealthWarning(elderId, recordDate);
       }
 

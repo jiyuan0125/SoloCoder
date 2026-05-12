@@ -46,28 +46,9 @@ function createConfigVersion(config: EnvironmentConfig, version: number): Config
   };
 }
 
-function validateCreateRequest(request: CreateEnvironmentRequest): void {
-  if (!request.name || typeof request.name !== 'string') {
-    throw new ApiError(400, 'name is required and must be a string');
-  }
-  if (!request.type) {
-    throw new ApiError(400, 'type is required');
-  }
-  validateType(request.type);
-  if (!request.projectId || typeof request.projectId !== 'string') {
-    throw new ApiError(400, 'projectId is required and must be a string');
-  }
-  if (!request.resources || typeof request.resources !== 'object') {
-    throw new ApiError(400, 'resources is required');
-  }
-  if (!request.config || typeof request.config !== 'object') {
-    throw new ApiError(400, 'config is required');
-  }
-}
-
 export const environmentService = {
   create(request: CreateEnvironmentRequest): Environment {
-    validateCreateRequest(request);
+    validateType(request.type);
 
     environmentStore.checkQuota(request.projectId, request.type);
 
@@ -163,6 +144,10 @@ export const environmentService = {
     return environmentStore.withLock(id, () => {
       const sourceEnv = environmentService.getById(id);
 
+      if (!newName || !newName.trim()) {
+        throw new ApiError(400, 'clone environment name is required');
+      }
+
       environmentStore.checkQuota(sourceEnv.projectId, sourceEnv.type);
 
       const initialConfigVersion = 1;
@@ -171,8 +156,12 @@ export const environmentService = {
         type: sourceEnv.type,
         projectId: sourceEnv.projectId,
         status: 'maintenance',
-        resources: JSON.parse(JSON.stringify(sourceEnv.resources)),
-        config: JSON.parse(JSON.stringify(sourceEnv.config)),
+        resources: {
+          serviceInstanceCount: sourceEnv.resources.serviceInstanceCount,
+          database: { ...sourceEnv.resources.database },
+          middleware: { ...sourceEnv.resources.middleware },
+        },
+        config: { ...sourceEnv.config },
         configHistory: [createConfigVersion(sourceEnv.config, initialConfigVersion)],
         currentConfigVersion: initialConfigVersion,
       });

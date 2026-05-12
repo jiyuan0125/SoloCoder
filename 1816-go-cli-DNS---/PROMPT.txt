@@ -1,17 +1,8 @@
-用Go写一个DNS批量查询命令行工具，用 cobra 做子命令架构，比系统自带的dig/nslookup好用。运维经常需要批量查一堆域名的DNS记录，手动一个一个查太慢了。
+最近在搞 DNS 配置迁移，批量查域名记录用 dig 一个一个查太慢了。Go 写个 dnsprobe，cobra 框架。
 
-工具叫dnsprobe，基本用法：dnsprobe query example.com。查询指定域名的DNS记录，支持多种记录类型：A（IPv4地址）、AAAA（IPv6地址）、CNAME（别名）、MX（邮件服务器）、NS（域名服务器）、TXT（文本记录）、SOA（起始授权机构）、SRV（服务定位）。默认查询A记录，用--type参数指定其他类型，用--type ALL查询所有类型。域名格式不合法时退出码 1 并打印具体哪里有问题。
+query 查指定域名 DNS 记录。支持 A/AAAA/CNAME/MX/NS/TXT/SOA/SRV，默认 A，--type ALL 查所有。输出域名/记录类型/TTL/值。多 A 记录全列。域名不存在（NXDOMAIN）退出码 0 明确标注，和超时区分。--json 输出 JSON。
 
-结果输出格式清晰：域名、记录类型、TTL、值。一个域名可能有多个A记录（CDN场景），全部列出来。加--json参数输出JSON格式。域名不存在（NXDOMAIN）时退出码 0 但明确标注"域名不存在"，和查询超时要区分开。
+batch 从文件批量查域名列表，并发查询。--concurrency 默认 20。结果按文件顺序输出。空行和错误格式行跳过不影响其他。--server 指定 DNS 服务器（8.8.8.8/1.1.1.1），--doh 用 DNS over HTTPS。缓存功能：内存缓存 TTL 跟随记录最长 5 分钟，--no-cache 禁用。
 
-批量查询功能：dnsprobe batch --file domains.txt。从文件读取域名列表（每行一个），文件不存在时退出码 1。并发查询所有域名。并发数通过--concurrency参数控制，默认20。查询结果按文件中的顺序输出，每个域名的查询结果用空行分隔。文件中有空行或格式错误的行跳过并记录，不影响其余域名的查询。
-
-DNS服务器选择：默认使用系统配置的DNS服务器。用--server参数可以指定DNS服务器地址，比如用Google的8.8.8.8或Cloudflare的1.1.1.1。还可以指定DoH（DNS over HTTPS）服务器，比如--doh https://dns.google/dns-query。指定不存在的DNS服务器时查询超时后报错退出码 2。
-
-结果缓存功能：同一个域名短时间内可能被多次查询，缓存可以避免重复查询。缓存用内存实现，TTL跟随DNS记录的TTL值，最长缓存5分钟。加--no-cache参数禁用缓存。
-
-DNS解析链追踪功能：dnsprobe trace example.com。从根域名服务器开始，逐级追踪DNS解析链路。显示每一级域名服务器返回了什么结果、耗时多少。某一级查询超时时标注超时并继续尝试下一级。
-
-DNS传播检查功能：dnsprobe propagate example.com --expected 1.2.3.4。向多个公共DNS服务器查询同一个域名的A记录，检查是否都返回了预期的IP地址。结果不一致的服务器列出实际返回值。
-
-DNS查询用UDP协议，但UDP响应超过512字节会被截断，需要支持自动降级到TCP重试。批量查询时有速率限制，避免被DNS服务器拒绝服务，默认每秒50个查询。查询CNAME记录时，如果目标域名有CNAME链（A指向B，B指向C），要显示完整的链路。用--resolve参数可以控制是否解析CNAME到最终IP地址。DNS查询结果中同一个域名的A记录和AAAA记录要分别显示，不能混在一起。
+trace 从根域名服务器逐级追踪解析链路，显示每级结果和耗时。超时标注继续下一级。propagate 向多个公共 DNS 查同一域名 A 记录检查传播一致性，不一致的列出实际值。
+UDP 查询响应超 512 字节自动降 TCP。批量查询速率限制默认每秒 50。CNAME 链要显示完整链路。--resolve 控制是否解析到最终 IP。A 和 AAAA 分别显示不混在一起。

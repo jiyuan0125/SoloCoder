@@ -53,4 +53,6 @@ export function initDatabase(): void {
   `);
 }
 
+initDatabase();
+
 export default db;

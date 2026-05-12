@@ -35,9 +35,12 @@ export async function createInvestigation(
 
   const isKeyPerson = hasHighRiskTravel(req.travel_history);
 
-  await db.run('BEGIN TRANSACTION');
+  let transactionActive = false;
 
   try {
+    await db.run('BEGIN TRANSACTION');
+    transactionActive = true;
+
     let person: Person;
 
     const existingPerson = await db.get<Person>('SELECT * FROM persons WHERE id = ?', req.person_id);
@@ -61,7 +64,6 @@ export async function createInvestigation(
       );
       person = await db.get<Person>('SELECT * FROM persons WHERE id = ?', newPersonId) as Person;
     } else {
-      await db.run('ROLLBACK');
       const err = new Error('未找到人员信息');
       (err as any).status = 404;
       throw err;
@@ -80,6 +82,7 @@ export async function createInvestigation(
     );
 
     await db.run('COMMIT');
+    transactionActive = false;
 
     const investigation = await db.get<Investigation>(
       'SELECT * FROM investigations WHERE id = ?',
@@ -88,7 +91,9 @@ export async function createInvestigation(
 
     return { person, investigation: investigation as Investigation };
   } catch (error) {
-    await db.run('ROLLBACK');
+    if (transactionActive) {
+      await db.run('ROLLBACK');
+    }
     throw error;
   }
 }

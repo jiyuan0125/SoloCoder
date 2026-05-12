@@ -1,9 +1,5 @@
-帮我用Go写一个CSP内容安全策略生成和验证命令行工具。我们公司的Web产品需要配置HTTP响应头Content-Security-Policy来防止XSS攻击，但策略配置很复杂，安全团队希望有一个工具能根据HTML页面的实际资源引用情况自动生成合适的CSP策略，并且能验证现有策略是否安全。
+市面上的 CSP 工具要么太专业要么不好用，用 Go 自己写一个，能根据 HTML 分析资源引用自动生成策略也能验证现有策略。
 
-工具有两个主要功能。第一个是analyze模式，接收一个HTML文件路径，扫描页面中引用的所有资源（script标签的src、link标签的href、img标签的src、style标签和内联style、内联script、font-face的src、connect到fetch和XMLHttpRequest的目标等），根据这些引用自动生成CSP策略。生成的策略应该尽可能严格：如果所有script都来自同源，就生成script-src 'self'；如果引用了cdn.example.com的脚本，就加上cdn.example.com；如果有内联脚本，就必须加'unsafe-inline'并给出警告（建议把内联脚本提取到外部文件）。生成的策略输出为完整的HTTP响应头格式，同时输出一份说明文档解释每个指令为什么这样设置。
+analyze 模式扫描 HTML 文件的所有资源引用（script src、link href、img src、内联 style/script 等），自动生成 CSP 策略。全同源用 self，引用了 CDN 加域名，有内联脚本加 unsafe-inline 并警告建议提取外部文件。支持 hash 方式（SHA256/384/512）替代 unsafe-inline。audit 模式接收 HTML 和 CSP 策略字符串，模拟浏览器检查每个资源是否违反策略，报告冲突和修复建议。
 
-第二个是audit模式，接收一个HTML文件和一个CSP策略字符串（通过命令行参数或文件传入），模拟浏览器解析CSP策略，然后逐一检查HTML中的每个资源引用是否会违反该策略。如果违反就报告具体是哪个元素、哪条指令被违反了、以及修复建议。比如script-src只允许了self但页面引用了外部CDN的脚本，就要指出这个冲突。
-
-CSP策略支持hash和nonce两种方式来替代unsafe-inline。hash方式是对内联script的内容做SHA256/384/512哈希，把哈希值写进策略里。nonce方式是服务端每次请求生成一个随机字符串放在script标签的nonce属性里和策略里。analyze模式应该支持生成hash方式的策略，计算出页面中所有内联script和style的哈希值。CSP的report-uri和report-to指令不阻止资源加载，只发送违规报告，audit模式要区分这两种情况，不要把只有report但没有实际阻止的违规当成错误。CSP 3.0引入了strict-dynamic，它会自动放行被信任脚本动态创建的脚本，audit模式至少要能识别strict-dynamic的存在并给出提示。
-
- 代码架构上，HTML解析用标准的HTML tokenizer，提取出所有资源引用后分类汇总，然后根据分类结果和策略模板生成CSP字符串。audit模式实现一个简化版的CSP匹配引擎，把CSP策略解析成结构化的指令集合，然后对每个资源引用做匹配检查。HTML文件不存在时退出码返回 1。CSP策略字符串为空时退出码返回 1 并提示需要提供策略。analyze模式如果HTML文件中没有引用任何外部资源，输出"default-src 'self'"作为最基本的策略。CSP策略中如果同时存在unsafe-inline和strict-dynamic，audit指出这是矛盾的配置并建议移除unsafe-inline因为strict-dynamic会使其失效。audit如果CSP策略缺少default-src指令，标注警告说缺少兜底策略。生成的策略字符串长度如果超过浏览器限制（通常4096字节），打印警告说策略可能过长。nonce生成使用crypto/rand确保随机性，不能用math/rand。
+HTML 解析用标准 tokenizer。CSP 匹配引擎简化版，解析策略为结构化指令集合。HTML 不存在退出码 1。策略为空退出码 1。无外部资源输出 default-src self。unsafe-inline 和 strict-dynamic 同时存在指出矛盾。缺 default-src 标注警告。策略超 4096 字节警告。nonce 用 crypto/rand 不用 math/rand。

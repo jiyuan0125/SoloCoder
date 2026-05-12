@@ -55,7 +55,8 @@ export class CourseService {
       throw error;
     }
 
-    if (instructor.averageRating !== null && instructor.averageRating < 3.5) {
+    if (instructor.ratingCount > 0 && 
+        (instructor.averageRating !== null && instructor.averageRating < 3.5)) {
       const error = new Error('讲师评分过低，暂停排课');
       (error as any).statusCode = 400;
       throw error;

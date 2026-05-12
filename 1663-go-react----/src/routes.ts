@@ -165,9 +165,9 @@ router.post('/orders', (req: Request, res: Response) => {
     res.status(201).json(result);
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === '用户ID不能为空' || error.message === '订单金额必须大于0') {
+      if (error.message === '订单号不能为空' || error.message === '用户ID不能为空' || error.message === '订单金额必须大于0') {
         res.status(400).json({ error: error.message });
-      } else if (error.message === '订单已归因') {
+      } else if (error.message === '订单号已存在' || error.message === '订单已归因') {
         res.status(409).json({ error: error.message });
       } else {
         res.status(500).json({ error: error.message });

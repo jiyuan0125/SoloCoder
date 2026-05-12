@@ -1,11 +1,11 @@
-用Go写一个Helm Chart模板验证和打包工具，用 cobra 做子命令架构。我们团队的微服务都用Helm来部署，但每次修改Chart模板后手动验证很麻烦，helm template能渲染出YAML但不好对比前后差异，helm lint检查太粗不够细致。
+隔壁部门做了个 Helm 部署流水线，我们需要对接，顺便把 Chart 模板验证工具也做了，Go 写。每次改 Chart 模板后手动验证很麻烦，helm template 能渲染但不好对比差异，helm lint 检查太粗。
 
-工具读取一个Helm Chart目录，Chart目录不存在或不含Chart.yaml时退出码 1。解析其中的Chart.yaml（获取Chart名称、版本、依赖）和templates目录下的所有模板文件。用Go template引擎渲染这些模板，使用values.yaml中的默认值作为输入数据，values.yaml不存在时退出码 1。渲染结果输出为标准Kubernetes YAML格式。
+工具读取一个 Helm Chart 目录，目录不存在或不含 Chart.yaml 退出码 1。解析 Chart.yaml（获取名称、版本、依赖）和 templates 目录下所有模板文件。用 Go template 引擎渲染模板，使用 values.yaml 默认值作为输入，values.yaml 不存在退出码 1。渲染结果输出为标准 Kubernetes YAML。
 
-验证功能包括：检查渲染后的YAML是否是合法的Kubernetes资源（有apiVersion、kind、metadata等必要字段），缺少必要字段时标记为错误并列出具体缺了什么。检查资源名称是否符合Kubernetes命名规范（小写字母、数字和连字符）。检查镜像标签是否使用了latest（标记为警告）。检查是否有资源设置了过大的资源请求或限制。检查Service和Deployment的标签选择器是否匹配（不匹配时标记为错误）。Chart.yaml的版本号不符合SemVer格式时退出码 1。有验证错误时退出码 3，只有警告时退出码 0。
+验证功能：检查渲染后的 YAML 是否合法（有 apiVersion、kind、metadata 等必要字段），缺少的标记为错误列出具体缺了什么。检查资源名称是否符合 K8s 命名规范（小写字母、数字和连字符）。检查镜像标签是否用了 latest（标记为警告）。检查是否有资源设置了过大的资源请求或限制。检查 Service 和 Deployment 标签选择器是否匹配。Chart.yaml 版本号不符合 SemVer 退出码 1。有验证错误退出码 3，只有警告退出码 0。
 
-差异对比功能：渲染当前Chart的模板，再渲染另一个版本的模板，对比两次渲染结果的差异，用类似diff的格式展示哪些资源被添加、删除或修改了。对比的Chart目录不存在时退出码 1。
+差异对比：渲染当前 Chart 模板，再渲染另一个版本，对比差异用 diff 格式展示哪些资源被添加、删除或修改。对比的 Chart 目录不存在退出码 1。
 
-打包功能：把Chart目录打包成tgz格式，文件名按Chart名称和版本号命名（比如myapp-1.2.3.tgz），同时生成一份包含所有渲染后YAML的说明文件。
+打包功能：把 Chart 目录打包成 tgz，文件名按名称和版本号命名（如 myapp-1.2.3.tgz），同时生成一份包含所有渲染后 YAML 的说明文件。
 
-Helm模板语法除了Go标准模板之外还有一些自定义函数（如toYaml、indent、nindent等），需要实现这些函数才能正确渲染。values.yaml可能有多个环境覆盖文件，工具要支持通过--values参数指定使用哪个覆盖文件。模板文件中可能引用了子Chart，需要递归处理，子Chart的模板不存在时退出码 1。YAML解析时要处理好多文档格式（---分隔符）。
+Helm 模板语法除了 Go 标准模板还有自定义函数（toYaml、indent、nindent 等），需要实现这些才能正确渲染。values.yaml 可能有多个环境覆盖文件，通过 --values 参数指定。模板文件可能引用子 Chart，需要递归处理，子 Chart 模板不存在退出码 1。YAML 解析要处理好 --- 分隔符的多文档格式。

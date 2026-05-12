@@ -5,6 +5,11 @@ import { attributionService } from './attributionService';
 
 export class OrderCommissionService {
   createOrder(data: CreateOrderRequest): { order: Order; commission: Commission | null } {
+    // 验证订单号
+    if (!data.order_id) {
+      throw new Error('订单号不能为空');
+    }
+
     // 验证用户ID
     if (!data.user_id) {
       throw new Error('用户ID不能为空');
@@ -15,10 +20,17 @@ export class OrderCommissionService {
       throw new Error('订单金额必须大于0');
     }
 
+    // 检查订单号重复
+    const existingOrder = db.prepare('SELECT id FROM orders WHERE external_order_id = ?').get(data.order_id);
+    if (existingOrder) {
+      throw new Error('订单号已存在');
+    }
+
     // 创建订单
     const orderId = uuidv4();
     const order: Order = {
       id: orderId,
+      external_order_id: data.order_id,
       user_id: data.user_id,
       amount: data.amount,
       status: 'completed',
@@ -27,12 +39,13 @@ export class OrderCommissionService {
     };
 
     const orderStmt = db.prepare(`
-      INSERT INTO orders (id, user_id, amount, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO orders (id, external_order_id, user_id, amount, status, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
 
     orderStmt.run(
       order.id,
+      order.external_order_id,
       order.user_id,
       order.amount,
       order.status,
@@ -120,9 +133,17 @@ export class OrderCommissionService {
     return { order, commission };
   }
 
-  refundOrder(orderId: string): void {
-    // 检查订单是否存在
-    const order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as Order | undefined;
+  getOrderByExternalId(externalOrderId: string): Order | undefined {
+    return db.prepare('SELECT * FROM orders WHERE external_order_id = ?').get(externalOrderId) as Order | undefined;
+  }
+
+  refundOrder(orderIdentifier: string): void {
+    // 先尝试通过内部 ID 查找，再尝试通过外部订单号查找
+    let order = db.prepare('SELECT * FROM orders WHERE id = ?').get(orderIdentifier) as Order | undefined;
+    if (!order) {
+      order = db.prepare('SELECT * FROM orders WHERE external_order_id = ?').get(orderIdentifier) as Order | undefined;
+    }
+    
     if (!order) {
       throw new Error('订单不存在');
     }
@@ -132,10 +153,10 @@ export class OrderCommissionService {
       UPDATE orders 
       SET status = ?, updated_at = ? 
       WHERE id = ?
-    `).run('refunded', new Date().toISOString(), orderId);
+    `).run('refunded', new Date().toISOString(), order.id);
 
     // 检查佣金记录
-    const commission = db.prepare('SELECT * FROM commissions WHERE order_id = ?').get(orderId) as Commission | undefined;
+    const commission = db.prepare('SELECT * FROM commissions WHERE order_id = ?').get(order.id) as Commission | undefined;
     if (commission) {
       if (commission.status === 'settled') {
         // 已结算的佣金不能直接取消
@@ -146,7 +167,7 @@ export class OrderCommissionService {
           UPDATE commissions 
           SET status = ?, updated_at = ? 
           WHERE order_id = ?
-        `).run('cancelled', new Date().toISOString(), orderId);
+        `).run('cancelled', new Date().toISOString(), order.id);
       }
     }
   }

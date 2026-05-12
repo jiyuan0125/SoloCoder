@@ -1,11 +1,5 @@
-帮我用Go写一个GraphQL Schema分析和代码生成的命令行工具。我们团队在用GraphQL做BFF层，Schema文件越来越多，有时候不同开发者会定义重复的字段或者命名不一致的类型，需要有一个工具来分析Schema的健康状况，同时能根据Schema自动生成前端的TypeScript类型定义。
+GraphQL Schema 文件越来越多，不同开发者定义了重复字段和命名不一致的类型，Go 命令行工具来分析并生成 TypeScript 类型。
 
-工具提供三个子命令。第一个是lint，接收一个或多个.graphql文件，检查Schema中是否存在以下问题：类型名是否遵循大驼峰命名规范、字段名是否遵循小驼峰规范、是否存在未使用的类型定义（定义了但没有任何查询或变更引用它）、是否存在重复的字段定义（同一个类型里定义了两次同名字段）、枚举值是否全大写加下划线分隔。检查结果按文件和位置输出，每个问题标注严重等级（error或warning）。
+lint 子命令检查命名规范（类型大驼峰、字段小驼峰、枚举全大写下划线）、未使用类型、重复字段定义。stats 子命令输出 Query/Mutation/Type/Enum 数量、最深嵌套层级、Type 热度排名。generate 子命令为每个 Type 生成 TypeScript interface：String→string、Int/Float→number、Boolean→boolean、ID→string、列表→数组。互相引用用 import。Fragment 先展开再生成。
 
-第二个子命令是stats，分析Schema并输出统计信息：有多少个Query、多少个Mutation、多少个Type、多少个Enum、最深嵌套层级是多少（比如Query -> User -> Posts -> Author -> Posts形成嵌套循环，需要检测出来）、每个Type被多少个其他Type引用（热度排名）。输出格式为可读的文本表格。
-
-第三个子命令是generate，接收Schema文件和输出目录路径，为每个Type生成对应的TypeScript interface定义。生成规则：标量类型String映射为string、Int映射为number、Float映射为number、Boolean映射为boolean、ID映射为string、自定义Type映射为对应的interface名、列表类型用数组表示、非空类型去掉可选标记（TypeScript里默认可选所以非空不需要特殊处理）、有默认值的字段在类型定义后面加注释说明默认值。生成的文件按类型分文件存放，每个文件包含一个export interface。如果有Type之间互相引用，用import语句引入。
-
-GraphQL的嵌套查询可能导致无限递归。比如User类型有posts字段返回Post列表，Post类型又有author字段返回User，工具在计算嵌套深度和检查循环引用时需要处理这种情况。检测到循环引用时要报告出来，因为循环引用在前端可能会导致无限渲染。点是Fragment的处理，.graphql文件中经常使用fragment spread来复用字段集合，generate子命令需要能把fragment展开后再生成类型，否则类型定义可能不完整。
-
- 代码架构上把GraphQL解析、校验规则、统计分析和代码生成做成四个独立模块，共享一个解析后的Schema AST（抽象语法树）。lint的每条规则实现一个检查器接口，方便后续扩展新规则。Schema文件如果语法错误（比如缺少大括号），退出码返回 1 并指出错误位置。lint如果发现任何error级别的问题，退出码返回 1；只有warning时退出码返回 0。generate生成的TypeScript文件如果目标目录不存在自动创建。循环引用检测到时在stats输出中单独列出循环链。generate处理Fragment时先把所有fragment spread展开为实际字段再生成类型，避免生成不完整的interface。生成的TypeScript代码如果能通过tsc --noEmit检查，在输出末尾标注"类型检查通过"。lint检查未使用的类型时如果一个类型只在其他未使用类型的字段里被引用，它也算未使用。generate输出时如果两个Type互相引用导致循环import，用注释标注循环引用并建议用type别名延迟引用。
+Schema 语法错误退出码 1 指出位置。lint 有 error 退出码 1，只有 warning 退出码 0。generate 目标目录不存在自动创建。循环引用在 stats 中单独列出。Fragment 展开后再生成避免不完整 interface。循环 import 用注释标注。嵌套深度检测循环（User→Posts→Author→User）要报告。

@@ -1,10 +1,8 @@
-财务那边经常需要把Excel文件转成CSV给其他系统用，还要能操作Excel的Sheet。你帮我写一个 Go 命令行工具做Excel批量处理，叫 xltool。
+Go 的 excelize 库做 Excel 读写挺方便的，但财务那边的需求不止读写——要转 CSV、操作 Sheet、还能像 SQL 一样查数据。用 Go 写个 xltool，urfave/cli v2 框架，有 convert、sheet、query 三个子命令。
 
-工具用urfave/cli v2框架，有 convert、sheet、query 三个子命令。
+convert 把 xlsx 转 CSV。支持指定 Sheet 名称或索引，不指定就转第一个。可以选编码（默认 UTF-8，也支持 GBK）。Excel 的日期序列号要转成可读字符串，格式可以指定。多 Sheet 可以一次全转，文件名用"原名_Sheet名.csv"。公式单元格取计算后的值。合并单元格只有左上角有值，其他位置要自动填充。超过 50 万行的大文件用流式读取。反向也支持：CSV 转 Excel，可以指定列类型（文本/数字/日期），纯数字文本（手机号、身份证号）不能被 Excel 自动转成数字导致精度丢失，引号内的逗号和换行也要正确处理。
 
-convert子命令把Excel文件（.xlsx格式）转换为CSV。支持指定要转换的Sheet名称或索引，不指定就转换第一个Sheet。支持指定编码（默认UTF-8，可选GBK）。支持指定日期格式（Excel中的日期序列号转换为可读的日期字符串时用的格式）。如果Excel文件中有多个Sheet，可以一次全部转换为多个CSV文件，文件名为"原文件名_Sheet名.csv"。Excel中的公式单元格读取的是计算后的值，不是公式本身。合并单元格读取时，只有左上角的单元格有值，其他位置要自动填充相同的值。处理大Excel文件（超过50万行）时使用流式读取避免内存溢出。支持反向操作：CSV转Excel，可以指定列的类型（文本、数字、日期），避免Excel自动把纯数字的文本（如手机号、身份证号）当作数字处理导致精度丢失，CSV转Excel时正确处理引号内的逗号和换行符。
+sheet 操作 Excel 的 Sheet：list 列出所有 Sheet 名称和索引，rename 重命名，copy 复制到同文件或另一个 Excel，delete 删除，merge 把多个 Sheet 按行追加合并（列名对齐），split 按某列值拆分成多个 Sheet。
 
-sheet子命令操作Excel的Sheet。list操作列出所有Sheet的名称和索引。rename操作重命名指定Sheet。copy操作复制一个Sheet到同一个文件或另一个Excel文件。delete操作删除指定Sheet。merge操作把多个Sheet合并为一个（按行追加，列名相同的列对齐合并）。split操作把一个Sheet按某列的值拆分成多个Sheet（比如按部门列拆分，每个部门一个Sheet）。
-
-query子命令用类似SQL的语法查询Excel数据。支持SELECT指定列、WHERE条件过滤、ORDER BY排序、LIMIT限制行数。条件支持等于、大于、小于、包含等操作符。查询结果输出为表格或CSV。
-convert 子命令 Excel 文件不存在或不是有效 xlsx 格式时报错退出码 1。sheet merge 合并多个 Sheet 时列名有重复加序号后缀区分不能丢数据。CSV 转 Excel 时纯数字文本列（手机号、身份证号）要正确处理为文本类型避免精度丢失。大文件流式读取时内存占用不超过 200MB，超过就分批处理。query 子命令条件语法错误时退出码 2 并输出具体的语法错误位置。
+query 用类 SQL 语法查 Excel 数据。SELECT 指定列，WHERE 条件过滤（等于/大于/小于/包含），ORDER BY 排序，LIMIT 限制行数。结果输出表格或 CSV。
+Excel 文件不存在或不是有效 xlsx 时退出码 1。sheet merge 合并时列名重复加序号后缀，不能丢数据。CSV 转 Excel 时纯数字文本列要处理为文本类型。大文件流式读取内存不超过 200MB。query 条件语法错误退出码 2 并输出错误位置。

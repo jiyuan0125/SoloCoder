@@ -54,6 +54,7 @@ export function initializeDatabase(): void {
   db.exec(`
     CREATE TABLE IF NOT EXISTS orders (
       id TEXT PRIMARY KEY,
+      external_order_id TEXT NOT NULL UNIQUE,
       user_id TEXT NOT NULL,
       amount INTEGER NOT NULL,
       status TEXT NOT NULL CHECK (status IN ('pending', 'completed', 'refunded')),

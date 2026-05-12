@@ -1,15 +1,9 @@
-用Go写一个CORS（跨域资源共享）配置检查命令行工具，用 cobra 做子命令架构。前后端分离的项目里CORS配置经常出问题，要么前端请求被浏览器拦截，要么配置太宽松有安全风险。
+安全团队那边提了个需求，要一个 CORS 配置检查和测试工具，用 Go 写。前端调后端接口经常遇到跨域问题，但到底是浏览器拦截还是后端配置不对，每次排查都很费时间。
 
-工具叫corscheck，基本用法：corscheck --origin https://frontend.example.com --url https://api.example.com/users。origin 或 url 参数缺失时退出码 1，格式不合法时退出码 1。模拟浏览器发送跨域请求，检查服务器的CORS配置是否正确。
+check 子命令向指定 URL 发送一个带 Origin 头的预检请求（OPTIONS），分析响应中的 CORS 相关头部：Access-Control-Allow-Origin、Access-Control-Allow-Methods、Access-Control-Allow-Headers、Access-Control-Allow-Credentials、Access-Control-Max-Age、Access-Control-Expose-Headers。检查配置是否正确、是否有安全风险（比如 Allow-Origin 设置为 * 同时 Allow-Credentials 为 true 是不合法的组合）。URL 格式不合法时退出码返回 1。
 
-检查流程是这样的：先发送一个OPTIONS预检请求（preflight request），携带Origin头、Access-Control-Request-Method头和Access-Control-Request-Headers头。然后检查响应中的CORS相关头。连接失败时退出码 2。
+test 子命令模拟浏览器的跨域请求行为。用户指定源域名（Origin）和目标 URL，工具模拟简单请求和预检请求两种场景，分别检查响应头是否允许跨域。这样可以确认某个跨域调用在浏览器端是否会被拦截，以及拦截的具体原因。
 
-需要检查的CORS响应头包括以下这些。Access-Control-Allow-Origin：检查是否允许请求的Origin。值可以是具体的域名或*（标记为黄色警告太宽松）。如果值和请求的Origin不匹配，标记为红色错误。Access-Control-Allow-Methods：检查是否允许请求的HTTP方法。Access-Control-Allow-Headers：检查是否允许请求的自定义头。Access-Control-Allow-Credentials：如果请求携带了凭证，这个值必须是true，但Allow-Credentials为true时Allow-Origin不能是*，违反这个规则标记为红色错误。Access-Control-Max-Age：建议至少600秒减少预检请求次数。Access-Control-Expose-Headers：检查是否暴露了前端需要读取的响应头。
+compare 子命令比较两个环境的 CORS 配置差异，比如对比 staging 和 production 的响应头，输出哪些头不一致。
 
-然后发送实际的GET请求（或用户指定的方法），检查实际响应中的CORS头是否和预检响应一致。有些服务器只对OPTIONS请求返回CORS头，实际请求不返回，这在某些浏览器中可能导致问题，要检测出来并标记。
-
-批量检查功能：corscheck batch --config cors-config.yaml。配置文件定义多组检查，文件不存在时退出码 1。并发执行所有检查，每个检查结果独立。
-
-加--credentials参数在请求中携带凭证信息，检查服务器是否正确处理了凭证相关的CORS配置。检查多个Origin时对每个Origin分别发送预检请求。有些服务器的CORS配置会动态反射请求的Origin（直接把请求的Origin值返回为Allow-Origin），这是一个已知的安全风险，工具要检测到并标记警告。
-
-输出报告：每种检查结果显示通过/警告/失败状态，附上具体描述和建议。加--json输出JSON格式。有失败项时退出码 3，只有警告时退出码 0。如果目标服务器根本不返回CORS头（完全没有CORS配置），明确告诉用户"服务器未配置CORS"，而不是显示一堆缺失头的警告。
+请求的 Origin 可以通过 --origin 参数指定，不指定则用一个默认的测试 Origin。允许的 HTTP 方法逐个测试，确认 Allow-Methods 声明和实际行为一致。有些服务器对不同路径的 CORS 配置不同，工具支持指定多个路径分别测试。请求超时默认 10 秒。HTTPS 证书错误时退出码返回 1。批量测试多个 URL 时某个失败不影响其余，最后汇总结果。支持输出 JSON 格式。CORS 头的值如果是多个域名用空格分隔，工具逐个解析。

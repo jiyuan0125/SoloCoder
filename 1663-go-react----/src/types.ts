@@ -35,6 +35,7 @@ export interface Attribution {
 
 export interface Order {
   id: string;
+  external_order_id: string;
   user_id: string;
   amount: number;
   status: OrderStatus;
@@ -89,6 +90,7 @@ export interface TrackAttributionRequest {
 }
 
 export interface CreateOrderRequest {
+  order_id: string;
   user_id: string;
   amount: number;
 }

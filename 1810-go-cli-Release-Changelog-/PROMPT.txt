@@ -1,13 +1,9 @@
-用Go写一个Release管理和Changelog自动生成命令行工具，用 cobra 做子命令架构。我们项目每次发版都要手动写Changelog，整理这个版本改了什么功能、修了什么bug，非常耗时。
+之前用 conventional-changelog 这个 npm 包生成 Changelog，但功能太死板还依赖 Node 环境。Go 写个 releasetool，cobra 框架。
 
-工具叫releasetool，在Git仓库中运行，不在仓库中时退出码 1。基本用法：releasetool new v1.2.0，创建一个新版本。版本号不符合语义化版本规范时退出码 1 并打印正确格式示例。工具自动分析从上一个版本标签到当前HEAD之间的所有提交记录，按类型分类整理成Changelog。
+在 Git 仓库中运行。releasetool new v1.2.0 创建新版本，自动分析从上个版本标签到 HEAD 的所有提交，按类型分类整理 Changelog。
 
-提交分类规则基于Conventional Commits格式。feat:开头的归入"新功能"分类，fix:开头的归入"Bug修复"，docs:归入"文档更新"，refactor:归入"重构"，perf:归入"性能优化"，test:归入"测试"，chore:归入"其他"。对于不符合Conventional Commits格式的提交，归入"未分类"并给出警告。每个分类下列出具体的提交条目，条目内容取提交消息的第一行（去掉前缀后）。如果有关联的Issue编号（提交消息中包含#123这种格式），在条目后面标注Issue链接。
+分类规则基于 Conventional Commits：feat→新功能，fix→Bug 修复，docs→文档，refactor→重构，perf→性能优化，test→测试，chore→其他。不符合格式的归"未分类"给警告。每条取提交消息第一行去掉前缀。有 Issue 编号（#123）的标注链接。
 
-生成的Changelog写入CHANGELOG.md文件，格式采用Keep a Changelog标准。文件顶部是最新版本，下面依次是历史版本。如果CHANGELOG.md已存在，在顶部插入新版本内容，保留历史记录不变。写入过程中如果文件被其他进程锁定，等待最多5秒后重试，仍然失败则退出码 2。
+写入 CHANGELOG.md 采用 Keep a Changelog 标准，最新版本在顶部。已存在则在顶部插入保留历史不变。版本号管理：检查 SemVer 格式、重复版本号（退出码 1）、是否有新提交（无新变更退出码 1）。版本号排序要正确解析 major.minor.patch 不能按字符串排（v1.10 > v1.2）。
 
-版本号管理：创建前检查版本号格式是否符合语义化版本规范（SemVer），检查是否有重复版本号（重复时退出码 1），检查从上一个版本到现在是否有新的提交（如果没有就提示"没有新变更，无需发版"退出码 1）。版本号的排序比较时，v1.2.0和v1.10.0按字符串排序的话1.10会在1.2前面，但按语义化版本应该是1.10更新，需要正确解析版本号的major、minor、patch三个部分再比较。
-
-releasetool diff v1.1.0 v1.2.0命令，对比两个版本之间的差异，输出Changelog预览但不写入文件。diff 的版本不存在时退出码 1。加--dry-run参数可以预览将要生成的Changelog内容但不实际写入文件或打标签。加--template参数可以用自定义的Changelog模板，模板文件不存在时退出码 1。
-
-如果项目从没有打过任何Git标签，new命令要把所有历史提交都纳入第一个版本的Changelog。创建标签失败（比如标签已存在但前面的重复检查没拦住，并发场景）时退出码 2 并回滚已写入的 CHANGELOG.md 变更。
+releasetool diff v1.1.0 v1.2.0 预览差异不写入。--dry-run 预览不写入不标签。--template 自定义模板。从没打过标签时所有历史提交纳入第一个版本。创建标签失败退出码 2 回滚 CHANGELOG 变更。

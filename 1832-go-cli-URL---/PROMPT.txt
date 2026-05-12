@@ -1,7 +1,7 @@
-用Go写一个URL处理工具箱，用 cobra 做子命令架构，集合URL解析、规范化、参数操作等常用功能。后端开发和测试人员在调试接口时经常要处理各种URL操作，目前只能靠在线工具或者手写代码。
+有个老系统是 Python 写的 URL 处理脚本，维护不动了，用 Go 重写一个 URL 工具箱，把解析、规范化、参数操作都集成进来。
 
-工具提供以下子命令。parse：解析URL的各个组成部分（scheme、host、port、path、query参数、fragment），用表格形式展示，URL格式不合法时退出码 1 并指出具体哪里有问题。normalize：URL规范化处理，包括统一scheme为小写、path部分处理重复斜杠和点号段（比如/a/./b/../c规范成/a/c）、query参数排序、解码后再编码确保格式统一。encode和decode：URL编码和解码，支持指定只编码部分字符（比如只编码空格和中文，保留斜杠和等号）。params子命令对query参数进行增删改查，支持从标准输入读取URL然后操作参数后输出新URL。
+parse 子命令解析 URL 的各个组成部分（scheme、host、port、path、query 参数、fragment），用表格展示，URL 格式不合法退出码 1 并指出具体哪里有问题。normalize 子命令做 URL 规范化：统一 scheme 为小写、path 处理重复斜杠和点号段（/a/./b/../c 变成 /a/c）、query 参数排序、解码后再编码确保格式统一。encode 和 decode 子命令做 URL 编码和解码，支持指定只编码部分字符（比如只编码空格和中文保留斜杠和等号）。params 子命令对 query 参数做增删改查，支持从标准输入读取 URL 操作参数后输出新 URL。
 
-支持管道操作，上一个命令的输出可以直接作为下一个命令的输入，这样就能组合出复杂的URL处理流程。比如cat urls.txt | tool params --set page=1 | tool normalize。管道输入为空时退出码 0 不报错。
+支持管道操作，上一个命令的输出直接作为下一个命令的输入。比如 cat urls.txt | tool params --set page=1 | tool normalize。管道输入为空退出码 0 不报错。
 
-URL解析时host部分可能包含端口号也可能不包含，还可能是IPv6地址（用方括号包裹），解析逻辑要覆盖这些情况。规范化path的时候，/a/b/..应该变成/a，但/a/b/../../应该变成/而不是空字符串，根路径的处理要小心。query参数解码时要考虑plus号转空格的规则（application/x-www-form-urlencoded格式中plus号代表空格），但完整的URL中query部分不一定遵循这个规则。URL中如果包含已编码的字符（如%20），再次编码时不应该对百分号本身再做一次编码。URL中可能包含用户信息（user:pass@host），解析和规范化时要保留。fragment部分包含特殊字符时规范化不能破坏它的语义。输入从 stdin 读取时每行一个URL，格式错误的行跳过并在 stderr 打印行号和错误信息，不影响其余URL的处理。
+URL 解析时 host 部分可能包含端口也可能不包含，还可能是 IPv6 地址（方括号包裹），这些都要覆盖。规范化 path 时 /a/b/.. 变成 /a，/a/b/../../.. 变成 / 而不是空字符串，根路径处理要小心。query 参数解码时 plus 号转空格的规则（application/x-www-form-urlencoded 中 plus 号代表空格），但完整 URL 的 query 部分不一定遵循这个规则。URL 中已编码的字符（如 %20）再次编码时不应该对百分号再做一次编码。URL 中可能包含用户信息（user:pass@host），解析和规范化时保留。fragment 包含特殊字符时规范化不能破坏语义。stdin 输入时每行一个 URL，格式错误的行跳过并在 stderr 打印行号和错误信息，不影响其余 URL 处理。

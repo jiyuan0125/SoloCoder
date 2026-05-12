@@ -67,7 +67,12 @@ export class FamilyService {
     return this.db.prepare(query).all(...params) as FamilyMessage[];
   }
 
-  createAppointment(request: VisitAppointmentRequest): VisitAppointment {
+  createAppointment(request: VisitAppointmentRequest & { date?: string }): VisitAppointment {
+    const visitDate = request.visitDate || request.date;
+    if (!visitDate || visitDate.trim() === '') {
+      throw new Error('BAD_REQUEST: 预约日期不能为空');
+    }
+
     const timeSlot = request.timeSlot;
     if (!isValidTimeSlot(timeSlot)) {
       throw new Error('BAD_REQUEST: 无效的探视时段，必须是morning或afternoon');
@@ -76,7 +81,7 @@ export class FamilyService {
     const existing = this.db.prepare(`
       SELECT * FROM visitAppointments 
       WHERE elderId = ? AND visitDate = ? AND timeSlot = ? AND status = 'pending'
-    `).get(request.elderId, request.visitDate, timeSlot) as VisitAppointment | undefined;
+    `).get(request.elderId, visitDate, timeSlot) as VisitAppointment | undefined;
 
     if (existing) {
       throw new Error('CONFLICT: 该时段已经预约过了');
@@ -92,7 +97,7 @@ export class FamilyService {
       `).run(
         request.familyMemberId,
         request.elderId,
-        request.visitDate,
+        visitDate,
         timeSlot,
         request.visitorName,
         request.visitorPhone || null,
