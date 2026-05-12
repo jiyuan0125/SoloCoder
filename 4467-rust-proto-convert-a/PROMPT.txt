@@ -1,0 +1,9 @@
+Rust axum 做一个协议转换代理。有些老服务只认 JSON，有些新服务用 Protobuf，中间需要一个转换层。
+
+Schema 管理：通过接口注册 Protobuf schema。每个 schema 有名称和版本。同一个名称可以有多个版本。查询时返回最新版本。
+
+JSON 转 Protobuf：请求 Body 是 JSON，根据路径确定目标 schema。转换时校验 JSON 字段和 schema 是否匹配。不匹配的字段返回错误详情。嵌套对象递归转换。
+
+Protobuf 转 JSON：请求 Body 是二进制 Protobuf。根据 Content-Type 和路径确定 schema。转换后的 JSON 保持 schema 的字段命名。枚举类型转成字符串。
+
+至少包含 schema、encoder、decoder、validate 四个模块。Cargo build，端口 PORT 环境变量。
