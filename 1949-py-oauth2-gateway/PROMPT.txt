@@ -1,5 +1,11 @@
-最近在搞身份管理，需要一个OAuth2认证网关，aiohttp 实现。
-模拟OAuth2授权码流程，颁发access_token和refresh_token。
-Token过期后用refresh_token刷新，refresh_token也过期则需重新授权。
-用户权限信息缓存到内存，权限变更时主动清除缓存。
+最近在搞身份管理这块，现有的认证方案要么太老（Basic Auth），要么太重（得接一套完整的 Keycloak），我们只需要一个轻量的 OAuth2 网关挡在前面。aiohttp 实现，模拟完整的授权码流程。
+
+先说授权流程——用户访问受保护资源，没 token 的话跳到 /authorize（模拟授权页面，输入用户名密码点确认），授权通过后生成 authorization_code，回调传给客户端。客户端拿 code 调 /token 换 access_token 和 refresh_token。access_token 有效期默认 2 小时，refresh_token 有效期 7 天。
+
+token 过期了怎么办？拿 refresh_token 调 /token/refresh 换一对新的 access_token + refresh_token，旧的 refresh_token 立即失效（rotation 机制，防止 token 被盗用后长期有效）。如果 refresh_token 也过期了，那只能重新走授权流程。
+
+用户权限信息缓存在内存里——首次授权成功后把用户的角色列表、权限点缓存起来，后续请求验 token 时直接从内存读，不用每次查数据库。如果通过 /users/{id}/permissions 接口修改了权限，对应的缓存条目立刻清除，下次请求重新加载。
+
+POST /authorize 模拟授权，POST /token 换 token（grant_type=authorization_code），POST /token/refresh 刷新 token。GET /verify 验证 access_token 有效性，返回用户信息和权限列表。POST /revoke 吊销 token。
+
 端口用 PORT 环境变量。

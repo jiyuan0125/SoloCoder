@@ -1,7 +1,11 @@
-上周竞品爬虫一夜刷了 200 万次 API，账单直接翻倍。Go Gin 做限流网关，在请求到达后端之前拦截，支持按 IP 和按 API Key 两种维度。
+上周竞品爬虫一夜刷了 200 万次 API，账单直接翻倍。Go Gin 做限流网关，在请求到达后端之前拦截。
 
-支持按 IP 和按 API Key 两种维度限流。限流规则可以通过接口配置：每分钟最大请求数、每日配额。API Key 通过请求头 X-API-Key 传入，Key 管理有独立的注册和吊销接口。
+两种维度限流：按客户端 IP、按 API Key（请求头 X-API-Key 传入）。限流规则通过接口配置——每分钟最大请求数、每日配额上限。同一个 API Key 同时受两个维度约束，哪个先触发了就按那个限流。
 
-被限流的请求返回 429。限流日志要记录请求的来源 IP、API Key、路径、时间，方便事后分析。日志数据可以通过接口按时间范围和 IP 查询。
+API Key 有独立的管理接口。POST /keys 注册新 Key，返回 key 字符串。DELETE /keys/{key} 吊销。吊销后该 Key 所有请求直接 429。被限流的正常请求也返回 429，响应头带 Retry-After 秒数。
 
-管理员可以手动把某个 IP 或 Key 加到黑名单，黑名单里的请求直接返回 403 不走限流逻辑。端口 PORT 环境变量，go build 能过。
+限流日志要记下来——每次触发限流记录：来源 IP、API Key（如果有）、请求路径、触发时间。日志数据可以通过接口按时间范围和 IP 或 Key 查询，方便事后分析到底谁在刷。
+
+管理员可以手动把某个 IP 或 Key 加到黑名单。黑名单里的请求直接返回 403，不走限流逻辑——限流还给它数数没意义。黑名单管理 POST /blacklist 加，DELETE /blacklist/{entry} 移除。
+
+规则配置 POST /rules，body 带 dimension（ip/apikey）、window（分钟）、limit、daily_quota。GET /rules 查所有规则。端口 PORT 环境变量，go build 能过。

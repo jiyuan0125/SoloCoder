@@ -1,7 +1,9 @@
 订单服务直接调库存服务，库存挂了订单也跟着挂，连锁反应一波带走三个服务。FastAPI 写一个进程内消息队列，用 Topic 和 Consumer Group 把上下游解耦。
 
-同一个 Topic 可以有多个 Consumer Group，每个 Group 内消息只投递给一个消费者，不同 Group 独立消费。多个生产者同时往同一个 Topic 发消息，多个消费者同时拉消息。
+同一个 Topic 可以有多个 Consumer Group，每组内消息只投递给一个消费者（点对点），不同 Group 独立消费（广播）。多个生产者同时往同一个 Topic 发消息没事，多个消费者同时拉也没事——内部用 asyncio 的锁保证并发安全。
 
-消息投递失败要重试 3 次，间隔递增。3 次都失败的进死信队列，死信消息可以人工重新投递。Topic 容量可以配置，超出后最老的消息自动丢弃。
+消息投递失败要重试 3 次，间隔递增（1 秒、2 秒、4 秒）。3 次全失败的进死信队列，死信消息可以通过管理接口手动重新投递到原 Topic。Topic 容量可以配置——超出后最老的消息自动丢弃，新消息优先。
 
-消息堆积到 10 万条以上时也要正常工作。消费者注册时指定的 Topic 不存在就自动创建。端口 PORT 环境变量。
+接口设计：POST /topics 创建 Topic，body 带 name 和 capacity。POST /topics/{name}/publish 发消息，body 带 content。GET /topics/{name}/consume?group={group}&limit={limit} 拉消息，limit 范围 1-100。POST /topics/{name}/ack 确认消费，body 带消息 ID 列表。GET /topics 返回所有 Topic 列表、积压量、Consumer Group 信息。GET /topics/{name}/deadletter 查死信。
+
+消息堆积到 10 万条以上时也要正常工作，拉消息和确认的延迟不要明显增长。消费者注册时指定的 Topic 不存在就自动创建（用默认容量 10000）。端口 PORT 环境变量。

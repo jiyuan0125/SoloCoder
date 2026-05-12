@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-var baseURL = "http://localhost:8080"
+var baseURL = "http://localhost:8300"
 
 func init() {
 	if url := os.Getenv("API_URL"); url != "" {

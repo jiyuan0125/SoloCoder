@@ -1,5 +1,9 @@
-线上有几个内部服务需要统一入口，用 Go 标准库 net/http 做一个反向代理。
-请求按路径前缀转发到后端，/api/users/* 到用户服务，/api/orders/* 到订单服务，/api/products/* 到商品服务。路径要支持多级匹配，比如 /api/users/123/profile。
-后端地址存在内存 map 里，运行时可以通过 /admin/backends 接口增删。转发时注入 X-Request-ID（UUID）和 X-Forwarded-For。
-后端不可用时返回 502 并记录日志。
-后端服务需要先注册才能使用，注册时要校验地址格式。端口 PORT 环境变量，go build 能过。
+上周上了三个内部服务，前端说要统一入口，不然跨域搞死人。Go 标准库 net/http 撸一个反向代理。
+
+路由按路径前缀匹配——/api/users/* 转发到用户服务，/api/orders/* 到订单服务，/api/products/* 到商品服务。多级路径 /api/users/123/profile 这种也要正确转发到后端。后端地址存在内存 map 里，key 是前缀，value 是上游地址。匹配时选最长前缀。
+
+运行时通过 /admin/backends 接口管理后端：POST 注册新后端（地址格式校验不能少，至少是 http:// 或 https:// 开头），DELETE 移除，GET 查看当前列表。转发每个请求时注入 X-Request-ID（UUID v4）和 X-Forwarded-For 头。客户端已经有 X-Forwarded-For 的追加 IP 而不是覆盖。
+
+后端不可用时直接返回 502 Bad Gateway，响应 Body 里写明哪个后端挂了，同时打日志记录请求方法、路径、耗时和错误原因。后端服务必须先注册才能使用，未注册的前缀返回 404。
+
+端口 PORT 环境变量，go build 能过。

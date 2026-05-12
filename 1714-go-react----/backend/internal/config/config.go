@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func LoadConfig(cmdPort string) *Config {
-	port := "8080"
+	port := "8300"
 	if cmdPort != "" {
 		port = cmdPort
 	} else if envPort := os.Getenv("PORT"); envPort != "" {
@@ -37,7 +37,7 @@ func (c *Config) GetAddress() string {
 func ParsePort(portStr string) int {
 	p, err := strconv.Atoi(portStr)
 	if err != nil {
-		return 8080
+		return 8300
 	}
 	return p
 }

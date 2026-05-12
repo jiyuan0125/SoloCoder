@@ -12,8 +12,8 @@ import {
 const VALID_CATEGORIES: ProjectCategory[] = ['film', 'music', 'publishing', 'game', 'design'];
 
 const STATUS_TRANSITIONS: Record<ProjectStatus, ProjectStatus[]> = {
-  preparing: ['funding', 'cancelled'],
-  funding: ['succeeded', 'failed', 'cancelled'],
+  preparing: ['funding'],
+  funding: ['succeeded', 'failed'],
   succeeded: [],
   failed: [],
   cancelled: [],

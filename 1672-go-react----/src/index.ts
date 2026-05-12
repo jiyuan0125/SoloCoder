@@ -6,7 +6,7 @@ import interestRoutes from './routes/interest';
 import configRoutes from './routes/config';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8102;
 
 app.use(express.json());
 

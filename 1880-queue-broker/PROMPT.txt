@@ -1,7 +1,9 @@
-支付成功要通知积分、库存、通知三个服务，同步调任何一个慢了都卡住用户。aiohttp 做消息代理，各服务通过 HTTP 接口发布和消费消息，实现异步解耦。
+上周大促，支付回调同步调积分、库存、通知三个服务，积分那边一卡，整条链路超时，用户反复刷新又重复扣库存。aiohttp 搞一个消息代理，把同步调用拆成异步投递，各服务通过 HTTP 接口发布和消费消息。
 
-支持 Topic 和 Consumer Group。消息投递失败重试，全失败进死信队列。消息 ID 在 Topic 内递增。消费者可以按 Topic 名称订阅，订阅时还可以提供一个过滤表达式，只消费满足条件的消息。
+Topic 是消息的第一级划分，Consumer Group 控制消费粒度。往 Topic 发消息用 POST /topics/{name}/messages，Body 里带 content（字符串）和可选的 priority（0 普通 / 1 优先，默认 0）。消费者组订阅用 POST /topics/{name}/groups/{gid}/subscribe，可以带一个 filter_expr 参数做过滤——比如 amount>100 只消费金额大于 100 的消息，表达式语法自己定但要支持数值比较和字符串包含。
 
-消息内容可能包含用户提交的富文本或 HTML 片段。管理后台有个接口可以查看消息内容，直接在页面上渲染展示。这个查看接口的权限控制：只有 Topic 的创建者和管理员可以查看。
+消息投递失败会重试 3 次，间隔 10 秒，全部失败进死信队列，POST /topics/{name}/dead-letter 可以查看。消息 ID 在 Topic 内严格递增，从 1 开始。消费进度通过 GET /topics/{name}/groups/{gid}/offset 查看，返回当前已消费到的 ID。
 
-Topic 容量可配。消费进度可查。端口 PORT 环境变量。
+消息内容可能包含用户提交的富文本或 HTML 片段。管理后台 GET /topics/{name}/messages/{mid}/render 这个接口直接渲染 HTML 返回页面。权限上只有 Topic 的创建者和管理员角色能访问，其他人 403。
+
+Topic 有容量上限，创建时可配 max_size，超出后最老消息被淘汰。端口 PORT 环境变量。

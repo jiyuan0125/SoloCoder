@@ -624,7 +624,7 @@ func getFinalReport(c *gin.Context) {
 
 func main() {
 	var port int
-	flag.IntVar(&port, "port", 8080, "服务端口")
+	flag.IntVar(&port, "port", 8300, "服务端口")
 	flag.Parse()
 
 	if envPort := os.Getenv("PORT"); envPort != "" {

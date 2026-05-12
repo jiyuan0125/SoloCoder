@@ -4,7 +4,7 @@ import appointmentRoutes from './routes/appointments';
 import recordRoutes from './routes/records';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8117;
 
 app.use(express.json());
 

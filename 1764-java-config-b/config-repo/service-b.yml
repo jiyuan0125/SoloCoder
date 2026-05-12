@@ -1,0 +1,14 @@
+server:
+  port: 8082
+
+app:
+  service-b:
+    name: Service B
+    description: Another sample service for configuration management
+    pool-size: 20
+    timeout-seconds: 30
+
+feature:
+  service-b:
+    enable-notifications: true
+    notification-template: default-template

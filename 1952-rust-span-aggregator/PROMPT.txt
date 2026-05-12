@@ -1,5 +1,11 @@
-调研了一圈，actix-web 做Span聚合器比较合适，系统依赖关系越来越复杂没人说得清。
-收集各服务上报的Span数据，按TraceID聚合为完整链路。
-自动检测慢调用（耗时超过P99阈值），标记为异常Span。
-根据Span数据自动生成服务依赖图。
+系统依赖关系越来越复杂，没人说得清楚哪个服务调了哪个服务，一出故障排查只能靠猜。actix-web 做一个 Span 聚合器，把链路追踪数据收集起来自动理出依赖关系。
+
+各服务通过 POST /spans 上报 Span 数据——每个 Span 包含 trace_id、span_id、parent_span_id、service_name、operation_name、start_time、duration、tags。聚合器收到后按 trace_id 归组，同一个 trace 下的所有 Span 拼成一条完整的调用链路。
+
+自动检测慢调用——维护一个全局的 P99 阈值（可配，比如 2 秒），单个 Span 的 duration 超过这个阈值就标记为 slow_span。查询接口 GET /traces/{trace_id} 返回完整链路时，慢 Span 会带 slow: true 标记，一眼看出哪一步拖了后腿。
+
+根据 Span 数据自动生成服务依赖图——分析 parent_span_id 的关系，A 调了 B 就画一条 A→B 的边。GET /dependency-graph 返回节点和边的列表，节点是服务名，边带调用次数和平均延迟。如果有循环依赖（A→B→C→A），也标记出来。
+
+存储用内存，保留最近 10000 条 trace 数据。GET /traces 支持 按 service_name、min_duration、时间范围 查询，返回匹配的 trace 列表。GET /stats 返回聚合统计——总 trace 数、平均延迟、P50/P95/P99、慢调用占比。
+
 端口通过 PORT 环境变量配置，Cargo build 能过。

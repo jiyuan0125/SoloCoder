@@ -1,8 +1,8 @@
 use std::sync::Arc;
 use std::time::Duration;
 use dashmap::DashMap;
-use chrono::{DateTime, Utc};
-use crate::models::{RequestRecord, RequestStatus, ResponseData};
+use chrono::Utc;
+use crate::models::{RequestRecord, RequestStatus, ResponseData, RetryHistory};
 
 #[derive(Clone)]
 pub struct IdempotencyStore {
@@ -70,12 +70,14 @@ impl IdempotencyStore {
         self.store.iter().map(|entry| entry.clone()).collect()
     }
     
-    pub fn exists(&self, key: &str) -> bool {
-        self.store.contains_key(key)
+    pub fn add_retry_history(&self, key: &str, history: RetryHistory) {
+        if let Some(mut entry) = self.store.get_mut(key) {
+            entry.retry_history.push(history);
+        }
     }
 }
 
-fn clean_expired(store: &DashMap<String, RequestRecord>, ttl: Duration) {
+fn clean_expired(store: &DashMap<String, RequestRecord>, _ttl: Duration) {
     let now = Utc::now();
     store.retain(|_, record| record.expires_at > now);
 }

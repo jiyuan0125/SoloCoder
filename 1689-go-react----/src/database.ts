@@ -86,6 +86,7 @@ export function initDatabase(): void {
       approved_by INTEGER,
       approved_at TEXT,
       consecutive_absences INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (group_activity_id) REFERENCES group_activities(id),
       FOREIGN KEY (approved_by) REFERENCES users(id)
     );

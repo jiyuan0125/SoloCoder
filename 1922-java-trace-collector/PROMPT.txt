@@ -1,4 +1,5 @@
-老张说调用链太长找不到瓶颈在哪。Spring Boot 写一个追踪服务：每个服务上报 Span，按 TraceID 聚合。Span 包含 trace_id、span_id、parent_span_id、service、operation、start_time、duration、status、tags。
-查 TraceID 返回完整调用树，支持展开每层 tags 和耗时占比。耗时超过 1 秒的 Span 标红。也支持按服务名和时间范围搜索。
-Span 上报支持批量（一次最多 100 条），重复的（同 trace_id + span_id）后到的覆盖先到的。
-可查服务列表和操作名列表。Maven 构建。
+老张说调用链太长了，一个请求进来经过网关、用户服务、订单服务、库存服务、支付服务，哪一步慢了根本看不出来。Spring Boot 写追踪服务。
+
+每个服务上报 Span，按 TraceID 聚合。一个 Span 包含 trace_id、span_id、parent_span_id、service（服务名）、operation（操作名）、start_time、duration（毫秒）、status（ok/error）、tags（键值对 map，可选）。查询 GET /traces/{tid} 返回完整调用树，支持展开每层 tags 和耗时占比。耗时超过 1 秒的 Span 标记为 slow: true，方便前端高亮。
+
+也支持搜索：GET /traces?service=order-service&from=xxx&to=xxx 按服务名和时间范围过滤。Span 上报走 POST /spans，支持批量一次最多 100 条，重复的（同 trace_id + span_id）后到的覆盖先到的。GET /services 返回所有已知服务列表，GET /services/{name}/operations 返回某服务的操作名列表。Maven 构建。

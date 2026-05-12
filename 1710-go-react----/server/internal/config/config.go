@@ -12,7 +12,7 @@ type Config struct {
 }
 
 func Load() *Config {
-	port := flag.String("port", "8080", "Server port")
+	port := flag.String("port", "8300", "Server port")
 	dbPath := flag.String("db", "trial.db", "SQLite database path")
 	flag.Parse()
 

@@ -1,7 +1,11 @@
-Rust/tokio 写一个轻量链路追踪。Span 用 Arc<Mutex<HashMap>> 存，并发安全但不用外部存储。
+Rust/tokio 写一个轻量链路追踪。Span 用 Arc<Mutex<HashMap>> 存，并发安全但不用外部存储，启动快、部署简单。
 
-每个 Span 可以打 tags（key-value 形式），后续通过 tag 搜索关联的 Span。
+每个 Span 有唯一 span_id，可选 parent_span_id 指向父 Span。同一个 trace_id 的 Span 组成一条完整调用链。Span 还可以打 tags，key-value 形式，比如 {"http.method": "POST", "db.query": "SELECT * FROM orders"}。tags 的 value 支持字符串和数字两种类型。
 
-接口支持按 trace ID 查完整链路和按 tag 模糊搜索。
+接口支持按 trace ID 查完整链路——返回该 trace 下所有 Span，按开始时间排序，通过 parent 关系组织成树形结构。树形展示用缩进体现层级：根 Span 不缩进，子 Span 缩进 2 格，孙 Span 缩进 4 格。
+
+按 tag 搜索返回匹配的所有 Span，支持多 tag AND 组合。搜索结果分页，默认每页 20 条。tag key 不存在不报错，返回空结果。
+
+Span 数据量控制：提供清理接口，按 trace_id 删除或按时间范围批量清理。清理前 24 小时之前的 Span 保持内存占用可控。Span 写入时如果总量超过 10000 条，自动淘汰最旧的 10%。
 
 PORT 环境变量配端口，Cargo build 能编译通过。

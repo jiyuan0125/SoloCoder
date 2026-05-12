@@ -1,7 +1,9 @@
-日志散在各个容器里查起来太痛苦。Spring Boot 做一个日志聚合服务，包含 ingest、storage、query、retention 四个模块。
+日志散在各个容器里查起来太痛苦，SSH 进去翻半天。Spring Boot 做一个日志聚合服务。
 
-ingest 模块接收 JSON 格式日志，必须包含 timestamp、service、level、message。timestamp 时区不统一，存储时统一处理。支持批量推送，单次最多 1000 条，超出的截断。
+服务分四块。ingest 负责接收日志——JSON 格式，必须有 timestamp、service、level、message 四个字段。timestamp 格式不统一（有的带时区有的不带，有的用毫秒有的用秒），存储前统一转成 UTC 毫秒时间戳。支持批量推送 POST /logs/batch，body 是数组，单次最多 1000 条，超出截断只收前 1000 条并返回 202 带警告信息。单条推送 POST /logs 也行。
 
-storage 模块按 service 和 level 索引。query 模块支持按 service、level、时间范围、关键字组合查询，结果按时间倒序分页。
+storage 按 service 和 level 建索引，方便后面按条件查。query 模块支持按 service（精确匹配）、level（可多选 INFO/WARN/ERROR）、时间范围（start_time 和 end_time）、关键字（message 字段模糊匹配）组合查询。结果按时间倒序，分页返回，page 和 page_size 参数控制。
 
-retention 模块按 service 配置保留天数，过期的后台定时清理。修改保留天数后已过期的立即清理。推送失败不影响客户端，但内部要记录原因。Maven 构建，端口配置文件指定。
+retention 模块按 service 配置保留天数，比如 order-service 保留 7 天，user-service 保留 30 天。过期的后台定时清理（每分钟跑一次）。修改保留天数后，已经超过新天数的日志立即清理掉，不用等下一轮定时任务。
+
+推送失败不影响客户端——返回 202 表示收到了就行。内部如果存储出错要记录原因到服务自己的日志里。GET /logs/retention 查各 service 的保留配置。PUT /logs/retention/{service} 改保留天数。Maven 构建，端口配置文件指定。

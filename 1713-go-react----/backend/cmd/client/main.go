@@ -11,7 +11,7 @@ import (
 	"strconv"
 )
 
-const baseURL = "http://localhost:8080/api"
+const baseURL = "http://localhost:8300/api"
 
 func main() {
 	if len(os.Args) < 2 {

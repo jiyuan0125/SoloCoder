@@ -1,7 +1,9 @@
-日志查起来太麻烦了，Spring Boot 做一个日志收集服务。
+日志查起来太麻烦了——一个 bug 涉及三个服务，SSH 进去翻半天还是一头雾水。Spring Boot 做一个日志收集服务，把所有服务的日志收拢到一个地方。
 
-各服务推送结构化日志过来，JSON 格式，必须包含 timestamp、service、level、message 四个字段。支持按 service、level、时间范围查询，结果按时间排序分页。有些服务每秒几百条日志，查询不能卡死。
+各服务推送结构化日志过来，JSON 格式。必须包含 timestamp、service、level、message 四个字段。timestamp 格式可能各种各样——有的带时区有的不带，有的毫秒有的秒——存储前统一转成 UTC 毫秒。level 只接受 DEBUG/INFO/WARN/ERROR 四种，其他值当 INFO 处理。缺字段的日志不丢弃，缺什么补什么（比如缺 level 补 INFO，缺 timestamp 用当前时间）。
 
-日志里有个 request-id 字段关联上下游请求，通过它可以串起一条完整链路的所有日志。日志量每天可能几十万条，纯内存存不下要想办法。
+日志里还有个 request-id 字段，用来关联上下游请求。通过一个 request-id 可以串起一条完整链路的所有日志——GET /logs/trace/{request_id}，返回按时间排序的所有相关日志。
 
-日志推过来格式可能不标准——缺字段、时间格式不对、level 写错，服务要能正常处理这些异常。Maven 构建，端口配置文件指定。
+查询接口 GET /logs 支持 service（精确匹配）、level（可多选）、start_time / end_time（时间范围）几个参数。结果按时间倒序分页，page 和 page_size 控制。有些服务每秒几百条日志，查询要快——按 service 和 time 建索引。
+
+日志量每天可能几十万条，纯内存存不下。用文件存储——按日期分文件，文件名格式 access-{yyyy-MM-dd}.log。启动时加载最近 7 天的文件到内存索引。Maven 构建，端口配置文件指定。

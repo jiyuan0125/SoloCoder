@@ -6,7 +6,7 @@ import { getDb } from './database';
 import { Notification } from './types';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8209;
 
 app.use(express.json());
 

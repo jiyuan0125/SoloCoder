@@ -1,7 +1,9 @@
-HTTP 和 gRPC 服务混布，Rust actix-web 做协议转换网关。
+HTTP 和 gRPC 服务混布，前端只认 HTTP JSON，后端有些服务只暴露 gRPC 接口。Rust actix-web 做协议转换网关，把两边桥起来。
 
-转换通道状态：未配置→就绪→转换中→错误。未配置的通道需要设置 service 和 method 映射后变就绪。就绪通道收到请求后变转换中，正常完成回到就绪。转换失败变错误，错误状态需要手动重置才能恢复。
+转换通道有状态管理。未配置→就绪→转换中→错误。新注册的通道是未配置状态，需要通过接口设置 service 名和 method 名的映射关系后才变就绪。就绪的通道收到请求后变转换中，正常完成回到就绪。转换失败（后端不可用、protobuf 编解码出错等）变错误，错误状态需要手动调接口重置才能恢复——PUT /channels/{id}/reset。
 
-路由格式 /v1/{service}/{method}。JSON 请求体转 protobuf 发给后端 gRPC 服务，响应再转 JSON。后端不可用返回 502。gRPC 状态码映射到 HTTP 状态码。
+路由格式 /v1/{service}/{method}，从路径提取 service 和 method。请求体是 JSON，按配置的 protobuf 映射规则转成 protobuf 消息发给后端 gRPC 服务，响应再转回 JSON 返回。后端不可用返回 502。gRPC 状态码要映射到 HTTP——OK→200，INVALID_ARGUMENT→400，NOT_FOUND→404，UNAVAILABLE→503，DEADLINE_EXCEEDED→504。
 
-统计每个通道的请求量和成功率。通道配置通过接口管理。Cargo build，端口 PORT 环境变量。
+统计每个通道的请求量和成功率，GET /channels/{id}/stats 返回。通道配置通过接口管理——POST /channels 注册，body 带 service、method、backend_address、proto 定义。GET /channels 查所有通道和状态。
+
+数据全内存。Cargo build，端口 PORT 环境变量。

@@ -224,7 +224,7 @@ app.post('/transactions/:id/cancel', async (req: Request, res: Response) => {
   }
 });
 
-const PORT = 3000;
+const PORT = 8104;
 
 const start = async () => {
   await initDB();

@@ -1,9 +1,11 @@
-Rust/tokio 做链路追踪。异步记录 Span。
+线上排查一个慢请求，从网关翻到服务 A 再翻到服务 B，对着时间戳人工对齐花了两小时。Rust/tokio 做一个轻量链路追踪，把调用链自动串起来。
 
-Span 用 Arc<Mutex<HashMap>> 存储。并发安全。
+Span 是核心数据模型。每个 Span 记录 trace_id、span_id、parent_span_id、开始时间、结束时间、操作名称。用 Arc<Mutex<HashMap>> 存储，并发读写安全，不需要外部数据库。同一个 trace_id 的所有 Span 组成一条完整调用链。
 
-每个 Span 有 tags（key-value）。可以通过 tag 搜索 Span。
+每个 Span 可以打 tags，key-value 形式。比如给一个 Span 打上 {"http.method": "POST", "http.url": "/api/orders"}，后续排查时不用翻日志就能看到请求细节。tags 搜索是高频操作，内部建一个反向索引加速查询。
 
-提供接口按 trace ID 查询和按 tag 搜索。
+接口分两个：按 trace ID 查询返回该 trace 下所有 Span，按时间倒序排列，parent 关系通过缩进体现；按 tag 搜索返回匹配的所有 Span，支持多个 tag 的 AND 组合。搜索结果分页返回，默认每页 20 条。
+
+Span 数据量大时内存占用要可控。提供接口手动清理指定 trace_id 的数据，也可以按时间范围批量清理超过 24 小时的旧 Span。
 
 端口通过 PORT 环境变量配置，Cargo build 能过。

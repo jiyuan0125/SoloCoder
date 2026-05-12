@@ -171,24 +171,6 @@ export const assignStaffToShift = (staffId: string, shiftId: string): ShiftAssig
   const id = uuidv4();
   db.prepare('INSERT INTO shift_assignments (id, staff_id, shift_id) VALUES (?, ?, ?)').run(id, staffId, shiftId);
 
-  if (!checkShiftHasBothRoles(shiftId)) {
-    const currentAssignments = db.prepare(`
-      SELECT s.role FROM shift_assignments sa
-      JOIN staff s ON sa.staff_id = s.id
-      WHERE sa.shift_id = ? AND sa.staff_id != ?
-    `).all(shiftId, staffId) as { role: string }[];
-
-    const hasMaternal = currentAssignments.some(a => a.role === STAFF_ROLES.MATERNAL_CARE) || 
-                       staff.role === STAFF_ROLES.MATERNAL_CARE;
-    const hasPediatric = currentAssignments.some(a => a.role === STAFF_ROLES.PEDIATRIC_NURSE) || 
-                        staff.role === STAFF_ROLES.PEDIATRIC_NURSE;
-
-    if (!hasMaternal || !hasPediatric) {
-      db.prepare('DELETE FROM shift_assignments WHERE id = ?').run(id);
-      throw new Error('SHIFT_ROLES_INCOMPLETE');
-    }
-  }
-
   return {
     id,
     staff_id: staffId,
@@ -282,4 +264,61 @@ export const getShiftAssignments = (shiftId: string): (ShiftAssignment & Staff)[
     JOIN staff s ON sa.staff_id = s.id
     WHERE sa.shift_id = ?
   `).all(shiftId) as (ShiftAssignment & Staff)[];
+};
+
+export const assignBatchToShift = (staffIds: string[], shiftId: string): ShiftAssignment[] => {
+  const shift = getShiftById(shiftId);
+  if (!shift) {
+    throw new Error('SHIFT_NOT_FOUND');
+  }
+
+  if (!Array.isArray(staffIds) || staffIds.length === 0) {
+    throw new Error('INVALID_STAFF_LIST');
+  }
+
+  const staffList: Staff[] = [];
+  for (const staffId of staffIds) {
+    const staff = getStaffById(staffId);
+    if (!staff) {
+      throw new Error('STAFF_NOT_FOUND');
+    }
+    staffList.push(staff);
+  }
+
+  const hasMaternal = staffList.some(s => s.role === STAFF_ROLES.MATERNAL_CARE);
+  const hasPediatric = staffList.some(s => s.role === STAFF_ROLES.PEDIATRIC_NURSE);
+
+  if (!hasMaternal || !hasPediatric) {
+    throw new Error('SHIFT_ROLES_INCOMPLETE');
+  }
+
+  const transaction = db.transaction(() => {
+    const assignments: ShiftAssignment[] = [];
+    
+    for (const staff of staffList) {
+      if (checkStaffShiftConflict(staff.id, shiftId)) {
+        throw new Error('SHIFT_CONFLICT');
+      }
+
+      if (!checkStaffWorkDays(staff.id, shift.shift_date)) {
+        throw new Error('WORK_DAYS_RULE_VIOLATION');
+      }
+
+      const existingAssignment = db.prepare(`
+        SELECT * FROM shift_assignments WHERE staff_id = ? AND shift_id = ?
+      `).get(staff.id, shiftId);
+
+      if (existingAssignment) {
+        assignments.push(existingAssignment as ShiftAssignment);
+      } else {
+        const id = uuidv4();
+        db.prepare('INSERT INTO shift_assignments (id, staff_id, shift_id) VALUES (?, ?, ?)').run(id, staff.id, shiftId);
+        assignments.push({ id, staff_id: staff.id, shift_id: shiftId });
+      }
+    }
+
+    return assignments;
+  });
+
+  return transaction();
 };

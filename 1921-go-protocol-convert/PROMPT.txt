@@ -1,5 +1,7 @@
-第三方只认 XML，我们内部全是 JSON，Go Fiber 做一个双向转换代理。POST /convert/xml2json 把 XML 转成 JSON，POST /convert/json2xml 反过来。
-转换规则支持自定义字段映射：XML 属性和子元素可以映射到 JSON 的不同层级，映射规则通过管理接口配置。
-XML 属性用 @前缀表示，比如 <item id='1'> 映射成 {"@id": "1"}。CDATA 段保留原文。
-没配映射规则的字段按默认规则转换。反向操作结果要和原始数据一致。
-映射规则要先注册才能使用。端口 PORT 环境变量，go build 能过。
+第三方只认 XML，我们内部全是 JSON，中间得有个翻译层。Go Fiber 做双向转换代理。
+
+正向 POST /convert/xml2json 把 XML 转成 JSON，反向 POST /convert/json2xml 把 JSON 转回 XML。转换规则支持自定义字段映射——XML 属性和子元素可以映射到 JSON 的不同层级，映射规则通过 POST /mappings/{message_type} 注册。XML 属性用 @ 前缀表示，<item id="1"> 映射成 {"@id":"1"}。CDATA 段保留原文不做转义。
+
+没配映射规则的字段按默认规则转换：XML 元素名直接做 JSON key，嵌套元素对应嵌套对象，多个同名元素对应数组。反向操作的结果要和原始数据结构一致——先 xml2json 再 json2xml，结果跟原始 XML 语义相同。
+
+映射规则必须先注册才能用，未注册的 message_type 调转换接口返回 404。已注册的规则可以通过 PUT /mappings/{message_type} 更新，更新后新请求用新规则。端口 PORT 环境变量，go build 能过。

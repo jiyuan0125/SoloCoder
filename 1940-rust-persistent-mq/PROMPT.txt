@@ -1,5 +1,11 @@
-下周要给交易中台演示可靠消息，先出个能跑的持久化消息队列，axum。
-消息写入磁盘持久化，重启后恢复未消费消息。
-同一Partition内严格按写入顺序投递。
-消费者确认后才标记已消费，超时未确认重新投递。
+下周要给交易中台演示一个可靠消息方案，之前用过的内存队列服务一重启消息全丢了，交易数据丢了可没法交代。Rust axum 出一个能跑的持久化消息队列，消息落盘，重启不丢数据。
+
+消息写入时同时写磁盘，用追加写的方式（append-only file），不用每次都做随机 IO。每条消息分配一个全局递增的 offset。服务重启时扫描日志文件恢复所有未消费的消息，消费者组的偏移量也做持久化——哪个 Group 消费到哪条 offset 了，写到独立的元数据文件里。
+
+同一个 Partition 内的消息严格按写入顺序投递。消费者拉取消息时按 offset 从小到大来，先入先出，保证顺序性。消费者拉到消息后要显式确认（ACK），确认之后这条消息才算消费完。超过确认超时（默认 30 秒）没 ACK 的消息重新变为可投递状态，其他同 Group 的消费者可以拉到。同一 Group 内一条消息同时只有一个消费者在处理。
+
+Partition 的概念要有——Topic 可以分成多个 Partition，不同 Partition 之间消息独立排序。简单起见，创建 Topic 时指定 Partition 数量，之后不改。消息写入时按 key 做 hash 选 Partition，没 key 就轮询。
+
+POST /topics 创建 Topic（指定 partition 数量），POST /topics/{name}/produce 发消息（body 含 key 和 payload），GET /topics/{name}/consume 拉消息（带 group 参数），POST /topics/{name}/ack 确认消费（带 offset）。
+
 端口通过 PORT 环境变量配置，Cargo build 能过。

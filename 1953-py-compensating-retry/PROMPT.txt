@@ -1,5 +1,9 @@
-给朋友的小项目写个补偿重试服务，aiohttp 后端跑在本地就行。
-多步骤操作失败时，已成功的步骤执行补偿（回滚）操作。
-补偿操作本身也可以失败，失败的补偿记录下来等待人工处理。
-整条操作链的状态可查询：每步的结果、补偿状态。
+给朋友的小项目写个补偿重试服务，aiohttp 后端跑在本地就行。场景是这样的——下单流程分好几步：扣库存、扣余额、发优惠券、发通知，任何一步失败，前面已经成功的步骤得回滚，不然数据就不一致了。
+
+操作流程分三步走。第一步，通过 POST /transactions 创建事务，传入操作步骤列表，每个步骤定义操作类型（比如 deduct_inventory）和参数。第二步，服务按顺序执行每个步骤，记录每步的状态（pending/success/failed/compensated）。第三步，如果某一步失败了，从失败步骤的上一步开始逆序执行补偿操作——比如库存扣成功了但余额扣失败，那就先回滚库存。
+
+补偿操作本身也可能失败。比如库存服务暂时不可用，回滚不了。这种情况下记录补偿失败的状态，把整个事务标记为 compensation_failed，等人工介入处理。人工可以通过 GET /transactions/{id} 查看每步的结果和补偿状态，用 POST /transactions/{id}/retry-compensation 手动重试失败的补偿。
+
+事务状态机：pending → executing → completed（全部成功）或 compensating → compensated（回滚成功）或 compensation_failed（回滚失败）。GET /transactions 列出所有事务，支持按状态筛选。
+
 端口用 PORT 环境变量。

@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: health-monitor
+
+logging:
+  level:
+    com.health: INFO
+
+health:
+  monitor:
+    default-interval-seconds: 30
+    default-timeout-milliseconds: 5000
+    unhealthy-threshold: 3
+    history-retention-minutes: 1440

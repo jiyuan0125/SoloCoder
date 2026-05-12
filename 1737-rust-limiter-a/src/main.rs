@@ -13,9 +13,9 @@ async fn main() -> std::io::Result<()> {
     env_logger::init();
 
     let port = env::var("PORT")
-        .unwrap_or_else(|_| "8080".to_string())
+        .unwrap_or_else(|_| "8414".to_string())
         .parse::<u16>()
-        .unwrap_or(8080);
+        .unwrap_or(8414);
 
     let app_state = AppState::new();
 

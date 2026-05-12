@@ -1,7 +1,11 @@
-Rust axum 写一个服务注册中心，包含 registry、heartbeat、discovery、notify 四个模块。
+Rust axum 写服务注册中心，先搞清楚四个模块怎么分工。registry 管注册注销，heartbeat 管心跳和实例状态，discovery 负责查询和过滤，notify 负责变更推送。
 
-registry 模块管理服务注册和注销。heartbeat 模块处理心跳和维护实例状态。discovery 模块提供查询接口，支持按服务名和元数据过滤。notify 模块在服务变更时通知订阅方。
+注册用 POST /services/{name}/instances，Body 带 host、port、metadata（键值对 map）。注销用 DELETE /services/{name}/instances/{iid}。心跳是 PUT /services/{name}/instances/{iid}/heartbeat，隔 10 秒打一次就行。
 
-实例状态：注册→健康→不健康→注销。注册后第一次心跳变健康。心跳超时（30 秒）变不健康。不健康超过 60 秒自动注销。注销后再发心跳算重新注册。
+实例注册完进入"注册"状态，第一次心跳进来变"健康"。心跳超时 30 秒变"不健康"，不健康持续 60 秒自动注销、释放资源。已经注销的实例再发心跳等同于重新注册，会分配新 instance_id。
 
-元数据支持部分更新。查询只返回健康实例。服务名下可能有很多实例。Cargo build，端口 PORT 环境变量。
+元数据支持部分更新——PATCH /services/{name}/instances/{iid}/metadata 只改传了的字段，没传的保留原值。discovery 查询只返回健康实例，支持按服务名精确匹配和按 metadata 过滤（metadata key 存在且 value 包含指定子串）。
+
+服务名下面可能挂几百个实例，查询结果要做分页，page 和 page_size 参数，默认每页 20 条。notify 模块在实例状态变更时向订阅方 POST 通知，订阅时注册回调 URL。
+
+Cargo build，端口 PORT 环境变量。

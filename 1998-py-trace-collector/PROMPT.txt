@@ -1,5 +1,9 @@
-群里有人说缺一个轻量级的链路追踪服务，我寻思 Python FastAPI 能搞，就动手了。各个微服务把 Span 数据推过来统一存和查。
-每个 Span 有 trace_id、span_id、parent_span_id、service_name、operation、start_time、end_time、status 几个字段。同一个 trace_id 下的所有 Span 组成一次完整的调用链。
-写入接口支持单个和批量。批量一次最多 500 个 Span。写入时按 trace_id 建索引，同一个 trace 的 Span 按时间排序。
-查询接口可以按 trace_id 拉完整调用链，也可以按 service_name + 时间范围查所有 Span。调用链的展示要包含耗时树：每个 Span 的耗时和占总耗时的比例。
-如果一个 trace 里有 Span 的 parent_span_id 指向不存在的 span_id，这些孤儿 Span 也要能查到。统计接口返回每个服务的平均响应时间和错误率。端口 PORT 环境变量。
+群里有人问有没有轻量级的链路追踪服务，Jaeger 太重了。FastAPI 搞一个——先把 Span 数据收过来存好，再考虑怎么展示。
+
+每个 Span 有 trace_id、span_id、parent_span_id、service_name、operation、start_time、end_time、status 几个字段。同一个 trace_id 下的所有 Span 组成一次完整的调用链。写入接口支持单个和批量，批量一次最多 500 个 Span。
+
+写入时按 trace_id 建索引，同一个 trace 的 Span 按时间排序。查询可以按 trace_id 拉完整调用链，也可以按 service_name 加时间范围查所有 Span。调用链的展示要包含耗时树——每个 Span 的耗时和占总耗时的比例，一眼能看出瓶颈在哪。
+
+如果 trace 里有 Span 的 parent_span_id 指向不存在的 span_id，这些孤儿 Span 也要能查到，单独一个接口按 parent_missing 过滤。统计接口返回每个服务的平均响应时间、错误率、P99 耗时。
+
+Span 数据存内存，按 trace_id 分片。每个 trace 保留最近 1000 个 Span，超出的覆盖最早的。trace 级别的 TTL 默认 1 小时，超时的整体回收。端口 PORT 环境变量。

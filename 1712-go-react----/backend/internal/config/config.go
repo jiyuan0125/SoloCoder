@@ -12,7 +12,7 @@ type Config struct {
 
 func Load() *Config {
 	cfg := &Config{
-		Port: 8080,
+		Port: 8300,
 	}
 
 	if portStr := os.Getenv("PORT"); portStr != "" {

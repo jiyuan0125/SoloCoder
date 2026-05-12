@@ -1,0 +1,21 @@
+spring:
+  datasource:
+    url: jdbc:mysql://test-db-server:3306/test_db?useSSL=false&serverTimezone=UTC
+    username: test_user
+    password: '{cipher}d2075bd93339c9b8ce309b1d9efb5bc447c3f3e3b3e5e5e5e5e5e5e5e5e5e5e5'
+  jpa:
+    show-sql: true
+  redis:
+    host: test-redis-server
+    port: 6379
+    password:
+
+app:
+  common:
+    environment: test
+    log-level: INFO
+    timeout: 60
+
+logging:
+  level:
+    com.example: INFO

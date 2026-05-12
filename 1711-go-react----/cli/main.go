@@ -15,7 +15,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-const baseURL = "http://localhost:8080/api"
+const baseURL = "http://localhost:8300/api"
 
 type Sample struct {
 	ID            string `json:"id"`

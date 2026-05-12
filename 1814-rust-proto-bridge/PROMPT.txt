@@ -1,7 +1,11 @@
-TLV（Tag-Length-Value）是很多二进制协议的基础格式。Rust/tokio 写个解析器，Tag 占 1 字节、Length 占 2 字节、Value 长度可变。
+TLV（Tag-Length-Value）是很多二进制协议的基础格式。老系统的报文全是 TLV 编码，新服务要对接就得能解析和生成这种格式。Rust/tokio 写个 TLV 解析器服务。
 
-TLV 允许嵌套——Value 里可以再包子 TLV，递归解析。校验层检查实际长度和声明长度是否一致，嵌套深度超过 10 层返回错误防止栈溢出。
+Tag 占 1 字节（0-255），Length 占 2 字节（大端序，最大 65535），Value 长度可变。TLV 允许嵌套——Value 里可以再包子 TLV，递归解析。校验层检查实际 Value 长度和 Length 字段声明的是否一致，不一致返回 400 附带"Tag {X} 的长度声明为 {Y} 但实际数据为 {Z}"。
 
-接口提供解析和序列化两个方向。
+嵌套深度超过 10 层返回 400 附带"嵌套深度超限"，防止恶意构造的超深嵌套导致栈溢出。解析耗时超过 1 秒的超时中断，返回 408。
+
+接口提供两个方向：解析（POST /parse，body 是十六进制编码的 TLV 数据，返回树状 JSON）和序列化（POST /serialize，body 是树状 JSON，返回十六进制编码的 TLV 数据）。树状 JSON 格式：{"tag": 1, "value": "data"} 或 {"tag": 2, "children": [...]}。
+
+解析结果里标注每层的偏移量，方便定位问题。序列化时自动计算 Length 字段。
 
 PORT 环境变量配端口，Cargo build 能编译通过。

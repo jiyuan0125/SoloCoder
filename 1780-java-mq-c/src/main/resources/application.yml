@@ -1,0 +1,17 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: message-queue
+
+message-queue:
+  max-message-size-bytes: 1048576
+  max-queue-size: 1000
+  wait-timeout-seconds: 30
+  offset-dir: ./data/offsets
+  offset-compaction-interval-minutes: 60
+
+logging:
+  level:
+    com.example.messagequeue: INFO

@@ -1,0 +1,12 @@
+server:
+  port: 8081
+
+app:
+  service-a:
+    max-connections: 500
+    debug-mode: false
+
+feature:
+  service-a:
+    enable-caching: true
+    cache-ttl: 600

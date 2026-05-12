@@ -1,4 +1,7 @@
-上版注册中心没有分组概念，canary 和 production 混在一起出了事故。Go 标准库重写：注册时带分组名（如 production/canary），同服务不同分组独立管理。
-查询指定分组返回对应结果，不指定返回默认。同个实例可属于多个分组。心跳超时按分组配，某分组全部掉线触发告警日志。
-实例信息变更（如端口改了）需重新注册，覆盖旧的。
-接口查看所有分组和每组实例。端口 PORT 环境变量，go build 能过。
+上次注册中心没有分组概念，canary 环境和 production 混在一起，canary 上的 bug 直接炸了线上。Go 标准库重写：注册时必须带分组名（如 production、canary、staging），同服务不同分组完全隔离。
+
+查询时指定分组只返回对应结果，不指定分组走默认 production。同一个实例可以属于多个分组——注册时 tags 传 ["production","canary"] 就行。心跳超时按分组配——canary 可能 15 秒，production 30 秒，某分组全部实例掉线触发告警日志，包含分组名和服务名。
+
+实例信息变更（端口改了、IP 变了）需要重新注册，覆盖旧的，旧的心跳计时器重置。接口覆盖：POST /services/{name}/instances 注册，DELETE /services/{name}/instances/{iid} 注销，GET /services 查看所有服务，GET /services/{name}/groups 查看某服务下所有分组和每组的实例列表。
+
+端口 PORT 环境变量，管理接口可以手动触发注销不健康的实例。go build 能过。

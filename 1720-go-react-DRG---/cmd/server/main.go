@@ -28,10 +28,10 @@ func main() {
 			var err error
 			port, err = strconv.Atoi(envPort)
 			if err != nil {
-				port = 8080
+				port = 8300
 			}
 		} else {
-			port = 8080
+			port = 8300
 		}
 	}
 

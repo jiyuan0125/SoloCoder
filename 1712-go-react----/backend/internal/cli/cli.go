@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const APIBase = "http://localhost:8080/api"
+const APIBase = "http://localhost:8300/api"
 
 type CLI struct {
 	apiBase string

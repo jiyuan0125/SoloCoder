@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var baseURL = "http://localhost:8080"
+var baseURL = "http://localhost:8300"
 
 type CreateTaskRequest struct {
 	Semester  string   `json:"semester"`

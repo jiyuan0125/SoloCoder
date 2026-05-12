@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const baseURL = "http://localhost:8080/api"
+const baseURL = "http://localhost:8300/api"
 
 type Indicator struct {
 	Code         string  `json:"code"`

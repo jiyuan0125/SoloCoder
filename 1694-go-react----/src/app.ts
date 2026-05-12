@@ -5,7 +5,7 @@ import fundsRouter from './routes/funds';
 import inspectionsRouter from './routes/inspections';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8204;
 
 app.use(express.json());
 

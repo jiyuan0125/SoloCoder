@@ -69,7 +69,11 @@ router.post('/', (req, res) => {
   }
   
   const taxYear = dayjs(donation.donated_at).year();
-  const taxIncomeBase = body.tax_income_base || 0;
+  const taxIncomeBase = body.tax_income_base;
+  
+  if (taxIncomeBase === undefined || taxIncomeBase === null) {
+    return res.status(400).json({ error: '缺少必要字段 tax_income_base（应纳税所得额，单位：分）' });
+  }
   
   if (taxIncomeBase < 0) {
     return res.status(400).json({ error: '应纳税所得额不能为负数' });
@@ -78,21 +82,23 @@ router.post('/', (req, res) => {
   const transaction = db.transaction(() => {
     const summary = getOrCreateDonorSummary(donation.donor_name, donation.id_card_last4, taxYear, taxIncomeBase);
     
-    let effectiveIncomeBase = summary.tax_income_base;
-    if (taxIncomeBase > effectiveIncomeBase) {
-      effectiveIncomeBase = taxIncomeBase;
-      const newLimit = Math.floor(effectiveIncomeBase * 0.3);
+    const effectiveIncomeBase = Number(summary.tax_income_base) || 0;
+    const newTaxIncomeBase = Number(taxIncomeBase) || 0;
+    
+    let taxLimit = Number(summary.tax_limit) || 0;
+    if (newTaxIncomeBase > effectiveIncomeBase) {
+      taxLimit = Math.floor(newTaxIncomeBase * 0.3);
       db.prepare(
         `UPDATE donor_annual_summary 
          SET tax_income_base = ?, tax_limit = ?, updated_at = ?
          WHERE id = ?`
-      ).run(effectiveIncomeBase, newLimit, dayjs().format('YYYY-MM-DD HH:mm:ss'), summary.id);
-      summary.tax_income_base = effectiveIncomeBase;
-      summary.tax_limit = newLimit;
+      ).run(newTaxIncomeBase, taxLimit, dayjs().format('YYYY-MM-DD HH:mm:ss'), summary.id);
+    } else if (effectiveIncomeBase > 0) {
+      taxLimit = Math.floor(effectiveIncomeBase * 0.3);
     }
     
-    const currentTotal = summary.total_tax_deductible_amount;
-    const limit = summary.tax_limit;
+    const currentTotal = Number(summary.total_tax_deductible_amount) || 0;
+    const limit = taxLimit;
     
     let deductibleAmount: number;
     if (currentTotal >= limit) {

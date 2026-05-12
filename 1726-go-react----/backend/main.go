@@ -15,7 +15,7 @@ func getPort() string {
 	if port := os.Getenv("PORT"); port != "" {
 		return ":" + port
 	}
-	port := flag.String("port", "8080", "server port")
+	port := flag.String("port", "8300", "server port")
 	flag.Parse()
 	return ":" + *port
 }

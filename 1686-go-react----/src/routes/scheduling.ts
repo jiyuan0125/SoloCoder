@@ -8,7 +8,9 @@ import {
   getAllShifts,
   getShiftAssignments,
   getStaffById,
-  getShiftById
+  getShiftById,
+  assignBatchToShift,
+  checkShiftHasBothRoles
 } from '../services/schedulingService';
 
 const router = Router();
@@ -124,6 +126,34 @@ router.post('/assign', (req: Request, res: Response): void => {
     }
     const assignment = assignStaffToShift(staffId, shiftId);
     res.status(201).json(assignment);
+  } catch (error) {
+    handleError(res, error as Error);
+  }
+});
+
+router.post('/assign-batch', (req: Request, res: Response): void => {
+  try {
+    const { staffIds, shiftId } = req.body;
+    if (!Array.isArray(staffIds) || staffIds.length === 0 || !shiftId) {
+      res.status(400).json({ error: 'Missing required fields: staffIds (array) and shiftId' });
+      return;
+    }
+    const assignments = assignBatchToShift(staffIds, shiftId);
+    res.status(201).json(assignments);
+  } catch (error) {
+    handleError(res, error as Error);
+  }
+});
+
+router.get('/shifts/:shiftId/validate', (req: Request, res: Response): void => {
+  try {
+    const shift = getShiftById(req.params.shiftId);
+    if (!shift) {
+      res.status(404).json({ error: 'SHIFT_NOT_FOUND' });
+      return;
+    }
+    const isValid = checkShiftHasBothRoles(req.params.shiftId);
+    res.json({ valid: isValid, shift });
   } catch (error) {
     handleError(res, error as Error);
   }

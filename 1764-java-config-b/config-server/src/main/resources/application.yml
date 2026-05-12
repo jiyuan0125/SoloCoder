@@ -1,0 +1,33 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: file:///${user.dir}/config-repo
+        git:
+          uri: file:///${user.dir}/config-repo
+          clone-on-start: true
+  security:
+    user:
+      name: configuser
+      password: configpass
+
+encrypt:
+  key: my-secret-encryption-key-2024
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,beans,refresh
+
+logging:
+  level:
+    org.springframework.cloud.config: DEBUG

@@ -1,0 +1,23 @@
+[project]
+name = "scheduler-b"
+version = "0.1.0"
+description = "统一任务调度器 - 基于 FastAPI 和 APScheduler"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.29.0",
+    "apscheduler>=3.10.4",
+    "pydantic>=2.6.0",
+    "httpx>=0.27.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.scripts]
+scheduler-b = "scheduler_b.main:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

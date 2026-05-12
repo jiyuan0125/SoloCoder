@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -309,10 +310,41 @@ func (h *Handler) VoidPrescription(c *gin.Context) {
 }
 
 type DispenseRequest struct {
-	DispensingMode     string `json:"dispensing_mode" binding:"required"`
-	DecoctionMachineID string `json:"decoction_machine_id,omitempty"`
-	PotCount           int    `json:"pot_count,omitempty"`
-	MinutesFromNow     int    `json:"minutes_from_now,omitempty"`
+	DispensingMode       string `json:"dispensing_mode" binding:"required"`
+	DispensingModeAlt    string `json:"dispensingMode,omitempty"`
+	DecoctionMachineID   string `json:"decoction_machine_id,omitempty"`
+	DecoctionMachineIDAlt string `json:"decoctionMachineID,omitempty"`
+	MachineID            string `json:"machine_id,omitempty"`
+	PotCount             int    `json:"pot_count,omitempty"`
+	PotCountAlt          int    `json:"potCount,omitempty"`
+	Pots                 int    `json:"pots,omitempty"`
+	MinutesFromNow       int    `json:"minutes_from_now,omitempty"`
+	MinutesFromNowAlt    int    `json:"minutesFromNow,omitempty"`
+}
+
+func (r *DispenseRequest) Normalize() {
+	if r.DispensingMode == "" {
+		r.DispensingMode = r.DispensingModeAlt
+	}
+	if r.DecoctionMachineID == "" {
+		if r.DecoctionMachineIDAlt != "" {
+			r.DecoctionMachineID = r.DecoctionMachineIDAlt
+		} else if r.MachineID != "" {
+			r.DecoctionMachineID = r.MachineID
+		}
+	}
+	if r.PotCount <= 0 {
+		if r.PotCountAlt > 0 {
+			r.PotCount = r.PotCountAlt
+		} else if r.Pots > 0 {
+			r.PotCount = r.Pots
+		}
+	}
+	if r.MinutesFromNow <= 0 {
+		if r.MinutesFromNowAlt > 0 {
+			r.MinutesFromNow = r.MinutesFromNowAlt
+		}
+	}
 }
 
 func (h *Handler) DispensePrescription(c *gin.Context) {
@@ -322,6 +354,8 @@ func (h *Handler) DispensePrescription(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
+
+	req.Normalize()
 
 	pr, ok := h.Store.GetPrescription(id)
 	if !ok {
@@ -485,9 +519,11 @@ func (h *Handler) adjustDosages(items []models.PrescriptionItem) ([]models.Presc
 	for i, item := range items {
 		result[i] = item
 
-		if (item.Unit == "克" || item.Unit == "g") && item.Dosage > 0 {
-			if math.Mod(item.Dosage, 5) != 0 {
-				adjusted := math.Ceil(item.Dosage/5) * 5
+		unitLower := strings.ToLower(strings.TrimSpace(item.Unit))
+		if (unitLower == "克" || unitLower == "g") && item.Dosage > 0 {
+			dosageInt := int64(math.Round(item.Dosage))
+			if dosageInt%5 != 0 {
+				adjusted := float64(((dosageInt + 4) / 5) * 5)
 				result[i].Dosage = adjusted
 				warnings = append(warnings, fmt.Sprintf("%s已自动调整为%d克", item.HerbName, int(adjusted)))
 			}

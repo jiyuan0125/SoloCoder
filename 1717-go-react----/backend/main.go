@@ -94,5 +94,5 @@ func getPort() string {
 		}
 	}
 
-	return "8080"
+	return "8300"
 }

@@ -1,5 +1,7 @@
-DBA 说纯 LRU 不够用，有些冷数据访问频率高但不该留在缓存里。Rust tokio 写一个中间件，支持 LRU 和 LFU 两种淘汰，按缓存空间配置选。
-LRU 淘汰最久未访问的，LFU 淘汰频率最低的，频率相同淘汰最老的。
-支持预热：启动时从文件加载初始数据，也可以导出为 JSON 文件。
-Key 和 Value 都是字符串，Value 上限 2MB。批量操作接口一次 set/get 多个 Key。改淘汰策略后已缓存数据不丢。
-统计接口返回命中率、淘汰次数、当前条目数。Cargo build，PORT 环境变量。
+DBA 说纯 LRU 有问题——有个冷门报表每天被点一次，就因为这一天访问了一次，LRU 把热点数据挤走了。Rust tokio 写缓存中间件，LRU 和 LFU 两种淘汰策略可选，按缓存空间粒度配。
+
+LRU 淘汰最久未访问的，LFU 淘汰访问频率最低的，频率相同的淘汰最早插入的（FIFO 兜底）。改淘汰策略不丢数据——从 LRU 切到 LFU，已有条目的访问频率从零开始重新计数。
+
+支持预热：启动时 POST /cache/warm 从 JSON 文件批量加载初始数据，也可以 GET /cache/export 导出为 JSON 文件做备份。Key 和 Value 都是字符串，单条 Value 上限 2MB，超了写入失败返回 413。
+
+批量操作接口 POST /cache/batch 一次 set 或 get 多个 Key——Body 是个数组，每个元素带 op（set/get）、key、value（set 时需要）。统计接口 GET /cache/stats 返回命中率、总请求数、淘汰次数、当前条目数。写入时 value 超过 1MB 拒绝返回 422。Cargo build，PORT 环境变量。

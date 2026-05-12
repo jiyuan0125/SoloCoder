@@ -4,7 +4,7 @@ import projectsRouter from './routes/projects';
 import auditRouter from './routes/audit';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8108;
 
 app.use(express.json());
 

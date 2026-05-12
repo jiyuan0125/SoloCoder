@@ -1,0 +1,33 @@
+{
+  "routes": [
+    {
+      "path": "/api",
+      "backend": "http://localhost:3000",
+      "strip_prefix": false,
+      "auth_required": true
+    },
+    {
+      "path": "/public",
+      "backend": "http://localhost:3001",
+      "strip_prefix": true,
+      "auth_required": false
+    }
+  ],
+  "auth": {
+    "mode": "jwt",
+    "jwt": {
+      "secret": "your-super-secret-key-change-me-in-production"
+    },
+    "api_key": {
+      "header": "X-API-Key",
+      "keys": [
+        "key1-example-change-me",
+        "key2-example-change-me"
+      ]
+    }
+  },
+  "log": {
+    "enabled": true,
+    "file": "access.log"
+  }
+}

@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { Layout, Menu, ConfigProvider, theme } from 'antd';
-import { HomeOutlined, DoctorOutlined, MedicineBoxOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import zhCN from 'antd/locale/zh_CN';
 import RegistrationHall from './components/RegistrationHall';
 import DoctorWorkstation from './components/DoctorWorkstation';
@@ -17,7 +17,7 @@ const menuItems = [
   },
   {
     key: '/doctor',
-    icon: <DoctorOutlined />,
+    icon: <UserOutlined />,
     label: <Link to="/doctor">诊室工作台</Link>,
   },
   {

@@ -1,0 +1,74 @@
+{
+  "rules": [
+    {
+      "path": "/api/users",
+      "method": "POST",
+      "request": [
+        {
+          "external": "user_name",
+          "internal": "username",
+          "type": "string"
+        },
+        {
+          "external": "email_address",
+          "internal": "email",
+          "type": "string"
+        },
+        {
+          "external": "birth_date",
+          "internal": "birthTimestamp",
+          "is_date": true
+        },
+        {
+          "external": "is_active",
+          "internal": "active",
+          "type": "bool",
+          "default": true
+        }
+      ],
+      "response": [
+        {
+          "external": "user_name",
+          "internal": "username",
+          "type": "string"
+        },
+        {
+          "external": "created_at",
+          "internal": "createdAt",
+          "is_date": true
+        }
+      ]
+    },
+    {
+      "path": "/api/orders",
+      "method": "GET",
+      "request": [],
+      "response": [
+        {
+          "external": "order_list",
+          "internal": "orders",
+          "is_array": true,
+          "array_sort_by": "id",
+          "array_sort_asc": true,
+          "nested_rules": [
+            {
+              "external": "order_id",
+              "internal": "id",
+              "type": "int"
+            },
+            {
+              "external": "order_date",
+              "internal": "date",
+              "is_date": true
+            },
+            {
+              "external": "total_amount",
+              "internal": "amount",
+              "type": "float"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

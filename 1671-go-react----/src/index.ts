@@ -17,7 +17,7 @@ import {
 import { CreatePaymentRequest, RefundRequest, RoutingStrategy } from './types';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8101;
 
 app.use(express.json());
 

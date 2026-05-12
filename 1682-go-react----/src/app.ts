@@ -5,7 +5,7 @@ import votesRouter from './routes/votes';
 import todosRouter from './routes/todos';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8112;
 
 app.use(bodyParser.json());
 

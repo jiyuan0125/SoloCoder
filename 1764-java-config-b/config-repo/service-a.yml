@@ -1,0 +1,16 @@
+server:
+  port: 8081
+
+app:
+  service-a:
+    name: Service A
+    description: A sample service demonstrating Spring Cloud Config
+    max-connections: 100
+    retry:
+      max-attempts: 3
+      delay: 1000
+
+feature:
+  service-a:
+    enable-caching: true
+    cache-ttl: 300

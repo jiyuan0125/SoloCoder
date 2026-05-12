@@ -1,7 +1,9 @@
-MySQL、Redis、MQ 三种数据源，每个都自己 new 连接自己关，连接泄漏了都不知道是哪个服务干的。Spring Boot 做统一的连接池管理。利用 java.util.concurrent 的 Semaphore 和 BlockingQueue 管理连接。
+MySQL、Redis、MQ 三种数据源，每个都自己 new 连接自己关，连接泄漏了都不知道是哪个服务干的。Spring Boot 做统一的连接池管理，把连接生命周期收拢到一层。
 
-每种数据源维护独立的连接池，参数：最大连接数、最小空闲数、获取超时。数据源通过接口注册，注册时提供名称和配置。
+每种数据源维护独立的连接池。注册数据源时 POST /pools，body 带名称、类型、连接参数（host/port/username/password 之类）、池参数（max_connections 最大连接数、min_idle 最小空闲数、acquire_timeout_seconds 获取超时）。内部用 java.util.concurrent 的 Semaphore 控制并发连接数，BlockingQueue 管空闲连接。
 
-获取连接时池满就排队，超时返回错误。归还时连接失效就销毁。后台定时检查空闲连接，超时的回收，不足的补上。连接池状态：初始化→运行→暂停→关闭。初始化完成后才能获取连接。暂停时新请求排队不获取。关闭时等所有在用连接归还。
+连接池有状态：初始化→运行→暂停→关闭。注册完先初始化（创建 min_idle 个连接），初始化完成后才能获取连接。暂停时新请求排队但不获取连接，适合做维护。关闭时等所有在用连接归还后销毁。
 
-查询每个池的状态：活跃、空闲、等待数。数据源动态注册注销。Maven 构建，端口配置文件。
+获取连接 GET /pools/{name}/acquire，池满就排队等，超时返回 503。归还 POST /pools/{name}/release，归还时检查连接还活着不，失效的直接销毁。后台每 30 秒扫空闲连接——超时的回收，不足 min_idle 的补上去。
+
+查询 GET /pools 返回每个池的状态：活跃连接数、空闲连接数、等待请求数。GET /pools/{name} 返回单个池的详情包括注册时的连接配置。DELETE /pools/{name} 删除，先等在用连接归还再关池。Maven 构建，端口配置文件。

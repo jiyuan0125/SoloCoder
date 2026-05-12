@@ -1,4 +1,7 @@
-日志一天几个 GB，全存扛不住。aiohttp 做一个分级存储：ERROR 及以上必存，WARN 按比例采样，INFO 默认丢弃除非关键词命中。
-采样比例和关键词规则都按 service 配置，message 包含关键词的 INFO 日志强制存储。
-存储后端支持内存和文件两种，按 service 选。文件存储按小时滚动，文件名带时间戳。
-查询按时间范围、级别、service 筛选，结果支持按字段排序。日志收集和查询分开处理。端口 PORT 环境变量。
+日志一天几个 GB 全存磁盘扛不住，但重要的日志又不能丢。aiohttp 写一个分级存储的日志聚合器。
+
+ERROR 和 FATAL 级别必须存，一条不漏。WARN 按比例采样，采样率按 service 配（比如 order-service 采 50%，payment-service 采 100%）。INFO 默认直接丢弃，除非 message 里命中了该 service 配置的关键词规则——比如 order-service 配了关键词 ["timeout","retry"]，INFO 日志包含这两个词就强制存储。采样比例和关键词规则都通过 PUT /services/{name}/config 动态配。
+
+存储后端每个 service 独立选——内存模式日志存内存环形缓冲区（容量 10000 条），文件模式按小时滚动写入，文件名带时间戳如 logs-order-service-20240101-14.log。
+
+收集接口 POST /logs 批量接收（Body 是日志数组，每条带 level、service、message、timestamp）。查询接口 GET /logs 按时间范围（from/to）、级别（level）、服务名（service）筛选，结果支持按字段排序（sort=timestamp:desc）。端口 PORT 环境变量。

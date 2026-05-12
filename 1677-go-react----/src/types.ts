@@ -86,5 +86,5 @@ export interface CreateDonationRequest {
 
 export interface CreateVoucherRequest {
   donation_id: string;
-  tax_income_base?: number;
+  tax_income_base: number;
 }

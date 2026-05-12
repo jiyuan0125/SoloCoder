@@ -8,7 +8,7 @@ import feesRoutes from './routes/fees';
 initDB();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8100;
 
 app.use(express.json());
 

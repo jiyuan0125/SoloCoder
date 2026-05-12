@@ -115,7 +115,7 @@ export const visitService = {
           effectiveLevel = newLevel;
         }
 
-        const currentFrequency = getVisitFrequencyDays(ServiceLevel.LEVEL_1);
+        const currentFrequency = getVisitFrequencyDays(previousLevel);
         const expectedFrequency = getVisitFrequencyDays(effectiveLevel);
 
         if (currentFrequency !== expectedFrequency) {

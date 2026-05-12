@@ -1,7 +1,9 @@
-每个服务本地一份 application.yml，改个超时参数要登录六台机器改六次。FastAPI 做配置中心，支持 watch 变更推送。
+每个服务本地一份 application.yml，改个超时参数要登录六台机器改六次。FastAPI 做配置中心，集中管配置，改一处全局生效。
 
-配置项状态：草稿→生效→归档。草稿通过发布接口变生效，每次发布生成一个版本号。生效的配置被新版本替代后变归档。归档版本可以回滚到生效。
+配置项有三个状态。草稿——刚创建还没发布。生效——当前正在使用的版本。归档——被新版本替代后的旧版本。草稿通过发布接口 POST /configs/{key}/publish 变生效，每次发布生成一个版本号（自增整数）。生效的配置被新版本替代后自动变归档。归档版本可以回滚到生效——POST /configs/{key}/rollback?version={version_number}。
 
-客户端 watch 某个 key，配置变更时 POST 到回调 URL。推送失败重试 2 次，间隔 5 秒。如果回调 URL 连续 5 次推送失败，标记为失效，不再推送。失效的 watch 可以手动重新激活。
+客户端可以 watch 某个 key 的配置变更。注册 watch 时 POST /watches，body 带 key、callback_url、environment。配置变更时 POST 到回调 URL，body 带新值和版本号。推送失败重试 2 次，间隔 5 秒。如果回调 URL 连续 5 次推送失败，标记为失效，不再推送。失效的 watch 可以通过 PUT /watches/{id}/activate 手动重新激活。
 
-配置按环境（dev/staging/prod）隔离。支持按 key 和环境查询，也支持批量拉取某个环境全部配置。端口 PORT 环境变量。
+配置按环境隔离——dev、staging、prod 三个环境各自独立。查询支持按 key + 环境精确查，也支持 GET /configs?environment={env} 批量拉某个环境全部配置。
+
+配置历史 GET /configs/{key}/versions 返回该 key 的所有版本。版本之间可以看差异——GET /configs/{key}/diff?from={v1}&to={v2}。端口 PORT 环境变量。

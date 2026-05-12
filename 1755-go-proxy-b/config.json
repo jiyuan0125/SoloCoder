@@ -1,0 +1,20 @@
+{
+  "backends": [
+    {
+      "name": "service-a",
+      "url": "http://localhost:8510",
+      "path": "/api/v1/a"
+    },
+    {
+      "name": "service-b",
+      "url": "http://localhost:8511",
+      "path": "/api/v1/b"
+    }
+  ],
+  "health_check": {
+    "interval": 10,
+    "path": "/health",
+    "timeout": 5
+  },
+  "management_path": "/_admin"
+}

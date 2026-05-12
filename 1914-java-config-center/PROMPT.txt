@@ -1,3 +1,7 @@
-昨天有人把数据库密码明文提交到配置中心了，Java Netty 重写一个。标记为 secret 的 Key 存储时 AES-GCM 加密，查询时解密返回，密钥启动参数传入。非敏感配置明文存储。
-变更推送支持长连接（WebSocket）和短连接（HTTP 回调），客户端注册时选模式。推送失败进重试队列重试 3 次，长连接重连后补发遗漏变更。
-修改配置时可标记为 secret。批量导出只导非敏感配置。Maven 构建，PORT 环境变量。
+昨天有人把数据库密码明文提交到配置中心了，全公司都能看到。Java Netty 重写配置中心，敏感配置加密存储。
+
+Key 创建或修改时可以标记 secret: true。标记为 secret 的 Key 存储时用 AES-GCM 加密，查询时解密返回原文，加密密钥通过启动参数 --encryption-key 传入，16 字节 hex 字符串。非敏感的 Key 明文存储。修改已有 Key 的 secret 标记——从 false 改 true 时立刻加密，从 true 改 false 时解密回明文。
+
+变更推送支持两种模式：长连接（WebSocket）和短连接（HTTP 回调），客户端注册时 POST /watches 指定 mode 和 callback_url。推送失败进重试队列，重试 3 次间隔递增（5s/15s/30s）。长连接断了重连后，中心补发断线期间的遗漏变更。
+
+批量导出 GET /configs/export 只导非敏感配置，secret 的 Key 跳过并在响应里标注哪些被跳过了。配置值最大 64KB，超限拒绝写入返回 422。端口 PORT 环境变量，Maven 构建。

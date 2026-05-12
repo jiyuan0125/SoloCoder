@@ -6,7 +6,7 @@ import alertsRouter from './routes/alerts';
 import statisticsRouter from './routes/statistics';
 
 const app: Application = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8118;
 
 app.use(express.json());
 

@@ -1,5 +1,9 @@
-Rust actix-web 写一个限流器。每个 API Key 维护独立的令牌桶，桶容量和填充速率按 Key 配置。
-令牌用完返回 429，响应头带 Retry-After。单个 Key 的限流参数可以在运行时修改，改完立即生效不丢已有的桶状态。
-支持全局限流模式：某个 IP 在 3 个以上不同的 Key 下同时被限流时，给该 IP 加 60 秒冷却。冷却期间所有请求直接 429。
-桶的状态信息（剩余令牌、最后填充时间、被限流次数）可以通过接口查到。冷却中的 IP 列表也要能查。
-Cargo build 通过，PORT 环境变量。
+Rust actix-web 做限流——每个 API Key 一个独立令牌桶，桶容量 burst 和填充速率 refill_rate 按 Key 配置，没配过的 Key 不许访问返回 401。
+
+请求进来查桶，有令牌扣一个放行，令牌用完返回 429 Too Many Requests，响应头带 Retry-After 告诉客户端多少秒后可以重试。单个 Key 的限流参数运行时通过 PUT /keys/{kid}/config 改，改完立即生效，桶里已有的令牌和上次填充时间不丢。
+
+还有一招全局限流模式——某个 IP 在 3 个以上不同 Key 下同时被限流，说明这 IP 有问题，直接给它加 60 秒冷却。冷却期间不管哪个 Key 的请求都直接 429，不走令牌桶逻辑。冷却结束后 IP 记录清空，从零开始重新统计。
+
+Key 通过 POST /keys 创建，Body 带 burst、refill_rate（每秒补充几个令牌）。DELETE /keys/{kid} 删除 Key 同时清掉它的桶状态。
+
+查状态：GET /keys/{kid}/stats 返回剩余令牌数、最后填充时间、累计被限流次数。GET /cooldowns 返回所有冷却中 IP 的列表，每条带 IP、冷却剩余秒数、触发时间。Cargo build 通过，端口 PORT 环境变量。

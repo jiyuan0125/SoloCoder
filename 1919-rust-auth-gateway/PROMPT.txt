@@ -1,4 +1,7 @@
-内网系统以前都是 Session 认证，现在要对接第三方，得上 OAuth2 授权码模式。Rust actix-web 写：客户端先到网关授权，网关重定向到登录页，登录成功回调换取 Token。
-Token 分 access_token（2 小时）和 refresh_token（7 天）。access_token 过期用 refresh_token 换新的。refresh_token 用过一次就失效，换新时同时发新的。
-客户端要先注册才能用 OAuth 流程，注册时给 client_id 和 client_secret。未注册的请求授权返回错误。
-Token 存内存，重启后全部失效。Cargo build，PORT 环境变量。
+内网系统以前全靠 Session，现在要对接第三方应用，得上 OAuth2 授权码模式。Rust actix-web 写一个认证网关。
+
+流程：第三方应用把用户重定向到 GET /authorize?client_id=xxx&redirect_uri=xxx&response_type=code，网关展示登录页。用户登录成功后，网关重定向回 redirect_uri 并带上 authorization code。第三方拿到 code 后 POST /token 换取 access_token（2 小时有效）和 refresh_token（7 天有效）。
+
+access_token 过期后用 POST /token/refresh 拿 refresh_token 换新的——换新时同时颁发新的 refresh_token，旧的立刻失效（旋转刷新）。refresh_token 过期或用过的返回 401，客户端需要重新走授权流程。
+
+第三方应用必须先通过 POST /clients 注册，注册时分配 client_id 和 client_secret，返回给调用方。未注册的 client_id 请求 /authorize 返回 400 错误。所有 Token 存内存，网关重启后全部失效，客户端需要重新授权。Cargo build，PORT 环境变量。

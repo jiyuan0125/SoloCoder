@@ -1,5 +1,226 @@
-配置散落在各个服务里，改一次得重启好几个。Spring Boot 统一管起来。
-多个项目的配置项集中管理，运行时可以改。改了之后客户端怎么拿到最新值你来定。
-版本管理和回滚要不要做你决定。多环境（开发测试生产）怎么隔离也交给你。
-敏感配置怎么处理你考虑一下。
-Maven 构建，JDK 17，端口配置文件。
+# Spring Cloud Config 统一配置管理方案
+
+## 项目概述
+本项目使用 Spring Cloud Config 实现多个服务的统一配置管理，解决配置分散、修改需重启的问题。
+
+## 架构设计
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                          Config Client 刷新流程                          │
+├─────────────────────────────────────────────────────────────────────────┤
+│                                                                         │
+│   ┌──────────────┐        ┌──────────────┐        ┌──────────────────┐  │
+│   │  Config Repo │───────▶│Config Server │───────▶│   Service A/B    │  │
+│   │   (Git)      │  Pull  │  (端口:8888) │  Pull  │ (端口:8081/8082) │  │
+│   └──────────────┘        └──────────────┘        └──────────────────┘  │
+│          ▲                                                              │
+│          │                                                              │
+│          │ git commit/push (版本管理/回滚)                               │
+│          │                                                              │
+│          │                            POST /actuator/refresh           │
+│   ┌──────────────┐                    手动或自动触发刷新                  │
+│   │  开发/运维    │──────────────────────────────────────────────────▶  │
+│   └──────────────┘                                                     │
+│                                                                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## 项目结构
+```
+1764-java-config-b/
+├── pom.xml                      # 父 POM，统一管理依赖版本
+├── config-server/               # 配置中心服务 (端口: 8888)
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/example/configserver/
+│       │   ├── ConfigServerApplication.java  # 启动类，@EnableConfigServer
+│       │   └── SecurityConfig.java           # 安全配置
+│       └── resources/
+│           └── application.yml
+├── service-a/                   # 示例服务 A (端口: 8081)
+│   ├── pom.xml
+│   └── src/main/
+│       ├── java/com/example/servicea/
+│       │   ├── ServiceAApplication.java
+│       │   ├── config/
+│       │   │   ├── ServiceAConfig.java       # @RefreshScope + @ConfigurationProperties
+│       │   │   └── SecurityConfig.java
+│       │   └── controller/
+│       │       └── ConfigController.java     # 演示配置读取和刷新
+│       └── resources/
+│           └── bootstrap.yml                 # 配置中心连接信息
+├── service-b/                   # 示例服务 B (端口: 8082)
+│   └── ... (结构同 service-a)
+└── config-repo/                 # 本地配置仓库（实际项目用 Git）
+    ├── application.yml          # 全局默认配置（所有服务共享）
+    ├── application-dev.yml      # 开发环境配置
+    ├── application-test.yml     # 测试环境配置
+    ├── application-prod.yml     # 生产环境配置
+    ├── service-a.yml            # Service A 默认配置
+    ├── service-a-dev.yml        # Service A 开发环境配置
+    ├── service-a-prod.yml       # Service A 生产环境配置
+    ├── service-b.yml            # Service B 默认配置
+    ├── service-b-dev.yml        # Service B 开发环境配置
+    └── service-b-prod.yml       # Service B 生产环境配置
+```
+
+## 核心特性说明
+
+### 1. 统一配置管理
+- 所有服务配置集中在 config-repo 目录
+- Config Server (8888) 作为统一入口提供配置
+- 客户端通过 bootstrap.yml 连接配置中心获取配置
+
+### 2. 多环境隔离（Profile 机制）
+通过 Spring Boot Profile 实现环境隔离：
+- **配置文件命名规则**：`{application-name}-{profile}.yml`
+- **优先级**（高到低）：
+  1. `service-a-prod.yml` (服务+环境)
+  2. `service-a.yml` (服务默认)
+  3. `application-prod.yml` (全局+环境)
+  4. `application.yml` (全局默认)
+
+- **切换环境方式**：
+  - 启动参数：`java -jar service-a.jar --spring.profiles.active=prod`
+  - 环境变量：`SPRING_PROFILES_ACTIVE=prod`
+  - IDE VM options：`-Dspring.profiles.active=prod`
+
+### 3. 运行时刷新（无需重启）
+- **@RefreshScope**：标记需要刷新的 Bean（配置类和 Controller）
+- **手动刷新**：POST 请求 `/actuator/refresh`
+  ```bash
+  curl -X POST http://localhost:8081/actuator/refresh
+  ```
+- **自动刷新**（可选）：结合 Spring Cloud Bus + Kafka/RabbitMQ 实现批量刷新
+
+### 4. 版本管理与回滚
+配置仓库使用 Git 管理：
+- **版本控制**：每次配置修改都 git commit，保留完整历史
+- **回滚方式**：
+  1. Git 回滚：`git revert <commit-id>` 或 `git reset --hard <commit-id>`
+  2. Config Server 指定标签：客户端配置 `spring.cloud.config.label=v1.0`
+- **标签管理**：使用 Git tag 标记稳定版本，如 `v1.0`, `release-2024.05`
+
+### 5. 敏感配置加密
+- **对称加密**：Config Server 配置 `encrypt.key`
+- **加密命令**：
+  ```bash
+  # 加密敏感值
+  curl -X POST http://configuser:configpass@localhost:8888/encrypt -d "my-secret-password"
+  
+  # 解密（验证）
+  curl -X POST http://configuser:configpass@localhost:8888/decrypt -d "密文"
+  ```
+- **配置中使用**：`password: '{cipher}加密后的密文'`
+- **注意**：单引号是必须的，防止 YAML 解析问题
+
+## 快速开始
+
+### 1. 构建项目
+```bash
+cd /home/baru/Work/Private/work01/SoloCoder/1764-java-config-b
+mvn clean package -DskipTests
+```
+
+### 2. 启动配置中心
+```bash
+cd config-server
+mvn spring-boot:run
+# 验证：访问 http://localhost:8888/service-a/dev
+```
+
+### 3. 启动客户端服务
+```bash
+# 终端 2: 启动 Service A (开发环境)
+cd service-a
+mvn spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=dev
+
+# 终端 3: 启动 Service B (生产环境)
+cd service-b
+mvn spring-boot:run -Dspring-boot.run.arguments=--spring.profiles.active=prod
+```
+
+### 4. 验证配置读取
+```bash
+# 查看 Service A 的配置
+curl http://localhost:8081/api/config
+
+# 查看 Service B 的配置
+curl http://localhost:8082/api/config
+```
+
+### 5. 运行时刷新演示
+```bash
+# 1. 修改配置文件 config-repo/service-a-dev.yml
+#    例如：将 max-connections: 50 改为 max-connections: 80
+
+# 2. 如果使用 Git 仓库：
+git add .
+git commit -m "update service-a max connections"
+
+# 3. 触发 Service A 刷新
+curl -X POST http://localhost:8081/actuator/refresh
+
+# 4. 验证配置已更新
+curl http://localhost:8081/api/config | grep maxConnections
+```
+
+## 生产环境建议
+
+### 1. 配置仓库
+- 使用真实 Git 仓库（GitHub/GitLab/Gitea），而非本地文件
+- Config Server 配置 `spring.cloud.config.server.git.uri` 指向 Git 地址
+- 配置 SSH Key 或 Token 访问私有仓库
+- 配置仓库分支策略：
+  - `main` 分支：生产环境
+  - `develop` 分支：开发/测试环境
+
+### 2. 高可用
+- Config Server 部署多个实例，前面加负载均衡
+- 客户端配置多个 Config Server 地址：
+  ```yaml
+  spring:
+    cloud:
+      config:
+        uri:
+          - http://config-server-1:8888
+          - http://config-server-2:8888
+  ```
+
+### 3. 安全加固
+- 修改默认的 `encrypt.key` 为强密钥（建议 16+ 字符）
+- 生产环境使用环境变量注入密钥：
+  ```bash
+  ENCRYPT_KEY=your-production-strong-key
+  ```
+- 配置中心账号密码使用更复杂的组合
+- 限制 `/encrypt` 和 `/decrypt` 端点的访问权限
+- 生产环境启用 HTTPS
+
+### 4. 刷新策略
+- **简单场景**：手动调用 `/actuator/refresh`
+- **中等规模**：Shell 脚本批量刷新所有服务
+- **大规模**：集成 Spring Cloud Bus + Kafka/RabbitMQ，实现配置更新后自动广播刷新事件
+  - 客户端依赖：`spring-cloud-starter-bus-kafka`
+  - 配置更新后只需：`curl -X POST http://config-server:8888/actuator/bus-refresh`
+
+### 5. 监控与运维
+- 监控 Config Server 的 `/actuator/health`
+- 监控客户端的 `/actuator/refresh` 调用日志
+- 配置变更审计：Git 历史 + Config Server 访问日志
+- 建议在 CI/CD 流程中加入配置校验步骤
+
+## 端口分配
+| 服务 | 端口 | 说明 |
+|------|------|------|
+| config-server | 8888 | 配置中心 |
+| service-a | 8081 | 示例服务 A |
+| service-b | 8082 | 示例服务 B |
+
+## 技术栈
+- JDK 17
+- Spring Boot 3.2.5
+- Spring Cloud 2023.0.1
+- Maven 构建
+- Spring Security（认证保护）
+- Spring Actuator（端点暴露）

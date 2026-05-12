@@ -7,7 +7,7 @@ import dashboardRoutes from './routes/dashboardRoutes';
 initDatabase();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8203;
 
 app.use(express.json());
 

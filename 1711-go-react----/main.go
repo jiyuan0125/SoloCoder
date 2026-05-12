@@ -27,7 +27,7 @@ func main() {
 
 	port := cfg.Port
 	if port == "" {
-		port = "8080"
+		port = "8300"
 	}
 
 	log.Printf("Server starting on port %s...", port)

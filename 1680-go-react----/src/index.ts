@@ -7,7 +7,7 @@ import { todosRouter } from './routes/todos';
 import './database';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8110;
 
 app.use(cors());
 app.use(bodyParser.json());

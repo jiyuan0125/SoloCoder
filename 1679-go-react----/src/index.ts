@@ -5,7 +5,7 @@ import meetingRoomsRoute from './routes/meeting-rooms';
 import recordsRoute from './routes/records';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8109;
 
 app.use(express.json());
 

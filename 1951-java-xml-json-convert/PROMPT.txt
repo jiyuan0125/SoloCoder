@@ -1,5 +1,11 @@
-之前用 Excel 管保险系统数据，数据量上来以后根本扛不住。换个XML-JSON转换器，Spring Boot。
-XML和JSON双向转换，属性映射规则可配置。
-转换前用Schema/XSD校验输入格式，不合法返回详细错误。
-字段映射支持重命名、类型转换、默认值填充。
+之前用 Excel 管保险系统数据，数据量上来以后查个保单号要翻半天，格式错了一整行数据就废了。换个思路，Spring Boot 做一个 XML 和 JSON 双向转换器，上下游系统各自用自己舒服的格式，中间通过转换器桥接。
+
+XML 转 JSON 和 JSON 转 XML 都要支持。属性映射规则可以配置——XML 的属性和子元素怎么对应到 JSON 的 key，比如 XML 里 <person id="123"><name>张三</name></person> 可以映射成 {"id":"123","name":"张三"} 也可以映射成 {"@id":"123","name":"张三"}，这种映射关系通过 POST /mappings 接口配置。
+
+转换之前先做校验。JSON 输入可以用 JSON Schema 校验，XML 输入可以用 XSD 校验。校验不通过返回 400，body 里带详细的错误信息——哪个字段不对、期望什么格式、实际收到了什么。不校验直接转也行，但容易出隐蔽的 bug。
+
+字段映射这块灵活一点——支持重命名（XML 里的 "cust_name" 到 JSON 里变成 "customerName"）、类型转换（字符串 "123" 转成数字 123）、默认值填充（JSON 里没有某个字段时自动填默认值到 XML 里）。映射规则按方向分开配置——XML→JSON 和 JSON→XML 可以有不同规则。
+
+POST /convert/xml-to-json 和 POST /convert/json-to-xml 做转换，body 里传原始数据和可选的 mapping 配置名。GET /mappings 列出所有映射配置。
+
 Maven 构建，端口用配置文件指定。

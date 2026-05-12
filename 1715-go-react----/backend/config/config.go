@@ -12,7 +12,7 @@ type Config struct {
 func Load() *Config {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8300"
 	}
 	if os.Args != nil && len(os.Args) > 1 {
 		for i, arg := range os.Args {

@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-const defaultBaseURL = "http://localhost:8080"
+const defaultBaseURL = "http://localhost:8300"
 
 type Client struct {
 	BaseURL string
@@ -271,5 +271,5 @@ func printUsage() {
 	fmt.Println("  export-records  Export student's exam records")
 	fmt.Println("")
 	fmt.Println("Environment variables:")
-	fmt.Println("  API_URL         Base URL of the API server (default: http://localhost:8080)")
+	fmt.Println("  API_URL         Base URL of the API server (default: http://localhost:8300)")
 }

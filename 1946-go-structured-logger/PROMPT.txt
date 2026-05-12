@@ -1,5 +1,11 @@
-闲着没事想做一个结构化日志服务自己用，Go 标准库 写服务端。
-日志结构化JSON格式，包含时间戳、级别、来源、trace_id、自定义字段。
-分级过滤：DEBUG/INFO/WARN/ERROR，运行时可调整级别。
-批量刷新：日志先写入内存缓冲区，满N条或M秒后刷到磁盘。
+线上排查问题的时候日志文件里一堆乱七八糟的格式——有的用 tab 分隔，有的用等号，有的纯文本，grep 起来费劲得很。Go 标准库写一个结构化日志服务，把日志格式统一成 JSON。
+
+每条日志固定包含几个字段：timestamp（ISO 8601 格式）、level（DEBUG/INFO/WARN/ERROR）、source（来源标识，比如服务名或模块名）、trace_id（可选，用于链路追踪）、message（日志正文）。除了这些固定字段，调用方还可以传自定义键值对，比如 user_id=123、request_path=/api/login，全部平铺到 JSON 里。
+
+日志级别过滤——服务启动时设一个最低级别（比如 INFO），运行时可以通过接口动态调整，不用重启。PUT /log-level 接受新的级别，改完立刻生效。DEBUG 级别的开发时候用，上了生产切成 INFO 或 WARN。
+
+批量刷新机制——每条日志不直接写磁盘，先进内存缓冲区（默认 500 条）。缓冲区满了或者距离上次刷新超过 N 秒（默认 5 秒，可配），一次性把缓冲区里的日志序列化成 JSON 数组追加写入磁盘文件。这样做 IO 效率高，但要注意服务异常退出时缓冲区里的日志别丢了——可以加一个优雅关闭的 hook，收到 SIGTERM 时把缓冲区刷盘再退出。
+
+POST /logs 写入日志（body 是 JSON，包含 level、source、trace_id、message 和自定义字段），GET /logs/level 查看当前级别，PUT /logs/level 修改级别。GET /logs/stats 查看缓冲区当前条目数、累计写入磁盘条目数。
+
 端口通过 PORT 环境变量配置。项目能 go build 通过，能正常启动就行。

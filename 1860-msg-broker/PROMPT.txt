@@ -1,7 +1,9 @@
 订单发完不能同步等物流回调，支付成功要通知库存、积分、通知三个服务。FastAPI 做一个消息代理，用 Topic 把上下游解耦。
 
-支持 Topic 发布订阅。同一个 Topic 可以有多个 Consumer Group。消息投递失败重试 3 次，间隔递增，全失败进死信队列。消息体可能很大（几 MB），也可能格式不对，服务要能正常处理这些情况。
+使用流程：1. 创建 Topic，指定容量上限（比如 50000 条）。2. 生产者往 Topic 发消息 POST /topics/{name}/messages，body 带 content。3. Consumer Group 里的消费者拉消息 GET /topics/{name}/consume?group={group}&limit={limit}，limit 范围 1-100。4. 消费完 ACK POST /topics/{name}/ack，body 带消息 ID 列表。5. 没有 ACK 的消息 30 秒后重新变为可消费。
 
-Topic 容量可配，超出后丢弃最老的。Consumer Group 的消费者可以动态加入和退出。退出时还没确认的消息重新分配给其他消费者。
+消息投递失败重试 3 次（间隔 1 秒、2 秒、4 秒），全失败进死信队列。死信消息可以通过管理接口重新投递到原 Topic。Topic 容量超出后丢弃最老的消息。消息体可能很大（几 MB），服务要正常处理不崩溃。消息格式不对（不是合法 JSON）的丢弃并记录原因。
 
-消息 ID 要全局唯一且有序（至少在同一 Topic 内递增）。查询接口返回 Topic 列表、各 Group 消费进度、死信队列内容。端口 PORT 环境变量。
+Consumer Group 的消费者可以动态加入和退出。退出时还没确认的消息重新分配给组内其他消费者。同一个 Group 内保证不重复投递——同一条消息同一时间只给一个消费者。
+
+消息 ID 全局唯一且在同一 Topic 内递增（可以用雪花算法或简单的自增）。查询接口 GET /topics 返回 Topic 列表，GET /topics/{name}/groups 返回各 Group 消费进度，GET /topics/{name}/deadletter 返回死信内容。端口 PORT 环境变量。

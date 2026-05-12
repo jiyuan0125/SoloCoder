@@ -13,7 +13,7 @@ type Config struct {
 }
 
 func Load(portFlag string) *Config {
-	viper.SetDefault("PORT", "8080")
+	viper.SetDefault("PORT", "8300")
 	viper.SetDefault("DB_PATH", "./teaching_eval.db")
 
 	viper.AutomaticEnv()
@@ -24,7 +24,7 @@ func Load(portFlag string) *Config {
 
 	port := viper.GetString("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8300"
 	}
 
 	return &Config{
@@ -37,7 +37,7 @@ func GetPort() string {
 	if port := os.Getenv("PORT"); port != "" {
 		return port
 	}
-	return "8080"
+	return "8300"
 }
 
 func GetAddr(port string) string {

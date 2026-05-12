@@ -1,7 +1,11 @@
-Spring Boot 重试服务。任务提交后异步跑，失败自动重试，指数退避：初始间隔 1 秒，每轮翻倍但不超过 60 秒，最多 5 次。
+调用外部支付接口偶尔超时，不重试丢钱，重试又怕重复扣款。Spring Boot 写个重试服务，把重试和幂等一起搞定。
 
-幂等靠操作 ID 保证——重复 ID 直接返回上次结果，ID 存内存 Set。
+任务提交后异步执行。失败自动重试，指数退避：初始间隔 1 秒，每轮翻倍（1→2→4→8→16→32），但不超过 60 秒上限。最多重试 5 次。5 次都失败标记为 DEAD——不再重试，等人工介入。退避参数和最大次数可以在创建任务时覆盖默认值。
 
-接口：创建任务、查状态、列待重试队列。
+幂等靠操作 ID 保证。提交任务时必须带 operation_id（字符串，调用方生成）。相同 operation_id 的请求直接返回上次执行结果，不重复执行。结果存在内存 ConcurrentHashMap 里。operation_id 为空返回 400，超过 64 字符返回 400。
+
+任务状态流转：QUEUED → RUNNING → SUCCESS / RETRYING → SUCCESS / FAILED / DEAD。RETRYING 状态下附带当前重试次数和下次重试时间。查询接口返回完整状态信息。
+
+接口：创建任务（POST /tasks）、查状态（GET /tasks/{id}）、列待重试队列（GET /tasks?status=RETRYING）、手动触发失败任务重试（POST /tasks/{id}/retry）。后台用 @Async + ScheduledExecutorService 跑任务和调度重试。
 
 端口用 server.port 配置，Maven 构建。

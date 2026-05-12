@@ -1,5 +1,11 @@
-试了三个现成方案都不满足安全审计要求关键系统必须双因素认证，只能 aiohttp 自己写MFA认证网关。
-支持用户名密码 + TOTP两步认证。
-TOTP验证失败5次后锁定该账号15分钟。
-提供备用恢复码功能，TOTP设备丢失时可用备用码登录。
+试了三个现成的认证方案，安全审计那边全打回来——关键系统必须双因素认证，单密码不行，买的方案又不满足数据不出内网的要求。aiohttp 自己写一个 MFA 认证网关。
+
+认证分两步走。第一步：用户名密码验证——POST /auth/login 传 username 和 password，验证通过后返回一个临时 token 和 TOTP 挑战（告诉客户端需要输入动态口令）。密码错误返回 401。第二步：POST /auth/verify-totp 传临时 token 和 TOTP 码（6 位数字），验证通过后颁发正式的 access_token（JWT 格式，有效期可配，默认 1 小时）。TOTP 码验证失败返回 401，不泄露具体原因。
+
+暴力破解防护——同一个账号连续 5 次 TOTP 验证失败，锁定该账号 15 分钟。锁定期间即使密码正确也不能登录，返回 403 告知锁定剩余时间。锁定状态在内存中维护，重启后清零。
+
+备用恢复码——用户注册 TOTP 时同时生成 10 个一次性恢复码（随机 8 位字符串），GET /auth/recovery-codes 查看。TOTP 设备丢了的时候，POST /auth/recover 传 username、password 和恢复码，验证通过后重新颁发 access_token 并标记该恢复码已使用。每个恢复码只能用一次。
+
+GET /auth/status 查看当前 token 的有效性和用户信息。POST /auth/logout 吊销 token。用户 TOTP 密钥通过 POST /auth/setup-totp 注册，返回二维码链接和密钥明文。
+
 端口用 PORT 环境变量。

@@ -33,7 +33,7 @@ router.get('/:id', requireSocialWorker, (req: AuthRequest, res: Response) => {
     FROM group_members m
     LEFT JOIN users u ON m.approved_by = u.id
     WHERE m.group_activity_id = ?
-    ORDER BY m.created_at DESC
+    ORDER BY m.id DESC
   `).all(req.params.id);
 
   const attendance = db.prepare(`

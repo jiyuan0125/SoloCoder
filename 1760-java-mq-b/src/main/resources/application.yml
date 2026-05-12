@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+mq:
+  default-max-messages-per-topic: 100000
+  default-max-retry: 3
+  retry-interval-seconds: 5
+  backlog-check-interval-seconds: 10
+  ack-timeout-seconds: 60
+  retention-minutes: 1440

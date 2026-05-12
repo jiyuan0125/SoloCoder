@@ -1,0 +1,91 @@
+{
+  "port": "8080",
+  "rules": [
+    {
+      "name": "user_converter",
+      "source_system": "system_a",
+      "target_system": "system_b",
+      "error_strategy": "partial",
+      "enabled": true,
+      "field_mappings": [
+        {
+          "source_path": "user.id",
+          "target_path": "userId",
+          "source_type": "int",
+          "target_type": "string",
+          "required": true
+        },
+        {
+          "source_path": "user.name",
+          "target_path": "userName",
+          "source_type": "string",
+          "target_type": "string",
+          "transform": {
+            "type": "uppercase",
+            "params": {}
+          }
+        },
+        {
+          "source_path": "user.email",
+          "target_path": "contact.email",
+          "source_type": "string",
+          "target_type": "string",
+          "default_value": "unknown@example.com"
+        },
+        {
+          "source_path": "user.age",
+          "target_path": "age",
+          "source_type": "string",
+          "target_type": "int",
+          "default_value": 0
+        },
+        {
+          "source_path": "user.active",
+          "target_path": "isActive",
+          "source_type": "string",
+          "target_type": "bool",
+          "default_value": false
+        }
+      ]
+    },
+    {
+      "name": "order_converter",
+      "source_system": "erp",
+      "target_system": "crm",
+      "error_strategy": "fail_fast",
+      "enabled": true,
+      "field_mappings": [
+        {
+          "source_path": "order_no",
+          "target_path": "orderId",
+          "source_type": "string",
+          "target_type": "string",
+          "required": true,
+          "transform": {
+            "type": "prefix",
+            "params": {
+              "prefix": "ORD-"
+            }
+          }
+        },
+        {
+          "source_path": "amount",
+          "target_path": "totalAmount",
+          "source_type": "string",
+          "target_type": "float",
+          "required": true
+        },
+        {
+          "source_path": "status",
+          "target_path": "orderStatus",
+          "source_type": "string",
+          "target_type": "string",
+          "transform": {
+            "type": "uppercase",
+            "params": {}
+          }
+        }
+      ]
+    }
+  ]
+}

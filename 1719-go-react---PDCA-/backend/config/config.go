@@ -7,7 +7,7 @@ type Config struct {
 
 func Load() *Config {
 	return &Config{
-		Port:         8080,
+		Port:         8300,
 		DatabasePath: "medical_quality.db",
 	}
 }

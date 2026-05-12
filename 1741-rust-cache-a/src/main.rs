@@ -21,7 +21,7 @@ async fn main() {
 
     let app = api::create_router(cache);
 
-    let port = env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = env::var("PORT").unwrap_or_else(|_| "8422".to_string());
     let addr = format!("0.0.0.0:{}", port);
     let listener = tokio::net::TcpListener::bind(&addr).await.unwrap();
 

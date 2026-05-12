@@ -1,5 +1,11 @@
-老板说要搞服务治理数字化，第一步先做个服务注册中心，Spring Boot。
-服务注册时上报心跳TTL，连续3次心跳超时自动注销。
-服务变更（注册/注销/状态变化）推送通知给订阅者。
-支持按服务名查询实例列表，返回每个实例的IP、端口、权重、健康状态。
-Maven 构建，端口用配置文件指定。
+老板说要搞服务治理数字化，第一步先把服务注册中心搭起来。Spring Boot 做，核心就三件事——服务注册、心跳保活、变更通知。
+
+服务注册的流程：实例启动后调 POST /services/{name}/instances，带上自己的 IP、端口、权重和心跳 TTL（比如 10 秒）。注册成功后实例开始按 TTL 间隔发送心跳 PUT /instances/{id}/heartbeat。注册中心跟踪每次心跳的时间戳，如果连续 3 次 TTL 时间内没收到心跳，自动把实例标记为不健康并触发注销。
+
+变更通知机制——服务端维护一个订阅列表，其他服务可以订阅某个服务名的变更事件。订阅用 POST /subscriptions，传 service_name 和回调 URL。当这个服务下有实例注册、注销或状态变化时，注册中心向所有订阅者的回调 URL 发 HTTP POST 通知，body 里包含变更类型（register/deregister/status_change）和实例详情。通知失败（超时或非 2xx）最多重试 2 次，间隔 5 秒。
+
+查询接口 GET /services/{name}/instances 返回该服务下所有实例列表，每条包含 ID、IP、端口、权重、健康状态（healthy/unhealthy）、最后心跳时间、注册时间。支持传 healthy_only=true 参数只返回健康实例。
+
+GET /services 列出所有已注册的服务名和各自的实例数量。DELETE /instances/{id} 主动注销实例（正常下线流程）。
+
+心跳间隔和超时阈值可全局配置，通过配置文件设置。Maven 构建，端口用配置文件指定。

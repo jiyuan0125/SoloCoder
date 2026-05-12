@@ -1,0 +1,24 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  redis:
+    timeout: 60s
+
+app:
+  common:
+    version: 1.0.0
+    environment: default
+    timeout: 30
+    feature-flags:
+      enable-new-ui: false
+      enable-analytics: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,env,refresh,beans

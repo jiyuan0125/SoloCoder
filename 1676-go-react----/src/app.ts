@@ -2,7 +2,7 @@ import express from 'express';
 import projectsRouter from './routes/projects';
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8106;
 
 app.use(express.json());
 

@@ -1,0 +1,12 @@
+server:
+  port: 8082
+
+app:
+  service-b:
+    pool-size: 100
+    timeout-seconds: 15
+
+feature:
+  service-b:
+    enable-notifications: true
+    notification-template: prod-template

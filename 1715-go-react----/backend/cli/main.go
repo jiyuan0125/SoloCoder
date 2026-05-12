@@ -12,7 +12,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const BaseURL = "http://localhost:8080/api"
+const BaseURL = "http://localhost:8300/api"
 
 var rootCmd = &cobra.Command{
 	Use:   "epidemic-cli",

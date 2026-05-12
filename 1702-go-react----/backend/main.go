@@ -299,7 +299,7 @@ func (s *Server) GetTodayPatients(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	var port string
-	flag.StringVar(&port, "port", "8080", "Server port")
+	flag.StringVar(&port, "port", "8212", "Server port")
 	flag.Parse()
 
 	if envPort := os.Getenv("PORT"); envPort != "" {

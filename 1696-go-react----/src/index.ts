@@ -6,7 +6,7 @@ import allocationsRouter from './routes/allocations';
 import ledgerRouter from './routes/ledger';
 
 const app = express();
-const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
+const PORT = process.env.PORT ? Number(process.env.PORT) : 8206;
 
 app.use(express.json());
 
