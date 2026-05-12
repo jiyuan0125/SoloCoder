@@ -1,15 +1,7 @@
-帮我写一个Go命令行工具来管理和检查Nginx配置文件。运维团队管理着几十台服务器上的Nginx配置，经常需要检查配置语法、查看当前的配置结构和做一些批量修改。
+Go 标准库解析文本的能力挺适合做 Nginx 配置分析的，拿来写一个配置管理和检查工具。运维管几十台服务器的 Nginx 配置，经常要查语法、看结构和做批量修改。
 
-这个工具不启动Nginx服务，纯粹是对配置文件做解析、检查和修改。
+工具不启动 Nginx 服务，纯粹对配置文件做解析、检查和修改。
 
-parse子命令解析Nginx配置文件，输出配置的树形结构。Nginx配置是嵌套的block结构，比如http里面有server，server里面有location。工具要把这个层级关系用缩进的树形图展示出来，每个block显示指令名和参数值。
+parse 子命令解析配置输出树形结构。Nginx 配置是嵌套 block（http 里 server 里 location），工具用缩进树形图展示，每个 block 显示指令名和参数值。check 子命令检查语法：大括号配对、指令名拼写（内置常见指令列表比对）、重复指令是否允许、include 引用的文件是否存在。diff 子命令语义化对比两个配置文件，理解结构后区分实质性变化和格式/位置变化。extract 子命令提取关键信息：upstream、server（端口和域名）、location（路径和代理目标）。hotreload 子命令修改配置后发 HUP 信号给 Nginx master 热重载，先做语法检查再发信号。
 
-check子命令检查配置文件的语法是否正确。检查内容包括：大括号是否配对、指令名是否拼写正确（内置一份常见指令的列表做比对）、重复的指令是否允许（比如一个server block里可以有多个location但不应该有多个listen用相同参数）、include指令引用的文件是否存在。
-
-diff子命令比较两个Nginx配置文件的差异。不只是文本差异，而是要理解配置结构后做语义化的对比。比如同样是listen 80，位置不同但语义一样就应该认为没有差异。输出要区分哪些是实质性的配置变化，哪些只是格式或位置的变化。
-
-extract子命令提取配置中的关键信息，输出当前配置了哪些upstream（后端服务器列表）、哪些server（监听的端口和域名）、哪些location（URL路径和代理目标）。
-
-hotreload子命令在修改配置后执行热重载操作，通过发送HUP信号给Nginx master进程来实现。执行前先做语法检查，检查通过才发送信号，并验证重载是否成功。
-
- Nginx配置文件中大量使用include指令引入其他文件，工具要能递归解析被include的文件，include的文件路径不存在时check子命令报错指出是哪一行include引用了缺失的文件，退出码返回 1。配置中的注释在diff时不算实质性变化。有些指令的参数格式比较特殊，比如正则表达式、带引号的字符串，工具要能正确处理这些情况。parse子命令如果配置文件不存在，退出码返回 1 并提示文件路径，不能创建空文件。check子命令如果大括号不配对，指出第一个不匹配的行号和缺少的是左括号还是右括号。hotreload子命令在发送HUP信号后等待3秒读取Nginx的error.log最后几行，如果出现"configuration file test failed"相关的错误，退出码返回 1 并提示重载失败。diff子命令如果两个文件结构完全一致只差注释和空行，输出"配置语义一致，仅格式/注释不同"。extract子命令如果没有找到任何upstream，输出"无upstream配置"而不是空输出，server和location同理。check子命令如果同一个server block里出现多个listen指令使用相同的地址和端口组合，打印警告指出行号。
+include 指令引入的文件要递归解析，路径不存在时 check 报错指出哪一行引用了缺失文件退出码 1。注释在 diff 时不算实质性变化。指令参数格式特殊（正则、引号字符串）要正确处理。parse 文件不存在退出码 1。check 大括号不配对指出第一个不匹配的行号和缺的是左还是右括号。hotreload 发 HUP 后等 3 秒读 error.log 最后几行，出现 test failed 退出码 1。diff 结构一致只差注释和空行输出"配置语义一致，仅格式/注释不同"。extract 没找到 upstream 输出"无 upstream 配置"不是空输出，server 和 location 同理。check 同一 server block 多个 listen 用相同地址端口打印警告指出行号。

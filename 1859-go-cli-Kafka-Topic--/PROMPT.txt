@@ -1,11 +1,9 @@
-帮我写一个Go命令行工具来管理Kafka的Topic和消费者组。我们有好几个Kafka集群，每个集群里有几十个Topic，平时管理起来靠kafka自带的命令行脚本，参数太多记不住，想做一个简化版的统一管理工具。
+业务上遇到个问题：Kafka Topic 管理太分散了，几个集群几十个 Topic 靠自带脚本管不过来。打算用 Go 搞个统一管理工具，直接用 sarama 库连 Kafka。
 
-工具通过Kafka的JMX接口或者AdminClient API来操作。为了简单起见，用Kafka的REST Proxy（如果有的话）或者直接通过shell调用kafka命令行工具来实现也行。不过既然是Go写的，最好还是直接用sarama这个Go客户端库来连接Kafka。
+topic 子命令管理 Topic：列出所有 Topic 显示名称、分区数、副本因子、消息数量和创建时间。--create 创建指定名称、分区数和副本数。--describe 查看详细信息包括每个分区 leader、ISR 和副本分布。--delete 删除 Topic，需要服务端配了 delete.topic.enable=true，没配要提示。
 
-topic子命令管理Topic。默认列出所有Topic，显示名称、分区数、副本因子、消息数量（每个分区的最新offset）和创建时间。支持--create创建Topic，指定名称、分区数和副本数。支持--describe查看Topic的详细信息，包括每个分区的leader、ISR列表和副本分布。支持--delete删除Topic，需要Kafka服务端配置了delete.topic.enable=true，如果没配置要提示用户。
+consumer 子命令管理消费者组：列出所有组显示组名、消费的 Topic、每个分区消费 offset、最新 offset 和 lag。--reset 重置消费者组 offset 到最早或最新。
 
-consumer子命令管理消费者组。列出所有消费者组，显示组名、消费的Topic、每个分区当前消费到的offset、每个分区的最新offset、滞后消息数（lag）。支持--reset参数重置消费者组的offset到最早或最新位置。
+produce 和 consume 子命令用于测试。produce 往 Topic 发消息（从标准输入或直接传入），consume 从 Topic 消费打印到标准输出。
 
-produce和consume子命令用于测试，produce往指定Topic发送消息（从标准输入读取或者直接传入文本），consume从指定Topic消费消息并打印到标准输出。
-
- Kafka集群可能配置了SASL认证（PLAIN或SCRAM），工具需要支持认证参数，认证失败时退出码返回 1 并提示检查用户名密码，不能把密码打印到日志里。连接超时设置30秒，Kafka集群如果某个Broker不可用，工具标记该Broker为不可达但继续查询其他Broker，所有Broker都不可达时退出码返回 1。消费者组的lag可能很大，显示时超过1万用"X.X万"格式，超过1亿用"X.X亿"格式。Topic正在被写入时消费者组的状态查询只是一个时间点的快照，工具在输出末尾标注"统计时间：YYYY-MM-DD HH:mm:ss"。创建Topic时如果指定的副本数超过Broker数量，退出码返回 1 并提示"副本数不能大于Broker数(N)"。Topic配置如果从3副本改为1副本，打印警告说这可能影响数据可靠性并要求用户输入"YES"确认，输入其他内容取消操作。consumer --reset重置offset时要求用户指定消费者组名和目标Topic，不能重置整个组的所有Topic订阅。produce发送消息如果Topic不存在且auto.create.topics.enable没开，退出码返回 1 并提示Topic不存在。consume消费时如果指定了--from-beginning但Topic没有任何消息，不报错直接打印"等待消息中..."并阻塞等待新消息。
+Kafka 可能配了 SASL 认证（PLAIN 或 SCRAM），工具要支持认证参数，认证失败退出码 1 提示检查密码，不能把密码打到日志里。连接超时 30 秒，某个 Broker 不可用标记为不可达但继续查其他 Broker，全部不可达退出码 1。消费者组 lag 超过 1 万用"X.X 万"格式，超过 1 亿用"X.X 亿"。输出末尾标注"统计时间：YYYY-MM-DD HH:mm:ss"。创建 Topic 副本数超过 Broker 数退出码 1。Topic 配置从 3 副本改 1 副本打印警告要求输入"YES"确认。consumer --reset 要求指定消费者组名和目标 Topic 不能重置整组。produce 发消息 Topic 不存在且没开自动创建退出码 1。consume 指定 --from-beginning 但 Topic 没消息不报错打印"等待消息中..."阻塞等待。
