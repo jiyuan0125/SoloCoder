@@ -1,0 +1,5 @@
+链路追踪需要支持跨服务调用链拼接，Spring Boot 写一个。每个服务上报 Span 数据，追踪服务按 TraceID 聚合。
+Span 包含 trace_id、span_id、parent_span_id、service、operation、start_time、duration、status、tags。
+查询接口按 TraceID 返回完整调用树，支持展开每层调用的 tags 和耗时占比。耗时超过 1 秒的 Span 标红。
+Span 上报支持批量（一次最多 100 条）。重复的 Span（同 trace_id + span_id）后到的覆盖先到的。
+服务列表和操作名列表也可以查询。Maven 构建。

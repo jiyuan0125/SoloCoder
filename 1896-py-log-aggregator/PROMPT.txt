@@ -1,0 +1,5 @@
+日志散在各处查着费劲，FastAPI 搞个日志聚合。各服务推 JSON 格式日志过来，必须含 timestamp、service、level、message。
+timestamp 格式不统一，有的 ISO8601 有的 Unix 时间戳，有的带时区有的不带，存储时统一转成 UTC。
+查询支持按 service、level、时间范围、message 模糊匹配组合筛选，结果按时间倒序分页。
+按 service 配置保留天数，过期的后台定时清理。客户端批量推日志一次最多 500 条。
+推日志失败不影响客户端，但内部记录失败数。日志写入和查询要分开处理不能互相阻塞。端口 PORT 环境变量。

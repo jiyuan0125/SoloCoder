@@ -1,0 +1,5 @@
+认证网关需要支持 OAuth2 授权码模式，Rust actix-web 写。客户端先到网关授权，网关重定向到登录页面，登录成功回调网关换取 Token。
+Token 分 access_token（有效期 2 小时）和 refresh_token（有效期 7 天）。access_token 过期用 refresh_token 换新的。
+refresh_token 用过一次就失效，换新时同时发新的 refresh_token。客户端需要先注册才能使用 OAuth 流程，注册时给 client_id 和 client_secret。
+未注册的客户端请求授权返回错误。Token 存在内存里，服务重启后所有 Token 失效。
+Cargo build，PORT 环境变量。
