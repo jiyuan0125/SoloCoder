@@ -1,0 +1,6 @@
+前端是 HTTP，后端有些服务是 gRPC 的，中间需要一个转换层。Go Gin 做 HTTP 到 gRPC 的协议网关。
+请求进来是 JSON，转成 protobuf 发给后端 gRPC 服务，响应再从 protobuf 转成 JSON 返回。转换规则按服务和方法配置，每种方法的请求和响应结构在网关侧有映射。
+路由格式是 /v1/{service}/{method}，比如 /v1/userservice/CreateUser。service 和 method 从 URL 路径提取。
+如果后端 gRPC 服务不可用，网关返回 502 并带上错误详情。gRPC 的状态码要映射成 HTTP 状态码。
+支持流式 gRPC（server streaming），网关把流式响应转成 chunked transfer encoding 返回给 HTTP 客户端。
+端口 PORT 环境变量，go build 能过。

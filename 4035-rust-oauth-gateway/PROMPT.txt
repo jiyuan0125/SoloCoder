@@ -1,0 +1,6 @@
+JWT 认证不够，还要支持 OAuth2 授权码流程。Rust + actix-web 做一个认证网关，同时支持 JWT 和 OAuth2。
+OAuth2 流程：客户端重定向到网关的授权端点，用户在网关完成认证后，网关回调到客户端带上 authorization code。客户端用 code 换 access token。
+JWT 和 OAuth2 的配置分开管理。JWT 的密钥、OAuth2 的 client_id/client_secret/redirect_uri 都通过接口配置。
+Token 刷新：access token 过期后，客户端用 refresh token 换新的。refresh token 也可以过期，过期后需要重新授权。
+每次认证事件记录审计日志。审计日志包括时间、客户端 ID、认证方式、结果。审计日志可以按时间范围和客户端查询。
+后端路由配置和之前类似，认证通过后转发到后端。Cargo build，PORT 环境变量。
