@@ -1,0 +1,7 @@
+监控系统要采集各种指标数据，Prometheus 格式的 Exporter 写起来太麻烦。用 Rust axum 写一个指标采集和查询服务。
+
+支持三种指标类型：Counter（只增不减的计数器）、Gauge（可增可减的仪表盘）、Histogram（直方图，记录值分布）。每个指标有名称和一组标签（label=value 键值对）。相同名称+相同标签组合的指标是同一个时间序列。
+
+数据上报接口：Counter 增加、Gauge 设置/增减、Histogram 记录一个观测值。Histogram 内部维护桶（bucket）配置，默认桶边界为 [0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10]。记录观测值时自动落入对应桶并更新计数。同时维护 sum 和 count。
+
+查询接口支持按名称和标签过滤，返回 Prometheus exposition format 文本。指标保留最近 1 小时的数据点，超出的自动清理。多个上报源可能同时写同一个指标。桶配置变更后已有 Histogram 的桶分布要重新计算。端口环境变量 PORT 指定，cargo build 能编过。
