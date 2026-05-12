@@ -1,0 +1,5 @@
+新规要求Prometheus采集不到业务指标，得加个指标采集服务，用 Spring Boot。
+三种指标类型：Counter（递增计数）、Gauge（可增减）、Histogram（分布直方图）。
+/metrics 接口输出Prometheus文本格式，支持标签维度。
+聚合查询：按时间窗口计算P99、P95、平均值。
+Maven 构建，端口用配置文件指定。
