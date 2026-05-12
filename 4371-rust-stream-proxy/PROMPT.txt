@@ -1,0 +1,4 @@
+线上有个 SSE 推流服务，需要在前面加一层代理做鉴权和限流。Rust actix-web 做。
+流式转发：支持 SSE 和 chunked 传输。代理不缓冲完整响应体，边收边发。上游断开后客户端连接也要断开。客户端断开后清理上游资源。
+鉴权层：请求进来先验证 token。合法请求转发，不合法返回 401。token 从 URL 参数或 Header 取。token 验证结果缓存，同一 token 5 秒内不重复验证。
+限流：每个 token 独立限流。每秒最多 N 个连接。超过限制的连接排队等待。至少包含 proxy、auth、limiter、stream 四个模块。Cargo build，PORT 环境变量。

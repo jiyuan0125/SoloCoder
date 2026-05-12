@@ -1,0 +1,4 @@
+日志格式不统一查起来很痛苦。Spring Boot 写一个结构化日志聚合服务。所有服务按统一格式上报日志。
+日志格式：timestamp、level、service、traceId、spanId、message、tags（KV 对）。tags 可以自由扩展。level 有 DEBUG/INFO/WARN/ERROR。
+日志处理：接收日志后按 level 过滤。低于配置级别的不存储。ERROR 级别的日志自动触发告警评估。同一 traceId 的日志聚合展示。
+敏感数据：日志中的手机号、身份证等自动脱敏。脱敏规则通过正则配置。至少包含 receiver、filter、alerter、masker 四个模块。Maven 构建，端口配置文件。
