@@ -1,0 +1,11 @@
+axum 实现一个 Counter 和 Gauge 的指标服务。用 Atomic 操作保证高并发下的性能。
+
+Counter：递增操作。支持 increment 和 increment_by。Counter 不能递减。
+
+Gauge：设置、递增、递减操作。Gauge 记录当前值。set 操作直接设置值。
+
+指标通过 HTTP 接口暴露。格式兼容 Prometheus。每个指标有 help 文本和 type 标注。
+
+标签（Labels）：每个指标可以有多个标签维度。标签在创建指标时指定。同一个指标名不同标签值是独立的时间序列。
+
+采集间隔：后台任务定时采样指标值，存储历史数据。采样间隔可配（默认 15 秒）。历史数据保留 1 小时。查询接口可以获取历史趋势。端口 PORT 环境变量。

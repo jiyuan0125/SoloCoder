@@ -1,0 +1,9 @@
+FastAPI 写一个 REST 和 SOAP 协议转换器。现代客户端用 RESTful JSON 调用，后端是老旧的 SOAP 服务。
+
+SOAP 请求模板：为每个 SOAP 操作预定义 XML 模板。REST 请求的 JSON body 填充到模板中对应的位置。模板支持简单类型和嵌套对象。
+
+SOAP 响应解析：用 XPath 从 SOAP XML 响应中提取字段，组装成 JSON。提取失败时返回原始 XML 字符串作为 error_detail 字段。
+
+WSDL 管理：通过接口上传 WSDL 文件。解析 WSDL 自动生成模板和映射规则。WSDL 文件可能格式不正确或包含不支持的特性。
+
+错误处理：SOAP Fault 转换为 HTTP 错误响应。Fault code 映射到 HTTP 状态码。SOAP 服务的连接超时和读取超时独立配置。端口 PORT 环境变量。

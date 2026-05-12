@@ -1,0 +1,9 @@
+Spring Boot 写一个 OAuth2 资源服务器网关。验证 OAuth2 Access Token 后转发请求。
+
+Token 验证：支持 JWT 自验证和 Introspection 端点验证两种模式。JWT 模式用本地公钥验证。Introspection 模式调用授权服务器的检查端点。
+
+Scope 校验：每个后端接口要求的 scope 在配置中定义。Token 的 scope 不满足时返回 403。不同 HTTP 方法可以要求不同的 scope。
+
+Token 缓存：验证通过的 Token 缓存结果，TTL 为 Token 剩余有效期的一半。缓存减少对授权服务器的调用。
+
+用户信息聚合：Token 验证后，从用户服务获取用户详细信息（角色、权限），一并转发给后端。用户服务不可达时用 Token 中的基本信息。端口 PORT 环境变量。
