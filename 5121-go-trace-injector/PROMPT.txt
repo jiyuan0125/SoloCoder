@@ -1,0 +1,1 @@
+Fiber 写一个 TraceID 注入器。每个进来的请求如果没有 TraceID 就自动生成一个（格式：trace-xxxx，16位随机hex），通过 Header 传递给下游。SpanID 在每个服务节点生成，格式：span-序号。父子关系通过 ParentSpanID 关联。采样策略：默认 10% 采样，ERROR 请求 100% 采样。采样决策在入口网关做，通过 Header 传递给下游（下游遵循决策）。Span 信息异步批量上报（每 50 条或每 2 秒）。管理接口展示采样率和 Span 上报量。端口 PORT 环境变量。

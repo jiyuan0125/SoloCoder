@@ -1,0 +1,1 @@
+写一个 Prometheus 格式导出器，FastAPI。内部维护多种指标（Counter、Gauge、Histogram），对外提供 /metrics 接口输出 Prometheus 文本格式。指标名遵循 Prometheus 命名规范（下划线分隔，带命名空间前缀）。标签用 key=value 格式。每种指标类型有对应的输出格式。同时提供一个查询接口（HTTP API），用 JSON 格式返回指标数据，方便其他系统消费。指标数据过期（超过 5 分钟没更新）自动删除。端口 PORT 环境变量。

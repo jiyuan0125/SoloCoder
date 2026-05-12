@@ -1,0 +1,1 @@
+actix-web 写一个 HTTP-gRPC 桥接。客户端用 HTTP/JSON 请求，网关转换为 gRPC 调用发给后端，gRPC 响应转回 JSON 返回客户端。转换规则通过 Protobuf 定义文件加载（文件路径配置）。HTTP 方法和路径映射到 gRPC 的 service/method。JSON 字段映射到 Protobuf 字段，类型自动转换（string↔int32 等）。gRPC 错误码映射为 HTTP 状态码。未映射的方法返回 404。管理接口展示已加载的 service/method 列表和调用统计。端口 PORT 环境变量。

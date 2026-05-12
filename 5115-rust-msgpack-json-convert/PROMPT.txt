@@ -1,0 +1,1 @@
+axum 做一个 MsgPack-JSON 网关。MsgPack 是二进制格式，比 JSON 更紧凑。提供两个接口：json2msgpack（JSON→MsgPack 二进制）和 msgpack2json（MsgPack 二进制→JSON）。MsgPack 的扩展类型（ext）映射为 JSON 里的特殊字段。数据类型保持一致：整数还是整数，浮点还是浮点，不做隐式转换。大批量转换（单次 > 1MB）要流式处理不全部加载到内存。管理接口展示转换次数和数据量。端口 PORT 环境变量。
