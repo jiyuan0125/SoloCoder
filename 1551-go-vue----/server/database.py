@@ -1,13 +1,16 @@
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from .config import DATABASE_URL
-from .models import Base
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {})
+DB_URL = os.environ.get("PORT_DB_URL", "sqlite:///./port_system.db")
+
+engine = create_engine(
+    DB_URL,
+    connect_args={"check_same_thread": False} if DB_URL.startswith("sqlite") else {}
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def init_db():
-    Base.metadata.create_all(bind=engine)
 
 def get_db():
     db = SessionLocal()
@@ -15,3 +18,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def init_db():
+    from server.models import Base
+    Base.metadata.create_all(bind=engine)

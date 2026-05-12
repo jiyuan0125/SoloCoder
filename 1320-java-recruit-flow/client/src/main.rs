@@ -55,7 +55,7 @@ enum CandidateCommands {
     InitialScreening {
         #[arg(short, long)]
         id: Uuid,
-        #[arg(short, long)]
+        #[arg(short, long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
         passed: bool,
     },
     SecondScreening {
@@ -68,7 +68,7 @@ enum CandidateCommands {
     ConfirmExpired {
         #[arg(short, long)]
         id: Uuid,
-        #[arg(short, long)]
+        #[arg(short, long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
         confirmed: bool,
     },
 }
@@ -78,13 +78,13 @@ enum InterviewCommands {
     Schedule {
         #[arg(short, long)]
         candidate_id: Uuid,
-        #[arg(short, long, value_parser = ["tech", "hr", "director"])]
+        #[arg(long = "interview-type", value_parser = ["tech", "hr", "director"])]
         interview_type: String,
         #[arg(short, long)]
         round: u32,
         #[arg(short, long)]
         interviewer: String,
-        #[arg(short, long)]
+        #[arg(long = "start-time")]
         start_time: String,
         #[arg(short, long)]
         duration: Option<u32>,
@@ -97,7 +97,7 @@ enum InterviewCommands {
     SubmitResult {
         #[arg(short, long)]
         id: Uuid,
-        #[arg(short, long)]
+        #[arg(short, long, num_args = 0..=1, default_missing_value = "true", action = clap::ArgAction::Set)]
         passed: bool,
         #[arg(short, long)]
         notes: Option<String>,

@@ -49,18 +49,27 @@ public class ExamService {
         }
 
         if (!examPaper.isCanRetake()) {
-            long completedCount = examRecordRepository.countByUserIdAndExamPaperId(userId, examPaperId);
+            long completedCount = examRecordRepository.countByUserIdAndExamPaperIdAndStatusIn(
+                    userId, 
+                    examPaperId,
+                    Arrays.asList(ExamStatus.SUBMITTED, ExamStatus.TIMEOUT_SUBMITTED, ExamStatus.ABNORMAL_SUBMITTED));
             if (completedCount > 0) {
                 throw new RuntimeException("该试卷不允许重考");
             }
         } else if (examPaper.getMaxRetakeCount() != null) {
-            long completedCount = examRecordRepository.countByUserIdAndExamPaperId(userId, examPaperId);
+            long completedCount = examRecordRepository.countByUserIdAndExamPaperIdAndStatusIn(
+                    userId, 
+                    examPaperId,
+                    Arrays.asList(ExamStatus.SUBMITTED, ExamStatus.TIMEOUT_SUBMITTED, ExamStatus.ABNORMAL_SUBMITTED));
             if (completedCount >= examPaper.getMaxRetakeCount()) {
                 throw new RuntimeException("已达到最大重考次数: " + examPaper.getMaxRetakeCount());
             }
         }
 
-        int attemptNumber = (int) examRecordRepository.countByUserIdAndExamPaperId(userId, examPaperId) + 1;
+        int attemptNumber = (int) examRecordRepository.countByUserIdAndExamPaperIdAndStatusIn(
+                userId, 
+                examPaperId,
+                Arrays.asList(ExamStatus.SUBMITTED, ExamStatus.TIMEOUT_SUBMITTED, ExamStatus.ABNORMAL_SUBMITTED)) + 1;
 
         ExamRecord examRecord = new ExamRecord();
         examRecord.setExamPaper(examPaper);
@@ -212,7 +221,7 @@ public class ExamService {
         for (ExamQuestion examQuestion : examQuestions) {
             AnswerRecord answerRecord = answerRecordMap.get(examQuestion.getId());
             
-            if (answerRecord != null && answerRecord.getUserAnswer() != null) {
+            if (answerRecord != null && answerRecord.getUserAnswer() != null && !answerRecord.getUserAnswer().trim().isEmpty()) {
                 GradingService.GradingResult result = gradingService.gradeQuestion(
                         examQuestion.getQuestion(),
                         answerRecord.getUserAnswer(),

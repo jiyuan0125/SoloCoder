@@ -193,16 +193,16 @@ public class PrescriptionService {
     }
 
     public Prescription getPrescription(Long prescriptionId) {
-        return prescriptionRepository.findById(prescriptionId)
+        return prescriptionRepository.findByIdWithDetails(prescriptionId)
                 .orElseThrow(() -> new RuntimeException("处方不存在"));
     }
 
     public List<Prescription> getPatientPrescriptions(Long patientId) {
-        return prescriptionRepository.findByPatientIdOrderByCreatedAtDesc(patientId);
+        return prescriptionRepository.findByPatientIdWithDetails(patientId);
     }
 
     public List<Prescription> getPrescriptionsByStatus(PrescriptionStatus status) {
-        return prescriptionRepository.findByStatus(status);
+        return prescriptionRepository.findByStatusWithDetails(status);
     }
 
     private void saveValidations(Prescription prescription, List<ValidationResult> validations) {

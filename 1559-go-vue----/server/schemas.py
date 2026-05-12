@@ -1,182 +1,201 @@
-from datetime import datetime
-from typing import Optional, List
 from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
 from .models import (
-    AlertStatus, AlertPriority, EventStatus, EventLevel, ForceStatus
+    AlertStatus, AlertUrgency, EventStatus, ResponseLevel,
+    TimelineEventType, ForceStatus
 )
 
 
-class AlertCreate(BaseModel):
+class AlertBase(BaseModel):
     location: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     description: Optional[str] = None
-    reporter_name: Optional[str] = None
-    reporter_contact: Optional[str] = None
-    alert_time: Optional[datetime] = None
+    source: str
+
+
+class AlertCreate(AlertBase):
+    pass
 
 
 class AlertVerify(BaseModel):
     verified_by: str
     verification_notes: Optional[str] = None
-    accept: bool = True
+    verify_as_valid: bool = True
 
 
-class AlertResponse(BaseModel):
-    id: int
-    alert_time: datetime
-    location: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
+class AlertUpdate(BaseModel):
+    location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     description: Optional[str] = None
-    reporter_name: Optional[str] = None
-    reporter_contact: Optional[str] = None
+
+
+class Alert(BaseModel):
+    id: int
+    location: str
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
+    source: str
     status: AlertStatus
-    priority: AlertPriority
+    urgency: AlertUrgency
+    created_at: datetime
     verified_at: Optional[datetime] = None
     verified_by: Optional[str] = None
     verification_notes: Optional[str] = None
     event_id: Optional[int] = None
-    created_at: datetime
-    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class ForceCreate(BaseModel):
-    name: str
-    type: Optional[str] = None
+class EventBase(BaseModel):
+    title: str
     location: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    estimated_arrival_minutes: int = 30
-    capacity: Optional[int] = None
-    contact_person: Optional[str] = None
-    contact_phone: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
 
 
-class ForceResponse(BaseModel):
+class EventCreate(EventBase):
+    alert_ids: Optional[List[int]] = None
+
+
+class Event(BaseModel):
     id: int
-    name: str
-    type: Optional[str] = None
+    title: str
     location: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    estimated_arrival_minutes: int
-    capacity: Optional[int] = None
-    contact_person: Optional[str] = None
-    contact_phone: Optional[str] = None
-    status: ForceStatus
-    current_event_id: Optional[int] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
+    status: EventStatus
+    urgency: AlertUrgency
     created_at: datetime
-    updated_at: datetime
+    verified_at: Optional[datetime] = None
+    response_level: ResponseLevel
 
     class Config:
         from_attributes = True
 
 
-class EventForceAssignmentResponse(BaseModel):
+class EventDetail(Event):
+    alerts: List[Alert] = []
+
+
+class EventVerify(BaseModel):
+    verified_by: str
+    notes: Optional[str] = None
+
+
+class RescueForceBase(BaseModel):
+    name: str
+    type: Optional[str] = None
+    capacity: Optional[int] = None
+    current_location: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    estimated_arrival_minutes: int = 0
+
+
+class RescueForceCreate(RescueForceBase):
+    pass
+
+
+class RescueForce(RescueForceBase):
+    id: int
+    status: ForceStatus
+
+    class Config:
+        from_attributes = True
+
+
+class ForceAssignmentBase(BaseModel):
+    force_id: int
+    assignment_notes: Optional[str] = None
+
+
+class ForceAssignmentCreate(ForceAssignmentBase):
+    pass
+
+
+class ForceAssignment(BaseModel):
     id: int
     event_id: int
     force_id: int
     assigned_at: datetime
     arrived_at: Optional[datetime] = None
-    departed_at: Optional[datetime] = None
-    force: Optional[ForceResponse] = None
-
-    class Config:
-        from_attributes = True
-
-
-class TimelineEntryResponse(BaseModel):
-    id: int
-    event_id: int
-    entry_type: str
-    entry_time: datetime
-    description: str
-    operator: Optional[str] = None
-
-    class Config:
-        from_attributes = True
-
-
-class RescueResultCreate(BaseModel):
-    people_rescued: int = 0
-    people_injured: int = 0
-    people_deceased: int = 0
-    is_successful: bool = True
-    summary: Optional[str] = None
-    notes: Optional[str] = None
-
-
-class RescueResultResponse(BaseModel):
-    id: int
-    event_id: int
-    people_rescued: int
-    people_injured: int
-    people_deceased: int
-    is_successful: bool
-    summary: Optional[str] = None
-    notes: Optional[str] = None
-    created_at: datetime
-    updated_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class EventResponse(BaseModel):
-    id: int
-    event_code: str
-    status: EventStatus
-    level: EventLevel
-    location: str
-    location_lat: Optional[float] = None
-    location_lon: Optional[float] = None
-    description: Optional[str] = None
-    people_involved: int
-    received_at: datetime
-    verified_at: Optional[datetime] = None
-    dispatched_at: Optional[datetime] = None
-    rescuing_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
-    response_time_minutes: Optional[int] = None
-    created_at: datetime
-    updated_at: datetime
+    assignment_notes: Optional[str] = None
+    force: RescueForce
 
     class Config:
         from_attributes = True
 
 
-class EventDetailResponse(EventResponse):
-    alerts: List[AlertResponse] = []
-    force_assignments: List[EventForceAssignmentResponse] = []
-    timeline: List[TimelineEntryResponse] = []
-    result: Optional[RescueResultResponse] = None
+class TimelineEventBase(BaseModel):
+    event_type: TimelineEventType
+    description: Optional[str] = None
+    actor: Optional[str] = None
 
 
-class DispatchForceRequest(BaseModel):
-    force_id: int
-    operator: Optional[str] = None
+class TimelineEvent(BaseModel):
+    id: int
+    event_id: Optional[int] = None
+    alert_id: Optional[int] = None
+    event_type: TimelineEventType
+    description: Optional[str] = None
+    timestamp: datetime
+    actor: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
-class ForceArrivalRequest(BaseModel):
-    operator: Optional[str] = None
+class EventResultBase(BaseModel):
+    successful: int = 0
+    injured: int = 0
+    fatalities: int = 0
+    total_people: int = 0
+    notes: Optional[str] = None
 
 
-class CompleteRescueRequest(BaseModel):
-    result: RescueResultCreate
-    operator: Optional[str] = None
+class EventResultCreate(EventResultBase):
+    pass
 
 
-class MonthlyStatsResponse(BaseModel):
+class EventResult(BaseModel):
+    id: int
+    event_id: int
+    successful: int
+    injured: int
+    fatalities: int
+    total_people: int
+    notes: Optional[str] = None
+    response_time_minutes: Optional[int] = None
+    completed_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MonthlyStats(BaseModel):
     year: int
     month: int
-    total_alerts: int
-    total_events: int
-    total_people_rescued: int
+    alert_count: int
+    event_count: int
+    successful_rescues: int
 
 
-class EventLevelUpdate(BaseModel):
-    level: EventLevel
+class AlertRecommendation(BaseModel):
+    id: int
+    name: str
+    type: Optional[str] = None
+    capacity: Optional[int] = None
+    current_location: Optional[str] = None
+    estimated_arrival_minutes: int
+    status: ForceStatus
+
+    class Config:
+        from_attributes = True

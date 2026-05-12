@@ -1,36 +1,31 @@
-from datetime import datetime, date
-from typing import Optional, List
-from enum import Enum
-
 from pydantic import BaseModel, Field
-
-from server.models import (
-    BeaconStatus, DredgingStatus, CheckResult,
-    TodoPriority, TodoStatus, WarningType, WarningStatus
+from datetime import datetime
+from typing import Optional, List
+from .models import (
+    NavigationStatus, BeaconStatus, DredgingStatus,
+    DraftDeclarationStatus, AlertSeverity, TodoPriority
 )
 
 
-class BeaconCreate(BaseModel):
-    identifier: str = Field(..., min_length=1)
-    name: Optional[str] = None
-    status: BeaconStatus = BeaconStatus.NORMAL
-    notes: Optional[str] = None
+class SectionBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    design_depth: float = Field(..., gt=0)
 
 
-class BeaconUpdate(BaseModel):
-    identifier: Optional[str] = None
-    name: Optional[str] = None
-    status: Optional[BeaconStatus] = None
-    notes: Optional[str] = None
+class SectionCreate(SectionBase):
+    pass
 
 
-class BeaconOut(BaseModel):
+class SectionUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    design_depth: Optional[float] = Field(None, gt=0)
+
+
+class Section(SectionBase):
     id: int
-    section_id: int
-    identifier: str
-    name: Optional[str] = None
-    status: BeaconStatus
-    notes: Optional[str] = None
+    current_measured_depth: Optional[float]
+    navigation_status: NavigationStatus
+    beacon_status_normal: bool
     created_at: datetime
     updated_at: datetime
 
@@ -38,51 +33,76 @@ class BeaconOut(BaseModel):
         from_attributes = True
 
 
-class DepthRecordCreate(BaseModel):
-    measured_depth: float = Field(..., gt=0)
-    record_date: Optional[date] = None
-    notes: Optional[str] = None
+class BeaconBase(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    code: str = Field(..., min_length=1, max_length=50)
+    status: BeaconStatus = BeaconStatus.NORMAL
+    description: Optional[str] = None
 
 
-class DepthRecordOut(BaseModel):
+class BeaconCreate(BeaconBase):
+    section_id: int
+
+
+class BeaconUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    code: Optional[str] = Field(None, min_length=1, max_length=50)
+    status: Optional[BeaconStatus] = None
+    description: Optional[str] = None
+
+
+class Beacon(BeaconBase):
     id: int
     section_id: int
-    measured_depth: float
-    record_date: date
-    notes: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class DepthRecordBase(BaseModel):
+    measured_depth: float = Field(..., gt=0)
+    recorded_at: Optional[datetime] = None
+
+
+class DepthRecordCreate(DepthRecordBase):
+    section_id: int
+
+
+class DepthRecord(DepthRecordBase):
+    id: int
+    section_id: int
+    recorded_at: datetime
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class DredgingPlanCreate(BaseModel):
+class DredgingPlanBase(BaseModel):
     target_depth: float = Field(..., gt=0)
-    planned_start_date: Optional[date] = None
-    planned_end_date: Optional[date] = None
-    notes: Optional[str] = None
+    status: DredgingStatus = DredgingStatus.PLANNED
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    description: Optional[str] = None
+
+
+class DredgingPlanCreate(DredgingPlanBase):
+    section_id: int
 
 
 class DredgingPlanUpdate(BaseModel):
     target_depth: Optional[float] = Field(None, gt=0)
     status: Optional[DredgingStatus] = None
-    planned_start_date: Optional[date] = None
-    planned_end_date: Optional[date] = None
-    actual_start_date: Optional[date] = None
-    actual_end_date: Optional[date] = None
-    notes: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    description: Optional[str] = None
 
 
-class DredgingPlanOut(BaseModel):
+class DredgingPlan(DredgingPlanBase):
     id: int
     section_id: int
-    target_depth: float
-    status: DredgingStatus
-    planned_start_date: Optional[date] = None
-    planned_end_date: Optional[date] = None
-    actual_start_date: Optional[date] = None
-    actual_end_date: Optional[date] = None
-    notes: Optional[str] = None
     created_at: datetime
     updated_at: datetime
 
@@ -90,52 +110,32 @@ class DredgingPlanOut(BaseModel):
         from_attributes = True
 
 
-class DraftDeclarationCreate(BaseModel):
-    ship_name: str = Field(..., min_length=1)
-    imo_number: Optional[str] = None
+class DraftDeclarationBase(BaseModel):
+    vessel_name: str = Field(..., min_length=1, max_length=100)
     declared_draft: float = Field(..., gt=0)
+    safety_margin: float = Field(0.3, ge=0)
+
+
+class DraftDeclarationCreate(DraftDeclarationBase):
+    section_id: int
+    dredging_plan_id: Optional[int] = None
 
 
 class DraftDeclarationUpdate(BaseModel):
-    is_completed: Optional[bool] = None
+    status: Optional[DraftDeclarationStatus] = None
+    vessel_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    declared_draft: Optional[float] = Field(None, gt=0)
+    safety_margin: Optional[float] = Field(None, ge=0)
 
 
-class DraftDeclarationOut(BaseModel):
+class DraftDeclaration(DraftDeclarationBase):
     id: int
     section_id: int
-    ship_name: str
-    imo_number: Optional[str] = None
-    declared_draft: float
-    check_result: CheckResult
-    check_message: Optional[str] = None
-    checked_at: Optional[datetime] = None
-    is_completed: bool
-    completed_at: Optional[datetime] = None
-    effective_depth_at_check: Optional[float] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class SectionCreate(BaseModel):
-    name: str = Field(..., min_length=1)
-    design_depth: float = Field(..., gt=0)
-    current_depth: Optional[float] = None
-
-
-class SectionUpdate(BaseModel):
-    name: Optional[str] = None
-    design_depth: Optional[float] = Field(None, gt=0)
-
-
-class SectionOut(BaseModel):
-    id: int
-    name: str
-    design_depth: float
-    current_depth: Optional[float] = None
-    is_restricted: bool
-    beacon_anomaly: bool
+    dredging_plan_id: Optional[int]
+    status: DraftDeclarationStatus
+    validation_result: Optional[str]
+    approved_at: Optional[datetime]
+    passed_at: Optional[datetime]
     created_at: datetime
     updated_at: datetime
 
@@ -143,32 +143,56 @@ class SectionOut(BaseModel):
         from_attributes = True
 
 
-class TodoCreate(BaseModel):
-    title: str = Field(..., min_length=1)
+class AlertBase(BaseModel):
+    type: str = Field(..., min_length=1, max_length=50)
+    severity: AlertSeverity = AlertSeverity.MEDIUM
+    message: str = Field(..., min_length=1)
+    is_active: bool = True
+
+
+class AlertCreate(AlertBase):
+    section_id: int
+
+
+class AlertUpdate(BaseModel):
+    is_active: Optional[bool] = None
+    severity: Optional[AlertSeverity] = None
+    message: Optional[str] = None
+
+
+class Alert(AlertBase):
+    id: int
+    section_id: int
+    created_at: datetime
+    resolved_at: Optional[datetime]
+
+    class Config:
+        from_attributes = True
+
+
+class TodoBase(BaseModel):
+    title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
     priority: TodoPriority = TodoPriority.MEDIUM
     deadline: Optional[datetime] = None
+    is_completed: bool = False
+
+
+class TodoCreate(TodoBase):
     section_id: Optional[int] = None
 
 
 class TodoUpdate(BaseModel):
-    title: Optional[str] = None
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
     description: Optional[str] = None
     priority: Optional[TodoPriority] = None
-    status: Optional[TodoStatus] = None
     deadline: Optional[datetime] = None
+    is_completed: Optional[bool] = None
 
 
-class TodoOut(BaseModel):
+class Todo(TodoBase):
     id: int
-    title: str
-    description: Optional[str] = None
-    priority: TodoPriority
-    status: TodoStatus
-    deadline: Optional[datetime] = None
-    section_id: Optional[int] = None
-    related_warning_id: Optional[int] = None
-    completed_at: Optional[datetime] = None
+    section_id: Optional[int]
     created_at: datetime
     updated_at: datetime
 
@@ -176,24 +200,7 @@ class TodoOut(BaseModel):
         from_attributes = True
 
 
-class WarningOut(BaseModel):
-    id: int
-    section_id: int
-    warning_type: WarningType
+class ValidationResult(BaseModel):
+    valid: bool
     message: str
-    status: WarningStatus
-    acknowledged_at: Optional[datetime] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
-class MessageResponse(BaseModel):
-    message: str
-
-
-class DepthCheckResult(BaseModel):
-    is_restricted: bool
-    effective_depth: Optional[float]
-    threshold: float
+    max_allowed_draft: float

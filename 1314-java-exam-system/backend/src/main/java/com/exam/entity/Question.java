@@ -2,6 +2,7 @@ package com.exam.entity;
 
 import com.exam.enums.DifficultyLevel;
 import com.exam.enums.QuestionType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,10 +43,12 @@ public class Question {
     @Column(name = "answer_time_limit")
     private Integer answerTimeLimit;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sortOrder ASC")
     private List<QuestionOption> options = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<QuestionAnswer> answers = new ArrayList<>();
 

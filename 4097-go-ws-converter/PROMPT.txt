@@ -1,0 +1,9 @@
+协议转换要支持消息格式自动检测。Go Gin 做一个自动检测消息格式的转换网关。
+
+请求进来后自动检测 Content-Type，支持 JSON、XML、Protobuf、MessagePack 四种格式。检测规则：先看 Content-Type header，没有的话根据 body 内容猜测（JSON 以 { 开头、XML 以 < 开头等）。
+
+后端只接受一种格式（可配置）。网关负责把各种格式统一转换成后端接受的格式。响应也做反向转换——后端返回的格式转成客户端期望的格式（通过 Accept header 协商）。
+
+Protobuf 转换需要 schema 文件。schema 在配置里指定路径，启动时加载。schema 加载失败的服务不可用，不能处理 Protobuf 格式的请求。
+
+转换失败的请求返回 400 和详细的错误信息。错误信息包含哪个字段转换失败、期望类型、实际值。至少包含 detector、converter、schema、router 四个模块。端口 PORT 环境变量，go build 能过。

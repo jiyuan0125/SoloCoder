@@ -1,47 +1,40 @@
-from typing import List, Optional
 from datetime import datetime
+from typing import Optional, List
 from pydantic import BaseModel, Field, validator
-from server.enums import (
-    AgentServiceStage,
-    StageStatus,
-    BerthStatus,
-    BerthApplicationStatus,
-    SupplyType,
-    SupplyStatus,
-    WasteStatus,
-    TodoStatus,
-    SettlementStatus,
+from .models import (
+    AgentServiceStatus,
+    BerthingRequestStatus,
+    MaterialType,
+    DeliveryStatus,
+    WasteCollectionStatus,
+    TodoStatus
 )
 
 
 class BerthBase(BaseModel):
-    berth_number: str
-    capacity: int
+    name: str
+    location: Optional[str] = None
+    max_length: Optional[float] = None
+    max_draft: Optional[float] = None
+    is_available: bool = True
+    description: Optional[str] = None
 
 
 class BerthCreate(BerthBase):
     pass
 
 
+class BerthUpdate(BaseModel):
+    name: Optional[str] = None
+    location: Optional[str] = None
+    max_length: Optional[float] = None
+    max_draft: Optional[float] = None
+    is_available: Optional[bool] = None
+    description: Optional[str] = None
+
+
 class Berth(BerthBase):
     id: int
-    status: BerthStatus
-
-    class Config:
-        from_attributes = True
-
-
-class StageHistoryBase(BaseModel):
-    stage: AgentServiceStage
-    status: StageStatus
-    notes: Optional[str] = None
-
-
-class StageHistory(StageHistoryBase):
-    id: int
-    agent_service_id: int
-    completed_at: Optional[datetime] = None
-    created_at: datetime
 
     class Config:
         from_attributes = True
@@ -49,9 +42,12 @@ class StageHistory(StageHistoryBase):
 
 class AgentServiceBase(BaseModel):
     ship_name: str
-    imo_number: str
-    captain_name: str
+    imo_number: Optional[str] = None
+    port_of_call: Optional[str] = None
     arrival_time: datetime
+    estimated_departure_time: Optional[datetime] = None
+    agency_fee: float = 0
+    notes: Optional[str] = None
 
 
 class AgentServiceCreate(AgentServiceBase):
@@ -61,95 +57,118 @@ class AgentServiceCreate(AgentServiceBase):
 class AgentServiceUpdate(BaseModel):
     ship_name: Optional[str] = None
     imo_number: Optional[str] = None
-    captain_name: Optional[str] = None
+    port_of_call: Optional[str] = None
     arrival_time: Optional[datetime] = None
+    estimated_departure_time: Optional[datetime] = None
+    agency_fee: Optional[float] = None
+    notes: Optional[str] = None
 
 
 class AgentService(AgentServiceBase):
     id: int
-    current_stage: AgentServiceStage
-    departure_time: Optional[datetime] = None
+    status: AgentServiceStatus
+    total_fee: float = 0
+    material_fee: float = 0
+    waste_fee: float = 0
     created_at: datetime
     updated_at: datetime
-    stage_history: List[StageHistory] = []
 
     class Config:
         from_attributes = True
 
 
-class BerthApplicationBase(BaseModel):
+class AgentServiceDetail(AgentService):
+    berthing_request: Optional["BerthingRequest"] = None
+    material_deliveries: List["MaterialDelivery"] = []
+    waste_collections: List["WasteCollection"] = []
+    todos: List["Todo"] = []
+    settlements: List["Settlement"] = []
+
+
+class BerthingRequestBase(BaseModel):
+    agent_service_id: int
     requested_berthing_time: datetime
-    expected_duration_hours: int = Field(..., ge=2, le=72)
+    estimated_duration_hours: float
     berth_preference: Optional[str] = None
 
+    @validator("estimated_duration_hours")
+    def check_duration(cls, v):
+        if not (2 <= v <= 72):
+            raise ValueError("预计靠泊时长必须在2到72小时之间")
+        return v
 
-class BerthApplicationCreate(BerthApplicationBase):
+    @validator("requested_berthing_time")
+    def check_future_time(cls, v):
+        if v <= datetime.utcnow():
+            raise ValueError("申请靠泊时间必须是未来时间")
+        return v
+
+
+class BerthingRequestCreate(BerthingRequestBase):
     pass
 
 
-class BerthApplicationApprove(BaseModel):
-    approved: bool
-    notes: Optional[str] = None
+class BerthingRequestApprove(BaseModel):
+    approved_by: str
+    auto_assign_berth: bool = True
 
 
-class BerthApplication(BerthApplicationBase):
+class BerthingRequest(BerthingRequestBase):
     id: int
-    agent_service_id: int
-    status: BerthApplicationStatus
+    status: BerthingRequestStatus
     assigned_berth_id: Optional[int] = None
+    actual_berthing_time: Optional[datetime] = None
+    approved_by: Optional[str] = None
+    approval_time: Optional[datetime] = None
+    is_timeout: bool = False
+    created_at: datetime
+    updated_at: datetime
     assigned_berth: Optional[Berth] = None
-    assigned_berth_time: Optional[datetime] = None
-    is_waiting_timeout: bool
-    approved_at: Optional[datetime] = None
-    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class SupplyBase(BaseModel):
-    supply_type: SupplyType
-    quantity: float = Field(..., gt=0)
-    unit_price: float = Field(..., gt=0)
-    scheduled_time: datetime
+class MaterialDeliveryBase(BaseModel):
+    agent_service_id: int
+    material_type: MaterialType
+    quantity_tons: float
     notes: Optional[str] = None
 
 
-class SupplyCreate(SupplyBase):
+class MaterialDeliveryCreate(MaterialDeliveryBase):
     pass
 
 
-class Supply(SupplyBase):
+class MaterialDelivery(MaterialDeliveryBase):
     id: int
-    agent_service_id: int
+    unit_price: float
     total_price: float
-    status: SupplyStatus
-    delivered_at: Optional[datetime] = None
+    delivery_time: Optional[datetime] = None
+    status: DeliveryStatus
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class WasteRecoveryBase(BaseModel):
-    total_weight_kg: float = Field(..., gt=0)
-    unit_price_per_kg: float = Field(..., gt=0)
-    scheduled_time: datetime
+class WasteCollectionBase(BaseModel):
+    agent_service_id: int
+    waste_type: Optional[str] = None
+    weight_kg: float
     notes: Optional[str] = None
 
 
-class WasteRecoveryCreate(WasteRecoveryBase):
+class WasteCollectionCreate(WasteCollectionBase):
     pass
 
 
-class WasteRecovery(WasteRecoveryBase):
+class WasteCollection(WasteCollectionBase):
     id: int
-    agent_service_id: int
-    discounted_weight_kg: Optional[float] = None
-    discounted_unit_price: Optional[float] = None
-    total_fee: float
-    status: WasteStatus
-    completed_at: Optional[datetime] = None
+    unit_price: float
+    total_price: float
+    collection_time: Optional[datetime] = None
+    status: WasteCollectionStatus
     created_at: datetime
 
     class Config:
@@ -157,6 +176,7 @@ class WasteRecovery(WasteRecoveryBase):
 
 
 class TodoBase(BaseModel):
+    agent_service_id: int
     title: str
     description: Optional[str] = None
     due_time: datetime
@@ -166,50 +186,51 @@ class TodoCreate(TodoBase):
     pass
 
 
+class TodoUpdate(BaseModel):
+    title: Optional[str] = None
+    description: Optional[str] = None
+    due_time: Optional[datetime] = None
+
+
 class Todo(TodoBase):
     id: int
-    agent_service_id: int
     status: TodoStatus
-    completed_at: Optional[datetime] = None
-    sequence: int
+    completed_time: Optional[datetime] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class FeeSettlementBase(BaseModel):
-    agent_fee: float = 0
-    other_fees: float = 0
+class SettlementBase(BaseModel):
+    agent_service_id: int
     notes: Optional[str] = None
 
 
-class FeeSettlementCreate(FeeSettlementBase):
+class SettlementCreate(SettlementBase):
     pass
 
 
-class FeeSettlement(FeeSettlementBase):
+class Settlement(SettlementBase):
     id: int
-    agent_service_id: int
-    supplies_fee: float
-    waste_recovery_fee: float
-    total_amount: float
-    final_amount: float
-    status: SettlementStatus
-    settled_at: Optional[datetime] = None
+    agency_fee: float = 0
+    material_fee: float = 0
+    waste_fee: float = 0
+    total_amount: float = 0
+    settlement_time: Optional[datetime] = None
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class AgentServiceDetail(AgentService):
-    berth_application: Optional[BerthApplication] = None
-    supplies: List[Supply] = []
-    waste_recovery: Optional[WasteRecovery] = None
-    todos: List[Todo] = []
-    fee_settlement: Optional[FeeSettlement] = None
+class StatusTransition(BaseModel):
+    target_status: AgentServiceStatus
 
 
-class Message(BaseModel):
-    message: str
+AgentServiceDetail.model_rebuild()
+BerthingRequest.model_rebuild()
+MaterialDelivery.model_rebuild()
+WasteCollection.model_rebuild()
+Todo.model_rebuild()
+Settlement.model_rebuild()

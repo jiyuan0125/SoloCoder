@@ -3,6 +3,7 @@ package markov
 import (
 	"errors"
 	"math/rand"
+	"sort"
 	"strings"
 	"unicode/utf8"
 )
@@ -126,9 +127,15 @@ func (c *Chain) nextToken(prefix string) (string, error) {
 		return "", errors.New("no transition")
 	}
 
+	tokens := make([]string, 0, len(nextTokens))
+	for token := range nextTokens {
+		tokens = append(tokens, token)
+	}
+	sort.Strings(tokens)
+
 	total := 0
-	for _, count := range nextTokens {
-		total += count
+	for _, token := range tokens {
+		total += nextTokens[token]
 	}
 
 	if total == 0 {
@@ -138,18 +145,14 @@ func (c *Chain) nextToken(prefix string) (string, error) {
 	randomValue := c.rng.Intn(total)
 	cumulative := 0
 
-	for token, count := range nextTokens {
-		cumulative += count
+	for _, token := range tokens {
+		cumulative += nextTokens[token]
 		if randomValue < cumulative {
 			return token, nil
 		}
 	}
 
-	for token := range nextTokens {
-		return token, nil
-	}
-
-	return "", errors.New("no token found")
+	return tokens[0], nil
 }
 
 func tokenizeChars(text string) []string {

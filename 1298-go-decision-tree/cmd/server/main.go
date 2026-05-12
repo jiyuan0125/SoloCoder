@@ -96,7 +96,7 @@ func trainHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	maxDepth := 10
-	if req.MaxDepth > 0 {
+	if req.MaxDepth >= 0 {
 		maxDepth = req.MaxDepth
 	}
 

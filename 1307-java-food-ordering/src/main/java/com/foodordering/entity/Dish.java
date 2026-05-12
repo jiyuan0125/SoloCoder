@@ -1,5 +1,6 @@
 package com.foodordering.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.foodordering.enums.Category;
 import com.foodordering.enums.TasteOption;
 import lombok.AllArgsConstructor;
@@ -22,4 +23,8 @@ public class Dish {
     private Boolean isActive;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    
+    public Boolean getSoldOut() {
+        return stock == null || stock <= 0;
+    }
 }

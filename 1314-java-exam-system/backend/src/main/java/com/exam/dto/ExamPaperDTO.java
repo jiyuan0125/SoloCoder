@@ -28,7 +28,7 @@ public class ExamPaperDTO {
     @Min(value = 1, message = "考试时长必须大于0")
     private Integer durationMinutes;
     
-    private boolean canRetake = false;
+    private boolean canRetake = true;
     
     private Integer maxRetakeCount;
     

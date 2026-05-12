@@ -1,0 +1,9 @@
+链路追踪要支持跨线程传播和异步调用链。Java Netty 做一个异步链路追踪收集器。
+
+Span 的创建和上报是异步的，业务线程不阻塞。Span 数据先写入内存队列，后台线程批量持久化。队列满时丢弃最老的 Span，不阻塞业务线程。
+
+异步调用链：一个 Span 可以有多个子 Span（比如并行调用了多个下游）。子 Span 的 parent_span_id 指向父 Span。多个子 Span 可能乱序到达，收集器需要正确组装调用树。
+
+Trace 的完成判定：一个 Trace 在超过 N 秒没收到新 Span 后判定为完成。完成后对整棵 Trace 树做分析：总耗时、最慢 Span、错误 Span。分析结果存下来供查询。
+
+查询接口：按 TraceID 查完整调用树，按服务名查最近 N 条 Trace，按耗时查慢请求 Top N。查询 Trace 树时如果还有 Span 没到达，标记为不完整。至少包含 collector、assembler、analyzer、query 四个模块。端口配置文件。

@@ -2,6 +2,7 @@ package com.hotelbooking.service;
 
 import com.hotelbooking.dto.BookingCancellationResult;
 import com.hotelbooking.dto.BookingRequest;
+import com.hotelbooking.dto.BookingResponse;
 import com.hotelbooking.dto.DailyPriceDetail;
 import com.hotelbooking.dto.PriceCalculationResult;
 import com.hotelbooking.exception.BookingException;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -36,7 +38,7 @@ public class BookingService {
     private final PriceService priceService;
 
     @Transactional
-    public Booking createBooking(BookingRequest request) {
+    public BookingResponse createBooking(BookingRequest request) {
         if (request.getCheckOutDate().isBefore(request.getCheckInDate()) ||
             request.getCheckOutDate().isEqual(request.getCheckInDate())) {
             throw new BookingException("退房日期必须晚于入住日期");
@@ -62,7 +64,11 @@ public class BookingService {
                 .continuousStayDiscount(priceResult.getContinuousStayDiscount())
                 .memberDiscount(priceResult.getMemberDiscount())
                 .totalAmount(priceResult.getTotalAmount())
+                .paidAmount(BigDecimal.ZERO)
+                .cancellationFee(BigDecimal.ZERO)
+                .earlyCheckOutFee(BigDecimal.ZERO)
                 .specialRequests(request.getSpecialRequests())
+                .isHotelCausedUpgrade(false)
                 .build();
 
         inventoryService.validateAvailability(booking);
@@ -70,11 +76,11 @@ public class BookingService {
         booking = bookingRepository.save(booking);
         saveDailyDetails(booking, priceResult.getDailyDetails());
 
-        return booking;
+        return toResponse(booking);
     }
 
     @Transactional
-    public Booking confirmBooking(Long bookingId) {
+    public BookingResponse confirmBooking(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("预订不存在"));
 
@@ -85,11 +91,12 @@ public class BookingService {
         inventoryService.validateAvailability(booking);
 
         booking.setStatus(BookingStatus.CONFIRMED);
-        return bookingRepository.save(booking);
+        booking = bookingRepository.save(booking);
+        return toResponse(booking);
     }
 
     @Transactional
-    public Booking checkIn(Long bookingId) {
+    public BookingResponse checkIn(Long bookingId) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("预订不存在"));
 
@@ -104,16 +111,17 @@ public class BookingService {
         room.setStatus(RoomStatus.OCCUPIED);
         roomRepository.save(room);
 
-        return bookingRepository.save(booking);
+        booking = bookingRepository.save(booking);
+        return toResponse(booking);
     }
 
     @Transactional
-    public Booking checkOut(Long bookingId) {
+    public BookingResponse checkOut(Long bookingId) {
         return checkOut(bookingId, null);
     }
 
     @Transactional
-    public Booking checkOut(Long bookingId, java.time.LocalDate actualCheckOutDate) {
+    public BookingResponse checkOut(Long bookingId, java.time.LocalDate actualCheckOutDate) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("预订不存在"));
 
@@ -155,7 +163,8 @@ public class BookingService {
         customer.setLastStayDate(checkOutDate);
         customerRepository.save(customer);
 
-        return bookingRepository.save(booking);
+        booking = bookingRepository.save(booking);
+        return toResponse(booking);
     }
 
     @Transactional
@@ -178,7 +187,8 @@ public class BookingService {
                 LocalDateTime.now()
         );
 
-        BigDecimal refundAmount = booking.getPaidAmount().subtract(cancellationFee);
+        BigDecimal paidAmount = booking.getPaidAmount() != null ? booking.getPaidAmount() : BigDecimal.ZERO;
+        BigDecimal refundAmount = paidAmount.subtract(cancellationFee);
         if (refundAmount.compareTo(BigDecimal.ZERO) < 0) {
             refundAmount = BigDecimal.ZERO;
         }
@@ -209,7 +219,7 @@ public class BookingService {
     }
 
     @Transactional
-    public Booking upgradeRoom(Long bookingId, com.hotelbooking.model.enums.RoomType newRoomType, boolean hotelCaused) {
+    public BookingResponse upgradeRoom(Long bookingId, com.hotelbooking.model.enums.RoomType newRoomType, boolean hotelCaused) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new ResourceNotFoundException("预订不存在"));
 
@@ -226,23 +236,71 @@ public class BookingService {
         booking.setRoomType(newRoomType);
         booking.setIsHotelCausedUpgrade(hotelCaused);
 
-        return bookingRepository.save(booking);
+        booking = bookingRepository.save(booking);
+        return toResponse(booking);
     }
 
-    public Optional<Booking> findById(Long id) {
-        return bookingRepository.findById(id);
+    public Optional<BookingResponse> findById(Long id) {
+        return bookingRepository.findById(id).map(this::toResponse);
     }
 
-    public Optional<Booking> findByBookingNumber(String bookingNumber) {
-        return bookingRepository.findByBookingNumber(bookingNumber);
+    public Optional<BookingResponse> findByBookingNumber(String bookingNumber) {
+        return bookingRepository.findByBookingNumber(bookingNumber).map(this::toResponse);
     }
 
-    public List<Booking> findByCustomerId(Long customerId) {
-        return bookingRepository.findByCustomerId(customerId);
+    public List<BookingResponse> findByCustomerId(Long customerId) {
+        return bookingRepository.findByCustomerId(customerId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    public List<Booking> findByStatus(BookingStatus status) {
-        return bookingRepository.findByStatus(status);
+    public List<BookingResponse> findByStatus(BookingStatus status) {
+        return bookingRepository.findByStatus(status).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    private BookingResponse toResponse(Booking booking) {
+        BookingResponse.BookingResponseBuilder builder = BookingResponse.builder()
+                .id(booking.getId())
+                .bookingNumber(booking.getBookingNumber())
+                .roomType(booking.getRoomType())
+                .roomTypeName(booking.getRoomType().getDisplayName())
+                .checkInDate(booking.getCheckInDate())
+                .checkOutDate(booking.getCheckOutDate())
+                .numberOfGuests(booking.getNumberOfGuests())
+                .status(booking.getStatus())
+                .statusName(booking.getStatus().getDisplayName())
+                .originalCheckOutDate(booking.getOriginalCheckOutDate())
+                .baseTotal(booking.getBaseTotal())
+                .continuousStayDiscount(booking.getContinuousStayDiscount())
+                .memberDiscount(booking.getMemberDiscount())
+                .holidaySurchargeTotal(booking.getHolidaySurchargeTotal())
+                .totalAmount(booking.getTotalAmount())
+                .paidAmount(booking.getPaidAmount() != null ? booking.getPaidAmount() : BigDecimal.ZERO)
+                .cancellationFee(booking.getCancellationFee() != null ? booking.getCancellationFee() : BigDecimal.ZERO)
+                .earlyCheckOutFee(booking.getEarlyCheckOutFee() != null ? booking.getEarlyCheckOutFee() : BigDecimal.ZERO)
+                .specialRequests(booking.getSpecialRequests())
+                .upgradedFromRoomType(booking.getUpgradedFromRoomType())
+                .isHotelCausedUpgrade(booking.getIsHotelCausedUpgrade() != null ? booking.getIsHotelCausedUpgrade() : false)
+                .checkInTime(booking.getCheckInTime())
+                .checkOutTime(booking.getCheckOutTime())
+                .cancelledAt(booking.getCancelledAt())
+                .createdAt(booking.getCreatedAt())
+                .updatedAt(booking.getUpdatedAt());
+
+        if (booking.getCustomer() != null) {
+            builder.customerId(booking.getCustomer().getId())
+                   .customerName(booking.getCustomer().getName())
+                   .customerPhone(booking.getCustomer().getPhone());
+        }
+
+        if (booking.getRoom() != null) {
+            builder.roomId(booking.getRoom().getId())
+                   .roomNumber(booking.getRoom().getRoomNumber());
+        }
+
+        return builder.build();
     }
 
     private Customer findOrCreateCustomer(BookingRequest request) {

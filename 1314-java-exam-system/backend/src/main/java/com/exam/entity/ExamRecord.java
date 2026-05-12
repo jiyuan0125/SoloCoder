@@ -1,6 +1,7 @@
 package com.exam.entity;
 
 import com.exam.enums.ExamStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -57,12 +58,15 @@ public class ExamRecord {
     @Column(name = "max_switch_duration_seconds")
     private Integer maxSwitchDurationSeconds;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "examRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamQuestion> examQuestions = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "examRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AnswerRecord> answerRecords = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "examRecord", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamException> exceptions = new ArrayList<>();
 

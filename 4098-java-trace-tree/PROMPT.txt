@@ -1,0 +1,9 @@
+链路追踪要支持自定义标签和跨服务传播。Spring Boot 做一个支持自定义标签的追踪系统。
+
+自定义标签：业务可以在 Span 上附加自定义标签（如 order_id、tenant_id）。标签通过 HTTP header X-Trace-Tags 传播。标签在查询时可以作为过滤条件。
+
+跨服务传播：TraceID 和 SpanID 通过 HTTP header 传播。支持同步 HTTP 和异步 MQ 两种传播方式。MQ 传播时 Trace 信息放在消息的 header 属性里。
+
+Span 的 kind 标记：区分 CLIENT（发出请求）和 SERVER（接收请求）。一个调用产生一对 CLIENT Span 和 SERVER Span，通过 parent_span_id 关联。
+
+Trace 的采样策略支持动态调整：通过接口修改采样比例。修改后立即生效。采样比例从 0.01% 到 100% 可调。Maven 构建，端口配置文件。

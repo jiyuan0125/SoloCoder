@@ -1,0 +1,9 @@
+后台服务之间混用 gRPC 和 REST，需要一个协议转换层。Go Gin 做一个 HTTP↔gRPC 桥接服务。
+
+REST 请求进来后转换成 gRPC 调用转发给后端。请求参数从 JSON 映射到 protobuf 字段，响应从 protobuf 转回 JSON。字段映射规则在配置文件里定义，支持字段名转换（snake_case ↔ camelCase）和嵌套展开。
+
+gRPC 的 streaming 在 HTTP 侧用 SSE（Server-Sent Events）对接。客户端订阅 SSE 后持续接收 gRPC stream 的消息，stream 结束时关闭 SSE 连接。
+
+支持批量操作：一个 HTTP 请求可以触发多个 gRPC 调用，结果聚合成一个响应返回。批量调用之间有依赖关系的要按顺序执行，没有依赖的并行执行。
+
+转换过程中的错误要映射到合适的 HTTP 状态码，gRPC 的 NOT_FOUND 映射 404，ALREADY_EXISTS 映射 409 等。至少包含 router、converter、grpc-client、config 四个模块。端口 PORT 环境变量，go build 能过。

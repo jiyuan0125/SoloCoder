@@ -1,26 +1,23 @@
-from datetime import datetime
-from sqlalchemy import (
-    Column, Integer, String, DateTime, Text, Float, Boolean, ForeignKey, Enum
-)
+from sqlalchemy import Column, Integer, String, DateTime, Text, ForeignKey, Float, Enum
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql import func
+from .database import Base
 import enum
 
-Base = declarative_base()
 
-
-class AlertStatus(enum.Enum):
-    RECEIVED = "received"
+class AlertStatus(str, enum.Enum):
+    PENDING = "pending"
     VERIFIED = "verified"
-    REJECTED = "rejected"
+    DISMISSED = "dismissed"
+    MERGED = "merged"
 
 
-class AlertPriority(enum.Enum):
+class AlertUrgency(str, enum.Enum):
     NORMAL = "normal"
-    URGENT = "urgent"
+    EMERGENCY = "emergency"
 
 
-class EventStatus(enum.Enum):
+class EventStatus(str, enum.Enum):
     RECEIVED = "received"
     VERIFIED = "verified"
     DISPATCHED = "dispatched"
@@ -28,130 +25,129 @@ class EventStatus(enum.Enum):
     COMPLETED = "completed"
 
 
-class EventLevel(enum.Enum):
+class ResponseLevel(str, enum.Enum):
     NORMAL = "normal"
     YELLOW = "yellow"
     RED = "red"
 
 
-class ForceStatus(enum.Enum):
+class TimelineEventType(str, enum.Enum):
+    ALERT_RECEIVED = "alert_received"
+    ALERT_VERIFIED = "alert_verified"
+    EVENT_CREATED = "event_created"
+    EVENT_VERIFIED = "event_verified"
+    FORCE_DISPATCHED = "force_dispatched"
+    FORCE_ARRIVED = "force_arrived"
+    RESCUE_STARTED = "rescue_started"
+    RESCUE_ENDED = "rescue_ended"
+    EVENT_COMPLETED = "event_completed"
+
+
+class ForceStatus(str, enum.Enum):
     AVAILABLE = "available"
     DISPATCHED = "dispatched"
-    RESCUING = "rescuing"
+    WORKING = "working"
 
 
 class Alert(Base):
     __tablename__ = "alerts"
 
     id = Column(Integer, primary_key=True, index=True)
-    alert_time = Column(DateTime, default=datetime.utcnow, nullable=False)
-    location = Column(String(500), nullable=False, index=True)
-    location_lat = Column(Float, nullable=True)
-    location_lon = Column(Float, nullable=True)
-    description = Column(Text, nullable=True)
-    reporter_name = Column(String(200), nullable=True)
-    reporter_contact = Column(String(100), nullable=True)
-    status = Column(Enum(AlertStatus), default=AlertStatus.RECEIVED, nullable=False)
-    priority = Column(Enum(AlertPriority), default=AlertPriority.NORMAL, nullable=False)
-    verified_at = Column(DateTime, nullable=True)
-    verified_by = Column(String(200), nullable=True)
-    verification_notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
+    location = Column(String, nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    description = Column(Text)
+    source = Column(String, nullable=False)
+    status = Column(Enum(AlertStatus), default=AlertStatus.PENDING)
+    urgency = Column(Enum(AlertUrgency), default=AlertUrgency.NORMAL)
+    created_at = Column(DateTime, server_default=func.now())
+    verified_at = Column(DateTime)
+    verified_by = Column(String)
+    verification_notes = Column(Text)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=True)
+
     event = relationship("Event", back_populates="alerts")
-
-
-class RescueForce(Base):
-    __tablename__ = "rescue_forces"
-
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(200), nullable=False)
-    type = Column(String(100), nullable=True)
-    location = Column(String(500), nullable=False)
-    location_lat = Column(Float, nullable=True)
-    location_lon = Column(Float, nullable=True)
-    estimated_arrival_minutes = Column(Integer, nullable=False, default=30)
-    capacity = Column(Integer, nullable=True)
-    contact_person = Column(String(200), nullable=True)
-    contact_phone = Column(String(100), nullable=True)
-    status = Column(Enum(ForceStatus), default=ForceStatus.AVAILABLE, nullable=False)
-    current_event_id = Column(Integer, ForeignKey("events.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-    event_assignments = relationship("EventForceAssignment", back_populates="force")
+    timeline_events = relationship("TimelineEvent", back_populates="alert")
 
 
 class Event(Base):
     __tablename__ = "events"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_code = Column(String(50), unique=True, index=True, nullable=False)
-    status = Column(Enum(EventStatus), default=EventStatus.RECEIVED, nullable=False)
-    level = Column(Enum(EventLevel), default=EventLevel.NORMAL, nullable=False)
-    location = Column(String(500), nullable=False)
-    location_lat = Column(Float, nullable=True)
-    location_lon = Column(Float, nullable=True)
-    description = Column(Text, nullable=True)
-    people_involved = Column(Integer, default=0)
-    received_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    verified_at = Column(DateTime, nullable=True)
-    dispatched_at = Column(DateTime, nullable=True)
-    rescuing_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    response_time_minutes = Column(Integer, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    title = Column(String, nullable=False)
+    location = Column(String, nullable=False)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    description = Column(Text)
+    status = Column(Enum(EventStatus), default=EventStatus.RECEIVED)
+    urgency = Column(Enum(AlertUrgency), default=AlertUrgency.NORMAL)
+    created_at = Column(DateTime, server_default=func.now())
+    verified_at = Column(DateTime)
+    response_level = Column(Enum(ResponseLevel), default=ResponseLevel.NORMAL)
 
     alerts = relationship("Alert", back_populates="event")
-    force_assignments = relationship("EventForceAssignment", back_populates="event")
-    timeline = relationship("TimelineEntry", back_populates="event")
-    result = relationship("RescueResult", back_populates="event", uselist=False)
+    force_assignments = relationship("ForceAssignment", back_populates="event")
+    timeline_events = relationship("TimelineEvent", back_populates="event")
+    result = relationship("EventResult", uselist=False, back_populates="event")
 
 
-class EventForceAssignment(Base):
-    __tablename__ = "event_force_assignments"
+class SearchRescueForce(Base):
+    __tablename__ = "rescue_forces"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    type = Column(String)
+    capacity = Column(Integer)
+    current_location = Column(String)
+    latitude = Column(Float)
+    longitude = Column(Float)
+    estimated_arrival_minutes = Column(Integer, default=0)
+    status = Column(Enum(ForceStatus), default=ForceStatus.AVAILABLE)
+
+    assignments = relationship("ForceAssignment", back_populates="force")
+
+
+class ForceAssignment(Base):
+    __tablename__ = "force_assignments"
 
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
     force_id = Column(Integer, ForeignKey("rescue_forces.id"), nullable=False)
-    assigned_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    arrived_at = Column(DateTime, nullable=True)
-    departed_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    assigned_at = Column(DateTime, server_default=func.now())
+    arrived_at = Column(DateTime)
+    completed_at = Column(DateTime)
+    assignment_notes = Column(Text)
 
     event = relationship("Event", back_populates="force_assignments")
-    force = relationship("RescueForce", back_populates="event_assignments")
+    force = relationship("SearchRescueForce", back_populates="assignments")
 
 
-class TimelineEntry(Base):
-    __tablename__ = "timeline_entries"
+class TimelineEvent(Base):
+    __tablename__ = "timeline_events"
 
     id = Column(Integer, primary_key=True, index=True)
-    event_id = Column(Integer, ForeignKey("events.id"), nullable=False)
-    entry_type = Column(String(100), nullable=False)
-    entry_time = Column(DateTime, default=datetime.utcnow, nullable=False)
-    description = Column(Text, nullable=False)
-    operator = Column(String(200), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    event_id = Column(Integer, ForeignKey("events.id"), nullable=True)
+    alert_id = Column(Integer, ForeignKey("alerts.id"), nullable=True)
+    event_type = Column(Enum(TimelineEventType), nullable=False)
+    description = Column(Text)
+    timestamp = Column(DateTime, server_default=func.now())
+    actor = Column(String)
 
-    event = relationship("Event", back_populates="timeline")
+    event = relationship("Event", back_populates="timeline_events")
+    alert = relationship("Alert", back_populates="timeline_events")
 
 
-class RescueResult(Base):
-    __tablename__ = "rescue_results"
+class EventResult(Base):
+    __tablename__ = "event_results"
 
     id = Column(Integer, primary_key=True, index=True)
     event_id = Column(Integer, ForeignKey("events.id"), nullable=False, unique=True)
-    people_rescued = Column(Integer, default=0)
-    people_injured = Column(Integer, default=0)
-    people_deceased = Column(Integer, default=0)
-    is_successful = Column(Boolean, default=True)
-    summary = Column(Text, nullable=True)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    successful = Column(Integer, default=0)
+    injured = Column(Integer, default=0)
+    fatalities = Column(Integer, default=0)
+    total_people = Column(Integer, default=0)
+    notes = Column(Text)
+    response_time_minutes = Column(Integer)
+    completed_at = Column(DateTime, server_default=func.now())
 
     event = relationship("Event", back_populates="result")

@@ -1,5 +1,6 @@
 package com.exam.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -34,7 +35,7 @@ public class ExamPaper {
     private int durationMinutes;
 
     @Column(nullable = false)
-    private boolean canRetake = false;
+    private boolean canRetake = true;
 
     @Column(name = "max_retake_count")
     private Integer maxRetakeCount;
@@ -45,9 +46,11 @@ public class ExamPaper {
     @Column(name = "switch_duration_limit_seconds", nullable = false)
     private int switchDurationLimitSeconds = 30;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamRule> rules = new ArrayList<>();
 
+    @JsonIgnore
     @OneToMany(mappedBy = "examPaper", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ExamRecord> examRecords = new ArrayList<>();
 

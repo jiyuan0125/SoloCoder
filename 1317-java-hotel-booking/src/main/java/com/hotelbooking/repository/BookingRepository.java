@@ -32,7 +32,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     
     @Query("SELECT COUNT(DISTINCT b) FROM Booking b WHERE b.roomType = :roomType " +
            "AND b.status IN ('PENDING_CONFIRMATION', 'CONFIRMED', 'CHECKED_IN') " +
-           "AND :date >= b.checkInDate AND :date < b.checkOutDate")
+           "AND :date >= b.checkInDate AND :date <= b.checkOutDate")
     Long countBookedRoomsForDate(
             @Param("roomType") RoomType roomType,
             @Param("date") LocalDate date);

@@ -1,18 +1,44 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Boolean, Text
+from datetime import datetime
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, Text, Boolean, Enum as SQLEnum
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
-from server.database import Base
-from server.enums import (
-    AgentServiceStage,
-    StageStatus,
-    BerthStatus,
-    BerthApplicationStatus,
-    SupplyType,
-    SupplyStatus,
-    WasteStatus,
-    TodoStatus,
-    SettlementStatus,
-)
+from enum import Enum
+from .database import Base
+
+
+class AgentServiceStatus(str, Enum):
+    ACCEPTED = "accepted"
+    DECLARED = "declared"
+    BERTHING_ARRANGED = "berthing_arranged"
+    OPERATION_EXECUTED = "operation_executed"
+    SETTLED = "settled"
+    DEPARTURE_CONFIRMED = "departure_confirmed"
+
+
+class BerthingRequestStatus(str, Enum):
+    PENDING = "pending"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    ASSIGNED = "assigned"
+
+
+class MaterialType(str, Enum):
+    FUEL = "fuel"
+    FRESH_WATER = "fresh_water"
+
+
+class DeliveryStatus(str, Enum):
+    PENDING = "pending"
+    DELIVERED = "delivered"
+
+
+class WasteCollectionStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
+
+
+class TodoStatus(str, Enum):
+    PENDING = "pending"
+    COMPLETED = "completed"
 
 
 class AgentService(Base):
@@ -20,99 +46,91 @@ class AgentService(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     ship_name = Column(String(255), nullable=False)
-    imo_number = Column(String(50), nullable=False)
-    captain_name = Column(String(255), nullable=False)
+    imo_number = Column(String(50))
+    port_of_call = Column(String(100))
     arrival_time = Column(DateTime, nullable=False)
-    departure_time = Column(DateTime, nullable=True)
-    current_stage = Column(String(50), default=AgentServiceStage.ORDER_RECEIVED.value, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
-    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
+    estimated_departure_time = Column(DateTime)
+    status = Column(SQLEnum(AgentServiceStatus), default=AgentServiceStatus.ACCEPTED, nullable=False)
+    agency_fee = Column(Float, default=0)
+    total_fee = Column(Float, default=0)
+    material_fee = Column(Float, default=0)
+    waste_fee = Column(Float, default=0)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    notes = Column(Text)
 
-    stage_history = relationship("StageHistory", back_populates="agent_service", order_by="StageHistory.id")
-    berth_application = relationship("BerthApplication", back_populates="agent_service", uselist=False)
-    supplies = relationship("Supply", back_populates="agent_service")
-    waste_recovery = relationship("WasteRecovery", back_populates="agent_service", uselist=False)
-    todos = relationship("Todo", back_populates="agent_service", order_by="Todo.due_time")
-    fee_settlement = relationship("FeeSettlement", back_populates="agent_service", uselist=False)
-
-
-class StageHistory(Base):
-    __tablename__ = "stage_history"
-
-    id = Column(Integer, primary_key=True, index=True)
-    agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
-    stage = Column(String(50), nullable=False)
-    status = Column(String(50), default=StageStatus.PENDING.value, nullable=False)
-    completed_at = Column(DateTime, nullable=True)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
-
-    agent_service = relationship("AgentService", back_populates="stage_history")
+    berthing_request = relationship("BerthingRequest", back_populates="agent_service", uselist=False, cascade="all, delete-orphan")
+    material_deliveries = relationship("MaterialDelivery", back_populates="agent_service", cascade="all, delete-orphan")
+    waste_collections = relationship("WasteCollection", back_populates="agent_service", cascade="all, delete-orphan")
+    todos = relationship("Todo", back_populates="agent_service", cascade="all, delete-orphan", order_by="Todo.due_time")
+    settlements = relationship("Settlement", back_populates="agent_service", cascade="all, delete-orphan")
 
 
 class Berth(Base):
     __tablename__ = "berths"
 
     id = Column(Integer, primary_key=True, index=True)
-    berth_number = Column(String(50), unique=True, nullable=False)
-    capacity = Column(Integer, nullable=False)
-    status = Column(String(50), default=BerthStatus.AVAILABLE.value, nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
+    location = Column(String(255))
+    max_length = Column(Float)
+    max_draft = Column(Float)
+    is_available = Column(Boolean, default=True)
+    description = Column(Text)
 
 
-class BerthApplication(Base):
-    __tablename__ = "berth_applications"
+class BerthingRequest(Base):
+    __tablename__ = "berthing_requests"
 
     id = Column(Integer, primary_key=True, index=True)
-    agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
+    agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False, unique=True)
     requested_berthing_time = Column(DateTime, nullable=False)
-    expected_duration_hours = Column(Integer, nullable=False)
-    berth_preference = Column(String(255), nullable=True)
-    status = Column(String(50), default=BerthApplicationStatus.PENDING.value, nullable=False)
-    assigned_berth_id = Column(Integer, ForeignKey("berths.id"), nullable=True)
-    assigned_berth_time = Column(DateTime, nullable=True)
-    is_waiting_timeout = Column(Boolean, default=False, nullable=False)
-    approved_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    estimated_duration_hours = Column(Float, nullable=False)
+    berth_preference = Column(String(255))
+    status = Column(SQLEnum(BerthingRequestStatus), default=BerthingRequestStatus.PENDING, nullable=False)
+    assigned_berth_id = Column(Integer, ForeignKey("berths.id"))
+    actual_berthing_time = Column(DateTime)
+    approved_by = Column(String(100))
+    approval_time = Column(DateTime)
+    is_timeout = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    agent_service = relationship("AgentService", back_populates="berth_application")
+    agent_service = relationship("AgentService", back_populates="berthing_request")
     assigned_berth = relationship("Berth")
 
 
-class Supply(Base):
-    __tablename__ = "supplies"
+class MaterialDelivery(Base):
+    __tablename__ = "material_deliveries"
 
     id = Column(Integer, primary_key=True, index=True)
     agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
-    supply_type = Column(String(50), nullable=False)
-    quantity = Column(Float, nullable=False)
+    material_type = Column(SQLEnum(MaterialType), nullable=False)
+    quantity_tons = Column(Float, nullable=False)
     unit_price = Column(Float, nullable=False)
     total_price = Column(Float, nullable=False)
-    scheduled_time = Column(DateTime, nullable=False)
-    status = Column(String(50), default=SupplyStatus.SCHEDULED.value, nullable=False)
-    delivered_at = Column(DateTime, nullable=True)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    delivery_time = Column(DateTime)
+    status = Column(SQLEnum(DeliveryStatus), default=DeliveryStatus.PENDING, nullable=False)
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    agent_service = relationship("AgentService", back_populates="supplies")
+    agent_service = relationship("AgentService", back_populates="material_deliveries")
 
 
-class WasteRecovery(Base):
-    __tablename__ = "waste_recovery"
+class WasteCollection(Base):
+    __tablename__ = "waste_collections"
 
     id = Column(Integer, primary_key=True, index=True)
     agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
-    total_weight_kg = Column(Float, nullable=False)
-    unit_price_per_kg = Column(Float, nullable=False)
-    discounted_weight_kg = Column(Float, nullable=True)
-    discounted_unit_price = Column(Float, nullable=True)
-    total_fee = Column(Float, nullable=False)
-    scheduled_time = Column(DateTime, nullable=False)
-    status = Column(String(50), default=WasteStatus.SCHEDULED.value, nullable=False)
-    completed_at = Column(DateTime, nullable=True)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    waste_type = Column(String(100))
+    weight_kg = Column(Float, nullable=False)
+    unit_price = Column(Float, nullable=False)
+    total_price = Column(Float, nullable=False)
+    collection_time = Column(DateTime)
+    status = Column(SQLEnum(WasteCollectionStatus), default=WasteCollectionStatus.PENDING, nullable=False)
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    agent_service = relationship("AgentService", back_populates="waste_recovery")
+    agent_service = relationship("AgentService", back_populates="waste_collections")
 
 
 class Todo(Base):
@@ -121,30 +139,26 @@ class Todo(Base):
     id = Column(Integer, primary_key=True, index=True)
     agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
     title = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    description = Column(Text)
     due_time = Column(DateTime, nullable=False)
-    status = Column(String(50), default=TodoStatus.PENDING.value, nullable=False)
-    completed_at = Column(DateTime, nullable=True)
-    sequence = Column(Integer, nullable=False)
-    created_at = Column(DateTime, server_default=func.now())
+    status = Column(SQLEnum(TodoStatus), default=TodoStatus.PENDING, nullable=False)
+    completed_time = Column(DateTime)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     agent_service = relationship("AgentService", back_populates="todos")
 
 
-class FeeSettlement(Base):
-    __tablename__ = "fee_settlements"
+class Settlement(Base):
+    __tablename__ = "settlements"
 
     id = Column(Integer, primary_key=True, index=True)
     agent_service_id = Column(Integer, ForeignKey("agent_services.id"), nullable=False)
-    agent_fee = Column(Float, nullable=False, default=0)
-    supplies_fee = Column(Float, nullable=False, default=0)
-    waste_recovery_fee = Column(Float, nullable=False, default=0)
-    other_fees = Column(Float, nullable=False, default=0)
-    total_amount = Column(Float, nullable=False, default=0)
-    final_amount = Column(Float, nullable=False, default=0)
-    status = Column(String(50), default=SettlementStatus.PENDING.value, nullable=False)
-    settled_at = Column(DateTime, nullable=True)
-    notes = Column(Text, nullable=True)
-    created_at = Column(DateTime, server_default=func.now())
+    agency_fee = Column(Float, default=0)
+    material_fee = Column(Float, default=0)
+    waste_fee = Column(Float, default=0)
+    total_amount = Column(Float, default=0)
+    settlement_time = Column(DateTime)
+    notes = Column(Text)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
-    agent_service = relationship("AgentService", back_populates="fee_settlement")
+    agent_service = relationship("AgentService", back_populates="settlements")

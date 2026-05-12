@@ -1,0 +1,22 @@
+{
+  "name": "settlement-system",
+  "version": "1.0.0",
+  "description": "资金清算系统 - 处理轧差计算和结算单生成",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^9.4.3"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "@types/better-sqlite3": "^7.6.9",
+    "typescript": "^5.4.2",
+    "ts-node": "^10.9.2"
+  }
+}

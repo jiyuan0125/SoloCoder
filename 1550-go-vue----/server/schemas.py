@@ -1,15 +1,15 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
-from .models import StationType, RedtideStatus, WaveAlertLevel
+from pydantic import BaseModel
+from .models import StationType, RedTideStatus, WaveAlertLevel
 
 
 class StationBase(BaseModel):
-    id: str
     name: str
     station_type: StationType
-    location: Optional[str] = None
-    sea_area: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    description: Optional[str] = None
 
 
 class StationCreate(StationBase):
@@ -17,157 +17,188 @@ class StationCreate(StationBase):
 
 
 class Station(StationBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class TideReadingBase(BaseModel):
+    value: float
+    reading_time: datetime
+
+
+class TideReadingCreate(TideReadingBase):
+    pass
+
+
+class TideReading(TideReadingBase):
+    id: int
+    station_id: int
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class TideMeasurementBase(BaseModel):
-    measured_at: datetime
-    tide_level: float = Field(..., description="潮位（米）")
+class HourlyTideReading(BaseModel):
+    hour: int
+    value: float
+    reading_time: datetime
 
 
-class TideMeasurementCreate(TideMeasurementBase):
-    pass
-
-
-class TideMeasurement(TideMeasurementBase):
-    id: int
-    station_id: str
-
-    class Config:
-        from_attributes = True
-
-
-class TideDailyStats(BaseModel):
+class DailyTideStats(BaseModel):
     date: str
-    max_tide: float
-    min_tide: float
-    avg_tide: float
+    max_value: float
+    min_value: float
+    avg_value: float
 
 
-class WaveMeasurementBase(BaseModel):
-    measured_at: datetime
-    significant_wave_height: float = Field(..., description="有效波高（米）")
-    wave_period: Optional[float] = None
-    wave_direction: Optional[float] = None
+class WaveReadingBase(BaseModel):
+    significant_wave_height: float
+    reading_time: datetime
 
 
-class WaveMeasurementCreate(WaveMeasurementBase):
+class WaveReadingCreate(WaveReadingBase):
     pass
 
 
-class WaveMeasurement(WaveMeasurementBase):
+class WaveReading(WaveReadingBase):
     id: int
-    station_id: str
-    alert_level: WaveAlertLevel = WaveAlertLevel.NONE
+    station_id: int
+    alert_level: WaveAlertLevel
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class WaterTempMeasurementBase(BaseModel):
-    measured_at: datetime
-    temperature: float = Field(..., description="水温（摄氏度）")
+class WaterTempReadingBase(BaseModel):
+    value: float
+    reading_time: datetime
 
 
-class WaterTempMeasurementCreate(WaterTempMeasurementBase):
+class WaterTempReadingCreate(WaterTempReadingBase):
     pass
 
 
-class WaterTempMeasurement(WaterTempMeasurementBase):
+class WaterTempReading(WaterTempReadingBase):
     id: int
-    station_id: str
+    station_id: int
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class SalinityMeasurementBase(BaseModel):
-    measured_at: datetime
-    salinity: float = Field(..., description="盐度（PSU）")
+class SalinityReadingBase(BaseModel):
+    value: float
+    reading_time: datetime
 
 
-class SalinityMeasurementCreate(SalinityMeasurementBase):
+class SalinityReadingCreate(SalinityReadingBase):
     pass
 
 
-class SalinityMeasurement(SalinityMeasurementBase):
+class SalinityReading(SalinityReadingBase):
     id: int
-    station_id: str
+    station_id: int
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class DissolvedOxygenMeasurementBase(BaseModel):
-    measured_at: datetime
-    dissolved_oxygen: float = Field(..., description="溶解氧（mg/L）")
+class DissolvedOxygenReadingBase(BaseModel):
+    value: float
+    reading_time: datetime
 
 
-class DissolvedOxygenMeasurementCreate(DissolvedOxygenMeasurementBase):
+class DissolvedOxygenReadingCreate(DissolvedOxygenReadingBase):
     pass
 
 
-class DissolvedOxygenMeasurement(DissolvedOxygenMeasurementBase):
+class DissolvedOxygenReading(DissolvedOxygenReadingBase):
     id: int
-    station_id: str
+    station_id: int
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class ChlorophyllMeasurementBase(BaseModel):
-    measured_at: datetime
-    chlorophyll: float = Field(..., description="叶绿素浓度（μg/L）")
+class ChlorophyllReadingBase(BaseModel):
+    value: float
+    reading_time: datetime
 
 
-class ChlorophyllMeasurementCreate(ChlorophyllMeasurementBase):
+class ChlorophyllReadingCreate(ChlorophyllReadingBase):
     pass
 
 
-class ChlorophyllMeasurement(ChlorophyllMeasurementBase):
+class ChlorophyllReading(ChlorophyllReadingBase):
     id: int
-    station_id: str
+    station_id: int
+    is_anomaly: bool
+    created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class RedtideEventBase(BaseModel):
-    description: Optional[str] = None
+class RedTideEventBase(BaseModel):
+    notes: Optional[str] = None
 
 
-class RedtideEventCreate(RedtideEventBase):
+class RedTideEventCreate(RedTideEventBase):
     pass
 
 
-class RedtideEvent(RedtideEventBase):
+class RedTideEventConfirm(BaseModel):
+    confirmed_by: str
+    notes: Optional[str] = None
+
+
+class RedTideEvent(RedTideEventBase):
     id: int
-    station_id: str
-    status: RedtideStatus
+    station_id: int
+    status: RedTideStatus
     suspected_at: datetime
     confirmed_at: Optional[datetime] = None
     published_at: Optional[datetime] = None
     resolved_at: Optional[datetime] = None
-    severity_level: Optional[str] = None
+    confirmed_by: Optional[str] = None
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class RedtideEventUpdate(BaseModel):
-    status: Optional[RedtideStatus] = None
-    description: Optional[str] = None
+class RedTideReadingBase(BaseModel):
+    chlorophyll_value: float
+    do_value: Optional[float] = None
+    reading_time: datetime
+    is_over_threshold: bool = True
+
+
+class RedTideReading(RedTideReadingBase):
+    id: int
+    event_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class FarmerBase(BaseModel):
     name: str
-    phone: Optional[str] = None
+    contact: Optional[str] = None
     email: Optional[str] = None
-    sea_area: Optional[str] = None
-    farm_name: Optional[str] = None
+    phone: Optional[str] = None
+    station_ids: Optional[str] = None
 
 
 class FarmerCreate(FarmerBase):
@@ -176,18 +207,22 @@ class FarmerCreate(FarmerBase):
 
 class Farmer(FarmerBase):
     id: int
-    is_active: bool
     created_at: datetime
 
     class Config:
         from_attributes = True
 
 
-class Notification(BaseModel):
-    id: int
-    redtide_event_id: int
-    farmer_id: Optional[int] = None
+class NotificationBase(BaseModel):
     message: str
+    notification_type: str
+
+
+class Notification(NotificationBase):
+    id: int
+    farmer_id: Optional[int] = None
+    station_id: Optional[int] = None
+    event_id: Optional[int] = None
     sent_at: datetime
     is_read: bool
 
@@ -195,13 +230,27 @@ class Notification(BaseModel):
         from_attributes = True
 
 
-class StationDataInput(BaseModel):
-    measured_at: datetime
-    tide: Optional[float] = None
-    wave_height: Optional[float] = None
-    wave_period: Optional[float] = None
-    wave_direction: Optional[float] = None
-    water_temp: Optional[float] = None
-    salinity: Optional[float] = None
-    dissolved_oxygen: Optional[float] = None
-    chlorophyll: Optional[float] = None
+class TideResponse(BaseModel):
+    hourly_readings: List[HourlyTideReading]
+    daily_stats: List[DailyTideStats]
+
+
+class WaveResponse(BaseModel):
+    readings: List[WaveReading]
+    latest_alert: Optional[WaveAlertLevel]
+
+
+class RedTideResponse(BaseModel):
+    current_status: RedTideStatus
+    current_event: Optional[RedTideEvent]
+    recent_events: List[RedTideEvent]
+    recent_readings: List[ChlorophyllReading]
+
+
+class StationData(BaseModel):
+    station: Station
+    latest_water_temp: Optional[WaterTempReading]
+    salinity_status: Optional[str]
+    latest_salinity: Optional[SalinityReading]
+    latest_do: Optional[DissolvedOxygenReading]
+    latest_chlorophyll: Optional[ChlorophyllReading]

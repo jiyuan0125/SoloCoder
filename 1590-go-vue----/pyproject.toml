@@ -1,0 +1,22 @@
+[project]
+name = "cable-car-management"
+version = "0.1.0"
+description = "景区缆车运营管理系统 - FastAPI后端"
+requires-python = ">=3.9"
+dependencies = [
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    "sqlalchemy>=2.0.25",
+    "pydantic>=2.5.3",
+    "pydantic-settings>=2.1.0",
+    "python-multipart>=0.0.6",
+    "python-dateutil>=2.8.2",
+    "httpx>=0.26.0",
+]
+
+[project.scripts]
+cable-car-cli = "cli.main:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

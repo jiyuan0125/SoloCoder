@@ -2,6 +2,7 @@ package com.hospital.prescription.entity;
 
 import com.hospital.prescription.enums.DosageForm;
 import com.hospital.prescription.enums.SolventType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,6 +17,7 @@ public class PrescriptionItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "prescription_id", nullable = false)
     private Prescription prescription;

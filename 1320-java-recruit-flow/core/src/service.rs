@@ -240,57 +240,65 @@ impl RecruitmentService {
         let new_start = new_interview.start_time;
         let new_end = new_interview.end_time();
 
-        let interviews = self
-            .interviews
-            .read()
-            .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?;
+        {
+            let interviews = self
+                .interviews
+                .read()
+                .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?;
 
-        for interview in interviews.values() {
-            if interview.status == InterviewStatus::Cancelled {
-                continue;
-            }
-
-            if interview.interviewer == new_interview.interviewer {
-                let existing_start = interview.start_time;
-                let existing_end = interview.end_time();
-
-                let with_buffer_start = existing_start - Duration::minutes(10);
-                let with_buffer_end = existing_end + Duration::minutes(10);
-
-                if !(new_end <= with_buffer_start || new_start >= with_buffer_end) {
-                    return Err(RecruitError::InterviewerTimeConflict(
-                        req.interviewer.clone(),
-                    ));
+            for interview in interviews.values() {
+                if interview.status == InterviewStatus::Cancelled {
+                    continue;
                 }
-            }
 
-            if interview.candidate_id == candidate_id {
-                let existing_start = interview.start_time;
-                let existing_end = interview.end_time();
+                if interview.interviewer == new_interview.interviewer {
+                    let existing_start = interview.start_time;
+                    let existing_end = interview.end_time();
 
-                let with_buffer_start = existing_start - Duration::minutes(10);
-                let with_buffer_end = existing_end + Duration::minutes(10);
+                    let with_buffer_start = existing_start - Duration::minutes(10);
+                    let with_buffer_end = existing_end + Duration::minutes(10);
 
-                if !(new_end <= with_buffer_start || new_start >= with_buffer_end) {
-                    return Err(RecruitError::NoBufferTime);
+                    if !(new_end <= with_buffer_start || new_start >= with_buffer_end) {
+                        return Err(RecruitError::InterviewerTimeConflict(
+                            req.interviewer.clone(),
+                        ));
+                    }
+                }
+
+                if interview.candidate_id == candidate_id {
+                    let existing_start = interview.start_time;
+                    let existing_end = interview.end_time();
+
+                    let with_buffer_start = existing_start - Duration::minutes(10);
+                    let with_buffer_end = existing_end + Duration::minutes(10);
+
+                    if !(new_end <= with_buffer_start || new_start >= with_buffer_end) {
+                        return Err(RecruitError::NoBufferTime);
+                    }
                 }
             }
         }
 
-        self.interviews
-            .write()
-            .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?
-            .insert(new_interview.id, new_interview.clone());
+        {
+            let mut interviews = self
+                .interviews
+                .write()
+                .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?;
 
-        let mut candidates = self
-            .candidates
-            .write()
-            .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?;
+            interviews.insert(new_interview.id, new_interview.clone());
+        }
 
-        if let Some(candidate) = candidates.get_mut(&candidate_id) {
-            if candidate.status == CandidateStatus::RecommendedForInterview {
-                candidate.status = CandidateStatus::Interviewing;
-                candidate.updated_at = now;
+        {
+            let mut candidates = self
+                .candidates
+                .write()
+                .map_err(|_| RecruitError::InvalidInput("lock error".to_string()))?;
+
+            if let Some(candidate) = candidates.get_mut(&candidate_id) {
+                if candidate.status == CandidateStatus::RecommendedForInterview {
+                    candidate.status = CandidateStatus::Interviewing;
+                    candidate.updated_at = now;
+                }
             }
         }
 

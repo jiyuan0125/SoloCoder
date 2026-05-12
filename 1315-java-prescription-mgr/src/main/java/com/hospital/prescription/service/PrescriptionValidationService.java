@@ -23,16 +23,14 @@ public class PrescriptionValidationService {
     private final AllergyRecordRepository allergyRecordRepository;
     private final DrugInteractionRepository drugInteractionRepository;
     private final ChildDosageRuleRepository childDosageRuleRepository;
-    private final PrescriptionRepository prescriptionRepository;
+    private final PatientRepository patientRepository;
 
     public PrescriptionValidationResult validate(PrescriptionRequest request) {
         List<ValidationResult> validations = new ArrayList<>();
 
         Patient patient = null;
         if (request.getPatientId() != null) {
-            patient = prescriptionRepository.findById(request.getPatientId())
-                    .map(Prescription::getPatient)
-                    .orElse(null);
+            patient = patientRepository.findById(request.getPatientId()).orElse(null);
         }
 
         List<Drug> drugs = new ArrayList<>();
@@ -89,7 +87,10 @@ public class PrescriptionValidationService {
             PrescriptionItemRequest item = itemMap.get(drug.getId());
             if (item == null) continue;
 
-            if (drug.isDoseExceeded(item.getSingleDose())) {
+            BigDecimal normalizedPrescriptionDose = convertToStandardUnit(item.getSingleDose(), item.getDoseUnit());
+            BigDecimal normalizedDrugMaxDose = convertToStandardUnit(drug.getMaxSingleDose(), drug.getDoseUnit());
+
+            if (normalizedPrescriptionDose.setScale(4, RoundingMode.HALF_UP).compareTo(normalizedDrugMaxDose) > 0) {
                 validations.add(ValidationResult.builder()
                         .validationType("DOSAGE")
                         .message(String.format("药品[%s]单次剂量超过最大限制。处方剂量: %s%s，最大限制: %s%s",
@@ -103,6 +104,26 @@ public class PrescriptionValidationService {
                         .build());
             }
         }
+    }
+    
+    private BigDecimal convertToStandardUnit(BigDecimal dose, String unit) {
+        if (dose == null || unit == null) {
+            return dose;
+        }
+        
+        String lowerUnit = unit.toLowerCase().trim();
+        
+        if (lowerUnit.equals("mg") || lowerUnit.equals("毫克")) {
+            return dose.divide(new BigDecimal("1000"), 6, RoundingMode.HALF_UP);
+        } else if (lowerUnit.equals("g") || lowerUnit.equals("克")) {
+            return dose;
+        } else if (lowerUnit.equals("μg") || lowerUnit.equals("mcg") || lowerUnit.equals("微克")) {
+            return dose.divide(new BigDecimal("1000000"), 9, RoundingMode.HALF_UP);
+        } else if (lowerUnit.equals("kg") || lowerUnit.equals("千克")) {
+            return dose.multiply(new BigDecimal("1000"));
+        }
+        
+        return dose;
     }
 
     private void validateDrugInteractions(List<Drug> drugs, List<ValidationResult> validations) {
@@ -137,10 +158,13 @@ public class PrescriptionValidationService {
 
     private void validateAdministrationRoute(List<Drug> drugs, Map<Long, PrescriptionItemRequest> itemMap,
                                                 List<ValidationResult> validations) {
-        Map<String, List<Drug>> drugByName = drugs.stream()
-                .collect(Collectors.groupingBy(Drug::getName));
+        Map<String, List<Drug>> drugByGenericName = drugs.stream()
+                .collect(Collectors.groupingBy(drug -> 
+                    (drug.getGenericName() != null && !drug.getGenericName().isEmpty()) 
+                        ? drug.getGenericName() 
+                        : extractGenericName(drug.getName())));
 
-        for (Map.Entry<String, List<Drug>> entry : drugByName.entrySet()) {
+        for (Map.Entry<String, List<Drug>> entry : drugByGenericName.entrySet()) {
             if (entry.getValue().size() > 1) {
                 List<DosageForm> forms = entry.getValue().stream()
                         .map(Drug::getDosageForm)
@@ -148,16 +172,20 @@ public class PrescriptionValidationService {
                         .toList();
                 
                 if (forms.size() > 1) {
+                    String drugNames = entry.getValue().stream()
+                            .map(Drug::getName)
+                            .collect(Collectors.joining("、"));
+                    
                     String formNames = forms.stream()
                             .map(DosageForm::getDescription)
                             .collect(Collectors.joining("、"));
                     
                     validations.add(ValidationResult.builder()
                             .validationType("ADMINISTRATION_ROUTE")
-                            .message(String.format("药品[%s]在处方中同时出现多种剂型：%s",
-                                    entry.getKey(), formNames))
+                            .message(String.format("同一药品[%s]在处方中同时出现多种剂型：%s",
+                                    drugNames, formNames))
                             .severity(SeverityLevel.SEVERE)
-                            .relatedDrugNames(entry.getKey())
+                            .relatedDrugNames(drugNames)
                             .suggestion("请选择单一剂型使用")
                             .build());
                 }
@@ -198,28 +226,54 @@ public class PrescriptionValidationService {
     }
 
     private void validateAllergyHistory(Patient patient, List<Drug> drugs, List<ValidationResult> validations) {
+        List<AllergyRecord> allergies = allergyRecordRepository.findByPatientId(patient.getId());
+        
         for (Drug drug : drugs) {
-            List<AllergyRecord> allergies = allergyRecordRepository.findByPatientIdAndAllergenLike(
-                    patient.getId(), drug.getName());
+            String drugGenericName = extractGenericName(drug.getName());
             
             for (AllergyRecord allergy : allergies) {
-                SeverityLevel severity = allergy.getAllergyType() == AllergyType.CONFIRMED 
-                        ? SeverityLevel.SEVERE 
-                        : SeverityLevel.MODERATE;
+                String allergen = allergy.getAllergen();
                 
-                validations.add(ValidationResult.builder()
-                        .validationType("ALLERGY")
-                        .message(String.format("患者[%s]存在%s：%s。药品[%s]可能引发过敏反应。",
-                                patient.getName(),
-                                allergy.getAllergyType().getDescription(),
-                                allergy.getAllergen(),
-                                drug.getName()))
-                        .severity(severity)
-                        .relatedDrugNames(drug.getName())
-                        .suggestion("建议更换其他不含该过敏原的药品")
-                        .build());
+                if (matchesAllergen(drug.getName(), drugGenericName, allergen)) {
+                    SeverityLevel severity = allergy.getAllergyType() == AllergyType.CONFIRMED 
+                            ? SeverityLevel.SEVERE 
+                            : SeverityLevel.MODERATE;
+                    
+                    validations.add(ValidationResult.builder()
+                            .validationType("ALLERGY")
+                            .message(String.format("患者[%s]存在%s：%s。药品[%s]可能引发过敏反应。",
+                                    patient.getName(),
+                                    allergy.getAllergyType().getDescription(),
+                                    allergy.getAllergen(),
+                                    drug.getName()))
+                            .severity(severity)
+                            .relatedDrugNames(drug.getName())
+                            .suggestion("建议更换其他不含该过敏原的药品")
+                            .build());
+                }
             }
         }
+    }
+    
+    private boolean matchesAllergen(String drugName, String drugGenericName, String allergen) {
+        String lowerDrugName = drugName.toLowerCase();
+        String lowerGenericName = drugGenericName.toLowerCase();
+        String lowerAllergen = allergen.toLowerCase();
+        
+        if (lowerDrugName.contains(lowerAllergen)) {
+            return true;
+        }
+        
+        if (lowerGenericName.contains(lowerAllergen)) {
+            return true;
+        }
+        
+        String allergenBase = lowerAllergen.replace("类", "").replace("素", "");
+        if (lowerGenericName.startsWith(allergenBase) || lowerDrugName.startsWith(allergenBase)) {
+            return true;
+        }
+        
+        return false;
     }
 
     private void validateSpecialPopulation(Patient patient, List<Drug> drugs, 
@@ -257,7 +311,10 @@ public class PrescriptionValidationService {
                     maxAllowedDose = drug.getMaxSingleDose().multiply(rule.getDoseRatio());
                 }
 
-                if (item.getSingleDose().setScale(4, RoundingMode.HALF_UP).compareTo(maxAllowedDose) > 0) {
+                BigDecimal normalizedPrescriptionDose = convertToStandardUnit(item.getSingleDose(), item.getDoseUnit());
+                BigDecimal normalizedMaxDose = convertToStandardUnit(maxAllowedDose, drug.getDoseUnit());
+
+                if (normalizedPrescriptionDose.setScale(4, RoundingMode.HALF_UP).compareTo(normalizedMaxDose) > 0) {
                     validations.add(ValidationResult.builder()
                             .validationType("CHILD_DOSAGE")
                             .message(String.format("儿童患者[%s]（%s）超剂量用药。药品[%s]处方剂量: %s%s，年龄段建议最大剂量: %s%s",
@@ -283,7 +340,10 @@ public class PrescriptionValidationService {
 
             BigDecimal elderlyMaxDose = drug.getMaxSingleDose().multiply(new BigDecimal("0.75"));
             
-            if (item.getSingleDose().setScale(4, RoundingMode.HALF_UP).compareTo(elderlyMaxDose) > 0) {
+            BigDecimal normalizedPrescriptionDose = convertToStandardUnit(item.getSingleDose(), item.getDoseUnit());
+            BigDecimal normalizedElderlyMaxDose = convertToStandardUnit(elderlyMaxDose, drug.getDoseUnit());
+            
+            if (normalizedPrescriptionDose.setScale(4, RoundingMode.HALF_UP).compareTo(normalizedElderlyMaxDose) > 0) {
                 validations.add(ValidationResult.builder()
                         .validationType("ELDERLY_DOSAGE")
                         .message(String.format("老年患者[%s]（%d岁）用药需注意肝肾功能减退。药品[%s]处方剂量: %s%s，建议老年人剂量: %s%s以下",
@@ -334,5 +394,30 @@ public class PrescriptionValidationService {
                     .suggestion("请确保有第二位医师/药师签字确认")
                     .build());
         }
+    }
+
+    private String extractGenericName(String drugName) {
+        String[] dosageForms = {
+            "肠溶片", "缓释片", "控释片", "分散片", "咀嚼片", "泡腾片", "舌下片",
+            "缓释胶囊", "控释胶囊", "肠溶胶囊", "注射液", "注射用",
+            "片", "胶囊", "糖浆", "栓剂", "软膏", "粉剂", "滴剂", "颗粒剂", "口服溶液"
+        };
+        
+        String[] saltsAndAcids = {
+            "盐酸", "硫酸", "磷酸", "醋酸", "马来酸", "富马酸", "苯磺酸", "甲磺酸",
+            "钠", "钾", "钙", "镁", "氯", "枸橼酸", "酒石酸"
+        };
+        
+        String genericName = drugName;
+        
+        for (String form : dosageForms) {
+            genericName = genericName.replace(form, "");
+        }
+        
+        for (String salt : saltsAndAcids) {
+            genericName = genericName.replace(salt, "");
+        }
+        
+        return genericName.trim();
     }
 }

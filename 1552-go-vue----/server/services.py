@@ -1,481 +1,283 @@
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
-
-from server.models import (
-    AgentService,
-    StageHistory,
-    Berth,
-    BerthApplication,
-    Supply,
-    WasteRecovery,
-    Todo,
-    FeeSettlement,
-)
-from server.schemas import (
-    AgentServiceCreate,
-    AgentServiceUpdate,
-    BerthCreate,
-    BerthApplicationCreate,
-    SupplyCreate,
-    WasteRecoveryCreate,
-    TodoCreate,
-    FeeSettlementCreate,
-)
-from server.enums import (
-    AgentServiceStage,
-    StageStatus,
-    BerthStatus,
-    BerthApplicationStatus,
-    SupplyType,
-    SupplyStatus,
-    WasteStatus,
-    TodoStatus,
-    SettlementStatus,
+from . import models, schemas
+from .config import (
+    FUEL_PRICE_PER_TON,
+    WATER_PRICE_PER_TON,
+    WASTE_PRICE_PER_KG,
+    WASTE_DISCOUNT_THRESHOLD_KG,
+    WASTE_DISCOUNT_RATE,
+    WAIT_TIMEOUT_HOURS
 )
 
 
-STAGE_ORDER = [
-    AgentServiceStage.ORDER_RECEIVED.value,
-    AgentServiceStage.DECLARATION.value,
-    AgentServiceStage.BERTHING_ARRANGEMENT.value,
-    AgentServiceStage.OPERATION_EXECUTION.value,
-    AgentServiceStage.FEE_SETTLEMENT.value,
-    AgentServiceStage.DEPARTURE_CONFIRMED.value,
-]
+STATUS_TRANSITIONS = {
+    models.AgentServiceStatus.ACCEPTED: [models.AgentServiceStatus.DECLARED],
+    models.AgentServiceStatus.DECLARED: [models.AgentServiceStatus.BERTHING_ARRANGED],
+    models.AgentServiceStatus.BERTHING_ARRANGED: [models.AgentServiceStatus.OPERATION_EXECUTED],
+    models.AgentServiceStatus.OPERATION_EXECUTED: [models.AgentServiceStatus.SETTLED],
+    models.AgentServiceStatus.SETTLED: [models.AgentServiceStatus.DEPARTURE_CONFIRMED],
+    models.AgentServiceStatus.DEPARTURE_CONFIRMED: [],
+}
 
 
-def _get_stage_index(stage: str) -> int:
-    try:
-        return STAGE_ORDER.index(stage)
-    except ValueError:
-        raise HTTPException(status_code=400, detail=f"Invalid stage: {stage}")
+def can_transition(current: models.AgentServiceStatus, target: models.AgentServiceStatus) -> bool:
+    return target in STATUS_TRANSITIONS.get(current, [])
 
 
-def create_agent_service(db: Session, service_in: AgentServiceCreate) -> AgentService:
-    db_service = AgentService(
-        ship_name=service_in.ship_name,
-        imo_number=service_in.imo_number,
-        captain_name=service_in.captain_name,
-        arrival_time=service_in.arrival_time,
-        current_stage=AgentServiceStage.ORDER_RECEIVED.value,
+def create_agent_service(db: Session, service: schemas.AgentServiceCreate) -> models.AgentService:
+    db_service = models.AgentService(
+        ship_name=service.ship_name,
+        imo_number=service.imo_number,
+        port_of_call=service.port_of_call,
+        arrival_time=service.arrival_time,
+        estimated_departure_time=service.estimated_departure_time,
+        agency_fee=service.agency_fee,
+        notes=service.notes,
+        status=models.AgentServiceStatus.ACCEPTED,
     )
     db.add(db_service)
     db.commit()
     db.refresh(db_service)
-
-    for stage in STAGE_ORDER:
-        db_stage = StageHistory(
-            agent_service_id=db_service.id,
-            stage=stage,
-            status=StageStatus.PENDING.value if stage != AgentServiceStage.ORDER_RECEIVED.value else StageStatus.COMPLETED.value,
-            completed_at=datetime.now() if stage == AgentServiceStage.ORDER_RECEIVED.value else None,
-        )
-        db.add(db_stage)
-
-    db.commit()
-    db.refresh(db_service)
     return db_service
 
 
-def get_agent_services(db: Session, skip: int = 0, limit: int = 100) -> List[AgentService]:
-    return db.query(AgentService).offset(skip).limit(limit).all()
-
-
-def get_agent_service(db: Session, service_id: int) -> Optional[AgentService]:
-    return db.query(AgentService).filter(AgentService.id == service_id).first()
-
-
-def update_agent_service(db: Session, service_id: int, service_in: AgentServiceUpdate) -> Optional[AgentService]:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        return None
-
-    update_data = service_in.dict(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(db_service, key, value)
-
-    db.commit()
-    db.refresh(db_service)
-    return db_service
-
-
-def advance_stage(db: Session, service_id: int, notes: Optional[str] = None) -> AgentService:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    current_index = _get_stage_index(db_service.current_stage)
-
-    if current_index >= len(STAGE_ORDER) - 1:
-        raise HTTPException(status_code=400, detail="Already in final stage")
-
-    if db_service.current_stage == AgentServiceStage.ORDER_RECEIVED.value:
-        _validate_order_received_stage(db, db_service)
-    elif db_service.current_stage == AgentServiceStage.DECLARATION.value:
-        _validate_declaration_stage(db, db_service)
-    elif db_service.current_stage == AgentServiceStage.BERTHING_ARRANGEMENT.value:
-        _validate_berthing_stage(db, db_service)
-    elif db_service.current_stage == AgentServiceStage.OPERATION_EXECUTION.value:
-        _validate_operation_stage(db, db_service)
-    elif db_service.current_stage == AgentServiceStage.FEE_SETTLEMENT.value:
-        _validate_fee_settlement_stage(db, db_service)
-
-    next_stage = STAGE_ORDER[current_index + 1]
-    db_service.current_stage = next_stage
-
-    db_stage = db.query(StageHistory).filter(
-        StageHistory.agent_service_id == service_id,
-        StageHistory.stage == next_stage,
-    ).first()
-
-    if db_stage:
-        db_stage.status = StageStatus.COMPLETED.value
-        db_stage.completed_at = datetime.now()
-        if notes:
-            db_stage.notes = notes
-
-    db.commit()
-    db.refresh(db_service)
-    return db_service
-
-
-def _validate_order_received_stage(db: Session, service: AgentService):
-    pass
-
-
-def _validate_declaration_stage(db: Session, service: AgentService):
-    pass
-
-
-def _validate_berthing_stage(db: Session, service: AgentService):
-    if not service.berth_application:
+def transition_status(db: Session, service_id: int, target: models.AgentServiceStatus) -> models.AgentService:
+    service = db.query(models.AgentService).filter(models.AgentService.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    if not can_transition(service.status, target):
         raise HTTPException(
             status_code=400,
-            detail="No berth application found. Please submit a berth application first."
+            detail=f"无法从状态 {service.status.value} 转换到 {target.value}"
         )
-    if service.berth_application.status != BerthApplicationStatus.APPROVED.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Berth application must be approved before advancing from berthing arrangement stage."
-        )
+    
+    if target == models.AgentServiceStatus.BERTHING_ARRANGED:
+        if not service.berthing_request or service.berthing_request.status != models.BerthingRequestStatus.ASSIGNED:
+            raise HTTPException(status_code=400, detail="靠泊安排未完成，无法进入下一环节")
+    
+    if target == models.AgentServiceStatus.SETTLED:
+        pass
+    
+    if target == models.AgentServiceStatus.DEPARTURE_CONFIRMED:
+        _validate_departure_conditions(db, service)
+    
+    service.status = target
+    db.commit()
+    db.refresh(service)
+    return service
 
 
-def _validate_operation_stage(db: Session, service: AgentService):
-    pass
-
-
-def _validate_fee_settlement_stage(db: Session, service: AgentService):
-    pending_todos = db.query(Todo).filter(
-        Todo.agent_service_id == service.id,
-        Todo.status == TodoStatus.PENDING.value,
+def _validate_departure_conditions(db: Session, service: models.AgentService):
+    pending_deliveries = db.query(models.MaterialDelivery).filter(
+        models.MaterialDelivery.agent_service_id == service.id,
+        models.MaterialDelivery.status == models.DeliveryStatus.PENDING
     ).count()
-    if pending_todos > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"There are {pending_todos} pending todos. All todos must be completed before fee settlement."
-        )
-
-
-def validate_departure_preconditions(db: Session, service_id: int) -> dict:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    pending_supplies = db.query(Supply).filter(
-        Supply.agent_service_id == service_id,
-        Supply.status == SupplyStatus.SCHEDULED.value,
+    
+    pending_waste = db.query(models.WasteCollection).filter(
+        models.WasteCollection.agent_service_id == service.id,
+        models.WasteCollection.status == models.WasteCollectionStatus.PENDING
     ).count()
-
-    if pending_supplies > 0:
-        raise HTTPException(
-            status_code=400,
-            detail=f"There are {pending_supplies} supplies that have not been delivered. All supplies must be delivered before departure."
-        )
-
-    if db_service.waste_recovery:
-        if db_service.waste_recovery.status != WasteStatus.COMPLETED.value:
-            raise HTTPException(
-                status_code=400,
-                detail="Waste recovery must be completed before departure."
-            )
-
-    return {"status": "ready", "message": "All preconditions met for departure confirmation"}
+    
+    if pending_deliveries > 0:
+        raise HTTPException(status_code=400, detail="还有物料补给未交付，无法确认离港")
+    if pending_waste > 0:
+        raise HTTPException(status_code=400, detail="还有垃圾回收未完成，无法确认离港")
 
 
-def create_berth(db: Session, berth_in: BerthCreate) -> Berth:
-    existing = db.query(Berth).filter(Berth.berth_number == berth_in.berth_number).first()
+def create_berth(db: Session, berth: schemas.BerthCreate) -> models.Berth:
+    existing = db.query(models.Berth).filter(models.Berth.name == berth.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="Berth number already exists")
-
-    db_berth = Berth(
-        berth_number=berth_in.berth_number,
-        capacity=berth_in.capacity,
-        status=BerthStatus.AVAILABLE.value,
-    )
+        raise HTTPException(status_code=400, detail="泊位名称已存在")
+    db_berth = models.Berth(**berth.model_dump())
     db.add(db_berth)
     db.commit()
     db.refresh(db_berth)
     return db_berth
 
 
-def get_berths(db: Session, skip: int = 0, limit: int = 100) -> List[Berth]:
-    return db.query(Berth).offset(skip).limit(limit).all()
-
-
-def create_berth_application(
-    db: Session,
-    service_id: int,
-    app_in: BerthApplicationCreate,
-) -> BerthApplication:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    if db_service.current_stage != AgentServiceStage.DECLARATION.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Berth application can only be submitted during the declaration stage."
-        )
-
-    if app_in.requested_berthing_time <= datetime.now():
-        raise HTTPException(
-            status_code=400,
-            detail="Requested berthing time must be in the future."
-        )
-
-    if app_in.expected_duration_hours < 2 or app_in.expected_duration_hours > 72:
-        raise HTTPException(
-            status_code=400,
-            detail="Expected berthing duration must be between 2 and 72 hours."
-        )
-
-    if db_service.berth_application:
-        raise HTTPException(
-            status_code=400,
-            detail="A berth application already exists for this service."
-        )
-
-    time_diff = app_in.requested_berthing_time - db_service.arrival_time
-    is_waiting_timeout = time_diff.total_seconds() > 24 * 3600
-
-    db_app = BerthApplication(
-        agent_service_id=service_id,
-        requested_berthing_time=app_in.requested_berthing_time,
-        expected_duration_hours=app_in.expected_duration_hours,
-        berth_preference=app_in.berth_preference,
-        status=BerthApplicationStatus.PENDING.value,
-        is_waiting_timeout=is_waiting_timeout,
+def create_berthing_request(db: Session, req: schemas.BerthingRequestCreate) -> models.BerthingRequest:
+    service = db.query(models.AgentService).filter(models.AgentService.id == req.agent_service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    if service.berthing_request:
+        raise HTTPException(status_code=400, detail="该代理服务已有靠泊申请")
+    
+    if req.requested_berthing_time <= datetime.utcnow():
+        raise HTTPException(status_code=400, detail="申请靠泊时间必须是未来时间")
+    
+    if not (2 <= req.estimated_duration_hours <= 72):
+        raise HTTPException(status_code=400, detail="预计靠泊时长必须在2到72小时之间")
+    
+    db_req = models.BerthingRequest(
+        agent_service_id=req.agent_service_id,
+        requested_berthing_time=req.requested_berthing_time,
+        estimated_duration_hours=req.estimated_duration_hours,
+        berth_preference=req.berth_preference,
+        status=models.BerthingRequestStatus.PENDING,
     )
-    db.add(db_app)
+    db.add(db_req)
     db.commit()
-    db.refresh(db_app)
-    return db_app
+    db.refresh(db_req)
+    return db_req
 
 
-def get_berth_application(db: Session, service_id: int) -> Optional[BerthApplication]:
-    return db.query(BerthApplication).filter(BerthApplication.agent_service_id == service_id).first()
-
-
-def approve_berth_application(
-    db: Session,
-    service_id: int,
-    approved: bool,
-    notes: Optional[str] = None,
-) -> BerthApplication:
-    db_app = get_berth_application(db, service_id)
-    if not db_app:
-        raise HTTPException(status_code=404, detail="Berth application not found")
-
-    if db_app.status != BerthApplicationStatus.PENDING.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Application has already been processed."
-        )
-
-    if approved:
-        available_berth = None
-        if db_app.berth_preference:
-            available_berth = db.query(Berth).filter(
-                Berth.berth_number == db_app.berth_preference,
-                Berth.status == BerthStatus.AVAILABLE.value,
-            ).first()
-
-        if not available_berth:
-            available_berth = db.query(Berth).filter(
-                Berth.status == BerthStatus.AVAILABLE.value,
-            ).first()
-
-        if not available_berth:
-            raise HTTPException(
-                status_code=400,
-                detail="No available berths to assign. Please add more berths first."
-            )
-
-        db_app.assigned_berth_id = available_berth.id
-        available_berth.status = BerthStatus.OCCUPIED.value
-        db_app.assigned_berth_time = datetime.now()
-        db_app.approved_at = datetime.now()
-        db_app.status = BerthApplicationStatus.APPROVED.value
-    else:
-        db_app.status = BerthApplicationStatus.REJECTED.value
-
+def approve_berthing_request(db: Session, request_id: int, data: schemas.BerthingRequestApprove) -> models.BerthingRequest:
+    req = db.query(models.BerthingRequest).filter(models.BerthingRequest.id == request_id).first()
+    if not req:
+        raise HTTPException(status_code=404, detail="靠泊申请不存在")
+    
+    if req.status != models.BerthingRequestStatus.PENDING:
+        raise HTTPException(status_code=400, detail="靠泊申请状态不允许审批")
+    
+    req.status = models.BerthingRequestStatus.APPROVED
+    req.approved_by = data.approved_by
+    req.approval_time = datetime.utcnow()
+    
+    time_diff = req.requested_berthing_time - req.agent_service.arrival_time
+    if time_diff.total_seconds() > WAIT_TIMEOUT_HOURS * 3600:
+        req.is_timeout = True
+    
+    if data.auto_assign_berth:
+        assigned_berth = _auto_assign_berth(db, req)
+        if assigned_berth:
+            req.assigned_berth_id = assigned_berth.id
+            req.actual_berthing_time = req.requested_berthing_time
+            req.status = models.BerthingRequestStatus.ASSIGNED
+            assigned_berth.is_available = False
+    
     db.commit()
-    db.refresh(db_app)
-    return db_app
+    db.refresh(req)
+    return req
 
 
-def create_supply(db: Session, service_id: int, supply_in: SupplyCreate) -> Supply:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
+def _auto_assign_berth(db: Session, req: models.BerthingRequest) -> Optional[models.Berth]:
+    preferred = None
+    if req.berth_preference:
+        preferred = db.query(models.Berth).filter(
+            models.Berth.name == req.berth_preference,
+            models.Berth.is_available == True
+        ).first()
+    
+    if preferred:
+        return preferred
+    
+    return db.query(models.Berth).filter(models.Berth.is_available == True).first()
 
-    existing_supplies = db.query(Supply).filter(
-        Supply.agent_service_id == service_id,
-        Supply.status != SupplyStatus.CANCELLED.value,
+
+def create_material_delivery(db: Session, delivery: schemas.MaterialDeliveryCreate) -> models.MaterialDelivery:
+    service = db.query(models.AgentService).filter(models.AgentService.id == delivery.agent_service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    existing_deliveries = db.query(models.MaterialDelivery).filter(
+        models.MaterialDelivery.agent_service_id == delivery.agent_service_id
     ).all()
-
-    if supply_in.supply_type == SupplyType.FUEL.value:
-        has_fresh_water = any(s.supply_type == SupplyType.FRESH_WATER.value for s in existing_supplies)
-        if has_fresh_water:
-            raise HTTPException(
-                status_code=400,
-                detail="Fuel and fresh water cannot be delivered together. Please cancel fresh water supply first."
-            )
-    elif supply_in.supply_type == SupplyType.FRESH_WATER.value:
-        has_fuel = any(s.supply_type == SupplyType.FUEL.value for s in existing_supplies)
-        if has_fuel:
-            raise HTTPException(
-                status_code=400,
-                detail="Fuel and fresh water cannot be delivered together. Please cancel fuel supply first."
-            )
-
-    total_price = supply_in.quantity * supply_in.unit_price
-
-    db_supply = Supply(
-        agent_service_id=service_id,
-        supply_type=supply_in.supply_type,
-        quantity=supply_in.quantity,
-        unit_price=supply_in.unit_price,
+    
+    existing_types = {d.material_type for d in existing_deliveries}
+    if delivery.material_type == models.MaterialType.FUEL and models.MaterialType.FRESH_WATER in existing_types:
+        raise HTTPException(status_code=400, detail="已安排淡水配送，不能同时安排燃油配送")
+    if delivery.material_type == models.MaterialType.FRESH_WATER and models.MaterialType.FUEL in existing_types:
+        raise HTTPException(status_code=400, detail="已安排燃油配送，不能同时安排淡水配送")
+    
+    unit_price = FUEL_PRICE_PER_TON if delivery.material_type == models.MaterialType.FUEL else WATER_PRICE_PER_TON
+    total_price = delivery.quantity_tons * unit_price
+    
+    db_delivery = models.MaterialDelivery(
+        agent_service_id=delivery.agent_service_id,
+        material_type=delivery.material_type,
+        quantity_tons=delivery.quantity_tons,
+        unit_price=unit_price,
         total_price=total_price,
-        scheduled_time=supply_in.scheduled_time,
-        status=SupplyStatus.SCHEDULED.value,
-        notes=supply_in.notes,
+        status=models.DeliveryStatus.PENDING,
+        notes=delivery.notes,
     )
-    db.add(db_supply)
+    db.add(db_delivery)
     db.commit()
-    db.refresh(db_supply)
-    return db_supply
+    db.refresh(db_delivery)
+    return db_delivery
 
 
-def get_supplies(db: Session, service_id: int) -> List[Supply]:
-    return db.query(Supply).filter(Supply.agent_service_id == service_id).all()
-
-
-def deliver_supply(db: Session, supply_id: int) -> Supply:
-    db_supply = db.query(Supply).filter(Supply.id == supply_id).first()
-    if not db_supply:
-        raise HTTPException(status_code=404, detail="Supply not found")
-
-    if db_supply.status != SupplyStatus.SCHEDULED.value:
-        raise HTTPException(status_code=400, detail="Only scheduled supplies can be delivered")
-
-    db_supply.status = SupplyStatus.DELIVERED.value
-    db_supply.delivered_at = datetime.now()
+def complete_material_delivery(db: Session, delivery_id: int) -> models.MaterialDelivery:
+    delivery = db.query(models.MaterialDelivery).filter(models.MaterialDelivery.id == delivery_id).first()
+    if not delivery:
+        raise HTTPException(status_code=404, detail="物料配送不存在")
+    
+    if delivery.status == models.DeliveryStatus.DELIVERED:
+        raise HTTPException(status_code=400, detail="物料配送已完成")
+    
+    delivery.status = models.DeliveryStatus.DELIVERED
+    delivery.delivery_time = datetime.utcnow()
     db.commit()
-    db.refresh(db_supply)
-    return db_supply
+    db.refresh(delivery)
+    return delivery
 
 
-def cancel_supply(db: Session, supply_id: int) -> Supply:
-    db_supply = db.query(Supply).filter(Supply.id == supply_id).first()
-    if not db_supply:
-        raise HTTPException(status_code=404, detail="Supply not found")
-
-    if db_supply.status != SupplyStatus.SCHEDULED.value:
-        raise HTTPException(status_code=400, detail="Only scheduled supplies can be cancelled")
-
-    db_supply.status = SupplyStatus.CANCELLED.value
-    db.commit()
-    db.refresh(db_supply)
-    return db_supply
-
-
-def create_waste_recovery(db: Session, service_id: int, waste_in: WasteRecoveryCreate) -> WasteRecovery:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    if db_service.waste_recovery:
-        raise HTTPException(
-            status_code=400,
-            detail="A waste recovery record already exists for this service."
-        )
-
-    base_fee = 0
-    discounted_weight = 0
-    discounted_unit_price = 0
-
-    if waste_in.total_weight_kg <= 500:
-        base_fee = waste_in.total_weight_kg * waste_in.unit_price_per_kg
+def calculate_waste_fee(weight_kg: float) -> tuple:
+    if weight_kg <= WASTE_DISCOUNT_THRESHOLD_KG:
+        total = weight_kg * WASTE_PRICE_PER_KG
+        return WASTE_PRICE_PER_KG, total
     else:
-        normal_weight = 500
-        normal_fee = normal_weight * waste_in.unit_price_per_kg
-        discounted_weight = waste_in.total_weight_kg - 500
-        discounted_unit_price = waste_in.unit_price_per_kg * 0.8
-        base_fee = normal_fee + (discounted_weight * discounted_unit_price)
+        normal_amount = WASTE_DISCOUNT_THRESHOLD_KG * WASTE_PRICE_PER_KG
+        excess = weight_kg - WASTE_DISCOUNT_THRESHOLD_KG
+        excess_amount = excess * WASTE_PRICE_PER_KG * WASTE_DISCOUNT_RATE
+        total = normal_amount + excess_amount
+        effective_unit = total / weight_kg
+        return effective_unit, total
 
-    db_waste = WasteRecovery(
-        agent_service_id=service_id,
-        total_weight_kg=waste_in.total_weight_kg,
-        unit_price_per_kg=waste_in.unit_price_per_kg,
-        discounted_weight_kg=discounted_weight if discounted_weight > 0 else None,
-        discounted_unit_price=discounted_unit_price if discounted_unit_price > 0 else None,
-        total_fee=base_fee,
-        scheduled_time=waste_in.scheduled_time,
-        status=WasteStatus.SCHEDULED.value,
-        notes=waste_in.notes,
+
+def create_waste_collection(db: Session, collection: schemas.WasteCollectionCreate) -> models.WasteCollection:
+    service = db.query(models.AgentService).filter(models.AgentService.id == collection.agent_service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    unit_price, total_price = calculate_waste_fee(collection.weight_kg)
+    
+    db_collection = models.WasteCollection(
+        agent_service_id=collection.agent_service_id,
+        waste_type=collection.waste_type,
+        weight_kg=collection.weight_kg,
+        unit_price=unit_price,
+        total_price=total_price,
+        status=models.WasteCollectionStatus.PENDING,
+        notes=collection.notes,
     )
-    db.add(db_waste)
+    db.add(db_collection)
     db.commit()
-    db.refresh(db_waste)
-    return db_waste
+    db.refresh(db_collection)
+    return db_collection
 
 
-def get_waste_recovery(db: Session, service_id: int) -> Optional[WasteRecovery]:
-    return db.query(WasteRecovery).filter(WasteRecovery.agent_service_id == service_id).first()
-
-
-def complete_waste_recovery(db: Session, service_id: int) -> WasteRecovery:
-    db_waste = get_waste_recovery(db, service_id)
-    if not db_waste:
-        raise HTTPException(status_code=404, detail="Waste recovery record not found")
-
-    if db_waste.status != WasteStatus.SCHEDULED.value:
-        raise HTTPException(status_code=400, detail="Only scheduled waste recovery can be completed")
-
-    db_waste.status = WasteStatus.COMPLETED.value
-    db_waste.completed_at = datetime.now()
+def complete_waste_collection(db: Session, collection_id: int) -> models.WasteCollection:
+    collection = db.query(models.WasteCollection).filter(models.WasteCollection.id == collection_id).first()
+    if not collection:
+        raise HTTPException(status_code=404, detail="垃圾回收不存在")
+    
+    if collection.status == models.WasteCollectionStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="垃圾回收已完成")
+    
+    collection.status = models.WasteCollectionStatus.COMPLETED
+    collection.collection_time = datetime.utcnow()
     db.commit()
-    db.refresh(db_waste)
-    return db_waste
+    db.refresh(collection)
+    return collection
 
 
-def create_todo(db: Session, service_id: int, todo_in: TodoCreate) -> Todo:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    existing_count = db.query(Todo).filter(Todo.agent_service_id == service_id).count()
-
-    db_todo = Todo(
-        agent_service_id=service_id,
-        title=todo_in.title,
-        description=todo_in.description,
-        due_time=todo_in.due_time,
-        status=TodoStatus.PENDING.value,
-        sequence=existing_count + 1,
+def create_todo(db: Session, todo: schemas.TodoCreate) -> models.Todo:
+    service = db.query(models.AgentService).filter(models.AgentService.id == todo.agent_service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    db_todo = models.Todo(
+        agent_service_id=todo.agent_service_id,
+        title=todo.title,
+        description=todo.description,
+        due_time=todo.due_time,
+        status=models.TodoStatus.PENDING,
     )
     db.add(db_todo)
     db.commit()
@@ -483,147 +285,84 @@ def create_todo(db: Session, service_id: int, todo_in: TodoCreate) -> Todo:
     return db_todo
 
 
-def get_todos(db: Session, service_id: int) -> List[Todo]:
-    return db.query(Todo).filter(
-        Todo.agent_service_id == service_id
-    ).order_by(Todo.due_time, Todo.id).all()
-
-
-def complete_todo(db: Session, todo_id: int) -> Todo:
-    db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
-    if not db_todo:
-        raise HTTPException(status_code=404, detail="Todo not found")
-
-    if db_todo.status == TodoStatus.COMPLETED.value:
-        return db_todo
-
-    pending_earlier = db.query(Todo).filter(
-        Todo.agent_service_id == db_todo.agent_service_id,
-        Todo.status == TodoStatus.PENDING.value,
-        Todo.due_time < db_todo.due_time,
-    ).count()
-
-    if pending_earlier > 0:
-        raise HTTPException(
-            status_code=400,
-            detail="Earlier todos must be completed first. Please complete pending todos with earlier due times."
-        )
-
-    db_todo.status = TodoStatus.COMPLETED.value
-    db_todo.completed_at = datetime.now()
+def complete_todo(db: Session, todo_id: int) -> models.Todo:
+    todo = db.query(models.Todo).filter(models.Todo.id == todo_id).first()
+    if not todo:
+        raise HTTPException(status_code=404, detail="待办事项不存在")
+    
+    if todo.status == models.TodoStatus.COMPLETED:
+        raise HTTPException(status_code=400, detail="待办事项已完成")
+    
+    service = todo.agent_service
+    pending_todos = [t for t in service.todos if t.status == models.TodoStatus.PENDING]
+    
+    if pending_todos and pending_todos[0].id != todo.id:
+        raise HTTPException(status_code=400, detail="请先完成更早的待办事项")
+    
+    todo.status = models.TodoStatus.COMPLETED
+    todo.completed_time = datetime.utcnow()
     db.commit()
-    db.refresh(db_todo)
-    return db_todo
+    db.refresh(todo)
+    return todo
 
 
-def create_fee_settlement(db: Session, service_id: int, fee_in: FeeSettlementCreate) -> FeeSettlement:
-    db_service = get_agent_service(db, service_id)
-    if not db_service:
-        raise HTTPException(status_code=404, detail="Agent service not found")
-
-    if db_service.fee_settlement:
-        raise HTTPException(
-            status_code=400,
-            detail="A fee settlement already exists for this service."
-        )
-
-    supplies_fee = db.query(Supply).filter(
-        Supply.agent_service_id == service_id,
-        Supply.status == SupplyStatus.DELIVERED.value,
-    ).all()
-
-    total_supplies_fee = sum(s.total_price for s in supplies_fee)
-
-    waste_fee = 0
-    if db_service.waste_recovery:
-        waste_fee = db_service.waste_recovery.total_fee
-
-    total_amount = fee_in.agent_fee + total_supplies_fee + waste_fee + fee_in.other_fees
-    final_amount = total_amount
-
-    db_fee = FeeSettlement(
-        agent_service_id=service_id,
-        agent_fee=fee_in.agent_fee,
-        supplies_fee=total_supplies_fee,
-        waste_recovery_fee=waste_fee,
-        other_fees=fee_in.other_fees,
+def create_settlement(db: Session, settlement: schemas.SettlementCreate) -> models.Settlement:
+    service = db.query(models.AgentService).filter(models.AgentService.id == settlement.agent_service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    if service.status != models.AgentServiceStatus.OPERATION_EXECUTED:
+        raise HTTPException(status_code=400, detail="只有作业执行完成后才能进行费用结算")
+    
+    material_fee = sum(
+        d.total_price for d in service.material_deliveries
+        if d.status == models.DeliveryStatus.DELIVERED
+    ) if service.material_deliveries else 0
+    
+    waste_fee = sum(
+        w.total_price for w in service.waste_collections
+        if w.status == models.WasteCollectionStatus.COMPLETED
+    ) if service.waste_collections else 0
+    
+    agency_fee = service.agency_fee
+    total_amount = agency_fee + material_fee + waste_fee
+    
+    db_settlement = models.Settlement(
+        agent_service_id=settlement.agent_service_id,
+        agency_fee=agency_fee,
+        material_fee=material_fee,
+        waste_fee=waste_fee,
         total_amount=total_amount,
-        final_amount=final_amount,
-        status=SettlementStatus.PENDING.value,
-        notes=fee_in.notes,
+        settlement_time=datetime.utcnow(),
+        notes=settlement.notes,
     )
-    db.add(db_fee)
+    db.add(db_settlement)
+    
+    service.material_fee = material_fee
+    service.waste_fee = waste_fee
+    service.total_fee = total_amount
+    service.status = models.AgentServiceStatus.SETTLED
+    
     db.commit()
-    db.refresh(db_fee)
-    return db_fee
+    db.refresh(db_settlement)
+    db.refresh(service)
+    return db_settlement
 
 
-def get_fee_settlement(db: Session, service_id: int) -> Optional[FeeSettlement]:
-    return db.query(FeeSettlement).filter(FeeSettlement.agent_service_id == service_id).first()
-
-
-def settle_fee(db: Session, service_id: int) -> FeeSettlement:
-    db_fee = get_fee_settlement(db, service_id)
-    if not db_fee:
-        raise HTTPException(status_code=404, detail="Fee settlement not found")
-
-    if db_fee.status == SettlementStatus.SETTLED.value:
-        return db_fee
-
-    supplies_fee = db.query(Supply).filter(
-        Supply.agent_service_id == service_id,
-        Supply.status == SupplyStatus.DELIVERED.value,
-    ).all()
-
-    total_supplies_fee = sum(s.total_price for s in supplies_fee)
-
-    waste_fee = 0
-    db_service = db_fee.agent_service
-    if db_service and db_service.waste_recovery:
-        waste_fee = db_service.waste_recovery.total_fee
-
-    db_fee.supplies_fee = total_supplies_fee
-    db_fee.waste_recovery_fee = waste_fee
-    db_fee.total_amount = db_fee.agent_fee + total_supplies_fee + waste_fee + db_fee.other_fees
-    db_fee.final_amount = db_fee.total_amount - total_supplies_fee - waste_fee
-    db_fee.status = SettlementStatus.SETTLED.value
-    db_fee.settled_at = datetime.now()
-
+def confirm_departure(db: Session, service_id: int) -> models.AgentService:
+    service = db.query(models.AgentService).filter(models.AgentService.id == service_id).first()
+    if not service:
+        raise HTTPException(status_code=404, detail="代理服务不存在")
+    
+    if service.status != models.AgentServiceStatus.SETTLED:
+        raise HTTPException(status_code=400, detail="只有费用结算完成后才能确认离港")
+    
+    _validate_departure_conditions(db, service)
+    
+    service.status = models.AgentServiceStatus.DEPARTURE_CONFIRMED
+    if service.berthing_request and service.berthing_request.assigned_berth:
+        service.berthing_request.assigned_berth.is_available = True
+    
     db.commit()
-    db.refresh(db_fee)
-    return db_fee
-
-
-def confirm_departure(db: Session, service_id: int, notes: Optional[str] = None) -> AgentService:
-    validate_departure_preconditions(db, service_id)
-
-    db_service = get_agent_service(db, service_id)
-
-    if db_service.current_stage != AgentServiceStage.FEE_SETTLEMENT.value:
-        raise HTTPException(
-            status_code=400,
-            detail="Departure can only be confirmed from fee settlement stage."
-        )
-
-    settle_fee(db, service_id)
-
-    db_service.current_stage = AgentServiceStage.DEPARTURE_CONFIRMED.value
-    db_service.departure_time = datetime.now()
-
-    if db_service.berth_application and db_service.berth_application.assigned_berth:
-        db_service.berth_application.assigned_berth.status = BerthStatus.AVAILABLE.value
-
-    db_stage = db.query(StageHistory).filter(
-        StageHistory.agent_service_id == service_id,
-        StageHistory.stage == AgentServiceStage.DEPARTURE_CONFIRMED.value,
-    ).first()
-
-    if db_stage:
-        db_stage.status = StageStatus.COMPLETED.value
-        db_stage.completed_at = datetime.now()
-        if notes:
-            db_stage.notes = notes
-
-    db.commit()
-    db.refresh(db_service)
-    return db_service
+    db.refresh(service)
+    return service

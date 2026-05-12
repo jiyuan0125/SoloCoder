@@ -37,12 +37,15 @@ public class Prescription {
     private String department;
     
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "item_order")
     private List<PrescriptionItem> items = new ArrayList<>();
     
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "validation_order")
     private List<PrescriptionValidation> validations = new ArrayList<>();
     
     @OneToMany(mappedBy = "prescription", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "signature_order")
     private List<PrescriptionSignature> signatures = new ArrayList<>();
     
     private boolean isOverDose;

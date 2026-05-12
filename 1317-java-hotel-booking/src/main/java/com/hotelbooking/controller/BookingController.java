@@ -3,9 +3,9 @@ package com.hotelbooking.controller;
 import com.hotelbooking.dto.AvailabilityResponse;
 import com.hotelbooking.dto.BookingCancellationResult;
 import com.hotelbooking.dto.BookingRequest;
+import com.hotelbooking.dto.BookingResponse;
 import com.hotelbooking.dto.PriceCalculationResult;
 import com.hotelbooking.exception.ResourceNotFoundException;
-import com.hotelbooking.model.entity.Booking;
 import com.hotelbooking.model.entity.Customer;
 import com.hotelbooking.model.enums.BookingStatus;
 import com.hotelbooking.service.BookingService;
@@ -55,35 +55,35 @@ public class BookingController {
     }
 
     @PostMapping
-    public ResponseEntity<Booking> createBooking(@Valid @RequestBody BookingRequest request) {
-        Booking booking = bookingService.createBooking(request);
+    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest request) {
+        BookingResponse booking = bookingService.createBooking(request);
         return ResponseEntity.ok(booking);
     }
 
     @GetMapping("/{bookingNumber}")
-    public ResponseEntity<Booking> getBooking(@PathVariable String bookingNumber) {
-        Booking booking = bookingService.findByBookingNumber(bookingNumber)
+    public ResponseEntity<BookingResponse> getBooking(@PathVariable String bookingNumber) {
+        BookingResponse booking = bookingService.findByBookingNumber(bookingNumber)
                 .orElseThrow(() -> new ResourceNotFoundException("预订不存在"));
         return ResponseEntity.ok(booking);
     }
 
     @PutMapping("/{id}/confirm")
-    public ResponseEntity<Booking> confirmBooking(@PathVariable Long id) {
-        Booking booking = bookingService.confirmBooking(id);
+    public ResponseEntity<BookingResponse> confirmBooking(@PathVariable Long id) {
+        BookingResponse booking = bookingService.confirmBooking(id);
         return ResponseEntity.ok(booking);
     }
 
     @PutMapping("/{id}/check-in")
-    public ResponseEntity<Booking> checkIn(@PathVariable Long id) {
-        Booking booking = bookingService.checkIn(id);
+    public ResponseEntity<BookingResponse> checkIn(@PathVariable Long id) {
+        BookingResponse booking = bookingService.checkIn(id);
         return ResponseEntity.ok(booking);
     }
 
     @PutMapping("/{id}/check-out")
-    public ResponseEntity<Booking> checkOut(
+    public ResponseEntity<BookingResponse> checkOut(
             @PathVariable Long id,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate actualCheckOut) {
-        Booking booking = bookingService.checkOut(id, actualCheckOut);
+        BookingResponse booking = bookingService.checkOut(id, actualCheckOut);
         return ResponseEntity.ok(booking);
     }
 
@@ -94,23 +94,23 @@ public class BookingController {
     }
 
     @PutMapping("/{id}/upgrade")
-    public ResponseEntity<Booking> upgradeRoom(
+    public ResponseEntity<BookingResponse> upgradeRoom(
             @PathVariable Long id,
             @RequestParam com.hotelbooking.model.enums.RoomType newRoomType,
             @RequestParam(defaultValue = "false") boolean hotelCaused) {
-        Booking booking = bookingService.upgradeRoom(id, newRoomType, hotelCaused);
+        BookingResponse booking = bookingService.upgradeRoom(id, newRoomType, hotelCaused);
         return ResponseEntity.ok(booking);
     }
 
     @GetMapping("/customer/{customerId}")
-    public ResponseEntity<List<Booking>> getCustomerBookings(@PathVariable Long customerId) {
-        List<Booking> bookings = bookingService.findByCustomerId(customerId);
+    public ResponseEntity<List<BookingResponse>> getCustomerBookings(@PathVariable Long customerId) {
+        List<BookingResponse> bookings = bookingService.findByCustomerId(customerId);
         return ResponseEntity.ok(bookings);
     }
 
     @GetMapping("/status/{status}")
-    public ResponseEntity<List<Booking>> getBookingsByStatus(@PathVariable BookingStatus status) {
-        List<Booking> bookings = bookingService.findByStatus(status);
+    public ResponseEntity<List<BookingResponse>> getBookingsByStatus(@PathVariable BookingStatus status) {
+        List<BookingResponse> bookings = bookingService.findByStatus(status);
         return ResponseEntity.ok(bookings);
     }
 }

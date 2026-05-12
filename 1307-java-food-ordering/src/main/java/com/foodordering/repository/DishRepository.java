@@ -31,6 +31,7 @@ public class DishRepository {
     public List<Dish> findByIsActiveTrue() {
         return dishes.values().stream()
                 .filter(Dish::getIsActive)
+                .filter(dish -> dish.getStock() != null && dish.getStock() > 0)
                 .toList();
     }
     

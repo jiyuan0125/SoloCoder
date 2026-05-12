@@ -62,6 +62,7 @@ func NewSolver(cities []City, config SolverConfig) (*Solver, error) {
 	if seed == 0 {
 		seed = time.Now().UnixNano()
 	}
+	config.RandomSeed = seed
 
 	if config.InitialTemperature <= 0 {
 		config.InitialTemperature = 1000.0
@@ -88,11 +89,8 @@ func NewSolver(cities []City, config SolverConfig) (*Solver, error) {
 }
 
 func (s *Solver) Solve() (*SolverResult, error) {
-	if len(s.cities) <= 1 {
-		return s.handleTrivialCase(0)
-	}
-	if len(s.cities) == 2 {
-		return s.handleTrivialCase(1)
+	if len(s.cities) <= 2 {
+		return s.handleTrivialCase()
 	}
 
 	start := time.Now()
@@ -122,10 +120,10 @@ func (s *Solver) Solve() (*SolverResult, error) {
 			newOrder := s.twoOpt(currentOrder)
 			newDistance := CalculateTotalDistance(s.cities, newOrder)
 
-			if IsSolutionBetter(newDistance, currentDistance) {
+			if IsSolutionBetter(currentDistance, newDistance) {
 				currentOrder = newOrder
 				currentDistance = newDistance
-				if IsSolutionBetter(newDistance, bestDistance) {
+				if IsSolutionBetter(bestDistance, newDistance) {
 					bestOrder = make([]int, len(newOrder))
 					copy(bestOrder, newOrder)
 					bestDistance = newDistance
@@ -204,25 +202,25 @@ func (s *Solver) Stop() {
 	}
 }
 
-func (s *Solver) handleTrivialCase(cityCount int) (*SolverResult, error) {
+func (s *Solver) handleTrivialCase() (*SolverResult, error) {
 	start := time.Now()
-	order := make([]int, cityCount+1)
-	for i := range order {
-		order[i] = i
-		if i == cityCount && cityCount > 0 {
-			order[i] = 0
-		}
-	}
-	if cityCount == 0 {
-		order = []int{0}
-	}
-	totalDistance := CalculateTotalDistance(s.cities, order[:len(s.cities)])
-	if cityCount == 0 {
+	n := len(s.cities)
+	var order []int
+	var totalDistance float64
+
+	if n == 0 {
 		order = []int{}
+		totalDistance = 0.0
+	} else if n == 1 {
+		order = []int{0}
+		totalDistance = 0.0
+	} else {
+		order = []int{0, 1}
+		totalDistance = CalculateTotalDistance(s.cities, order)
 	}
 
 	return &SolverResult{
-		Path:            order[:len(s.cities)],
+		Path:            order,
 		TotalDistance:   totalDistance,
 		Convergence:     []ConvergencePoint{},
 		Duration:        time.Since(start),

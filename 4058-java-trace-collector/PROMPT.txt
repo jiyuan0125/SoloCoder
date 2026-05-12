@@ -1,0 +1,9 @@
+排查微服务调用链太痛苦了，需要一个轻量的链路追踪收集器。Java Netty 写一个高性能的 Trace 收集服务。
+
+每个请求进来时生成 TraceID，经过每个服务时创建 Span 并上报到收集器。Span 包含 trace_id、span_id、parent_span_id、服务名、操作名、开始时间、耗时。TraceID 通过 HTTP header X-Trace-Id 传播，SpanID 通过 X-Span-Id 传播。
+
+收集器接收 Span 后按 TraceID 归组，一棵 Trace 树由多个 Span 组成。查询时输入 TraceID 返回完整的调用树，按父子关系展示。调用树里能看出哪个环节最慢（耗时最长的 Span）。
+
+采样策略：不是所有请求都收集，按比例采样（比如 10%）。采样比例可以在运行时调整。被采样的请求所有 Span 都收集，不被采样的直接丢弃。
+
+Trace 数据保留 7 天，过期数据后台清理。慢请求（整体耗时超过阈值）自动标记，支持按慢请求筛选。至少包含 collector、storage、query、sampler 四个模块。端口配置文件。

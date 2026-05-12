@@ -1,0 +1,32 @@
+{
+  "dataRange": "all",
+  "timestamp": "2026-05-11T23:16:23.948Z",
+  "tables": {
+    "backup_tasks": [
+      {
+        "id": "1721e6d7-a0b4-4d18-9d7b-12b19b91c54b",
+        "name": "daily-backup",
+        "cron_expression": "0 2 * * *",
+        "enabled": 1,
+        "data_range": "all"
+      }
+    ],
+    "snapshots": [
+      {
+        "id": "b1c5d235-3e64-46ae-8a32-00958553286c",
+        "created_at": "2026-05-11T23:16:23.928Z",
+        "data_range": "all",
+        "file_size": 0,
+        "status": "creating",
+        "sha256": null,
+        "file_path": "/home/baru/Work/Private/work01/SoloCoder/1621-go-react----/backups/snapshot-b1c5d235-3e64-46ae-8a32-00958553286c-2026-05-11T23-16-23-928Z.json",
+        "error_reason": null
+      }
+    ],
+    "restore_operations": []
+  },
+  "metadata": {
+    "dataRange": "all",
+    "backupTime": "2026-05-11T23:16:23.949Z"
+  }
+}

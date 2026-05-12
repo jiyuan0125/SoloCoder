@@ -22,8 +22,7 @@ func ParseCustomFunction(expr string, variables []string) (*CustomFunction, erro
 		return nil, errors.New("empty expression")
 	}
 
-	fullExpr := wrapExpression(expr)
-	astExpr, err := parser.ParseExpr(fullExpr)
+	astExpr, err := parser.ParseExpr(expr)
 	if err != nil {
 		return nil, fmt.Errorf("invalid expression: %v", err)
 	}
@@ -52,10 +51,6 @@ func (cf *CustomFunction) Evaluate(x []float64) float64 {
 
 func (cf *CustomFunction) Variables() []string {
 	return append([]string{}, cf.variables...)
-}
-
-func wrapExpression(expr string) string {
-	return fmt.Sprintf("func() float64 { return %s }()", expr)
 }
 
 func compileExpression(node ast.Expr, allowedVars []string) (func(map[string]float64) float64, error) {

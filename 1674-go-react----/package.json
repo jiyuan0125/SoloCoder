@@ -1,0 +1,21 @@
+{
+  "name": "cross-border-payment-system",
+  "version": "1.0.0",
+  "description": "跨境支付系统 - TypeScript 后端",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "@types/sqlite3": "^3.1.11",
+    "typescript": "^5.4.5"
+  }
+}

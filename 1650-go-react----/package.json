@@ -1,0 +1,23 @@
+{
+  "name": "audit-log-service",
+  "version": "1.0.0",
+  "description": "Audit log service for sensitive operations",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node-dev src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "better-sqlite3": "^11.1.2",
+    "dayjs": "^1.11.11"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.3",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/better-sqlite3": "^7.6.11",
+    "ts-node-dev": "^2.0.0"
+  }
+}

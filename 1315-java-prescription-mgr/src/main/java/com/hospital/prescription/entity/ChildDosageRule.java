@@ -1,5 +1,6 @@
 package com.hospital.prescription.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hospital.prescription.enums.ChildAgeGroup;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -16,6 +17,7 @@ public class ChildDosageRule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drug_id", nullable = false)
     private Drug drug;

@@ -1,0 +1,23 @@
+{
+  "name": "social-organization-management",
+  "version": "1.0.0",
+  "description": "社会组织管理系统后端",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "dev": "ts-node-dev --respawn --transpile-only src/server.ts"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "better-sqlite3": "^11.1.2",
+    "date-fns": "^3.6.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.9",
+    "@types/better-sqlite3": "^7.6.11",
+    "typescript": "^5.5.3",
+    "ts-node-dev": "^2.0.0"
+  }
+}

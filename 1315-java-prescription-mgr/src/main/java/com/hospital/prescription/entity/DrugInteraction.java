@@ -1,5 +1,6 @@
 package com.hospital.prescription.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hospital.prescription.enums.SeverityLevel;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,10 +16,12 @@ public class DrugInteraction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drug_a_id", nullable = false)
     private Drug drugA;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "drug_b_id", nullable = false)
     private Drug drugB;

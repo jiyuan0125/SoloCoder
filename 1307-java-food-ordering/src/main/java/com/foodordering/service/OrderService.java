@@ -31,26 +31,37 @@ public class OrderService {
         validateOrderItems(request.getItems());
         
         List<OrderItem> orderItems = new ArrayList<>();
+        List<Long> deductedDishIds = new ArrayList<>();
+        List<Integer> deductedQuantities = new ArrayList<>();
         double totalPrice = 0.0;
         
-        for (OrderItemRequest itemRequest : request.getItems()) {
-            Dish dish = dishService.getDishById(itemRequest.getDishId());
-            validateDishAvailability(dish, itemRequest.getQuantity());
-            validateTasteOption(dish, itemRequest.getTaste());
-            
-            dishService.decreaseStock(dish.getId(), itemRequest.getQuantity());
-            
-            OrderItem orderItem = new OrderItem();
-            orderItem.setDishId(dish.getId());
-            orderItem.setDishName(dish.getName());
-            orderItem.setDishPrice(dish.getPrice());
-            orderItem.setQuantity(itemRequest.getQuantity());
-            orderItem.setTaste(itemRequest.getTaste() != null ? 
-                    itemRequest.getTaste() : TasteOption.NONE);
-            orderItem.setSubtotal(dish.getPrice() * itemRequest.getQuantity());
-            
-            orderItems.add(orderItem);
-            totalPrice += orderItem.getSubtotal();
+        try {
+            for (OrderItemRequest itemRequest : request.getItems()) {
+                Dish dish = dishService.getDishById(itemRequest.getDishId());
+                validateDishAvailability(dish, itemRequest.getQuantity());
+                validateTasteOption(dish, itemRequest.getTaste());
+                
+                dishService.decreaseStock(dish.getId(), itemRequest.getQuantity());
+                deductedDishIds.add(dish.getId());
+                deductedQuantities.add(itemRequest.getQuantity());
+                
+                OrderItem orderItem = new OrderItem();
+                orderItem.setDishId(dish.getId());
+                orderItem.setDishName(dish.getName());
+                orderItem.setDishPrice(dish.getPrice());
+                orderItem.setQuantity(itemRequest.getQuantity());
+                orderItem.setTaste(itemRequest.getTaste() != null ? 
+                        itemRequest.getTaste() : TasteOption.NONE);
+                orderItem.setSubtotal(dish.getPrice() * itemRequest.getQuantity());
+                
+                orderItems.add(orderItem);
+                totalPrice += orderItem.getSubtotal();
+            }
+        } catch (Exception e) {
+            for (int i = 0; i < deductedDishIds.size(); i++) {
+                dishService.increaseStock(deductedDishIds.get(i), deductedQuantities.get(i));
+            }
+            throw e;
         }
         
         Order order = new Order();

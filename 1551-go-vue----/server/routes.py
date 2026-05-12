@@ -1,292 +1,347 @@
-from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
 from sqlalchemy.orm import Session
-from .database import get_db
-from .models import Berth, Ship, Operation, YardZone, YardItem
-from . import scheduler
+from server.database import get_db
+from server.models import Berth, Ship, HandlingOperation, YardArea
+from server.schemas import (
+    BerthCreate, BerthUpdate, BerthResponse,
+    ShipCreate, ShipUpdate, ShipResponse,
+    HandlingOperationCreate, HandlingOperationUpdate, HandlingOperationResponse,
+    YardAreaCreate, YardAreaUpdate, YardAreaResponse,
+    SchedulingRecommendation
+)
+from server.services import PortService
 
 router = APIRouter()
 
-class BerthCreate(BaseModel):
-    name: str
-    type: str
-    capacity: float
 
-class ShipCreate(BaseModel):
-    name: str
-    type: str
-    draft: float
-    eta: datetime
-
-class ShipUpdate(BaseModel):
-    name: Optional[str] = None
-    type: Optional[str] = None
-    draft: Optional[float] = None
-    eta: Optional[datetime] = None
-
-class OperationCreate(BaseModel):
-    ship_id: int
-    priority: int = 5
-    yard_zone_id: Optional[int] = None
-    quantity: float
-
-class YardZoneCreate(BaseModel):
-    name: str
-    total_capacity: float
-
-@router.get("/berths")
-def list_berths(db: Session = Depends(get_db)):
-    berths = db.query(Berth).all()
-    return [
-        {
-            "id": b.id,
-            "name": b.name,
-            "type": b.type,
-            "capacity": b.capacity,
-            "is_under_maintenance": b.is_under_maintenance,
-            "current_ship": b.ship.name if b.ship else None
-        }
-        for b in berths
-    ]
-
-@router.post("/berths")
-def create_berth(data: BerthCreate, db: Session = Depends(get_db)):
-    existing = db.query(Berth).filter(Berth.name == data.name).first()
+@router.post("/berths/", response_model=BerthResponse)
+def create_berth(berth: BerthCreate, db: Session = Depends(get_db)):
+    existing = db.query(Berth).filter(Berth.name == berth.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="泊位名称已存在")
-    berth = Berth(name=data.name, type=data.type, capacity=data.capacity)
-    db.add(berth)
+        raise HTTPException(status_code=400, detail="Berth with this name already exists")
+    
+    db_berth = Berth(**berth.model_dump())
+    db.add(db_berth)
     db.commit()
-    db.refresh(berth)
-    return {"id": berth.id, "message": "泊位创建成功"}
+    db.refresh(db_berth)
+    db_berth.is_available = db_berth.check_available()
+    return db_berth
 
-@router.post("/berths/{berth_id}/maintenance")
-def toggle_maintenance(berth_id: int, db: Session = Depends(get_db)):
+
+@router.get("/berths/", response_model=List[BerthResponse])
+def list_berths(available_only: Optional[bool] = None, db: Session = Depends(get_db)):
+    query = db.query(Berth)
+    
+    if available_only is not None:
+        berths = query.all()
+        result = []
+        for berth in berths:
+            is_available = berth.check_available()
+            if (available_only and is_available) or (not available_only and not is_available):
+                berth.is_available = is_available
+                result.append(berth)
+        return result
+    
+    berths = query.all()
+    for berth in berths:
+        berth.is_available = berth.check_available()
+    return berths
+
+
+@router.get("/berths/{berth_id}", response_model=BerthResponse)
+def get_berth(berth_id: int, db: Session = Depends(get_db)):
     berth = db.query(Berth).filter(Berth.id == berth_id).first()
     if not berth:
-        raise HTTPException(status_code=404, detail="泊位不存在")
-    if not berth.is_under_maintenance and berth.current_ship_id is not None:
-        raise HTTPException(status_code=400, detail="泊位有船舶停靠，无法进入维护")
-    berth.is_under_maintenance = not berth.is_under_maintenance
+        raise HTTPException(status_code=404, detail="Berth not found")
+    berth.is_available = berth.check_available()
+    return berth
+
+
+@router.put("/berths/{berth_id}", response_model=BerthResponse)
+def update_berth(berth_id: int, berth_update: BerthUpdate, db: Session = Depends(get_db)):
+    berth = db.query(Berth).filter(Berth.id == berth_id).first()
+    if not berth:
+        raise HTTPException(status_code=404, detail="Berth not found")
+    
+    for key, value in berth_update.model_dump(exclude_unset=True).items():
+        setattr(berth, key, value)
+    
     db.commit()
     db.refresh(berth)
-    return {"id": berth.id, "is_under_maintenance": berth.is_under_maintenance}
+    berth.is_available = berth.check_available()
+    return berth
 
-@router.get("/ships")
-def list_ships(db: Session = Depends(get_db)):
-    ships = db.query(Ship).all()
-    return [
-        {
-            "id": s.id,
-            "name": s.name,
-            "type": s.type,
-            "draft": s.draft,
-            "status": s.status,
-            "eta": s.eta.isoformat() if s.eta else None,
-            "current_berth": s.current_berth.name if s.current_berth else None
-        }
-        for s in ships
-    ]
 
-@router.post("/ships")
-def create_ship(data: ShipCreate, db: Session = Depends(get_db)):
-    existing = db.query(Ship).filter(Ship.name == data.name).first()
+@router.delete("/berths/{berth_id}")
+def delete_berth(berth_id: int, db: Session = Depends(get_db)):
+    berth = db.query(Berth).filter(Berth.id == berth_id).first()
+    if not berth:
+        raise HTTPException(status_code=404, detail="Berth not found")
+    
+    has_active_ops = db.query(HandlingOperation).filter(
+        HandlingOperation.berth_id == berth_id,
+        HandlingOperation.status.in_(["pending", "in_progress", "waiting"])
+    ).first()
+    
+    if has_active_ops:
+        raise HTTPException(status_code=400, detail="Berth has active operations")
+    
+    db.delete(berth)
+    db.commit()
+    return {"message": "Berth deleted"}
+
+
+@router.post("/ships/", response_model=ShipResponse)
+def create_ship(ship: ShipCreate, db: Session = Depends(get_db)):
+    existing = db.query(Ship).filter(Ship.name == ship.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="船舶名称已存在")
-    ship = Ship(name=data.name, type=data.type, draft=data.draft, eta=data.eta, status="arriving")
-    db.add(ship)
+        raise HTTPException(status_code=400, detail="Ship with this name already exists")
+    
+    db_ship = Ship(**ship.model_dump())
+    db.add(db_ship)
     db.commit()
-    db.refresh(ship)
-    return {"id": ship.id, "message": "船舶创建成功"}
+    db.refresh(db_ship)
+    return db_ship
 
-@router.patch("/ships/{ship_id}")
-def update_ship(ship_id: int, data: ShipUpdate, db: Session = Depends(get_db)):
+
+@router.get("/ships/", response_model=List[ShipResponse])
+def list_ships(status: Optional[str] = None, db: Session = Depends(get_db)):
+    query = db.query(Ship)
+    if status:
+        query = query.filter(Ship.status == status)
+    return query.all()
+
+
+@router.get("/ships/{ship_id}", response_model=ShipResponse)
+def get_ship(ship_id: int, db: Session = Depends(get_db)):
     ship = db.query(Ship).filter(Ship.id == ship_id).first()
     if not ship:
-        raise HTTPException(status_code=404, detail="船舶不存在")
+        raise HTTPException(status_code=404, detail="Ship not found")
+    return ship
+
+
+@router.put("/ships/{ship_id}", response_model=ShipResponse)
+def update_ship(ship_id: int, ship_update: ShipUpdate, db: Session = Depends(get_db)):
+    ship = db.query(Ship).filter(Ship.id == ship_id).first()
+    if not ship:
+        raise HTTPException(status_code=404, detail="Ship not found")
     
-    old_draft = ship.draft
+    update_data = ship_update.model_dump(exclude_unset=True)
     
-    if data.name is not None:
-        ship.name = data.name
-    if data.type is not None:
-        ship.type = data.type
-    if data.draft is not None:
-        ship.draft = data.draft
-    if data.eta is not None:
-        ship.eta = data.eta
+    if "status" in update_data:
+        return PortService.update_ship_status(db, ship_id, update_data["status"])
+    
+    if "draught" in update_data:
+        return PortService.update_ship_draught(db, ship_id, update_data["draught"])
+    
+    for key, value in update_data.items():
+        setattr(ship, key, value)
     
     db.commit()
     db.refresh(ship)
-    
-    result = {"message": "船舶信息已更新"}
-    
-    if data.draft is not None and data.draft != old_draft:
-        ok, msg = scheduler.revalidate_ship_berth(db, ship)
-        result["revalidation"] = {"passed": ok, "message": msg}
-    
-    return result
+    return ship
 
-@router.post("/ships/{ship_id}/status/{target}")
-def change_ship_status(ship_id: int, target: str, db: Session = Depends(get_db)):
+
+@router.delete("/ships/{ship_id}")
+def delete_ship(ship_id: int, db: Session = Depends(get_db)):
     ship = db.query(Ship).filter(Ship.id == ship_id).first()
     if not ship:
-        raise HTTPException(status_code=404, detail="船舶不存在")
-    ok, msg = scheduler.advance_ship_status(db, ship, target)
-    if not ok:
-        raise HTTPException(status_code=400, detail=msg)
-    return {"message": msg}
+        raise HTTPException(status_code=404, detail="Ship not found")
+    
+    has_active_ops = db.query(HandlingOperation).filter(
+        HandlingOperation.ship_id == ship_id,
+        HandlingOperation.status.in_(["pending", "in_progress", "waiting"])
+    ).first()
+    
+    if has_active_ops:
+        raise HTTPException(status_code=400, detail="Ship has active operations")
+    
+    db.delete(ship)
+    db.commit()
+    return {"message": "Ship deleted"}
 
-@router.get("/operations")
-def list_operations(db: Session = Depends(get_db)):
-    ops = db.query(Operation).all()
-    return [
-        {
-            "id": o.id,
-            "ship": o.ship.name if o.ship else None,
-            "berth": o.berth.name if o.berth else None,
-            "priority": o.priority,
-            "yard_zone": o.yard_zone.name if o.yard_zone else None,
-            "quantity": o.quantity,
-            "status": o.status,
-            "created_at": o.created_at.isoformat() if o.created_at else None,
-            "started_at": o.started_at.isoformat() if o.started_at else None,
-            "completed_at": o.completed_at.isoformat() if o.completed_at else None
-        }
-        for o in ops
-    ]
 
-@router.post("/operations")
-def create_operation(data: OperationCreate, db: Session = Depends(get_db)):
-    ship = db.query(Ship).filter(Ship.id == data.ship_id).first()
+@router.get("/ships/{ship_id}/schedule", response_model=SchedulingRecommendation)
+def get_ship_schedule(ship_id: int, db: Session = Depends(get_db)):
+    ship = db.query(Ship).filter(Ship.id == ship_id).first()
     if not ship:
-        raise HTTPException(status_code=404, detail="船舶不存在")
+        raise HTTPException(status_code=404, detail="Ship not found")
     
-    if scheduler.has_active_operation(db, ship.id):
-        raise HTTPException(status_code=400, detail="该船舶已有活跃的装卸作业")
+    recommended, waiting = PortService.get_scheduling_recommendation(db, ship)
     
-    if ship.status not in ["docked", "loading"]:
-        raise HTTPException(status_code=400, detail="船舶未靠泊，无法安排装卸作业")
+    for berth in recommended:
+        berth.is_available = berth.check_available()
     
-    if not ship.current_berth:
-        raise HTTPException(status_code=400, detail="船舶未分配到泊位")
-    
-    berth = ship.current_berth
-    
-    if data.yard_zone_id:
-        zone = db.query(YardZone).filter(YardZone.id == data.yard_zone_id).first()
-        if not zone:
-            raise HTTPException(status_code=404, detail="堆场区域不存在")
-        
-        ok, msg = scheduler.check_yard_capacity(db, zone, data.quantity)
-        if not ok:
-            raise HTTPException(status_code=400, detail=msg)
-    
-    op = Operation(
-        ship_id=ship.id,
-        berth_id=berth.id,
-        priority=data.priority,
-        yard_zone_id=data.yard_zone_id,
-        quantity=data.quantity,
-        status="queued"
+    return SchedulingRecommendation(
+        recommended_berths=recommended,
+        waiting_queue=waiting
     )
-    db.add(op)
+
+
+@router.post("/operations/", response_model=HandlingOperationResponse)
+def create_operation(operation: HandlingOperationCreate, db: Session = Depends(get_db)):
+    return PortService.create_handling_operation(
+        db=db,
+        ship_id=operation.ship_id,
+        priority=operation.priority,
+        cargo_volume=operation.cargo_volume,
+        description=operation.description,
+        berth_id=operation.berth_id,
+        yard_area_id=operation.yard_area_id
+    )
+
+
+@router.get("/operations/", response_model=List[HandlingOperationResponse])
+def list_operations(
+    status: Optional[str] = None,
+    ship_id: Optional[int] = None,
+    berth_id: Optional[int] = None,
+    db: Session = Depends(get_db)
+):
+    query = db.query(HandlingOperation)
+    
+    if status:
+        query = query.filter(HandlingOperation.status == status)
+    if ship_id:
+        query = query.filter(HandlingOperation.ship_id == ship_id)
+    if berth_id:
+        query = query.filter(HandlingOperation.berth_id == berth_id)
+    
+    return query.order_by(
+        HandlingOperation.priority.desc(),
+        HandlingOperation.created_at.asc()
+    ).all()
+
+
+@router.get("/operations/{operation_id}", response_model=HandlingOperationResponse)
+def get_operation(operation_id: int, db: Session = Depends(get_db)):
+    operation = db.query(HandlingOperation).filter(HandlingOperation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found")
+    return operation
+
+
+@router.put("/operations/{operation_id}", response_model=HandlingOperationResponse)
+def update_operation(operation_id: int, op_update: HandlingOperationUpdate, db: Session = Depends(get_db)):
+    operation = db.query(HandlingOperation).filter(HandlingOperation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found")
+    
+    update_data = op_update.model_dump(exclude_unset=True)
+    
+    if "status" in update_data and update_data["status"] == "completed":
+        return PortService.complete_handling_operation(db, operation_id)
+    
+    for key, value in update_data.items():
+        setattr(operation, key, value)
+    
     db.commit()
-    db.refresh(op)
-    
-    return {"id": op.id, "message": "装卸作业已创建"}
+    db.refresh(operation)
+    return operation
 
-@router.post("/operations/{op_id}/start")
-def start_operation(op_id: int, db: Session = Depends(get_db)):
-    op = db.query(Operation).filter(Operation.id == op_id).first()
-    if not op:
-        raise HTTPException(status_code=404, detail="作业不存在")
-    if op.status not in ["queued", "waiting"]:
-        raise HTTPException(status_code=400, detail=f"作业状态为 {op.status}，无法开始")
-    
-    result = scheduler.start_operation(db, op)
-    return {"id": result.id, "status": result.status, "message": "作业已开始" if result.status == "in_progress" else "作业进入等待状态"}
 
-@router.post("/operations/{op_id}/complete")
-def complete_operation(op_id: int, db: Session = Depends(get_db)):
-    op = db.query(Operation).filter(Operation.id == op_id).first()
-    if not op:
-        raise HTTPException(status_code=404, detail="作业不存在")
-    if op.status != "in_progress":
-        raise HTTPException(status_code=400, detail=f"作业状态为 {op.status}，无法完成")
+@router.delete("/operations/{operation_id}")
+def delete_operation(operation_id: int, db: Session = Depends(get_db)):
+    operation = db.query(HandlingOperation).filter(HandlingOperation.id == operation_id).first()
+    if not operation:
+        raise HTTPException(status_code=404, detail="Operation not found")
     
-    result = scheduler.complete_operation(db, op)
-    return {"id": result.id, "status": result.status, "message": "作业已完成"}
-
-@router.get("/schedule")
-def get_schedule(db: Session = Depends(get_db)):
-    waiting = scheduler.get_waiting_operations(db)
-    recommended = []
+    if operation.status in ["in_progress"]:
+        raise HTTPException(status_code=400, detail="Cannot delete in-progress operation")
     
-    for op in waiting:
-        ship = db.query(Ship).filter(Ship.id == op.ship_id).first()
-        if ship:
-            berth = scheduler.find_suitable_berth(db, ship)
-            recommended.append({
-                "operation_id": op.id,
-                "ship": ship.name,
-                "priority": op.priority,
-                "recommended_berth": berth.name if berth else None
-            })
-    
-    return {
-        "waiting_queue": [
-            {
-                "operation_id": w.id,
-                "ship": w.ship.name if w.ship else None,
-                "priority": w.priority,
-                "status": w.status,
-                "created_at": w.created_at.isoformat()
-            }
-            for w in waiting
-        ],
-        "recommendations": recommended
-    }
+    db.delete(operation)
+    db.commit()
+    return {"message": "Operation deleted"}
 
-@router.get("/yard")
-def list_yard_zones(db: Session = Depends(get_db)):
-    zones = db.query(YardZone).all()
-    return [
-        {
-            "id": z.id,
-            "name": z.name,
-            "total_capacity": z.total_capacity,
-            "used_capacity": z.used_capacity,
-            "available_capacity": z.total_capacity - z.used_capacity,
-            "is_available": z.is_available
-        }
-        for z in zones
-    ]
 
-@router.post("/yard")
-def create_yard_zone(data: YardZoneCreate, db: Session = Depends(get_db)):
-    existing = db.query(YardZone).filter(YardZone.name == data.name).first()
+@router.post("/yard_areas/", response_model=YardAreaResponse)
+def create_yard_area(yard: YardAreaCreate, db: Session = Depends(get_db)):
+    existing = db.query(YardArea).filter(YardArea.name == yard.name).first()
     if existing:
-        raise HTTPException(status_code=400, detail="堆场区域名称已存在")
-    zone = YardZone(name=data.name, total_capacity=data.total_capacity, used_capacity=0)
-    db.add(zone)
+        raise HTTPException(status_code=400, detail="Yard area with this name already exists")
+    
+    db_yard = YardArea(**yard.model_dump())
+    db.add(db_yard)
     db.commit()
-    db.refresh(zone)
-    return {"id": zone.id, "message": "堆场区域创建成功"}
+    db.refresh(db_yard)
+    usage = db_yard.calculate_usage(db)
+    db_yard.current_usage = usage
+    db_yard.remaining_capacity = db_yard.total_capacity - usage
+    return db_yard
 
-@router.post("/yard/{zone_id}/toggle")
-def toggle_yard_zone(zone_id: int, db: Session = Depends(get_db)):
-    zone = db.query(YardZone).filter(YardZone.id == zone_id).first()
-    if not zone:
-        raise HTTPException(status_code=404, detail="堆场区域不存在")
+
+@router.get("/yard_areas/", response_model=List[YardAreaResponse])
+def list_yard_areas(available_only: Optional[bool] = None, db: Session = Depends(get_db)):
+    query = db.query(YardArea)
     
-    if zone.is_available:
-        scheduler.handle_zone_unavailable(db, zone.id)
-    else:
-        zone.is_available = True
+    if available_only is not None:
+        query = query.filter(YardArea.is_available == available_only)
+    
+    yards = query.all()
+    for yard in yards:
+        usage = yard.calculate_usage(db)
+        yard.current_usage = usage
+        yard.remaining_capacity = yard.total_capacity - usage
+    
+    return yards
+
+
+@router.get("/yard_areas/{yard_id}", response_model=YardAreaResponse)
+def get_yard_area(yard_id: int, db: Session = Depends(get_db)):
+    yard = db.query(YardArea).filter(YardArea.id == yard_id).first()
+    if not yard:
+        raise HTTPException(status_code=404, detail="Yard area not found")
+    
+    usage = yard.calculate_usage(db)
+    yard.current_usage = usage
+    yard.remaining_capacity = yard.total_capacity - usage
+    return yard
+
+
+@router.put("/yard_areas/{yard_id}", response_model=YardAreaResponse)
+def update_yard_area(yard_id: int, yard_update: YardAreaUpdate, db: Session = Depends(get_db)):
+    yard = db.query(YardArea).filter(YardArea.id == yard_id).first()
+    if not yard:
+        raise HTTPException(status_code=404, detail="Yard area not found")
+    
+    update_data = yard_update.model_dump(exclude_unset=True)
+    
+    if "is_available" in update_data:
+        if update_data["is_available"]:
+            PortService.mark_yard_area_available(db, yard_id)
+        else:
+            PortService.mark_yard_area_unavailable(db, yard_id)
+        db.refresh(yard)
+    
+    for key, value in update_data.items():
+        if key != "is_available":
+            setattr(yard, key, value)
+    
+    if "is_available" not in update_data:
         db.commit()
-        db.refresh(zone)
+        db.refresh(yard)
     
-    return {"id": zone.id, "is_available": zone.is_available}
+    usage = yard.calculate_usage(db)
+    yard.current_usage = usage
+    yard.remaining_capacity = yard.total_capacity - usage
+    return yard
+
+
+@router.delete("/yard_areas/{yard_id}")
+def delete_yard_area(yard_id: int, db: Session = Depends(get_db)):
+    yard = db.query(YardArea).filter(YardArea.id == yard_id).first()
+    if not yard:
+        raise HTTPException(status_code=404, detail="Yard area not found")
+    
+    has_active_ops = db.query(HandlingOperation).filter(
+        HandlingOperation.yard_area_id == yard_id,
+        HandlingOperation.status.in_(["pending", "in_progress", "waiting"])
+    ).first()
+    
+    if has_active_ops:
+        raise HTTPException(status_code=400, detail="Yard area has active operations")
+    
+    db.delete(yard)
+    db.commit()
+    return {"message": "Yard area deleted"}

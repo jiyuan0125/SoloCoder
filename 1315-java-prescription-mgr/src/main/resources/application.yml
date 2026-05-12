@@ -19,4 +19,4 @@ spring:
         format_sql: true
 
 server:
-  port: 8401
+  port: 9202

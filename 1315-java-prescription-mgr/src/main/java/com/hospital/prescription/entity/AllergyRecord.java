@@ -1,5 +1,6 @@
 package com.hospital.prescription.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hospital.prescription.enums.AllergyType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -15,6 +16,7 @@ public class AllergyRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "patient_id", nullable = false)
     private Patient patient;

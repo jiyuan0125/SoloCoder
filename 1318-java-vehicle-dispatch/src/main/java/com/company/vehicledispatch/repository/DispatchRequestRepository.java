@@ -19,9 +19,9 @@ public interface DispatchRequestRepository extends JpaRepository<DispatchRequest
     List<DispatchRequest> findByDepartmentId(Long departmentId);
     
     @Query("SELECT dr FROM DispatchRequest dr WHERE dr.assignedVehicle.id = :vehicleId " +
-           "AND dr.status IN ('PENDING', 'APPROVED') " +
+           "AND dr.status IN ('PENDING', 'APPROVED', 'IN_USE') " +
            "AND ((dr.startDateTime < :endDateTime AND dr.endDateTime > :startDateTime) " +
-           "OR (dr.startDateTime = :endDateTime))")
+           "OR (dr.endDateTime = :startDateTime))")
     List<DispatchRequest> findConflictingRequests(@Param("vehicleId") Long vehicleId,
                                                    @Param("startDateTime") LocalDateTime startDateTime,
                                                    @Param("endDateTime") LocalDateTime endDateTime);
@@ -35,10 +35,10 @@ public interface DispatchRequestRepository extends JpaRepository<DispatchRequest
                                                                  @Param("startDateTime") LocalDateTime startDateTime);
     
     @Query("SELECT dr FROM DispatchRequest dr WHERE dr.assignedVehicle.id = :vehicleId " +
-           "AND dr.status IN ('PENDING', 'APPROVED') " +
-           "AND dr.endDateTime <= :endDateTime " +
-           "AND dr.endDateTime > :bufferStart")
+           "AND dr.status IN ('PENDING', 'APPROVED', 'IN_USE') " +
+           "AND dr.endDateTime < :startDateTime " +
+           "AND dr.endDateTime >= :bufferStart")
     List<DispatchRequest> findRequestsWithinBuffer(@Param("vehicleId") Long vehicleId,
-                                                    @Param("endDateTime") LocalDateTime endDateTime,
+                                                    @Param("startDateTime") LocalDateTime startDateTime,
                                                     @Param("bufferStart") LocalDateTime bufferStart);
 }

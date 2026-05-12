@@ -1,6 +1,7 @@
 package com.company.vehicledispatch.entity;
 
 import com.company.vehicledispatch.enums.RequestStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import javax.persistence.*;
@@ -14,6 +15,7 @@ public class DispatchRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
     private Department department;
@@ -35,6 +37,7 @@ public class DispatchRequest {
 
     private Integer estimatedDistance;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id")
     private Vehicle assignedVehicle;

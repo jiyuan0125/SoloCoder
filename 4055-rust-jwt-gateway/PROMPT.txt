@@ -1,0 +1,9 @@
+Rust actix-web 写一个 Token 验证网关，放在业务服务前面做认证。
+
+支持 JWT 和 opaque token 两种格式。JWT 验证签名和过期时间，opaque token 需要调用内部接口校验。两种 token 可以共存，通过 header 里的前缀区分（Bearer vs Token）。
+
+Token 刷新机制：客户端拿 refresh token 换新的 access token。refresh token 有使用次数限制，用一次失效，同时签发新的 refresh token。旧的 refresh token 在刷新后加入黑名单，黑名单 TTL 和 refresh token 的有效期一致。
+
+请求转发时把验证过的用户信息（user_id、roles）注入到 header 里传给后端。后端可以直接信任这些 header，不需要再验证。
+
+未认证的请求返回 401，权限不足返回 403。错误响应格式要统一，包含错误码和描述。路径 /api/auth/{provider}/token 下的走认证流程，其他路径做 token 校验。Cargo build，PORT 环境变量。

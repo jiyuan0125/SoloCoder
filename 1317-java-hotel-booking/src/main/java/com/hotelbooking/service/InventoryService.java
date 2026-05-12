@@ -74,6 +74,20 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
+    public int calculateAvailableRoomsWithCleaningBuffer(RoomType roomType, LocalDate checkInDate, LocalDate checkOutDate, int totalRooms) {
+        int maxBooked = 0;
+        LocalDate current = checkInDate;
+        
+        while (current.isBefore(checkOutDate)) {
+            Long bookedCount = bookingRepository.countBookedRoomsForDate(roomType, current);
+            maxBooked = Math.max(maxBooked, bookedCount != null ? bookedCount.intValue() : 0);
+            current = current.plusDays(1);
+        }
+        
+        return Math.max(0, totalRooms - maxBooked);
+    }
+
+    @Transactional(readOnly = true)
     public void validateAvailability(Booking booking) {
         RoomTypeConfig config = roomTypeConfigRepository.findByRoomType(booking.getRoomType())
                 .orElseThrow(() -> new BookingException("房型配置不存在"));

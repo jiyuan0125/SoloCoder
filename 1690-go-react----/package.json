@@ -1,0 +1,24 @@
+{
+  "name": "volunteer-management-platform",
+  "version": "1.0.0",
+  "description": "志愿者管理平台",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "better-sqlite3": "^9.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "@types/express": "^4.17.17",
+    "@types/better-sqlite3": "^7.6.4",
+    "@types/uuid": "^9.0.0",
+    "@types/node": "^20.0.0",
+    "ts-node": "^10.9.1"
+  }
+}

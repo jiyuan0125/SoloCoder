@@ -2,6 +2,7 @@ package com.exam.entity;
 
 import com.exam.enums.DifficultyLevel;
 import com.exam.enums.QuestionType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -17,6 +18,7 @@ public class ExamRule {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonIgnore
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exam_paper_id", nullable = false)
     private ExamPaper examPaper;

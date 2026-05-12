@@ -155,7 +155,7 @@ public class DispatchService {
             return false;
         }
 
-        double fuelPercentage = (vehicle.getFuelLevel() / vehicle.getMaxFuelLevel()) * 100;
+        double fuelPercentage = vehicle.getFuelLevel();
         if (fuelPercentage <= appConfig.getVehicle().getFuelUnavailableThreshold()) {
             return false;
         }

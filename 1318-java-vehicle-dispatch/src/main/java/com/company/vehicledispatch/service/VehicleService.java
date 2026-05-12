@@ -99,8 +99,8 @@ public class VehicleService {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new BusinessException("车辆不存在: " + id));
 
-        if (fuelLevel < 0 || fuelLevel > vehicle.getMaxFuelLevel()) {
-            throw new BusinessException("油量/电量必须在 0 到 " + vehicle.getMaxFuelLevel() + " 之间");
+        if (fuelLevel < 0 || fuelLevel > 100) {
+            throw new BusinessException("油量/电量百分比必须在 0 到 100 之间");
         }
 
         vehicle.setFuelLevel(fuelLevel);
@@ -133,7 +133,7 @@ public class VehicleService {
     }
 
     public void updateVehicleStatuses(Vehicle vehicle) {
-        double fuelPercentage = (vehicle.getFuelLevel() / vehicle.getMaxFuelLevel()) * 100;
+        double fuelPercentage = vehicle.getFuelLevel();
         vehicle.setFuelWarning(fuelPercentage <= appConfig.getVehicle().getFuelWarningThreshold());
 
         double maintenanceInterval = appConfig.getVehicle().getMaintenanceIntervalKm();
@@ -148,6 +148,18 @@ public class VehicleService {
         vehicle.setAnnualInspectionDue(vehicle.getAnnualInspectionExpiryDate().isBefore(today.plusDays(reminderDays)) ||
                 vehicle.getAnnualInspectionExpiryDate().isEqual(today.plusDays(reminderDays)) ||
                 vehicle.getAnnualInspectionExpiryDate().isBefore(today));
+
+        if (vehicle.getStatus() == VehicleStatus.AVAILABLE || vehicle.getStatus() == VehicleStatus.UNAVAILABLE) {
+            boolean fuelUnavailable = fuelPercentage <= appConfig.getVehicle().getFuelUnavailableThreshold();
+            boolean insuranceExpired = vehicle.getInsuranceExpiryDate().isBefore(today);
+            boolean inspectionExpired = vehicle.getAnnualInspectionExpiryDate().isBefore(today);
+
+            if (fuelUnavailable || insuranceExpired || inspectionExpired) {
+                vehicle.setStatus(VehicleStatus.UNAVAILABLE);
+            } else {
+                vehicle.setStatus(VehicleStatus.AVAILABLE);
+            }
+        }
     }
 
     public List<Vehicle> getVehiclesWithFuelWarning() {

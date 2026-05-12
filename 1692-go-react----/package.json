@@ -1,0 +1,43 @@
+{
+  "name": "public-training-platform",
+  "version": "1.0.0",
+  "description": "公益培训平台后端 - TypeScript + Express + SQLite",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts"
+  },
+  "keywords": [
+    "training",
+    "platform",
+    "typescript",
+    "express",
+    "sqlite"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.19.2",
+    "typeorm": "^0.3.20",
+    "reflect-metadata": "^0.2.2",
+    "sqlite3": "^5.1.7",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "uuid": "^9.0.1",
+    "class-validator": "^0.14.1",
+    "class-transformer": "^0.5.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.30",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/cors": "^2.8.17",
+    "@types/uuid": "^9.0.8",
+    "typescript": "^5.4.3",
+    "ts-node": "^10.9.2"
+  }
+}
