@@ -1,0 +1,6 @@
+Rust actix-web 做一个心跳网格健康检查。节点之间互相检测。
+节点注册：节点启动后注册到网格。注册信息包含地址、端口、检测间隔。节点列表通过接口管理。节点下线后超过 3 个检测周期自动移除。
+心跳检测：每个节点定期向其他节点发送心跳。心跳是 HTTP GET 请求。连续 3 次无响应标记节点为 suspect。suspect 状态持续 2 个周期升级为 dead。suspect 期间如果收到该节点的心跳，恢复为 alive。
+状态传播：节点状态变更通过 gossip 协议传播到所有节点。传播延迟不超过 2 秒。每个节点维护全网格状态视图。
+状态查询：可以查询单个节点状态或全网格状态。状态包括 alive、suspect、dead、unknown。unknown 是刚注册还没开始检测的节点。
+至少包含 heartbeat、mesh、detector、handler 四个模块。Cargo build，PORT 环境变量。

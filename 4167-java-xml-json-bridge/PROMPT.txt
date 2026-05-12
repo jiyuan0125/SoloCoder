@@ -1,0 +1,5 @@
+协议转换要支持 XML 和 JSON 互转，还要做 Schema 校验。Spring Boot 做。
+XML ↔ JSON 转换：请求 Content-Type 是 XML 时自动转成 JSON 给后端。后端返回的 JSON 转成 XML 给客户端。转换规则处理数组、属性、命名空间。属性用 @前缀，文本用 #text。
+Schema 管理：可以上传 XSD（XML Schema）和 JSON Schema。转换前用对应的 Schema 校验。校验失败返回错误详情。Schema 版本管理，新版本上传后旧版本保留。
+自定义映射：默认映射不够时可以自定义字段映射规则。比如 XML 里的 user_name 映射到 JSON 里的 userName。映射规则支持多级嵌套路径。
+批量转换：支持一次提交多条数据批量转换。部分转换失败不影响成功的。至少包含 bridge、converter、schema、handler 四个模块。Maven 构建，端口配置文件。

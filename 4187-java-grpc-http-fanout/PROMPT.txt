@@ -1,0 +1,5 @@
+协议转换要支持 gRPC 和 HTTP 互转。Spring Boot 做。
+gRPC ↔ HTTP 转换：HTTP 请求到达后转换成 gRPC 调用转发到后端。gRPC 响应转换成 HTTP JSON 响应返回。gRPC 的 protobuf 定义通过接口上传。上传后自动生成字段映射。
+字段映射：protobuf 的字段名和 JSON 的字段名自动做驼峰/下划线转换。枚举类型转成字符串。嵌套 message 转成嵌套 JSON。repeated 字段转成数组。
+错误映射：gRPC 的 status code 映射到 HTTP 状态码。INVALID_ARGUMENT → 400、NOT_FOUND → 404、INTERNAL → 500 等。自定义错误码在 metadata 里传递。
+批量请求：HTTP 端支持批量请求（一个请求包含多条 gRPC 调用）。批量请求并行执行。部分失败不影响成功的。至少包含 fanout、converter、grpc、http 四个模块。Maven 构建，端口配置文件。

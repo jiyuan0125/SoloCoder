@@ -1,0 +1,6 @@
+FastAPI 做一个 Token 保险箱。管理各种 API Token 和密钥。
+Token 存储：每个 Token 有名称、值、类型（API Key / OAuth2 / JWT Secret）、关联的应用名。Token 值加密存储。加密密钥从环境变量读。Token 有过期时间。
+Token 签发：JWT 类型的 Token 可以由保险箱签发。签发时指定 payload、过期时间。签发后的 Token 可以验证。验证时检查签名和过期。
+刷新机制：OAuth2 类型的 Token 支持自动刷新。快过期时（剩余不到 10%）自动用 refresh_token 换新的。刷新失败的通知关联应用。
+Token 值查询：默认返回脱敏值（前 4 位 + ***）。有权限的请求可以获取原文。权限通过应用名判断，每个 Token 指定哪些应用可以访问原文。
+至少包含 vault、issuer、validator、refresh 四个模块。端口 PORT 环境变量。

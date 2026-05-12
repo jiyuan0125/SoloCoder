@@ -1,0 +1,5 @@
+Rust axum 做一个分布式链路合并器。多个服务上报的 Span 合并成完整调用链。
+Span 接收：各服务上报 Span 数据。Span 包含 trace_id、span_id、parent_span_id、服务名、操作名、开始时间、结束时间、tags。同一个 trace 的 Span 可能乱序到达。
+调用链合并：按 trace_id 聚合 Span。如果 parent_span_id 指向的 Span 还没到，先缓存。超时 30 秒还没到的 Span 标记为 lost，调用链中对应节点标记为缺失。
+Baggage 传播：Span 可以携带 baggage（key-value 对）。baggage 沿调用链向下传播。子 Span 可以读取父 Span 的 baggage。baggage 总大小限制 1KB。
+查询接口：按 trace_id 查完整链路。按服务名和操作名查最近 N 条 trace。支持时间范围过滤。至少包含 merger、trace、baggage、handler 四个模块。Cargo build，PORT 环境变量。
