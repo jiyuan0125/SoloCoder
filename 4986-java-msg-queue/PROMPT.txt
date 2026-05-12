@@ -1,0 +1,9 @@
+Spring Boot 写个消息队列。支持发布/订阅模式。
+
+Topic 支持通配符订阅：*匹配一级，#匹配多级。比如 order.* 匹配 order.create，order.# 匹配 order.create.success。
+
+消息投递有确认机制。消费者处理完发 ACK，消息才从队列移除。NACK 后消息重新入队。
+
+队列支持延迟消息：消息在指定时间后才可被消费。延迟精度到秒。
+
+Maven 构建。端口 server.port。

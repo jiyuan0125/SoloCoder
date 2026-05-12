@@ -1,0 +1,11 @@
+Spring Boot 链路追踪。Span 状态：创建→开始→结束→上报→归档。
+
+创建：初始化 Span 信息。开始：记录开始时间。结束：记录结束时间和结果（成功/失败）。上报：发送到收集器。归档：持久化到存储。
+
+Span 只能按顺序状态流转。不能从创建直接跳到结束。
+
+每个 Span 有 tags 和 logs。tags 是 KV 对，logs 是带时间戳的事件。
+
+Trace 树构建：通过 parent_span_id 建立父子关系。根 Span 的 parent 为空。
+
+Maven 项目，server.port。

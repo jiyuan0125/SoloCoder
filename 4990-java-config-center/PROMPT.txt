@@ -1,0 +1,11 @@
+Spring Boot 配置中心。配置项有类型：string、number、boolean、json。
+
+写入时校验类型。string 类型不限内容。number 类型要能转成数字。boolean 只接受 true/false。json 要能解析。
+
+配置项有环境覆盖：同一个 key 在不同环境可以有不同值。查询时指定环境，没有环境特定值就回退到默认值。
+
+配置审计：每次变更记录谁改的、什么时候改的、从什么值改成什么值。
+
+代码至少三个类：配置存储、类型校验、审计日志。
+
+Maven 构建，server.port。

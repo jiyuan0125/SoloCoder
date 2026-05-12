@@ -1,0 +1,13 @@
+Fiber 做指标采集服务。三种指标类型：Counter（只增）、Gauge（增减）、Histogram（分布）。
+
+多个 goroutine 同时上报指标数据。同一个 Counter 并发增加不能丢失计数。
+
+指标按名称区分。同一个名称多次注册返回已有的指标对象。
+
+Histogram 记录每个观测值，提供分位数查询（p50、p90、p99）。
+
+指标导出为 Prometheus 格式文本。/metrics 接口返回。
+
+管理接口可以重置某个指标的值。
+
+PORT 环境变量，go build 通过。

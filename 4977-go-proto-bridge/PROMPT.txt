@@ -1,0 +1,13 @@
+Go 标准库写协议转换。HTTP 请求转 gRPC。
+
+gRPC 服务定义通过 proto 文件描述。proto 文件上传后解析出 service 和 method。
+
+HTTP 请求路径映射到 gRPC method。映射规则：/api/{service}/{method} → gRPC 的 {service}/{method}。
+
+gRPC 响应转回 HTTP JSON。枚举类型转成字符串。时间戳转成 ISO 8601。
+
+转换有超时控制。gRPC 调用超过 5 秒返回 504。
+
+管理接口查看映射规则和转换统计（成功数、失败数、平均耗时）。
+
+PORT 环境变量。

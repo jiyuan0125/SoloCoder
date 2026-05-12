@@ -1,0 +1,11 @@
+Netty 实现链路追踪。高并发场景，每秒可能有数千个请求同时产生 Span。
+
+Span 写入用 Netty 的 EventLoop 处理。写入操作不能阻塞。
+
+Span 数据先缓存再批量写入存储。缓存区大小有限（10000 个 Span），满了丢弃最老的。
+
+每个请求的 Span 关联到同一个 TraceID。同一个 TraceID 的 Span 可能分布在不同线程处理。
+
+查询接口需要聚合同一个 TraceID 的所有 Span。聚合过程不能影响写入性能。
+
+Maven 项目，端口 PORT 环境变量。

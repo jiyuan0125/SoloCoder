@@ -1,0 +1,13 @@
+actix-web 认证网关。支持 API Key 和 JWT 两种认证方式。
+
+API Key 认证：请求 Header 带 X-API-Key。Key 对应一个租户。租户有配额限制。
+
+JWT 认证：Token payload 有 scope 字段。不同 scope 对应不同权限。
+
+两种认证方式的权限模型不同。API Key 的权限是租户级别的，JWT 的权限是用户级别的。
+
+未认证请求返回 401。认证了但没权限返回 403。
+
+认证日志记录每次请求的认证方式和结果。
+
+PORT 环境变量，cargo build。
