@@ -1,0 +1,11 @@
+用 Go 标准库 net/http 写一个指标采集服务，给内部系统用的。
+
+支持三种指标类型：Counter（只增不减的计数器）、Gauge（可增可减的仪表盘）、Histogram（直方图，记录分布情况）。每个指标有名称和一组标签（key=value），标签用于维度聚合。
+
+客户端通过 HTTP 接口注册指标（指定名称、类型、描述），然后通过接口上报数据。Counter 接收增量值，Gauge 接收绝对值，Histogram 接收一个观测值。
+
+提供 Prometheus exposition 格式的 /metrics 接口，输出所有指标的当前值。
+
+指标注册的时候需要校验同名同标签的指标类型是否一致，如果已有 Counter 类型的 http_requests_total 又注册一个 Gauge 类型的同名指标要报错。
+
+路径方面：/api/v1/metrics 注册，/api/v1/metrics/{name}/data 上报数据，/metrics Prometheus 格式。端口 PORT 环境变量。

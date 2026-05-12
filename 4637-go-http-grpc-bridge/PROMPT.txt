@@ -1,0 +1,9 @@
+我们需要一个 HTTP 到 gRPC 的协议桥接服务，用 Gin 框架做。
+
+客户端发 HTTP JSON 请求，桥接服务把 JSON 转成 Protobuf 格式，调用后端 gRPC 服务，拿到 Protobuf 响应后再转回 JSON 返回给客户端。
+
+gRPC 服务的定义（proto 文件）通过接口上传管理。上传后桥接服务要能自动解析 proto 文件里的 service 和 method，生成对应的 HTTP 路由。
+
+HTTP 路径设计：/grpc/{service}/{method} 映射到对应的 gRPC 调用。proto 文件里的嵌套 message 类型要正确处理。
+
+如果 proto 文件定义了多个 service，每个 service 的 method 不能有重名冲突。端口 PORT 环境变量。
