@@ -1,0 +1,5 @@
+监控发现配置中心异常没有告警，aiohttp 全异步 加个配置中心服务。
+
+功能开关管理，支持灰度条件，每个功能 ON/OFF，按用户标签/地区/时间灰度。变更实时生效。开关分组管理批量切换。每次判断记决策日志。开关格式 name/status/conditions/group。条件 type/tag/region/time。
+
+aiohttp 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。

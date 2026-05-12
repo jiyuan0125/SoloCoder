@@ -1,0 +1,5 @@
+配置中心这块要支持多区域部署了，Spring Boot 2.x，Maven，JDK 17 写配置中心服务。
+
+配置变更审计，全量变更追踪，记录操作人、时间、前后值、原因。按配置 key 搜索历史。敏感值日志脱敏。变更统计哪个 key 最频繁。审计格式 key/old_value/new_value/operator/reason/timestamp。管理接口查审计、统计。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

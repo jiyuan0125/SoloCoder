@@ -1,0 +1,5 @@
+给朋友的团队写个认证网关服务，Go 标准库 net/http 实现，不用框架 跑本地就行。
+
+OAuth2 Token 刷新代理，对上游透明，access token 1 小时 refresh 30 天。代理自动刷新对上游透明。刷新失败清过期 token 要求重新授权。Token 加密存储不落日志明文。格式 access_token/refresh_token/expires_at/user_id。管理接口查 token 状态和手动失效。
+
+Go 标准库 net/http 实现，不用框架。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。

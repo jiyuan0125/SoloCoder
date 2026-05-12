@@ -1,0 +1,5 @@
+最近服务注册与发现这块流量翻倍了，Spring Boot 2.x，Maven，JDK 17 写个服务注册与发现服务扛住。
+
+多环境服务发现，dev/staging/prod 隔离，注册时指定环境只能注册到对应环境。查询按环境过滤。环境间 federation 共享指定服务（如共享 auth-service）。环境切换发现结果立即更新。心跳超时 30 秒。federation 配置通过管理接口。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

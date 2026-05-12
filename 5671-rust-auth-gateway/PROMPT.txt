@@ -1,0 +1,5 @@
+朋友那边需要一个认证网关服务，用 tokio 做异步运行时，裸 TCP/HTTP 处理 后端。
+
+JWT Token 验证网关，刷新+撤销，验证签名和有效期。过期前 5 分钟加 X-Token-Refresh 头。刷新 Token 有效期 2 倍。同用户最多 5 有效 Token。撤销后立即生效（撤销列表）。Token 含 user_id/exp/iat/jti。HMAC-SHA256 签名。管理接口创建/撤销/查有效 Token。
+
+用 tokio 做异步运行时，裸 TCP/HTTP 处理。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

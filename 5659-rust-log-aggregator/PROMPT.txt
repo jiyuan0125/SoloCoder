@@ -1,0 +1,5 @@
+老板说要搞日志聚合数字化，先出个日志聚合服务，用 tokio 做异步运行时，裸 TCP/HTTP 处理。
+
+业务链路日志追踪，按 traceID 聚合调用链，跨服务请求链路按 traceID 关联。汇总调用链计算总耗时和服务耗时。任何一步报错标记整条异常。查询某时段失败率最高链路。链路日志格式 trace_id/span_id/parent_span_id/service/operation/start/end/status。
+
+用 tokio 做异步运行时，裸 TCP/HTTP 处理。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

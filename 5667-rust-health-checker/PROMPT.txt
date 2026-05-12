@@ -1,0 +1,5 @@
+想用 Rust axum 练手健康检查，做个健康检查服务。
+
+TCP/HTTP 探针管理，连续失败 3 次才标记不健康，HTTP 探针检查状态码和响应关键字。TCP 探针检查端口连通性。状态变更触发回调（POST 到 URL）。探针配置 name/type/target/interval/timeout/threshold/callback_url。结果含状态、成功/失败时间、连续失败数。
+
+Rust axum。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

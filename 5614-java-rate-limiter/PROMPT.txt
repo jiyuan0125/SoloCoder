@@ -1,0 +1,5 @@
+新接了个项目要求有限流器服务，用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。
+
+第三方 API 代理配额管理，多个上游 API 不同限制，天气 API 60 次/分，地图 30 次/秒，短信 10 次/分。调用前查剩余配额，不足排队等刷新。不同 API 限流粒度不同分别处理。并发查同一 API 配额不能超卖。API 配置通过接口管理。
+
+用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

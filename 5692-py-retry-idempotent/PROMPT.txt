@@ -1,0 +1,6 @@
+最近重试与幂等这块流量翻倍了，FastAPI 全异步 写个重试与幂等服务扛住。
+
+API 调用指数退避重试器，失败后指数退避（1s→2s→4s→8s 最大 30s）。重试次数可配默认 5。可重试（超时、503）和不可重试（400、401、404）区分。每次尝试记结果。重试配置 url/method/max_retries/max_interval。重试记录 url/attempt/delay/result。
+
+FastAPI 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。
+代码分至少三个源文件。

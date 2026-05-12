@@ -1,0 +1,6 @@
+客户抱怨链路追踪这块不好用，用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建 重构个链路追踪服务。
+
+分布式 TraceID 传播服务，请求入口生成 TraceID 通过 header 传播。每服务创建 Span（服务名、操作、时间）。Span 上报按 TraceID 聚合调用链。支持异步任务链路——继承父 TraceID。TraceID 格式 trace-{uuid}。Span 含 trace_id/span_id/parent/service/op/start/end/status。
+
+用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+代码分至少三个源文件。

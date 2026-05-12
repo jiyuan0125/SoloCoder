@@ -1,0 +1,5 @@
+群里有人说缺一个API网关服务，用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建 搞一个。
+
+物联网设备接入网关，MQTT/CoAP 转 HTTP，MQTT 消息 topic/devices/{id}/data 解析后转 HTTP。CoAP 二进制解码转 HTTP。设备用预共享密钥认证。数据含设备 ID、时间戳、类型、值。批量上报最多 50 条。设备注册和密钥通过 API。
+
+用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

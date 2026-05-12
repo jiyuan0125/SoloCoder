@@ -1,0 +1,5 @@
+下周要给业务方演示认证网关功能，先出个能跑的认证网关服务，Rust actix-web。
+
+RBAC 权限校验网关，角色继承，每个请求检查角色是否有权限。支持通配符 orders:*。角色有继承（admin 继承 user）。权限变更实时生效。权限不足返回 403 不是 401。权限格式 role/resource/action。管理接口 CRUD 角色和权限。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

@@ -1,0 +1,5 @@
+调研了一圈FastAPI 全异步 做健康检查服务比较合适。
+
+服务启动就绪检查编排器，等待依赖就绪，启动时轮询依赖 /health 直到全部 200。每个依赖独立超时。全部就绪后注册到服务发现。指数退避重试（1s→2s→4s→8s 最大 30s）。依赖配置 name/url/timeout/max_retries。启动状态 waiting/ready/failed。
+
+FastAPI 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。

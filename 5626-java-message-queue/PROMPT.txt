@@ -1,0 +1,5 @@
+季度末了消息队列这块还是手动的，赶紧搞个消息队列服务，Spring Boot 2.x，Maven，JDK 17。
+
+电商订单事件总线，订单各环节事件下游订阅消费，事件类型：创建/支付/发货/签收。库存订阅支付扣减，积分订阅支付发放，通知订阅全部。at-least-once 投递，消费者保证幂等。投递失败重试 3 次间隔递增，全失败进死信。大量堆积内存不爆。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

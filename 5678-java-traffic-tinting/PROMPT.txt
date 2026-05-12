@@ -1,0 +1,6 @@
+V2 版本月底上线，先把流量染色服务的核心做了，用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。
+
+金丝雀发布染色器，内部用户先走新版本，user_type=internal 判断。金丝雀版本日志标 X-Canary: true。异常一键切回（canary_mode=false）。后端含 stable/canary 两套地址。路由：canary_mode && internal → canary 否则 → stable。管理接口切换和查错误率。
+
+用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+代码分至少三个源文件。

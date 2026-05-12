@@ -1,0 +1,5 @@
+线上旧的脚本太难用了，FastAPI 全异步 重写一个日志聚合服务。
+
+审计日志归档，append-only 不可修改，审计事件（登录、权限变更、数据修改）统一收集。按操作人/类型/时间查。内存存 + 定时写文件（JSON Lines）。导出 CSV。审计格式 id/operator/action/resource/old_value/new_value/timestamp。导入 CSV 加载历史。
+
+FastAPI 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。

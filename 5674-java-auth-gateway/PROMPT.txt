@@ -1,0 +1,5 @@
+看到一个开源项目挺有意思的，自己也做一个认证网关服务，Spring Boot 2.x，Maven，JDK 17。
+
+多租户身份路由网关，统一认证，不同租户认证方式不同（JWT/API Key/SAML）。网关统一认证后注入 X-Tenant-Id 和 X-User-Id。路由配置 tenant_id/auth_type/auth_config。认证失败返回 401。租户管理接口 CRUD。认证日志记录时间、租户、结果。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

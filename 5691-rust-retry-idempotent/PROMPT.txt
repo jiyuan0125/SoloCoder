@@ -1,0 +1,5 @@
+业务方的重试与幂等要接第三方，Rust axum 做个重试与幂等服务对接。
+
+支付重试与去重，幂等键（商户号+订单号），重复提交不重复扣款。超时后重试前先查是否已成功。重试 3 次仍失败进人工队列。幂等键有效期 24 小时。支付记录格式 idempotency_key/order_id/merchant_id/amount/status/attempts/created_at。管理接口查记录和人工队列。
+
+Rust axum。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

@@ -1,0 +1,5 @@
+市面上的方案太重了我们只需要核心功能，Rust axum 写一个。
+
+商品详情三级缓存：信息 24h、价格 1min、库存实时，缓存 key 格式 goods:{id}:{type}。缓存 miss 回源并回填。同一商品多请求回源用 singleflight 只放一个。回源挂了等待的要有兜底。变更时主动失效。容量 10000 key LRU 淘汰。
+
+Rust axum。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

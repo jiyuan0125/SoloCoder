@@ -1,0 +1,5 @@
+之前用脚本搞指标采集，数据量上来扛不住了。用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建 做个指标采集服务。
+
+资源使用率监控采集，CPU/内存/磁盘/网络，采集间隔可配（默认 10 秒）。时序存储支持 avg/max/min 聚合。超阈值生成告警。指标格式 name/value/timestamp/tags。告警规则 metric + condition + threshold + duration。管理接口 CRUD 告警规则和查指标。
+
+用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

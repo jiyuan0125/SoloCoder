@@ -1,0 +1,5 @@
+运维说链路追踪这块太分散了需要统一管理，Spring Boot 2.x，Maven，JDK 17 写链路追踪服务。
+
+异步任务链路串联器，定时任务、消息消费等异步场景的链路追踪。异步任务生成独立 TraceID 通过消息 header 或任务参数传下游。一个触发源产生多个异步任务要关联。异步链路超时未完成标记告警。格式 parent_trace_id/child_traces[]/status/timeout。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

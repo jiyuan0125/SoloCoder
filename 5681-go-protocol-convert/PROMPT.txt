@@ -1,0 +1,5 @@
+市面上的方案太重了我们只需要核心功能，用 Fiber 框架 写一个。
+
+HTTP 到 gRPC 协议转码网关，RESTful JSON 请求转 gRPC。URL 映射方法 /api/v1/users → users.UserService.List。JSON 映射 protobuf 字段类型自动转换。gRPC 状态码映射 HTTP 状态码。模拟后端。路由映射配置 method+path → service+method。
+
+用 Fiber 框架。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。

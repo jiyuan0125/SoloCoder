@@ -1,0 +1,6 @@
+上个月系统故障出了事故排查了好几个小时，现在要上指标采集服务，Go 标准库 net/http 实现，不用框架。
+
+API 性能指标采集，QPS/P50/P95/P99，按分钟粒度聚合保留 7 天。查询返回指定时段指标。/metrics 端点导出 Prometheus 格式。接口注册 name/method/path。上报含 interface/status_code/duration_ms/timestamp。聚合含 request_count/error_count/durations 算百分位。
+
+Go 标准库 net/http 实现，不用框架。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。
+代码分至少三个源文件。

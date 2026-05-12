@@ -1,0 +1,5 @@
+业务方那边提了个需求，要日志聚合服务，aiohttp 全异步。
+
+多服务日志统一收集，UDP 接收按服务分桶，各服务 UDP 发 JSON 日志。按服务名和时间窗口分桶。支持按时间/服务名/级别搜索。保留 7 天超期清理。内存缓冲满批量写文件。日志含 service/level/message/timestamp/trace_id。UDP 乱序结果按时间排序。
+
+aiohttp 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。

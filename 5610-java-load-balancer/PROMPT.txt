@@ -1,0 +1,5 @@
+线上旧的脚本太难用了，Spring Boot 2.x，Maven，JDK 17 重写一个负载均衡服务。
+
+文件上传负载均衡，按文件大小路由到不同存储节点，大文件（>100MB）走高带宽节点，小文件走低延迟节点。同一用户多文件分到同一节点。节点磁盘不足不再分配。请求带 User-Id 和 Content-Length。亲和性节点满了换新的。无可用节点排队超时 10 秒。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

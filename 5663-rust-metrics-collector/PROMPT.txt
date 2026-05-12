@@ -1,0 +1,5 @@
+有个老系统维护不动了，Rust actix-web 重写指标采集服务。
+
+业务指标统计，Counter/Gauge/Histogram，自定义指标（订单量、活跃用户等）。Counter 上报增量 Gauge 绝对值 Histogram 观测值。各服务通过 API 上报。按小时/天/周预聚合。指标格式 name/type/value/timestamp/labels。查询按时间范围和标签过滤。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

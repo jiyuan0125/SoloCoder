@@ -1,0 +1,5 @@
+新来的 CTO 说事件调度器要自研不要买，Rust actix-web 写事件调度器服务。
+
+周期性数据清理调度器，定时清理过期 session、临时文件、日志。规则可配（表名/过期条件/保留条数）。每次记录删除行数和耗时。大量数据分批删（每批 1000 行）避免锁表。清理失败不影响下次。清理规则格式 target/condition/batch_size/interval。管理接口 CRUD 规则和查执行记录。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

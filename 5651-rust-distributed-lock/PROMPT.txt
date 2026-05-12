@@ -1,0 +1,5 @@
+我们业务方最近要上分布式锁服务，Rust actix-web。
+
+库存扣减分布式锁，可重入，下单获商品锁，扣减后释放。锁超时 30 秒防死锁。同一商品同时只有一个扣减。可重入——同一请求多次获同把锁不阻塞（请求 ID 标识）。锁格式 resource/holder/reentrant_count/expire。管理接口查看和强制释放。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。
