@@ -1,0 +1,5 @@
+JWT Token 验证网关。Go Gin。
+
+所有 API 请求验证 JWT 签名和有效期。Token 过期前 5 分钟响应头加 X-Token-Refresh: true。刷新 Token 有效期是访问 Token 的 2 倍。同一用户最多 5 个有效 Token。Token 撤销后立即生效（维护撤销列表）。
+
+Token 格式使用 JWT（header.payload.signature），payload 包含 user_id、exp、iat、jti。签名用 HMAC-SHA256。管理接口：创建 Token、撤销 Token、查看用户的有效 Token 列表。密钥通过配置设置。数据存内存。端口 PORT 环境变量。go run 能跑。

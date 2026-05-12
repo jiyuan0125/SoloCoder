@@ -1,0 +1,5 @@
+HTTP 到 gRPC 协议转码网关。Rust axum。
+
+外部 RESTful JSON 请求转成内部 gRPC 调用。URL 映射到 gRPC 方法：/api/v1/users → users.UserService.List。JSON 字段映射到 protobuf 字段。gRPC 错误码映射到 HTTP 状态码。
+
+不真的连 gRPC，模拟后端调用。路由映射配置：http_method + http_path → grpc_service + grpc_method。请求转换规则：json_field → proto_field（类型转换自动处理）。gRPC 状态码映射：OK→200, NOT_FOUND→404, PERMISSION_DENIED→403, INTERNAL→500。管理接口可以查看映射规则。数据存内存。PORT 环境变量。cargo build 通过。

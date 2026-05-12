@@ -1,0 +1,5 @@
+系统资源使用率监控采集器。aiohttp 全异步。
+
+定时采集 CPU 使用率、内存使用率、磁盘使用率、网络流量。采集间隔可配（默认 10 秒）。指标按时间序列存储，支持按时间范围查询和聚合（avg/max/min）。超过阈值生成告警事件。
+
+指标格式：metric_name、value、timestamp、tags（dict）。告警规则：metric + condition（>/>=/</<=）+ threshold + duration（持续 N 秒）。告警事件：rule_id、triggered_at、metric_value。管理接口：CRUD 告警规则、查询指标。数据存内存。端口环境变量。

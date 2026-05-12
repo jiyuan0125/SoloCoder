@@ -1,0 +1,5 @@
+用 actix-web 做一个带 OAuth2 代理的认证网关。支持 Authorization Code 流程——客户端跳转到网关授权页面，用户登录后网关拿到 authorization code，换取 access token 和 refresh token。
+
+access token 存在网关端（不暴露给浏览器），浏览器拿到的是一个 session ID。后续请求带 session ID，网关用 session ID 查到对应的 access token 再转发到后端。session 有效期 2 小时，过期后用 refresh token 自动续期。
+
+refresh token 也过期了，重定向到登录页。支持多个 OAuth2 Provider，通过入口路径区分。管理接口展示活跃 session 数。端口环境变量指定，cargo run 能跑。

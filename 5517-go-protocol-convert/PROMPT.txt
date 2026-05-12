@@ -1,0 +1,5 @@
+用 Go 标准库 net/http 做一个 HTTP-to-gRPC 协议转换网关。客户端发 HTTP JSON 请求，网关转换成 gRPC 调用后端服务。gRPC 的服务定义通过管理接口上传 proto 文件。
+
+proto 文件上传后网关自动解析出所有方法和消息类型，建立 HTTP 路由映射。路径格式为 /{service}/{method}。嵌套 JSON 对象映射到嵌套的 message，数组映射到 repeated 字段。
+
+响应从 gRPC 格式转回 JSON。枚举值转成字符串而不是数字。gRPC 调用超时 5 秒，超时返回 504。端口 PORT 环境变量指定，编译后能直接运行。

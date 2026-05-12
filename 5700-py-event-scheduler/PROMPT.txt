@@ -1,0 +1,5 @@
+定时任务调度引擎。FastAPI 全异步。
+
+支持一次性定时任务（指定执行时间）和 Cron 周期任务。任务执行记录持久化到内存。重启后恢复未执行的任务。任务超时标记失败并告警。同一任务不能并发执行。
+
+任务格式：id、name、type（once/cron）、schedule（datetime 或 cron 表达式）、timeout_secs、status（active/paused/completed/failed）、last_run_time、next_run_time。执行记录：task_id、run_time、duration_secs、result、error_msg。管理接口：CRUD 任务、手动触发、暂停/恢复。Cron 表达式支持标准 5 位格式。数据存内存。端口环境变量。

@@ -1,0 +1,5 @@
+用户会话缓存服务，session 信息存内存，TTL 30 分钟。Spring Boot 2.x。
+
+用户操作时刷新 TTL。同一个用户多设备登录 session 数据隔离（按 device-id 区分）。服务重启后 session 数据要能恢复——每分钟把活跃 session 快照写到本地文件。启动时从文件加载。
+
+Session 数据包含：用户 ID、设备 ID、登录时间、最后活跃时间、角色。查询接口按用户 ID 返回所有设备的 session。管理员可以强制某个用户下线（删除所有 session）。数据用 ConcurrentHashMap 存。端口环境变量。mvn package 通过。

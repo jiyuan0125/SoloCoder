@@ -1,0 +1,5 @@
+配置版本管理与回滚。aiohttp 全异步。
+
+每次变更生成新版本（自增 ID）。版本间可对比差异。回滚操作也是一次新版本（内容是旧版本的值）。版本保留最近 100 个。支持 JSON 格式导入导出。
+
+配置格式：key、current_value、version。版本历史：config_id、version、value、operator、timestamp。对比接口输入两个版本号返回差异列表。管理接口：CRUD、回滚、导入导出、查看历史。数据存内存。端口环境变量。

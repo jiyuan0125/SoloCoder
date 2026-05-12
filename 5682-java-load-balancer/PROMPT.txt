@@ -1,0 +1,5 @@
+日志分级过滤服务。FastAPI 全异步。
+
+接收所有级别日志，按配置动态过滤。线上模式：只持久化 WARN 以上，DEBUG/INFO 存内存 ring buffer（容量 10000 条），出错时 dump 最近 100 条 DEBUG/INFO 辅助排查。过滤规则运行时可修改。
+
+日志格式：level、service、message、timestamp、extra（dict）。过滤规则：级别阈值、关键词白名单/黑名单、service 过滤。ring buffer 满了覆盖最老的。管理接口：修改过滤规则、dump ring buffer、按条件搜索持久化日志。数据存内存。端口环境变量。

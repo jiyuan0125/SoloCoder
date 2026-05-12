@@ -1,0 +1,5 @@
+业务指标统计服务。Go net/http 标准库。
+
+自定义业务指标（订单量、活跃用户、转化率等）。指标支持 Counter（累加）、Gauge（瞬时值）、Histogram（分布）三种类型。各业务服务通过 API 上报指标值。指标按小时/天/周预聚合。
+
+指标格式：name、type、value、timestamp、labels（map[string]string）。Counter 上报增量，Gauge 上报绝对值，Histogram 上报观测值（自动计算分桶）。查询接口支持按时间范围和标签过滤。预聚合结果定时计算。数据存内存。端口 PORT 环境变量。go run 能跑。

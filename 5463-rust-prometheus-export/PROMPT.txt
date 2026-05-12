@@ -1,0 +1,5 @@
+Rust/axum 做指标采集+Prometheus 格式导出。场景是给 Prometheus 拉取的指标端点，同时支持通过 HTTP 上报指标。
+
+指标类型支持 Counter、Gauge、Histogram。上报接口接收 JSON 格式的指标数据。内部存储用 HashMap，key 是指标名+标签的序列化字符串。Prometheus 格式导出接口（/metrics）输出标准 Prometheus text format。每个指标输出 HELP、TYPE 和所有时间序列的数据行。
+
+Counter 和 Gauge 的输出比较直接。Histogram 的输出要包含 _bucket（各桶的计数）、_sum（总和）、_count（总次数）三部分。标签在 Prometheus 格式里用花括号表示。管理接口查看所有已注册的指标和元数据。

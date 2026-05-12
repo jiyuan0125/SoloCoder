@@ -1,0 +1,5 @@
+做一个 API 聚合网关，一个请求可以同时调用多个后端合并结果。Spring Boot 2.x。
+
+配置文件定义聚合规则：前端请求 /api/dashboard 时，网关并行调用 /api/user、/api/orders、/api/stats 三个后端，合并成一个 JSON 返回。后端调用用 CompletableFuture 异步。某个后端超时不影响其他，缺失的字段填 null。
+
+聚合规则通过 API 动态管理。规则定义包括：聚合路径、后端调用列表（URL、超时、是否必须）。Stream API 处理结果合并和转换。后端服务地址可配置。数据存内存。端口环境变量。mvn clean package 通过。

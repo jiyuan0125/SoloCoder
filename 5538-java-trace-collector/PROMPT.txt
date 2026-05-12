@@ -1,0 +1,5 @@
+用 Spring Boot 写一个高性能链路追踪收集器。设计目标每秒处理 5 万个 span。span 通过 UDP 接收，收到后写入内存队列。后台线程消费队列，按 trace_id hash 分区后写入存储。
+
+存储按 trace_id hash 到不同文件。查询时用 trace_id 定位到对应文件，加载并构建调用树。
+
+支持采样——只收集一定比例的 trace。采样率可配，默认 10%。错误 span 100% 采集不受采样率影响。管理接口展示当前 QPS、队列深度、采样率。端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。

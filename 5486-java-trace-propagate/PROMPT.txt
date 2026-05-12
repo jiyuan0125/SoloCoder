@@ -1,0 +1,5 @@
+Java/Netty 做 TraceID 注入和 Span 传播。场景是微服务调用链中，一个请求经过多个服务，需要通过 TraceID 串联所有日志。
+
+入口服务生成 TraceID（UUID），通过 HTTP 头 X-Trace-Id 传递到下游。每个服务处理请求时生成 SpanID，SpanID 和 TraceID 一起传到下游。服务上报 Span 信息到收集服务：TraceID、SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签（键值对）。
+
+收集服务把 Span 存到 H2 数据库。查询接口按 TraceID 查询完整调用链，返回 Span 树（按 ParentSpanID 构建树结构）。支持查询耗时最长的 Top N Trace。管理接口查看最近上报的 Span 数量、按服务名统计 Span 数量。

@@ -1,0 +1,5 @@
+做一个带认证和权限校验的 API 网关。aiohttp 全异步。
+
+每个请求必须带 Authorization: Bearer <token> 头。网关维护一个 token 列表和对应的权限。接口路径和所需权限的映射关系可配置（比如 /api/users 需要 user:read 权限，/api/users POST 需要 user:write）。token 无效或权限不足分别返回 401 和 403。
+
+token 和权限配置通过管理接口设置。用户输入的 token 不做任何日志记录（防止泄露）。路径匹配支持通配符 /api/*。请求日志只记录时间、路径、状态码、来源 IP。数据存内存。端口环境变量。

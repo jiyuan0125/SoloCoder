@@ -1,0 +1,5 @@
+做一个基于 Netty 的 TCP 负载均衡器，不用 Spring，纯 Netty 实现。Maven 构建。
+
+后端是多个 TCP 服务，负载均衡器接收客户端 TCP 连接，按轮询策略转发到后端。连接建立后保持长连接（不是每个请求新建）。后端连接断开后自动从列表移除。支持通过 HTTP 管理 API 动态添加移除后端节点（管理 API 跑在另一个端口）。
+
+连接数超过后端承载能力时新连接排队等待。Netty 的 channel 管理要正确关闭。代码分至少三个源文件：proxy handler、backend pool、admin API。端口环境变量。mvn clean package 通过。

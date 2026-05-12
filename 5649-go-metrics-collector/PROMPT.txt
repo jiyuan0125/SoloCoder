@@ -1,0 +1,5 @@
+基于 topic 的发布订阅消息中间件。Go Fiber。
+
+Topic 可以动态创建，消息发布到 topic 后推送给所有订阅者。订阅者通过长轮询（long polling）获取消息。消息按 topic 分区，每个 topic 独立的消息序列号。消息确认机制：消费者拉取后必须确认，超时 30 秒未确认重新变为可消费。
+
+涉及 archive/tar 做消息归档或者用 encoding/gob 做消息序列化。消息存内存，支持按 topic 和时间范围查询。端口 PORT 环境变量。go run 能跑。

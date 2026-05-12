@@ -1,0 +1,5 @@
+Spring Boot 做 Token 生命周期管理。场景是认证系统需要管理 access_token 和 refresh_token 的完整生命周期。
+
+access_token 有效期 30 分钟，refresh_token 有效期 7 天。refresh_token 只能使用一次，用了之后旧的作废，发一对新的。refresh_token 也要能被吊销（用户改密码或主动登出时吊销所有 refresh_token）。Token 签发用 HMAC-SHA256，密钥配置在 application.properties。
+
+认证流程：验证 access_token 签名和过期时间。过期返回 401 + 特定错误码 TOKEN_EXPIRED。客户端用 refresh_token 换新的 access_token。refresh_token 也过期了返回 401 + REFRESH_EXPIRED，需要重新登录。管理接口查看活跃 token 数、吊销指定用户的所有 token。

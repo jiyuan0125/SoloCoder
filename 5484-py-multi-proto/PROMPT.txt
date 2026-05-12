@@ -1,0 +1,5 @@
+FastAPI 做多协议适配网关。同一个后端服务可以接收不同格式的请求（JSON、XML、Form-Data），网关负责统一转换为后端期望的 JSON 格式。
+
+转换规则按 Content-Type 选择：application/json 直接透传，application/xml 转为 JSON（标签名做 key、内容做 value、属性加 @ 前缀），multipart/form-data 按 field name 组装成 JSON 对象。嵌套结构的表示：XML 用子标签，Form-Data 用点号分隔（如 address.city）。
+
+响应也可以选择格式：客户端通过 Accept 头指定想要 JSON 还是 XML。不支持格式返回 415。转换错误返回 400 并说明原因。管理接口查看转换统计和错误日志。

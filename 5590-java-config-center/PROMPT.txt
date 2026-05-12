@@ -1,0 +1,5 @@
+用 Netty 做一个带配置依赖解析的配置中心。配置值支持引用其他配置——比如 database.url 引用了 host 和 port 两个配置，值为 jdbc:mysql://{host}:端口 PORT 环境变量指定，mvn exec:java 能跑起来。/mydb。
+
+修改 host 或 port 时，所有引用了它们的配置自动重新计算并推送。引用关系形成依赖图，修改一个底层的配置可能级联影响几十个上层配置。循环引用在写入时检测并拒绝。
+
+配置值还支持表达式——比如 thread.pool.size = CPU_CORES * 2，运行时动态计算。管理接口展示完整的依赖图和级联影响范围。端口 PORT 环境变量指定，mvn exec:java 能跑起来。

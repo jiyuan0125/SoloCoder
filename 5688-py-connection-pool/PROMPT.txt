@@ -1,0 +1,5 @@
+多依赖级联健康检查。Spring Boot 2.x Maven JDK 17。
+
+服务依赖数据库、缓存、消息队列。健康检查依次检测所有依赖，任一不健康则服务不健康。/liveness 返回进程存活状态，/readiness 返回就绪状态。依赖恢复后自动恢复就绪。
+
+依赖配置：name、type（http/tcp/ping）、address、timeout、interval。检测结果：依赖名、状态（healthy/unhealthy）、last_check_time、error_msg。/readiness 要所有依赖 healthy 才返回 200。管理接口可以查看每个依赖的详细状态。数据内存存。端口环境变量。mvn package 通过。

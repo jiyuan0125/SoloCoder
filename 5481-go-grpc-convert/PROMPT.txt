@@ -1,0 +1,5 @@
+Go 标准库做 HTTP↔gRPC 协议转换网关。前端只能发 HTTP JSON 请求，但后端服务是 gRPC 接口，中间需要一层转换。
+
+转换规则配置：HTTP 路径映射到 gRPC 方法（package.service/method）。请求转换：JSON body 转为 gRPC 的 protobuf 消息（用 JSON marshal/unmarshal 模拟，不需要真实 protobuf）。响应转换：gRPC 响应转回 JSON。嵌套对象和枚举值要正确转换。枚举用字符串表示。
+
+错误处理：gRPC 返回的错误码转 HTTP 状态码（NOT_FOUND→404、ALREADY_EXISTS→409、PERMISSION_DENIED→403、其他→500）。管理接口查看转换规则、请求统计（每个方法的调用量、平均耗时）。规则可以动态添加和修改。

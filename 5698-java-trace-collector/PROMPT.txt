@@ -1,0 +1,5 @@
+分布式 TraceID 传播收集器。Spring Boot 2.x Maven JDK 17。
+
+请求入口生成 TraceID，通过 X-Trace-Id 头传播。每个服务创建 Span 记录（服务名、操作、开始/结束时间）。Span 通过接口上报，收集器按 TraceID 聚合完整调用链。支持异步任务的链路——异步任务继承父 TraceID。
+
+TraceID 格式：trace-{uuid}。Span 格式：trace_id、span_id、parent_span_id、service、operation、start_time、end_time、status、tags（Map）。调用链查询：按 TraceID 精确查、按服务名+时间范围模糊查。数据存内存。端口环境变量。mvn package 通过。

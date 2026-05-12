@@ -1,0 +1,5 @@
+FastAPI 做 OAuth2 Token 验证网关。场景是第三方应用通过 OAuth2 授权访问我们的 API，网关负责验证 access_token 的有效性。
+
+支持两种 token 类型：JWT 自包含 token 和引用 token（需要调认证服务校验）。JWT token 本地验证签名和过期时间。引用 token 调外部认证服务的 /introspect 接口验证。token 类型通过前缀区分（jwt_ 开头是 JWT，ref_ 开头是引用 token）。
+
+token 验证通过后提取 scope（权限范围），每个 API 路由配置需要的 scope。scope 不够的返回 403。token 过期前 5 分钟内，网关在响应头里加 X-Token-Refresh-Recommended: true 提醒客户端续期。管理接口查看当前活跃 token 数、验证成功/失败统计。
