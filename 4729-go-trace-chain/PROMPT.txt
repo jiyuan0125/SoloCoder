@@ -1,0 +1,4 @@
+排查跨服务问题全靠日志时间对齐太痛苦了，Go net/http 实现一个简单的链路追踪收集服务。
+每次请求入口生成 TraceID，调用下游时通过 X-Trace-Id 头传播。每次调用记录一个 Span：trace_id、span_id、parent_span_id、服务名、操作名、开始时间、耗时、状态码。
+追踪数据通过 HTTP 接口批量上报到收集服务。收集服务按 trace_id 聚合所有 Span，提供接口查询某次请求的完整调用链和耗时树。
+上报接口单次最多 1000 个 Span，超过的分批处理。Span 的 parent_span_id 为空表示根节点。端口 PORT 指定。

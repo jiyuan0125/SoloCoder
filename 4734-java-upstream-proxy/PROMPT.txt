@@ -1,0 +1,4 @@
+需要把外部请求按路径分发到内网不同服务，Netty 实现反向代理。
+路由表配置路径前缀到后端地址的映射。请求匹配到前缀后，去掉前缀部分转发到后端。比如配置 /service-a/ → localhost:9001，请求 /service-a/api/login 转发到 /api/login。
+后端连接失败时返回 503。支持路径参数匹配，比如 /api/users/{id}/orders 这里的 id 要传给后端。
+路由配置在 JSON 文件里，修改文件后重新加载。JDK 17 + Maven，PORT 指定。
