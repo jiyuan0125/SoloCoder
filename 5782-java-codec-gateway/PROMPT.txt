@@ -1,0 +1,5 @@
+闲着没事想做一个数据格式转换器自己用，Java/Spring Boot 2.x写服务端。
+
+JSON → Protobuf 序列化（模拟：JSON → 自定义紧凑格式）。反向也要支持：Protobuf → JSON。字段映射规则通过配置文件定义，支持字段名映射和类型转换。转换失败的记录原始数据和错误原因到失败队列。嵌套结构支持递归转换。数组类型正确处理。时间格式自动转换（JSON的ISO字符串 → 内部时间戳）。管理接口查看转换统计和失败队列。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

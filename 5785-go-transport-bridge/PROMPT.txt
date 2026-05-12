@@ -1,0 +1,5 @@
+最近在搞中间件这块，需要一个XML-REST协议适配器，Go/标准库 net/http实现。
+
+接收REST/JSON请求转换为SOAP XML格式调用老系统。老系统XML响应解析为JSON返回。XML namespace 处理：自动映射和去除。SOAP Fault 转为合适的 HTTP 错误码和 JSON 错误体。字段映射支持嵌套路径（如 response.body.result.items → items）。特殊字符处理（CDATA、XML实体）。管理接口查看转换统计和映射配置。
+
+Go 标准库 net/http 实现，不用框架。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。

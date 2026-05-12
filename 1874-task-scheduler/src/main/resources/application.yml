@@ -1,0 +1,7 @@
+server:
+  port: 8080
+
+scheduler:
+  data-dir: data
+  max-retries: 3
+  max-queue-size: 5

@@ -1,0 +1,11 @@
+指标需要按 Prometheus 格式导出。用 Go 标准库 net/http 写。
+
+指标注册接口：指定名称、类型（counter/gauge/histogram）、标签名列表、help 文本。注册后可以通过接口写入数据点。
+
+Counter 只增不减。Gauge 可增可减。Histogram 写入观察值，内部维护桶分布（可配桶边界）。
+
+/metrics 端点输出 Prometheus text format。其他端点支持 JSON 导出。
+
+管理接口查看已注册的指标列表和原始数据。支持删除指标。
+
+端口 PORT 环境变量，go build 能过。

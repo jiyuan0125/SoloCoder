@@ -1,5 +1,0 @@
-用 Netty 做一个 UDP 日志收集服务。Maven 不用 Spring。
-
-各微服务通过 UDP 发送 JSON 格式日志到收集器。日志按服务名和时间窗口分桶存储。支持按时间范围、服务名、级别（DEBUG/INFO/WARN/ERROR）搜索。日志保留 7 天，超期清理。内存缓冲满时批量写入本地文件。
-
-日志格式：service、level、message、timestamp、trace_id（可选）。UDP 不保证顺序，日志时间戳可能乱序，搜索结果按时间排序。管理接口（HTTP）：搜索日志、查看各服务日志量统计。两个端口。端口环境变量。mvn clean package 通过。

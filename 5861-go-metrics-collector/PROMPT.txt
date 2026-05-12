@@ -1,0 +1,11 @@
+Prometheus 格式的指标采集服务。用 Go 标准库 net/http 写。
+
+支持三种指标类型：Counter（只增不减）、Gauge（可增可减）、Histogram（分布统计）。每种类型有独立的注册和更新接口。
+
+Counter 接口：inc(name, labels, value)。Gauge 接口：set(name, labels, value)、inc、dec。Histogram 接口：observe(name, labels, value)，内部维护桶的分布。
+
+labels 是键值对，同一个 name + 不同 labels 是独立的指标序列。比如 http_requests_total{method="GET",path="/api"} 和 http_requests_total{method="POST",path="/api"} 是两条。
+
+/metrics 接口输出 Prometheus text format。管理接口可以查看所有注册的指标名称和标签组合数量。
+
+端口 PORT 环境变量，go build 能过。

@@ -1,0 +1,11 @@
+有个消息系统用 Protobuf 编码，前端只认 JSON。用 Go/Gin 写。
+
+编码转换：接收 JSON body + 指定的 message type，按预定义的 schema 编码成 protobuf 二进制。schema 通过管理接口注册，用 .proto 文件的 JSON 描述格式。
+
+解码转换：接收 protobuf 二进制 + message type，按 schema 解码成 JSON。
+
+Schema 管理：注册 .proto 定义的 JSON 描述（包含 message name、字段列表、字段类型、字段编号）。支持嵌套 message。
+
+消息校验：编码前校验 JSON 是否符合 schema（必填字段、类型匹配）。校验失败返回详细错误信息。
+
+端口 PORT 环境变量，go build 能过。

@@ -1,0 +1,11 @@
+需要一个高吞吐的指标采集管道。用 Rust/axum 写。
+
+指标通过 UDP 接收（HTTP 接口同时支持），格式为 influxdb line protocol 的子集：measurement,tag1=val1,tag2=val2 field1=123,field2=456 timestamp。
+
+接收到的指标先写入内存环形缓冲区（MPSC channel），后台线程从缓冲区消费并建立索引。索引结构按 measurement → tags → fields 三级组织。
+
+查询接口支持：按 measurement 和 tag 过滤、按时间范围、聚合函数（sum/avg/max/min/count）。查询在内存索引上执行。
+
+缓冲区满时丢弃最旧的数据。提供接口查看缓冲区使用率和丢弃计数。
+
+Cargo build 能过，端口 PORT 环境变量。

@@ -1,0 +1,9 @@
+业务方需要在多个服务之间传递事件。用 Java/Spring Boot 做一个简单的消息队列。
+
+Topic 管理通过接口：创建 topic、查看 topic 列表、删除 topic。每个 topic 有消息保留策略——按条数或按时间，超出自动清理旧消息。
+
+生产者往 topic 发消息，消息有 ID、时间戳、body、可选的 key。支持批量发送。
+
+消费者按 group 订阅 topic，同 group 内消息均匀分配（竞争消费），不同 group 各自独立消费。消费失败的消息进入重试队列，重试 3 次后进入死信队列。死信队列的消息可以查看和重新投递。
+
+消息投递保证 at-least-once。Maven 构建，端口 server.port。

@@ -1,0 +1,11 @@
+需要跨服务的链路追踪，服务间的调用关系要可视化。用 Go 标准库 net/http 写。
+
+Span 上报接口接收 span 数据。每个 span 包含 trace_id、span_id、parent_span_id、service、operation、start_time、end_time、tags(map)、status。
+
+服务拓扑自动生成：根据 span 的 service 和 parent 信息，自动构建服务调用关系图。查询接口返回拓扑 JSON（节点是服务，边是调用关系，边上有 QPS 和平均延迟）。
+
+按 trace_id 查询返回完整 span 树。每个 span 包含耗时和状态。支持搜索特定服务 + 特定操作的慢请求。
+
+内存保留最近 10 万条 span 数据，超出丢弃最旧的。
+
+端口 PORT 环境变量，go build 能过。

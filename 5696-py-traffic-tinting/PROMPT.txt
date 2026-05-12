@@ -1,5 +1,0 @@
-多版本并行流量路由。Spring Boot 2.x。
-
-v1/v2/v3 三个版本同时运行。客户端请求头 X-API-Version 指定版本，网关路由到对应服务。未指定版本路由到默认版本。版本标记 deprecated 后响应头加 Sunset 和 Link。版本下线前 30 天开始返回 deprecation 警告。
-
-版本配置：version、backend_url、status（active/deprecated/sunset）、default（boolean）、sunset_date。路由匹配不到指定版本返回 400 和可用版本列表。管理接口：CRUD 版本配置。数据 ConcurrentHashMap 存。端口环境变量。mvn package 通过。

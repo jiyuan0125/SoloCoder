@@ -1,0 +1,5 @@
+Go/Gin做中间件这块挺合适的，试一下HTTP-gRPC桥接服务。
+
+HTTP 请求进来解析为内部格式，映射到 gRPC 方法调用（模拟：调用内部HTTP接口但包装成gRPC风格）。gRPC 响应转回 HTTP JSON。支持 unary 和 server-streaming 两种模式。错误码映射：gRPC NOT_FOUND → HTTP 404，INVALID_ARGUMENT → 400。支持 gRPC metadata 到 HTTP header 的双向映射。接口定义通过配置文件管理。管理接口查看转换统计和错误映射。
+
+Go Gin 框架实现。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。

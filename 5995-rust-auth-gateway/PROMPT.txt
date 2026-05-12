@@ -1,0 +1,11 @@
+网关需要做 Token 黑名单和刷新。用 Rust/tokio 写，Token 管理、黑名单和 API 层分文件。
+
+JWT 签发接口：输入用户 ID 和角色，返回 access token（15 分钟有效）和 refresh token（7 天有效）。
+
+Token 刷新：用 refresh token 换新的 access token。refresh token 使用后作废（加入黑名单）。
+
+黑名单：支持按 token jti 和按用户 ID 加入黑名单。按用户 ID 加黑名单后该用户所有 token 失效。黑名单条目有过期时间（自动清理）。
+
+认证接口：验证 token 有效性（签名、过期、黑名单检查）。返回用户信息。
+
+Cargo build 能过，端口 PORT 环境变量。

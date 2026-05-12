@@ -1,0 +1,7 @@
+线上的旧中间件太简陋了，重写一个指标导出网关，Go/标准库 net/http实现。
+
+/metrics 接口输出 Prometheus text format。支持 Counter（TYPE counter）、Gauge（TYPE gauge）、Histogram（TYPE histogram）。每个指标带 HELP 和 TYPE 行。标签用花括号表示。Histogram 输出 _bucket、_sum、_count 三个指标。输出按指标名字母序排列。支持按前缀过滤（如 ?name=api_）。大量指标时分块输出避免超时。管理接口查看已注册的指标数量和上次采集时间。
+
+格式化引擎、指标聚合、分块输出分模块。
+
+Go 标准库 net/http 实现，不用框架。数据存内存，用 map 或自定义结构体。端口通过环境变量 PORT 指定。go run 能跑起来。

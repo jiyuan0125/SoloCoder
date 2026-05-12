@@ -1,0 +1,11 @@
+现在各服务各自做认证，想统一到网关层。用 Python/FastAPI 写。
+
+JWT 认证：请求带 Authorization: Bearer <token>，网关验证签名和过期时间。验证通过后把 token 里的 user_id、role 等字段注入到请求 Header 转发给后端。
+
+API Key 认证：请求带 X-API-Key header，网关查 key 表找到对应的用户信息和权限。Key 有过期时间，过期了拒绝。
+
+白名单路径不需要认证。白名单通过接口配置，支持精确匹配和前缀匹配。
+
+Token 刷新：POST /auth/refresh 接口，用旧 token 换新 token。旧 token 还有 5 分钟以内过期时才允许刷新。
+
+端口 PORT 环境变量。

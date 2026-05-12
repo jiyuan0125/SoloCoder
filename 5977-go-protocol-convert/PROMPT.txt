@@ -1,0 +1,9 @@
+需要桥接 WebSocket 和 TCP。用 Go 标准库 net/http 写。
+
+客户端通过 WebSocket 连接网关。网关把 WebSocket 帧转发到后端 TCP 服务器。TCP 服务器的响应转成 WebSocket 帧发回客户端。
+
+支持多个 TCP 后端。按 WebSocket 连接路径路由到不同的 TCP 后端。
+
+WebSocket 断开时关闭 TCP 连接。TCP 连接断开时关闭 WebSocket。异常断开都记录日志。
+
+管理接口配置路由。端口 PORT 环境变量，go build 能过。

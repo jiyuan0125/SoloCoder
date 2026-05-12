@@ -1,0 +1,9 @@
+之前用 Redis 但其实数据量不大，没必要。用 Go 标准库 net/http 写一个嵌入式缓存服务。
+
+缓存支持 string、list、hash、set 四种数据类型。每种类型有对应的操作接口。string 支持自增自减，list 支持左右 push/pop，hash 支持 field 级别操作，set 支持交集并集。
+
+所有 key 有 TTL，set 时指定。永久 key 不设 TTL。TTL 到期后惰性删除——访问时检查，过期了就删掉返回不存在。
+
+提供接口扫描所有 key（支持 pattern 匹配）和查看某个 key 的剩余 TTL。内存使用超过阈值时触发淘汰，淘汰策略可配。
+
+端口 PORT 环境变量，go build 能过。

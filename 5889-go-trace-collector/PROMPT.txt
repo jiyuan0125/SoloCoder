@@ -1,0 +1,11 @@
+链路追踪要支持自定义标签，方便业务排查。用 Spring Boot 写。
+
+Span 除了标准字段，还支持任意自定义标签（key-value 对）。标签在上报 span 时一起提交。比如一个订单相关的 span 可以带 order_id、user_id 标签。
+
+按标签搜索：指定标签 key 和 value，返回包含该标签的所有 trace。支持多标签 AND 搜索。
+
+链路对比：输入两个 trace_id，对比它们的 span 差异——哪些服务多调了、哪些少调了、哪些耗时差异大。
+
+Span 数据存内存，定时归档到磁盘文件（JSON Lines 格式）。归档后内存中的旧数据清理。磁盘文件可查询。
+
+Maven 构建，端口 server.port。

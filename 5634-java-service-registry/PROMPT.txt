@@ -1,5 +1,0 @@
-移动端 BFF 网关，iOS 和 Android 共用一套 API。FastAPI 全异步。
-
-网关根据请求头 X-Client-Type（ios/android）和 X-App-Version 做差异化处理。v1 版本的接口返回完整字段，v2 版本裁剪掉不需要的字段。接口路径统一为 /api/v{version}/{resource}。v1 接口标记为 deprecated 但仍然可用。
-
-接口配置（路径、后端地址、字段过滤规则、版本号）通过管理 API 设置。代码分至少三个文件：路由匹配、后端代理、版本管理。接口变更记录到日志。数据存内存。端口环境变量。

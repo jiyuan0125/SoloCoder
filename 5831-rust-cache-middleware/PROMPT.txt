@@ -1,0 +1,11 @@
+我们有好几套环境共用一套缓存，需要按命名空间隔离。用 Python/FastAPI 写。
+
+缓存按 namespace 隔离，不同 namespace 的 key 完全独立。每个 namespace 可以单独配置最大容量和淘汰策略（LRU/LFU/FIFO）。
+
+支持的基础操作：get、set（带 TTL）、delete、exists。批量操作：mget、mset、mdel。set 时如果 key 已存在且未过期则覆盖。
+
+namespace 过期 key 有后台任务定期清理，清理间隔可配。同时提供一个接口手动触发清理某个 namespace 的过期 key。
+
+统计接口返回每个 namespace 的 key 数、命中率、淘汰数。管理接口创建和删除 namespace。
+
+端口 PORT 环境变量。

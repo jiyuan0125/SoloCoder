@@ -1,5 +1,0 @@
-A/B 测试流量分配器。aiohttp 全异步。
-
-用户按 ID 哈希均匀分配到实验组。同一用户始终在同一组。请求打上 X-Experiment-Group 头转发到后端。实验结束后查看各组转化率对比。一个实验最多 10 个组（包括对照组）。
-
-实验格式：name、groups（list of group_name + traffic_percent）、status（running/stopped）、start_time、end_time。用户分组用 consistent hashing。管理接口：CRUD 实验、查看分组结果、查看转化率数据。数据存内存。端口环境变量。

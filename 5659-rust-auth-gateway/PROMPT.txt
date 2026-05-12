@@ -1,5 +1,0 @@
-带标签的缓存系统，可以按标签批量失效缓存。Go Fiber。
-
-每个缓存项可以关联多个标签。比如商品详情缓存关联 tag=category:3,tag=shop:100。当 category:3 下所有商品需要刷新时，按标签批量失效。标签关联关系也存内存。
-
-缓存操作：Set(key, value, ttl, tags)、Get(key)、Delete(key)、InvalidateByTag(tag)。标签管理：查看某个标签下有哪些 key。缓存容量满时 LRU。端口 PORT 环境变量。go run 能跑。

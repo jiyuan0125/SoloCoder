@@ -1,0 +1,5 @@
+闲着没事想做一个通知消息总线自己用，Java/Spring Boot 2.x写服务端。
+
+Topic 模式：发布者往 Topic 发消息，订阅了该 Topic 的消费者都能收到。消费者注册时指定 Topic 和回调地址。消息推送失败重试 3 次，间隔递增（1秒、5秒、30秒）。3 次都失败的消息进死信队列。消息保留 7 天。消费者可查询自己 Topic 的未消费消息数量。管理接口管理 Topic 和消费者注册。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

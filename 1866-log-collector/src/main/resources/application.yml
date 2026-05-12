@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: log-collector
+
+log-collector:
+  log-directory: ./logs
+  load-days: 7
+  default-level: INFO
+  file-prefix: access

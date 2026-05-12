@@ -1,0 +1,11 @@
+有个场景需要 HTTP 和 WebSocket 之间的桥接。用 FastAPI 写。
+
+HTTP 端接收 POST 请求，把 body 发送到 WebSocket 连接。WebSocket 端接收消息，转成 HTTP 回调到配置的地址。
+
+桥接规则配置：每个桥接有唯一的 channel ID。HTTP 请求指定 channel ID，消息发到对应的 WebSocket 连接。一个 channel 只能有一个 WebSocket 连接。
+
+WebSocket 断连后缓存最近 100 条消息，重连后补发。HTTP 端如果 channel 没有活跃的 WebSocket 连接，返回 503。
+
+管理接口查看所有 channel 的状态（连接/断开）、消息转发统计。
+
+端口 PORT 环境变量。

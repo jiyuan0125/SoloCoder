@@ -1,0 +1,5 @@
+我们安全团队最近需要一套JWT验证与刷新，用Rust/actix-web做。
+
+请求带 Authorization: Bearer {token} 头。网关验证签名和过期时间。过期但不超过 5 分钟的自动刷新返回新 Token（响应头 X-New-Token）。过期超过 5 分钟的返回 401。Token 包含 user_id 和 role 字段，注入到下游请求头。支持 Token 黑名单：登出后 Token 即使未过期也失效。黑名单自动清理过期 Token。管理接口管理密钥和黑名单。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

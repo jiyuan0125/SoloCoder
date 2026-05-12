@@ -1,0 +1,11 @@
+需要把旧的 SOAP 接口转成 REST。用 Spring Boot 写。
+
+转换规则定义：SOAP operation 名称、对应的 REST 路径和 HTTP 方法、请求字段映射（XML 路径 → JSON 字段）、响应字段映射（JSON → XML）。
+
+转换过程：接收 REST JSON 请求 → 按 mapping 组装 SOAP XML → 调用 SOAP 后端 → 解析 SOAP 响应 → 转 JSON 返回。
+
+转换状态记录：每次转换记录输入输出和耗时。转换失败的记录错误详情和堆栈。
+
+管理接口 CRUD 转换规则、查看转换统计和最近失败记录。
+
+Maven 构建，端口 server.port。

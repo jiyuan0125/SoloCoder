@@ -1,0 +1,9 @@
+有个事件驱动的业务需要广播消息给所有订阅者。用 FastAPI 写一个发布订阅系统。
+
+Publisher 往 channel 发消息，所有订阅了该 channel 的 subscriber 都能收到。subscriber 通过长轮询获取消息——请求进来后如果有消息立即返回，没有就挂起最多 30 秒。
+
+channel 持久化最近 1000 条消息，新订阅者可以选择从最新消息开始消费或从某个时间点回放。
+
+subscriber 如果超过 60 秒没有拉取消息，自动取消订阅。取消后该 subscriber 的未消费消息丢弃。
+
+管理接口查看所有 channel 和 subscriber 状态。端口 PORT 环境变量。

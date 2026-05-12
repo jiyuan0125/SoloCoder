@@ -1,0 +1,5 @@
+新接了个大客户的项目，他们要求有TraceID日志关联，用Rust/actix-web搞。
+
+日志写入时如果带有 trace_id 字段自动关联到该 trace。查询接口支持按 trace_id 查询完整链路日志（跨服务）。按时间排序展示链路中各节点的日志。trace 日志支持树形展示（span 嵌套关系）。同一个 trace 的日志聚合统计总耗时和各节点耗时。trace 过期时间 24 小时。管理接口可查看热点 trace 列表和慢链路。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

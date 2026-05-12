@@ -1,5 +1,0 @@
-用 Netty 实现 WebSocket 连接池管理。Maven 不用 Spring。
-
-维护与多个上游 WebSocket 服务的持久连接。心跳每 30 秒发一次，60 秒无回复判定断开。断线后自动重连，指数退避。重连成功后尝试补发断线期间的消息（上游支持的话）。连接池支持运行时动态增减连接数。
-
-每个上游的配置：地址、最大连接数、心跳间隔。管理接口（HTTP）可以查看连接状态和手动触发重连。连接状态：connected/connecting/disconnected。数据内存存。两个端口。端口环境变量。mvn clean package 通过。

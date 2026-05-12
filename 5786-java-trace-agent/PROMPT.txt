@@ -1,0 +1,7 @@
+可观测团队那边提了个需求，要一套TraceID注入与传播，Java/Spring Boot 2.x。
+
+入口请求没有TraceID时自动生成（格式：32位hex）。TraceID 通过 X-Trace-Id 头传播。每层服务创建 Span，SpanID 自增，ParentSpanID 指向上层。Span 信息包括：服务名、操作名、开始时间、结束时间、状态。完整的 trace 数据汇聚到查询服务。查询接口按 TraceID 返回完整调用树。采样策略：默认 100% 采样，可调为 10% 或 1%。采样只影响记录不影响传播。
+
+ID生成、Span管理、采样策略分模块。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

@@ -1,0 +1,13 @@
+老系统是 SOAP 协议，新系统用 REST，需要一个转换层。用 Rust/axum 写。
+
+接收 RESTful JSON 请求，转换成 SOAP XML 调用老系统，再把 XML 响应转回 JSON 返回。
+
+转换规则配置：REST 路径映射到 SOAP action，JSON body 字段映射到 SOAP XML 的节点。映射关系通过接口配置，存内存。
+
+SOAP 响应解析：从 XML 中提取数据字段，按映射规则组装成 JSON。XML namespace 需要正确处理。
+
+错误转换：SOAP Fault 转成 JSON 错误格式，包含错误码和消息。未知错误统一转成 500。
+
+管理接口查看映射规则列表和转换统计（成功数、失败数、平均耗时）。
+
+Cargo build 能过，端口 PORT 环境变量。

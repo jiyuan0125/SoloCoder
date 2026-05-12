@@ -1,0 +1,11 @@
+客户需要 OAuth2 授权码模式的认证网关。用 Spring Boot 写。
+
+授权码流程：客户端重定向到 /auth/authorize → 用户登录 → 重定向回客户端带 code → 客户端用 code 换 token。
+
+客户端注册接口：注册 client_id、client_secret、redirect_uri、支持的 scope。未注册的客户端请求直接拒绝。
+
+Token 管理：access_token 有过期时间（可配，默认 2 小时），refresh_token 有效期 30 天。Token 存内存，支持主动吊销（revocation 接口）。
+
+用户信息接口：后端拿 access_token 调 /auth/userinfo 获取用户基本信息。权限校验在 scope 维度，不同 scope 可访问不同接口。
+
+Maven 构建，端口 server.port。

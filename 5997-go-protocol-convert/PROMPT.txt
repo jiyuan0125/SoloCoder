@@ -1,0 +1,11 @@
+需要把 MQTT 消息桥接到 HTTP。用 Go/Gin 写。
+
+MQTT 客户端连接到指定 topic。收到消息后转成 HTTP POST 请求发送到配置的回调 URL。消息 topic 映射到 HTTP 路径。
+
+HTTP 请求的响应如果状态码是 2xx，MQTT 消息确认消费。非 2xx 重试 3 次，间隔递增。重试都失败则消息进入死信队列。
+
+死信队列通过接口查询和管理。可以重新投递死信消息。
+
+桥接配置通过接口管理：MQTT broker 地址、topic、回调 URL、重试策略。
+
+端口 PORT 环境变量，go build 能过。

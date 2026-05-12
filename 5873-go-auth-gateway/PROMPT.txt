@@ -1,0 +1,11 @@
+微服务之间调用也需要认证。用 Rust/axum 写服务间认证网关。
+
+双向 TLS 模拟：每个服务有预共享密钥（PSK）。请求时带 X-Service-Id 和 X-Signature。Signature = HMAC-SHA256(timestamp + method + path + body, psk)。网关验证签名和时间戳（5 分钟内有效）。
+
+服务注册接口：注册 service_id、PSK、允许访问的路径列表（ACL）。未注册的 service_id 全部拒绝。
+
+ACL 校验：签名通过后检查路径是否在 ACL 列表内。不在列表内的返回 403。
+
+审计日志：所有认证请求记录到内存缓冲区（最近 10000 条），包含 service_id、路径、结果、时间戳。
+
+Cargo build 能过，端口 PORT 环境变量。

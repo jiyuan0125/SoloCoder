@@ -1,0 +1,5 @@
+群里有人说缺一个好用的OAuth2认证代理，我寻思Rust/actix-web能搞。
+
+OAuth2 授权码流程：用户访问 /login 跳转授权页，授权后回调 /callback 换取 access_token。Token 存储在服务端（session模式），浏览器给 Cookie。后续请求通过 Cookie 找到 session 中的 Token 注入到下游请求头。Token 过期自动用 refresh_token 续期。续期失败重定向登录。管理接口管理 client_id/secret 和回调地址。支持多套 OAuth2 配置（不同身份提供商）。
+
+Rust actix-web。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。

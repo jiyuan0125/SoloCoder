@@ -1,0 +1,11 @@
+微服务调用链路太长，出问题不知道卡在哪。用 Python/FastAPI 写链路追踪。
+
+每个请求生成唯一的 trace_id。服务间调用时 trace_id 通过 Header 传递。每次调用记录一个 span：trace_id、span_id、parent_span_id、服务名、操作名、开始时间、结束时间、状态码。
+
+Span 通过接口上报，支持批量。上报后存 SQLite。
+
+查询接口：按 trace_id 查询完整链路（所有 span），组装成树形结构展示。支持查询最近 N 条慢请求（总耗时 Top N）。
+
+统计接口：返回每个服务的平均响应时间和错误率。
+
+端口 PORT 环境变量。

@@ -1,5 +1,0 @@
-多环境服务注册发现，dev/staging/prod 隔离。Spring Boot 2.x Maven JDK 17。
-
-服务注册时指定环境，只能注册到对应环境。查询时按环境过滤。环境之间可以 federate 共享指定服务（比如 auth-service 三个环境共享）。环境切换时（比如测试切生产）服务发现结果立即更新。
-
-服务实例信息：名称、地址、端口、环境、版本、状态（健康/不健康）。心跳超时 30 秒标记不健康。federation 配置通过管理接口。数据 ConcurrentHashMap 存。端口环境变量。mvn package 通过。

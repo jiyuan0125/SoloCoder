@@ -1,0 +1,11 @@
+配置需要支持模板和变量替换。用 Spring Boot 写，模板引擎、变量存储和 API 层分文件。
+
+配置值支持模板语法：${variable_name} 和 ${variable_name:default_value}。客户端拉取配置时自动替换变量。
+
+变量来源：全局变量（所有 namespace 共享）、namespace 变量（只在某个 namespace 内生效）、环境变量（从运行环境读取，优先级最高）。
+
+变量管理接口 CRUD 变量。配置预览接口：返回替换后的完整配置（用于调试）。
+
+导入导出：导出某个 namespace 的配置和变量为 JSON。导入时自动创建不存在的变量。
+
+Maven 构建，端口 server.port。

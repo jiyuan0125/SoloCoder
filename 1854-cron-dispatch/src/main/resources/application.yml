@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: cron-dispatch
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: Asia/Shanghai

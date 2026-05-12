@@ -1,5 +1,0 @@
-用 Netty 做一个 HTTP/1.1 到 HTTP/2 的协议升级网关。Maven，不用 Spring。
-
-客户端用 HTTP/1.1 连接网关，网关用 HTTP/2 连接后端。请求头要正确转换（HTTP/2 用伪头字段 :method、:path 等）。响应也要从 HTTP/2 转回 HTTP/1.1。POST 请求的 body 要完整转发。
-
-HTTP/2 的流管理和 HTTP/1.1 的请求-响应模型怎么对应你自己设计。连接复用、流并发、头压缩这些 HTTP/2 特性的支持程度你自己定。管理接口展示当前连接数和协议版本分布。端口环境变量。mvn clean package 通过。

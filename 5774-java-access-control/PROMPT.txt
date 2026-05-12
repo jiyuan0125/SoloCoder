@@ -1,0 +1,5 @@
+想用Java/Spring Boot 2.x练手中间件这块，做个MFA认证网关。
+
+普通操作只需 Token 验证。敏感操作（标记在路由配置中）需要额外验证动态口令（TOTP）。动态口令通过 /mfa/challenge 接口获取挑战码，用户用认证器计算口令后提交 /mfa/verify。验证通过后生成一个短期 Token（5分钟有效）用于后续敏感操作。连续 3 次口令错误冻结 MFA 验证 30 分钟。管理接口查看 MFA 状态和失败记录。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

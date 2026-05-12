@@ -1,0 +1,11 @@
+链路追踪需要跨异步消息传播。用 Spring Boot 写，Span 采集、传播层和查询 API 分文件。
+
+HTTP 请求自动注入 TraceID（通过 filter）。异步消息（通过消息队列发送的消息）也携带 TraceID 在消息 header 里。
+
+Span 采集接口接收 HTTP 和消息两种来源的 Span 数据。统一存储后按 TraceID 关联。
+
+查询接口按 TraceID 查完整链路，包括 HTTP 调用和消息投递。展示异步边（通过消息传递）和同步边（HTTP 调用）。
+
+依赖拓扑：根据 Span 数据自动生成服务间调用关系图。
+
+Maven 构建，端口 server.port。

@@ -1,0 +1,11 @@
+链路追踪需要采集 Span 数据并提供查询。用 Go 标准库 net/http 写。
+
+Span 采集接口：接收 TraceID、SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签、状态。写入内存存储。
+
+查询接口：按 TraceID 查完整调用链。返回 Span 树（根据 ParentSpanID 构建父子关系）。支持按服务名和时间范围过滤 Trace。
+
+采样策略：可配采样率。未采样的 Span 只记录 TraceID 不存储详情。
+
+慢请求分析：找出耗时 Top N 的 Trace。每个 Trace 展示耗时最长的 Span。
+
+端口 PORT 环境变量，go build 能过。

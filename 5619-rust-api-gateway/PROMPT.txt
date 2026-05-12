@@ -1,5 +1,0 @@
-IP 维度的请求限流器，带地理位置过滤，Go Fiber。
-
-每个 IP 独立计数（每分钟最多 N 次，N 可配置）。IP 归属地查询用本地 IP 段表（内存中加载一个 CIDR 列表）。特定地区的 IP 限制更严格（比如境外 IP 每分钟 10 次）。超出限制返回 429。
-
-IP 段表通过接口加载，格式是 JSON 数组 [{cidr, region, limit}]。无效的 CIDR 格式要跳过不崩溃。限流计数器用 encoding/binary 相关的处理或者用 interface 做可插拔的存储后端。go run 能跑。端口 PORT 环境变量。

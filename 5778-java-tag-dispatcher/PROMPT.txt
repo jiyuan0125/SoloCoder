@@ -1,0 +1,5 @@
+用Java/Spring Boot 2.x写一个跨服务标签传播器。标签从入口网关一路传到最后一个服务，中间不能丢。
+
+入口服务给请求打标签（自定义Header）。标签列表：env=gray, version=v2, trace=xxx。服务间调用时自动携带所有标签Header。标签传播支持 HTTP 和模拟的 RPC 调用。标签变更：中间服务可以添加新标签但不能删除上游传来的标签。标签丢失检测：下游服务发现缺少必传标签时记录告警。管理接口查看标签在各服务的传播状态和丢失告警。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

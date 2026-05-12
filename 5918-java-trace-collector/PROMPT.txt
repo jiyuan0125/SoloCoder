@@ -1,0 +1,11 @@
+微服务调用链太长出问题时不好定位，需要链路追踪。用 Spring Boot 写。
+
+请求入口生成 TraceID（16 位随机 hex）。如果请求 header 里已有 TraceID 则沿用。每个 Span 有 SpanID 和 ParentSpanID。
+
+Span 信息：服务名、操作名、开始时间、结束时间、标签（key=value）、状态（OK/ERROR）。Span 通过 HTTP Header 传播：X-Trace-Id、X-Span-Id、X-Parent-Span-Id。
+
+查询接口：按 TraceID 查完整调用链、返回 Span 树结构。支持按服务名、时间范围、状态过滤。
+
+采样策略：默认全部采集，可以设采样率（0-1）。采样只影响是否存储，不影响 TraceID 传播。
+
+Maven 构建，端口 server.port。

@@ -1,0 +1,7 @@
+新的架构规范要求Baggage跨服务传播必须自建，得加个链路上下文传播器，用Java/Spring Boot 2.x。
+
+Baggage 是 key-value 对附加在 trace 上跨服务传播。入口给压测流量打 baggage: stress-test=true。中间服务读取 baggage 判断是否走影子逻辑。Baggage 通过 HTTP Header 传播（X-Baggage-{key}: {value}）。支持添加新 baggage 但不允许删除已有的。Baggage 大小限制：总大小不超过 1KB。管理接口查看当前活跃的 baggage 和传播统计。
+
+Baggage管理、传播引擎、读取接口分模块。
+
+Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。

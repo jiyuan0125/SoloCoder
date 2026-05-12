@@ -1,0 +1,11 @@
+需要一个通用的去重表服务。用 Rust/axum 写。
+
+去重接口：传入 namespace + key + TTL。如果 namespace+key 不存在，记录并返回 "new"。如果存在且未过期，返回 "duplicate" 加上原始写入时间。如果存在但已过期，覆盖并返回 "new"。
+
+支持批量去重：一次检查多个 key，返回每个 key 的结果。
+
+TTL 精确到秒。过期数据惰性删除 + 后台定期清理（每分钟一次）。
+
+统计接口：每个 namespace 的 key 数量、命中率（重复查询次数 / 总查询次数）。
+
+Cargo build 能过，端口 PORT 环境变量。

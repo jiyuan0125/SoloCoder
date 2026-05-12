@@ -1,5 +1,0 @@
-审计日志归档服务。Spring Boot 2.x Maven JDK 17。
-
-系统审计事件（登录、权限变更、数据修改）统一收集。审计日志 append-only 不可修改删除。按操作人、操作类型、时间范围查询。审计日志内存存储同时定时写文件（JSON Lines 格式）。导出支持 CSV。
-
-审计事件格式：id、operator、action、resource_type、resource_id、old_value（可选）、new_value（可选）、timestamp。导入功能：从 CSV 文件加载历史审计日志。查询支持分页。数据 ConcurrentHashMap 存。端口环境变量。mvn package 通过。

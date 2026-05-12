@@ -1,0 +1,11 @@
+代理需要支持 WebSocket 转发。用 Go 标准库 net/http 写，HTTP 路由、WS 升级和后端管理分文件。
+
+HTTP 请求和 WebSocket 连接都按路径前缀路由到后端。WebSocket 升级时从 HTTP 切换到 WebSocket 协议，然后双向转发帧。
+
+后端 WebSocket 连接断开时，代理关闭客户端连接。客户端断开时也关闭后端。
+
+后端健康检查独立运行。不健康的后端不参与路由。新请求分配到健康的后端。
+
+管理接口 CRUD 路由配置、查看各后端的连接数和健康状态。
+
+端口 PORT 环境变量，go build 能过。

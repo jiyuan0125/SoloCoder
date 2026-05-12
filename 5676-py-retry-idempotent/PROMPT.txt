@@ -1,5 +1,0 @@
-定时任务去重锁。Spring Boot 2.x Maven JDK 17。
-
-集群部署多个节点，同一时刻只有一个节点执行某个定时任务。任务执行超过预期时间（可配）后锁自动释放，其他节点可接管。任务完成主动释放。锁信息包含持有者节点 ID 和当前执行进度。
-
-任务格式：name、cron、timeout、status（idle/running）、holder、progress。管理接口：查看所有任务状态、手动释放锁、手动触发执行。执行记录：任务名、执行节点、开始时间、结束时间、结果。数据 ConcurrentHashMap 存。端口环境变量。mvn package 通过。

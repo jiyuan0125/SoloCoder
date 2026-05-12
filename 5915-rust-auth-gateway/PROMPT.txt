@@ -1,0 +1,11 @@
+对外暴露的接口需要统一鉴权。用 Rust/axum 写。
+
+JWT 认证：请求带 Authorization: Bearer <token>，网关验证签名和过期时间。过期 token 返回 401。支持 RSA 和 HMAC 两种签名算法。
+
+Token 刷新：客户端用 refresh token 换新的 access token。refresh token 有效期比 access token 长。refresh token 用过一次后作废。
+
+黑名单机制：可以手动把某个 token 加入黑名单，加入后即使未过期也被拒绝。
+
+用户信息接口：解析 token 后返回用户 ID、角色、权限列表。其他服务可以调用这个接口做鉴权。
+
+Cargo build 能过，端口 PORT 环境变量。
