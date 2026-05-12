@@ -43,8 +43,8 @@ type Patient struct {
 
 type PatientEnrollment struct {
 	ID              int64      `json:"id"`
-	PatientID       int64      `json:"patient_id"`
-	PathID          int64      `json:"path_id"`
+	PatientID       int64       `json:"patient_id"`
+	PathID          int64       `json:"path_id"`
 	PatientHospitalNo string   `json:"patient_hospital_no"`
 	PatientName     string     `json:"patient_name"`
 	Diagnosis       string     `json:"diagnosis"`
@@ -58,6 +58,7 @@ type PatientEnrollment struct {
 	SuggestExit     bool       `json:"suggest_exit"`
 	ActualDays      int        `json:"actual_days,omitempty"`
 	ActualCost      float64    `json:"actual_cost,omitempty"`
+	CreatedAt       time.Time  `json:"created_at"`
 }
 
 type DailyOrder struct {
