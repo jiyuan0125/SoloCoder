@@ -1,0 +1,7 @@
+Spring Boot 做有序消息队列。相同 Key 的消息严格按发送顺序投递。
+
+消息通过 Key 路由到固定 partition。Partition 内严格有序。跨 Key 不保证顺序。
+
+消费者 ACK 后才投递下一条。NACK 后重试（最多 3 次）。超过重试次数进死信。
+
+partition 数量可配。Key 路由策略：hash 取模。端口 server.port 配置，Maven 构建。

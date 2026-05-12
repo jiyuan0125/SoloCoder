@@ -9,13 +9,13 @@ import (
 )
 
 type CreateTrainingReq struct {
-	Name     string             `json:"name"`
+	Name     string               `json:"name"`
 	Type     models.TrainingType `json:"type"`
-	Form     models.TrainingForm   `json:"form"`
-	Date     string             `json:"date"`
-	Hours    int                `json:"hours"`
-	Lecturer string             `json:"lecturer"`
-	Capacity int                `json:"capacity"`
+	Form     models.TrainingForm `json:"form"`
+	Date     string               `json:"date"`
+	Hours    int                  `json:"hours"`
+	Lecturer string               `json:"lecturer"`
+	Capacity int                  `json:"capacity"`
 }
 
 func CreateTraining(c *gin.Context) {
@@ -111,6 +111,21 @@ func UpdateRegistration(c *gin.Context) {
 	}
 	s.SaveRegistration(r)
 	c.JSON(http.StatusOK, r)
+}
+
+func ListRegistrations(c *gin.Context) {
+	teacherID := c.Query("teacher_id")
+	s := storage.Get()
+	if teacherID != "" {
+		c.JSON(http.StatusOK, s.RegistrationsByTeacher(teacherID))
+		return
+	}
+	allRegs := make([]models.Registration, 0)
+	for _, t := range s.AllTeachers() {
+		regs := s.RegistrationsByTeacher(t.ID)
+		allRegs = append(allRegs, regs...)
+	}
+	c.JSON(http.StatusOK, allRegs)
 }
 
 func ListRegistrationsByTeacher(c *gin.Context) {

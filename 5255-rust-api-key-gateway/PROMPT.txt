@@ -1,0 +1,5 @@
+axum 做API Key 网关。Key 通过接口创建，创建时绑定权限范围和限流策略。Key 格式：前缀 + 随机字符串。
+
+请求带 X-API-Key Header。网关验证 Key 有效性和权限。无 Key 或 Key 无效返回 401。权限不足返回 403。
+
+Key 使用记录持久化。提供接口查询 Key 的使用统计和最近调用记录。端口 PORT 环境变量，Cargo build 能过。

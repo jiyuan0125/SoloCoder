@@ -11,6 +11,7 @@ use crate::service::RetryIdempotentService;
 #[derive(Debug, Deserialize)]
 pub struct ExecuteRequest {
     pub idempotency_key: String,
+    pub callback_url: String,
     pub payload: serde_json::Value,
 }
 
@@ -37,7 +38,17 @@ pub async fn execute_request(
             .into_response();
     }
 
-    let response = service.process_request(&req.idempotency_key, &req.payload).await;
+    if req.callback_url.is_empty() {
+        return (
+            StatusCode::BAD_REQUEST,
+            Json(ErrorResponse {
+                error: "callback_url is required".to_string(),
+            }),
+        )
+            .into_response();
+    }
+
+    let response = service.process_request(&req.idempotency_key, &req.callback_url, &req.payload).await;
     (StatusCode::OK, Json(response)).into_response()
 }
 

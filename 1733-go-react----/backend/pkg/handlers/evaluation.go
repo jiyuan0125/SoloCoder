@@ -107,7 +107,12 @@ func CreateEvaluation(c *gin.Context) {
 }
 
 func ListEvaluations(c *gin.Context) {
+	teacherID := c.Query("teacher_id")
 	s := storage.Get()
+	if teacherID != "" {
+		c.JSON(http.StatusOK, s.EvaluationsByTeacher(teacherID))
+		return
+	}
 	c.JSON(http.StatusOK, s.AllEvaluations())
 }
 

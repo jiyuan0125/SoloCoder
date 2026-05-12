@@ -24,8 +24,9 @@ def create_task(task_in: TaskCreate):
                 detail="Cron expression is required for cron tasks",
             )
         try:
-            from crontab import CronTab
-            CronTab(task_in.cron_expression)
+            from croniter import croniter
+            if not croniter.is_valid(task_in.cron_expression):
+                raise ValueError("Invalid cron expression format")
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,

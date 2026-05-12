@@ -1,0 +1,10 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: leaky-bucket-rate-limiter
+
+logging:
+  level:
+    com.example.ratelimiter: DEBUG

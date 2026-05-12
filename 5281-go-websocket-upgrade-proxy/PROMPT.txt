@@ -1,0 +1,7 @@
+Go 标准库做 WebSocket 升级的反向代理。普通 HTTP 请求和 WebSocket 升级请求都要处理。
+
+WebSocket 连接建立后，双向转发消息直到任一方关闭。连接 idle 超过 5 分钟自动断开。消息大小限制 64KB，超过断开连接。
+
+HTTP 请求走正常的反向代理逻辑。升级失败（后端不支持 WebSocket）返回 501。
+
+同时在线的 WebSocket 连接数统计，按后端分组。端口 PORT 环境变量。

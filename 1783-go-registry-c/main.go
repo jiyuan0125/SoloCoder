@@ -251,7 +251,7 @@ func (r *Registry) checkHealth() {
 func getPort() string {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8103"
 	}
 	return port
 }

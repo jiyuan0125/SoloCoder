@@ -6,11 +6,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -28,37 +30,14 @@ public class ProxyController {
         this.restClient = RestClient.create();
     }
 
-    @GetMapping
-    public ResponseEntity<Object> proxyGet(HttpServletRequest request) {
-        return proxyRequest(request, HttpMethod.GET, null);
-    }
-
-    @PostMapping
-    public ResponseEntity<Object> proxyPost(HttpServletRequest request, @RequestBody(required = false) Object body) {
-        return proxyRequest(request, HttpMethod.POST, body);
-    }
-
-    @PutMapping
-    public ResponseEntity<Object> proxyPut(HttpServletRequest request, @RequestBody(required = false) Object body) {
-        return proxyRequest(request, HttpMethod.PUT, body);
-    }
-
-    @DeleteMapping
-    public ResponseEntity<Object> proxyDelete(HttpServletRequest request) {
-        return proxyRequest(request, HttpMethod.DELETE, null);
-    }
-
-    @PatchMapping
-    public ResponseEntity<Object> proxyPatch(HttpServletRequest request, @RequestBody(required = false) Object body) {
-        return proxyRequest(request, HttpMethod.PATCH, body);
-    }
-
-    private ResponseEntity<Object> proxyRequest(HttpServletRequest request, HttpMethod method, Object body) {
+    @RequestMapping
+    public ResponseEntity<byte[]> proxyRequest(HttpServletRequest request) {
         Instance instance = loadBalancerService.getNextInstance();
 
         if (instance == null) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Collections.singletonMap("error", "No available backend instances"));
+                    .body(Collections.singletonMap("error", "No available backend instances")
+                            .toString().getBytes());
         }
 
         instance.incrementActiveRequests();
@@ -66,28 +45,32 @@ public class ProxyController {
         try {
             URI targetUri = buildTargetUri(instance, request);
             HttpHeaders headers = buildHeaders(request);
+            byte[] requestBody = readRequestBody(request);
 
-            logger.debug("Proxying request {} {} to {}", method, request.getRequestURI(), targetUri);
+            logger.debug("Proxying request {} {} to {}", request.getMethod(), 
+                    request.getRequestURI(), targetUri);
 
-            RestClient.RequestBodySpec requestSpec = restClient.method(method)
+            RestClient.RequestBodySpec requestSpec = restClient.method(HttpMethod.valueOf(request.getMethod()))
                     .uri(targetUri)
                     .headers(httpHeaders -> httpHeaders.addAll(headers));
 
-            if (body != null) {
-                requestSpec.body(body);
+            if (requestBody != null && requestBody.length > 0) {
+                requestSpec.body(requestBody);
             }
 
-            ResponseEntity<Object> response = requestSpec.retrieve()
-                    .toEntity(Object.class);
+            ResponseEntity<byte[]> response = requestSpec.retrieve()
+                    .toEntity(byte[].class);
 
             loadBalancerService.recordRequestSuccess(instance);
-            return response;
+            return ResponseEntity.status(response.getStatusCode())
+                    .headers(response.getHeaders())
+                    .body(response.getBody());
 
         } catch (RestClientException e) {
             logger.error("Error proxying request to {}: {}", instance.getId(), e.getMessage());
             loadBalancerService.recordRequestFailure(instance);
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body(Collections.singletonMap("error", "Backend service error: " + e.getMessage()));
+                    .body(("{\"error\": \"Backend service error: " + e.getMessage() + "\"}").getBytes());
         } finally {
             instance.decrementActiveRequests();
         }
@@ -119,7 +102,17 @@ public class ProxyController {
         }
 
         headers.remove(HttpHeaders.HOST);
+        headers.remove(HttpHeaders.CONTENT_LENGTH);
 
         return headers;
+    }
+
+    private byte[] readRequestBody(HttpServletRequest request) {
+        try {
+            return StreamUtils.copyToByteArray(request.getInputStream());
+        } catch (IOException e) {
+            logger.warn("Failed to read request body: {}", e.getMessage());
+            return new byte[0];
+        }
     }
 }

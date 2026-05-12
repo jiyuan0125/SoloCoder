@@ -1,9 +1,9 @@
 import time
 import threading
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
-from crontab import CronTab
+from croniter import croniter
 from .models import Task, TaskStatus, ExecutionRecord, ExecutionStatus, TaskType
 from .storage import storage
 
@@ -13,21 +13,32 @@ MAX_RETRIES = 3
 RETRY_INTERVALS = [5, 15, 30]
 
 
+def to_naive_utc(dt: Optional[datetime]) -> Optional[datetime]:
+    if dt is None:
+        return None
+    if dt.tzinfo is not None:
+        return dt.astimezone(timezone.utc).replace(tzinfo=None)
+    return dt
+
+
+def now_utc() -> datetime:
+    return datetime.utcnow()
+
+
 def calculate_next_run(task: Task, from_time: Optional[datetime] = None) -> Optional[datetime]:
     if task.task_type == TaskType.DELAYED:
-        return task.execute_at
+        return to_naive_utc(task.execute_at)
 
     if task.task_type == TaskType.CRON and task.cron_expression:
         try:
-            cron = CronTab(task.cron_expression)
-            base_time = from_time or datetime.utcnow()
-            next_ts = cron.next(base_time, default_utc=True)
-            if next_ts is None or next_ts <= 0:
-                next_ts = cron.next(datetime.utcnow() + timedelta(seconds=1), default_utc=True)
-            if next_ts is not None:
-                return datetime.utcnow() + timedelta(seconds=next_ts)
+            base_time = from_time or now_utc()
+            if not croniter.is_valid(task.cron_expression):
+                return None
+            cron = croniter(task.cron_expression, base_time)
+            next_dt = cron.get_next(datetime)
+            return next_dt
         except Exception:
-            pass
+            return None
     return None
 
 
@@ -41,7 +52,7 @@ def execute_task(task: Task) -> ExecutionRecord:
 
     if not task.callback_url:
         record.status = ExecutionStatus.SUCCESS
-        record.finished_at = datetime.utcnow()
+        record.finished_at = now_utc()
         storage.add_execution_record(record)
         return record
 
@@ -64,7 +75,7 @@ def execute_task(task: Task) -> ExecutionRecord:
         record.status = ExecutionStatus.FAILED
         record.error_message = str(e)[:200]
     finally:
-        record.finished_at = datetime.utcnow()
+        record.finished_at = now_utc()
         storage.add_execution_record(record)
 
     return record
@@ -84,8 +95,9 @@ def handle_task_result(task: Task, record: ExecutionRecord) -> None:
     else:
         if task.retry_count < MAX_RETRIES:
             task.retry_count += 1
-            interval = RETRY_INTERVALS[task.retry_count - 1] if task.retry_count <= len(RETRY_INTERVALS) else 60
-            task.next_run_at = datetime.utcnow() + timedelta(seconds=interval)
+            interval_idx = task.retry_count - 1
+            interval = RETRY_INTERVALS[interval_idx] if interval_idx < len(RETRY_INTERVALS) else 60
+            task.next_run_at = now_utc() + timedelta(seconds=interval)
             task.status = TaskStatus.PENDING
         else:
             task.status = TaskStatus.DEAD_LETTER
@@ -102,14 +114,14 @@ def run_task(task: Task) -> None:
     try:
         record = execute_task(task)
         handle_task_result(task, record)
-    except Exception as e:
+    except Exception:
         task.status = current_status
         storage.update_task(task)
 
 
 def scheduler_loop() -> None:
     while True:
-        now = datetime.utcnow()
+        now = now_utc()
         due_tasks = storage.get_due_tasks(now)
 
         for task in due_tasks:

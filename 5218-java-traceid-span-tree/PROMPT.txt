@@ -1,0 +1,7 @@
+Spring Boot 做TraceID 和 Span 树服务。每个请求入口生成全局唯一 TraceID。内部每次调用生成 Span（带 ParentSpanID）。
+
+Span 记录：操作名称、开始时间、结束时间、标签（KV）、状态。Span 之间通过 ParentSpanID 构成树。
+
+提供接口上报 Span 数据。查询接口按 TraceID 返回完整的 Span 树。树以层级结构展示。
+
+端口 server.port 配置，Maven 构建。

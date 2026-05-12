@@ -1,0 +1,5 @@
+Go 标准库做WebSocket-HTTP 桥接网关。WebSocket 客户端连接到网关，网关将每条消息转换为 HTTP 请求发送到后端。
+
+后端 HTTP 响应转回 WebSocket 消息。消息格式可配：JSON、纯文本、二进制。
+
+WebSocket 连接管理：最大连接数可配。idle 超时断开。消息大小限制。端口 PORT 环境变量，go build 能过。

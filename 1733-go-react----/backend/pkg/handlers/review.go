@@ -122,7 +122,12 @@ func SubmitReview(c *gin.Context) {
 }
 
 func ListApplications(c *gin.Context) {
+	teacherID := c.Query("teacher_id")
 	s := storage.Get()
+	if teacherID != "" {
+		c.JSON(http.StatusOK, s.ApplicationsByTeacher(teacherID))
+		return
+	}
 	c.JSON(http.StatusOK, s.AllApplications())
 }
 

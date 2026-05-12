@@ -31,6 +31,7 @@ impl RetryIdempotentService {
     pub async fn process_request(
         &self,
         idempotency_key: &str,
+        callback_url: &str,
         payload: &serde_json::Value,
     ) -> ApiResponse {
         if let Some(record) = self.idempotency_store.get(idempotency_key) {
@@ -59,7 +60,7 @@ impl RetryIdempotentService {
         };
         self.idempotency_store.insert(record.clone());
 
-        let result = self.execute_with_retry(idempotency_key, payload).await;
+        let result = self.execute_with_retry(idempotency_key, callback_url, payload).await;
 
         match result {
             Ok(response) => {
@@ -101,6 +102,7 @@ impl RetryIdempotentService {
     async fn execute_with_retry(
         &self,
         idempotency_key: &str,
+        callback_url: &str,
         payload: &serde_json::Value,
     ) -> Result<ResponseData, String> {
         let mut attempt: u32 = 0;
@@ -112,7 +114,7 @@ impl RetryIdempotentService {
             }
 
             let start = std::time::Instant::now();
-            let result = self.downstream.execute(payload).await;
+            let result = self.downstream.execute(callback_url, payload).await;
             let duration = start.elapsed();
 
             match result {

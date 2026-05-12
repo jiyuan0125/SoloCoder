@@ -1,0 +1,7 @@
+Spring Boot 做Span 跨服务传播服务。TraceID 和 ParentSpanID 通过 HTTP Header 在服务间传播。
+
+传播 Header 名称：X-Trace-ID、X-Parent-Span-ID、X-Span-ID。服务收到请求时读取 Header，创建子 Span。
+
+服务出口时自动注入传播 Header。入口时自动解析。配置通过接口管理。
+
+端口 server.port 配置，Maven 构建。

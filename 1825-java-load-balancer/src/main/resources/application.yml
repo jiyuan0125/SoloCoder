@@ -1,0 +1,23 @@
+server:
+  port: 8501
+
+spring:
+  application:
+    name: java-load-balancer
+
+loadbalancer:
+  health-check:
+    interval-ms: 10000
+    tcp-timeout-ms: 5000
+    failure-threshold: 3
+    recovery-threshold: 2
+  traffic-log:
+    max-entries: 1000
+  graceful-shutdown:
+    wait-seconds: 60
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics

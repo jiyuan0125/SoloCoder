@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: circuit-breaker-manager
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+monitor:
+  interval: 10000

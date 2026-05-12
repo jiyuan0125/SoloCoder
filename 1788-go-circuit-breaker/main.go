@@ -247,7 +247,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8108"
 	}
 
 	if _, err := strconv.Atoi(port); err != nil {
