@@ -1,0 +1,5 @@
+想用 Rust actix-web 练手日志处理这块，做个日志聚合索引器。
+日志收集：通过 HTTP 批量接收日志。每条日志包含 level、timestamp、message、source 字段。source 标识日志来源服务。timestamp 支持毫秒精度。批量上限 1000 条。
+索引构建：按 source 分索引。message 字段做分词建倒排。level 和 timestamp 建排序索引。索引数据存内存。
+查询接口：按时间范围、级别、来源过滤。支持关键词搜索。搜索结果按时间排序。聚合查询：按级别统计数量、按来源统计数量、按时间段统计数量。
+日志老化：超过保留时间（默认 7 天）的日志自动清除。清除时索引也同步清理。查询统计数据反映的是当前存活的数据。至少包含 receiver、indexer、querier、janitor 四个模块。Cargo build，PORT 环境变量。
