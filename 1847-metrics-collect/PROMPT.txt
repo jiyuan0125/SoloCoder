@@ -1,0 +1,7 @@
+监控需要采集业务指标，Rust axum 做一个指标采集和查询服务。
+
+支持 Counter（只增不减）、Gauge（可增可减）、Histogram（分布统计）。每种指标有名称和一组标签（key=value）。同一个指标名称+标签组合是一个时间序列。上报时类型必须和注册时一致，不匹配的丢弃。
+
+查询按名称和标签过滤。Histogram 返回 p50、p90、p99 分位数值。所有指标可以导出 Prometheus text format。
+
+数据存内存只保留最近 24 小时。从来没注册过的指标查询时不要 crash。接口包括 register、report、query、export 四组。Cargo build，端口 PORT 环境变量。

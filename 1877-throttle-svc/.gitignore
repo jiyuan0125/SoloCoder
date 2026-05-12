@@ -1,0 +1,7 @@
+# Binaries
+*.exe
+*.exe~
+# Test
+*.test
+# Vendor
+vendor/

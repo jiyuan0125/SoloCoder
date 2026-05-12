@@ -1,0 +1,7 @@
+前端 HTTP 后端有些是 gRPC 的，中间需要一个转换层。Rust tokio 做协议网关。
+
+请求进来是 JSON，转成 protobuf 发给后端 gRPC，响应再转 JSON 返回。路由格式 /v1/{service}/{method}，从路径提取 service 和 method。转换规则按服务和方法配置。
+
+后端不可用返回 502。gRPC 状态码要映射成 HTTP 状态码。还要支持一种场景：客户端直接发纯文本过来，网关要按约定格式解析。
+
+端口 PORT 环境变量。Cargo build。

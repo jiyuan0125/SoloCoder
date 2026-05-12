@@ -1,0 +1,7 @@
+HTTP 和 gRPC 服务混布，Rust actix-web 做协议转换网关。
+
+转换通道状态：未配置→就绪→转换中→错误。未配置的通道需要设置 service 和 method 映射后变就绪。就绪通道收到请求后变转换中，正常完成回到就绪。转换失败变错误，错误状态需要手动重置才能恢复。
+
+路由格式 /v1/{service}/{method}。JSON 请求体转 protobuf 发给后端 gRPC 服务，响应再转 JSON。后端不可用返回 502。gRPC 状态码映射到 HTTP 状态码。
+
+统计每个通道的请求量和成功率。通道配置通过接口管理。Cargo build，端口 PORT 环境变量。

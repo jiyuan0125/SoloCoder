@@ -1,0 +1,7 @@
+之前用 Nginx 做反向代理但定制不了，用 Rust actix-web 写一个能按业务规则路由的代理服务。
+
+路由规则按请求路径前缀匹配后端，支持 /api/users/*、/api/orders/*、/api/inventory/* 三组。路径要支持多级，比如 /api/orders/2024/region/sh/batch 这种。后端列表存内存，可以接口动态增减。
+
+每个后端有状态：上线→活跃→下线。新加的后端要先过一次健康检查才能变活跃。活跃的后端连续 3 次检查失败变下线。下线状态的后端不参与转发但保留在列表里。健康检查间隔 10 秒，用 HTTP GET /health。
+
+转发时注入 X-Forwarded-For 和 X-Request-ID。同一个路径前缀下的多个活跃后端按轮询转发。Cargo build，端口 PORT 环境变量。

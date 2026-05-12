@@ -1,0 +1,7 @@
+日志散在各个容器里查起来太痛苦。Spring Boot 做一个日志聚合服务，包含 ingest、storage、query、retention 四个模块。
+
+ingest 模块接收 JSON 格式日志，必须包含 timestamp、service、level、message。timestamp 时区不统一，存储时统一处理。支持批量推送，单次最多 1000 条，超出的截断。
+
+storage 模块按 service 和 level 索引。query 模块支持按 service、level、时间范围、关键字组合查询，结果按时间倒序分页。
+
+retention 模块按 service 配置保留天数，过期的后台定时清理。修改保留天数后已过期的立即清理。推送失败不影响客户端，但内部要记录原因。Maven 构建，端口配置文件指定。
