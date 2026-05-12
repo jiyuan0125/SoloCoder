@@ -1,0 +1,5 @@
+配置变更要走审批流程。Spring Boot 做一个带审批工作流的配置中心。
+配置项状态：draft → submitted → approved → published。也可以 rejected 退回 draft 重新编辑。提交审批后由审批人审批。审批人按配置项的环境分配（dev 谁都能批，prod 要 TL 批）。
+published 的配置推送到客户端。推送方式：客户端轮询 + 服务端主动通知。推送确认：客户端收到后要 ack，没 ack 的定期重推。
+配置回滚：published 的配置可以回滚到上一个版本。回滚也要走审批。配置版本号自增，回滚后版本号继续增长不回退。
+配置项有依赖关系：改了 A 配置可能需要同步改 B 配置。依赖关系通过接口配置。至少包含 workflow、publisher、version、dependency 四个模块。Maven 构建，端口配置文件。

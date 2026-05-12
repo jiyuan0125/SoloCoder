@@ -1,0 +1,5 @@
+最近在搞可观测性这块，需要一个日志收集聚合服务，Python aiohttp 实现。
+服务端接收客户端推送的结构化日志，日志格式包含 timestamp、level、service、message、tags。按服务名分文件存储，文件名格式 service-YYYY-MM-DD.log。
+日志查询支持按时间范围、级别、服务名、关键字过滤。查询结果按时间排序。日志文件可能一天好几个 GB，查询要做分页。
+日志级别动态调整：可以通过接口临时把某个服务的日志级别从 INFO 调成 DEBUG，调整有有效期，过期自动恢复。调整立即生效。
+日志转发：配置转发规则，匹配到的日志推送到下游（webhook）。转发失败重试 2 次后跳过。至少包含 collector、querier、config、forwarder 四个模块。端口 PORT 环境变量。

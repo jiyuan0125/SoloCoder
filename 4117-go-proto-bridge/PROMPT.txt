@@ -1,0 +1,6 @@
+Go 标准库做一个协议桥接服务，把 HTTP JSON 请求转成 gRPC 调用。
+桥接服务维护一个映射表：HTTP 路径 → gRPC 服务方法。映射关系通过接口配置。新增映射时需要指定 gRPC 服务地址、方法名、请求字段映射。
+字段映射支持嵌套：HTTP JSON 的 user.name 映射到 gRPC 请求的 user_info.full_name。数组字段也要支持。映射不到的字段可以配置默认值或忽略。
+gRPC 响应转回 JSON 时，字段名用下划线风格（snake_case）。嵌套的 gRPC message 展平或保留层级都可以，看配置。
+错误处理：gRPC 返回的错误码转成 HTTP 状态码。gRPC 服务不可用时返回 502。超时可配置。
+端口 PORT 环境变量，go build 能过。

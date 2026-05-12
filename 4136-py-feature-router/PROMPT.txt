@@ -1,0 +1,5 @@
+Python aiohttp 做一个 Feature Flag 路由服务。根据用户特征决定走哪个功能分支。
+Feature Flag 配置：每个 flag 有名称、启用百分比、用户白名单、用户属性规则。规则支持组合：年龄 > 18 AND 地区 = CN。属性值从请求 header 里提取。
+流量分配：百分比按用户 ID 取 hash 后分配。同一个用户每次命中结果一致。白名单用户始终命中。
+Flag 依赖：一个 flag 可以依赖另一个 flag。父 flag 关闭时子 flag 也关闭。依赖关系不能循环。
+变更实时生效：修改 flag 配置后下一个请求立刻按新配置判断。变更历史记录在内存里，可以回滚。至少包含 flag、matcher、router、history 四个模块。端口 PORT 环境变量。

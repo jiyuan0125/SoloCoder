@@ -1,0 +1,6 @@
+Rust actix-web 做一个 OAuth2 认证中继服务。应用不直接对接 OAuth2 提供方，而是通过这个中继。
+支持的 OAuth2 流程：Authorization Code、Client Credentials。中继服务帮应用完成 code 换 token、token 刷新等操作。
+Token 存储：中继服务缓存每个用户的 access_token 和 refresh_token。token 过期前自动用 refresh_token 刷新。刷新失败通知应用重新授权。
+用户信息：中继服务用 access_token 从 OAuth2 提供方获取用户信息（用户名、邮箱、头像），返回给应用。用户信息也有缓存。
+多应用支持：不同的应用有不同的 client_id 和 client_secret。应用通过中继的接口注册。注册信息存在内存里。
+至少包含 oauth、token、userinfo、app 四个模块。Cargo build，PORT 环境变量。
