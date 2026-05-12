@@ -1,1 +1,7 @@
-Gin 做一个慢调用追踪。记录每个 Span 的耗时，总耗时超过阈值（默认 1 秒）的 trace 标记为慢调用。慢调用的调用树展示各 Span 耗时占比，自动标红耗时最长的 Span（瓶颈节点）。统计：P50/P95/P99 延迟、慢调用比例、各服务的耗时分布。慢调用阈值可以按接口单独配置。慢调用和错误调用是独立标记，一个 trace 可以同时是慢调用和错误调用。管理接口展示慢调用 Top 10 和耗时分布。端口 PORT 环境变量。
+Gin 写一个链路追踪服务，支持采样策略和跨服务 Span 关联。
+
+每个 Trace 由多个 Span 组成，Span 上报时携带 trace_id、span_id、parent_span_id、service_name、operation_name、start_time、duration、tags。同一个 trace_id 的所有 Span 自动关联成一棵调用树，parent_span_id 为空的是根 Span。
+
+采样策略：可配置采样率（默认 10%），按 trace_id 哈希决定是否采样。采样只影响存储，不影响上报。另外支持强制采样规则：如果任意一个 Span 的 tags 包含 error=true，整条 trace 强制采样保留。采样策略可以按服务名单独配置。
+
+查询接口：按 trace_id 查完整调用树、按服务名查最近的 trace 列表、按时间范围查所有 trace。调用树展示各层级的耗时和占比。管理接口展示采样率配置、各服务上报量、存储的 trace 数量。端口 PORT 环境变量。

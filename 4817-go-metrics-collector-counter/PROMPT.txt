@@ -1,9 +1,7 @@
-用 Gin 写一个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。
+用 Gin 做一个 Histogram 指标采集服务，专门处理耗时分布类的指标。
 
-Counter（计数器）：只能递增，记录事件总数。Gauge（仪表盘）：可增可减，记录当前值（如在线用户数）。Histogram（直方图）：记录值的分布，配置分位数（如 P50/P90/P99）。
+指标通过 API 上报：POST /histogram，body 包含指标名、观测值（如请求耗时 ms）、标签键值对。服务端对同一个指标名 + 标签组合的所有观测值维护一个排序数组，实时计算 P50/P90/P95/P99/P999 分位数。分位数的计算用插值法，不是简单取第 N 个值。
 
-指标通过 API 上报：POST /metrics，body 是指标名、类型、值、标签（键值对）。相同指标名 + 相同标签的多次上报，Counter 累加、Gauge 取最后值、Histogram 记录所有值。
+当观测值数量超过 10000 时，自动切换到 TDigest 近似算法，内存占用控制在固定大小。查询接口返回各分位数值、总观测数、平均值、最大值、最小值。支持按时间范围查询，只统计最近 N 分钟的观测值。
 
-查询接口：按指标名和标签过滤查询当前值。Histogram 查询返回各分位数值。Prometheus 格式导出接口：/metrics/prometheus。
-
-指标过期：超过 5 分钟没有上报的指标标记为过期，查询时不返回但保留历史数据。管理接口查看所有指标列表和最近上报时间。端口 PORT 环境变量。
+Prometheus exposition 格式导出：/metrics 输出标准的 Prometheus histogram 格式（_bucket、_sum、_count）。管理接口展示所有指标列表、各指标的观测数量和最近上报时间。端口 PORT 环境变量。
