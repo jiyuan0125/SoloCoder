@@ -1,11 +1,9 @@
-Spring Boot 写一个 Span 传播中间件。在微服务调用链中自动传播 TraceID 和 SpanID。
+Spring Boot 写一个分布式追踪数据收集器。接收各服务上报的 Span 数据，构建调用树。
 
-入口过滤器：从请求 Header 提取或生成 TraceID。为当前请求创建根 Span。Span 包含请求方法、路径、客户端 IP。
+Span 上报接口：接收 Span 数据，包含 traceId、spanId、parentSpanId、服务名、操作名、开始时间、结束时间、标签（key-value）。同一个 traceId 的所有 Span 组成一棵调用树。
 
-出口拦截器：发出去的 HTTP 请求自动注入当前 TraceID 和新生成的 SpanID 到 Header。用 RestTemplate 的拦截器实现。
+调用树构建：根据 parentSpanId 构建父子关系。根 Span 的 parentSpanId 为空。查询接口按 traceId 返回完整调用树，包含每层的服务名、耗时、状态。
 
-Span 上下文：用 ThreadLocal 存储。异步调用时需要手动传递。提供工具方法把当前上下文传递到 CompletableFuture。
+服务拓扑：统计最近 1 小时内所有调用树中出现的服务对（调用方→被调用方）的调用次数和错误率。拓扑数据定时刷新。
 
-Span 上报：请求结束后异步上报 Span 数据到收集器。上报失败本地暂存，定时重试。暂存容量有上限，满了丢弃最旧的。
-
-采样率配置：不是所有请求都追踪。按百分比采样。采样决定在入口处做。端口 PORT 环境变量。
+异常检测：调用树中存在耗时超过阈值（可配）的 Span 时标记为慢调用。存在错误标签的 Span 标记为异常。查询时可以过滤只看异常调用树。数据保留 24 小时。端口 PORT 环境变量。
