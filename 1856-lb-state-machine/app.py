@@ -1,6 +1,5 @@
 import os
 import time
-import json
 import uuid
 import asyncio
 import aiohttp
@@ -9,7 +8,7 @@ from typing import Dict, List, Optional, Any
 from datetime import datetime
 from dataclasses import dataclass, field
 from enum import Enum
-from collections import deque
+import random
 
 
 class NodeState(str, Enum):
@@ -32,8 +31,16 @@ class Node:
     warm_start_time: Optional[float] = None
     history: List[Dict[str, Any]] = field(default_factory=list)
     created_at: float = field(default_factory=time.time)
+    _lock: asyncio.Lock = field(default_factory=asyncio.Lock, compare=False, repr=False)
 
-    def add_history(self, old_state: str, new_state: str):
+    async def __aenter__(self):
+        await self._lock.acquire()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self._lock.release()
+
+    def add_history(self, old_state: Optional[str], new_state: str):
         self.history.append({
             "old_state": old_state,
             "new_state": new_state,
@@ -55,10 +62,10 @@ class StateMachine:
     def __init__(self, callback_notifier: "CallbackNotifier"):
         self.nodes: Dict[str, Node] = {}
         self.callback_notifier = callback_notifier
-        self.lock = asyncio.Lock()
+        self._global_lock = asyncio.Lock()
 
     async def register_node(self, address: str, weight: int, health_check_path: str) -> str:
-        async with self.lock:
+        async with self._global_lock:
             node_id = str(uuid.uuid4())
             node = Node(
                 id=node_id,
@@ -77,10 +84,12 @@ class StateMachine:
             return node_id
 
     async def remove_node(self, node_id: str) -> bool:
-        async with self.lock:
-            if node_id not in self.nodes:
+        async with self._global_lock:
+            node = self.nodes.get(node_id)
+            if not node:
                 return False
-            node = self.nodes[node_id]
+        
+        async with node:
             if node.state == NodeState.REMOVED:
                 return False
             old_state = node.state.value
@@ -95,8 +104,9 @@ class StateMachine:
             return True
 
     def get_all_nodes(self) -> List[Dict[str, Any]]:
-        return [
-            {
+        result = []
+        for node in list(self.nodes.values()):
+            result.append({
                 "id": node.id,
                 "address": node.address,
                 "weight": node.weight,
@@ -104,20 +114,23 @@ class StateMachine:
                 "health_check_path": node.health_check_path,
                 "state": node.state.value,
                 "created_at": datetime.fromtimestamp(node.created_at).isoformat()
-            }
-            for node in self.nodes.values()
-        ]
+            })
+        return result
 
     def get_node_history(self, node_id: str) -> Optional[List[Dict[str, Any]]]:
         node = self.nodes.get(node_id)
         if not node:
             return None
-        return node.history
+        return list(node.history)
 
     async def process_health_check_result(self, node_id: str, success: bool):
-        async with self.lock:
+        async with self._global_lock:
             node = self.nodes.get(node_id)
-            if not node or node.state == NodeState.REMOVED:
+            if not node:
+                return
+
+        async with node:
+            if node.state == NodeState.REMOVED:
                 return
 
             old_state = node.state
@@ -129,23 +142,21 @@ class StateMachine:
                 node.consecutive_failure += 1
                 node.consecutive_success = 0
 
-            new_state = await self._determine_next_state(node, success)
+            new_state = self._determine_next_state(node, success)
 
             if new_state and new_state != old_state:
-                node.state = new_state
-                if new_state == NodeState.WARMING:
-                    node.warm_start_time = time.time()
-                node.consecutive_success = 0
-                node.consecutive_failure = 0
-                node.add_history(old_state.value, new_state.value)
-                await self.callback_notifier.notify(
-                    node_id,
-                    old_state.value,
-                    new_state.value,
-                    datetime.now().isoformat()
-                )
+                await self._transition_state(node, old_state, new_state)
 
-    async def _determine_next_state(self, node: Node, success: bool) -> Optional[NodeState]:
+    async def check_warming_timeout(self):
+        nodes_to_check = list(self.nodes.values())
+        for node in nodes_to_check:
+            async with node:
+                if node.state == NodeState.WARMING and node.warm_start_time:
+                    elapsed = time.time() - node.warm_start_time
+                    if elapsed >= self.WARMING_DURATION:
+                        await self._transition_state(node, node.state, NodeState.ACTIVE)
+
+    def _determine_next_state(self, node: Node, success: bool) -> Optional[NodeState]:
         current_state = node.state
 
         if current_state == NodeState.NEW:
@@ -168,6 +179,20 @@ class StateMachine:
 
         return None
 
+    async def _transition_state(self, node: Node, old_state: NodeState, new_state: NodeState):
+        node.state = new_state
+        if new_state == NodeState.WARMING:
+            node.warm_start_time = time.time()
+        node.consecutive_success = 0
+        node.consecutive_failure = 0
+        node.add_history(old_state.value, new_state.value)
+        await self.callback_notifier.notify(
+            node.id,
+            old_state.value,
+            new_state.value,
+            datetime.now().isoformat()
+        )
+
     def get_available_nodes(self) -> List[Node]:
         return [
             node for node in self.nodes.values()
@@ -182,39 +207,46 @@ class HealthChecker:
         self.state_machine = state_machine
         self.session: Optional[aiohttp.ClientSession] = None
         self._running = False
-        self._task: Optional[asyncio.Task] = None
+        self._health_task: Optional[asyncio.Task] = None
+        self._warming_task: Optional[asyncio.Task] = None
 
     async def start(self):
         self.session = aiohttp.ClientSession()
         self._running = True
-        self._task = asyncio.create_task(self._check_loop())
+        self._health_task = asyncio.create_task(self._health_check_loop())
+        self._warming_task = asyncio.create_task(self._warming_timeout_loop())
 
     async def stop(self):
         self._running = False
-        if self._task:
-            self._task.cancel()
-            try:
-                await self._task
-            except asyncio.CancelledError:
-                pass
+        for task in [self._health_task, self._warming_task]:
+            if task:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
         if self.session:
             await self.session.close()
 
-    async def _check_loop(self):
+    async def _health_check_loop(self):
         while self._running:
             await self._check_all_nodes()
             await asyncio.sleep(self.CHECK_INTERVAL)
 
+    async def _warming_timeout_loop(self):
+        while self._running:
+            await self.state_machine.check_warming_timeout()
+            await asyncio.sleep(1)
+
     async def _check_all_nodes(self):
         nodes = list(self.state_machine.nodes.values())
-        tasks = [self._check_node(node) for node in nodes]
+        tasks = []
+        for node in nodes:
+            tasks.append(self._check_single_node(node.id, node.address, node.health_check_path))
         await asyncio.gather(*tasks, return_exceptions=True)
 
-    async def _check_node(self, node: Node):
-        if node.state == NodeState.REMOVED:
-            return
-
-        url = f"http://{node.address}{node.health_check_path}"
+    async def _check_single_node(self, node_id: str, address: str, health_check_path: str):
+        url = f"http://{address}{health_check_path}"
         success = False
 
         try:
@@ -223,16 +255,15 @@ class HealthChecker:
         except Exception:
             success = False
 
-        await self.state_machine.process_health_check_result(node.id, success)
+        await self.state_machine.process_health_check_result(node_id, success)
 
 
 class LoadBalancer:
     def __init__(self, state_machine: StateMachine):
-        self.state_machine = state_machine
-        self.weights: Dict[str, int] = {}
+        self._state_machine = state_machine
 
     def select_node(self) -> Optional[Node]:
-        available = self.state_machine.get_available_nodes()
+        available = self._state_machine.get_available_nodes()
         if not available:
             return None
 
@@ -240,7 +271,6 @@ class LoadBalancer:
         if total_weight == 0:
             return available[0]
 
-        import random
         r = random.uniform(0, total_weight)
         current = 0
         for node in available:
@@ -255,7 +285,7 @@ class CallbackNotifier:
     def __init__(self):
         self.callbacks: List[str] = []
         self.session: Optional[aiohttp.ClientSession] = None
-        self.lock = asyncio.Lock()
+        self._lock = asyncio.Lock()
 
     async def start(self):
         self.session = aiohttp.ClientSession()
@@ -265,7 +295,7 @@ class CallbackNotifier:
             await self.session.close()
 
     async def add_callback(self, url: str):
-        async with self.lock:
+        async with self._lock:
             if url not in self.callbacks:
                 self.callbacks.append(url)
 
@@ -273,8 +303,10 @@ class CallbackNotifier:
         return list(self.callbacks)
 
     async def notify(self, node_id: str, old_state: Optional[str], new_state: str, timestamp: str):
-        if not self.callbacks:
-            return
+        async with self._lock:
+            if not self.callbacks:
+                return
+            callbacks = list(self.callbacks)
 
         payload = {
             "node_id": node_id,
@@ -282,9 +314,6 @@ class CallbackNotifier:
             "new_state": new_state,
             "timestamp": timestamp
         }
-
-        async with self.lock:
-            callbacks = list(self.callbacks)
 
         tasks = [self._send_callback(url, payload) for url in callbacks]
         await asyncio.gather(*tasks, return_exceptions=True)

@@ -1,0 +1,7 @@
+最近需要一个给 commit 打标签（类似 note 但存在本地），用 Go 标准库写个命令行工具。
+
+给 commit 打标签（类似 note 但存在本地）。支持添加、列出、按标签搜索 commit。标签信息存在 .git/annotations/ 下。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+解析完日志后自动触发告警检查。没有错误日志的时候不检查。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

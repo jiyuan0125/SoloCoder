@@ -1,0 +1,8 @@
+Go 的encoding/json刚好能解决给已有项目添加健康检查端点的需求，拿来写个工具。
+
+给已有项目添加健康检查端点。分析 Go 源码，识别框架类型，注入健康检查代码。输出 patch 文件。
+用 Go 标准库的 html/template 包。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+需要维护数据源和查询配置。查询配置引用数据源。
+
+用 Go 标准库写，go run . 或 go build 都行。

@@ -1,11 +1,5 @@
-Netty 实现链路追踪。高并发场景，每秒可能有数千个请求同时产生 Span。
+排查支付接口慢请求要翻五个服务日志拼调用链对时间戳，花了两小时才定位。做分布式链路追踪，每个请求有全局唯一 TraceID 通过 HTTP Header 自动传播。每次调用产生 Span 记录起止时间，所有 Span 按 TraceID 聚合构建调用树展示耗时。超阈值自动标慢调用。查询按 TraceID、服务名、耗时排序。
 
-Span 写入用 Netty 的 EventLoop 处理。写入操作不能阻塞。
+每秒数千请求产生 Span——EventLoop 处理写入不能阻塞，缓存区满丢弃最老的，查询聚合不拖慢写入。用 Netty 实现。Span 先缓存再批量写入，缓存区上限 10000 个满了丢弃最老的。查询接口聚合同一 TraceID 的所有 Span，聚合不阻塞写入。
 
-Span 数据先缓存再批量写入存储。缓存区大小有限（10000 个 Span），满了丢弃最老的。
-
-每个请求的 Span 关联到同一个 TraceID。同一个 TraceID 的 Span 可能分布在不同线程处理。
-
-查询接口需要聚合同一个 TraceID 的所有 Span。聚合过程不能影响写入性能。
-
-Maven 项目，端口 PORT 环境变量。
+Spring Boot 2.x（JDK 17，Maven）。端口 server.port。

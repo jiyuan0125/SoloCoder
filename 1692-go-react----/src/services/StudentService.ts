@@ -5,6 +5,12 @@ import { Course } from '../models/Course';
 import { Enrollment } from '../models/Enrollment';
 import { CoursePrerequisite } from '../models/CoursePrerequisite';
 import { CourseStatus, UserRole, EnrollmentStatus } from '../types';
+import { v4 as uuidv4 } from 'uuid';
+
+export interface StudentRegistrationRequest {
+  name: string;
+  email: string;
+}
 
 export class StudentService {
   private userRepository: Repository<User>;
@@ -17,6 +23,48 @@ export class StudentService {
     this.courseRepository = AppDataSource.getRepository(Course);
     this.enrollmentRepository = AppDataSource.getRepository(Enrollment);
     this.coursePrerequisiteRepository = AppDataSource.getRepository(CoursePrerequisite);
+  }
+
+  async registerStudent(request: StudentRegistrationRequest): Promise<User> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: request.email }
+    });
+
+    if (existingUser) {
+      const error = new Error('邮箱已被注册');
+      (error as any).statusCode = 409;
+      throw error;
+    }
+
+    const student = this.userRepository.create({
+      id: uuidv4(),
+      name: request.name,
+      email: request.email,
+      role: UserRole.STUDENT
+    });
+
+    return this.userRepository.save(student);
+  }
+
+  async getStudentById(studentId: string): Promise<User> {
+    const student = await this.userRepository.findOne({
+      where: { id: studentId, role: UserRole.STUDENT }
+    });
+
+    if (!student) {
+      const error = new Error('学员不存在');
+      (error as any).statusCode = 404;
+      throw error;
+    }
+
+    return student;
+  }
+
+  async getAllStudents(): Promise<User[]> {
+    return this.userRepository.find({
+      where: { role: UserRole.STUDENT },
+      order: { createdAt: 'DESC' }
+    });
   }
 
   async enrollCourse(studentId: string, courseId: string): Promise<Enrollment> {

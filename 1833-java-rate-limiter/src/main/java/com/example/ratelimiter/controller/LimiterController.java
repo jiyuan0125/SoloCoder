@@ -3,6 +3,8 @@ package com.example.ratelimiter.controller;
 import com.example.ratelimiter.core.BucketManager;
 import com.example.ratelimiter.model.BucketStats;
 import com.example.ratelimiter.model.LimiterConfig;
+import com.example.ratelimiter.model.UpdateLimiterConfigRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,6 +14,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/limiter")
 public class LimiterController {
+
+    private static final String CONFIG_PREFIX = "/limiter/config";
 
     private final BucketManager bucketManager;
 
@@ -30,24 +34,42 @@ public class LimiterController {
         return ResponseEntity.ok().build();
     }
 
-    @PatchMapping("/config/{path}")
+    @PatchMapping("/config/**")
     public ResponseEntity<Void> updateConfig(
-            @PathVariable("path") String path,
-            @RequestBody @Valid LimiterConfig config) {
+            HttpServletRequest request,
+            @RequestBody @Valid UpdateLimiterConfigRequest updateRequest) {
         
-        if (!path.equals(config.getPath())) {
-            config.setPath(path);
+        String path = extractPath(request);
+        if (path == null || path.isEmpty()) {
+            return ResponseEntity.badRequest().build();
         }
+        LimiterConfig config = new LimiterConfig(path, updateRequest.getCapacity(), updateRequest.getRate());
         bucketManager.updateConfig(config);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/config/{path}")
-    public ResponseEntity<Void> deleteConfig(@PathVariable("path") String path) {
+    @DeleteMapping("/config/**")
+    public ResponseEntity<Void> deleteConfig(HttpServletRequest request) {
+        String path = extractPath(request);
+        if (path == null || path.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
         boolean deleted = bucketManager.deleteConfig(path);
         if (deleted) {
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.notFound().build();
+    }
+
+    private String extractPath(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        String contextPath = request.getContextPath();
+        if (contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)) {
+            uri = uri.substring(contextPath.length());
+        }
+        if (uri.startsWith(CONFIG_PREFIX)) {
+            return uri.substring(CONFIG_PREFIX.length());
+        }
+        return null;
     }
 }

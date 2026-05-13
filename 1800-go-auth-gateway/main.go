@@ -14,9 +14,19 @@ import (
 )
 
 type APIKey struct {
-	Key      string   `json:"key"`
-	Prefixes []string `json:"prefixes"`
-	ID       string   `json:"id"`
+	Key         string    `json:"key,omitempty"`
+	Prefixes    []string  `json:"prefixes"`
+	ID          string    `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	LastUsedAt  *time.Time `json:"last_used_at"`
+}
+
+type APIKeyMetadata struct {
+	ID         string     `json:"id"`
+	Prefixes   []string   `json:"prefixes"`
+	CreatedAt  time.Time  `json:"created_at"`
+	LastUsedAt *time.Time `json:"last_used_at"`
+	KeyPrefix  string     `json:"key_prefix"`
 }
 
 type LoginRequest struct {
@@ -40,8 +50,8 @@ type Pagination struct {
 }
 
 type APIKeyListResponse struct {
-	Data       []APIKey   `json:"data"`
-	Pagination Pagination `json:"pagination"`
+	Data       []APIKeyMetadata `json:"data"`
+	Pagination Pagination       `json:"pagination"`
 }
 
 var (
@@ -176,6 +186,14 @@ func authMiddleware(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
+			now := time.Now()
+			mu.Lock()
+			if updatedKey, ok := apiKeys[apiKeyString]; ok {
+				updatedKey.LastUsedAt = &now
+				apiKeys[apiKeyString] = updatedKey
+			}
+			mu.Unlock()
+
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -299,6 +317,23 @@ func refreshHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func toAPIKeyMetadata(key APIKey) APIKeyMetadata {
+	keyPrefix := ""
+	if len(key.Key) > 8 {
+		keyPrefix = key.Key[:8] + "..."
+	} else {
+		keyPrefix = key.Key
+	}
+
+	return APIKeyMetadata{
+		ID:         key.ID,
+		Prefixes:   key.Prefixes,
+		CreatedAt:  key.CreatedAt,
+		LastUsedAt: key.LastUsedAt,
+		KeyPrefix:  keyPrefix,
+	}
+}
+
 func listAPIKeysHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		writeError(w, http.StatusMethodNotAllowed, "方法不允许")
@@ -346,8 +381,13 @@ func listAPIKeysHandler(w http.ResponseWriter, r *http.Request) {
 		totalPages = 1
 	}
 
+	metadataList := make([]APIKeyMetadata, 0, end-start)
+	for _, key := range keys[start:end] {
+		metadataList = append(metadataList, toAPIKeyMetadata(key))
+	}
+
 	response := APIKeyListResponse{
-		Data: keys[start:end],
+		Data: metadataList,
 		Pagination: Pagination{
 			Page:       page,
 			PageSize:   pageSize,
@@ -378,11 +418,14 @@ func createAPIKeyHandler(w http.ResponseWriter, r *http.Request) {
 
 	newKey := fmt.Sprintf("ak-%d-%s", time.Now().UnixNano(), randomString(8))
 	apiKeyIDCounter++
+	now := time.Now()
 
 	apiKey := APIKey{
-		Key:      newKey,
-		Prefixes: req.Prefixes,
-		ID:       fmt.Sprintf("ak_%d", apiKeyIDCounter),
+		Key:        newKey,
+		Prefixes:   req.Prefixes,
+		ID:         fmt.Sprintf("ak_%d", apiKeyIDCounter),
+		CreatedAt:  now,
+		LastUsedAt: nil,
 	}
 
 	mu.Lock()
@@ -465,7 +508,7 @@ func main() {
 
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8400"
 	}
 
 	fmt.Printf("认证网关启动中，监听端口: %s\n", port)

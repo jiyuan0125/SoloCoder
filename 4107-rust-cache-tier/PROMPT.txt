@@ -1,9 +1,5 @@
-Redis 缓存挂了那次事故暴露了一个问题——我们把所有缓存鸡蛋放一个篮子里了。Redis 一挂，所有请求直接穿透到数据库，数据库也扛不住，整条链路雪崩。这次 Rust actix-web 实现一个多级缓存中间件，L1 内存 + L2 磁盘文件，至少挂了一层还有另一层兜底。
+Redis 挂了请求穿透数据库雪崩。Rust actix-web 多级缓存 L1 内存+L2 磁盘。
 
-查询路径很清晰：先查 L1 内存，命中直接返回。L1 没命中查 L2 文件，L2 命中后回填 L1 再返回。两级都没命中返回 miss，调用方自己决定要不要回源写缓存。
+查询：先 L1 命中直接返。L1 miss 查 L2 命中回填 L1 返。两级 miss 返回 miss 调用方自定。淘汰：L1 支持运行时切换 LRU/LFU（PUT /cache/policy）切换清空 L1 L2 不受。缓存项可锁定不参与淘汰不受 TTL。TTL 精度到秒过期 miss 异步删后台每秒扫不阻塞。
 
-1. 淘汰策略。L1 容量有上限，满了要淘汰。支持 LRU 和 LFU 两种策略，通过 PUT /cache/policy 接口运行时切换。切换时清空 L1 重新加载热点数据，L2 不受影响。缓存项可以被标记为"锁定"，锁定的项不参与淘汰，也不受 TTL 影响，直到手动解锁。
-
-2. TTL 与过期。缓存项有过期时间，精度到秒。过期后查询返回 miss 并异步删除。后台每秒扫一轮过期项，扫描期间正常读写不受阻塞。L2 文件用 bincode 序列化存储，读写效率比 JSON 好得多。每个缓存项存一个 header（key、ttl、created_at、locked）和一个 body（value bytes）。
-
-3. 数据同步。写入时双写 L1 和 L2。删除时双删。L2 到 L1 的回填只在查询时触发，不会反向同步。L1 的命中率通过 GET /cache/stats 暴露——包含 L1 hits、L1 misses、L2 hits、L2 misses、当前容量。
+L2 用 bincode 序列化每项存 header（key/ttl/created_at/locked）+ body。写入双写删除双删。L2→L1 只查询触发。GET /cache/stats 暴露 L1/L2 hits/misses 和容量。`Cargo build`，`PORT` 环境变量。

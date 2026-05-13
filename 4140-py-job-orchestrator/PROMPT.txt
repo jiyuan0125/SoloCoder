@@ -1,9 +1,7 @@
-数据 ETL 流程里十个任务互相依赖，手动编排经常搞错顺序——上周有人把汇总任务排在清洗前面，输出一堆脏数据。Python FastAPI 写一个任务编排器，上游的输出自动接上下游的输入。
+ETL 十个任务互相依赖手动编排搞错顺序。Python FastAPI 任务编排器上游输出自动接下游。
 
-任务定义。每个任务有 name、execute_url（POST 调用的 HTTP 接口）、params（参数 map）、timeout（超时秒数，默认 120）、retry_count（重试次数，默认 0）。参数支持变量引用，用 {{task_name.field}} 语法引用上游任务的输出字段。变量解析在执行前做，解析失败的任务标记为 skipped 不阻塞后续。
+任务定义：name/execute_url/params/timeout（默认 120）/retry_count（默认 0）。参数支持 {{task_name.field}} 引用上游输出解析失败标 skipped 不阻塞。
 
-任务流程。POST /flow 创建流程，参数包含 name、tasks（任务定义列表）和 dependencies（依赖关系 map，key 是任务名 value 是它依赖的任务名列表）。引擎自动做拓扑排序检测循环。循环流程返回 400 拒绝创建。流程触发后按依赖顺序执行，没有依赖关系的任务并行执行。
+POST /flow 创建含 name/tasks/dependencies（依赖 map）。引擎拓扑排序检测循环返回 400。触发后按依赖顺序无依赖并行。同流程可同时多实例各自独立跟踪。状态：pending→running→success/partial/failed。关键任务 POST /flow/{name}/critical 标。
 
-同一个流程可以同时跑多个实例。每个实例有独立的 instance_id，状态独立跟踪。实例状态：pending → running → success / partial（部分任务失败但非关键）/ failed（关键任务失败）。哪些任务是关键的通过 POST /flow/{name}/critical 标记。
-
-监控和调试。GET /flow/{name}/instances 查看实例列表，GET /instance/{id}/status 查看每个任务节点的实时状态和输出。
+GET /flow/{name}/instances 查实例 GET /instance/{id}/status 查每任务实时状态和输出。`PORT` 环境变量。

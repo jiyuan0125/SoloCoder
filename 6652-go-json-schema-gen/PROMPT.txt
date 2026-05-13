@@ -1,0 +1,7 @@
+下周要演示从 Go struct 或 JSON 样本生成 JSON Schema，Go 命令行工具先出个原型。
+
+从 Go struct 或 JSON 样本生成 JSON Schema。自动推断类型、required 字段、枚举值。输出 JSON Schema draft-07 格式。
+工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+
+Go 标准库，命令行参数用 flag 包解析。

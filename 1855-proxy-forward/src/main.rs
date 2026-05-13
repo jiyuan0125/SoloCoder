@@ -21,7 +21,7 @@ async fn main() -> std::io::Result<()> {
         .init();
 
     let config = Config::from_env();
-    let port = env::var("PORT").unwrap_or_else(|_| "8080".to_string());
+    let port = env::var("PORT").unwrap_or_else(|_| "8302".to_string());
     let addr = format!("0.0.0.0:{}", port);
 
     info!("Starting reverse proxy on {}", addr);

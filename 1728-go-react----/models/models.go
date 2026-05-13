@@ -50,8 +50,10 @@ type Training struct {
 }
 
 type SafetyCheckItem struct {
-	Item   string `json:"item"`
-	Result string `json:"result"`
+	Item       string     `json:"item"`
+	Result     string     `json:"result"`
+	Responsible string    `json:"responsible,omitempty"`
+	Deadline   *time.Time `json:"deadline,omitempty"`
 }
 
 type SafetyCheck struct {

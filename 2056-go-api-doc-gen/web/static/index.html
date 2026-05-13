@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 文档管理系统</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="header">
+        <h1>📚 API 文档管理系统</h1>
+        <nav class="nav">
+            <button onclick="showSection('versions')">版本管理</button>
+            <button onclick="showSection('docs')">文档浏览</button>
+            <button onclick="showSection('compare')">版本对比</button>
+        </nav>
+    </header>
+
+    <main class="main">
+        <section id="versions" class="section">
+            <h2>版本管理</h2>
+            <div class="card">
+                <h3>创建新版本</h3>
+                <form id="createVersionForm" class="form">
+                    <div class="form-group">
+                        <label>版本名称</label>
+                        <input type="text" id="versionName" placeholder="如: v1.0.0">
+                    </div>
+                    <div class="form-group">
+                        <label>模块名称</label>
+                        <input type="text" id="moduleName" placeholder="如: 用户模块">
+                    </div>
+                    <div class="form-group">
+                        <label>源码目录 *</label>
+                        <input type="text" id="sourceDir" placeholder="Go 源代码目录绝对路径" required>
+                    </div>
+                    <div class="form-group">
+                        <label>备注</label>
+                        <textarea id="versionNote" rows="2" placeholder="版本说明"></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">扫描并创建版本</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h3>历史版本</h3>
+                <div id="versionsList" class="list"></div>
+            </div>
+        </section>
+
+        <section id="docs" class="section hidden">
+            <div class="docs-header">
+                <select id="versionSelect" onchange="loadVersionDocs()">
+                    <option value="">选择版本...</option>
+                </select>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="搜索接口..." oninput="searchAPIs()">
+                </div>
+                <div class="export-buttons">
+                    <button onclick="exportMarkdown()" class="btn">导出 Markdown</button>
+                    <button onclick="exportOpenAPI()" class="btn">导出 OpenAPI</button>
+                </div>
+            </div>
+
+            <div class="docs-content">
+                <aside class="sidebar" id="moduleList"></aside>
+                <div class="api-content" id="apiContent">
+                    <div class="empty-state">请选择一个版本查看文档</div>
+                </div>
+            </div>
+        </section>
+
+        <section id="compare" class="section hidden">
+            <h2>版本对比</h2>
+            <div class="compare-selector">
+                <div>
+                    <label>旧版本</label>
+                    <select id="compareOldVersion"></select>
+                </div>
+                <div>
+                    <label>新版本</label>
+                    <select id="compareNewVersion"></select>
+                </div>
+                <button onclick="compareVersions()" class="btn btn-primary">对比</button>
+            </div>
+            <div id="compareResult"></div>
+        </section>
+    </main>
+
+    <div id="testModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>在线测试接口</h3>
+                <button onclick="closeTestModal()" class="close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>请求方法</label>
+                    <select id="testMethod">
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                        <option value="PATCH">PATCH</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>完整 URL</label>
+                    <input type="text" id="testUrl" placeholder="http://localhost:9200/api/xxx">
+                </div>
+                <div class="form-group">
+                    <label>请求头 (JSON 格式)</label>
+                    <textarea id="testHeaders" rows="2" placeholder='{"Content-Type": "application/json"}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label>请求体</label>
+                    <textarea id="testBody" rows="6" placeholder='{"key": "value"}'></textarea>
+                </div>
+                <button onclick="executeTest()" class="btn btn-primary">发送请求</button>
+                <div id="testResult" class="test-result hidden"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

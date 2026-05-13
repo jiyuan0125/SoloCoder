@@ -1,0 +1,5 @@
+线上的手动流程太难用了，重写一个事务管理生成，Go 实现。
+事务开始、提交、回滚。
+嵌套事务支持。
+子命令结构：db migrate、db rollback、db status、db seed。
+纯标准库实现，go run . 能跑。

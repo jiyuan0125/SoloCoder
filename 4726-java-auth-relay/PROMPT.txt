@@ -1,4 +1,9 @@
-各服务自己管 Token 太乱了，用 Netty 实现一个认证代理。
-客户端请求带上 JWT Token，网关校验 Token 有效性和过期时间。合法的把用户 ID 和角色放到请求头转发到后端。Token 快过期时（还有不到5分钟）在响应头里附带新 Token。
-不合法 Token 返回 401。白名单路径不需要认证直接转发。后端地址和 JWT 密钥配置在 properties 文件里。
-Token 刷新后旧 Token 在过渡期内仍然有效（默认60秒）。JDK 17 + Maven，端口 PORT 环境变量指定。
+上个季度出了两次P2事故，根因都是这一块的基础能力缺失。
+
+提供RESTfulAPI。接口要做参数校验，不合法的请求直接返回400别往下传。分页查询要支持page和page_size参数，默认每页20条，最多100条。
+
+管理接口要能看到系统的实时状态，包括当前处理的请求数、累计的统计指标等。
+
+各服务自己管Token太乱了，用Netty实现一个认证代理。客户端请求带上JWTToken，网关校验Token有效性和过期时间。Token快过期时（还有不到5分钟）在响应头里附带新Token。不合法Token返回401。后端地址和JWT密钥配置在properties文件里。Token刷新后旧Token在过渡期内仍然有效（默认60秒）。
+
+包含 auth、relay、token、config 模块。

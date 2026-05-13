@@ -1,0 +1,20 @@
+server:
+  port: 9900
+
+spring:
+  application:
+    name: service-registry
+
+registry:
+  heartbeat:
+    interval: 10000
+    unhealthy-threshold: 3
+    deregister-threshold: 6
+    recovery-window: 60000
+  graceful-shutdown:
+    wait-time: 10000
+  discovery:
+    page-size: 20
+    pagination-threshold: 100
+  notification:
+    max-retries: 5

@@ -1,11 +1,5 @@
-Fiber 协议转换。支持 JSON ↔ Protobuf 双向转换。
+后端 gRPC 服务性能好但前端只认 REST JSON，手动写转换代码又蠢又容易出错。通用协议转换网关一套配置搞定：收到 JSON 按路径匹配 gRPC 方法自动转 Protobuf 调后端，响应转回 JSON。嵌套结构对应多层嵌套，枚举字段 JSON 字符串 gRPC 数字双向映射。支持 gRPC 流式响应转 newline-delimited JSON。
 
-Protobuf schema 定义文件（.proto）通过接口上传。上传的文件要校验语法。
+JSON ↔ Protobuf 双向转换——schema 通过接口上传。用 Fiber 实现。.proto 文件通过接口上传，上传时校验语法。JSON 字段在 schema 中无对应则忽略；Protobuf 字段 JSON 缺失用默认值。批量转换一次处理多条消息，单条失败不影响其余。
 
-转换时如果 JSON 字段在 Protobuf schema 里找不到对应字段，忽略该字段。反过来如果 Protobuf 字段在 JSON 里没有，用默认值。
-
-嵌套消息支持：JSON 的嵌套对象对应 Protobuf 的嵌套 message。
-
-批量转换接口：一次转换多条消息。某条转换失败不影响其他的。
-
-端口 PORT 环境变量，go build。
+Go+Fiber，go build 编译通过。端口 PORT 环境变量。

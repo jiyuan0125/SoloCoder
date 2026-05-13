@@ -1,1 +1,5 @@
-FastAPI 写一个流量染色网关。分层设计：RuleEngine（染色规则加载匹配存储）、TagResolver（请求属性提取和规则匹配）、Router（根据标签选择后端）、AdminAPI（规则管理接口）。RuleEngine 加载规则后通知 TagResolver 更新缓存。TagResolver 匹配出标签后传给 Router。Router 根据标签选择后端版本转发请求。AdminAPI 修改规则后通知 RuleEngine 重新加载。各层通过共享的事件总线解耦。端口 PORT 指定。
+FastAPI 实现流量染色网关，分层解耦。端口 PORT 环境变量指定。
+
+RuleEngine负责加载存储染色规则，规则变更时生成不可变快照通知TagResolver更新。TagResolver用快照做匹配——从请求提取Header、路径、IP、查询参数与规则链比对。匹配出的标签集合传给Router，Router根据标签组合查路由表选后端版本。
+
+AdminAPI改规则后只通知RuleEngine重新加载，不直接碰TagResolver和Router。各层通过共享事件总线通信。规则加载、标签匹配、后端路由三件事各自独立，改规则不影响正在匹配的请求。

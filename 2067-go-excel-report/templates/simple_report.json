@@ -1,0 +1,22 @@
+{
+  "name": "simple_report",
+  "description": "简单报表",
+  "sheets": [
+    {
+      "sheet_name": "数据",
+      "static_cells": [
+        {
+          "cell": "A1",
+          "value": "简单报表"
+        }
+      ],
+      "tables": [
+        {
+          "start_cell": "A3",
+          "headers": null,
+          "fields": null
+        }
+      ]
+    }
+  ]
+}

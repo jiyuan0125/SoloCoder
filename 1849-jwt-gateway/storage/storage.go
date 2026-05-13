@@ -44,10 +44,7 @@ func NewKeyManager(rotationPeriod time.Duration) *KeyManager {
 	return km
 }
 
-func (km *KeyManager) GenerateKey() string {
-	km.mu.Lock()
-	defer km.mu.Unlock()
-
+func (km *KeyManager) generateKeyLocked() string {
 	km.nextID++
 	id := strconv.Itoa(km.nextID)
 	secret := make([]byte, 32)
@@ -62,7 +59,15 @@ func (km *KeyManager) GenerateKey() string {
 	return id
 }
 
+func (km *KeyManager) GenerateKey() string {
+	km.mu.Lock()
+	defer km.mu.Unlock()
+	return km.generateKeyLocked()
+}
+
 func (km *KeyManager) activateLatest() {
+	km.mu.Lock()
+	defer km.mu.Unlock()
 	for id, key := range km.keys {
 		if key.Status == StatusGenerated {
 			key.Status = StatusActive
@@ -86,7 +91,7 @@ func (km *KeyManager) RotateKey() (string, string) {
 		return "", ""
 	}
 
-	newID := km.GenerateKey()
+	newID := km.generateKeyLocked()
 	newKey := km.keys[newID]
 	newKey.Status = StatusActive
 	km.activeKeyID = newID
@@ -111,13 +116,31 @@ func (km *KeyManager) deprecateAfter(id string, period time.Duration) {
 func (km *KeyManager) GetKey(id string) *Key {
 	km.mu.RLock()
 	defer km.mu.RUnlock()
-	return km.keys[id]
+	if key, ok := km.keys[id]; ok {
+		return &Key{
+			ID:        key.ID,
+			Secret:    append([]byte(nil), key.Secret...),
+			Status:    key.Status,
+			CreatedAt: key.CreatedAt,
+			RotatedAt: key.RotatedAt,
+		}
+	}
+	return nil
 }
 
 func (km *KeyManager) GetActiveKey() *Key {
 	km.mu.RLock()
 	defer km.mu.RUnlock()
-	return km.keys[km.activeKeyID]
+	if key, ok := km.keys[km.activeKeyID]; ok {
+		return &Key{
+			ID:        key.ID,
+			Secret:    append([]byte(nil), key.Secret...),
+			Status:    key.Status,
+			CreatedAt: key.CreatedAt,
+			RotatedAt: key.RotatedAt,
+		}
+	}
+	return nil
 }
 
 func (km *KeyManager) ListKeys() []*Key {
@@ -125,7 +148,13 @@ func (km *KeyManager) ListKeys() []*Key {
 	defer km.mu.RUnlock()
 	keys := make([]*Key, 0, len(km.keys))
 	for _, key := range km.keys {
-		keys = append(keys, key)
+		keys = append(keys, &Key{
+			ID:        key.ID,
+			Secret:    append([]byte(nil), key.Secret...),
+			Status:    key.Status,
+			CreatedAt: key.CreatedAt,
+			RotatedAt: key.RotatedAt,
+		})
 	}
 	return keys
 }

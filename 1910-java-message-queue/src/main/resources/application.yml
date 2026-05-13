@@ -1,0 +1,10 @@
+server:
+  port: 8400
+
+app:
+  queue:
+    data-dir: ./data
+    default-topic-capacity: 100000
+    backlog-warn-threshold: 50000
+    ack-timeout-seconds: 30
+    max-retry-count: 3

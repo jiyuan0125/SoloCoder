@@ -1,7 +1,5 @@
-FastAPI 做日志关联追踪。每条日志可以带 TraceID，通过 TraceID 查询完整的跨服务调用链。
+FastAPI 做日志关联追踪服务。每条日志自动带 TraceID，一条命令拉出完整调用链。日志进来时看请求 Header 有没有 TraceID，没有自动生成 UUID。同一请求在服务间传递时 TraceID 通过 X-Trace-Id 透传。每条日志打上服务名和接收时间戳，格式统一为 JSON（trace_id、service、timestamp、level、message、tags）。
 
-日志按时间排序。同一个 TraceID 的日志按服务分组展示。每个服务的日志按时间排序。
+存储用内存字典按 TraceID 索引，同时维护按时间排序的全量列表。查询支持按 TraceID、服务名、时间范围组合过滤。按 TraceID 查时先按服务分组再按时间排序。结果分页默认 50 条。
 
-支持按 TraceID、服务名、时间范围组合查询。查询结果支持分页。
-
-未带 TraceID 的日志也可以查询，但不能按 TraceID 关联。端口 PORT 环境变量，能正常跑起来。
+未带 TraceID 的日志也能存（如定时任务），通过服务名和时间范围查。端口 PORT 环境变量。

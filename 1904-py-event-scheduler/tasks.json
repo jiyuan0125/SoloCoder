@@ -1,0 +1,147 @@
+[
+  {
+    "id": "c6fd78d9d07946948e88762b3dbe9a91",
+    "name": "test-delay-task",
+    "schedule": {
+      "type": "delay",
+      "cron": null,
+      "delay_seconds": 5
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "success",
+    "created_at": "2026-05-13T09:56:36.377653",
+    "last_run_at": "2026-05-13T09:56:41.380371",
+    "execution_history": [
+      {
+        "id": "bd6ec61fd42d469696829e42afd574ea",
+        "executed_at": "2026-05-13T09:56:41.380922",
+        "status": "success",
+        "duration_ms": 13,
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "5d08d5fb0b304c669771d91e437bb9be",
+    "name": "test-delay-2",
+    "schedule": {
+      "type": "delay",
+      "cron": null,
+      "delay_seconds": 3
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "success",
+    "created_at": "2026-05-13T09:56:36.404941",
+    "last_run_at": "2026-05-13T09:56:39.407705",
+    "execution_history": [
+      {
+        "id": "daf609cad45d456f8ecf6d56431dd82e",
+        "executed_at": "2026-05-13T09:56:39.408177",
+        "status": "success",
+        "duration_ms": 15,
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "4904d844ecf743b6a046931b94790de7",
+    "name": "fail-task",
+    "schedule": {
+      "type": "delay",
+      "cron": null,
+      "delay_seconds": 3
+    },
+    "callback_url": "http://127.0.0.1:19999/nonexistent",
+    "status": "failed",
+    "created_at": "2026-05-13T09:57:05.069695",
+    "last_run_at": "2026-05-13T10:00:46.819414",
+    "execution_history": [
+      {
+        "id": "61c391dc26e54322925fe63b3c3088d5",
+        "executed_at": "2026-05-13T09:57:08.071735",
+        "status": "failed",
+        "duration_ms": 10,
+        "error": "All connection attempts failed"
+      },
+      {
+        "id": "c2eab804585b45c09889c9856b2d0294",
+        "executed_at": "2026-05-13T10:00:46.819794",
+        "status": "failed",
+        "duration_ms": 20,
+        "error": "All connection attempts failed"
+      }
+    ]
+  },
+  {
+    "id": "6461a938248d41499cda48a239225d55",
+    "name": "cancel-me",
+    "schedule": {
+      "type": "delay",
+      "cron": null,
+      "delay_seconds": 300
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "cancelled",
+    "created_at": "2026-05-13T09:58:01.790071",
+    "last_run_at": null,
+    "execution_history": []
+  },
+  {
+    "id": "da97841fef034431a99dc3edb076031a",
+    "name": "cron-test",
+    "schedule": {
+      "type": "cron",
+      "cron": "* * * * *",
+      "delay_seconds": null
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "pending",
+    "created_at": "2026-05-13T09:58:11.960663",
+    "last_run_at": null,
+    "execution_history": []
+  },
+  {
+    "id": "466e7579045f404eb093d0f7b6488e63",
+    "name": "cron-test",
+    "schedule": {
+      "type": "cron",
+      "cron": "* * * * *",
+      "delay_seconds": null
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "success",
+    "created_at": "2026-05-13T09:59:00.000331",
+    "last_run_at": "2026-05-13T09:59:00.000935",
+    "execution_history": [
+      {
+        "id": "4005d2b641a84551b66bf0b888d96781",
+        "executed_at": "2026-05-13T09:59:00.007975",
+        "status": "success",
+        "duration_ms": 12,
+        "error": null
+      }
+    ]
+  },
+  {
+    "id": "28944ee199b84ffe8739f307af9b9543",
+    "name": "cron-test",
+    "schedule": {
+      "type": "cron",
+      "cron": "* * * * *",
+      "delay_seconds": null
+    },
+    "callback_url": "http://127.0.0.1:9152/callback",
+    "status": "success",
+    "created_at": "2026-05-13T10:00:00.001304",
+    "last_run_at": "2026-05-13T10:00:00.001708",
+    "execution_history": [
+      {
+        "id": "ffb4aea127744aab8903c27685cee288",
+        "executed_at": "2026-05-13T10:00:00.002799",
+        "status": "success",
+        "duration_ms": 12,
+        "error": null
+      }
+    ]
+  }
+]

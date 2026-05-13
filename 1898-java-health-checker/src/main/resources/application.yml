@@ -1,0 +1,10 @@
+server:
+  port: 9004
+
+spring:
+  application:
+    name: java-health-checker
+
+logging:
+  level:
+    com.healthchecker: DEBUG

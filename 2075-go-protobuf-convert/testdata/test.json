@@ -1,0 +1,30 @@
+{
+  "address": {
+    "city": "Beijing",
+    "country": "China",
+    "street": "123 Main St"
+  },
+  "contact": {
+    "name": "John",
+    "phone": "123456789"
+  },
+  "contact_info": {
+    "contact": {
+      "name": "John",
+      "phone": "123456789"
+    }
+  },
+  "createdAt": "seconds:1715558400",
+  "id": 123,
+  "name": "Test User",
+  "scores": {
+    "english": 88,
+    "math": 95
+  },
+  "status": "STATUS_ACTIVE",
+  "tags": [
+    "tag1",
+    "tag2",
+    "tag3"
+  ]
+}

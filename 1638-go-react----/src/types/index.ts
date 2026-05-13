@@ -71,6 +71,11 @@ export interface RollbackRequest {
   version: number;
 }
 
+export interface RollbackResult {
+  environment: Environment;
+  warning?: string;
+}
+
 export class ApiError extends Error {
   statusCode: number;
   constructor(statusCode: number, message: string) {

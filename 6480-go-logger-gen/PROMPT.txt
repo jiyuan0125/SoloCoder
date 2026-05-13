@@ -1,0 +1,5 @@
+看到别人的数据校验工具挺有意思，自己也做一个日志器生成，Go。
+日志级别、格式化、输出目标。
+上下文字段支持。
+多级命令：config get、config set、config list、config env switch。
+不用第三方包，go build 通过就行。

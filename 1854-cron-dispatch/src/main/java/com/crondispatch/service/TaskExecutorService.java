@@ -33,7 +33,6 @@ import java.util.concurrent.TimeoutException;
 public class TaskExecutorService {
     private static final Logger logger = LoggerFactory.getLogger(TaskExecutorService.class);
     private static final int MAX_QUEUE_SIZE = 5;
-    private static final int MAX_RETRY = 3;
     private static final int RETRY_BASE_DELAY = 5;
     private static final int HTTP_TIMEOUT = 30;
 
@@ -59,6 +58,7 @@ public class TaskExecutorService {
     public void executeTask(String taskId) {
         Task task = taskStore.get(taskId);
         if (task == null) {
+            logger.warn("任务 [{}] 不存在，跳过执行", taskId);
             return;
         }
 
@@ -69,16 +69,41 @@ public class TaskExecutorService {
         }
 
         runningTasks.put(taskId, true);
+        logger.info("开始执行任务 [{}] '{}'", task.getId(), task.getName());
         executorService.submit(() -> runTask(task));
     }
 
     private void handleMisfire(Task task) {
-        ExecutionHistory history = historyService.createHistory(task.getId());
-        history.setResult(ExecutionResult.SKIPPED);
-        history.setErrorMessage("任务正在执行中，触发跳过策略");
-        history.setEndTime(Instant.now());
-        historyService.saveHistory(history);
-        logger.warn("任务 {} 正在执行中，本次触发已跳过", task.getId());
+        if (task.getMisfireStrategy() == null || task.getMisfireStrategy() == com.crondispatch.enums.MisfireStrategy.SKIPPED) {
+            ExecutionHistory history = historyService.createHistory(task.getId());
+            history.setResult(ExecutionResult.SKIPPED);
+            history.setErrorMessage("任务正在执行中，触发跳过策略");
+            history.setEndTime(Instant.now());
+            historyService.saveHistory(history);
+            logger.warn("任务 [{}] '{}' 正在执行中，本次触发已跳过 (SKIPPED策略)", 
+                task.getId(), task.getName());
+        } else {
+            Queue<String> queue = taskQueues.computeIfAbsent(task.getId(), k -> new java.util.LinkedList<>());
+            if (queue.size() < MAX_QUEUE_SIZE) {
+                queue.offer(task.getId());
+                logger.info("任务 [{}] '{}' 正在执行中，加入队列 (队列大小: {}, QUEUED策略)", 
+                    task.getId(), task.getName(), queue.size());
+            } else {
+                ExecutionHistory history = historyService.createHistory(task.getId());
+                history.setResult(ExecutionResult.SKIPPED);
+                history.setErrorMessage("任务正在执行中，队列已满");
+                history.setEndTime(Instant.now());
+                historyService.saveHistory(history);
+                logger.warn("任务 [{}] '{}' 正在执行中，队列已满，跳过本次触发", 
+                    task.getId(), task.getName());
+            }
+        }
+    }
+
+    public void cleanupTask(String taskId) {
+        runningTasks.remove(taskId);
+        taskQueues.remove(taskId);
+        logger.info("已清理任务 [{}] 的状态信息", taskId);
     }
 
     private void runTask(Task task) {

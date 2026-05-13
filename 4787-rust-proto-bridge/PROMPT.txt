@@ -1,5 +1,5 @@
-actix-web 写一个协议转换代理。有些老服务只认 HTTP+JSON，新服务用 gRPC+Protobuf，需要一个中间层做转换。
+老系统只认 HTTP+JSON，新服务用 gRPC+Protobuf，手动写转换代码蠢又易出错。用 Rust actix-web 写双向协议转换代理让新老系统无缝通信。
 
-HTTP→gRPC 方向：收到 HTTP JSON 请求后，根据路径匹配 gRPC 服务和方法，把 JSON 转成 Protobuf 消息，调用 gRPC 后端，再把响应转回 JSON。路径映射在配置文件中定义，比如 POST /api/users 对应 userService.CreateUser。配置文件中用 proto 文件路径指定消息格式，启动时加载解析。
+HTTP→gRPC：JSON 请求按路径匹配 gRPC 方法，自动转 Protobuf 调后端再转回 JSON。路径到方法映射通过配置文件定义，proto 路径在配置中指定启动时加载。
 
-gRPC→HTTP 方向：收到 gRPC 请求后转成 HTTP JSON 调用后端老服务。还有一个 WebSocket 桥接模式：客户端通过 WebSocket 连上来，消息体是 JSON，网关把每条消息转成 gRPC 调用，结果通过同一个 WebSocket 连接推回去。端口 PORT 环境变量指定。
+gRPC→HTTP：收到 gRPC 请求转 HTTP JSON 调老系统 REST 接口再转回。WebSocket 桥接：客户端建立 WS 连接发 JSON 每条消息转一次 gRPC 调用结果通过同一 WS 推回。枚举 JSON 侧用字符串（如 "ACTIVE"），gRPC 侧数字，双向映射不能搞反。端口 PORT 环境变量。

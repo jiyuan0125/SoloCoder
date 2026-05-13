@@ -1,0 +1,8 @@
+调研了一圈，Go 做检查 changelog 文件格式最方便，编译出来直接跑。
+
+检查 changelog 文件格式。验证版本号递增、日期格式、条目分类。支持 Keep a Changelog 格式。
+有可能一次导入上万条数据。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
+
+Go 标准库，命令行参数用 flag 包解析。

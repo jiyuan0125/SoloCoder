@@ -1,4 +1,4 @@
-需要把 HTTP 请求转成 gRPC 调用。用 Go/Gin 写。
+前端团队只愿意写 HTTP 接口，后端全是 gRPC 服务，两边都不肯让步。Go/Gin 写个 HTTP-gRPC 桥接。
 
 转换配置：HTTP 路径 + 方法 → gRPC 服务名 + 方法名。请求 body（JSON）映射到 gRPC 请求的 protobuf 字段。映射规则通过配置文件定义。
 

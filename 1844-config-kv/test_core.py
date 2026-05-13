@@ -204,6 +204,16 @@ async def test_http_routes():
                 data = await resp.json()
                 assert data['success'] == True
                 print(f"    ✓ Rollback success")
+            
+            print("  Test 9: GET all groups (batch pull)")
+            async with session.get(
+                'http://localhost:18080/projects/order-service/groups'
+            ) as resp:
+                assert resp.status == 200
+                data = await resp.json()
+                assert 'database' in data
+                assert data['database']['max_pool_size'] == 10
+                print(f"    ✓ Batch pull works: {list(data.keys())}")
         
         await runner.cleanup()
         print("\n✅ All HTTP route tests passed!")

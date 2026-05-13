@@ -1,0 +1,6 @@
+业务那边要一个证书密钥管理相关的工具，Go CLI 实现。
+工具要能PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
+证书有申请→签发→生效→过期→续签的状态流转。
+数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
+用 archive/zip 的读写。
+go build 能过，命令行工具能正常运行。

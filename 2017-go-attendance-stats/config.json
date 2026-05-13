@@ -1,0 +1,7 @@
+{
+  "workdays": [1, 2, 3, 4, 5],
+  "start_time": "09:00",
+  "end_time": "18:00",
+  "database": "attendance.db",
+  "port": 8401
+}

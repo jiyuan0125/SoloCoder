@@ -1,0 +1,8 @@
+V2 要上线，检查 HTTP 响应 header的工具还没写，Go 赶一个。
+
+检查 HTTP 响应 header。连接指定 URL，获取所有响应 header。检测安全相关 header（CSP、HSTS、X-Frame-Options 等）。
+需要用到 bytes.Buffer 等标准库功能。
+文件状态有 新增、处理中、已完成、归档。处理完后可以归档。
+数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

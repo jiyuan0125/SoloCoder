@@ -1,7 +1,5 @@
-axum 做 Fencing Token 锁。每次锁分配时递增的 Token。资源端只接受比上次更大的 Token。
+axum 做 Fencing Token 锁。客户端 A 拿到锁后 GC 停顿，锁超时释放，B 拿到锁，A 恢复后还以为持有——Fencing Token 解决：每次锁分配返回单调递增 Token，资源端只接受比上次更大的 Token。
 
-客户端拿到锁和 Token 后操作资源。资源端记录最后接受的 Token。Token 更小或相等的请求被拒绝。
+获取锁 POST /locks/acquire：传入 resource、holder_id、ttl_seconds（默认 30）。锁空闲或同 holder（重入）返回 {lock_id, fencing_token}。Token 全局递增，重启从文件恢复。释放锁 POST /locks/release：传入 lock_id 和 holder_id。
 
-Token 用 i64，重启后从持久化文件恢复。Token 不会回绕。
-
-提供接口查看各资源的当前 Token、锁持有者。端口 PORT 环境变量，Cargo build 能过。
+验证 POST /resources/validate：传入 resource 和 fencing_token，大于最后记录 Token 则更新返回 200，否则 409。管理接口查所有资源当前 Token 和活跃锁。Token 持久化每 5 秒刷盘。端口 PORT 环境变量，cargo build 能过。

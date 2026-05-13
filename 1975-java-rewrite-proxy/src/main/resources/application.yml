@@ -1,0 +1,6 @@
+server:
+  port: 8642
+
+proxy:
+  target-url: http://localhost:8603
+  timeout: 10000

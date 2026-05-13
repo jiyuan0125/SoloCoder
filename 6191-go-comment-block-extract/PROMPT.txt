@@ -1,0 +1,5 @@
+Go 标准库的os/exec挺适合做配置管理的，试一下注释块提取。
+支持 //、/* */、# 三种注释风格。
+注释内容按文件分组输出。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+纯标准库实现，go run . 能跑。

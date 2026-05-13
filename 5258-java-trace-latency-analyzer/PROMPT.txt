@@ -1,7 +1,5 @@
-Spring Boot 做耗时分析追踪服务。记录每个 Span 的开始和结束时间，计算耗时。按 TraceID 查询耗时树。
+Spring Boot 做链路耗时分析。上报 POST /traces/spans 批量接收 Span（最多 50 个），含 trace_id、span_id、parent_span_id、operation_name、start_time、end_time。按 trace_id 聚合计算 duration。
 
-耗时树展示每个 Span 的耗时占总耗时的比例。高亮超过阈值的 Span（阈值可配）。
+查询 GET /traces/{trace_id}/latency-tree 返回耗时树：根节点总耗时，子节点按调用层级展开，每个节点显示 duration 和占总耗时百分比。超阈值（默认 500ms，LATENCY_THRESHOLD 环境变量）标记 slow: true。
 
-统计接口：最慢的 10 个 Trace、平均耗时、P95 耗时。按操作名称聚合统计。
-
-端口 server.port 配置，Maven 构建。
+统计：GET /traces/slowest?limit=10 最慢 Trace。GET /traces/stats/operation?name=xxx 操作平均耗时、P95、调用次数（最近 1000 个 Span）。GET /traces/stats/overview 全局概览。Span 数据存内存上限 50000，超出淘汰最早 TraceID 的全部 Span。端口 server.port 配置，Maven 构建。

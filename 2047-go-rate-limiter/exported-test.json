@@ -1,0 +1,51 @@
+[
+  {
+    "id": "test-user",
+    "name": "Test User Limit",
+    "dimension": "user",
+    "algorithm": "sliding",
+    "threshold": 2,
+    "window_size": 60000000000,
+    "target": "user123"
+  },
+  {
+    "id": "test-api",
+    "name": "Test API Limit",
+    "dimension": "api",
+    "algorithm": "token",
+    "threshold": 1,
+    "window_size": 0,
+    "bucket_capacity": 5,
+    "fill_rate": 2,
+    "target": "/api/test"
+  },
+  {
+    "id": "ip-fixed",
+    "name": "ip-fixed",
+    "dimension": "ip",
+    "algorithm": "fixed",
+    "threshold": 5,
+    "window_size": 60000000000,
+    "target": "192.168.1.1"
+  },
+  {
+    "id": "api-token",
+    "name": "api-token",
+    "dimension": "api",
+    "algorithm": "token",
+    "threshold": 20,
+    "window_size": 0,
+    "bucket_capacity": 20,
+    "fill_rate": 5,
+    "target": "/api/test"
+  },
+  {
+    "id": "user-sliding",
+    "name": "user-sliding",
+    "dimension": "user",
+    "algorithm": "sliding",
+    "threshold": 3,
+    "window_size": 30000000000,
+    "target": "user001"
+  }
+]

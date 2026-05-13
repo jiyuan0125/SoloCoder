@@ -1,5 +1,5 @@
-用 Spring Boot 做一个带 span 关联的链路追踪收集器。除了服务间调用的 span，还支持关联其他维度：数据库查询、缓存操作、外部 HTTP 调用。
+除了服务间调用的 span，还支持关联数据库查询、缓存操作、外部 HTTP 调用等维度。Spring Boot 实现。span 有 tags（键值对）和 logs（带时间戳的事件列表），比如 HTTP span 可以有 http.method=GET, http.url=/api/users。
 
-span 有关联的 tags（键值对）和 logs（带时间戳的事件列表）。比如一个 HTTP span 可以有 tags: http.method=GET, http.url=/api/users。
+查询某个 trace 返回每个 span 关联详情。支持按 tag 搜索——比如查所有 http.status_code=500 的 span。接口展示 span 类型分布统计。
 
-查询某个 trace 时返回每个 span 的关联详情。支持按 tag 搜索——比如查所有 http.status_code=500 的 span。管理接口展示 span 类型分布。端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。
+端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。

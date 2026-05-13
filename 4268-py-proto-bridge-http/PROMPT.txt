@@ -1,4 +1,4 @@
-新接了个项目——老系统的 HTTP 接口是 XML 格式的，新系统要 JSON，两边得有个转换层。FastAPI 搞。收一种格式的请求，转换后转发给后端，后端的响应再转回来。JSON↔XML、JSON↔Form URL-Encoded 都得支持。转换规则按接口路径配——POST /convert/json-to-xml、POST /convert/xml-to-json 这种。
-字段名可以映射——嵌套路径也行，比如 source.data.name 映射成 target.user.userName。字符串和数字互转要注意精度，浮点数别丢了小数位。日期格式 ISO8601↔Unix 时间戳互转，时区按东八区处理。
-转换失败要记下原始请求和错误信息，日志按接口路径分组查，能看到每个接口的成功率和平均耗时。空值字段可以选保留或丢弃，丢弃的话响应里不返回 null 字段。嵌套 20 层以上的 JSON 也不能趴下——设置最大递归深度，超了返回 400。请求体大小限制 10MB。
-注意安全：用户提交的查询参数直接拿去构造 XPath 表达式了，得做转义防止 XPath 注入。XML 外部实体攻击（XXE）也得防，禁用 DTD 和外部实体解析。模块拆 adapter、mapper、converter、logger。端口 PORT 环境变量。
+用 Python FastAPI 写格式转换桥接层。收一种格式请求转换后转发给后端，响应再转回来。JSON↔XML、JSON↔Form URL-Encoded 都支持，转换规则按接口路径配。
+字段名可映射支持嵌套路径如 source.data.name→target.user.userName。字符串数字互转注意精度，日期 ISO8601↔Unix 时间戳互转时区东八区。
+转换失败记原始请求和错误信息，日志按接口路径分组查可看成功率和平均耗时。空值字段可选保留或丢弃。JSON 嵌套超 20 层设最大递归深度超了返回 400。请求体限制 10MB。
+防 XPath 注入做转义，禁用 DTD 和外部实体防 XXE。模块拆 adapter、mapper、converter、logger。端口 PORT 环境变量。

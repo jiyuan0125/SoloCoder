@@ -1,0 +1,8 @@
+市面上的压缩和解压测试数据目录工具要么太重要么收费，Go 标准库写一个。
+
+压缩和解压测试数据目录。按项目分组，支持增量压缩（只打包变更的文件）。记录每个文件的 checksum 用于校验完整性。
+执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+管理分组和组内成员。成员操作基于分组进行。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

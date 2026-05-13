@@ -1,7 +1,5 @@
-axum 写一个指标采集服务。接入的服务往这里推指标数据。
+各服务自己暴露 /metrics 太分散，Prometheus 配十几套抓取规则维护成本高。用 Rust axum 写指标采集汇聚服务，业务统一往这推数据，Prometheus 只抓一个端点。
 
-三种指标类型：Counter（只增计数器）、Gauge（可增可减仪表盘）、Histogram（分布直方图）。每条指标数据包含：指标名、类型、值、标签集（如 method=GET, path=/api/users, status=200）。相同指标名+标签集的数据做聚合。
+三种类型：Counter（只增）、Gauge（可增可减）、Histogram（分布）。每条上报含指标名、类型、值、标签键值对。相同指标名+相同标签集做聚合（Counter 累加、Gauge 取最新、Histogram 合并）。暴露 Prometheus 标准格式 /metrics。
 
-对外暴露 Prometheus 格式的 /metrics 端点。Histogram 类型需要指定桶的边界，桶边界在注册指标时设定。同一个 Histogram 指标多次注册如果桶边界不一致，使用第一次注册的边界。
-
-指标有采集间隔配置，超过采集间隔没有新数据的指标标记为 stale。stale 指标在 /metrics 里不输出。指标还可以设置过期时间，过期后自动删除，释放内存。删除后如果又收到同名指标，当作新指标重新注册。端口 PORT 环境变量。
+Histogram 桶边界首次注册时设定，后续不一致以首次为准。超采集间隔（可配默认 60 秒）没新数据标 stale 不输出。指标过期（可配默认 5 分钟）自动删除，删除后再收到当新指标。数据存内存重启清零可接受。端口 PORT 环境变量。

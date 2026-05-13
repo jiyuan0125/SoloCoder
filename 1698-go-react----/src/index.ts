@@ -169,7 +169,7 @@ app.post('/api/scheduler/run-now', async (req: Request, res: Response, next: Nex
   }
 });
 
-const PORT = process.env.PORT || 8208;
+const PORT = process.env.PORT || 8300;
 
 async function start() {
   db = await initDb();

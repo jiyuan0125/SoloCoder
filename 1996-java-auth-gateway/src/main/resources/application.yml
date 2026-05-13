@@ -1,0 +1,17 @@
+server:
+  port: ${GATEWAY_PORT:10100}
+
+jwt:
+  primary-secret: ${JWT_PRIMARY_SECRET:this_is_a_very_long_and_secure_primary_secret_key_for_jwt_signing_123456}
+  old-secret: ${JWT_OLD_SECRET:this_is_a_very_long_and_secure_old_secret_key_for_jwt_signing_123456}
+  old-key-expire-minutes: ${JWT_OLD_KEY_EXPIRE_MINUTES:60}
+  old-key-expire-at: ${JWT_OLD_KEY_EXPIRE_AT:}
+
+audit:
+  max-records: 20000
+
+routes:
+  - path-prefix: /api/service1
+    url: http://localhost:10101
+  - path-prefix: /api/service2
+    url: http://localhost:10101

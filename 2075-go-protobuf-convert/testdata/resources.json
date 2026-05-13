@@ -1,0 +1,14 @@
+{
+  "resources": {
+    "1778665308484186503": {
+      "id": "1778665308484186503",
+      "type": "proto_file",
+      "name": "test.proto",
+      "path": "testdata/test.proto",
+      "created_at": "2026-05-13T17:41:48.484187557+08:00",
+      "updated_at": "2026-05-13T17:41:48.484187588+08:00"
+    }
+  },
+  "relations": {},
+  "operations": {}
+}

@@ -1,0 +1,10 @@
+server:
+  port: 9511
+
+spring:
+  application:
+    name: xml-json-converter
+
+logging:
+  level:
+    com.example.converter: DEBUG

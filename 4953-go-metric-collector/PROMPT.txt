@@ -1,11 +1,5 @@
-Fiber 指标采集服务。收集各种指标数据。
+给 Prometheus 对接指标时 Histogram bucket 累计值算错导致监控图诡异尖峰。指标采集导出应封装好——支持 Counter、Gauge、Histogram 三种类型，自动算 count、sum 和 bucket 累计值，暴露标准 Prometheus text format。
 
-指标类型你定义。怎么存你选。
+用 Fiber 实现。POST /metrics/batch 批量上报，每个指标带 name、type、value、tags。查询 GET /metrics/query 支持 group_by 标签分组和 quantiles 分位数计算。GET /metrics/export 输出 Prometheus text format。
 
-有个接口暴露指标数据，格式兼容 Prometheus。
-
-指标可以打标签。标签怎么影响聚合你定。
-
-批量上报接口。
-
-端口 PORT 环境变量。
+内部用 map 存储，key 为指标名+标签哈希。Histogram 保留最近 1000 个采样值计算分位数。GET /admin/stats 返回指标总数、标签组合数、近一小时上报次数。Go+Fiber，go build 编译通过。端口 PORT 环境变量。

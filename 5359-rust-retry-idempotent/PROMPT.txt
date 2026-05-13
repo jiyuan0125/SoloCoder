@@ -1,1 +1,5 @@
-Rust/tokio 写一个重试与幂等框架。模块：RetryScheduler（管理重试调度和退避计算）、IdempotentStore（幂等键和结果存储）、HttpClient（实际调用后端）、APILayer（对外接口）。APILayer 收到请求先查 IdempotentStore，命中直接返回。未命中则调用 HttpClient 执行，失败交给 RetryScheduler 调度重试。RetryScheduler 用定时器按退避策略触发重试。HttpClient 执行成功后结果写入 IdempotentStore。端口环境变量指定。
+tokio 实现重试与幂等服务，重试调度、幂等存储、HTTP调用拆成独立模块。端口环境变量指定。
+
+请求先进APILayer查IdempotentStore——幂等键命中说明执行过，直接返回缓存结果。未命中则调HttpClient执行实际请求。成功后结果写入IdempotentStore。
+
+执行失败交RetryScheduler，按指数退避（1s、2s、4s、8s）用tokio定时器触发。重试前先查幂等——其他节点可能已成功。最多重试5次，全部失败记到死信。幂等键和结果内存保留24小时，过期自动清理。

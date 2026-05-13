@@ -1,0 +1,5 @@
+闲着没事想做一个代码块提取自己用，Go 写。
+按语言分类。保存为独立文件。
+代码块标题或注释作为文件名。
+子命令结构：db migrate、db rollback、db status、db seed。
+不用第三方包，go build 通过就行。

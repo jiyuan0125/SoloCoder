@@ -1,5 +1,7 @@
-后端有个 gRPC 服务跑了两三年了，现在前端团队要用 REST 对接，让他们改 gRPC 客户端不现实。Go 标准库 net/http 写一个 gRPC-REST 桥接服务来解决这个协议鸿沟。
-1. REST 请求进来后转换成 gRPC 调用。JSON 请求体映射到 Protobuf 消息，字段名用 camelCase 映射到 snake_case。嵌套对象和 repeated 字段都要正确处理。枚举类型支持用名字和数字两种方式传入，数字范围不对的返回400和字段级的错误信息。bytes 字段从 Base64 解码。
-2. gRPC 响应转回 JSON 时，protobuf 的默认值字段默认不输出（omitempty 语义）。timestamp 字段转成 ISO 8601 字符串。google.protobuf.Any 类型转成带 @type 字段的 JSON 对象。转换失败返回400和具体的字段路径错误信息。
-3. 桥接服务需要知道 gRPC 服务的 proto 定义。proto 文件通过接口上传，上传后解析并自动生成对应的 REST 路由。同一个 proto 文件可以多次上传（版本更新），新版本的路由覆盖旧版本。
-上传的 proto 文件要做安全检查——不允许包含文件路径或特殊字符，文件大小限制 1MB。bridge（桥接核心）、converter（编解码转换）、proto（文件解析和管理）、router（动态路由生成）。
+Go 标准库 net/http gRPC-REST 桥接服务解决协议鸿沟。
+
+REST 请求转 gRPC 调用。JSON 映射到 Protobuf camelCase 映射 snake_case。嵌套和 repeated 正确处理。枚举支持名字和数字传入数字范围错 400 带字段级错误。bytes 从 Base64 解码。
+
+gRPC 响应转 JSON 默认值字段不输出（omitempty）。timestamp 转 ISO 8601。Any 类型转带 @type 的 JSON。转换失败 400 带字段路径错误。
+
+proto 文件通过接口上传解析自动生成 REST 路由。同文件可多次上传新版覆盖旧版。安全检查不允许文件路径特殊字符大小限 1MB。bridge（桥接）、converter（编解码）、proto（文件解析管理）、router（动态路由）。

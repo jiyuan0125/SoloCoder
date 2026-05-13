@@ -1,0 +1,5 @@
+Go 标准库的crypto/sha256挺适合做文件处理的，试一下Dockerfile生成。
+多阶段构建。Go 项目优化。
+.dockerignore 自动生成。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+不用第三方包，go build 通过就行。

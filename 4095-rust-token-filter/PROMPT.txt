@@ -1,7 +1,5 @@
-GET /api/users 是公开接口，POST /api/users 要管理员权限，DELETE /api/users/:id 要超级管理员——每个接口权限不同硬编码维护不过来。Rust actix-web 做一个 API 级别的认证网关，权限配置化不碰代码。
+每接口权限不同硬编码维护不过来。Rust actix-web API 级认证网关权限配置化。
 
-API 权限按 HTTP 方法和路径组合定义。比如 GET /api/users 是公开的，POST /api/users 需要 admin 权限，DELETE /api/users/:id 需要 superadmin。权限配置存在网关里，修改配置文件就能调整权限不需要改代码。支持通配符路径比如 /api/admin/* 下所有接口都要管理员权限。
+权限按 HTTP 方法和路径组合定义如 GET /api/users 公开 POST 需 admin DELETE 需 superadmin。配置文件改权限不碰代码。支持通配符 /api/admin/* 下都要管理员。Token JWT 角色存 claims。过期/签名无效 401 权限不足 403。
 
-Token 解析后提取用户角色。角色和权限的映射关系在配置里定义——一个角色可以有多个权限，一个权限也可以属于多个角色。Token 支持 JWT 格式，角色信息存在 claims 里。Token 过期或签名无效返回 401，角色权限不足返回 403。
-
-权限缓存：解析结果和权限判断都做缓存。缓存 TTL 可配置，默认 5 分钟。权限配置变更时主动清除相关缓存。缓存命中率统计在 /stats 端点暴露。审计日志：每次请求记录用户、路径、方法、权限判断结果（允许或拒绝）。审计日志异步写入不阻塞请求。日志支持按用户和时间范围查询。模块：authz（权限判断）、cache（缓存管理）、audit（审计日志）、config（配置加载）。Cargo build，PORT 环境变量。
+权限缓存：解析和判断结果都缓存 TTL 可配默认 5 分钟。配置变更清相关缓存。命中率 /stats 暴露。审计日志：每次请求记用户/路径/方法/判断结果异步写入不阻塞。支持按用户和时间查。模块：authz/cache/audit/config。`Cargo build`，`PORT` 环境变量。

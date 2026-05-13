@@ -1,4 +1,7 @@
-闲着没事想做一个 Prometheus 指标代理自己用，Python FastAPI 写服务端。
-代理暴露 /metrics 接口，返回 Prometheus text format 格式数据。支持 Counter（只增不减）、Gauge（可增可减）、Histogram（分桶统计）三种指标类型。
-每个指标有 name 和 labels（键值对）。Histogram 需要配置桶边界比如 [0.1, 0.5, 1.0, 5.0]，自动计算 count、sum 和各桶的 le 值。各服务通过 HTTP 接口上报数据。
-提供查询接口按指标名和 label 过滤当前值。同一 name + label 组合的数据点覆盖更新。数据存内存。端口 PORT 环境变量。
+支持水平扩展，多实例之间通过共享存储或者最终一致性同步状态。
+
+所有写操作要有操作日志记录，谁在什么时候做了什么要可追溯。
+
+配置变更要有审计日志，记录谁改了什么、改前值和改后值。
+
+闲着没事想做一个Prometheus指标代理自己用，PythonFastAPI写服务端。代理暴露/metrics接口，返回Prometheustextformat格式数据。支持Counter（只增不减）、Gauge（可增可减）、Histogram（分桶统计）三种指标类型。Histogram需要配置桶边界，自动计算count、sum和各桶的le值。各服务HTTP接口上报数据。提供查询接口按指标名和label过滤当前值。

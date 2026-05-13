@@ -1,7 +1,7 @@
-1. 新接手一个遗留系统，对外接口是 SOAP/XML，内部新服务全是 JSON。中间必须有一层转换。Spring Boot 做一个 XML-JSON 协议桥接服务，自动转换还带 Schema 校验。
+遗留系统 SOAP/XML 新服务 JSON 中间要转换。Spring Boot XML-JSON 桥接带 Schema 校验。
 
-bridge 模块是入口，判断请求方向：Content-Type 是 application/xml 时，把请求体转成 JSON 传给后端，后端返回 JSON 再转回 XML 给客户端。反向同理。converter 模块处理具体的转换逻辑——数组怎么表示、属性怎么处理、命名空间怎么办。约定用 @ 前缀标属性、#text 标文本内容。遇到无法自动映射的节点，保留原始结构不丢数据。
+bridge 判断方向：Content-Type application/xml 时转 JSON 给后端后端 JSON 转 XML 返客户端。反向同理。converter 处理转换：@ 前缀标属性 #text 标文本内容无法自动映射的保留原始不丢数据。
 
-schema 模块管理校验规则。可以上传 XSD 和 JSON Schema 两种格式。转换前用对应的 Schema 校验输入数据，校验失败返回详细的错误位置和原因。Schema 支持版本管理，新版本上传后旧版本保留，可以按版本号切换。自定义映射是另一个维度——默认映射规则不够用时，配置字段映射覆盖。比如 XML 的 user_name 映射到 JSON 的 userName，支持多级嵌套路径。
+schema 管校验支持 XSD 和 JSON Schema。转换前校验失败返详细错误位置和原因。版本管理新旧都保留按版本号切换。自定义映射覆盖默认规则如 XML user_name→JSON userName 支持多级嵌套。
 
-handler 模块包装批量转换能力，一次提交多条数据批量处理。部分失败的不影响成功的，每条独立返回状态。Maven 构建，端口写在配置文件里。
+handler 批量转换一次多条部分失败不影响成功每条独立返回状态。Maven 构建端口配置文件。

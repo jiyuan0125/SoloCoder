@@ -1,0 +1,11 @@
+name: 错误格式测试
+description: 测试YAML格式错误
+
+data_source:
+  type: csv
+  path: examples/data/sales.csv
+  columns:
+    - name: date
+      type: date
+    this is invalid yaml syntax
+      wrong: indentation

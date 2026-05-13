@@ -1,11 +1,7 @@
-Fiber 协议转换。转换管道是多阶段的：接收→解码→转换→编码→发送。
+管道式多阶段协议处理——接收→解码→转换→编码→发送，每阶段独立状态机。用 Fiber 实现。
 
-每个阶段有独立的状态：等待→处理中→完成→失败。
+POST /pipeline/submit 创建管道（source_format、target_format、transform_rules、downstream_url），返回 pipeline_id。阶段状态机：pending→processing→completed/failed，某阶段失败后续全 skipped。
 
-某个阶段失败后，后续阶段跳过。整个管道返回失败原因。
+失败原因：解码失败=格式不合法，转换失败=源字段不存在。状态变更产生事件：管道创建时可配 webhook_url，事件 POST 到该 URL，失败进重试队列（3 次间隔 5/15/30 秒）。
 
-解码阶段可能因为格式问题失败。转换阶段可能因为规则不匹配失败。编码阶段不会失败。
-
-管道状态变更有事件通知。事件包含管道 ID 和当前阶段。
-
-端口 PORT 环境变量，go build 通过。
+GET /pipeline/{id}/events 返回事件历史。GET /admin/stats 返回全局统计。Go+Fiber，go build 编译通过。端口 PORT 环境变量。

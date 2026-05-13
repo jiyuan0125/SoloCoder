@@ -1,11 +1,1 @@
-配置中心没有版本管理，改错了回不去——上次有人把数据库密码改错了，整个 staging 环境挂了，回滚只能手动改回去。配置还要按环境隔离，dev 和 prod 的配置不能混。Spring Boot 做一个支持版本管理和环境隔离的配置中心。
-
-配置每次修改生成新版本，版本号单调递增。查看任意历史版本：GET /api/config/versions/{version}。版本之间可以 diff：GET /api/config/diff?v1=5&v2=8。回滚到指定版本时创建新版本，内容等于旧版本，不是真的覆盖。
-
-配置按环境隔离——dev、staging、prod。环境通过 POST /api/envs 创建，GET /api/envs 列出。同一份配置在不同环境可以有不同值。当前环境通过 GET /api/env/current 查询。环境切换是个读操作，不影响当前运行的服务。
-
-配置变更后推送给订阅的客户端。客户端通过长轮询监听，GET /api/config/watch?version=10。长轮询超时 30 秒，超时后客户端重新发起。变更时立即返回新版本的数据。没有变更就等到超时返回 304。
-
-客户端启动时先拉全量，GET /api/config?env=prod。运行时通过长轮询接收增量推送。网络断开时用本地缓存。
-
-version 管版本链和 diff、environment 管环境隔离、pusher 管长轮询和推送、client 管客户端规范。Maven 构建，端口走配置文件。
+用 Java Spring Boot 写配置中心没有版本管理，改错了回不去：上次有人把数据库密码改错了，整个 staging 环境挂了，回滚只能手动改回去。配置每次修改生成新版本，版本号单调递增。查看任意历史版本：GET /api/config/versions/{version}。版本之间可以 diff：GET /api/config/diff?v1=5&v2=8。回滚到指定版本时创建新版本，内容等于旧版本，不是真的覆盖。环境通过 POST /api/envs 创建，GET /api/envs 列出。长轮询超时 30 秒，超时后客户端重新发起。没有变更就等到超时返回 304。网络断开时用本地缓存。Maven 构建，端口配置。

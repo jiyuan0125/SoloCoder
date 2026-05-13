@@ -1,7 +1,5 @@
-FastAPI 做半开探测熔断。半开状态放行探测请求，根据探测结果决定状态转换。
+FastAPI 实现渐进式半开探测熔断器。半开不只放一个请求试探，而是逐步增加探测流量。注册 POST /breakers：service_name、downstream_url、failure_threshold（默认 5）、open_duration（默认 30 秒）、max_probe_count（默认 10）。
 
-探测请求数量逐步增加：第一次放行 1 个，成功则第二次放行 2 个，以此类推，最大 10 个。任一探测失败立即重新打开。
+半开探测：第一次放行 1 个请求，成功则下次放 2 个，再成功放 4 个，指数增长到上限 max_probe_count。任一轮探测有失败立即回 open 状态等 open_duration。全部探测成功则关闭熔断，重置计数器。
 
-全量探测成功后关闭熔断器。关闭时重置所有计数器。
-
-提供接口手动触发半开（用于运维调试）。端口 PORT 环境变量，能正常跑起来。
+GET /breakers/{name}/status 返回当前状态、探测轮次、放行数量、最近 20 次结果。POST /breakers/{name}/force-halfopen 手动触发半开。POST /breakers/{name}/force-close 手动关闭。端口 PORT 环境变量。

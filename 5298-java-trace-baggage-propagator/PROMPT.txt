@@ -1,5 +1,5 @@
-Spring Boot 做Baggage 传播服务。用户自定义的 KV 对（Baggage）随 TraceID 在服务间传播。每个 Span 可以读取和添加 Baggage。
+Spring Boot 做 Baggage 传播服务。链路上带业务上下文（用户 ID、租户标识、灰度标记），每个服务都能读到。Baggage 是自定义 KV 对绑定在 Trace 上跟着 TraceID 传播。通过 HTTP Header X-Baggage-{Key}={Value} 传播，每个字段一个 Header。每个 Span 可读取和添加 Baggage。
 
-Baggage 通过 HTTP Header 传播。Header 格式：X-Baggage-Key=Value。多个 Baggage 用逗号分隔。
+大小限制：所有 Baggage 的 key+value 总大小不超 1KB。超限时截断 value 或丢弃新加的保留已有。Key 只允许字母数字下划线，value 允许任意 UTF-8 不允许换行。
 
-Baggage 大小限制（总大小不超过 1KB）。超出的 Baggage 截断或丢弃。端口 server.port 配置，Maven 构建。
+POST /baggage/{traceId} 添加。GET /baggage/{traceId} 查询所有。DELETE /baggage/{traceId}/{key} 删除。GET /baggage/{traceId}/size 返回总大小。端口 server.port 配置，Maven 构建。数据存内存。

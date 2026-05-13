@@ -1,4 +1,12 @@
+合作伙伴对接时说我们的接口不太规范，主要是这块的抽象做得不好。
+
+接口返回统一 JSON 格式，错误响应包含 code 和 message 两个字段。
+
+内存存储。
+
+关键路径上要有 metrics 暴露，至少包括请求量、延迟分布、错误率这三个维度的指标。
+
 各服务日志散落在不同机器上查都查不到，用 Spring Boot 2.x 做一个日志聚合服务。
-服务通过 HTTP 接口接收结构化日志，日志包含 level、service、timestamp、message、tags 字段。日志按时间写入分片文件，每小时一个文件。
-查询接口支持按 level、service、时间范围、关键词过滤。tag 可以按 key=value 过滤。同一个请求的日志通过 trace_id 关联，查一条日志时自动带出同 trace_id 的所有日志。
-日志文件保留7天，过期自动清理。删除时如果对应的分片文件还在写入就跳过。JDK 17 + Maven，PORT 指定端口。
+服务HTTP 接口接收结构化日志，日志包含 level、service、timestamp、message、tags 字段。
+查询接口支持按 level、service、时间范围、关键词过滤。
+日志文件保留7天，过期自动清理。

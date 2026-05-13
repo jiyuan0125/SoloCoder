@@ -1,7 +1,5 @@
-链路追踪能查到调用链了，但看不出哪一步最慢、哪些 Span 有异常——一堆 Span 平铺在那，分析全靠肉眼。Spring Boot 增强版，把耗时分析和异常标注做进去。
+链路追踪查到调用链看不出哪步最慢。Spring Boot 增强版加耗时分析和异常标注。
 
-Span 除了基本信息外加上标签（tag，key-value 用于业务标记如 `db=postgres`、`cache=miss`）、日志事件（时间戳+消息，记录关键节点如"开始查询""缓存命中"）、关联异常信息（异常类型+消息+堆栈前 5 行摘要）。查询时异常 Span 要高亮标注——GET `/traces/{id}` 返回的 Span 树里，有异常的 Span 加 `has_error: true` 标记。
+Span 加标签（tag key-value 业务标记）、日志事件（时间戳+消息）、异常信息（类型+消息+堆栈前 5 行）。异常 Span 加 `has_error:true` 标记。GET `/traces/{id}/critical-path` 返回关键路径和每 Span 耗时占比。父子间隙时间（gap time）也算出，间隙大说明排队等待资源。
 
-耗时分析：GET `/traces/{id}/critical-path` 返回关键路径（耗时最长的链路）和每个 Span 的耗时占比。父子 Span 之间的间隙时间（gap time = 子 Span 开始时间 - 父 Span 开始时间 - 父 Span 自身耗时）也要算出来，间隙大说明在排队或等待资源。
-
-GET `/traces/slow` 按服务名查最近 N 条慢 Trace（按耗时降序），可设阈值过滤。Span 上报要处理乱序——子 Span 可能比父 Span 先到，后到的父 Span 要正确挂到已有子 Span 上。代码按 trace、span、analytics、storage 四个模块拆。Maven 构建，端口走配置文件。
+GET `/traces/slow` 按服务名查慢 Trace 按耗时降序可设阈值。Span 乱序到达后到的父 Span 正确挂到子 Span。代码按 trace、span、analytics、storage 拆。Maven 构建，端口走配置文件。

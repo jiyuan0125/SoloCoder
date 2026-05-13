@@ -1,11 +1,1 @@
-老系统的 URL 路径和新系统完全不一样，比如老的是 /getOrder?id=123，新的要变成 /api/v2/orders/123。中间不做转换根本切不过去。Go/Fiber 做一个带路径重写的 API 网关，把老路径映射到新路径。
-
-路径匹配支持三种：精确匹配、前缀匹配、正则匹配。匹配优先级：精确 > 正则 > 前缀。路径参数用 {param} 语法，比如 /api/{version}/{resource}。查询参数原样透传，不做处理。
-
-匹配到的路径按规则重写。重写支持字符串替换和正则捕获组引用。比如规则 /api/v1/{resource} 重写为 /internal/v2/{resource}，{resource} 的值从匹配中提取。重写规则通过接口管理——POST /api/rules 添加、PUT /api/rules/{id} 修改、DELETE /api/rules/{id} 删除。
-
-除了路径重写，还能操作 Header——添加、删除、修改请求头。Header 操作在转发前执行，可以和路径重写组合使用。比如重写路径的同时加个 X-Source: legacy 标记。
-
-每条路由配一个目标地址。目标不可用返回 502，超时返回 504。超时时间默认 10 秒，可以按路由覆盖。目标健康检查可选开启。路由规则变更不需要重启。
-
-matcher 管路径匹配、rewriter 管路径和 Header 改写、forwarder 管转发、router 管路由表。端口 PORT 环境变量，go build 能过。
+用 Go 写老系统的 URL 路径和新系统完全不一样，比如老的是 /getOrder?id=123，新的要变成 /api/v2/orders/123。中间不做转换根本切不过去。重写规则通过接口管理：POST /api/rules 添加、PUT /api/rules/{id} 修改、DELETE /api/rules/{id} 删除。Header 操作在转发前执行，可以和路径重写组合使用。每条路由配一个目标地址。目标不可用返回 502，超时返回 504。超时时间默认 10 秒，可以按路由覆盖。路由规则变更不需要重启。matcher 管路径匹配、rewriter 管路径和 Header 改写、forwarder 管转发、router 管路由表。端口 PORT，go build 。

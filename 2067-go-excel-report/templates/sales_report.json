@@ -1,0 +1,46 @@
+{
+  "name": "sales_report",
+  "description": "月度销售报表",
+  "sheets": [
+    {
+      "sheet_name": "销售数据",
+      "static_cells": [
+        {
+          "cell": "A1",
+          "value": "月度销售报表"
+        },
+        {
+          "cell": "A2",
+          "value": "日期：2024-01"
+        }
+      ],
+      "tables": [
+        {
+          "start_cell": "A4",
+          "headers": null,
+          "fields": null
+        }
+      ],
+      "merges": [
+        {
+          "start_cell": "",
+          "end_cell": ""
+        }
+      ],
+      "conditionals": [
+        {
+          "range": "C5:C100",
+          "condition": "\u003e"
+        }
+      ],
+      "charts": [
+        {
+          "type": "bar",
+          "title": "销售柱状图",
+          "data_range": "A4:C10",
+          "position": "E1"
+        }
+      ]
+    }
+  ]
+}

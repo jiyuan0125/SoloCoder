@@ -1,10 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 import {
   Plan,
-  PlanStatus,
   CreatePlanRequest,
-  UpdatePlanRequest,
-  GrayStrategyType
+  UpdatePlanRequest
 } from '../types';
 import { planRepository, errorRepository, db } from '../db';
 import {
@@ -16,13 +14,20 @@ import {
 } from '../utils/stateMachine';
 import { validateStrategy } from '../utils/grayStrategy';
 
+const STATUS_PENDING = 'pending';
+const STATUS_GRAYSCALE = 'grayscale';
+const STATUS_FULL_RELEASE = 'full_release';
+const STATUS_PAUSED = 'paused';
+const STATUS_COMPLETED = 'completed';
+const STATUS_ROLLED_BACK = 'rolled_back';
+
 export class PlanService {
   createPlan(request: CreatePlanRequest): Plan {
     this.validateCreateRequest(request);
 
     const existingGrayscalePlan = planRepository.findByAppIdAndStatus(
       request.appId,
-      PlanStatus.GRAYSCALE
+      STATUS_GRAYSCALE as any
     );
     if (existingGrayscalePlan) {
       throw this.createConflictError(
@@ -38,7 +43,7 @@ export class PlanService {
       oldVersion: request.oldVersion,
       newVersion: request.newVersion,
       strategy: request.strategy,
-      status: PlanStatus.PENDING,
+      status: STATUS_PENDING as any,
       errorRateConfig: request.errorRateConfig || {
         threshold: 5,
         windowMinutes: 5
@@ -66,7 +71,7 @@ export class PlanService {
   updatePlan(id: string, request: UpdatePlanRequest): Plan {
     const plan = this.getPlanById(id);
 
-    if (plan.status !== PlanStatus.PENDING) {
+    if (plan.status !== STATUS_PENDING) {
       throw this.createBadRequestError(
         '只有待开始状态的计划可以修改',
         plan.status
@@ -101,7 +106,7 @@ export class PlanService {
   deletePlan(id: string): void {
     const plan = this.getPlanById(id);
 
-    if (plan.status === PlanStatus.GRAYSCALE || plan.status === PlanStatus.FULL_RELEASE) {
+    if (plan.status === STATUS_GRAYSCALE || plan.status === STATUS_FULL_RELEASE) {
       throw this.createConflictError(
         `处于 ${plan.status} 状态的发布计划不能删除`
       );
@@ -133,7 +138,7 @@ export class PlanService {
   rollback(id: string): Plan {
     const plan = this.getPlanById(id);
 
-    if (plan.status !== PlanStatus.FULL_RELEASE) {
+    if (plan.status !== STATUS_FULL_RELEASE) {
       throw this.createBadRequestError(
         '只有全量发布状态的计划可以执行回滚操作',
         plan.status
@@ -141,7 +146,7 @@ export class PlanService {
     }
 
     const transaction = db.transaction(() => {
-      plan.status = PlanStatus.ROLLED_BACK;
+      plan.status = STATUS_ROLLED_BACK as any;
       plan.updatedAt = Date.now();
       planRepository.update(plan);
     });
@@ -168,7 +173,7 @@ export class PlanService {
       );
     }
 
-    plan.status = nextStatus;
+    plan.status = nextStatus as any;
     plan.updatedAt = Date.now();
     planRepository.update(plan);
     return plan;
@@ -195,8 +200,8 @@ export class PlanService {
       const errorStats = errorRepository.calculateErrorRate(planId, windowStart, now);
 
       let autoPaused = false;
-      if (plan.status === PlanStatus.GRAYSCALE && errorStats.rate >= plan.errorRateConfig.threshold) {
-        plan.status = PlanStatus.PAUSED;
+      if (plan.status === STATUS_GRAYSCALE && errorStats.rate >= plan.errorRateConfig.threshold) {
+        plan.status = STATUS_PAUSED as any;
         plan.updatedAt = now;
         planRepository.update(plan);
         autoPaused = true;
@@ -234,7 +239,7 @@ export class PlanService {
     if (missingFields.length > 0) {
       throw this.createBadRequestError(
         `缺少必填字段: ${missingFields.join(', ')}`,
-        PlanStatus.PENDING
+        STATUS_PENDING as any
       );
     }
 
@@ -242,12 +247,12 @@ export class PlanService {
     if (!strategyValidation.valid) {
       throw this.createBadRequestError(
         strategyValidation.error!,
-        PlanStatus.PENDING
+        STATUS_PENDING as any
       );
     }
   }
 
-  private createBadRequestError(message: string, currentStatus: PlanStatus): any {
+  private createBadRequestError(message: string, currentStatus: string): any {
     return {
       status: 400,
       message,

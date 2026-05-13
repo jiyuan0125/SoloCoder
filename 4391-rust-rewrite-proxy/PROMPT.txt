@@ -1,7 +1,1 @@
-老系统迁移到新架构，URL 路径全变了——/users/123/detail 变成了 /api/v2/users/123/profile。前端已经切过去了但有些老客户端还在用旧 URL。Rust axum 写一个路径改写反向代理，在中间做 URL 转换。
-
-路径改写用正则捕获组。规则定义包含 pattern（正则表达式）和 replacement（替换模板）。比如 pattern 是 ^/old/(\w+)/detail$，replacement 是 /api/v2/$1/profile。请求进来后按规则优先级逐一匹配，先匹配到的执行改写后转发到后端。没有匹配到的请求直接 404——不能把未知路径转发到后端。
-
-查询参数也要处理。改写时可以添加固定参数（比如加 version=2）、删除指定参数、重命名参数（user_id → uid）。参数值支持模板替换——可以用请求路径里的捕获组填充。比如路径里的 {id} 可以出现在参数值里。
-
-改写规则通过接口管理。POST /rules 创建、PUT /rules/{id} 修改、DELETE /rules/{id} 删除。规则有优先级字段，数字越小越先匹配。规则变更不需要重启，内存中的规则表实时更新。每次请求的改写过程记录日志：原始路径、改写后路径、匹配了哪条规则。模块划分为 proxy（请求代理和转发）、rewriter（路径和参数改写）、rule（规则管理）、admin（管理接口和日志）。Cargo build，PORT 环境变量。
+老系统迁移到新架构，URL 路径全变了：/users/123/detail 变成了 /api/v2/users/123/profile。前端已经切过去了但有些老客户端还在用旧 URL。Rust axum 写一个路径改写反向代理，在中间做 URL 转换。请求进来后按规则优先级逐一匹配，先匹配到的执行改写后转发到后端。没有匹配到的请求直接 404：不能把未知路径转发到后端。POST /rules 创建、PUT /rules/{id} 修改、DELETE /rules/{id} 删除。模块划分为 proxy（请求代理和转发）、rewriter（路径和参数改写）、rule（规则管理）、admin（管理接口和日志）。Cargo build，PORT 环境变量。

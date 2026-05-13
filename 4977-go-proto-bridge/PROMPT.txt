@@ -1,13 +1,5 @@
-Go 标准库写协议转换。HTTP 请求转 gRPC。
+后端 gRPC 服务但前端只认 REST JSON，手动写转换代码容易出错。协议转换网关一套配置搞定：收到 JSON 按路径匹配 gRPC 方法自动转 Protobuf 调后端，响应转回 JSON。嵌套结构对应多层嵌套，枚举双向映射。支持 gRPC 流式响应转 newline-delimited JSON。
 
-gRPC 服务定义通过 proto 文件描述。proto 文件上传后解析出 service 和 method。
+proto 文件上传后自动生成映射规则。用 Go 标准库实现。映射：/api/{service}/{method} → gRPC 调用。响应 JSON 化：枚举转字符串，时间戳转 ISO 8601。gRPC 调用超 5 秒返回 504。
 
-HTTP 请求路径映射到 gRPC method。映射规则：/api/{service}/{method} → gRPC 的 {service}/{method}。
-
-gRPC 响应转回 HTTP JSON。枚举类型转成字符串。时间戳转成 ISO 8601。
-
-转换有超时控制。gRPC 调用超过 5 秒返回 504。
-
-管理接口查看映射规则和转换统计（成功数、失败数、平均耗时）。
-
-PORT 环境变量。
+管理接口查看映射规则和转换统计。go build 编译通过。端口 PORT 环境变量。数据存内存。

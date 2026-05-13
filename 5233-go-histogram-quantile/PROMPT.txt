@@ -1,1 +1,7 @@
-Go 标准库做Prometheus 格式导出接口。指标名称自定义。定期（可配）清理长时间没有上报的指标。Gauge 支持回调函数获取实时值。端口 PORT 环境变量，go build 能过。
+Go 标准库做 Histogram 指标服务——不只是 Counter 和 Gauge，还支持分布统计，能算 P50/P90/P95/P99。导出格式兼容 Prometheus。
+
+Histogram 用途：统计请求延迟分布。上报接口传入 name、value（采样值）、labels。内部用排序数组估算分位数，不保留所有原始数据。每个指标名+标签组合保留最近 10000 个采样值（环形缓冲区）。
+
+查询接口按指标名和分位数返回值，同时返回 count 和 sum。Prometheus 导出输出标准 histogram 格式。也支持 Gauge 指标。
+
+长时间不上报的指标定期清理。端口 PORT 环境变量，go build 能过。

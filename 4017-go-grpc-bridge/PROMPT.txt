@@ -1,7 +1,7 @@
-前端只认 HTTP JSON，后端有两三个老服务是 gRPC 的，改造成本太高、团队也没人懂 protobuf。在中间搭一个协议转换层，让两边各说各的话。
+前端认 HTTP JSON 后端有 gRPC 服务改造成本高。Go Gin 协议网关做 JSON↔protobuf 转换。
 
-Go Gin 做这个协议网关。请求进来是 JSON，网关转成 protobuf 发给后端 gRPC 服务，响应再从 protobuf 转回 JSON。转换规则按 service 和 method 配置，路由格式 `/v1/{service}/{method}`，比如 `/v1/userservice/CreateUser`。POST `/routes` 注册新的映射规则，指定 gRPC 服务地址、service 名、method 名和请求/响应的 protobuf 定义。映射可以动态增删。
+路由格式 `/v1/{service}/{method}`，POST `/routes` 注册映射指定 gRPC 地址、service、method 和 protobuf 定义，可动态增删。请求 JSON 转 protobuf 发后端，响应 protobuf 转 JSON 返回。
 
-后端 gRPC 不可用时网关返回 502，Body 里带 gRPC 状态码和错误详情。gRPC 状态码要映射成 HTTP 状态码——NOT_FOUND 映射 404、ALREADY_EXISTS 映射 409、PERMISSION_DENIED 映射 403、其他映射 500。支持 server streaming：网关把流式响应转成 chunked transfer encoding 给 HTTP 客户端，客户端看到的是逐步到达的 JSON 数组。
+gRPC 不可用返回 502 Body 带 gRPC 状态码和错误详情。状态码映射：NOT_FOUND→404、ALREADY_EXISTS→409、PERMISSION_DENIED→403、其他→500。支持 server streaming 转成 chunked transfer encoding，客户端看到逐步到达的 JSON 数组。
 
-统计接口 GET `/stats` 返回每个路由的调用量、错误率、平均响应时间。`go build` 编译，`PORT` 环境变量指定监听端口。
+GET `/stats` 返回每路由调用量、错误率、平均响应时间。`go build` 编译，`PORT` 环境变量。

@@ -1,0 +1,5 @@
+组长说要搞工具化，先做个证书密钥管理，Go CLI。
+工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证、PKCS12/PKCS8 格式转换。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+消息发送需要 topic，topic 怎么创建不提。
+go build 能过，命令行工具能正常运行。

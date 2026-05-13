@@ -1,0 +1,5 @@
+群里有人说缺一个快照备份，我寻思 Go 能搞。
+快照之间共享未变更的文件（硬链接）。
+按时间查看任意快照的内容。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+不用第三方包，go build 通过就行。

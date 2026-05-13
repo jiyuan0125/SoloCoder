@@ -1,7 +1,1 @@
-服务延迟说"平均 200ms"其实没什么用——99% 的请求在 50ms 以内，但有 1% 跑到了 5 秒，平均还是 200ms。长尾问题被平均值掩盖了。Rust axum 做一个带 HDR Histogram 的指标服务，能精确看到分布。
-
-Histogram 采集延迟指标。服务通过 POST /metrics/report 上报耗时数据，请求体包含 name（指标名）、value（耗时微秒）、labels（键值对数组，如 ["method=GET","path=/api/users"]）。服务端用 HDR Histogram 记录分布，查询时可以看 P50/P90/P95/P99/P999 各个百分位的值。桶的精度可配——默认 2 位有效数字，够用了。
-
-除了 Histogram 还有 Counter 和 Gauge。Counter 只增不减，适合请求计数。Gauge 可增可减，适合当前活跃连接数。Counter 上报时值累加，Gauge 上报时值覆盖。所有指标都带 labels，相同 name+labels 组合的指标聚合成一个。
-
-指标查询按 name 和 labels 过滤。支持时间范围——最近 1 小时、6 小时、24 小时。返回 JSON 格式，包含指标类型、当前值、分布信息（Histogram 才有）。collector 管上报接收、histogram 管 HDR 算法、store 管时序存储、query 管查询接口。Cargo build，PORT 环境变量。
+用 Rust 写服务延迟说"平均 200ms"其实没什么用：99% 的请求在 50ms 以内，但有 1% 跑到了 5 秒，平均还是 200ms。服务通过 POST /metrics/report 上报耗时数据，请求体包含 name（指标名）、value（耗时微秒）、labels（键值对数组，如 ["method=GET","path=/api/users"]）。服务端用 HDR Histogram 记录分布，查询时可以看 P50/P90/P95/P99/P999 各个百分位的值。桶的精度可配：默认 2 位有效数字，够用了。Gauge 可增可减，适合当前活跃连接数。指标查询按 name 和 labels 过滤。支持时间范围：最近 1 小时、6 小时、24 小时。Cargo build，PORT 环境变量。

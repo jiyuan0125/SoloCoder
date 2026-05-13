@@ -1,1 +1,5 @@
-Spring Boot 做一个健康检查服务。模块设计：TargetRegistry（检查目标注册管理）、ProbeEngine（执行 HTTP/TCP 探测）、StateManager（状态判断和变更）、NotificationService（Webhook 通知）。TargetRegistry 注册目标后通知 ProbeEngine 开始探测。ProbeEngine 探测完成后交 StateManager 判断状态变更。StateManager 状态变更时通知 NotificationService 发 webhook 同时更新 TargetRegistry。NotificationService 失败时记录日志。端口 PORT 指定。
+Spring Boot 实现健康检查服务，职责拆分。端口 PORT 环境变量指定。
+
+TargetRegistry管检查目标的注册和配置——探测地址、间隔、超时、探测类型。新目标注册后通知ProbeEngine开始探测。ProbeEngine只管发探测请求（HTTP GET或TCP连接），拿结果交StateManager。
+
+StateManager做状态判断——连续3次失败标记不健康，连续2次成功恢复健康，避免抖动。状态变更时更新TargetRegistry展示状态并通知NotificationService发Webhook。NotificationService发webhook失败记日志，不阻塞后续流程。每个模块有独立管理接口。

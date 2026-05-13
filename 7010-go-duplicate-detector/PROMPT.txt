@@ -1,0 +1,5 @@
+下周要演示，先出个能跑的数据校验验证工具，Go CLI。
+工具要能多文件交叉校验（A 文件 ID 在 B 文件必须存在）、校验失败时提供修复建议、自动修复模式。
+密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+用 encoding/json 的 Decoder 流式处理。
+go build 能过，命令行工具能正常运行。

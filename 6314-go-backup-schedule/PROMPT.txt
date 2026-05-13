@@ -1,0 +1,5 @@
+开源的那个开源工具功能太多但自定义模板没做好，Go 从零写备份调度。
+Cron 表达式配置。
+备份任务执行日志。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+纯标准库实现，go run . 能跑。

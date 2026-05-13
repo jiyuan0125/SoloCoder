@@ -1,11 +1,1 @@
-先理清需求。服务挂了要从 Prometheus 看到曲线变化，不能光靠人盯——半夜挂了谁盯着？Spring Boot 做一个带指标导出的健康检查面板，探测结果直接暴露成 Prometheus metric。
-
-第一步，注册探针。每个探针包含名称、目标地址、类型（HTTP/TCP）、检查间隔、超时时间、连续失败阈值。探针可以分组，分组后按组查询状态。POST /api/probes 注册。
-
-第二步，后台线程池执行探测。HTTP 探针发 GET 请求，2xx 为健康。TCP 探针尝试建连接，连接成功为健康。超时视为失败。探测结果记录状态和耗时，存最近 100 条。连续失败 N 次触发告警，告警通过回调 URL 通知。
-
-第三步，状态暴露。每个探针作为一个 Prometheus metric 暴露，包含状态值（1=UP, 0.5=WARN, 0=DOWN）和探测耗时毫秒。WARN 是连续失败但未达阈值，DOWN 是达到阈值。导出格式是标准的 Prometheus text exposition，走 /metrics 端点。
-
-按探针或分组查当前状态，GET /api/probes/{name}/status。历史趋势数据通过 GET /api/probes/{name}/history 查询，返回最近 100 条探测结果。探针配置变更时不影响正在执行的探测任务。
-
-probe 管探针注册和配置、executor 管探测执行、dashboard 管查询和历史、exporter 管 Prometheus 导出。Maven 构建，端口走配置文件。
+用 Java Spring Boot 写先理清需求。第一步，注册探针。每个探针包含名称、目标地址、类型（HTTP/TCP）、检查间隔、超时时间、连续失败阈值。POST /api/probes 注册。第二步，后台线程池执行探测。HTTP 探针发 GET 请求，2xx 为健康。TCP 探针尝试建连接，连接成功为健康。超时视为失败。探测结果记录状态和耗时，存最近 100 条。连续失败 N 次触发告警，告警通过回调 URL 通知。第三步，状态暴露。WARN 是连续失败但未达阈值，DOWN 是达到阈值。按探针或分组查当前状态，GET /api/probes/{name}/status。Maven 构建，端口配置。

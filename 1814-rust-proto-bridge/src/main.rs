@@ -58,24 +58,30 @@ impl IntoResponse for TlvError {
     }
 }
 
-fn is_likely_tlv(data: &[u8], remaining: usize) -> bool {
-    if remaining < HEADER_SIZE {
+fn try_parse_as_tlv_sequence(data: &[u8]) -> bool {
+    let mut offset = 0;
+    let len = data.len();
+    
+    if len == 0 {
         return false;
     }
-    let length = u16::from_be_bytes([data[1], data[2]]) as usize;
-    if length > 0 && length + HEADER_SIZE <= remaining {
-        let sub_data = &data[HEADER_SIZE..HEADER_SIZE + length];
-        return is_likely_tlv(sub_data, length);
+    
+    while offset < len {
+        if len - offset < HEADER_SIZE {
+            return false;
+        }
+        
+        let declared_length = u16::from_be_bytes([data[offset + 1], data[offset + 2]]) as usize;
+        let total_size = HEADER_SIZE + declared_length;
+        
+        if offset + total_size > len {
+            return false;
+        }
+        
+        offset += total_size;
     }
-    length <= remaining && (length == 0 || !sub_has_tlv_structure(data, remaining))
-}
-
-fn sub_has_tlv_structure(data: &[u8], remaining: usize) -> bool {
-    if remaining < HEADER_SIZE {
-        return false;
-    }
-    let length = u16::from_be_bytes([data[1], data[2]]) as usize;
-    length + HEADER_SIZE <= remaining
+    
+    offset == len
 }
 
 fn parse_tlv(data: &[u8], offset: usize, depth: usize) -> Result<(TlvNode, usize), TlvError> {
@@ -100,7 +106,7 @@ fn parse_tlv(data: &[u8], offset: usize, depth: usize) -> Result<(TlvNode, usize
     
     let value_bytes = &data[HEADER_SIZE..HEADER_SIZE + declared_length];
     
-    let node = if !value_bytes.is_empty() && is_likely_tlv(value_bytes, declared_length) {
+    let node = if !value_bytes.is_empty() && try_parse_as_tlv_sequence(value_bytes) {
         let mut children = Vec::new();
         let mut sub_offset = 0;
         

@@ -1,0 +1,5 @@
+线上的批处理工具太难用了，重写一个递归权限设置，Go 实现。
+文件和目录用不同的权限规则。
+按文件类型设置不同权限。
+多级命令：config get、config set、config list、config env switch。
+纯标准库实现，go run . 能跑。

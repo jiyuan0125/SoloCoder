@@ -1,1 +1,5 @@
-Go 标准库写一个指标采集服务。组件化设计：MetricReceiver（接收上报数据、校验标准化）、TimeSeriesStore（时序数据存储和降采样）、AggregationEngine（实时聚合计算）、ExportService（Prometheus 格式导出）。MetricReceiver 标准化后写入 TimeSeriesStore 同时推送到 AggregationEngine。AggregationEngine 结果缓存供查询。ExportService 从 AggregationEngine 获取结果转 Prometheus 格式。同一个指标同一秒多次上报在 MetricReceiver 层做合并。端口 PORT 指定。
+Go标准库实现指标采集服务，接收、存储、聚合拆开。端口 PORT 环境变量指定。
+
+MetricReceiver校验上报格式（指标名合法、值是数字、标签是KV对），同一指标同一秒多次上报取最后一次值。标准化后同时写TimeSeriesStore持久化和推送AggregationEngine实时聚合。
+
+TimeSeriesStore存原始时序数据，查询长时间范围自动从秒级聚合成分钟或小时级降采样。AggregationEngine维护实时聚合缓存，按指标名和标签组合分组，支持sum/avg/max/min。ExportService从AggregationEngine取结果转Prometheus text format输出。

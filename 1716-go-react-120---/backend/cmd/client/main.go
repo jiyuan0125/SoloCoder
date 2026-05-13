@@ -297,9 +297,9 @@ func listCalls() {
 	}
 	defer resp.Body.Close()
 
-	respBody, _ := io.ReadAll(respBody)
+	body, _ := io.ReadAll(resp.Body)
 	var calls []EmergencyCall
-	_ = json.Unmarshal(respBody, &calls)
+	_ = json.Unmarshal(body, &calls)
 
 	fmt.Println("=== 求救记录列表 ===")
 	for _, c := range calls {

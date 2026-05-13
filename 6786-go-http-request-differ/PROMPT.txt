@@ -1,0 +1,8 @@
+下周要演示对比两次 HTTP 请求的响应差异，Go 命令行工具先出个原型。
+
+对比两次 HTTP 请求的响应差异。发送请求，对比 header 和 body。输出结构化 diff。用于检测 API 变化。
+需要用到 io.Pipe 等标准库功能。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+需要维护数据源和查询配置。查询配置引用数据源。
+
+用 Go 标准库写，go run . 或 go build 都行。

@@ -1,9 +1,7 @@
-前端团队只会调 HTTP JSON 接口，后端新服务全用 gRPC proto 定义。两边协议对不上，前端天天催后端写适配层。干脆中间放一个协议桥接服务，Go 标准库写一个，HTTP JSON 请求自动转成 gRPC 调用。
+前端只会 HTTP JSON 后端全用 gRPC。Go 标准库协议桥接 HTTP JSON 自动转 gRPC。
 
-桥接服务维护一个映射表：HTTP 路径 + 方法 → gRPC 服务方法。映射通过 POST /mappings 管理，每条映射五个必填字段：http_path（如 POST /api/users）、http_method（GET/POST/PUT/DELETE）、grpc_service（包名.服务名）、grpc_method（方法名）、grpc_address（gRPC 服务地址 host:port）。
+映射表：HTTP 路径+方法→gRPC 服务方法。POST /mappings 管理含 http_path/http_method/grpc_service/grpc_method/grpc_address。字段映射：request_mapping 指定 JSON 字段对应 gRPC 字段支持嵌套如 user.name→user_info.full_name 数组映射 repeated 字段。映射不到配默认值或忽略。
 
-1. 字段映射。新增映射时还要指定 request_mapping——HTTP JSON 的字段对应 gRPC 请求的哪个字段。支持嵌套：HTTP 的 user.name 对应 gRPC 的 user_info.full_name。数组字段也支持，JSON 数组直接映射到 repeated 字段。映射不到的字段可以配默认值或标记为忽略。映射关系用 JSON 配置，key 是 gRPC 字段路径，value 是 HTTP JSON 字段路径或默认值。
+响应转换：字段名统一 snake_case。嵌套 message 可展平或保留层级 response_style 控制。enum 转字符串不转数字。
 
-2. 响应转换。gRPC 响应转 JSON 时字段名统一 snake_case。嵌套 message 可以展平成一级 JSON 或保留层级，通过映射的 response_style 字段控制：flat 还是 nested。gRPC 的 enum 值转成字符串而不是数字。
-
-3. 错误处理。
+错误处理：gRPC 状态码映射 HTTP——NOT_FOUND→404 ALREADY_EXISTS→409 PERMISSION_DENIED→403 DEADLINE_EXCEEDED→504 其他→500。`PORT` 环境变量，`go build` 通过。

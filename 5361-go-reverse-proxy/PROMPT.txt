@@ -1,1 +1,5 @@
-Go 标准库写一个反向代理。分模块：Router（路由规则管理和匹配）、UpstreamManager（上游实例注册健康检查负载选择）、ProxyHandler（请求转发 Header 处理错误重试）、AdminAPI（管理接口）。Router 和 UpstreamManager 解耦，路由引用上游组名不引用具体实例。ProxyHandler 从 Router 获取匹配结果再从 UpstreamManager 选实例执行转发。健康检查在独立 goroutine 运行，结果实时反映到 UpstreamManager。每个模块有独立管理接口。端口 PORT 指定。
+Go标准库实现反向代理，路由和上游管理彻底解耦。端口PORT环境变量。
+
+Router只管路由规则增删改查和路径匹配，路由配置引用上游组名不引用具体实例。ProxyHandler拿Router匹配结果后找UpstreamManager选具体实例做转发。
+
+UpstreamManager管实例注册、健康检查和负载选择。健康检查独立goroutine每10秒探测，结果实时反映到实例列表。转发失败（连接超时、后端500）同组内换实例重试一次。AdminAPI按模块拆：路由管理、上游实例管理、转发统计。

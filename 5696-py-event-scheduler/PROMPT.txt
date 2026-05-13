@@ -1,5 +1,5 @@
-业务方要求事件调度器这块有 SLA 保障，aiohttp 全异步 做事件调度器服务。
+Cron + 一次性定时，执行记录持久化，重启恢复未执行任务，同一任务不并发。aiohttp 全异步。
 
 定时任务调度引擎，一次性 + Cron 周期，执行记录持久化到内存。重启恢复未执行任务。超时标记失败告警。同一任务不并发。任务格式 id/name/type/schedule/timeout/status/last_run/next_run。执行记录 task_id/run_time/duration/result/error。管理接口 CRUD、手动触发、暂停恢复。Cron 支持标准 5 位。
 
-aiohttp 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。
+端口 PORT 环境变量，pip install 装依赖跑。

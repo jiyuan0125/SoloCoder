@@ -1,1 +1,7 @@
-Rust/actix-web 写一个分布式锁。锁状态用 std::sync::RwLock 保护内部 HashMap。等待队列用 tokio::sync::broadcast channel 做通知。租约管理用 tokio::time::delay_queue 做自动过期。可重入锁的计数用递归结构。HTTP 接口用 actix-web 的 web::Resource 做路由。序列化用 serde_json。端口环境变量指定。
+actix-web 重构分布式锁，用Rust并发原语。端口环境变量，数据存内存。
+
+锁状态用RwLock保护HashMap——读多写少用RwLock比Mutex高效。value含持有者ID、过期时间和可重入计数。等待队列用tokio::sync::broadcast——锁释放时广播所有等待者竞争获取。
+
+租约管理用tokio::time::delay_queue自动过期。可重入用递归结构——同线程多次获取加计数，释放递减到零才真正释放。接口用web::Resource路由，serde_json序列化。
+
+接口：POST /locks/{name} 获取（传holder_id和ttl）。DELETE /locks/{name} 释放。PUT /locks/{name}/renewal 续期。GET /locks 列出。

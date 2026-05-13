@@ -1,7 +1,5 @@
-Spring Boot 做广播事件总线。事件发布后所有订阅者都收到。
+Spring Boot 做广播事件总线。发布者发一次事件，所有匹配订阅者都收到。订阅者通过 HTTP 回调接收，注册时指定回调 URL 和事件类型。事件类型支持层级：order.* 匹配 order.created、order.updated 等。
 
-订阅者通过 HTTP 回调接收事件。回调失败自动重试（指数退避，最多 5 次）。全部重试失败后标记订阅者为不可用。
+投递流程：发布 POST /events→遍历匹配订阅者→逐个 POST 回调→失败重试（指数退避 1s→2s→4s→8s→16s，最多 5 次）。5 次全失败标记 unavailable，后续不再投递避免浪费。
 
-事件类型支持层级匹配（如 order.* 匹配 order.created）。订阅者可以过滤事件类型。
-
-提供接口：发布事件、管理订阅者、查看事件投递状态。端口 server.port 配置，Maven 构建。
+管理：POST /subscribers 注册。DELETE 注销。GET /events/{id}/deliveries 查各订阅者投递状态。PUT /subscribers/{id}/reactivate 重新激活不可用订阅者。端口 server.port 配置，Maven 构建。数据存内存。

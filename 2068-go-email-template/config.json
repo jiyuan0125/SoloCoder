@@ -1,0 +1,8 @@
+{
+  "smtp_host": "smtp.example.com",
+  "smtp_port": 587,
+  "smtp_username": "user@example.com",
+  "smtp_password": "password",
+  "smtp_from": "sender@example.com",
+  "db_path": "email_template.db"
+}

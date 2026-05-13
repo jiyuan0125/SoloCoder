@@ -19,7 +19,7 @@ func main() {
 	_ = godotenv.Load()
 
 	var port int
-	flag.IntVar(&port, "port", 0, "服务端口")
+	flag.IntVar(&port, "port", 8502, "服务端口")
 	flag.Parse()
 
 	if port == 0 {

@@ -1,1 +1,7 @@
-Rust/axum 写一个认证网关。JWT 校验用 jsonwebtoken crate。API Key 存储用 HashMap。封禁列表用 DashMap。Token 刷新用自定义的 claim 结构。黑名单用 tokio::sync::RwLock 保护。审计日志用 tracing crate。密码哈希用 argon2 crate。HTTP 接口用 axum 的 middleware 做认证层。端口环境变量指定。
+axum 重写认证网关，用经过审计的Rust库。端口环境变量，数据存内存。
+
+JWT校验用jsonwebtoken crate解码验证签名和过期时间。API Key用HashMap启动时加载运行时管理接口增删。封禁列表用DashMap并发安全IP黑名单。Token刷新用自定义claim结构含刷新标记。
+
+黑名单用tokio::sync::RwLock。审计日志用tracing crate记录。密码哈希用argon2 crate常量时间比较防时序攻击。HTTP用axum middleware做认证层在路由前拦截。
+
+接口：POST /auth/login 登录。POST /auth/renewal 续期。POST /apikeys 创建Key。GET /banned 封禁列表。GET /stats/auth 统计。

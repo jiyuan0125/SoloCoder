@@ -1,9 +1,7 @@
-先说问题。之前用的熔断器不支持降级策略，服务熔断后直接返回 500，调用方没有兜底逻辑用户体验就是一片空白。Python aiohttp 做一个带降级的熔断器，断了有备选方案。
+熔断器不支持降级断了直接 500 用户体验空白。Python aiohttp 带降级熔断器。
 
-第一步，状态管理。熔断器三种状态循环切换：closed（正常放行，记录失败次数）→ open（达到阈值触发，执行降级）→ half_open（冷却期结束，放探测请求）。closed 到 open 的阈值按服务单独配置，默认连续 5 次失败或 1 分钟内失败率超过 50%。open 到 half_open 的冷却时间默认 30 秒。所有参数通过 PUT /breaker/{service}/config 动态修改。
+三态：closed（放行记失败）→open（达阈值执行降级）→half_open（冷却完放探测）。阈值按服务配默认连续 5 次失败或 1 分钟失败率超 50%。冷却默认 30 秒。PUT /breaker/{service}/config 动态改。
 
-第二步，降级策略。open 状态下的请求走降级逻辑。三种降级策略按接口配置——cache（返回最近一次成功的响应缓存）、default（返回预配置的默认响应）、fallback（调用备用服务的 HTTP 接口）。降级响应加 X-Degraded: true header 标记，让调用方知道这不是正常数据。降级策略通过 POST /breaker/{service}/fallback 配置。
+降级策略三种：cache（返回最近成功缓存）、default（预配默认响应）、fallback（调备用接口）。响应加 X-Degraded:true。POST /breaker/{service}/fallback 配。closed 下缓存 2xx 响应 key 路径+方法 TTL 5 分钟。half_open 探测成功清降级缓存。
 
-第三步，降级缓存。closed 状态下把成功的响应（状态码 2xx）缓存起来供降级使用。缓存 key 是请求路径 + 方法，TTL 5 分钟。half_open 探测成功后清空降级缓存，恢复正常。GET /breaker/{service}/cache 查看 cached 的 key 列表和过期时间。
-
-第四步，事件订阅。熔断器状态变更时通知订阅者。POST /subscriber 注册回调 URL。
+状态变更通知订阅者 POST /subscriber 注册回调。`PORT` 环境变量。

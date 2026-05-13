@@ -21,10 +21,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/configs")
@@ -129,10 +132,12 @@ public class ConfigController {
             @PathVariable String namespace,
             @PathVariable String group,
             @PathVariable String key,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<ConfigHistory> history = configService.listHistory(namespace, group, key, pageable);
+        Page<ConfigHistory> history = configService.listHistory(namespace, group, key, startTime, endTime, pageable);
         return ResponseEntity.ok(history);
     }
     
@@ -152,10 +157,12 @@ public class ConfigController {
             @PathVariable String namespace,
             @PathVariable String group,
             @PathVariable String key,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startTime,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endTime,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        Page<AuditLog> logs = configService.listAuditLogs(namespace, group, key, pageable);
+        Page<AuditLog> logs = configService.listAuditLogs(namespace, group, key, startTime, endTime, pageable);
         return ResponseEntity.ok(logs);
     }
     
@@ -168,7 +175,7 @@ public class ConfigController {
             HttpServletRequest httpRequest) {
         configService.validateKeyParams(namespace, group, key);
         
-        Optional<ConfigItem> currentOpt = configService.getConfig(namespace, group, key);
+        Optional<ConfigItem> currentOpt = configService.getConfigFresh(namespace, group, key);
         
         if (currentOpt.isPresent() && lastVersion != null) {
             ConfigItem current = currentOpt.get();
@@ -183,7 +190,7 @@ public class ConfigController {
             boolean changed = subscriber.waitForChange(longPollConfig.getTimeoutSeconds(), TimeUnit.SECONDS);
             
             if (changed) {
-                Optional<ConfigItem> updated = configService.getConfig(namespace, group, key);
+                Optional<ConfigItem> updated = configService.getConfigFresh(namespace, group, key);
                 if (updated.isPresent()) {
                     Map<String, Object> result = buildChangeResponse(updated.get());
                     return ResponseEntity.ok(result);

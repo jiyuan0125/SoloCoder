@@ -1,0 +1,5 @@
+下周要演示，先出个能跑的加密解密工具工具，Go CLI。
+工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
+权限路径支持多层 resources/{type}/{id}/actions/{action}。
+错误情况怎么处理你自己定。
+go build 能过，命令行工具能正常运行。

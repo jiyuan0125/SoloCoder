@@ -1,0 +1,5 @@
+之前用过 Python 做类似的数据处理工具，这次换 Go 试试Switch穷举检查。
+枚举类型的 switch 缺少 default 或部分值。
+缺失的 case 列出。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+go build 能编译通过，不依赖第三方库。

@@ -1,9 +1,5 @@
-凌晨三点服务挂了没人看日志，早上来了才发现停了 5 个小时。Python FastAPI 写一个带告警的日志聚合服务，错误日志自动分析触发告警，不用人盯着。
+凌晨服务挂了没人看停 5 小时。Python FastAPI 带告警日志聚合。
 
-服务端接收 POST /logs 批量推送的结构化日志。单条日志字段：timestamp（毫秒时间戳）、level（DEBUG/INFO/WARN/ERROR）、service（来源服务名）、message（日志正文）、tags（可选键值对）。按服务名分文件存储 service-YYYY-MM-DD.log，保留 7 天自动清理。单次推送上限 500 条。
+POST /logs 批量推送字段：timestamp（毫秒）/level/service/message/tags。按服务分文件保留 7 天自动清理。单次上限 500。
 
-告警规则按服务配置。POST /alert/rule 创建规则，参数包含 service_name、conditions（条件列表）、notify_url（webhook 地址）。三种条件类型：rate（每分钟错误数超过 N）、streak（连续 N 条都是 ERROR）、keyword（特定关键字出现，支持正则）。多个条件之间用 AND 或 OR 组合。同一服务同一规则在告警恢复前不重复触发。
-
-告警升级。告警触发后 N 分钟未确认自动升级。POST /alert/{id}/escalate 配置升级策略——通知更高级别的接收人，或者把通知频率从 5 分钟一次提到 1 分钟一次。确认告警调 POST /alert/{id}/ack，确认后停止升级和重复通知。
-
-日志查询。GET /logs/query 支持时间范围、级别、服务名和关键字过滤。查询结果按时间排序，分页返回。关键字搜索结果高亮显示匹配的部分。大文件查询用文件指针偏移实现分页。
+告警规则 POST /alert/rule 含 service_name/conditions/notify_url。三种条件：rate（每分钟错误超 N）/streak（连续 N 条 ERROR）/keyword（正则）。多条件 AND/OR 组合同规则恢复前不重复。升级：触发后 N 分钟未确认自动升级通知更高级或提频率。POST /alert/{id}/ack 确认停升级。查询 GET /logs/query 时间/级别/服务/关键字过滤分页高亮。`PORT` 环境变量。

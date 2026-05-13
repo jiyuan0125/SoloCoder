@@ -1,0 +1,6 @@
+之前用过 Python 做日志分析工具，这次换 Go 试试校验清单生成。
+包含文件路径、大小、哈希值。
+增量更新：只重新计算变更的文件。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+校验完成后自动更新统计信息，首次运行没有历史统计。
+go build 能编译通过，不依赖第三方库。

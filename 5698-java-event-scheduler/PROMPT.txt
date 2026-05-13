@@ -1,4 +1,4 @@
-监控发现事件调度器异常没有告警，Spring Boot 2.x，Maven，JDK 17 加个事件调度器服务。
+解析标准 Cron 计算下次执行时间，支持秒级 6 位表达式，调度精度误差不超 100 毫秒。Spring Boot 2.x。
 
 Cron 表达式解析与调度器，解析标准 Cron 计算下次执行时间。支持秒级（6 位表达式）。调度精度误差不超过 100 毫秒。时区感知。Cron 变更后下次按新表达式算。任务格式 id/cron/timezone/last_run/next_run/status。管理接口 CRUD 任务和查看下次执行时间。
 

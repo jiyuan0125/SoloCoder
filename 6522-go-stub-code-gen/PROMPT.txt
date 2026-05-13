@@ -1,0 +1,8 @@
+用 Go 写一个根据 Go interface 定义生成 stub 实现的命令行工具。
+
+根据 Go interface 定义生成 stub 实现。每个方法返回零值或配置的固定值。支持从 .go 文件解析 interface，输出到 stdout。
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+文件状态有 新增、处理中、已完成、归档。处理完后可以归档。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+
+用 Go 标准库写，go run . 或 go build 都行。

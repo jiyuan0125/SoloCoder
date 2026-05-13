@@ -2,4 +2,4 @@
 
 全局配额存储在共享状态中，各节点请求时扣减。扣减失败（配额不足）返回 429。本地节点缓存最近 1 秒的配额余额，减少每次请求都查全局的开销。配额每秒刷新一次。节点间通过心跳同步状态，节点掉线后其占用配额在 3 秒后释放。管理接口可查看全局配额使用情况和各节点占用。
 
-Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17，端口 PORT 环境变量，mvn clean package 编译 java -jar 跑。

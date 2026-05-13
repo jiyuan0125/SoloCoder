@@ -2,4 +2,4 @@
 
 动态配置热更新，变更推送通知订阅者，应用启动拉全量并监听变更。变更推送通知，客户端拉取新值。配置有版本号支持回滚。变更审计日志记录操作人和内容。推送失败标记 pending 下次重试。历史保留最近 100 版本。
 
-用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17，端口 PORT 环境变量，mvn clean package 编译 java -jar 跑。

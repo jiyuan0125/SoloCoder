@@ -1,0 +1,5 @@
+调研了一圈，Go 做模块初始化生成比较合适，交叉编译支持好。
+go.mod、main.go、基础目录结构。
+依赖版本管理。
+命令有好几个子命令，每个子命令又有自己的参数。比如 sync local、sync remote、sync status。
+纯标准库实现，go run . 能跑。

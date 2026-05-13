@@ -1,5 +1,9 @@
-V2 版本月底上线，先把链路聚合追踪服务做了——市面上的追踪系统功能太多，我们只需要 Span 聚合和慢请求分析。Java Netty 实现。
-多个服务实例上报 Span 数据到这个服务。Span 数据包含：TraceID、SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签（KV对，放任意数据）。服务按 TraceID 聚合所有 Span，聚合后构建调用树——根据 ParentSpanID 确定父子关系，计算每个节点的耗时和整条链路的总耗时。
-调用树中如果某个 Span 的耗时占整个 Trace 总耗时的80%以上，自动标记为热点（性能瓶颈）。热点 Span 的标签中如果有 error=true 的标签，标记为异常热点（需要优先修复）。聚合后的调用树可以按服务名和操作名查询，支持时间范围过滤。
-Span 数据接收后先存缓冲区（固定大小），异步线程从缓冲区消费并聚合。缓冲区满的时候丢弃最早的 Span——丢弃的 Span 不计入统计，但丢弃的总数要记录下来暴露为指标。数据全在内存，保留最近一万条 Trace（LRU淘汰），不支持持久化。
-查询接口支持按 TraceID 精确查询和按条件列表查询。receiver（接收 Span）、aggregator（聚合和构建调用树）、builder（调用树渲染）、query（查询接口）。Maven 构建。
+Java Netty 链路聚合追踪 Span 聚合和慢请求分析。
+
+多实例上报 Span 含 TraceID、SpanID、ParentSpanID、服务名、操作名、开始结束时间、标签（KV 对）。按 TraceID 聚合构建调用树确定父子关系算每节点和总耗时。
+
+某 Span 耗时占 Trace 总耗时 80% 以上标热点（性能瓶颈）。热点有 error=true 标签标异常热点优先修复。按服务名操作名查询支持时间过滤。
+
+Span 先存缓冲区异步消费聚合。缓冲区满丢最早不计入统计但丢总数记指标。全内存保留最近一万条（LRU 淘汰）不持久化。
+
+按 TraceID 精确查和按条件列表查。receiver（接收）、aggregator（聚合构建）、builder（调用树渲染）、query（查询）。Maven 构建。

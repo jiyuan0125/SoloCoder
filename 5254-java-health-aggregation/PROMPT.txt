@@ -1,5 +1,5 @@
-Spring Boot 做健康聚合服务。一个服务可以有多个探针（TCP + HTTP + 自定义）。所有探针都健康才算整体健康。
+Spring Boot 做健康聚合服务。一个后端可有多个探针（TCP/HTTP/自定义），结果聚合判断整体健康。注册 POST /api/services：传入 service_name 和 probes 数组（type、target、weight=critical/non_critical、interval_seconds、timeout_seconds）。
 
-探针权重可配：关键探针失败直接标记不健康，非关键探针失败只标记降级。
+探测：后台按间隔定时执行。TCP 建连，HTTP 检查 2xx，Custom 调 URL 返回 200 视为健康。
 
-聚合结果通过接口查询。提供最近 100 次探测的详细记录。端口 server.port 配置，Maven 构建。
+聚合规则：critical 探针任一失败则 unhealthy，仅 non_critical 失败标记 degraded，全部通过才 healthy。最近 100 次探测结果保存在内存可查历史。GET /api/services/{name}/health 返回聚合状态和各探针最新结果。GET /api/overview 全局概览。端口 server.port 配置，Maven 构建。

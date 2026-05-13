@@ -1,0 +1,7 @@
+线上排障的时候缺一个好用的分析慢查询日志，Go 写一个。
+
+分析慢查询日志。解析 MySQL/PostgreSQL 慢查询日志，提取 SQL、执行时间、扫描行数。按耗时排序输出。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+管理分组和组内成员。成员操作基于分组进行。
+
+Go 标准库，命令行参数用 flag 包解析。

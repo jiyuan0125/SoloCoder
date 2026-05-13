@@ -1,9 +1,5 @@
-后端接口从 v1 升级到 v2，字段名和路径全变了，前端来不及改——要改 30 多个页面，排期到下个月。Go 标准库写一个请求转换代理，转发前改请求，响应回来再改回去，前端无感迁移。
+后端 v1 升 v2 字段名路径全变前端来不及改。Go 标准库请求转换代理前端无感迁移。
 
-请求转换三层。第一层 header 重命名：比如 X-Token 转 Authorization，X-Request-Id 转 X-Trace-Id。第二层 body 字段重命名：JSON body 里的 user_name 转成 fullName，这种嵌套字段映射也要支持。第三层路径重写：/v1/api/users → /api/v2/users，路径参数也要转换，/v1/user/123 → /v2/users/id:123。所有转换规则通过 transform.json 配置文件定义。
+请求转换三层：header 重命名（X-Token→Authorization）、body 字段重命名（user_name→fullName 支持嵌套）、路径重写（/v1/user/123→/v2/users/id:123）。规则在 transform.json 配置。
 
-响应转换。字段过滤——只返回白名单里的字段，其他字段删除。格式转换——时间戳从秒级转毫秒级，金额从分转元。字段名从 snake_case 转 camelCase。转换规则也写在配置文件里，请求和响应的规则分开定义。
-
-不同后端可以有不同的转换规则集。规则集和后端绑定，通过后端 ID 区分。同一个代理可以对接多个后端，每个后端独立配置。POST /backends 添加后端和对应的规则集，GET /transforms 查看所有规则。
-
-转换规则热加载。修改 transform.json 后调 POST /reload 热加载生效，不重启服务。加载失败（JSON 格式错误或规则冲突）不更新，保持旧配置运行并返回错误详情。GET /transforms/validate 校验配置文件是否合法。
+响应转换：字段过滤白名单、格式转换（时间戳秒→毫秒金额分→元）、字段名 snake_case→camelCase。规则集和后端绑定 POST /backends 添加 GET /transforms 查看。热加载 POST /reload 不重启加载失败保持旧配置返回错误。GET /transforms/validate 校验合法性。`PORT` 环境变量，`go build` 通过。

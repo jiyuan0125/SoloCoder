@@ -1,11 +1,5 @@
-tokio 写个认证服务。请求进来要先过认证。
+六个服务每个都写了 JWT 校验，Token 格式改了六个地方都得改还漏了一个。认证逻辑应该集中在网关处理。
 
-认证方式你来选。至少支持一种。
+所有请求先过认证再转发——API Key 和 Basic Auth 双模式，白名单路径免认证。用 tokio + actix-web 做认证网关。API Key：32 位 hex 随机串可设过期。Basic Auth：密码 SHA-256 哈希存储。认证通过后注入 X-User-Id、X-User-Role、X-User-Email Header。白名单从 YAML 配置加载。
 
-认证通过后要带用户信息往下传。传什么信息你定。
-
-有些路径不需要认证。哪些路径需要认证你来定。
-
-提供管理接口管理用户和权限。
-
-端口 PORT 环境变量，cargo build 能过。
+管理接口需 admin 角色：POST /admin/users 创建用户、DELETE 删除、GET 列出；POST /admin/keys 生成 Key 可设过期。Rust tokio/actix-web，cargo build 编译通过。端口 PORT 环境变量。

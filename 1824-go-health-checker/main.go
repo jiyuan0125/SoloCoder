@@ -19,8 +19,8 @@ func main() {
 	mux := http.NewServeMux()
 	
 	mux.HandleFunc("/health", handler.HealthCheck)
-	mux.HandleFunc("/components", func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/components" {
+	mux.HandleFunc("/components/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/components/" || r.URL.Path == "/components" {
 			if r.Method == http.MethodPost {
 				handler.RegisterComponent(w, r)
 			} else if r.Method == http.MethodGet {

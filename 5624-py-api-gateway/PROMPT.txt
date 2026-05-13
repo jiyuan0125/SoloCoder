@@ -1,5 +1,5 @@
-看到一个开源项目挺有意思的，自己也做一个API网关服务，aiohttp 全异步。
+看到一个开源项目挺有意思的，自己也做一个 API 网关服务，aiohttp 全异步。
 
-移动端 BFF 网关，按客户端类型和版本差异化响应，X-Client-Type（ios/android）和 X-App-Version 做字段裁剪。v1 完整字段 v2 裁剪。/api/v{version}/{resource} 路径。v1 标 deprecated 但仍可用。接口配置（路径、后端、字段规则、版本号）通过管理 API。代码分至少三个文件。
+移动端 BFF 网关，按客户端类型和版本差异化响应。X-Client-Type（ios/android）和 X-App-Version 做字段裁剪。v1 完整字段 v2 裁剪。/api/v{version}/{resource} 路径。v1 标 deprecated 但仍可用。接口配置（路径、后端、字段规则、版本号）通过管理 API。代码分至少三个文件。
 
-aiohttp 全异步。数据存内存，用字典或列表。端口通过环境变量 PORT 指定。pip install 装好依赖后能跑起来。
+端口 PORT 环境变量，pip install 装依赖跑。代码分至少三个文件。

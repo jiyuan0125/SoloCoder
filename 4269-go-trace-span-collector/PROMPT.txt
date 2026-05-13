@@ -1,4 +1,4 @@
-先收集 Span，再组装调用树，最后提供查询。Go Fiber 做一个分布式链路追踪收集器。服务上报 Span，每个 Span 带 TraceID、SpanID、ParentSpanID，加上操作名、起止时间、标签和状态。ID 格式自定义，用字符串存就行，不限制必须是 UUID。
-按 TraceID 把 Span 聚到一起，再按 ParentSpanID 串成调用树。树深度不限，嵌套十几层的微服务调用链也得撑住。同一个 TraceID 的 Span 可能分好几批到——先到的先缓存着，定时器到期了才开始组装。
-查 TraceID 能拿到完整调用链，返回 JSON 树结构，每个节点有操作名、耗时、状态和标签。也可以按操作名搜 Span，结果分页，默认每页 20 条。按时间范围查 Trace 列表也行，返回 TraceID、根操作名、总耗时和状态。
-Span 到了之后异步组装，组装完的才能查。等太久没组装完的——比如超过 5 分钟还缺 Span——标记为不完整，不完整的调用树也能查，只是缺失的节点标注为 unknown。调用树里耗时最长的 Span 单独高亮，方便定位瓶颈。模块拆 collector、assembler、querier、tree。端口 PORT 环境变量，go build 能过。
+用 Go Fiber 做分布式链路追踪收集器。服务上报 Span 带 TraceID、SpanID、ParentSpanID 加操作名、起止时间、标签和状态，ID 用字符串存。
+按 TraceID 聚 Span 再按 ParentSpanID 串调用树深度不限。同一 TraceID 的 Span 可能分批到先缓存定时器到期再组装。
+查 TraceID 拿完整调用链返回 JSON 树结构，每节点有操作名耗时状态标签。按操作名搜 Span 分页默认 20 条。按时间范围查 Trace 列表返回 TraceID、根操作名、总耗时和状态。
+异步组装超 5 分钟缺 Span 标不完整缺失节点标 unknown。耗时最长 Span 单独高亮方便定位瓶颈。模块拆 collector、assembler、querier、tree。端口 PORT 环境变量，go build。

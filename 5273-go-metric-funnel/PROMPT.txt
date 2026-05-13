@@ -1,7 +1,5 @@
-Go 标准库做指标聚合服务。多个上游服务定期上报指标。本服务按服务来源和标签分组聚合。
+Go 标准库做指标聚合漏斗。上游服务上报原始指标，按来源和标签分组聚合，输出精炼时序视图。上报 POST /metrics：service_name、metric_name、value、tags（KV 对）。按分组和时间窗口聚合，支持四种运算：sum、avg、max、min。粒度按分钟或按小时。
 
-聚合操作：sum（求和）、avg（平均）、max（最大）、min（最小）。聚合粒度：按分钟、按小时。
+聚合结果持久化到本地 JSON 文件，每个窗口一个文件，重启加载历史。查询 GET /metrics/query 支持 start_time、end_time 和 tags 过滤。粒度通过 POST /config/granularity 动态调整，下一个窗口立即生效。
 
-聚合结果持久化到文件。历史数据可以查询。查询支持时间范围和标签过滤。
-
-端口 PORT 环境变量，go build 能过。
+端口 PORT 环境变量，go build 能编译通过。

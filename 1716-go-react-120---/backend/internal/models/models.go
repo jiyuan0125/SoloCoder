@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -212,6 +214,28 @@ func trimSpace(s string) string {
 		}
 	}
 	return string(result)
+}
+
+func (s *SeverityLevel) UnmarshalJSON(data []byte) error {
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		parsed, ok := ParseSeverity(str)
+		if ok {
+			*s = parsed
+			return nil
+		}
+	}
+
+	var num int
+	if err := json.Unmarshal(data, &num); err == nil {
+		parsed, ok := ParseSeverity(strconv.Itoa(num))
+		if ok {
+			*s = parsed
+			return nil
+		}
+	}
+
+	return json.Unmarshal(data, (*string)(s))
 }
 
 func ValidVehicleStatusTransition(from, to VehicleStatus) bool {

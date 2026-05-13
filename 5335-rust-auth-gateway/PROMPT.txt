@@ -1,3 +1,5 @@
-Rust/axum 写一个认证网关。所有请求先过网关验证身份。支持多种认证方式，具体哪些自己决定。认证失败要给出合理的错误信息，但不能泄露太多内部细节。短时间内同一个来源大量失败请求要限制住。
+Rust/axum 写认证网关，所有请求先验证身份再放行。支持 API Key 和 JWT 两种认证，带任意一种通过即放行。认证失败返回 401 统一"认证失败"不泄露方式。短时间同 IP 大量认证失败自动封禁（默认 10 分钟）防暴力破解。
 
-Token 快过期了要提醒客户端续期。端口环境变量指定。
+JWT 快过期（剩余不足 5 分钟）响应头加 X-Token-Renewal-Advise: true 提醒续期。POST /auth/renewal 旧 Token 换新。
+
+管理：POST /apikeys 创建（名称和权限）。DELETE 吊销。GET /banned 封禁 IP 列表。POST /auth/login 用户名密码换 Token。GET /stats/auth 认证统计。端口 PORT 环境变量，cargo build 能过。数据存内存。

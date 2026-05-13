@@ -1,0 +1,41 @@
+name: 销售汇总报表
+description: 按区域和月份汇总销售数据
+
+data_source:
+  type: csv
+  path: examples/data/sales.csv
+  delimiter: ","
+  columns:
+    - name: date
+      type: date
+    - name: region
+      type: string
+    - name: product
+      type: string
+    - name: quantity
+      type: number
+    - name: amount
+      type: number
+    - name: customer
+      type: string
+
+template:
+  name: 销售汇总模板
+  title: 销售汇总表（按区域和月份）
+  group_by:
+    - field: region
+    - field: date
+      date_group: month
+  aggregations:
+    - field: quantity
+      type: sum
+      alias: 总数量
+    - field: amount
+      type: sum
+      alias: 总金额
+    - field: amount
+      type: avg
+      alias: 平均金额
+
+output_format: text
+output_path: examples/output/sales_summary.txt

@@ -1,7 +1,5 @@
-查某个订单的调用链，但 Span 里只有 trace_id 和 span_id——没有 order_id，根本定位不了业务问题。Spring Boot 做一个追踪系统，Span 上可以附加业务标签，通过 HTTP header 传播，让链路追踪跟业务数据打通。
+Span 只有 trace_id 没有业务标签定位不了业务问题。Spring Boot 追踪系统 Span 可附加业务标签。
 
-自定义标签：业务可以在 Span 上附加自定义标签——order_id、tenant_id、user_id 等等。标签通过 HTTP header X-Trace-Tags 传播，格式是 key=value 用逗号分隔。标签在查询时可以作为过滤条件，比如查所有 order_id=12345 的 Trace。这让排查业务问题从"先找 TraceID"变成"直接用订单号搜"。
+自定义标签：Span 附加 order_id/tenant_id/user_id 等。标签通过 X-Trace-Tags header 传播格式 key=value 逗号分隔。查询时标签作过滤条件直接用订单号搜。
 
-跨服务传播：TraceID 和 SpanID 通过 HTTP header 传播。支持同步 HTTP 和异步 MQ 两种传播方式——MQ 传播时 Trace 信息放在消息的 header 属性里，消费者取出后继续传递。传播链路断了不会影响业务，只是那段 Trace 丢失。
-
-Span 的 kind 标记区分 CLIENT（发出请求）和 SERVER（接收请求）。一个调用产生一对 CLIENT Span 和 SERVER Span，通过 parent_span_id 关联。Trace 的采样策略支持动态调整，通过接口修改采样比例，从 0.01% 到 100% 可调，修改后立即生效。技术约束：Spring Boot，Maven 构建，端口配置文件，数据存内存。
+跨服务传播：支持同步 HTTP 和异步 MQ 两种方式——MQ 传播 Trace 信息放消息 header 属性消费者取出继续传。传播断了不影响业务只丢那段 Trace。Span kind 区分 CLIENT/SERVER 一对 Span 通过 parent_span_id 关联。采样策略动态调整接口改比例从 0.01% 到 100% 立即生效。Spring Boot Maven 构建端口配置文件数据存内存。

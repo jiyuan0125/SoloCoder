@@ -1,0 +1,7 @@
+有个老的 Python 工具做管理 API 版本协商，速度跟不上，换成 Go。
+
+管理 API 版本协商。根据请求 header 中的版本号路由到对应的 schema。验证请求和响应是否符合版本 schema。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+
+Go 实现，只用标准库，交叉编译友好。

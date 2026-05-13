@@ -1,9 +1,7 @@
-Fiber 做协议转换。接收一种格式的请求，转成另一种格式转发。
+改个配置要重启所有服务配置热更新是刚需。用 Go Gin 做通用协议转换网关一套配置搞定 REST↔gRPC 双向转换。
 
-具体什么格式转什么格式你来定。选两种常见的。
+对外暴露 RESTful 接口，根据路由表找对应 gRPC 方法 JSON 请求体转 Protobuf 调后端再转回 JSON。路径和 gRPC 方法映射通过 YAML 配置。gRPC message 嵌套 JSON 对应多层嵌套，枚举 JSON 用字符串 gRPC 用数字双向映射。
 
-转换规则怎么定义你选。转换可能有数据丢失，你怎么处理你来定。
+支持 gRPC 服务端流式响应转 newline-delimited JSON。proto 文件路径和后端地址通过配置加载。后端不可用或超时返回 503。
 
-提供接口查看转换日志。
-
-端口 PORT 环境变量。go build 能过。
+配置改完调接口热加载不重启。端口 PORT 环境变量，go build 编译通过。

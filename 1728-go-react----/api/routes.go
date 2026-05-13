@@ -622,8 +622,10 @@ func createCheck(ctx *gin.Context) {
 		LabID     string `json:"lab_id" binding:"required"`
 		Inspector string `json:"inspector" binding:"required"`
 		Items     []struct {
-			Item   string `json:"item" binding:"required"`
-			Result string `json:"result" binding:"required"`
+			Item       string  `json:"item" binding:"required"`
+			Result     string  `json:"result" binding:"required"`
+			Responsible string `json:"responsible"`
+			Deadline   string  `json:"deadline"`
 		} `json:"items" binding:"required"`
 	}
 
@@ -648,6 +650,16 @@ func createCheck(ctx *gin.Context) {
 			ctx.JSON(http.StatusBadRequest, gin.H{"error": "检查结果必须是：合格、不合格、待整改"})
 			return
 		}
+		if item.Result == "不合格" {
+			if item.Responsible == "" {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": "检查不合格项需要指定责任人"})
+				return
+			}
+			if item.Deadline == "" {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": "检查不合格项需要指定截止日期"})
+				return
+			}
+		}
 	}
 
 	config.Storage.RLock()
@@ -661,9 +673,18 @@ func createCheck(ctx *gin.Context) {
 
 	items := make([]models.SafetyCheckItem, len(input.Items))
 	for i, item := range input.Items {
+		var deadline *time.Time
+		if item.Deadline != "" {
+			d, err := time.Parse("2006-01-02", item.Deadline)
+			if err == nil {
+				deadline = &d
+			}
+		}
 		items[i] = models.SafetyCheckItem{
-			Item:   item.Item,
-			Result: item.Result,
+			Item:        item.Item,
+			Result:      item.Result,
+			Responsible: item.Responsible,
+			Deadline:    deadline,
 		}
 	}
 
@@ -678,24 +699,35 @@ func createCheck(ctx *gin.Context) {
 	config.Storage.Lock()
 	config.Storage.Checks[check.ID] = check
 
-	hasUnqualified := false
+	createdTodos := []*models.Todo{}
 	for _, item := range check.Items {
 		if item.Result == "不合格" {
-			hasUnqualified = true
+			todo := &models.Todo{
+				ID:          generateID(),
+				RelatedID:   check.ID,
+				RelatedType: "safety_check",
+				Description: fmt.Sprintf("【%s】%s 不合格，需整改", lab.Name, item.Item),
+				Responsible: item.Responsible,
+				DueDate:     item.Deadline,
+				Status:      "待处理",
+				CreatedAt:   time.Now(),
+			}
+			config.Storage.Todos[todo.ID] = todo
+			createdTodos = append(createdTodos, todo)
 		}
-	}
-
-	if hasUnqualified {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "检查不合格项自动生成待办，请指定责任人和截止日期"})
-		config.Storage.Unlock()
-		return
 	}
 
 	config.Storage.Unlock()
 
 	config.AddAuditLog("创建安全检查", getCurrentUser(ctx), "检查 ID: %s, 实验室: %s", check.ID, lab.Name)
+	for _, todo := range createdTodos {
+		config.AddAuditLog("自动生成待办", getCurrentUser(ctx), "待办 ID: %s, 描述: %s", todo.ID, todo.Description)
+	}
 
-	ctx.JSON(http.StatusCreated, check)
+	ctx.JSON(http.StatusCreated, gin.H{
+		"check": check,
+		"todos": createdTodos,
+	})
 }
 
 func getCheck(ctx *gin.Context) {

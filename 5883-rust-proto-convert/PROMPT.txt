@@ -1,4 +1,4 @@
-gRPC 和 REST 之间需要互相调用。用 Go 标准库 net/http 写协议转换代理。
+gRPC 和 REST 两套服务互相要调对方，协议不通很头疼。Go 标准库 net/http 写个协议转换代理。
 
 REST → gRPC 方向：接收 JSON 请求，根据路径映射找到对应的 gRPC 方法，把 JSON 转成 protobuf 消息调用后端 gRPC 服务，再把 protobuf 响应转回 JSON。先用 JSON 手动映射模拟，不用真的依赖 gRPC 库。
 

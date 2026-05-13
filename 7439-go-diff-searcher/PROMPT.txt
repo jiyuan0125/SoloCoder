@@ -1,0 +1,5 @@
+闲着没事写个文本搜索匹配工具自己用，Go CLI。
+工具要能通配符匹配（glob 模式）、路径匹配、排除规则。
+认证需要用户角色，用户角色怎么创建不提。
+用 encoding/xml 的 Marshal/Unmarshal。
+go build 能过，命令行工具能正常运行。

@@ -1,0 +1,5 @@
+写个 Go 命令行工具做CSV导入配置。
+CSV 的列映射到配置键路径。
+导入前预览。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+不用第三方包，go build 通过就行。

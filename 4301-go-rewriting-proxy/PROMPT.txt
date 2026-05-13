@@ -1,9 +1,4 @@
-上个月后端团队升级了 v2 接口，前端还在调 v1 的路径和 Header，两套协议并行跑了快两周，排查问题时日志里字段对不上，人都要疯了。我们网关组被拉去做请求改写代理，Go 标准库 net/http 写，请求进来按规则改写 Header 再转发到上游。
-
-处理流程不复杂：先进来匹配路径前缀，匹配到的请求按规则修改 Header——添加 X-Forwarded-For、X-Forwarded-Host，把 Host 替换成目标地址。没匹配到的路径前缀原样转发，一动不动。改写规则不用重启就能更新，走接口动态配置，运维随时加规则，POST /api/rules 添加、GET /api/rules 列出、DELETE /api/rules/{id} 删除。
-
-每条规则后面可以挂多个上游地址，选哪个的策略支持轮询和随机两种。转发时当前上游连不上就自动切下一个。后台定时对上游做 TCP 探测，连续失败 3 次标为不可用，连续成功 1 次恢复，探测间隔默认 10 秒。
-
-日志这块每个请求都要记：来源 IP、目标上游、改写前后的 Header 快照、响应状态码、转发耗时。日志按分钟聚合统计，聚合数据通过 GET /api/stats 查询，支持按时间段和路径前缀过滤。
-
-上游信息在系统启动前就得配好，改写规则走动态接口。代码上 proxy 负责转发、rewriter 负责 Header 改写、upstream 管上游列表和健康检查、logger 管日志和聚合。端口 PORT 环境变量，go build 能过。
+用 Go 标准库 net/http 写请求改写代理。请求按路径前缀匹配匹配到的改写 Header 再转发——加 X-Forwarded-For、X-Forwarded-Host 替换 Host。没匹配原样转发。规则走接口配置：POST /api/rules 添加、GET 列出、DELETE /api/rules/{id} 删除。
+每条规则可挂多上游策略支持轮询和随机。转发连不上自动切下一个。后台 TCP 探测连续失败 3 次标不可用成功 1 次恢复默认 10 秒。
+每请求记来源 IP、目标上游、改写前后 Header 快照、状态码和耗时。日志按分钟聚合 GET /api/stats 支持按时间段和路径过滤。
+代码拆 proxy 转发、rewriter 改写、upstream 上游健康检查、logger 日志聚合。端口 PORT 环境变量，go build。

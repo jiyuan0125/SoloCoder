@@ -1,5 +1,5 @@
-用 Fiber 做一个 SOAP-REST 转换代理。老旧的 SOAP 服务通过代理暴露为 RESTful JSON 接口。代理加载 WSDL 文件后自动生成 REST 映射。
+老旧 SOAP 服务通过代理暴露为 RESTful JSON 接口。Fiber 实现。代理加载 WSDL 文件后自动生成 REST 映射——每个 operation 映射为一个 REST 端点，请求体 JSON 嵌入到 SOAP Envelope 对应位置。SOAP 响应解析后提取数据转 JSON，SOAP Fault 转标准 HTTP 错误加 JSON 错误详情。代理缓存 WSDL 解析结果避免重复解析。
 
-WSDL 中的每个 operation 映射为一个 REST 端点。请求体 JSON 嵌入到 SOAP Envelope 的对应位置。
+接口展示转换统计和各 operation 调用次数。
 
-SOAP 响应解析后提取数据转成 JSON。SOAP Fault 转成标准 HTTP 错误加 JSON 错误详情。代理缓存 WSDL 解析结果。管理接口展示转换统计和各 operation 的调用次数。端口 PORT 环境变量指定，编译后能直接运行。
+端口 PORT 环境变量指定，编译后能直接运行。

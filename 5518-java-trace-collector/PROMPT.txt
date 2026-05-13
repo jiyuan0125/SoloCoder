@@ -1,5 +1,5 @@
-用 Spring Boot 做一个分布式链路追踪收集器。每个请求入口生成一个 trace_id，服务间调用时通过 HTTP Header（X-Trace-Id）传播。每段调用记录为一个 span，包含 trace_id、span_id、parent_span_id、服务名、操作名、开始时间、耗时。
+每个请求入口生成 trace_id，服务间调用通过 HTTP Header（X-Trace-Id）传播，每段调用记录为一个 span（含 trace_id、span_id、parent_span_id、服务名、操作名、开始时间、耗时）。Spring Boot 实现。客户端通过 HTTP 批量上报 span，收集器按 trace_id 聚合构建调用树。
 
-客户端通过 HTTP 批量上报 span 数据。收集器收到后按 trace_id 聚合，构建调用树。
+查询接口按 trace_id 返回完整调用树。支持查慢链路——耗时超过阈值的 trace 列表，按耗时降序。接口展示最近 1 小时的 trace 数量和平均链路深度。
 
-查询接口按 trace_id 查询完整链路，返回调用树。支持查询慢链路——耗时超过阈值的 trace 列表，按耗时降序。管理接口展示最近 1 小时的 trace 数量、平均链路深度。端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。
+端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。

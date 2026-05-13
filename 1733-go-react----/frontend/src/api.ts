@@ -14,7 +14,7 @@ import type {
 } from './types';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8406/api',
+  baseURL: 'http://localhost:8100/api',
 });
 
 export const teacherApi = {

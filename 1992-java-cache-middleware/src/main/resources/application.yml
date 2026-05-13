@@ -1,0 +1,19 @@
+server:
+  port: 10004
+
+spring:
+  application:
+    name: cache-middleware
+
+cache:
+  default:
+    ttl-seconds: 300
+    max-capacity: 1000
+    eviction-policy: LRU
+  max-value-size-bytes: 1048576
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

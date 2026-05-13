@@ -1,4 +1,4 @@
-先收集 Span 数据，再按 TraceID 组装成耗时树，最后分析哪些请求慢。Go 标准库写一个请求耗时分析追踪器。服务上报 Span，每个 Span 带操作名、起止时间（毫秒精度）、标签（键值对）和状态（OK、ERROR、TIMEOUT）。Span 通过 TraceID 关联，ParentSpanID 串成调用树。ParentSpanID 为空的就是根 Span。ID 格式自定义，字符串存就行。
-根据 Span 时间构建耗时树——每个节点显示操作名、耗时（毫秒）和占总耗时的百分比，子节点按开始时间排。耗时百分比帮助快速定位瓶颈——哪个服务占了总耗时的 80% 一目了然。
-设个耗时阈值（默认 1 秒），超了的 Trace 标记为慢请求，单独存和查。慢请求列表按耗时倒序排，接口支持分页和按时间范围过滤。
-Span 状态往上冒：子 Span 超时则父 Span 也标超时（调用链里有超时说明整条链都受影响）。但子 Span 错误父 Span 不一定错——看业务，比如某个非关键服务报错不影响主流程，所以错误不冒泡，只有超时冒泡。同一个 TraceID 的 Span 可能分多批到，先到的缓存 5 分钟等后面的。模块拆 collector、tree、detector、querier。端口 PORT 环境变量，go build 能过。
+用 Go 标准库写请求耗时分析追踪器。服务上报 Span 带操作名、起止时间（毫秒）、标签和状态（OK/ERROR/TIMEOUT）。Span 通过 TraceID 关联 ParentSpanID 串调用树，根 Span 的 ParentSpanID 为空。ID 用字符串存。
+根据 Span 时间构建耗时树每节点显示操作名、耗时和占总耗时百分比，子节点按开始时间排。快速定位瓶颈。
+设耗时阈值默认 1 秒超了标慢请求单独存查。慢请求列表按耗时倒序排支持分页和时间范围过滤。
+子 Span 超时冒泡父也标超时，子错误不冒泡看业务。同 TraceID 的 Span 分批到先缓存 5 分钟等后面的。模块拆 collector、tree、detector、querier。端口 PORT 环境变量，go build。

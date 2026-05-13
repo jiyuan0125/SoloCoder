@@ -1,0 +1,5 @@
+调研了一圈，Go 做安全扫描审计比较合适。
+工具要能依赖漏洞检查（go.sum/go.mod 解析）、CVE 数据库匹配、修复版本建议。
+规则校验需要规则组，规则组怎么来的不提。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+go build 能过，命令行工具能正常运行。

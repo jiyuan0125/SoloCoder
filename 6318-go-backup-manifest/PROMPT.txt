@@ -1,0 +1,5 @@
+帮我做一套备份清单管理，Go 命令行工具。
+清单记录文件路径、大小、哈希、备份时间。
+从清单快速查找文件。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+不用第三方包，go build 通过就行。

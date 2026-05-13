@@ -1,0 +1,5 @@
+新接了个教育项目，他们要求有Markdown图片整理的功能，Go 搞。
+复制到统一目录。更新引用路径。
+缺失图片标记。
+子命令结构：db migrate、db rollback、db status、db seed。
+go build 能编译通过，不依赖第三方库。

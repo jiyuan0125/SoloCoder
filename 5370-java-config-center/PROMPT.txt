@@ -1,1 +1,7 @@
-Spring Boot 做一个配置中心。配置存储用 Spring 的 Resource 抽象读取文件系统。版本管理用 git（用 JGit 操作本地 git 仓库做版本历史）。推送通知用 Spring 的 ApplicationEvent 加 @EventListener 在进程内通信，对外用 RestTemplate 发 HTTP 回调。重试用 Spring Retry 的 @Retryable。配置加密用 jasypt。导出用 Spring Actuator 的 endpoint 思路自己实现。端口 PORT 指定。
+Spring Boot 重构配置中心，用Spring生态工具。端口PORT环境变量，Maven构建。
+
+配置存储用Spring Resource抽象。版本管理用JGit操作本地git仓库，每次变更自动提交，回滚即git revert。推送通知两层：进程内ApplicationEvent+@EventListener，对外RestTemplate HTTP回调。
+
+重试用@Retryable注解。配置加密用jasypt。导出接口仿Actuator endpoint思路——每配置项的变更历史、当前值、推送状态都是独立endpoint。
+
+接口：POST /configs 创建。GET /configs?app=&env= 查询。PUT /configs/{id} 修改。GET /configs/{id}/history 历史。POST /configs/rollback 回滚。

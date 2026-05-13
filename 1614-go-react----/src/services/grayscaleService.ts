@@ -1,6 +1,12 @@
 import { shouldUseNewVersion } from '../utils/grayStrategy';
 import { planService } from './planService';
-import { PlanStatus } from '../types';
+
+const STATUS_PENDING = 'pending';
+const STATUS_GRAYSCALE = 'grayscale';
+const STATUS_FULL_RELEASE = 'full_release';
+const STATUS_PAUSED = 'paused';
+const STATUS_COMPLETED = 'completed';
+const STATUS_ROLLED_BACK = 'rolled_back';
 
 export class GrayscaleService {
   resolveVersion(
@@ -10,7 +16,7 @@ export class GrayscaleService {
   ): {
     planId: string;
     version: string;
-    status: PlanStatus;
+    status: string;
     inGrayscale: boolean;
   } {
     const plan = planService.getPlanById(planId);
@@ -18,10 +24,10 @@ export class GrayscaleService {
     let inGrayscale = false;
 
     switch (plan.status) {
-      case PlanStatus.PENDING:
+      case STATUS_PENDING:
         version = plan.oldVersion;
         break;
-      case PlanStatus.GRAYSCALE:
+      case STATUS_GRAYSCALE:
         if (shouldUseNewVersion(planId, userId, plan.strategy, userAttributes)) {
           version = plan.newVersion;
           inGrayscale = true;
@@ -29,12 +35,12 @@ export class GrayscaleService {
           version = plan.oldVersion;
         }
         break;
-      case PlanStatus.FULL_RELEASE:
-      case PlanStatus.COMPLETED:
+      case STATUS_FULL_RELEASE:
+      case STATUS_COMPLETED:
         version = plan.newVersion;
         break;
-      case PlanStatus.PAUSED:
-      case PlanStatus.ROLLED_BACK:
+      case STATUS_PAUSED:
+      case STATUS_ROLLED_BACK:
         version = plan.oldVersion;
         break;
     }
@@ -55,27 +61,27 @@ export class GrayscaleService {
     appId: string;
     planId: string | null;
     version: string;
-    status: PlanStatus | null;
+    status: string | null;
     inGrayscale: boolean;
   } {
     const allPlans = planService.getAllPlans();
     const appPlans = allPlans.filter(p => p.appId === appId);
 
     const activePlan = appPlans.find(
-      p => p.status === PlanStatus.GRAYSCALE ||
-           p.status === PlanStatus.FULL_RELEASE ||
-           p.status === PlanStatus.PAUSED
+      p => p.status === STATUS_GRAYSCALE ||
+           p.status === STATUS_FULL_RELEASE ||
+           p.status === STATUS_PAUSED
     );
 
     if (!activePlan) {
       const completedOrRolledBack = appPlans.find(
-        p => p.status === PlanStatus.COMPLETED || p.status === PlanStatus.ROLLED_BACK
+        p => p.status === STATUS_COMPLETED || p.status === STATUS_ROLLED_BACK
       );
       if (completedOrRolledBack) {
         return {
           appId,
           planId: completedOrRolledBack.id,
-          version: completedOrRolledBack.status === PlanStatus.COMPLETED
+          version: completedOrRolledBack.status === STATUS_COMPLETED
             ? completedOrRolledBack.newVersion
             : completedOrRolledBack.oldVersion,
           status: completedOrRolledBack.status,

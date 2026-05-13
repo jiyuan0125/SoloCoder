@@ -156,13 +156,16 @@ public class LogService {
 
         Map<String, Long> errorTrend = new LinkedHashMap<>();
         LocalDateTime since = LocalDateTime.now().minusHours(1);
-        List<Object[]> errorResults = logEntryRepository.countErrorsByHour(since);
-        for (Object[] row : errorResults) {
-            errorTrend.put((String) row[0], (Long) row[1]);
+        List<LogEntry> errorEntries = logEntryRepository.findByLevelAndTimestampGreaterThanEqual(LogLevel.ERROR, since);
+        
+        for (LogEntry entry : errorEntries) {
+            LocalDateTime hourStart = entry.getTimestamp().withMinute(0).withSecond(0).withNano(0);
+            String hourKey = hourStart.format(HOUR_FORMATTER);
+            errorTrend.merge(hourKey, 1L, Long::sum);
         }
 
-        LocalDateTime hourStart = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
-        String currentHour = hourStart.format(HOUR_FORMATTER);
+        LocalDateTime currentHourStart = LocalDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        String currentHour = currentHourStart.format(HOUR_FORMATTER);
         errorTrend.putIfAbsent(currentHour, 0L);
 
         return AggregationStats.builder()

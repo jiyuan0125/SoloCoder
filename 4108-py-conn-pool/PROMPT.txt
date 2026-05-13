@@ -1,9 +1,5 @@
-连接池看着简单，但市面上那些组件要么功能太重引入一堆不需要的依赖，要么状态完全不透明，出了问题只能干猜。Python FastAPI 自己写一个轻量的 TCP 连接池管理器，核心诉求就一个字：看得清。
+连接池组件太重或状态不透明出问题只能猜。Python FastAPI 轻量 TCP 连接池管理器核心诉求看得清。
 
-池子管理的是 TCP 连接，按目标地址（host:port）分组。每个组四个参数独立配置：max_connections（上限）、min_idle（最小空闲数）、connect_timeout（建连超时秒数）、idle_timeout（空闲超过多少秒关掉）。这些参数通过 POST /pool/config 接口按组设置，改完立刻生效，已有连接不受影响。
+按目标地址 host:port 分组。每组四参数独立配：max_connections/min_idle/connect_timeout/idle_timeout。POST /pool/config 按组设改完立即生效。POST /pool/{host}/{port}/borrow 获取有空闲直接用没空闲没到上限新建先验证。到上限排队超 connect_timeout 返回 503 pool_exhausted。POST /pool/{host}/{port}/return 归还非关闭。借出超 5 分钟未还标泄漏强制关闭移除。
 
-获取连接调 POST /pool/{host}/{port}/borrow，有空闲的直接拿来用。没有空闲且没到上限就新建——新建的连接先验证可用性再交付。到达上限了排队等，等待超过 connect_timeout 秒还没拿到就返回 503 加上 pool_exhausted 信息。连接用完必须调 POST /pool/{host}/{port}/return 归还，不是关掉而是放回池子。借出的连接如果超过 5 分钟没归还标记为泄漏，泄漏的连接强制关闭并从池子移除。
-
-后台有个定时任务每隔 check_interval 秒检查空闲连接的健康状态——对每个空闲连接发一个 TCP ping，收不到响应的关掉，然后补建新连接到 min_idle。检查间隔默认 30 秒，按组可配。补建失败的连接记一条 warning 日志，不影响其他组。
-
-状态查询是重点功能。
+后台每 check_interval 秒（默认 30 按组配）检查空闲连接 TCP ping 不可用的关补建到 min_idle 失败记 warning。`PORT` 环境变量。

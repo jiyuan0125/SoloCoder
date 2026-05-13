@@ -1,0 +1,5 @@
+之前用过 Python 做日志分析工具，这次换 Go 试试gRPC服务脚手架。
+不用 protobuf，用 Go struct 定义消息。
+服务接口和桩代码。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用第三方包，go build 通过就行。

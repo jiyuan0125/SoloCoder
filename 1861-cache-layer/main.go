@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	defaultPort     = "8080"
+	defaultPort     = "8308"
 	defaultCapacity = 1000
 	defaultTTL      = 3600
 )

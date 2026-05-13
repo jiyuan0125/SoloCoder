@@ -1,0 +1,8 @@
+下周要演示根据 Git tags 和 commits 自动生成 changelog，Go 命令行工具先出个原型。
+
+根据 Git tags 和 commits 自动生成 changelog。按版本分组，提取 feat/fix/breaking 类型的 commit。输出 Markdown 格式。
+执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+管理分组和组内成员。成员操作基于分组进行。
+
+Go 标准库，命令行参数用 flag 包解析。

@@ -1,13 +1,7 @@
-Fiber 做指标采集服务。三种指标类型：Counter（只增）、Gauge（增减）、Histogram（分布）。
+给 Prometheus 对接指标 Histogram bucket 累计值算错尖峰排查两天才定位。用 Go Gin/net/http 写指标采集导出服务封装好。
 
-多个 goroutine 同时上报指标数据。同一个 Counter 并发增加不能丢失计数。
+Counter 只增、Gauge 可增减、Histogram 分布三种类型。HTTP POST 上报含指标名、类型、值、标签。同名同标签 Counter 累加、Gauge 取最新、Histogram 合并。/metrics 导出 Prometheus text format Histogram 自动算 count、sum 和 bucket 累计值。
 
-指标按名称区分。同一个名称多次注册返回已有的指标对象。
+查询按指标名和标签过滤。超 5 分钟没上报标过期查询不返回。管理接口看指标列表和最近上报时间。
 
-Histogram 记录每个观测值，提供分位数查询（p50、p90、p99）。
-
-指标导出为 Prometheus 格式文本。/metrics 接口返回。
-
-管理接口可以重置某个指标的值。
-
-PORT 环境变量，go build 通过。
+数据存内存。端口 PORT 环境变量，go build 编译通过。

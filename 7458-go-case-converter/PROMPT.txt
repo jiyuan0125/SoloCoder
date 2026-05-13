@@ -1,0 +1,5 @@
+Go 标准库的net/url刚好能用，写个文本处理转换工具。
+工具要能文本统计（字数/行数/字符分布）、可读性评分、关键词提取。
+密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+用 archive/zip 的读写。
+go build 能过，命令行工具能正常运行。

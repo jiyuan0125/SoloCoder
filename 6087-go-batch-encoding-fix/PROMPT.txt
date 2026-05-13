@@ -1,0 +1,5 @@
+想用 Go 练手代码质量这块，做个批量编码修复。
+常见编码自动检测。
+修复不了的标记出来。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+不用第三方包，go build 通过就行。

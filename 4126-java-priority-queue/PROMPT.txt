@@ -1,9 +1,5 @@
-客服工单系统出了个 bug——VIP 客户的工单排在普通用户后面，等了两小时才被处理，投诉到大老板了。Spring Boot 写一个支持优先级的消息队列，优先级高的先消费，失败的进死信。
+VIP 客户工单排普通用户后面两小时才处理。Spring Boot 支持优先级消息队列。
 
-消息有优先级 1 到 10，数字越大越优先。同一个 topic 下的消息按优先级排序消费——10 级消息永远比 1 级先消费，相同优先级按发送时间 FIFO。生产者通过 POST /message/send 发送消息，参数包含 topic（字符串）、priority（1-10 整数）、body（JSON 格式）、ttl（可选，过期自动丢弃，单位秒）。
+消息优先级 1-10 越大越优先同 topic 按优先级排相同按发送时间 FIFO。POST /message/send 含 topic/priority/body（JSON）/ttl（可选过期秒数）。消费失败进死信 GET /deadletter/{topic} 分页查。POST /deadletter/{message_id}/redeliver 重投恢复原优先级。死信上限 10000 满了丢弃最老记 warning。
 
-消费失败的消息进入死信队列。GET /deadletter/{topic} 查看死信列表，支持 page 和 size 分页。POST /deadletter/{message_id}/redeliver 重新投递，重新投递的消息恢复原来的优先级。死信队列容量上限默认 10000 条，满了最早的消息被丢弃并记录 warning 日志。
-
-消息大小上限 1MB。超大消息直接拒绝返回 413 Payload Too Large。消息体格式校验——必须是合法 JSON，字段符合 topic 定义的 JSON Schema（通过 POST /topic/{name}/schema 注册）。校验失败返回 400 加上具体不匹配的字段列表和期望类型。
-
-生产者确认：消息发送后等 broker 返回 message_id（UUID 格式）和 status=accepted。确认超时 5 秒，超时视为发送失败。
+消息大小上限 1MB 超大返回 413。体须合法 JSON 符合 topic 的 JSON Schema（POST /topic/{name}/schema 注册）校验失败 400 加不匹配字段列表。发送确认：等 broker 返回 message_id（UUID）和 status=accepted 超时 5 秒视为失败。Maven 构建，端口配置文件。

@@ -2,7 +2,7 @@ import express from 'express';
 import plansRouter from './routes/plans';
 
 const app = express();
-const PORT = process.env.PORT || 9104;
+const PORT = process.env.PORT || 8101;
 
 app.use(express.json());
 

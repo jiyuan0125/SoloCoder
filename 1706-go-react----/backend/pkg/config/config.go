@@ -10,7 +10,7 @@ type Config struct {
 }
 
 func Load() *Config {
-	port := 8080
+	port := 8210
 	if envPort := os.Getenv("PORT"); envPort != "" {
 		if p, err := strconv.Atoi(envPort); err == nil {
 			port = p

@@ -1,9 +1,13 @@
-微服务链路追踪需要一个收集器，用 Spring Boot 2.x（JDK 17，Maven）做。
+微服务链路追踪需要一个收集器，用SpringBoot2.x（JDK17，Maven）做。
 
-每个请求有一个 TraceID，请求经过的每个服务产生一个 Span。Span 记录了操作名称、开始时间、结束时间、父 Span ID。客户端通过 HTTP 接口上报 Span 数据。
+Span记录了操作名称、开始时间、结束时间、父SpanID。客户端HTTP接口上报Span数据。
 
-收集器把 Span 按 TraceID 组织成树形结构。提供接口查询某个 TraceID 的完整调用链，返回树形 JSON。还要提供接口查询耗时最慢的 Top N Trace，用于性能分析。
+收集器把Span按TraceID组织成树形结构。提供接口查询某个TraceID的完整调用链，返回树形JSON。还要提供接口查询耗时最慢的TopNTrace，用于性能分析。
 
-Span 数据存在内存里，按时间窗口保留（默认1小时），过期自动清理。
+Span数据存在内存里，按时间窗口保留（默认1小时），过期自动清理。
 
-路径方面：/api/v1/spans 上报，/api/v1/traces/{traceId} 查询，/api/v1/traces/slow 慢查询。上报的 Span 可能是乱序到达的（先收到子 Span 后收到父 Span），树形构建要处理这种情况。端口通过 application.properties 或环境变量 SERVER_PORT 配置。
+提供RESTfulAPI。接口要做参数校验，不合法的请求直接返回400。分页查询要支持page和page_size参数，默认每页20条。
+
+路径方面：/api/v1/spans上报，/api/v1/traces/{traceId}查询，/api/v1/traces/slow慢查询。
+
+包含 collector、query、topology、store 模块。

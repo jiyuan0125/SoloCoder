@@ -1,4 +1,4 @@
-配置需要支持模板和变量替换。用 Spring Boot 写，模板引擎、变量存储和 API 层分文件。
+十个服务的数据库连接串只有 IP 不一样，每个都配一遍太蠢了。Spring Boot 写个支持模板和变量替换的配置中心，模板引擎、变量存储和 API 层分文件。
 
 配置值支持模板语法：${variable_name} 和 ${variable_name:default_value}。客户端拉取配置时自动替换变量。
 

@@ -1,0 +1,8 @@
+之前用的 SaaS 工具到量了，Go 自建测试 HTTP Keep-Alive 行为。
+
+测试 HTTP Keep-Alive 行为。发送多个请求到同一连接，检查连接是否复用。统计连接建立次数。
+有可能一次导入上万条数据。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+
+Go 标准库，命令行参数用 flag 包解析。

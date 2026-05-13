@@ -1,4 +1,4 @@
-缓存需要支持热点 key 探测和自动预热。用 Rust/actix-web 写。
+缓存命中率从 95% 掉到 60%，热点 key 过期后没有及时刷新。Rust/actix-web 写个带热点探测和自动预热的缓存。
 
 基础操作：get/set/delete，set 时指定 TTL。支持 batch 操作。
 

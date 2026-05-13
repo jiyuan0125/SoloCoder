@@ -1,0 +1,13 @@
+{
+  "snapshot_id": "f25c7712-5572-4e0a-81b3-223a9dc834eb",
+  "aggregate_id": "bbbbbbbb-1111-2222-3333-444444444444",
+  "state": {
+    "last_event_id": "a8c8e7ff-efb5-4043-bafd-4a0497b43032",
+    "last_event_timestamp": "2026-05-13T02:54:41.188553149+00:00",
+    "last_event_type": "step_5",
+    "val": 5
+  },
+  "version": 4,
+  "timestamp": "2026-05-13T02:54:41.188558815Z",
+  "events_count": 3
+}

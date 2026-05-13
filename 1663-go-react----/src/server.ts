@@ -3,7 +3,7 @@ import { initializeDatabase } from './database';
 import routes from './routes';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8203;
 
 // 中间件
 app.use(express.json());

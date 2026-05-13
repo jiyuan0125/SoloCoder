@@ -1,0 +1,5 @@
+之前买的 SaaS 到量了，续费太贵，Go 自建同名文件查找。
+同名文件再比较内容。
+结果按文件名分组。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+不用第三方包，go build 通过就行。

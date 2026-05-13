@@ -1,0 +1,5 @@
+用 Go 写一个Channel使用分析。分析 Go 代码中 channel 的使用。。
+缓冲和非缓冲 channel。
+channel 方向（发送/接收）匹配检查。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+纯标准库实现，go run . 能跑。

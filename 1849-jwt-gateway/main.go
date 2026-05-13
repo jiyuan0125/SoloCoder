@@ -38,6 +38,7 @@ func main() {
 	r.POST("/keys/generate", handlers.GenerateKey(keyManager))
 	r.POST("/keys/rotate", handlers.RotateKey(keyManager))
 	r.GET("/keys", handlers.ListKeys(keyManager))
+	r.GET("/test/token", handlers.IssueTestToken(keyManager))
 
 	adminGroup := r.Group("/admin")
 	adminGroup.Use(middleware.Auth(keyManager, auditLog), middleware.RequireAdmin(auditLog))

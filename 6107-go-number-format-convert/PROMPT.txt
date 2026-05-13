@@ -1,0 +1,5 @@
+用 Go 写一个数字格式转换。各种数字格式互转：科学计数法、千分位、中文大写。。
+千分位分隔符支持逗号和空格。
+NaN 和 Infinity 的处理。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+纯标准库实现，go run . 能跑。

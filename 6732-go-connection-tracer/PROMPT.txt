@@ -1,0 +1,8 @@
+Go 的encoding/json刚好能解决追踪系统上的网络连接的需求，拿来写个工具。
+
+追踪系统上的网络连接。列出所有 TCP/UDP 连接及对应进程。支持按状态过滤（LISTEN/ESTABLISHED/TIME_WAIT）。
+多个 worker 并发处理输入数据。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+管理分组和组内成员。成员操作基于分组进行。
+
+Go 标准库，命令行参数用 flag 包解析。

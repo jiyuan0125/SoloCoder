@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>消息队列管理系统</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f7fa; min-height: 100vh; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1rem 2rem; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header h1 { font-size: 1.5rem; font-weight: 600; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        .tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 2px solid #e0e0e0; }
+        .tab { padding: 0.75rem 1.5rem; cursor: pointer; color: #666; font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s; }
+        .tab.active { color: #667eea; border-bottom-color: #667eea; }
+        .tab:hover { color: #667eea; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); padding: 1.5rem; margin-bottom: 1rem; }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; padding-bottom: 1rem; border-bottom: 1px solid #eee; }
+        .card-header h2 { font-size: 1.25rem; color: #333; }
+        .btn { padding: 0.5rem 1rem; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; transition: all 0.2s; font-size: 0.875rem; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover { background: #5a6fd6; }
+        .btn-danger { background: #ef4444; color: white; }
+        .btn-danger:hover { background: #dc2626; }
+        .btn-success { background: #10b981; color: white; }
+        .btn-success:hover { background: #059669; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-secondary:hover { background: #4b5563; }
+        .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8fafc; color: #64748b; font-weight: 600; font-size: 0.875rem; }
+        td { color: #333; }
+        tr:hover { background: #f8fafc; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .stat-value { font-size: 2rem; font-weight: 700; color: #667eea; }
+        .stat-label { color: #666; font-size: 0.875rem; margin-top: 0.25rem; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modal-header h3 { font-size: 1.25rem; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #666; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; margin-bottom: 0.5rem; color: #333; font-weight: 500; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.75rem; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #667eea; }
+        .form-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+        .badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+        .badge-success { background: #d1fae5; color: #065f46; }
+        .badge-warning { background: #fef3c7; color: #92400e; }
+        .badge-danger { background: #fee2e2; color: #991b1b; }
+        .badge-info { background: #dbeafe; color: #1e40af; }
+        .action-btns { display: flex; gap: 0.5rem; }
+        .empty-state { text-align: center; padding: 3rem; color: #666; }
+        .refresh-btn { background: none; border: none; color: #667eea; cursor: pointer; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .section-title { font-size: 1.1rem; font-weight: 600; color: #333; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .message-preview { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: monospace; font-size: 0.8rem; color: #666; }
+        .sub-section { margin-top: 2rem; padding-top: 1rem; border-top: 2px solid #eee; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📦 消息队列管理系统</h1>
+    </div>
+    <div class="container">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('dashboard')">仪表盘</div>
+            <div class="tab" onclick="switchTab('topics')">主题管理</div>
+            <div class="tab" onclick="switchTab('publish')">发布消息</div>
+            <div class="tab" onclick="switchTab('consume')">消费消息</div>
+        </div>
+
+        <div id="dashboard" class="tab-content active">
+            <div class="stats-grid" id="statsGrid"></div>
+            <div class="card">
+                <div class="card-header">
+                    <h2>主题列表</h2>
+                    <button class="refresh-btn" onclick="loadDashboard()">🔄 刷新</button>
+                </div>
+                <table id="topicsTable">
+                    <thead>
+                        <tr>
+                            <th>主题名</th>
+                            <th>TTL (秒)</th>
+                            <th>最大死信数</th>
+                            <th>订阅数</th>
+                            <th>队列消息</th>
+                            <th>处理中</th>
+                            <th>死信</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="topics" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>主题管理</h2>
+                    <button class="btn btn-primary" onclick="openModal('createTopicModal')">+ 创建主题</button>
+                </div>
+                <table id="topicsManageTable">
+                    <thead>
+                        <tr>
+                            <th>主题名</th>
+                            <th>TTL (秒)</th>
+                            <th>最大死信数</th>
+                            <th>订阅数</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="publish" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>发布消息</h2>
+                </div>
+                <div class="form-group">
+                    <label>选择主题</label>
+                    <select id="publishTopic"></select>
+                </div>
+                <div class="form-group">
+                    <label>消息内容 (每行一条，批量发布)</label>
+                    <textarea id="publishMessages" rows="6" placeholder="消息1&#10;消息2&#10;消息3"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="publishMessages()">发布消息</button>
+                <div id="publishResult" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+
+        <div id="consume" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2>消费消息</h2>
+                </div>
+                <div class="form-group">
+                    <label>选择主题</label>
+                    <select id="consumeTopic" onchange="loadSubscriptions()"></select>
+                </div>
+                <div class="form-group">
+                    <label>选择订阅</label>
+                    <select id="consumeSubscription"></select>
+                </div>
+                <div class="form-group">
+                    <label>消费者ID (可选，留空自动生成)</label>
+                    <input type="text" id="consumerId" placeholder="consumer-1">
+                </div>
+                <div class="form-group">
+                    <label>拉取数量</label>
+                    <input type="number" id="pullCount" value="10" min="1" max="100">
+                </div>
+                <button class="btn btn-primary" onclick="pullMessages()">拉取消息</button>
+                <div id="pullResult" style="margin-top: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="createTopicModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建主题</h3>
+                <button class="close-btn" onclick="closeModal('createTopicModal')">&times;</button>
+            </div>
+            <div class="form-group">
+                <label>主题名 (字母、数字、下划线)</label>
+                <input type="text" id="newTopicName" placeholder="my_topic">
+            </div>
+            <div class="form-group">
+                <label>消息TTL (毫秒，默认3600000=1小时)</label>
+                <input type="number" id="newTopicTTL" value="3600000" min="1000">
+            </div>
+            <div class="form-group">
+                <label>最大死信数量 (默认100)</label>
+                <input type="number" id="newTopicMaxDead" value="100" min="0">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeModal('createTopicModal')">取消</button>
+                <button class="btn btn-primary" onclick="createTopic()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="createSubModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建订阅</h3>
+                <button class="close-btn" onclick="closeModal('createSubModal')">&times;</button>
+            </div>
+            <input type="hidden" id="subTopicName">
+            <div class="form-group">
+                <label>订阅名</label>
+                <input type="text" id="newSubName" placeholder="my_subscription">
+            </div>
+            <div class="form-group">
+                <label>模式</label>
+                <select id="newSubMode">
+                    <option value="cluster">集群模式 (每条消息投递给一个消费者)</option>
+                    <option value="broadcast">广播模式 (每条消息投递给所有消费者)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Ack超时 (毫秒，默认30000=30秒)</label>
+                <input type="number" id="newSubAckTimeout" value="30000" min="1000">
+            </div>
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="closeModal('createSubModal')">取消</button>
+                <button class="btn btn-primary" onclick="createSubscription()">创建</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="topicDetailModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="topicDetailTitle">主题详情</h3>
+                <button class="close-btn" onclick="closeModal('topicDetailModal')">&times;</button>
+            </div>
+            <div id="topicDetailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        const API = '/api';
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelector('.tab[onclick="switchTab(\'' + tabName + '\')"]').classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+            
+            if (tabName === 'dashboard') loadDashboard();
+            else if (tabName === 'topics') loadTopicsManage();
+            else if (tabName === 'publish') loadPublishTopics();
+            else if (tabName === 'consume') loadConsumeTopics();
+        }
+
+        function openModal(id) {
+            document.getElementById(id).classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        async function fetchJSON(url, options) {
+            if (!options) options = {};
+            options.headers = options.headers || {};
+            options.headers['Content-Type'] = 'application/json';
+            const res = await fetch(url, options);
+            if (!res.ok) {
+                let msg = '请求失败';
+                try {
+                    const err = await res.json();
+                    msg = err.error || msg;
+                } catch(e) {}
+                throw new Error(msg);
+            }
+            if (res.status === 204) return null;
+            return res.json();
+        }
+
+        async function loadDashboard() {
+            try {
+                const data = await fetchJSON(API + '/dashboard');
+                const grid = document.getElementById('statsGrid');
+                let totalQueued = 0, totalInFlight = 0, totalDead = 0;
+                data.topic_stats.forEach(s => {
+                    totalQueued += s.queued_messages;
+                    totalInFlight += s.in_flight_messages;
+                    totalDead += s.dead_letter_count;
+                });
+                grid.innerHTML = '<div class="stat-card"><div class="stat-value">' + data.total_topics + '</div><div class="stat-label">主题总数</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + totalQueued + '</div><div class="stat-label">队列消息</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + totalInFlight + '</div><div class="stat-label">处理中</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + totalDead + '</div><div class="stat-label">死信消息</div></div>';
+
+                const tbody = document.querySelector('#topicsTable tbody');
+                if (data.topics.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" class="empty-state">暂无主题</td></tr>';
+                } else {
+                    tbody.innerHTML = '';
+                    data.topics.forEach(t => {
+                        const stats = data.topic_stats.find(s => s.topic_name === t.name) || {};
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td><strong>' + t.name + '</strong></td>' +
+                            '<td>' + (t.ttl / 1000).toFixed(0) + '</td>' +
+                            '<td>' + t.max_dead_messages + '</td>' +
+                            '<td><span class="badge badge-info">' + (stats.subscription_count || 0) + '</span></td>' +
+                            '<td><span class="badge badge-warning">' + (stats.queued_messages || 0) + '</span></td>' +
+                            '<td><span class="badge badge-info">' + (stats.in_flight_messages || 0) + '</span></td>' +
+                            '<td><span class="badge badge-danger">' + (stats.dead_letter_count || 0) + '</span></td>' +
+                            '<td><button class="btn btn-primary btn-sm" onclick="viewTopic(\'' + t.name + '\')">详情</button></td>';
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function loadTopicsManage() {
+            try {
+                const topics = await fetchJSON(API + '/topics');
+                const tbody = document.querySelector('#topicsManageTable tbody');
+                if (topics.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="empty-state">暂无主题</td></tr>';
+                } else {
+                    tbody.innerHTML = '';
+                    topics.forEach(t => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = '<td><strong>' + t.name + '</strong></td>' +
+                            '<td>' + (t.ttl / 1000).toFixed(0) + '</td>' +
+                            '<td>' + t.max_dead_messages + '</td>' +
+                            '<td id="subCount-' + t.name + '">加载中...</td>' +
+                            '<td>' + new Date(t.created_at).toLocaleString() + '</td>' +
+                            '<td><div class="action-btns">' +
+                            '<button class="btn btn-primary btn-sm" onclick="viewTopic(\'' + t.name + '\')">详情</button>' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteTopic(\'' + t.name + '\')">删除</button>' +
+                            '</div></td>';
+                        tbody.appendChild(tr);
+                        
+                        fetchJSON(API + '/topics/' + t.name + '/stats').then(stats => {
+                            const el = document.getElementById('subCount-' + t.name);
+                            if (el) el.innerHTML = '<span class="badge badge-info">' + stats.subscription_count + '</span>';
+                        }).catch(() => {});
+                    });
+                }
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function loadPublishTopics() {
+            try {
+                const topics = await fetchJSON(API + '/topics');
+                const select = document.getElementById('publishTopic');
+                if (topics.length === 0) {
+                    select.innerHTML = '<option value="">暂无主题</option>';
+                } else {
+                    select.innerHTML = '';
+                    topics.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.name;
+                        opt.textContent = t.name;
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function loadConsumeTopics() {
+            try {
+                const topics = await fetchJSON(API + '/topics');
+                const select = document.getElementById('consumeTopic');
+                if (topics.length === 0) {
+                    select.innerHTML = '<option value="">暂无主题</option>';
+                } else {
+                    select.innerHTML = '';
+                    topics.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.name;
+                        opt.textContent = t.name;
+                        select.appendChild(opt);
+                    });
+                }
+                loadSubscriptions();
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function loadSubscriptions() {
+            const topicName = document.getElementById('consumeTopic').value;
+            const select = document.getElementById('consumeSubscription');
+            if (!topicName) {
+                select.innerHTML = '<option value="">请先选择主题</option>';
+                return;
+            }
+            try {
+                const subs = await fetchJSON(API + '/topics/' + topicName + '/subscriptions');
+                if (subs.length === 0) {
+                    select.innerHTML = '<option value="">暂无订阅</option>';
+                } else {
+                    select.innerHTML = '';
+                    subs.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.name;
+                        opt.textContent = s.name + ' (' + s.mode + ')';
+                        select.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function createTopic() {
+            const name = document.getElementById('newTopicName').value;
+            const ttl = parseInt(document.getElementById('newTopicTTL').value);
+            const maxDead = parseInt(document.getElementById('newTopicMaxDead').value);
+            
+            if (!name) {
+                alert('请输入主题名');
+                return;
+            }
+
+            try {
+                await fetchJSON(API + '/topics', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: name, ttl: ttl, max_dead_messages: maxDead })
+                });
+                closeModal('createTopicModal');
+                loadTopicsManage();
+                alert('创建成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function deleteTopic(name) {
+            if (!confirm('确定要删除主题 "' + name + '" 吗？\n注意：必须先删除所有订阅才能删除主题。')) return;
+            try {
+                await fetchJSON(API + '/topics/' + name, { method: 'DELETE' });
+                loadTopicsManage();
+                alert('删除成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function viewTopic(name) {
+            document.getElementById('topicDetailTitle').textContent = '主题详情: ' + name;
+            openModal('topicDetailModal');
+            
+            try {
+                const topic = await fetchJSON(API + '/topics/' + name);
+                const stats = await fetchJSON(API + '/topics/' + name + '/stats');
+                const subs = await fetchJSON(API + '/topics/' + name + '/subscriptions');
+                let deadLetters = [];
+                try {
+                    deadLetters = await fetchJSON(API + '/topics/' + name + '/dead-letters');
+                } catch(e) {}
+
+                let subsHtml = '';
+                if (subs.length === 0) {
+                    subsHtml = '<div class="empty-state">暂无订阅</div>';
+                } else {
+                    subsHtml = '<table><thead><tr><th>订阅名</th><th>模式</th><th>Ack超时</th><th>创建时间</th><th>操作</th></tr></thead><tbody>';
+                    subs.forEach(s => {
+                        const badgeClass = s.mode === 'broadcast' ? 'badge-info' : 'badge-success';
+                        subsHtml += '<tr><td>' + s.name + '</td>' +
+                            '<td><span class="badge ' + badgeClass + '">' + s.mode + '</span></td>' +
+                            '<td>' + s.ack_timeout + 'ms</td>' +
+                            '<td>' + new Date(s.created_at).toLocaleString() + '</td>' +
+                            '<td><div class="action-btns">' +
+                            '<button class="btn btn-danger btn-sm" onclick="deleteSubscription(\'' + name + '\',\'' + s.name + '\')">删除</button>' +
+                            '</div></td></tr>';
+                    });
+                    subsHtml += '</tbody></table>';
+                }
+
+                let dlHtml = '';
+                if (deadLetters.length === 0) {
+                    dlHtml = '<div class="empty-state">暂无死信消息</div>';
+                } else {
+                    dlHtml = '<table><thead><tr><th>ID</th><th>消息预览</th><th>原因</th><th>死亡时间</th><th>操作</th></tr></thead><tbody>';
+                    deadLetters.forEach(d => {
+                        dlHtml += '<tr><td style="font-family:monospace;font-size:0.75rem">' + d.id.substring(0, 12) + '...</td>' +
+                            '<td><div class="message-preview">' + d.payload + '</div></td>' +
+                            '<td><span class="badge badge-danger">' + d.reason + '</span></td>' +
+                            '<td>' + new Date(d.dead_at).toLocaleString() + '</td>' +
+                            '<td><div class="action-btns">' +
+                            '<button class="btn btn-success btn-sm" onclick="requeueDeadLetter(\'' + name + '\',\'' + d.id + '\')">重投</button>' +
+                            '<button class="btn btn-danger btn-sm" onclick="dropDeadLetter(\'' + name + '\',\'' + d.id + '\')">丢弃</button>' +
+                            '</div></td></tr>';
+                    });
+                    dlHtml += '</tbody></table>';
+                }
+
+                document.getElementById('topicDetailContent').innerHTML = 
+                    '<div class="stats-grid">' +
+                    '<div class="stat-card"><div class="stat-value">' + stats.queued_messages + '</div><div class="stat-label">队列消息</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + stats.in_flight_messages + '</div><div class="stat-label">处理中</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + stats.dead_letter_count + '</div><div class="stat-label">死信消息</div></div>' +
+                    '<div class="stat-card"><div class="stat-value">' + stats.subscription_count + '</div><div class="stat-label">订阅数</div></div>' +
+                    '</div>' +
+                    '<div class="sub-section"><div class="section-title"><span>订阅列表</span>' +
+                    '<button class="btn btn-primary btn-sm" onclick="openCreateSub(\'' + name + '\')">+ 创建订阅</button>' +
+                    '</div>' + subsHtml + '</div>' +
+                    '<div class="sub-section"><div class="section-title">死信消息 (' + deadLetters.length + ')</div>' + dlHtml + '</div>';
+            } catch (e) {
+                document.getElementById('topicDetailContent').innerHTML = '<div class="empty-state">加载失败: ' + e.message + '</div>';
+            }
+        }
+
+        function openCreateSub(topicName) {
+            document.getElementById('subTopicName').value = topicName;
+            openModal('createSubModal');
+        }
+
+        async function createSubscription() {
+            const topicName = document.getElementById('subTopicName').value;
+            const name = document.getElementById('newSubName').value;
+            const mode = document.getElementById('newSubMode').value;
+            const ackTimeout = parseInt(document.getElementById('newSubAckTimeout').value);
+
+            if (!name) {
+                alert('请输入订阅名');
+                return;
+            }
+
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/subscriptions', {
+                    method: 'POST',
+                    body: JSON.stringify({ name: name, mode: mode, ack_timeout: ackTimeout })
+                });
+                closeModal('createSubModal');
+                viewTopic(topicName);
+                alert('创建成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function deleteSubscription(topicName, subName) {
+            if (!confirm('确定要删除订阅 "' + subName + '" 吗？')) return;
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/subscriptions/' + subName, { method: 'DELETE' });
+                viewTopic(topicName);
+                alert('删除成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function requeueDeadLetter(topicName, deadID) {
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/dead-letters/' + deadID + '/requeue', { method: 'POST' });
+                viewTopic(topicName);
+                alert('重投成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function dropDeadLetter(topicName, deadID) {
+            if (!confirm('确定要丢弃此死信吗？')) return;
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/dead-letters/' + deadID, { method: 'DELETE' });
+                viewTopic(topicName);
+                alert('丢弃成功');
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function publishMessages() {
+            const topicName = document.getElementById('publishTopic').value;
+            const text = document.getElementById('publishMessages').value;
+            const messages = text.split('\n').filter(m => m.trim());
+            
+            if (!topicName) {
+                alert('请选择主题');
+                return;
+            }
+            if (messages.length === 0) {
+                alert('请输入消息内容');
+                return;
+            }
+
+            try {
+                const result = await fetchJSON(API + '/topics/' + topicName + '/publish', {
+                    method: 'POST',
+                    body: JSON.stringify({ messages: messages })
+                });
+                const ids = result.message_ids.map(id => id.substring(0, 8) + '...').join(', ');
+                document.getElementById('publishResult').innerHTML = 
+                    '<div class="card" style="background: #d1fae5; margin-top: 0;">' +
+                    '<strong>✓ 成功发布 ' + result.count + ' 条消息</strong><br>' +
+                    '<small style="color:#666;">Message IDs: ' + ids + '</small>' +
+                    '</div>';
+            } catch (e) {
+                document.getElementById('publishResult').innerHTML = 
+                    '<div class="card" style="background: #fee2e2; margin-top: 0;">' +
+                    '<strong>✗ 发布失败</strong><br>' +
+                    '<small>' + e.message + '</small>' +
+                    '</div>';
+            }
+        }
+
+        let pulledMessages = [];
+
+        async function pullMessages() {
+            const topicName = document.getElementById('consumeTopic').value;
+            const subName = document.getElementById('consumeSubscription').value;
+            const consumerId = document.getElementById('consumerId').value;
+            const max = parseInt(document.getElementById('pullCount').value);
+
+            if (!topicName || !subName) {
+                alert('请选择主题和订阅');
+                return;
+            }
+
+            try {
+                let url = API + '/topics/' + topicName + '/subscriptions/' + subName + '/pull?max=' + max;
+                if (consumerId) url += '&consumer_id=' + encodeURIComponent(consumerId);
+                
+                pulledMessages = await fetchJSON(url);
+                
+                if (pulledMessages.length === 0) {
+                    document.getElementById('pullResult').innerHTML = '<div class="card" style="background:#fef3c7;margin-top:0;">暂无消息</div>';
+                    return;
+                }
+
+                let html = '<table><thead><tr><th>消息ID</th><th>内容</th><th>发布时间</th><th>操作</th></tr></thead><tbody>';
+                pulledMessages.forEach((m, i) => {
+                    html += '<tr id="msg-' + i + '">' +
+                        '<td style="font-family:monospace;font-size:0.75rem">' + m.message_id.substring(0, 12) + '...</td>' +
+                        '<td><div class="message-preview">' + m.payload + '</div></td>' +
+                        '<td>' + new Date(m.published_at).toLocaleString() + '</td>' +
+                        '<td><div class="action-btns">' +
+                        '<button class="btn btn-success btn-sm" onclick="ackMessage(\'' + topicName + '\',\'' + subName + '\',\'' + m.message_id + '\',' + i + ')">确认</button>' +
+                        '<button class="btn btn-danger btn-sm" onclick="nackMessage(\'' + topicName + '\',\'' + subName + '\',\'' + m.message_id + '\',' + i + ')">拒绝</button>' +
+                        '</div></td></tr>';
+                });
+                html += '</tbody></table>';
+                document.getElementById('pullResult').innerHTML = html;
+            } catch (e) {
+                document.getElementById('pullResult').innerHTML = 
+                    '<div class="card" style="background: #fee2e2; margin-top: 0;">' +
+                    '<strong>✗ 拉取失败</strong><br>' +
+                    '<small>' + e.message + '</small>' +
+                    '</div>';
+            }
+        }
+
+        async function ackMessage(topicName, subName, messageId, index) {
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/subscriptions/' + subName + '/messages/' + messageId + '/ack', { method: 'POST' });
+                const el = document.getElementById('msg-' + index);
+                if (el) el.style.opacity = '0.5';
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        async function nackMessage(topicName, subName, messageId, index) {
+            try {
+                await fetchJSON(API + '/topics/' + topicName + '/subscriptions/' + subName + '/messages/' + messageId + '/nack', { method: 'POST' });
+                const el = document.getElementById('msg-' + index);
+                if (el) el.style.opacity = '0.5';
+            } catch (e) {
+                alert(e.message);
+            }
+        }
+
+        loadDashboard();
+    </script>
+</body>
+</html>

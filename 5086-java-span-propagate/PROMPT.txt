@@ -1,11 +1,5 @@
-Spring Boot 写一个 Span 传播中间件。在微服务调用链中自动传播 TraceID 和 SpanID。
+Spring Boot 写一个 Span 传播中间件，在微服务调用链中自动传播 TraceID 和 SpanID。入口过滤器：从请求 Header 提取或生成 TraceID，创建根 Span（含请求方法、路径、客户端 IP）。出口拦截器：发出 HTTP 请求自动注入当前 TraceID 和新 SpanID 到 Header，用 RestTemplate 拦截器实现。
 
-入口过滤器：从请求 Header 提取或生成 TraceID。为当前请求创建根 Span。Span 包含请求方法、路径、客户端 IP。
+Span 上下文用 ThreadLocal 存储，异步调用需手动传递，提供工具方法把上下文传递到 CompletableFuture。
 
-出口拦截器：发出去的 HTTP 请求自动注入当前 TraceID 和新生成的 SpanID 到 Header。用 RestTemplate 的拦截器实现。
-
-Span 上下文：用 ThreadLocal 存储。异步调用时需要手动传递。提供工具方法把当前上下文传递到 CompletableFuture。
-
-Span 上报：请求结束后异步上报 Span 数据到收集器。上报失败本地暂存，定时重试。暂存容量有上限，满了丢弃最旧的。
-
-采样率配置：不是所有请求都追踪。按百分比采样。采样决定在入口处做。端口 PORT 环境变量。
+Span 上报：请求结束后异步上报到收集器，失败本地暂存定时重试，暂存有上限满了丢弃最旧的。采样率配置：按百分比采样，采样决定在入口处做。端口 PORT 环境变量。

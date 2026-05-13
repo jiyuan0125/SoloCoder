@@ -1,11 +1,5 @@
-Go 标准库写指标采集。指标通过 HTTP 接口上报。上报数据可能包含异常值。
+给 Prometheus 对接指标时 Histogram bucket 累计值算错导致监控图诡异尖峰。指标采集导出应封装好不用每次手写。支持 Counter（只增）、Gauge（可增减）、Histogram（分布）三种类型。客户端 HTTP 上报指标值，相同指标名加标签做聚合。导出以 Prometheus text format 输出，Histogram 自动算 count、sum 和 bucket 累计值。
 
-Counter 类型的值不能减少。如果上报了一个比当前值小的数，忽略这次上报并记录告警。
+用 Go 标准库实现。上报数据做校验：Counter 递减上报忽略并记告警。Gauge 非数字值忽略。Histogram 观测值忽略负数，上限 1e9。批量上报一次提交多个指标，单条异常不影响其余。Prometheus 格式导出。
 
-Gauge 类型的值可以增减。如果上报了非数字值，忽略。
-
-Histogram 类型记录观测值。负数的观测值忽略。观测值最大 1e9。
-
-批量上报接口：一次上报多个指标。某个指标数据异常不影响其他指标。
-
-Prometheus 格式导出。端口 PORT 环境变量。
+端口 PORT 环境变量。go build 编译通过。数据存内存。

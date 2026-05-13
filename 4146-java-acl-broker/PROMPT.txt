@@ -1,9 +1,5 @@
-有人往消息队列里灌垃圾数据把服务搞崩了——没有权限控制，任何客户端都能往任何 topic 发消息，字段也是乱七八糟的。Spring Boot 写一个带 ACL 的消息队列，谁能发谁能收都管起来。
+没权限控制谁都能往 topic 发垃圾数据。Spring Boot 带 ACL 消息队列。
 
-Topic 管理。POST /topic 创建 topic，参数包含 name、owner（创建者 client_id）、schema（JSON Schema 定义消息格式）、acl_rules（权限规则列表）。ACL 控制哪些客户端可以发布和订阅。客户端用 client_id 标识，通过 POST /client 注册获取。
+POST /topic 创建含 name/owner/schema（JSON Schema）/acl_rules。ACL 控制谁能发谁能收客户端 POST /client 注册获取 client_id。发布 POST /message/publish 含 topic/body 两步校验：查 publish 权限没返回 403 校验 body 是否符合 schema 不符合 400 加不匹配字段。订阅 POST /topic/{name}/subscribe 含 callback_url 先校验 subscribe 权限。新消息 POST 推送超时 10 秒失败重试 3 次递增（5s/15s/45s）全失败进死信。
 
-消息发布。POST /message/publish 参数包含 topic 和 body（JSON 格式）。发布前做两步校验：第一步检查客户端是否有该 topic 的 publish 权限，没有返回 403。第二步校验消息体是否符 schema——字段类型、必填项、值范围。不符合返回 400 加上具体不匹配的字段和期望类型。校验通过后消息存入内存队列。
-
-消息订阅。客户端通过 POST /topic/{name}/subscribe 订阅，参数包含 callback_url。订阅前校验是否有 subscribe 权限。订阅后新消息 POST 推送到 callback_url。推送超时 10 秒，失败重试 3 次间隔递增（5s → 15s → 45s）。重试全部失败的消息进入死信。
-
-死信处理。GET /deadletter/{topic} 查看死信列表。POST /deadletter/{message_id}/redeliver 重新投递。死信队列容量上限 5000 条，满了丢弃最早的。
+死信 GET /deadletter/{topic} 查 POST /deadletter/{message_id}/redeliver 重投上限 5000 满了丢弃最早的。Maven 构建端口配置文件。

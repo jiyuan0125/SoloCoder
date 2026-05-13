@@ -1,0 +1,8 @@
+搞一个WebSocket 负载测试，Go 标准库，不依赖第三方包。
+
+WebSocket 负载测试。同时建立多个 WebSocket 连接，发送消息测量吞吐量。支持自定义消息和频率。
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+
+用 Go 标准库写，go run . 或 go build 都行。

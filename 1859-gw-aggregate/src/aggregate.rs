@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use axum::http::HeaderMap;
 use futures::future::join_all;
@@ -33,6 +33,10 @@ impl AggregateSceneRegistry {
     pub fn remove(&mut self, name: &str) -> bool {
         self.scenes.remove(name).is_some()
     }
+
+    pub fn list(&self) -> Vec<AggregateScene> {
+        self.scenes.values().cloned().collect()
+    }
 }
 
 fn default_home_scene() -> AggregateScene {
@@ -40,17 +44,17 @@ fn default_home_scene() -> AggregateScene {
         name: "home".to_string(),
         backends: vec![
             BackendCall {
-                url: "http://localhost:8001/user".to_string(),
+                url: "http://localhost:8501/user".to_string(),
                 timeout_secs: 5,
                 field_name: "user".to_string(),
             },
             BackendCall {
-                url: "http://localhost:8002/orders".to_string(),
+                url: "http://localhost:8502/orders".to_string(),
                 timeout_secs: 5,
                 field_name: "orders".to_string(),
             },
             BackendCall {
-                url: "http://localhost:8003/recommendations".to_string(),
+                url: "http://localhost:8503/recommendations".to_string(),
                 timeout_secs: 5,
                 field_name: "recommendations".to_string(),
             },
@@ -63,12 +67,12 @@ fn default_profile_scene() -> AggregateScene {
         name: "profile".to_string(),
         backends: vec![
             BackendCall {
-                url: "http://localhost:8001/user".to_string(),
+                url: "http://localhost:8501/user".to_string(),
                 timeout_secs: 5,
                 field_name: "user".to_string(),
             },
             BackendCall {
-                url: "http://localhost:8002/orders".to_string(),
+                url: "http://localhost:8502/orders".to_string(),
                 timeout_secs: 5,
                 field_name: "orders".to_string(),
             },

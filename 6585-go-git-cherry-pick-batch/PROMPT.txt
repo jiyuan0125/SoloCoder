@@ -1,0 +1,8 @@
+客户催了好几次了，先把批量 cherry-pick commits做出来，Go 工具。
+
+批量 cherry-pick commits。从一个分支选择多个 commit 应用到另一个分支。支持自动解决简单冲突、跳过已应用的 commit。
+后台多个 goroutine 同时写结果文件。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

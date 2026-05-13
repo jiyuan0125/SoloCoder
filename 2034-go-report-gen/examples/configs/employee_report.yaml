@@ -1,0 +1,44 @@
+name: 员工报表
+description: 员工薪资统计报表
+
+data_source:
+  type: csv
+  path: examples/data/employees.csv
+  delimiter: ","
+  columns:
+    - name: id
+      type: number
+    - name: name
+      type: string
+    - name: department
+      type: string
+    - name: salary
+      type: number
+    - name: join_date
+      type: date
+    - name: performance
+      type: string
+
+template:
+  name: 员工薪资模板
+  title: 各部门薪资统计
+  group_by:
+    - field: department
+  aggregations:
+    - field: salary
+      type: sum
+      alias: 薪资总额
+    - field: salary
+      type: avg
+      alias: 平均薪资
+    - field: salary
+      type: max
+      alias: 最高薪资
+    - field: salary
+      type: min
+      alias: 最低薪资
+    - type: count
+      alias: 员工人数
+
+output_format: html
+output_path: examples/output/employee_report.html

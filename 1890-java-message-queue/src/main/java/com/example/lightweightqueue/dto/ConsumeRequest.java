@@ -1,0 +1,16 @@
+package com.example.lightweightqueue.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+@Data
+public class ConsumeRequest {
+    @NotBlank
+    private String topic;
+    
+    @NotBlank
+    private String groupId;
+    
+    @NotBlank
+    private String consumerId;
+}

@@ -1,0 +1,5 @@
+试了三个现成方案都不满足自定义输出格式，只能 Go 自己写TOML配置扩展。
+通过 extend 关键字引用基础配置。
+覆盖的值验证类型一致。
+多级命令：config get、config set、config list、config env switch。
+go build 能编译通过，不依赖第三方库。

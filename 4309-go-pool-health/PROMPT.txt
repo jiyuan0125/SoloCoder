@@ -1,11 +1,4 @@
-Consul 太重了，我们就五六个服务，搞个注册中心用不上那么多功能。Go 标准库做一个轻量的，够用就行。
-
-先说注册。服务启动时调 POST /api/register，带上服务名、实例地址、端口、元数据。注册成功返回一个唯一实例 ID。服务名和实例地址不能为空，元数据可选，不传也行。
-
-注册后服务要定期发心跳，默认间隔 10 秒，调 POST /api/heartbeat/{instanceID}。连续 3 次心跳超时自动注销，注销后的实例信息保留 5 分钟供排查用。心跳间隔可以按服务单独配——有些服务响应慢就配长一点。
-
-查询走 GET /api/services/{name}，按服务名查所有可用实例，返回实例列表和健康状态。支持按元数据过滤：GET /api/services/{name}?tag=env:prod。服务名不存在时返回空列表，不是 404。
-
-还有一个订阅功能——客户端可以订阅某个服务名，POST /api/watch。订阅后该服务的实例上下线变更推送到回调地址。回调失败重试 2 次后静默放弃，不影响主流程。实例从 unhealthy 恢复到 healthy 要自动推送恢复通知。
-
-registry 管注册和注销、heartbeat 管心跳检测、discovery 管查询和过滤、watcher 管订阅和推送。端口 PORT 环境变量，go build 能过。
+用 Go 标准库写轻量注册中心。注册 POST /api/register 带服务名、实例地址、端口、元数据返回唯一实例 ID。服务名和地址必填元数据可选。
+注册后定期心跳默认 10 秒 POST /api/heartbeat/{instanceID}。连续 3 次超时自动注销信息保留 5 分钟排查。心跳间隔可按服务单配。
+查询 GET /api/services/{name} 按服务名查可用实例返列表和健康状态。支持按元数据过滤 ?tag=env:prod。服务名不存在返空列表不返 404。
+订阅功能 POST /api/watch 实例上下线推到回调地址。回调失败重试 2 次后静默放弃。恢复 healthy 自动推通知。拆 registry 注册注销、heartbeat 心跳、discovery 查询过滤、watcher 订阅推送。端口 PORT 环境变量，go build。

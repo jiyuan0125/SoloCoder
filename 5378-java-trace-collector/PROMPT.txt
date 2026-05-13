@@ -1,5 +1,7 @@
-Java/Netty 写一个链路追踪服务。多个 Span 同时上报，按 TraceID 分组时 HashMap 的并发读写不能丢数据。TraceAssembler 组装 Span 树时，新的 Span 可能刚好到达改变树的结构。
+Java/Netty 实现链路追踪服务，并发安全是核心。端口PORT环境变量，数据存内存。
 
-批量上报时多个 Netty channel 同时写 StorageEngine，存储层不能因为并发写入导致数据损坏。查询接口在读取 Trace 树的同时可能有新 Span 加入，查询结果要一致。
+多Span同时上报按TraceID分组用ConcurrentHashMap+computeIfAbsent原子操作防丢失。TraceAssembler组装Span树时用copy-on-write——每次组装生成新不可变树，查询拿完整快照。
 
-端口 PORT 指定。
+批量上报多Netty channel同时写StorageEngine用分段锁保证不同TraceID不互相阻塞。查询时可能新Span加入——返回查询时刻完整快照。
+
+接口：POST /spans 批量上报（traceId、spanId、parentSpanId、operationName、tags、duration）。GET /traces/{traceId} Trace树。GET /traces 搜索（按服务名、操作名、时间范围）。

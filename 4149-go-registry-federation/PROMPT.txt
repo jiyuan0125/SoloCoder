@@ -1,9 +1,7 @@
-单机房注册中心一挂全站瘫痪——上次 Consul 宕机 15 分钟，所有服务发现都失败了。Go 标准库写一个联邦注册中心，多个实例之间自动同步数据，一个挂了其他的顶上。
+单机房注册中心一挂全站瘫痪。Go 标准库联邦注册中心多实例自动同步。
 
-每个注册中心实例管理本地的服务注册信息。POST /register 注册服务实例，参数包含 service_name、instance_id、address、port、tags（标签 map）、ttl（心跳超时秒数默认 30）。同一个 instance_id 重复注册更新已有信息。实例需要定期 PUT /renew 续约，超过 TTL 自动注销。
+POST /register 注册含 service_name/instance_id/address/port/tags/ttl（默认 30 秒）。同 id 重复更新。定期 PUT /renew 续约超 TTL 注销。
 
-联邦同步。注册中心实例之间定时同步数据——每 5 秒交换一次增量变更（新增和删除的注册信息）。同步延迟控制在 5 秒以内。同步冲突用最后写入时间戳解决——同一实例的注册信息以时间戳最新的为准。同步协议用 HTTP——GET /sync/changes?since=timestamp 拉取增量。
+联邦同步：每 5 秒交换增量变更用 HTTP GET /sync/changes?since=timestamp 拉取。冲突用最后写入时间戳解决。服务发现 GET /services/{name} 从任意实例查合并本地和同步数据相同 id 本地优先。支持按标签过滤 ?tag=zone:east。
 
-服务发现。客户端从任意实例查询，GET /services/{name} 返回该服务的所有实例。查询结果合并本地数据和同步过来的数据。相同 instance_id 如果本地和远程都有以本地为准。支持按标签过滤 GET /services/{name}?tag=zone:east。
-
-注册中心实例管理。POST /members 添加联邦成员，DELETE /members/{addr} 移除。GET /members 列出所有成员和同步状态——最后同步时间、同步延迟。实例列表存在本地 members.json 文件。
+实例管理 POST /members 添加联邦成员 DELETE 移除 GET 列出同步状态。列表存 members.json。`go build`，`PORT` 环境变量。

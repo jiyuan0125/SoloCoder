@@ -1,7 +1,5 @@
-老系统只支持 HTTP，但前端团队已经全面转 WebSocket 了——接口层总不能因为传输协议不对就让前端改代码。Go Fiber 做一个 WebSocket 到 HTTP 的桥接服务，让只支持 HTTP 的后端也能服务 WebSocket 客户端。
+前端转 WebSocket 后端只支持 HTTP 协议不对。Go Fiber WebSocket↔HTTP 桥接。
 
-WebSocket 客户端连接后，每个消息转换成一个 HTTP POST 请求转发给后端。后端的响应通过 WebSocket 连接推回给客户端。消息格式转换在配置里定义——JSON 字段映射，WebSocket 端用 user_id，HTTP 端可能叫 uid，映射规则配置化。
+WS 客户端每个消息转 HTTP POST 转发后端响应通过 WS 推回。JSON 字段映射在配置里定义如 WS 端 user_id 映射 HTTP 端 uid。二进制消息 Base64 编码作 HTTP body Content-Type application/octet-stream 返回也 Base64 解码。纯文本直接透传。
 
-二进制消息处理：WebSocket 的二进制消息用 Base64 编码后作为 HTTP body 转发，Content-Type 设为 application/octet-stream。后端返回的二进制数据也做 Base64 解码后通过 WebSocket 发回。纯文本消息不做编码直接透传。
-
-连接管理：WebSocket 连接的超时、最大消息大小、心跳间隔可配置。后端 HTTP 请求的超时独立配置。WebSocket 断开时后端 HTTP 的长连接也要正确关闭释放资源。桥接支持一对多——一个 WebSocket 消息可以触发多个 HTTP 请求，结果聚合后返回。聚合策略按路由配置：全部成功才返回，或者部分成功也返回（带失败标记）。架构分 WebSocket 处理层、HTTP 客户端层、消息转换层、连接池管理层。端口 PORT 环境变量，go build 能过。
+连接管理：WS 超时/最大消息/心跳可配。后端 HTTP 超时独立配。WS 断开 HTTP 长连接正确关闭释放资源。一对多：一个 WS 消息触发多个 HTTP 请求结果聚合返回策略按路由配（全成功或部分成功带失败标记）。架构分 WS 处理/HTTP 客户端/消息转换/连接池管理。`PORT` 环境变量，`go build` 通过。

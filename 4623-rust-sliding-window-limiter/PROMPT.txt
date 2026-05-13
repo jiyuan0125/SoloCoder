@@ -1,7 +1,9 @@
-想用 Rust 的 tokio 做一个 API 限流器，给内部服务用的。
+内部各个团队的服务互相调用没有限流保护，上个月有个团队写了个循环疯狂调我们的接口，直接把服务打满了。
 
-每个 API Key 有独立的请求配额，比如 key-a 每分钟100次，key-b 每分钟200次。用滑动窗口来计数，不是固定窗口。超过配额的请求返回 429 状态码，响应头里带上 Retry-After 表示多久后可以重试。
+注册APIKey时指定两个参数：时间窗口大小（。超过配额的请求直接返回429TooManyRequests，响应头带Retry-After，值是窗口内最早的请求过期还需要的秒数。
 
-API Key 的信息需要能通过接口注册和管理。有个问题我们还没想好：没有配 API Key 的请求应该怎么处理，是直接拒绝还是走默认配额？你看着办。
+APIKey的管理接口完成——POST/api/keys注册新Key，GET/api/keys列出所有Key及其当前配额使用情况，DELETE/api/keys/{key}删除Key。直接返回401Unauthorized——内部服务调用必须带Key，没有例外。
 
-并发量可能比较大，要能扛住。端口环境变量 PORT 指定。
+窗口内请求数据可以用VecDeque按时间有序存储，过期的记录惰性清理——每次检查配额时顺便把窗口外的旧记录pop掉。
+
+包含 limiter、window、rule、config。

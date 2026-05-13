@@ -1,5 +1,5 @@
-用 Spring Boot 写一个带加密存储的配置中心。敏感配置（如数据库密码、API Key）存储时加密，传输时也加密。客户端获取时拿到的还是密文，在本地解密。非敏感配置明文存储和传输。
+敏感配置（数据库密码、API Key）存储时加密传输时也加密，客户端拿到密文在本地解密；非敏感配置明文存储传输。Spring Boot 实现。配置项标记 sensitive 或 plain，同一个 namespace 下混合存储。
 
-配置项标记为 sensitive 或 plain，标记通过管理接口设置。同一个 namespace 下可以混合存储。
+变更通知走 WebSocket，客户端连接后订阅指定 namespace，服务端变更时推送变更的 key 列表（不推值，客户端自己来拉）。接口支持批量导入导出配置。
 
-配置变更通知走 WebSocket。客户端连接后订阅指定 namespace，服务端变更时推送变更的 key 列表（不推值，客户端自己来拉）。管理接口支持批量导入导出配置。端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。
+端口 PORT 环境变量指定，mvn spring-boot:run 能跑起来。

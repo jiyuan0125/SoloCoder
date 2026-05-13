@@ -4,7 +4,7 @@ import { executionRepo, stageRepo, taskRepo } from './database';
 import { TriggerType } from './types';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 8105;
 
 app.use(express.json());
 

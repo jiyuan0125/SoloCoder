@@ -1,9 +1,7 @@
-为什么大多数指标系统只能看 CPU 内存？因为自定义指标聚合没人做。Spring Boot 写一个指标聚合服务，支持 Counter、Gauge、Histogram 三种类型的自定义时间窗口聚合。
+自定义指标聚合没人做。Spring Boot 指标聚合服务支持自定义时间窗口聚合。
 
-指标在 registry 模块注册，类型一旦确定不可更改。每个指标有名称和一组标签（key-value），名称+标签组合唯一标识一个时间序列。重复注册同类型+同标签的忽略，类型冲突的返回错误。
+registry 注册指标类型确定不可改。名称+标签唯一标识时间序列。重名同类型忽略类型冲突返回错误。collector 写入 Counter 只接受正增量负数 400。Gauge 接受任意值。Histogram 接受采样值 T-Digest 维护分位数近似。批量提交部分失败不影响成功。
 
-collector 模块负责数据写入。Counter 类型只接受正增量，传负数返回 400。Gauge 类型接受任意数值。Histogram 类型接受单个采样值，内部用 T-Digest 算法维护分位数近似。上报接口支持批量提交，部分失败不影响成功的。
+rollup 核心：按窗口聚合可配 1 分钟/5 分钟/1 小时。Counter 算增量。Gauge 算平均/最大/最小。Histogram 算 P50/P90/P99。多标签组合时可按指定标签维度合并如按 region 合并不同 host。
 
-rollup 模块是核心——按时间窗口聚合，窗口大小可配 1 分钟、5 分钟或 1 小时。Counter 算增量（窗口结束值减开始值）。Gauge 算平均值、最大值、最小值。Histogram 算 P50、P90、P99。同一个指标有多个标签组合时，可以按指定标签维度做合并聚合——比如按 region 合并，把不同 host 的值加在一起。
-
-exporter 模块以 Prometheus exposition format 输出所有指标和聚合结果，方便 Grafana 直接对接。Maven 构建，端口写在配置文件里。
+exporter 以 Prometheus exposition format 输出所有指标和聚合结果 Grafana 直接对接。Maven 构建端口配置文件。

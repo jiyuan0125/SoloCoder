@@ -23,7 +23,7 @@ public class HttpConnectionPool {
 
     private final Queue<PooledConnection> idleConnections = new LinkedList<>();
     private final Set<PooledConnection> activeConnections = Collections.synchronizedSet(new HashSet<>());
-    private final BlockingQueue<Waiter> waitingQueue;
+    private volatile BlockingQueue<Waiter> waitingQueue;
 
     private final PoolMetrics metrics = new PoolMetrics();
     private volatile ConnectionPoolConfig config;
@@ -224,8 +224,25 @@ public class HttpConnectionPool {
         lock.lock();
         try {
             int oldSize = config.getMaxQueueSize();
+            if (oldSize == newSize) {
+                return;
+            }
+
+            BlockingQueue<Waiter> newQueue = new ArrayBlockingQueue<>(newSize);
+            int transferred = 0;
+            for (Waiter w : waitingQueue) {
+                if (newQueue.offer(w)) {
+                    transferred++;
+                } else {
+                    break;
+                }
+            }
+
             config.setMaxQueueSize(newSize);
-            log.info("Pool [{}]: Max queue size updated from {} to {}", poolName, oldSize, newSize);
+            waitingQueue = newQueue;
+
+            log.info("Pool [{}]: Max queue size updated from {} to {}, transferred {} waiters",
+                    poolName, oldSize, newSize, transferred);
         } finally {
             lock.unlock();
         }

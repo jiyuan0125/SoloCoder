@@ -1,0 +1,5 @@
+有个老工具是 Python 写的，维护不动了，用 Go 重写规则化文本替换。
+规则文件每行一个：旧文本→新文本。支持正则。
+替换优先级按规则顺序。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+go build 能编译通过，不依赖第三方库。

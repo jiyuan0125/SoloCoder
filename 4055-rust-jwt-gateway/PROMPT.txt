@@ -1,7 +1,7 @@
-你有没有遇到过这种情况——五个后端服务各自实现了一套 Token 验证逻辑，改个签名算法要改五处代码？用 actix-web 做一个 Token 验证网关，放在所有业务服务前面统一做认证，后端只管业务逻辑。
+五个后端服务各自实现 Token 验证逻辑改签名算法改五处。Rust actix-web Token 验证网关统一认证。
 
-支持 JWT 和 opaque token 两种格式。JWT 验签名和过期时间，opaque token 调内部接口校验。两种 token 共存，通过 Authorization header 的前缀区分——Bearer 打头的是 JWT，Token 打头的是 opaque。JWT 签名算法支持 HS256 和 RS256，密钥通过配置文件加载。
+支持 JWT 和 opaque token。Bearer 打头是 JWT 验签名过期，Token 打头是 opaque 调内部接口校验。JWT 支持 HS256 和 RS256 密钥配置加载。
 
-Token 刷新：客户端拿 refresh token 换新的 access token。refresh token 有使用次数限制，用一次就失效，同时签发新的 refresh token 返回给客户端。旧的 refresh token 刷新后加入黑名单，黑名单 TTL 和 refresh token 有效期一致，过期自动清理。刷新接口本身也需要认证——必须提供有效的 refresh token 才能换新的。
+Token 刷新：refresh token 换 access token。refresh 用一次失效同时签发新的旧加入黑名单 TTL 与有效期一致过期自动清理。刷新接口须提供有效 refresh token。
 
-验证通过的请求转发时把用户信息注入 header——X-User-Id、X-User-Roles 传给后端。后端直接信任这些 header 不需要再验。未认证返回 401，权限不足返回 403，响应格式统一包含 error_code 和 message。/api/auth/{provider}/token 走认证流程，其余路径做 token 校验。Cargo build，PORT 环境变量。你觉得一个网关够用还是需要按业务域拆分？
+验证通过转发时注入 X-User-Id、X-User-Roles header。未认证 401 权限不足 403 统一含 error_code 和 message。`/api/auth/{provider}/token` 走认证其余做校验。`Cargo build`，`PORT` 环境变量。

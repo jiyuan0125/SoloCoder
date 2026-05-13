@@ -1,11 +1,7 @@
-支付接口因为网络抖动被重复扣款，客诉一堆。Rust axum 做一个幂等代理——客户端请求带幂等键，相同键的请求只执行一次，从根源上杜绝重复。
+支付接口网络抖动重复扣款。Rust axum 幂等代理请求带幂等键相同只执行一次。
 
-第一步，幂等键提取。从请求 header 的 X-Idempotency-Key 提取幂等键。没有这个 header 的请求直接透传到后端不做幂等处理。幂等键最大长度 128 字符，超长的返回 400。
+提取：从 X-Idempotency-Key header 提取没有的直接透传不做幂等。最大 128 字符超长 400。首次：转发后端同时标 processing 后端返回后存状态码和响应摘要 TTL 24 小时。processing 超 30 秒没结果自动清除允许重试。
 
-第二步，首次请求处理。首次看到的幂等键，代理把请求转发到后端，同时把幂等键标记为 processing。后端返回后把状态码和响应体摘要存入幂等记录，TTL 24 小时。processing 状态的幂等键如果超过 30 秒还没结果，自动清除允许重试。
+重复：同键后续直接返回缓存不转发加 X-Idempotent-Replayed:true。processing 期间到达的请求等最多 30 秒超时 408。错误处理：5xx 不记录允许重试 4xx 记录防反复发同样错误。
 
-第三步，重复请求处理。相同幂等键的后续请求直接返回缓存的结果不转发到后端。响应头加 X-Idempotent-Replayed: true 标记。如果有请求在 processing 期间到达，等待最多 30 秒。等待超时返回 408 Request Timeout。
-
-第四步，错误处理。后端返回 5xx 的情况幂等键不记录——允许客户端重试。后端返回 4xx 的情况幂等键记录——相同请求直接返回同样的 4xx，防止客户端反复发同样的错误请求。
-
-第五步，管理接口。GET /idempotent/{key} 查询幂等记录——状态（processing/completed）、状态码、创建时间、过期时间。GET /idempotent/stats 返回全局统计——总记录数、processing 数、命中率。
+管理 GET /idempotent/{key} 查状态/状态码/创建/过期。GET /idempotent/stats 返回总数/processing 数/命中率。`Cargo build`，`PORT` 环境变量。

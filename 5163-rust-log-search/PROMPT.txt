@@ -1,7 +1,5 @@
-tokio 写一个日志聚合服务，支持结构化字段索引和范围查询。
+tokio 写一个日志聚合服务，支持结构化字段索引和范围查询。日志通过 HTTP 接口上报（POST /ingest），每条是 JSON 含 level、message、timestamp、source 及自定义字段。上报时自动解析，对 level、source、timestamp 建索引，自定义字段中字符串值也建倒排索引。
 
-日志通过 HTTP 接口上报（POST /ingest），每条日志是 JSON 格式，包含 level、message、timestamp、source 字段，以及任意数量的自定义字段。上报时自动解析 JSON，对 level、source、timestamp 建索引。自定义字段中字符串类型的值也建倒排索引。
+查询接口：按 level 精确匹配、按 source 匹配、按 timestamp 范围查询、按自定义字段键值过滤，多条件 AND 关系，结果按 timestamp 倒序分页返回。
 
-查询接口：支持按 level 精确匹配、按 source 精确匹配、按 timestamp 范围查询（起止时间戳）、按自定义字段键值过滤。多个条件之间是 AND 关系。查询结果按 timestamp 倒序分页返回。
-
-索引数据存在内存中，按时间分片（每小时一个分片）。超过 24 小时的分片自动释放内存，但保留到磁盘文件（JSON Lines）。查历史数据时从磁盘加载。管理接口展示各分片的内存占用、索引条目数量、查询 QPS。端口 PORT 环境变量。
+索引数据存内存，按时间分片（每小时一个）。超 24 小时的分片释放内存但保留到磁盘（JSON Lines），查历史时从磁盘加载。管理接口展示各分片内存占用、索引条目数、查询 QPS。端口 PORT 环境变量。

@@ -1,13 +1,7 @@
-Netty 做链路追踪。请求进来时生成 TraceID，通过 Header 传播。
+排查支付慢请求翻五个服务日志对时间戳两小时才定位第三方慢。用 Spring Boot 2.x（JDK 17，Maven）做分布式链路追踪。
 
-每个服务节点处理请求时创建 Span。Span 记录服务名称、操作名称、开始时间、结束时间。
+每个请求全局唯一 TraceID 通过 HTTP Header 传播。每次调用产生 Span 含 SpanID、ParentSpanID、服务名、操作名、起止时间、标签。SDK 做成独立 Java 包：Servlet Filter 拦截自动创建 Span，RestTemplate 拦截器注入追踪 Header 业务不用改。
 
-Span 有父子关系。根 Span 没有父 Span。
+Span 数据按 TraceID 聚合构建调用树存 SQLite。超阈值自动标慢调用。查询按 TraceID 查完整链路、按服务名查、按耗时排序找 Top N。
 
-Span 数据量可能很大（每秒数千个）。存储和查询要能承受。
-
-查询接口支持按 TraceID 查询完整链路（所有 Span 按调用关系组织成树）。
-
-批量查询接口可能传入无效的 TraceID，无效的跳过。
-
-Maven，PORT 环境变量。
+结果展示耗时树状结构。端口 server.port。

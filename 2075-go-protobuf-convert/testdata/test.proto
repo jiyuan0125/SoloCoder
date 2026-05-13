@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package test;
+
+import "google/protobuf/timestamp.proto";
+
+message Status {
+  enum Code {
+    UNKNOWN = 0;
+    OK = 1;
+    ERROR = 2;
+  }
+  Code code = 1;
+  string message = 2;
+}
+
+message InnerMessage {
+  int32 value = 1;
+  string text = 2;
+}
+
+message OneofTest {
+  oneof content {
+    int32 int_value = 1;
+    string string_value = 2;
+    InnerMessage msg_value = 3;
+  }
+}
+
+message TestMessage {
+  string name = 1;
+  int32 id = 2;
+  repeated string tags = 3;
+  map<string, int32> scores = 4;
+  InnerMessage nested = 5;
+  google.protobuf.Timestamp created_at = 6;
+  Status.Code status = 7;
+  OneofTest oneof_field = 8;
+}

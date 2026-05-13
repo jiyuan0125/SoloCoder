@@ -1,9 +1,7 @@
-写一个轻量链路追踪服务，用 FastAPI。重点在可视化的数据。
+排查慢请求时只知道"慢"不知道慢在哪一层——链路追踪数据散落在各服务日志拼不出全貌。用 FastAPI 做轻量链路追踪服务重点在数据组装和统计。
 
-Span 上报通过 HTTP API。每个 Span 包含：trace_id、span_id、parent_span_id、service、operation、start_time、duration_ms、status、tags。
+Span 通过 HTTP API 上报每个含 trace_id、span_id、parent_span_id、service、operation、start_time、duration_ms、status、tags。自动按 trace_id 分组构建调用树（树结构 JSON 导出根节点 parent_span_id 为空）。
 
-Trace 组装：所有 Span 上报后，服务自动按 trace_id 分组并构建调用树。调用树支持 JSON 格式导出，格式为树结构：根节点是第一个 Span（parent_span_id 为空），子节点是下游调用。
+超阈值自动标慢调用。统计每服务平均耗时、慢调用 Top N、服务间调用频率。查询按 trace_id 查完整链路、按服务名和时间范围查 Trace 列表。
 
-统计分析：最近 1 小时内各服务的请求数、平均耗时、错误率。按操作名分组统计。错误 Span（status=error）单独列出并统计错误原因（从 tags 中提取）。
-
-Trace 过期清理：超过 24 小时的 Trace 数据自动删除。管理接口查看统计和手动触发清理。端口 PORT 环境变量。
+管理接口查看存储使用和索引状态。端口 PORT 环境变量。

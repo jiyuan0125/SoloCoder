@@ -1,11 +1,1 @@
-先说痛点。服务注册到 Consul 后挂了不会自动摘除，要等 TTL 过期，默认 10 分钟太长了。自己写一个 Go 标准库的注册中心，挂了就自动注销，不占位置。
-
-服务启动时注册，POST /api/register，提供名称、地址、端口、元数据。注册成功返回一个 token，后续心跳和注销都要带这个 token。服务名可以有多个实例，每个实例独立管理。
-
-注册后定期发心跳，POST /api/heartbeat/{instanceID}，默认间隔 10 秒。3 次没收到心跳自动注销。注销事件广播给所有订阅者，订阅者通过 POST /api/subscribe 注册回调地址。心跳间隔可以按服务自定义——有些服务 30 秒心跳一次也行。
-
-按名称查询所有健康实例，GET /api/services/{name}。按名称加元数据过滤查询，GET /api/services/{name}?env=prod。查询结果包含实例 ID、地址、状态、最后心跳时间。
-
-实例状态流转：HEALTHY → UNHEALTHY → DEREGISTERED。心跳正常是 HEALTHY，心跳超时是 UNHEALTHY，超时后自动注销是 DEREGISTERED。UNHEALTHY 恢复心跳变回 HEALTHY。
-
-registry 管注册和注销、heartbeat 管心跳检测、query 管查询过滤、broadcaster 管订阅推送。端口 PORT 环境变量，go build 能过。
+用 Go 写服务注册到 Consul 后挂了不会自动摘除，要等 TTL 过期，默认 10 分钟太长了。注册成功返回一个 token，后续心跳和注销都要带这个 token。注册后定期发心跳，POST /api/heartbeat/{instanceID}，默认间隔 10 秒。3 次没收到心跳自动注销。注销事件广播给所有订阅者，订阅者通过 POST /api/subscribe 注册回调地址。心跳间隔可以按服务自定义：有些服务 30 秒心跳一次也行。查询结果包含实例 ID、地址、状态、最后心跳时间。心跳正常是 HEALTHY，心跳超时是 UNHEALTHY，超时后自动注销是 DEREGISTERED。端口 PORT，go build 。

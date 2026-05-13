@@ -1,5 +1,5 @@
-给朋友的团队写个API网关服务，用 tokio 做异步运行时，裸 TCP/HTTP 处理 跑本地就行。
+给朋友的团队写个 API 网关服务，用 tokio 做异步运行时，裸 TCP/HTTP 处理跑本地就行。
 
-多租户 SaaS 统一 API 入口，认证后注入租户信息，Authorization 头解析后注入 X-Tenant-Id 和 X-User-Role。admin 访问所有接口，user 只访问本租户。网关支持请求聚合：一个 API 并行调多个后端合并返回。路由配置动态更新。租户日志独立。
+多租户 SaaS 统一 API 入口，认证后注入租户信息。Authorization 头解析后注入 X-Tenant-Id 和 X-User-Role。admin 可访问所有接口，user 只能访问本租户。网关支持请求聚合：一个 API 并行调多个后端合并返回。路由配置支持动态更新。各租户日志独立存储。
 
-用 tokio 做异步运行时，裸 TCP/HTTP 处理。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。
+tokio 裸 TCP/HTTP，端口 PORT 环境变量，cargo run 跑起来。

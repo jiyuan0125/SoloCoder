@@ -1,11 +1,1 @@
-先看问题。下游服务不稳定，超时、5xx、连接失败都有，我们自己的接口跟着抖，前端同事每隔几天就来投诉。aiohttp 做一个分级熔断器，每个下游接口独立管控。
-
-第一步，配置熔断规则。每个下游接口独立配置：失败阈值（比如 50%）、统计窗口（比如 60 秒）、最小请求数（比如 20）。POST /api/breakers 注册规则。窗口内请求数少于最小请求数时不触发熔断，样本太少容易误判。
-
-第二步，三态流转。CLOSED 状态正常调用并统计失败率。失败率超阈值切 OPEN。OPEN 持续一段时间（可配，默认 30 秒）后切 HALF_OPEN。HALF_OPEN 放一个请求探测——成功恢复 CLOSED 并重置计数，失败回到 OPEN。
-
-第三步，接口关联。接口之间可以配关联关系——A 熔断后 B 也自动熔断。比如支付接口依赖账户接口，账户熔断了支付也没意义。关联关系通过 POST /api/breakers/{name}/dependencies 配置。
-
-状态变更时触发通知，调用回调 URL（POST /api/notify/config 配置）。通知内容包含接口名、旧状态、新状态、触发原因。
-
-breaker 管状态机、judge 管失败判定和统计、recovery 管半开探测、notifier 管通知。端口 PORT 环境变量。
+用 Python 写先看问题。第一步，配置熔断规则。每个下游接口独立配置：失败阈值（比如 50%）、统计窗口（比如 60 秒）、最小请求数（比如 20）。POST /api/breakers 注册规则。CLOSED 状态正常调用并统计失败率。失败率超阈值切 OPEN。OPEN 持续一段时间（可配，默认 30 秒）后切 HALF_OPEN。HALF_OPEN 放一个请求探测：成功恢复 CLOSED 并重置计数，失败回到 OPEN。状态变更时触发通知，调用回调 URL（POST /api/notify/config 配置）。breaker 管状态机、judge 管失败判定和统计、recovery 管半开探测、notifier 管通知。端口 PORT。

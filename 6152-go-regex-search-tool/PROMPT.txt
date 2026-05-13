@@ -1,0 +1,5 @@
+之前用 Excel 管备份记录，数据量上来扛不住。换个正则搜索工具，Go。
+支持命名捕获组提取。
+搜索结果输出为 JSON，包含文件名、行号、匹配内容。
+多级命令：config get、config set、config list、config env switch。
+纯标准库实现，go run . 能跑。

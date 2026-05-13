@@ -1,0 +1,8 @@
+每次做根据 Content-Type 处理 HTTP 响应体都容易出错，写个 Go 工具自动化。
+
+根据 Content-Type 处理 HTTP 响应体。自动识别 JSON/XML/HTML/二进制，格式化输出。支持自定义处理器。
+输入文件可能是空的或者只有 header 行。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+工具管理配置模板和配置实例。实例基于模板生成。
+
+Go 标准库，命令行参数用 flag 包解析。

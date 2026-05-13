@@ -6,6 +6,7 @@ import {
   ConfigVersion,
   CreateEnvironmentRequest,
   UpdateEnvironmentRequest,
+  RollbackResult,
   ApiError,
 } from '../types';
 import { environmentStore } from '../store';
@@ -175,7 +176,7 @@ export const environmentService = {
     return env.configHistory;
   },
 
-  async rollback(id: string, version: number): Promise<Environment> {
+  async rollback(id: string, version: number): Promise<RollbackResult> {
     return environmentStore.withLock(id, () => {
       const env = environmentService.getById(id);
       validateDestroyed(env);
@@ -185,9 +186,7 @@ export const environmentService = {
         throw new ApiError(404, `config version ${version} not found`);
       }
 
-      if (env.resources.serviceInstanceCount > 0 && env.status === 'running') {
-        throw new ApiError(400, 'active instances detected, manual restart required');
-      }
+      const hasActiveInstances = env.resources.serviceInstanceCount > 0 && env.status === 'running';
 
       const newVersion = env.currentConfigVersion + 1;
       const updated = environmentStore.update(id, {
@@ -199,7 +198,16 @@ export const environmentService = {
       if (!updated) {
         throw new ApiError(404, `environment ${id} not found`);
       }
-      return updated;
+
+      const result: RollbackResult = {
+        environment: updated,
+      };
+
+      if (hasActiveInstances) {
+        result.warning = 'active instances detected, manual restart required';
+      }
+
+      return result;
     });
   },
 };

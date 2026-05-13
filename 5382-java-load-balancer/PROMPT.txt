@@ -1,5 +1,7 @@
-Spring Boot 做一个负载均衡器。管理端在调整权重的同时，大量请求正在做负载选择。权重改了一半时拿到的数据可能不一致。健康检查线程标记实例不健康的同时，调度线程正在选择实例。
+Spring Boot 重写负载均衡器，权重原子读写健康状态CAS防覆盖。端口PORT环境变量，Maven构建，数据存内存。
 
-多个健康检查结果同时到达时状态更新不能互相覆盖。同一个客户端的粘性记录在高并发下读写不能出错。
+权重用AtomicInteger数组保证原子读写，读取时获取一致快照。健康检查标记不健康同时调度在选择——用CopyOnWriteArrayList存可用实例，更新时创建新列表替换，调度读一致快照。
 
-端口 PORT 指定。
+多健康检查结果同时到达用CAS保证原子不互相覆盖。粘性会话用ConcurrentHashMap保护，同客户端IP映射不因并发更新丢失。
+
+接口：POST /instances 注册。DELETE /instances/{id} 注销。PUT /instances/{id}/weight 调权重。GET /instances 状态列表。GET /stats 分发统计。

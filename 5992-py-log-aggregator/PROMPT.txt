@@ -1,4 +1,4 @@
-日志需要按级别路由到不同存储。用 Python/FastAPI 写。
+ERROR 日志和 DEBUG 日志放一起太浪费空间了，ERROR 要永久保留，DEBUG 留十分钟就够了。Python/FastAPI 写个按级别路由到不同存储的日志服务。
 
 路由规则：ERROR 级别写入文件 A（永久保留），INFO/WARN 写入文件 B（保留 7 天），DEBUG 写入内存缓冲（最近 10000 条）。
 

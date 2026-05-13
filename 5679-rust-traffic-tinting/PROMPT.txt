@@ -1,5 +1,5 @@
 业务方催了好几轮了，先把流量染色服务做出来，Rust axum。
 
-多版本并行路由，v1/v2/v3 同时运行，X-API-Version 指定版本。未指定走默认版本。deprecated 版本加 Sunset 头。下线前 30 天返回 deprecation 警告。版本配置 version/backend/status/default/sunset_date。匹配不到返回 400 和可用版本列表。
+多版本并行路由，v1/v2/v3 同时运行，请求通过 X-API-Version 头指定版本。未指定走默认版本。deprecated 版本加 Sunset 头提示。下线前 30 天返回 deprecation 警告。版本配置包括 version/backend/status/default/sunset_date。匹配不到返回 400 和可用版本列表。管理接口查看各版本流量分布和 deprecation 状态。
 
-Rust axum。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。
+axum，端口 PORT 环境变量，cargo run 跑起来。

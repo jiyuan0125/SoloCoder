@@ -1,4 +1,4 @@
-代理需要支持 WebSocket 转发。用 Go 标准库 net/http 写，HTTP 路由、WS 升级和后端管理分文件。
+WebSocket 连接在 Nginx 代理后面经常断，想自己管。Go 标准库 net/http 写个支持 WS 转发的代理，HTTP 路由、WS 升级和后端管理分文件。
 
 HTTP 请求和 WebSocket 连接都按路径前缀路由到后端。WebSocket 升级时从 HTTP 切换到 WebSocket 协议，然后双向转发帧。
 

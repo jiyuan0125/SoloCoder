@@ -1,9 +1,5 @@
-Spring Boot 写个消息队列。支持发布/订阅模式。
+服务间异步通信需要消息通道但 Kafka 太重，轻量消息代理够用。
 
-Topic 支持通配符订阅：*匹配一级，#匹配多级。比如 order.* 匹配 order.create，order.# 匹配 order.create.success。
+Topic 支持通配符订阅（MQTT 风格）再加延迟消息。用 Spring Boot 实现发布订阅消息队列。Topic 用 / 分层（如 order/create/success）。订阅通配符：* 匹配一级，# 匹配多级。消费者 POST /consumers 注册（subscription_pattern + consumer_id），消息发布 POST /topics/publish 匹配所有订阅者每组选一个投递。拉模式消费，POST /messages/{id}/ack 确认，POST /messages/{id}/nack 拒绝重新入队。
 
-消息投递有确认机制。消费者处理完发 ACK，消息才从队列移除。NACK 后消息重新入队。
-
-队列支持延迟消息：消息在指定时间后才可被消费。延迟精度到秒。
-
-Maven 构建。端口 server.port。
+延迟消息带 deliver_after 秒数到期才进可投递队列。管理接口 GET /topics 列出活跃 Topic。Spring Boot 2.x（JDK 17，Maven）。端口 server.port。

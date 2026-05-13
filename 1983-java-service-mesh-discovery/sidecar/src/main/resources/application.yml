@@ -1,0 +1,19 @@
+server:
+  port: 9901
+
+spring:
+  application:
+    name: sidecar
+
+sidecar:
+  registry-url: http://localhost:9900
+  control-plane-url: http://localhost:9902
+  service-name: unknown
+  app-host: 127.0.0.1
+  app-port: 8080
+  version: v1
+  zone: default
+  local-ip: 127.0.0.1
+  proxy-port: 9903
+  heartbeat-interval: 5000
+  rule-refresh-interval: 5000

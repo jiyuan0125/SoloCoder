@@ -126,6 +126,8 @@ struct PublishResponse {
 struct ListQuery {
     #[serde(default)]
     q: Option<String>,
+    #[serde(default)]
+    search: Option<String>,
 }
 
 async fn create_channel(
@@ -194,12 +196,12 @@ async fn publish_message(
 }
 
 fn message_to_event(msg: Message) -> Result<Event, axum::Error> {
-    let json_content = serde_json::to_string(&msg.content).map_err(axum::Error::new)?;
+    let content = String::from_utf8_lossy(&msg.content);
 
     let data = serde_json::json!({
         "id": msg.id,
         "timestamp": msg.timestamp,
-        "content": json_content,
+        "content": content,
     })
     .to_string();
 
@@ -261,10 +263,12 @@ async fn list_channels(
 ) -> impl IntoResponse {
     let channels = state.channels.read().await;
 
+    let search_term = query.search.or(query.q);
+
     let mut result = Vec::new();
 
     for (name, channel) in channels.iter() {
-        if let Some(q) = &query.q {
+        if let Some(q) = &search_term {
             if !name.to_lowercase().contains(&q.to_lowercase()) {
                 continue;
             }

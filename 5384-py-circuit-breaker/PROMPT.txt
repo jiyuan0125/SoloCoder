@@ -1,5 +1,7 @@
-FastAPI 写一个熔断器。多个请求同时检查熔断状态时，不能都看到"未熔断"然后都放过去。状态从 OPEN 转 HALF_OPEN 时只放一个请求试探。指标收集器在多个请求同时上报成功失败时计数要准确。
+FastAPI 重写熔断器，asyncio.Lock保护状态转换，Half-Open只放一个。端口PORT环境变量，数据存内存。
 
-降级缓存在写入同时可能被读取，不能读到半写数据。同一个接口的熔断状态变更时正在等待的请求要统一处理。
+Open转Half-Open瞬间只放一个请求试探——asyncio.Lock保护，第一个获锁执行后续等结果。指标收集用collections.Counter原子累加。
 
-端口 PORT 指定。
+降级缓存用dict引用赋值保证原子性，读拿完整值或None。状态变更时广播通知所有等待者。每下游服务独立熔断状态和指标窗口。失败率按最近N秒滑动窗口（默认60秒），时间桶聚合过期自动清理。
+
+接口：POST /services 注册。GET /services/{name}/status 状态。PUT /services/{name}/config 参数调整。

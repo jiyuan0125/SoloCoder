@@ -1,0 +1,8 @@
+客户催了好几次了，先把列出 Docker daemon 中的镜像做出来，Go 工具。
+
+列出 Docker daemon 中的镜像。按仓库/标签/大小/创建时间排序。支持过滤和输出 JSON。
+金额用整数存储（分为单位），显示的时候转为元。除法截断不是四舍五入。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

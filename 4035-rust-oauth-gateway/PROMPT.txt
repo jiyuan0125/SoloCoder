@@ -1,7 +1,7 @@
-JWT 认证网关够内部用了，但第三方接入要走 OAuth2 授权码流程——总不能让外部合作方也拿着 JWT 到处发吧？Rust + actix-web 在现有网关上叠 OAuth2 支持。
+JWT 网关够内部用但第三方要 OAuth2。Rust + actix-web 叠 OAuth2 支持。
 
-OAuth2 授权码流程走完整的一套：第三方客户端重定向到网关 `/authorize` 端点，用户在网关完成认证后回调到客户端带上 authorization code，客户端用 code 调 `/token` 换 access token。JWT 和 OAuth2 的配置分开管理——JWT 密钥、OAuth2 的 client_id/client_secret/redirect_uri 都通过 POST `/oauth/clients` 注册。
+完整授权码流程：客户端重定向到 `/authorize` 用户认证后回调带 code，客户端用 code 调 `/token` 换 access token。JWT 密钥和 OAuth2 client_id/secret/redirect_uri 分开管理，POST `/oauth/clients` 注册。
 
-Token 生命周期管理：access token 过期后用 refresh token 换新的，refresh token 也能过期（默认 7 天）、过期后重新走授权流程。refresh token 用过一次后旧的失效，防止重放攻击。GET `/oauth/clients` 列出所有注册的第三方客户端。
+Token 生命周期：access token 过期用 refresh token 换新的，refresh token 默认 7 天过期后重走授权。refresh token 用一次旧失效防重放。GET `/oauth/clients` 列出所有第三方。
 
-每次认证事件记审计日志——时间、客户端 ID、认证方式（JWT/OAuth2）、结果（成功/失败/超时）。GET `/audit` 按时间范围和客户端查询。认证通过后转发到后端，后端路由配置通过接口管理。`Cargo build` 通过，`PORT` 环境变量。
+认证事件记审计日志含时间、客户端 ID、方式（JWT/OAuth2）、结果。GET `/audit` 按时间和客户端查。认证通过转发后端路由接口管理。`Cargo build` 通过，`PORT` 环境变量。

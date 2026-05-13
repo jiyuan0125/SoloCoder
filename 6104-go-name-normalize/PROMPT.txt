@@ -1,0 +1,5 @@
+开源的那个库功能太多但批量模式没做好，Go 从零写姓名数据标准化。
+英文姓名按「名 姓」或「姓, 名」格式统一。
+复姓要识别。
+多级命令：config get、config set、config list、config env switch。
+纯标准库实现，go run . 能跑。

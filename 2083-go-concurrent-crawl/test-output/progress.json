@@ -1,0 +1,17 @@
+{
+  "visited": {
+    "https://example.com": {
+      "url": "https://example.com",
+      "depth": 0,
+      "state": "completed"
+    },
+    "https://iana.org/domains/example": {
+      "url": "https://iana.org/domains/example",
+      "depth": 1,
+      "state": "completed"
+    }
+  },
+  "completed": 2,
+  "failed": 0,
+  "queue_size": 0
+}

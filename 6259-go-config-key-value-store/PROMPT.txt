@@ -1,0 +1,5 @@
+新接了个电商项目，他们要求有配置KV存储的功能，Go 搞。
+get、set、delete、list 操作。
+配置持久化到文件。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+go build 能编译通过，不依赖第三方库。

@@ -1,9 +1,5 @@
-现在的 ETL 任务全靠 cron 硬编码执行顺序，改一个依赖关系要改一堆 crontab，还经常改漏导致任务跑了但上游数据没准备好。Python FastAPI 做一个工作流调度引擎，DAG 风格的依赖调度，不是简单的定时任务。
+ETL 全靠 cron 硬编码改依赖要改一堆还改漏。Python FastAPI DAG 工作流调度。
 
-工作流由多个任务节点组成，节点之间有前置依赖。定义工作流时指定每个节点的依赖列表，引擎自动做拓扑排序检测循环。一个节点的前置全部完成后才开始执行。执行失败的节点不会阻塞不依赖它的后续节点——这点很关键，别让一个失败拖垮整条链路。
+工作流多任务节点有前置依赖引擎拓扑排序检测循环。前置全完成才执行。失败节点不阻塞不依赖它的后续。任务执行 HTTP 调用 2xx 成功 5xx 失败超时默认 60 秒也算失败。参数支持 {{task_name.field}} 引用上游输出解析失败标 skipped 不阻塞后续。
 
-任务执行就是 HTTP 调用。POST 参数到指定 URL，根据状态码判断结果：2xx 成功，5xx 失败，超时（默认 60 秒）也算失败。任务参数支持变量引用，用 {{task_name.field}} 语法引用上游输出字段。变量解析失败的节点标记为 skipped，不阻塞后续。
-
-触发两种方式：手动 POST /workflow/{id}/trigger 和定时。定时用 cron 表达式，PUT /workflow/{id}/schedule 配置。同一个工作流同时只允许一个实例在跑，重复触发返回 409 跳过。实例状态：idle → running → success / partial_success（部分节点失败但非关键）/ failed（关键节点失败）。哪些节点是关键的通过 POST /workflow/{id}/critical 标记。
-
-每个节点支持超时和重试。重试间隔指数退避，默认最多重试 2 次。
+触发：手动 POST /workflow/{id}/trigger 和定时 PUT /workflow/{id}/schedule cron 配。同时只一个实例重复触发 409。状态：idle→running→success/partial_success/failed。关键节点 POST /workflow/{id}/critical 标。每节点支持超时和重试指数退避默认最多 2 次。`PORT` 环境变量。

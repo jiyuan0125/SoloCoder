@@ -4,7 +4,7 @@ import { isValidVersion, isValidStatusTransition, isVersionLessThan, isUserInGra
 import { ReleaseStatus, CreateVersionRequest, PublishVersionRequest, AddWhitelistRequest, GrayScalePercentageRequest, CheckUpdateResponse } from './types';
 
 const app = express();
-const PORT = process.env.PORT || 9103;
+const PORT = process.env.PORT || 8100;
 
 app.use(express.json());
 

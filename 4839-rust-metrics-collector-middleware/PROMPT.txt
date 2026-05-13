@@ -1,7 +1,5 @@
-axum 做一个指标聚合服务。采集到的指标按服务分组，定时 flush 到本地文件。
+给 Prometheus 对接指标 Histogram bucket 累计值算错尖峰排查两天才定位。用 Rust axum/tokio 写指标聚合服务。
 
-指标通过 API 上报：POST /report，body 包含服务名、指标名、值、时间戳、标签。同一个服务名的指标聚合在一起。聚合维度：按 1 分钟窗口聚合，同一个指标名 + 标签组合在同一个窗口内的值取 sum/count/max/min。
+API 上报含服务名、指标名、值、时间戳、标签。支持 Counter、Gauge、Histogram 三种类型。同服务名聚合，按 1 分钟窗口同指标名+标签组合取 sum/count/max/min。每 60 秒 flush 到 JSON Lines 文件（按服务名分目录按日期分文件），失败保留内存重试 3 次。启动发现有未 flush 历史数据自动补写。
 
-每隔 60 秒把上一个窗口的聚合数据 flush 到文件（JSON Lines 格式，每行一个窗口的聚合结果）。文件按服务名分目录，按日期分文件。flush 失败时保留在内存重试，最多重试 3 次。启动时如果发现有未 flush 的历史数据（程序上次异常退出），自动补写。
-
-查询接口：按服务名和时间范围查询聚合后的指标。也支持查原始的实时数据（还没 flush 的）。管理接口展示各服务的上报频率、最近 flush 状态、文件存储大小。端口 PORT 环境变量。
+查询按服务名和时间范围查聚合后指标也支持查实时未 flush 数据。/metrics 导出 Prometheus text format。管理接口展示各服务上报频率、flush 状态、文件大小。端口 PORT 环境变量，cargo build 编译通过。

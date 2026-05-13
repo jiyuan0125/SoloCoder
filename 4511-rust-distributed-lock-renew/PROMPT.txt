@@ -1,11 +1,7 @@
-Rust 实现一个分布式锁服务。多个服务实例需要抢同一把锁来执行定时任务。
+多服务实例抢分布式锁执行定时任务，用数据库行锁高并发把库搞崩了。Rust 实现分布式锁服务，TTL 自动释放防死锁。
 
-基本操作：acquire(lock_name, holder_id, ttl) 获取锁，release(lock_name, holder_id) 释放锁，renew(lock_name, holder_id, new_ttl) 续期。只有持有者才能释放和续期，其他人释放返回失败。TTL 到期自动释放。
+基本操作：acquire(lock_name, holder_id, ttl) 获取锁，release 释放，renew 续期。只有持有者能释放和续期。
 
-锁等待：获取锁的时候支持阻塞等待模式。可以指定最大等待时间，在等待时间内如果锁被释放了就立刻获取。等不到返回超时。
+锁等待：支持阻塞等待模式，可指定最大等待时间，锁释放立刻获取，等不到返回超时。
 
-死锁检测：如果同一个 holder 同时持有超过 5 把锁，触发告警（记录日志）。锁持有时间超过 TTL 的 80% 还没续期也告警。
-
-管理接口：查看当前所有锁的状态（谁持有、还剩多久）、强制释放指定的锁。释放的时候通知等待队列里的下一个。
-
-至少包含 lock、waiter、watchdog、admin 四个模块。Cargo build 通过，端口 PORT 环境变量。
+死锁检测：同一 holder 持超 5 把锁触发告警，持有时间超 TTL 80% 没续期也告警。管理接口查看锁状态、强制释放，释放时通知等待队列下一个申请者。包含 lock、waiter、watchdog、admin 模块。Cargo build 通过，端口 PORT 环境变量。

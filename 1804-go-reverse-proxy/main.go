@@ -510,6 +510,10 @@ func (h *AdminHandler) DeleteRoute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
+	if !strings.HasPrefix(prefix, "/") {
+		prefix = "/" + prefix
+	}
+	
 	h.router.RemoveRoute(prefix)
 	
 	w.Header().Set("Content-Type", "application/json")

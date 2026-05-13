@@ -1,7 +1,1 @@
-物联网设备用 WebSocket 推数据上来，后端服务只暴露 REST API。中间需要一层转换——设备发 JSON 消息过来，桥转成 REST 请求调后端；后端要推消息给设备，调桥的 REST 接口，桥通过 WebSocket 发过去。Rust axum 写这个双向协议桥。
-
-设备通过 WebSocket 连接到网关，连接建立时从 URL 参数取设备 ID（ws://host/ws?device_id=sensor-001）。消息格式统一为 JSON，包含三个字段：method（HTTP 方法如 GET/POST）、path（后端路径如 /api/temperature）、body（请求体）。网关收到消息后转换成 HTTP 请求调用后端服务，响应通过同一个 WebSocket 连接回传给设备。响应消息包含 status（状态码）和 data（响应体）。
-
-后端主动推送通过 REST 接口。POST /push 发送消息到指定设备，请求体包含 device_id 和 payload。网关在内存中维护 device_id 到 WebSocket 连接的映射，找到连接后发送 payload。设备不在线时返回 404。
-
-设备管理记录连接状态。设备连接时注册（记录 device_id、连接时间），断开时注销。GET /devices 查看所有在线设备列表，GET /devices/{id}/messages 查看某个设备最近的 100 条消息记录。bridge 管协议转换、device 管设备注册和状态、ws_handler 管 WebSocket 生命周期、rest_client 管 HTTP 调用。Cargo build，PORT 环境变量。
+用 Rust 写物联网设备用 WebSocket 推数据上来，后端服务只暴露 REST API。设备通过 WebSocket 连接到网关，连接建立时从 URL 参数取设备 ID（ws://host/ws?device_id=sensor-001）。响应消息包含 status（状态码）和 data（响应体）。网关在内存中维护 device_id 到 WebSocket 连接的映射，找到连接后发送 payload。设备管理记录连接状态。设备连接时注册（记录 device_id、连接时间），断开时注销。bridge 管协议转换、device 管设备注册和状态、ws_handler 管 WebSocket 生命周期、rest_client 管 HTTP 调用。Cargo build，PORT 环境变量。

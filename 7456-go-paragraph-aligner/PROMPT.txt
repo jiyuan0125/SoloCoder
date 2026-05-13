@@ -1,0 +1,5 @@
+之前手动格式不统一太麻烦太慢了，用 Go 重写个文本处理转换工具。
+工具要能JSON/YAML/TOML 格式互转、格式美化（缩进/排序）、Schema 验证。
+数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
+错误情况怎么处理你自己定。
+go build 能过，命令行工具能正常运行。

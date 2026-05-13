@@ -1,4 +1,4 @@
-连接池需要支持多种协议的连接。用 Python/aiohttp 写。
+系统里 TCP、HTTP、WebSocket 三种协议的连接混在一起，管理方式各不相同。Python/aiohttp 写个多协议连接池统一管理。
 
 支持的连接类型：TCP、HTTP、WebSocket。每种类型的连接有独立的创建和验证逻辑。
 

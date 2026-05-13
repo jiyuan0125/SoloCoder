@@ -1,5 +1,9 @@
-axum 做OAuth2 Token 中继网关。客户端用授权码换取 Token 的过程由网关完成。后端只看到解析后的用户信息。
+axum 做 OAuth2 Token 中继网关。后端服务不想处理 OAuth2 的授权码交换、Token 刷新这些杂事，全交给网关。
 
-授权码通过接口传入。Token 自动缓存和刷新。后端通过 Header 获取用户 ID 和角色。
+工作流程：客户端拿 OAuth2 授权码发给网关，网关用授权码向 Provider 换 Access Token 和 Refresh Token，缓存到内存。后续请求带 Bearer Token，网关验证后把用户信息（user_id、email、roles）注入 Header 转发后端。
 
-支持多个 OAuth2 Provider（如 GitHub、Google）。Provider 配置通过接口管理。端口 PORT 环境变量，Cargo build 能过。
+Token 自动刷新：Access Token 剩余不到 5 分钟时用 Refresh Token 刷新，新 Token 通过响应头返回。Refresh Token 也过期就返回 401。
+
+支持多 Provider（GitHub、Google 等），通过接口配置各 Provider 的 token_url、client_id、client_secret。
+
+端口 PORT 环境变量，cargo build 能过。

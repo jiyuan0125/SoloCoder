@@ -1,9 +1,7 @@
-谁没在配置文件里硬编码过数据库密码？密钥散落在代码、配置文件、环境变量各处，轮换的时候根本不知道改全了没有。FastAPI 做一个 Token 保险箱，把所有 API Key、OAuth2 Token、JWT Secret 统一管起来。
+密钥散落代码配置环境变量各处轮换不知改全没。FastAPI Token 保险箱统一管 API Key/OAuth2/JWT Secret。
 
-vault 模块是存储层。每个 Token 条目包含名称、加密后的值、类型（API Key / OAuth2 / JWT Secret）、关联的应用名和过期时间。加密用 AES-GCM，密钥从环境变量 VAULT_KEY 读取，服务启动时校验密钥长度。Token 过期后查询返回提示但不自动删除。
+vault 存储层每条含名称/加密值/类型/关联应用/过期时间。AES-GCM 加密密钥从 VAULT_KEY 环境变量读启动校验长度。过期查询返提示不自动删。
 
-issuer 模块处理 JWT 签发和验证。签发时指定 payload（Map 结构）和过期时间，返回 signed token。验证时检查签名完整性和过期时间。OAuth2 Token 的签发不在范围内，但 refresh 模块负责它的自动刷新——剩余有效期不到 10% 时触发刷新，用 refresh_token 换新的 access_token。刷新失败时通过回调通知关联应用，最多重试 3 次。
+issuer 签发 JWT 指定 payload 和过期时间返 signed token。验证检查签名和过期。refresh 模块管 OAuth2 Token 刷新有效期不到 10% 时触发用 refresh_token 换新 access_token。失败回调通知关联应用最多重试 3 次。
 
-validator 模块管访问权限。查询 Token 值时默认返回脱敏版本（前 4 位 + ***）。请求完整值需要指定应用名，validator 检查这个应用是否在 Token 的授权列表里。不在列表里就拒绝。
-
-端口 PORT 环境变量。
+validator 管权限查询默认返脱敏（前 4 位+***）要完整值须指定应用名检查是否在授权列表不在拒绝。`PORT` 环境变量。

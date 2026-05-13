@@ -1,0 +1,8 @@
+Go 标准库的bufio模块挺适合做运行 Postman Collection的，试一下。
+
+运行 Postman Collection。解析 Collection JSON，按顺序执行请求。支持环境变量和断言检查。输出执行报告。
+用 Go 标准库的 encoding/binary 包。
+数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

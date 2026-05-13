@@ -8,7 +8,7 @@ import communityRoutes from './routes/community';
 import dashboardRoutes from './routes/dashboard';
 
 const app = express();
-const PORT = process.env.PORT || 8119;
+const PORT = process.env.PORT || 8300;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

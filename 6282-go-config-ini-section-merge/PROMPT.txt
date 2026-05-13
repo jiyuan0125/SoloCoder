@@ -1,0 +1,5 @@
+用 Go 写一个INI配置段合并。合并多个 INI 文件的配置段。。
+同名段内的键值合并。
+段级别的优先级。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用第三方包，go build 通过就行。

@@ -1,9 +1,12 @@
-Go/Gin 写个缓存服务。支持 TTL 过期和 LRU 淘汰，最大容量可配。
+新入职的同事反馈说上手成本太高了，的配置就要花一周，Go 实现。
 
-缓存每个 key 有独立 TTL。set 的时候指定 TTL，不指定就永不过期。get 时如果 key 已过期自动删除并返回不存在。容量满了触发 LRU 淘汰最久没访问的 key。
+缓存每个key有独立TTL。set时指定TTL，不指定就永不过期。get时如果key已过期自动删除并返回不存在。容量满了触发LRU淘汰最久没访问的key。
 
-缓存淘汰策略可以切换：LRU 或 LFU。策略切换不丢数据，只是改变淘汰选择算法。后台 goroutine 定时扫描过期 key 清理。
+缓存淘汰策略可以切换：LRU或LFU。策略切换不丢数据，只是改变淘汰选择算法。后台goroutine定时扫描过期key清理。
 
-提供批量操作接口 batch_set 和 batch_get。统计接口返回命中率、当前 key 数、淘汰次数。
+提供批量操作接口batch_set和batch_get。统计接口返回命中率、当前key数、淘汰次数。
 
-端口 PORT 环境变量。go build 能过。
+提供RESTfulAPI。接口要做参数校验，不合法的请求直接返回400别往下传。分页查询要支持page和page_size参数，默认每页20条，最多100条。
+
+包含 cache、eviction、ttl、stats。
+

@@ -1,0 +1,6 @@
+我们SRE团队最近需要一套Unicode标准化，用 Go 标准库做。
+NFC、NFD、NFKC、NFKD 可选。
+中日韩字符统一处理。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+校验完成后自动更新统计信息，首次运行没有历史统计。
+不用第三方包，go build 通过就行。

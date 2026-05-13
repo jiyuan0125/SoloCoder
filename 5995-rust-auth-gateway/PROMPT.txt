@@ -1,4 +1,4 @@
-网关需要做 Token 黑名单和刷新。用 Rust/tokio 写，Token 管理、黑名单和 API 层分文件。
+用户登出后 Token 还能用好长时间，安全审计不通过。Rust/tokio 写个带 Token 黑名单和刷新的认证网关，Token 管理、黑名单和 API 层分文件。
 
 JWT 签发接口：输入用户 ID 和角色，返回 access token（15 分钟有效）和 refresh token（7 天有效）。
 

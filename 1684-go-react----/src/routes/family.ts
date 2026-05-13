@@ -69,7 +69,7 @@ router.get('/elders/:elderId/messages', asyncHandler(async (req: Request, res: R
 }));
 
 router.post('/appointments', asyncHandler(async (req: Request, res: Response) => {
-  const request = req.body as VisitAppointmentRequest;
+  const request = req.body as VisitAppointmentRequest & { date?: string };
   const appointment = familyService.createAppointment(request);
   res.status(201).json({ success: true, data: appointment });
 }));

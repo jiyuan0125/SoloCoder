@@ -1,0 +1,5 @@
+看到别人的数据校验工具挺有意思，自己也做一个模板匹配提取，Go。
+模板用占位符标记可变部分。
+匹配结果映射到字段名。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+不用第三方包，go build 通过就行。

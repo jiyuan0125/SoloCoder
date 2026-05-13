@@ -75,7 +75,7 @@ export const initDatabase = (): Promise<void> => {
       const defaultConfigs = [
         { type: 'email', enabled: 1, rateLimitPerMinute: 10, emailRecipients: JSON.stringify(['admin@example.com']) },
         { type: 'sms', enabled: 1, rateLimitPerMinute: 5, smsNumbers: JSON.stringify(['+1234567890']) },
-        { type: 'webhook', enabled: 0, rateLimitPerMinute: 20, webhookUrl: 'http://localhost:8080/webhook' }
+        { type: 'webhook', enabled: 0, rateLimitPerMinute: 20, webhookUrl: 'http://localhost:8200/webhook' }
       ];
 
       const insertStmt = db.prepare(

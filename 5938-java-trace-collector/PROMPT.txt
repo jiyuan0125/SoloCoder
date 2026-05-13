@@ -1,4 +1,4 @@
-链路追踪需要采集 Span 数据并提供查询。用 Go 标准库 net/http 写。
+Span 数据堆了几百万条但没人知道怎么用，查个慢请求得翻半天日志。Go 标准库 net/http 写个链路追踪采集和查询服务。
 
 Span 采集接口：接收 TraceID、SpanID、ParentSpanID、服务名、操作名、开始时间、结束时间、标签、状态。写入内存存储。
 

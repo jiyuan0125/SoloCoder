@@ -3,12 +3,13 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use axum::{
-    extract::{Query, State},
+    extract::State,
     http::StatusCode,
     response::{IntoResponse, Response, Sse},
     routing::{get, post},
     Json, Router,
 };
+use http::Request;
 use axum::response::sse::Event;
 use chrono::{DateTime, Utc};
 use futures::stream::Stream;
@@ -47,14 +48,6 @@ struct RegisterRequest {
 struct HeartbeatRequest {
     name: String,
     address: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-struct QueryParams {
-    name: Option<String>,
-    tags: Option<Vec<String>>,
-    page: Option<usize>,
-    page_size: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -257,17 +250,89 @@ async fn heartbeat(
     }
 }
 
+fn parse_query_tags(query_str: &str) -> Vec<String> {
+    let mut tags = Vec::new();
+    for pair in query_str.split('&') {
+        let key: &str;
+        let value: &str;
+        if let Some(idx) = pair.find('=') {
+            key = &pair[..idx];
+            value = &pair[idx + 1..];
+        } else {
+            key = pair;
+            value = "";
+        }
+        if key == "tags" || key == "tags[]" {
+            let decoded = percent_encoding::percent_decode_str(value)
+                .decode_utf8_lossy()
+                .trim()
+                .to_string();
+            if !decoded.is_empty() {
+                tags.push(decoded);
+            }
+        }
+    }
+    tags
+}
+
+fn parse_query_params(req: &Request<axum::body::Body>) -> (Option<String>, Vec<String>, usize, usize) {
+    let query_str = req.uri().query().unwrap_or("");
+    
+    let mut name: Option<String> = None;
+    let mut page: Option<usize> = None;
+    let mut page_size: Option<usize> = None;
+    
+    for pair in query_str.split('&') {
+        let key: &str;
+        let value: &str;
+        if let Some(idx) = <str>::find(pair, '=') {
+            key = &pair[..idx];
+            value = &pair[idx + 1..];
+        } else {
+            key = pair;
+            value = "";
+        }
+        match key {
+            "name" => {
+                let decoded = percent_encoding::percent_decode_str(value)
+                    .decode_utf8_lossy()
+                    .trim()
+                    .to_string();
+                if !decoded.is_empty() {
+                    name = Some(decoded);
+                }
+            }
+            "page" => {
+                if let Ok(p) = value.parse::<usize>() {
+                    page = Some(p);
+                }
+            }
+            "page_size" => {
+                if let Ok(p) = value.parse::<usize>() {
+                    page_size = Some(p);
+                }
+            }
+            _ => {}
+        }
+    }
+    
+    let tags = parse_query_tags(query_str);
+    let page = page.unwrap_or(1).max(1);
+    let page_size = page_size.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
+    
+    (name, tags, page, page_size)
+}
+
 async fn query(
     State(state): State<Arc<AppState>>,
-    Query(params): Query<QueryParams>,
+    req: Request<axum::body::Body>,
 ) -> Response {
     let registry = state.registry.read().await;
 
-    let page = params.page.unwrap_or(1).max(1);
-    let page_size = params.page_size.unwrap_or(DEFAULT_PAGE_SIZE).max(1);
+    let (name, tags, page, page_size) = parse_query_params(&req);
 
-    let matching_keys: HashSet<InstanceKey> = match (params.name, params.tags) {
-        (Some(name), Some(tags)) if !tags.is_empty() => {
+    let matching_keys: HashSet<InstanceKey> = match (name, !tags.is_empty()) {
+        (Some(name), true) => {
             let name_keys = registry.name_index.get(&name).cloned().unwrap_or_default();
             let mut tag_keys: Option<HashSet<InstanceKey>> = None;
             for tag in tags {
@@ -280,10 +345,10 @@ async fn query(
             }
             name_keys.intersection(&tag_keys.unwrap_or_default()).cloned().collect()
         }
-        (Some(name), _) => {
+        (Some(name), false) => {
             registry.name_index.get(&name).cloned().unwrap_or_default()
         }
-        (None, Some(tags)) if !tags.is_empty() => {
+        (None, true) => {
             let mut tag_keys: Option<HashSet<InstanceKey>> = None;
             for tag in tags {
                 let keys = registry.tag_index.get(&tag).cloned().unwrap_or_default();
@@ -295,7 +360,7 @@ async fn query(
             }
             tag_keys.unwrap_or_default()
         }
-        (None, _) => {
+        (None, false) => {
             registry.instances.keys().cloned().collect()
         }
     };

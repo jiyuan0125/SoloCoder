@@ -1,0 +1,5 @@
+V2 版本月底上线，先把数据范围检查做了，Go CLI。
+范围通过参数指定。
+超出范围的记录列出。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+纯标准库实现，go run . 能跑。

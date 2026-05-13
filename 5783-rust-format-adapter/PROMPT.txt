@@ -1,4 +1,4 @@
-季度末了，中间件这块还是手动管的，赶紧搞个WebSocket-HTTP桥接服务，Rust/axum。
+前端用 WebSocket 推实时数据，后端老系统只认 HTTP 请求，协议对不上。Rust/axum 在中间搭个桥。
 
 客户端WebSocket消息转为HTTP POST请求发到后端。后端HTTP响应通过WebSocket推回客户端。WebSocket 连接管理：最大连接数、空闲超时（5分钟）、心跳。消息类型映射：文本消息→JSON POST，二进制消息→multipart POST。后端响应超时 10 秒，超时返回WebSocket错误帧。支持广播：一条WebSocket消息触发多个后端调用。管理接口查看连接数和消息统计。
 

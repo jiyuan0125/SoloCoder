@@ -1,0 +1,5 @@
+Go 标准库的io/ioutil挺适合做代码生成的，试一下同步软链接处理。
+复制链接本身还是跟随链接。
+断裂链接的处理。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+go build 能编译通过，不依赖第三方库。

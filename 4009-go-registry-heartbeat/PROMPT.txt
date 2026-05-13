@@ -1,9 +1,7 @@
-20 多个微服务的调用地址全写死在配置文件里，每次扩缩容都要改配置重启，改到手软。先用 Go 标准库 net/http 把注册中心搭起来。
+20 多个微服务地址写死配置文件，扩缩容要改配置重启。Go 标准库 net/http 注册中心。
 
-第一步，服务注册。服务启动时调 POST `/register` 注册自己，带上服务名、IP、端口和一组元数据（键值对，值可以是字符串、数字或嵌套 JSON，注册中心不用理解含义，原样存）。注册成功返回实例 ID。之后每 10 秒发一次心跳 PUT `/heartbeat/{id}`，心跳超时 30 秒自动注销。主动注销（DELETE `/deregister/{id}`）后如果又收到心跳，当作新注册处理，分配新实例 ID。
+POST `/register` 带服务名、IP、端口和元数据（键值对，值可嵌套 JSON 原样存），返回实例 ID。每 10 秒心跳 PUT `/heartbeat/{id}`，超时 30 秒自动注销。主动注销 DELETE `/deregister/{id}` 后又收到心跳当新注册分配新 ID。
 
-第二步，服务发现。查询接口有两种模式：GET `/services/{name}` 返回该服务下所有健康实例列表，GET `/services/{name}/random` 随机返回一个（客户端负载均衡用前者调试、用后者生产）。支持按元数据过滤，比如 `?metadata.region=east` 只返回指定区域的实例。
+GET `/services/{name}` 返回所有健康实例，GET `/services/{name}/random` 随机返回一个。支持元数据过滤如 `?metadata.region=east`。客户端通过 WebSocket 订阅服务变更（注册、注销、心跳超时）。
 
-第三步，变更通知。客户端可以订阅某个服务的变更事件，通过 WebSocket 推送注册、注销、心跳超时等事件。
-
-实例列表存内存，查询接口返回的数据带缓存时间戳，方便客户端判断新鲜度。`go build` 编译，端口从 `PORT` 环境变量拿。
+实例列表存内存，查询返回带缓存时间戳。`go build` 编译，`PORT` 环境变量。

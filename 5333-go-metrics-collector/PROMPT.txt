@@ -1,3 +1,5 @@
-Go 标准库写一个指标监控。应用上报运行指标，指标服务负责存储和查询。指标的类型比较多，有只增的、有可增可减的、还有看分布的。查询的时候要做聚合计算，比如平均值、分位数。时间范围太长的时候数据要做降采样。
+Go 标准库写指标采集服务。指标类型四种：Counter（只增计数器）、Gauge（可增减瞬时值）、Histogram（分布统计）、Summary（分位数 P50/P95/P99）。上报 POST /metrics 接收 name、type、value、labels、timestamp。
 
-要提供一个和主流监控系统兼容的导出格式。端口 PORT 环境变量。
+查询聚合：Counter 支持 sum 和 rate，Gauge 支持 avg/max/min，Histogram 支持 percentile，Summary 支持 merge。长范围查询自动降采样避免海量数据点。
+
+导出 GET /metrics/prometheus 输出 Prometheus text format。GET /metrics/query 查询指标和时间范围。GET /metrics/list 列出已注册指标。端口 PORT 环境变量，数据存内存。

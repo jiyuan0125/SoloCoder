@@ -1,0 +1,6 @@
+Go 的os/exec刚好能解决批量文件处理的并发需求，拿来写Go导入分析。
+统计每个包的引用次数。
+找出可以直接替换的第三方依赖。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+校验完成后自动更新统计信息，首次运行没有历史统计。
+不用第三方包，go build 通过就行。

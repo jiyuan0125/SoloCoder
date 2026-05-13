@@ -1,1 +1,5 @@
-aiohttp 做一个日志聚合服务。拆成四个模块：IngestionService（接收日志、解析、校验）、IndexEngine（建立时间索引和全文索引）、StorageLayer（持久化存储和过期清理）、SearchService（查询和聚合）。IngestionService 接收后写入缓冲队列通知 IndexEngine 建索引。IndexEngine 建完后通知 StorageLayer 落盘。SearchService 查询先走 IndexEngine 定位再从 StorageLayer 读数据。过期清理由 StorageLayer 独立定时执行，清理完通知 IndexEngine 删索引。端口 PORT 指定。
+aiohttp 重构日志聚合服务，按职责拆分。端口 PORT 环境变量指定。
+
+IngestionService只管收日志——解析格式、校验字段、写缓冲队列，队列满则阻塞接收端防内存爆掉。IndexEngine从队列消费，建两个索引：按时间排序的有序列表（时间范围查询）和关键词分词倒排索引（全文搜索）。索引建完通知StorageLayer落盘写文件。
+
+SearchService查询时先拿IndexEngine做条件过滤定位目标日志ID，再从StorageLayer读完整内容。索引层和存储层各管各的，改存储格式不影响查询。过期清理由StorageLayer负责——定时删过期文件后通知IndexEngine同步删索引。

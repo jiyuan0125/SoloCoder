@@ -1,9 +1,5 @@
-之前用 Envoy 做流量染色，光配置文件就写了 200 多行 YAML，加一个新规则要改三个地方，上线还要重启整个服务网格。受不了了。Python FastAPI 自己写一个轻量级的流量染色和标签路由服务。
+用 Envoy 染色配置文件 200 行 YAML 加规则改三处。Python FastAPI 轻量流量染色标签路由。
 
-染色规则匹配请求特征来打标签。四种匹配维度：Header 值精确匹配或正则匹配、Cookie 值精确匹配、源 IP 段匹配（CIDR 格式，比如 10.0.1.0/24）、请求路径前缀匹配。一个请求可能同时命中多条规则，标签累加不覆盖。标签写到 X-Traffic-Tags 这个 response header 里，下游服务直接读。比如同时匹配了 Header x-gray=true 和路径前缀 /api/v2，最终标签就是 gray,v2。
+染色规则匹配请求特征打标签。四维度：Header 精确/正则、Cookie 精确、源 IP 段（CIDR）、路径前缀。多规则命中标签累加不覆盖写到 X-Traffic-Tags response header。规则有优先级越大先生效同优先按创建时间。可启用禁用。REST 接口：POST/PUT/DELETE/PATCH /rules 管理GET 列出。
 
-规则有优先级，数字越大越先生效。相同优先级按创建时间排序，先创建的先匹配。规则可以启用和禁用，禁用的不参与匹配。增删改通过 REST 接口管理：POST /rules 创建、PUT /rules/{id} 修改、DELETE /rules/{id} 删除、PATCH /rules/{id}/toggle 切换启用状态。GET /rules 列出所有规则和当前状态。
-
-标签路由根据标签把请求转发到不同后端实例组。POST /router/routes 创建路由映射，指定 tag 值和对应的后端地址列表。比如 tag=gray 转到 10.0.1.10:8080 和 10.0.1.11:8080。同一个标签对应多实例时轮询分配。GET /router/routes 查看所有映射关系。
-
-配置变更后 5 秒内生效。生效期间已处理中的请求按旧规则走完。
+标签路由根据标签转发不同后端。POST /router/routes 创建映射指定 tag 和后端地址列表。同标签多实例轮询。GET /router/routes 查映射。配置变更 5 秒生效处理中请求按旧规则走完。`PORT` 环境变量。

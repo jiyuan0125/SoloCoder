@@ -1,1 +1,7 @@
-Go/Gin 写一个服务注册中心。服务信息存到 sync.Map 里。心跳用 time.Ticker 定时检查，过期检测用 map 加时间戳排序。通知机制用 channel 做 pub/sub。查询接口支持按服务名、标签、版本三种条件组合过滤。负载策略用 sort.Slice 做权重排序，用 crypto/rand 做随机选择。DNS 解析用 net.LookupIP。健康探测用 net.DialTimeout。端口 PORT 指定。
+Gin 重写服务注册中心，用Go并发原语提升性能。端口PORT环境变量，数据存内存。
+
+服务信息存sync.Map，利用无锁读应对高并发查询。心跳检测用time.Ticker定时触发，超时自动标记不健康。过期清理用map+时间戳排序定期扫描移除。
+
+通知用Go channel做pub/sub——每订阅者独立channel，满了丢最老消息避免阻塞发布者。查询支持按服务名、标签、版本组合过滤，sort.Slice做权重排序，crypto/rand做随机选择。DNS解析用net.LookupIP，健康探测用net.DialTimeout。
+
+接口：POST /register 注册。PUT /heartbeat 心跳。GET /services/{name} 查询（标签和版本过滤）。POST /subscribe 订阅。DELETE /deregister 注销。

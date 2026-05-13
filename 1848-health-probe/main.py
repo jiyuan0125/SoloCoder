@@ -152,23 +152,22 @@ class State:
             ]
         }
 
-    async def update_target_status(self, target_id: int, new_status: TargetStatus) -> Optional[TargetStatus]:
-        async with self.lock:
-            if target_id not in self.targets:
-                return None
-            target = self.targets[target_id]
-            old_status = target.status
-            if old_status != new_status:
-                target.status = new_status
-                logger.info(
-                    f"Status changed: target={target.id}, address={target.address}, "
-                    f"old={old_status.value}, new={new_status.value}"
-                )
-                await self._recalculate_all_group_statuses()
-                return old_status
+    def _update_target_status_no_lock(self, target_id: int, new_status: TargetStatus) -> Optional[TargetStatus]:
+        if target_id not in self.targets:
             return None
+        target = self.targets[target_id]
+        old_status = target.status
+        if old_status != new_status:
+            target.status = new_status
+            logger.info(
+                f"Status changed: target={target.id}, address={target.address}, "
+                f"old={old_status.value}, new={new_status.value}"
+            )
+            self._recalculate_all_group_statuses_no_lock()
+            return old_status
+        return None
 
-    async def _recalculate_all_group_statuses(self):
+    def _recalculate_all_group_statuses_no_lock(self):
         statuses_changed: Dict[int, GroupStatus] = {}
         for group in self.groups.values():
             new_status = self._calculate_group_status(group.id)
@@ -299,20 +298,20 @@ async def run_probe(target_id: int):
                 target.last_error = None
                 if target.status == TargetStatus.UNHEALTHY:
                     if target.consecutive_successes >= target.recovery_threshold:
-                        await state.update_target_status(target.id, TargetStatus.HEALTHY)
+                        state._update_target_status_no_lock(target.id, TargetStatus.HEALTHY)
                 elif target.status == TargetStatus.UNKNOWN:
                     if target.consecutive_successes >= target.recovery_threshold:
-                        await state.update_target_status(target.id, TargetStatus.HEALTHY)
+                        state._update_target_status_no_lock(target.id, TargetStatus.HEALTHY)
             else:
                 target.consecutive_failures += 1
                 target.consecutive_successes = 0
                 target.last_error = "Probe failed"
                 if target.status == TargetStatus.HEALTHY:
                     if target.consecutive_failures >= target.failure_threshold:
-                        await state.update_target_status(target.id, TargetStatus.UNHEALTHY)
+                        state._update_target_status_no_lock(target.id, TargetStatus.UNHEALTHY)
                 elif target.status == TargetStatus.UNKNOWN:
                     if target.consecutive_failures >= target.failure_threshold:
-                        await state.update_target_status(target.id, TargetStatus.UNHEALTHY)
+                        state._update_target_status_no_lock(target.id, TargetStatus.UNHEALTHY)
 
         await asyncio.sleep(target.interval)
 

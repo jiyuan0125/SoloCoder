@@ -1,9 +1,4 @@
-之前用 Nginx 做限流，配起来太死板——改个速率要 reload，不同接口想配不同速率就得写一堆 location。Rust axum 写一个独立的令牌桶限流服务，所有配置走接口。
-
-每个请求路径配独立的桶。桶有两个参数：容量和填充速率（令牌/秒）。请求消耗一个令牌，桶空时返回 429。容量和速率通过 PUT /api/buckets/{path} 设置，GET /api/buckets 列出所有桶。有些接口一次消耗多个令牌（比如批量操作），消耗数量在请求头 X-Token-Cost 指定，不指定默认 1。令牌不够时按实际可消耗数部分通过，剩余请求拒绝。
-
-桶的信息可以随时查询——当前令牌数、容量、速率、上次填充时间。不用的桶 DELETE /api/buckets/{path} 删除，删除时桶里还有等待中的请求要处理完再清。
-
-限流触发的 429 响应带 Retry-After Header，值是预估的令牌补充时间。桶的容量设为 0 直接拒绝所有请求，相当于紧急熔断开关。
-
-Rust 这边 bucket 管令牌状态、limiter 管消耗判定、manager 管桶的生命周期、handler 处理 HTTP 接口。Cargo build 能过，端口 PORT 环境变量。
+用 Rust axum 写令牌桶限流服务。每请求路径配独立桶参数容量和填充速率（令牌/秒）。请求消耗令牌桶空返 429。PUT /api/buckets/{path} 设置 GET /api/buckets 列出。批量操作可指定 X-Token-Cost 消耗多个令牌默认 1。令牌不够按实际可消耗数部分通过剩余拒绝。
+桶信息可查：当前令牌数、容量、速率、上次填充时间。DELETE /api/buckets/{path} 删除时等请求处理完再清。
+429 响应带 Retry-After 预估补充时间。容量设 0 直接拒绝所有等于紧急熔断开关。
+拆 bucket 令牌状态、limiter 消耗判定、manager 桶生命周期、handler HTTP 接口。Cargo build，端口 PORT 环境变量。

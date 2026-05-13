@@ -1,11 +1,7 @@
-Rust axum 做一个带 TTL 的缓存中间件。其他服务通过 HTTP 接口来读写缓存。
+用户画像接口查库 200ms，P99 要求 50ms。Rust axum 做带 TTL 的缓存中间件，其他服务 HTTP 接口读写缓存。
 
-基本操作：set(key, value, ttl) 设置缓存，get(key) 获取缓存，delete(key) 删除缓存。value 支持任意字符串，key 最长 256 字节。TTL 到期后自动删除，get 返回不存在。
+基本操作：set(key, value, ttl)、get(key)、delete(key)。value 任意字符串，key 最长 256 字节，TTL 到期自动删除。过期清理用后台线程定期扫描，不在读写路径判断过期。
 
-淘汰策略：缓存总量有上限（可配置），满了之后按 LRU 淘汰。淘汰的时候优先淘汰快过期的。淘汰操作在后台线程执行，不影响读写性能。
+缓存总量有上限（可配），满了按 LRU 淘汰，优先淘汰快过期的 key，后台线程执行不影响读写。
 
-缓存穿透保护：同一个 key 如果在短时间内被大量 get 且都不存在，触发保护机制，短时间内直接返回空不再查。这个保护阈值可配。
-
-统计接口：命中率、总请求数、当前缓存条目数、淘汰次数。最近被淘汰的 key 列表（保留最近 100 条）。
-
-至少包含 cache、eviction、protection、stats 四个模块。Cargo build 通过，端口 PORT 环境变量。
+防穿透：同一 key 短时间大量 get 不存在时触发保护直接返回空，阈值可配。统计接口提供命中率、请求数、条目数、淘汰次数，最近淘汰 key 保留 100 条。包含 cache、eviction、protection、stats 模块。Cargo build 通过，端口 PORT 环境变量。

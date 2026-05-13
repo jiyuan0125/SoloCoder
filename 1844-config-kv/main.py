@@ -464,6 +464,12 @@ async def watch_status_handler(request: web.Request):
     return web.json_response({'watchers': watchers})
 
 
+async def get_all_groups_handler(request: web.Request):
+    project = request.match_info['project']
+    all_config = config_service.get_all_groups_config(project)
+    return web.json_response(all_config)
+
+
 async def set_parent_handler(request: web.Request):
     project = request.match_info['project']
     group = request.match_info['group']
@@ -484,6 +490,7 @@ async def set_parent_handler(request: web.Request):
 def create_app():
     app = web.Application()
     
+    app.router.add_get('/projects/{project}/groups', get_all_groups_handler)
     app.router.add_get('/projects/{project}/groups/{group}/keys', get_keys_handler)
     app.router.add_put('/projects/{project}/groups/{group}/keys', put_keys_handler)
     app.router.add_put('/projects/{project}/groups/{group}/parent', set_parent_handler)
@@ -496,7 +503,7 @@ def create_app():
 
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 8080))
+    port = int(os.environ.get('PORT', 8200))
     app = create_app()
     logger.info(f"Starting config center on port {port}")
     web.run_app(app, port=port)

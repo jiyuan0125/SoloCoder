@@ -1,0 +1,8 @@
+看到别人的分析 Go 测试文件之间的依赖关系（通过 import 和共享 package），输出依赖图挺好用，自己也做一个，Go 标准库。
+
+分析 Go 测试文件之间的依赖关系（通过 import 和共享 package），输出依赖图。支持检测循环依赖、找出独立可并行运行的测试组。
+需要用到 bufio.Scanner 等标准库功能。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+
+Go 实现，只用标准库，交叉编译友好。

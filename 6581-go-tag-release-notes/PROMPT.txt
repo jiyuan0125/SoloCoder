@@ -1,0 +1,8 @@
+之前用的 SaaS 工具到量了，Go 自建为指定 tag 生成 release notes。
+
+为指定 tag 生成 release notes。对比前一个 tag 的差异，提取 feat/fix/breaking 变更。输出 Markdown。
+去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。
+命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
+工具管理配置模板和配置实例。实例基于模板生成。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

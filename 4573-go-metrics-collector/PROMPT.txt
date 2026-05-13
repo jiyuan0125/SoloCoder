@@ -1,7 +1,13 @@
-之前用 Prometheus 做监控，但我们的业务指标比较特殊，Prometheus 的四种类型不够用。用 Go/Fiber 写一个指标采集服务，支持自定义指标类型。
+Prometheus太重了，我们只需要基本的指标采集和查询，部署一整套监控栈不值得。
 
-指标分三种：Counter（只增不减的计数器）、Gauge（可增可减的仪表盘）、Histogram（分布统计）。每个指标有名称、标签（键值对维度）、描述。通过接口给指标设值或增量操作。Histogram 需要指定桶的边界（bucket boundaries），统计落在每个桶里的数量、总和、计数。
+用Go/Fiber写一个指标采集服务，支持自定义指标类型。
 
-对外暴露 /metrics 接口，输出 Prometheus exposition format，让 Prometheus 来抓。标签相同的指标合并，标签不同的独立计算。同一个名称的指标不能重复创建。
+指标分三种：Counter（只增不减的计数器）、Gauge（可增可减的仪表盘）、Histogram（分布统计）。Histogram需要指定桶的边界，统计落在每个桶里的数量、总和、计数。
 
-指标数据存在内存里，支持按名称前缀批量删除。有个管理接口列出所有已注册指标的元信息和当前值。端口环境变量 PORT 指定，go build 能编译通过。
+对外暴露/metrics接口，输出Prometheusexpositionformat，让Prometheus来抓。同一个名称的指标不能重复创建。
+
+健康检查接口必须有，返回服务自身状态和依赖组件的状态。
+
+指标数据存在内存里，支持按名称前缀批量删除。有个管理接口列出所有已注册指标的元信息和当前值。
+
+包含 metric、ingest、query、storage。

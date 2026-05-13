@@ -1,0 +1,8 @@
+有个老的 Python 工具做对比两个版本的 OpenAPI spec，检测 breaking changes，速度跟不上，换成 Go。
+
+对比两个版本的 OpenAPI spec，检测 breaking changes。标记删除的接口、改变的参数类型、新增的 required 字段。输出 Markdown 报告。
+用 Go 标准库的 archive/tar 包。
+主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,0 +1,5 @@
+给朋友的小店写个选择性恢复，Go 命令行工具。
+可以只恢复指定目录或文件。
+恢复前预览要恢复的内容。
+多级命令：config get、config set、config list、config env switch。
+go build 能编译通过，不依赖第三方库。

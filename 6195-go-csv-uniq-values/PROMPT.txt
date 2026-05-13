@@ -1,0 +1,5 @@
+Go 的crypto/sha256刚好能解决批量文件处理的并发需求，拿来写CSV唯一值统计。
+频率分布。高频和低频标记。
+结果输出为摘要报告。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+不用第三方包，go build 通过就行。

@@ -17,7 +17,7 @@ func Load() *Config {
 		if envPort := os.Getenv("PORT"); envPort != "" {
 			*port = envPort
 		} else {
-			*port = "8300"
+			*port = "8503"
 		}
 	}
 

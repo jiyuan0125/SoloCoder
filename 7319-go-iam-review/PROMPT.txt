@@ -1,0 +1,5 @@
+闲着没事写个安全扫描审计工具自己用，Go CLI。
+工具要能安全基线检查、CIS Benchmark 对比、差距分析报告。
+搜索索引时要更新引用计数，更新计数也要查索引完整性。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+go build 能过，命令行工具能正常运行。

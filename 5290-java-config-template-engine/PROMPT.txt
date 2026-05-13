@@ -1,7 +1,5 @@
-Spring Boot 做配置模板引擎。配置值支持模板语法，可以引用其他配置的值。
+Spring Boot 做配置模板引擎。配置值支持模板语法一处定义到处引用。用 {{config.key}} 引用其他配置项，如 database.url 写成 jdbc:postgresql://{{config.db_host}}:{{config.db_port}}/mydb，改 db_host 所有引用自动跟着变。引用支持嵌套，循环引用检测报错。
 
-模板语法：{{config.key}} 引用其他配置。引用可以嵌套：A 引用 B，B 引用 C。循环引用检测。
+基础配置变更后所有引用的模板自动重新解析，结果缓存。解析时被引用 key 不存在或语法错误，保留上次正确值，错误写日志。
 
-被引用的配置变更后，引用它的模板配置自动重新解析。解析结果缓存。
-
-模板解析错误时保留上一次的正确值。错误信息记录到日志。端口 server.port 配置，Maven 构建。
+POST /configs 设置普通值和模板值。GET /configs/{key}/resolved 返回解析后最终值。GET /configs/{key}/references 返回哪些配置引用了这个 key。POST /configs/batch 批量设置。端口 server.port 配置，Maven 构建。数据存内存。

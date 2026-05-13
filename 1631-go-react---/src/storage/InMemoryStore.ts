@@ -198,11 +198,24 @@ export class InMemoryStore {
     };
   }
 
+  private isValidDuration(duration: number): boolean {
+    return !isNaN(duration) && isFinite(duration);
+  }
+
+  private getSafeDuration(startTime: number, endTime: number): number {
+    const duration = endTime - startTime;
+    if (!this.isValidDuration(duration)) {
+      return 0;
+    }
+    return Math.max(0, duration);
+  }
+
   getServiceStats(): ServiceStats[] {
     const statsMap = new Map<string, {
       totalSpans: number;
       totalDuration: number;
       errorCount: number;
+      validSpanCount: number;
     }>();
 
     for (const traceMap of this.spans.values()) {
@@ -210,11 +223,17 @@ export class InMemoryStore {
         const stats = statsMap.get(span.serviceName) || {
           totalSpans: 0,
           totalDuration: 0,
-          errorCount: 0
+          errorCount: 0,
+          validSpanCount: 0
         };
 
         stats.totalSpans++;
-        stats.totalDuration += (span.endTime - span.startTime);
+
+        const duration = this.getSafeDuration(span.startTime, span.endTime);
+        if (duration > 0) {
+          stats.totalDuration += duration;
+          stats.validSpanCount++;
+        }
 
         if (span.tags?.error === true) {
           stats.errorCount++;
@@ -227,7 +246,7 @@ export class InMemoryStore {
     return Array.from(statsMap.entries()).map(([serviceName, stats]) => ({
       serviceName,
       totalSpans: stats.totalSpans,
-      avgResponseTime: stats.totalSpans > 0 ? stats.totalDuration / stats.totalSpans : 0,
+      avgResponseTime: stats.validSpanCount > 0 ? stats.totalDuration / stats.validSpanCount : 0,
       errorCount: stats.errorCount,
       errorRate: stats.totalSpans > 0 ? stats.errorCount / stats.totalSpans : 0
     }));
@@ -238,7 +257,7 @@ export class InMemoryStore {
 
     for (const traceId of this.spans.keys()) {
       const tree = this.getTraceTree(traceId);
-      if (tree && tree.totalDuration >= threshold) {
+      if (tree && this.isValidDuration(tree.totalDuration) && tree.totalDuration >= threshold) {
         slowTraces.push(tree);
       }
     }

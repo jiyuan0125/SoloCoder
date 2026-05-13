@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: lightweight-queue
+
+server:
+  port: 8905
+
+queue:
+  data-dir: ./queue-data
+  default-max-capacity: 10000

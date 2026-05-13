@@ -1,7 +1,5 @@
-标准库 net/http 做反向代理，把请求转发到后端服务集群。后端服务通过接口注册，每个后端带健康检查路径。
+net/http 做反向代理，请求转发到后端服务集群，注入特定 Header 并处理多上游故障转移。后端通过 POST /admin/upstreams 注册，传入 host:port 和 health_check_path。转发逻辑：从健康后端中轮询选一个，注入 X-Forwarded-For（客户端 IP）和 X-Request-ID（UUID v4），转发超时 10 秒。
 
-转发时改写 Header：注入 X-Forwarded-For、X-Request-ID。上游返回 5xx 时尝试下一个上游。所有上游都挂了返回 502。
+故障转移：选中后端返回 5xx 或连接失败，自动尝试下一个健康后端，全部失败才返回 502。4xx 不做故障转移。
 
-上游健康检查每 10 秒一次，连续 3 次失败标记为不健康，1 次成功恢复。健康检查结果影响转发选择。
-
-端口 PORT 环境变量，go build 能过。
+健康检查：每 10 秒对每个后端发 GET {health_check_path}，超时 3 秒。连续 3 次失败标记 unhealthy，1 次成功即恢复。端口 PORT 环境变量，go build 能过。

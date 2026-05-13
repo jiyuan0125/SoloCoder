@@ -1,0 +1,7 @@
+试了几个现成方案都不满足需求，只能 Go 自己写合并多个子项目的 release notes 为主项目 release note。
+
+合并多个子项目的 release notes 为主项目 release note。按子项目分组，支持自定义排序和格式。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+解析完日志后自动触发告警检查。没有错误日志的时候不检查。
+
+用 Go 标准库写，go run . 或 go build 都行。

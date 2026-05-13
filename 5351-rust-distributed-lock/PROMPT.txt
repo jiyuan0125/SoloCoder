@@ -1,1 +1,5 @@
-Rust/actix-web 写一个分布式锁。拆成四个模块：LockManager（锁状态管理）、WaitQueue（等待者队列）、LeaseManager（租约超时处理）、APIServer（HTTP 接口）。LockManager 获取锁时如果已被占用则注册到 WaitQueue。WaitQueue 在锁释放时按 FIFO 唤醒下一个等待者。LeaseManager 定期扫描过期锁，过期后通知 LockManager 释放并触发 WaitQueue 唤醒。可重入锁的计数由 LockManager 维护，获取加一释放减一，减到零才真正释放。端口环境变量指定。
+actix-web 实现分布式锁服务，四个模块解耦。端口环境变量指定。
+
+LockManager管锁状态——谁持有、TTL剩余、重入次数。获取时锁已被占则转交WaitQueue排队。WaitQueue是FIFO队列，锁释放时决定下一个获得者。LeaseManager独立定时器扫描过期锁，到期通知LockManager释放并触发WaitQueue唤醒。APIServer是HTTP接口层，只做参数解析和响应序列化。
+
+可重入锁由LockManager维护——同一client_id对同一锁每次获取计数+1，释放-1，减到零才真正释放触发等待者唤醒。LeaseManager扫描时同时检查重入计数，仅计数为零且超时才释放。

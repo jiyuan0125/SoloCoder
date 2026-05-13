@@ -27,7 +27,13 @@ func writeJSON(w http.ResponseWriter, status int, data interface{}) {
 func writeError(w http.ResponseWriter, status int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(models.APIResponse{Success: false, Error: err.Error()})
+	errorMsg := ""
+	if err != nil {
+		errorMsg = err.Error()
+	} else {
+		errorMsg = http.StatusText(status)
+	}
+	json.NewEncoder(w).Encode(models.APIResponse{Success: false, Error: errorMsg})
 }
 
 func (h *Handler) EnableCORS(next http.HandlerFunc) http.HandlerFunc {

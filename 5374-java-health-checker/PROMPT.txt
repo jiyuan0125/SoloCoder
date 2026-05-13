@@ -1,1 +1,7 @@
-Spring Boot 做一个健康检查服务。HTTP 探测用 RestTemplate 加自定义的 RequestConfig 设置超时。TCP 探测用 java.net.Socket 加 connect timeout。探测调度用 ThreadPoolTaskScheduler。状态判断用自定义的 StateMachine。Webhook 通知用 RestTemplate 发 POST。状态聚合用 Spring 的 Aggregator pattern。端口 PORT 指定。
+Spring Boot 重构健康检查，用框架能力替自造轮子。端口PORT环境变量，Maven构建，数据存内存。
+
+HTTP探测用RestTemplate自定义RequestConfig——连接超时3秒读超时5秒。TCP探测用Socket加connect timeout。调度用ThreadPoolTaskScheduler可配线程池大小和间隔。
+
+状态判断用自定义StateMachine——每目标独立有限状态机（healthy→degrading→unhealthy→recovering→healthy），转换条件是连续成功或失败次数。Webhook用RestTemplate发POST。状态聚合计算整体健康百分比生成系统级报告。
+
+接口：POST /targets 注册。GET /health/overview 整体状态。GET /health/{name} 单目标历史。PUT /targets/{name} 修改配置。

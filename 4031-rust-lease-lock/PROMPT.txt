@@ -1,7 +1,7 @@
-上次分布式锁跑了一阵发现两个问题：持有者忘了续约导致锁提前释放，别的实例趁机拿走锁结果两个人同时操作；锁过期后被别人拿走了原持有者还在写数据——数据又乱了。这次用 Rust tokio 做带租约和 fencing token 的版本。
+分布式锁持有者忘续约导致锁提前释放数据又乱了。Rust tokio 带租约和 fencing token 版本。
 
-获取锁时分配租约（TTL）和单调递增的 fencing token。持有者必须在 TTL 内续约（PUT `/locks/{name}/renew`，带 fencing token 验证身份），否则自动释放。释放和续约时必须带 fencing token，不匹配则拒绝——这样即使网络延迟导致旧持有者的请求晚到了，也不会影响新持有者。下游存储可以用 fencing token 做写入校验。
+获取锁时分配租约 TTL 和单调递增 fencing token。持有者须在 TTL 内续约（PUT `/locks/{name}/renew` 带 fencing token），否则自动释放。释放和续约须带 fencing token 不匹配拒绝——防旧持有者影响新持有者。
 
-同一个资源上的锁请求排队等待。队列支持优先级（high/normal/low），高的优先出队，相同优先级按请求时间排序。等待超时返回 408。
+锁请求排队支持优先级（high/normal/low），高优先同优先按时间排。等待超时返回 408。
 
-锁支持层级关系——父锁被持有时子锁可以被其他人获取（读写锁语义：父锁=写锁、子锁=读锁）。父锁释放时所有子锁一并释放。GET `/locks` 返回等待队列和持有者信息，包含 fencing token 和剩余 TTL。`Cargo build` 通过，`PORT` 环境变量。
+锁支持层级：父锁持有时子锁可被他人获取（读写锁语义）。父锁释放所有子锁一并释放。GET `/locks` 返回队列和持有者含 fencing token 和剩余 TTL。`Cargo build` 通过，`PORT` 环境变量。

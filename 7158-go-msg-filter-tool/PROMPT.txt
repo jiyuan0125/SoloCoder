@@ -1,0 +1,4 @@
+Go 标准库的crypto/rsa刚好能用，写个消息/队列处理工具。
+工具要能消息过滤（基于规则筛选）、黑名单/白名单、过滤统计。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+go build 能过，命令行工具能正常运行。

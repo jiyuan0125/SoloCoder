@@ -1,0 +1,5 @@
+老板说要搞日志分析数字化，先做个多字段排序，Go 命令行。
+每列可以指定升序或降序。支持中文排序。
+数字列按数值排序不是字符串排序。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用第三方包，go build 通过就行。

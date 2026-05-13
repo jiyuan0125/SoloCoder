@@ -1,0 +1,27 @@
+{
+  "backup_records": [
+    {
+      "id": "e64c59552ff1e3c35c742c601444700e",
+      "start_time": "2026-05-13T13:45:11.318093027+08:00",
+      "end_time": "2026-05-13T13:45:11.31947811+08:00",
+      "source_path": "test_source",
+      "target_path": "test_backup.zip",
+      "is_compressed": true,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "file1.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T13:44:51.727985185+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T13:44:51.727985185+08:00"
+        }
+      ],
+      "failed_files": null
+    }
+  ],
+  "latest_id": "e64c59552ff1e3c35c742c601444700e"
+}

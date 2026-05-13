@@ -1,1 +1,7 @@
-Go 标准库写一个指标采集服务。时序数据用自定义的 ring buffer 存储。Counter 用 atomic.Int64 做原子计数。Histogram 用自己实现的分位数计算（基于 t-digest 思路简化版）。降采样用时间窗口聚合。Prometheus 导出用 text/template 格式化。HTTP 接口用标准库 http.ServeMux。配置文件用 encoding/json 解析。端口 PORT 环境变量指定。
+Go标准库重写指标采集，用ring buffer替slice提升性能。端口PORT环境变量，数据存内存。
+
+时序数据用自实现ring buffer——固定大小环形数组，写满覆盖最老数据。Counter用atomic.Int64原子计数。Histogram用简化t-digest思路，维护质心点近似分布，查P50/P95/P99插值计算。
+
+降采样用时间窗口聚合——长范围查询按大窗口（如1分钟）做min/max/avg聚合。Prometheus导出用text/template格式化标准text format含HELP、TYPE和数据行。HTTP用标准库http.ServeMux路由。
+
+接口：POST /metrics 上报。GET /metrics/query 查询。GET /metrics/prometheus 导出。GET /metrics/list 指标列表。

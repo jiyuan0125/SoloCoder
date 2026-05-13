@@ -1,13 +1,1 @@
-缓存满了淘汰最旧的，这不难。难的是淘汰策略要灵活，统计要实时，初始化要快。Rust axum 做一个 LRU 缓存中间件，把缓存该有的能力做齐。
-
-缓存操作走接口——GET /api/cache/{key} 查询，PUT /api/cache/{key} 写入（带 TTL），DELETE /api/cache/{key} 删除。查询时检查 TTL，过期返回 miss 并删除。支持按前缀批量删除：DELETE /api/cache?prefix=user:。
-
-缓存条目数达到上限时淘汰最久未访问的。TTL 到期的条目在访问时检查并删除。后台还有个定期扫描，每 60 秒扫一遍清除过期条目。淘汰和过期事件可以配置通知——回调一个 URL，POST 通知包含被淘汰的 key 和原因。
-
-命中率、当前条目数、总请求数、淘汰次数——这些统计数据实时更新，通过 GET /api/stats 暴露。统计数据分 hit/miss/eviction/expired 四类。
-
-支持从文件或接口批量导入初始数据，POST /api/cache/batch。导入期间正常处理读写请求。导入完成后的统计数据要反映导入的数据量。
-
-条目淘汰后又被访问（通过批量导入恢复了）的情况，统计里要有单独的"复活"计数。
-
-cache 管缓存操作、eviction 管 LRU 和淘汰策略、stats 管统计、warmer 管批量导入。Cargo build，PORT 环境变量。
+缓存满了淘汰最旧的，这不难。难的是淘汰策略要灵活，统计要实时，初始化要快。Rust axum 做一个 LRU 缓存中间件，把缓存该有的能力做齐。缓存操作走接口：GET /api/cache/{key} 查询，PUT /api/cache/{key} 写入（带 TTL），DELETE /api/cache/{key} 删除。查询时检查 TTL，过期返回 miss 并删除。缓存条目数达到上限时淘汰最久未访问的。淘汰和过期事件可以配置通知：回调一个 URL，POST 通知包含被淘汰的 key 和原因。cache 管缓存操作、eviction 管 LRU 和淘汰策略、stats 管统计、warmer 管批量导入。Cargo build，PORT 环境变量。

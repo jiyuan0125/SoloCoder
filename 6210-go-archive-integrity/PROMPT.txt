@@ -1,0 +1,5 @@
+试了三个现成方案都不满足自定义输出格式，只能 Go 自己写压缩包完整性校验。
+检测损坏的文件头、CRC 错误。
+列出校验结果。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用第三方包，go build 通过就行。

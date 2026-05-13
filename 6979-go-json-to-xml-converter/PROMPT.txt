@@ -1,0 +1,7 @@
+用 Go 写一个JSON 转 XML的命令行工具。
+
+JSON 转 XML。递归转换嵌套结构。支持属性映射、命名空间。输出格式化的 XML。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+Go 标准库，命令行参数用 flag 包解析。

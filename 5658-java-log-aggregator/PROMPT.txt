@@ -1,4 +1,4 @@
-业务上需要一套日志聚合服务，Spring Boot 2.x，Maven，JDK 17。
+线上只持久化 WARN 以上，DEBUG/INFO 存 ring buffer 10000 条，出错时 dump 最近 100 条。Spring Boot 2.x。
 
 日志分级过滤，线上只持久化 WARN 以上，DEBUG/INFO 存 ring buffer（10000 条），出错时 dump 最近 100 条。过滤规则运行时可修改。日志格式 level/service/message/timestamp/extra。规则含级别阈值、关键词白名单、service 过滤。管理接口改规则、dump buffer。
 

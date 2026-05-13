@@ -1,9 +1,5 @@
-Redis 对这个场景来说太奢侈了——就是想给内部几个服务一个共享的 KV 缓存层，数据量不大但访问频繁。部署 Redis 还要运维审批，干脆自己搞。Rust + axum 写一个轻量 HTTP 缓存服务，LRU 淘汰策略，容量按条目数配置。
+内部服务需共享 KV 缓存，数据量不大访问频繁，Redis 太重。Rust + axum 轻量 HTTP 缓存，LRU 淘汰，容量按条目数配。
 
-1. 基础操作：PUT `/cache/{key}` 写入（Body 为 value，可选 TTL 秒数），GET `/cache/{key}` 读取，DELETE `/cache/{key}` 删除，POST `/cache/flush` 清空全部。每个 key 可单独设 TTL，不设走全局默认 TTL（默认 300 秒）。过期用惰性删除——访问时发现已过期就删掉返回 miss（404）。
+PUT `/cache/{key}` 写入（Body 为 value，可选 TTL），GET `/cache/{key}` 读，DELETE `/cache/{key}` 删，POST `/cache/flush` 清空。每 key 可单独设 TTL，不设走全局默认 300 秒。过期惰性删除——访问时发现过期就删返回 404。PUT `/config` 设最大条目数默认 10000，满后淘汰最久未访问的。改容量后超出部分立即淘汰。单条 value 上限 1MB 超出返回 413。
 
-2. 容量管理：通过 PUT `/config` 设置最大条目数，默认 10000。满了之后淘汰最久未访问的。修改全局容量后，如果当前条目数超过新上限，立即淘汰多余的。单条 value 上限 1MB，超出的写入返回 413。
-
-3. 统计与监控：GET `/stats` 返回命中率、当前条目数、总查询次数、淘汰次数。数据全在内存，重启清零——这是预期行为，上层服务要有兜底。
-
-`Cargo build` 通过，`PORT` 环境变量指定监听端口。
+GET `/stats` 返回命中率、条目数、查询次数、淘汰次数。数据全内存重启清零。`Cargo build` 通过，`PORT` 环境变量。

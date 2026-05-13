@@ -1,4 +1,4 @@
-需要跨服务的链路追踪，服务间的调用关系要可视化。用 Go 标准库 net/http 写。
+跨服务的调用关系复杂到没人能画清楚，出问题一锅粥。Go 标准库 net/http 写个链路追踪，自动生成服务拓扑。
 
 Span 上报接口接收 span 数据。每个 span 包含 trace_id、span_id、parent_span_id、service、operation、start_time、end_time、tags(map)、status。
 

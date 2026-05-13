@@ -1,9 +1,9 @@
-用 Rust 的 actix-web 做一个 JWT 认证网关。
+CTO 上周 review 时特别点了这个问题，各服务的认证逻辑各自实现，token 格式也不统一，有的用 JWT 有的用自定义 session。需要一个统一的认证网关，Rust actix-web 实现，统一处理 JWT 验证和角色鉴权。
 
-网关拦截所有请求，校验 Authorization 头里的 JWT Token。Token 合法就放行，同时在请求头里注入用户信息（X-User-Id、X-User-Role）。Token 过期或格式错误返回 401。
+网关拦截所有请求，校验 Authorization 头里的 JWT Token。Token 过期或格式错误返回 401，影响线上体验。
 
 支持 Token 刷新：客户端可以用有效的 refresh_token 换新的 access_token。refresh_token 有效期7天，access_token 有效期30分钟。
 
-路径和角色的映射关系通过配置文件或接口设置，比如 /admin/* 需要 admin 角色，/api/v1/users/* 需要登录即可。路径匹配要支持通配符和精确匹配的优先级。
+路径和角色的映射关系通过配置文件或接口设置，比如 /admin/* 需要 admin 角色，/api/v1/users/* 需要登录即可。
 
-有些路径不需要认证（比如 /auth/login、/health），这些白名单路径直接放行。白名单的路径配置和角色映射的路径配置如果冲突了——比如同一路径既在白名单又在角色映射里——怎么处理你来决定。端口 PORT 环境变量。
+包含 jwt、rbac、audit、config 模块。

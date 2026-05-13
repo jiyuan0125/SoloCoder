@@ -1,0 +1,8 @@
+新接了个项目，要求批量更新 Git submodule，用 Go 标准库写。
+
+批量更新 Git submodule。支持递归更新、指定版本、检查是否有新版本。输出每个 submodule 的当前版本和最新版本。
+用 Go 标准库的 html/template 包。
+扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+
+纯 Go 标准库，编译后单二进制可以直接跑。

@@ -1,3 +1,5 @@
-Spring Boot 写一个消息队列。发送方把消息发到 topic，消费方订阅 topic 收消息。消息不能丢。消费失败了要能重试。重试多少次、间隔多久自己设计。消费方处理慢的时候消息不能堆积到内存溢出。
+Spring Boot 做消息队列，发送方发到 topic，消费方订阅收消息，中间解耦。投递保证 at-least-once。消息持久化到本地文件重启不丢。消费失败进重试队列间隔递增（10s→30s→1min→5min），最多 5 次后进死信等人工处理。消费慢时消息在磁盘排队不溢出内存。
 
-同一个 topic 的消息要有一定的顺序保证。端口 PORT 环境变量。
+同 topic 同分区保持顺序，先发先消费。跨分区不保证全局顺序。分区数创建 topic 时指定。
+
+POST /topics 创建（指定分区数）。POST /topics/{name}/messages 发消息。POST /topics/{name}/subscribe 订阅（回调地址和消费组）。GET /topics 列出所有和消息数统计。GET /topics/{name}/deadletter 查死信。端口 PORT 环境变量，Maven 构建。数据存内存加本地文件。

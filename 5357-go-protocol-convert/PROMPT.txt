@@ -1,1 +1,5 @@
-Go/Fiber 写一个协议转换网关。拆分：SchemaRegistry（管理 Protobuf schema 定义）、JsonToProto（JSON 到 Protobuf 转换引擎）、ProtoToJson（反向转换）、APIHandler（HTTP 接口层）。SchemaRegistry 加载 schema 后通知 JsonToProto 和 ProtoToJson 更新映射表。APIHandler 接收请求后调用 JsonToProto 转发。后端响应通过 ProtoToJson 转回。Schema 更新时正在进行的转换用旧 schema 走完。端口 PORT 环境变量指定。
+Go/Fiber 实现协议转换网关，前端发JSON转Protobuf给下游。端口 PORT 环境变量，数据存内存。
+
+四个模块：SchemaRegistry管理Protobuf schema定义，加载维护.proto解析后的类型映射表。JsonToProto根据映射表递归把JSON字段转Protobuf字段。ProtoToJson反向转换。APIHandler是HTTP接口层，接收请求调JsonToProto转发后端，响应通过ProtoToJson转回。
+
+SchemaRegistry加载新schema后通知两个转换器更新映射表。APIHandler只跟转换器交互不操作schema。Schema更新时进行中的转换请求用旧schema走完，新请求用新schema，保证数据一致性。

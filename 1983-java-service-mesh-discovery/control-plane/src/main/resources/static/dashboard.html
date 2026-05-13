@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Service Mesh Topology</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+        .header { background: #1e293b; padding: 16px 24px; border-bottom: 1px solid #334155; }
+        .header h1 { font-size: 20px; font-weight: 600; }
+        .header .subtitle { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .container { padding: 24px; }
+        .canvas-container { background: #1e293b; border-radius: 8px; padding: 16px; position: relative; min-height: 500px; }
+        svg { width: 100%; height: 600px; }
+        .node circle { stroke: #475569; stroke-width: 2; }
+        .node.healthy circle { fill: #22c55e; }
+        .node.unhealthy circle { fill: #64748b; }
+        .node text { fill: #e2e8f0; font-size: 12px; text-anchor: middle; }
+        .edge line { stroke: #64748b; stroke-width: 2; }
+        .edge.high-qps line { stroke: #f59e0b; stroke-width: 3; }
+        .edge.high-error line { stroke: #ef4444; stroke-width: 3; }
+        .edge-label text { fill: #94a3b8; font-size: 10px; }
+        .legend { display: flex; gap: 24px; margin-top: 16px; padding: 12px; background: #1e293b; border-radius: 8px; }
+        .legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-dot.healthy { background: #22c55e; }
+        .legend-dot.unhealthy { background: #64748b; }
+        .legend-dot.normal { background: #64748b; }
+        .legend-dot.high-qps { background: #f59e0b; }
+        .legend-dot.high-error { background: #ef4444; }
+        .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+        .stat-card { background: #1e293b; padding: 16px; border-radius: 8px; border-left: 3px solid #3b82f6; }
+        .stat-value { font-size: 24px; font-weight: 600; color: #3b82f6; }
+        .stat-label { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .tooltip { position: absolute; background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 6px; font-size: 12px; pointer-events: none; display: none; z-index: 100; }
+        .tooltip h4 { margin-bottom: 8px; color: #3b82f6; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Service Mesh Topology</h1>
+        <div class="subtitle">服务拓扑可视化 - 每 10 秒刷新</div>
+    </div>
+    <div class="container">
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="serviceCount">0</div>
+                <div class="stat-label">服务数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="instanceCount">0</div>
+                <div class="stat-label">实例数量</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="edgeCount">0</div>
+                <div class="stat-label">调用关系</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalQps">0</div>
+                <div class="stat-label">总 QPS</div>
+            </div>
+        </div>
+
+        <div class="canvas-container">
+            <svg id="topology"></svg>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item"><div class="legend-dot healthy"></div>健康服务</div>
+            <div class="legend-item"><div class="legend-dot unhealthy"></div>不健康服务</div>
+            <div class="legend-item"><div class="legend-dot normal"></div>正常调用</div>
+            <div class="legend-item"><div class="legend-dot high-qps"></div>高 QPS</div>
+            <div class="legend-item"><div class="legend-dot high-error"></div>高错误率</div>
+        </div>
+    </div>
+
+    <script>
+        const svg = document.getElementById('topology');
+        const tooltip = document.getElementById('tooltip');
+
+        function fetchTopology() {
+            fetch('/api/topology/json')
+                .then(r => r.json())
+                .then(data => renderTopology(data))
+                .catch(e => console.error('Fetch failed:', e));
+        }
+
+        function renderTopology(data) {
+            svg.innerHTML = '';
+            const nodes = data.nodes || [];
+            const edges = data.edges || [];
+
+            document.getElementById('serviceCount').textContent = nodes.length;
+            document.getElementById('edgeCount').textContent = edges.length;
+
+            let totalInstances = 0;
+            let totalQps = 0;
+            nodes.forEach(n => {
+                totalInstances += n.instanceCount || 0;
+                totalQps += n.qps || 0;
+            });
+            document.getElementById('instanceCount').textContent = totalInstances;
+            document.getElementById('totalQps').textContent = totalQps;
+
+            const width = svg.clientWidth || 1000;
+            const height = 600;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = Math.min(width, height) * 0.35;
+
+            const nodePositions = {};
+            nodes.forEach((node, i) => {
+                const angle = (2 * Math.PI * i) / Math.max(nodes.length, 1) - Math.PI / 2;
+                const x = centerX + radius * Math.cos(angle);
+                const y = centerY + radius * Math.sin(angle);
+                nodePositions[node.id] = { x, y, node };
+            });
+
+            edges.forEach(edge => {
+                const source = nodePositions[edge.source];
+                const target = nodePositions[edge.target];
+                if (!source || !target) return;
+
+                let edgeClass = 'edge';
+                if ((edge.errorRate || 0) > 5) {
+                    edgeClass = 'edge high-error';
+                } else if ((edge.qps || 0) > 100) {
+                    edgeClass = 'edge high-qps';
+                }
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('class', edgeClass);
+                line.setAttribute('x1', source.x);
+                line.setAttribute('y1', source.y);
+                line.setAttribute('x2', target.x);
+                line.setAttribute('y2', target.y);
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                svg.appendChild(line);
+
+                const midX = (source.x + target.x) / 2;
+                const midY = (source.y + target.y) / 2;
+                const label = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                label.setAttribute('class', 'edge-label');
+                const labelText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                labelText.setAttribute('x', midX);
+                labelText.setAttribute('y', midY - 5);
+                labelText.textContent = `QPS: ${edge.qps || 0} | Err: ${(edge.errorRate || 0).toFixed(1)}%`;
+                label.appendChild(labelText);
+                svg.appendChild(label);
+            });
+
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+            marker.setAttribute('id', 'arrowhead');
+            marker.setAttribute('markerWidth', '10');
+            marker.setAttribute('markerHeight', '7');
+            marker.setAttribute('refX', '9');
+            marker.setAttribute('refY', '3.5');
+            marker.setAttribute('orient', 'auto');
+            const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+            polygon.setAttribute('points', '0 0, 10 3.5, 0 7');
+            polygon.setAttribute('fill', '#64748b');
+            marker.appendChild(polygon);
+            defs.appendChild(marker);
+            svg.appendChild(defs);
+
+            nodes.forEach(node => {
+                const pos = nodePositions[node.id];
+                if (!pos) return;
+
+                const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                g.setAttribute('class', 'node ' + (node.healthy ? 'healthy' : 'unhealthy'));
+
+                const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                circle.setAttribute('cx', pos.x);
+                circle.setAttribute('cy', pos.y);
+                circle.setAttribute('r', 30);
+                g.appendChild(circle);
+
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', pos.x);
+                text.setAttribute('y', pos.y + 4);
+                text.textContent = node.name;
+                g.appendChild(text);
+
+                const stats = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                stats.setAttribute('x', pos.x);
+                stats.setAttribute('y', pos.y + 50);
+                stats.setAttribute('style', 'font-size: 10px; fill: #94a3b8;');
+                stats.textContent = `${node.instanceCount}实例 | QPS:${node.qps || 0} | Err:${(node.errorRate || 0).toFixed(1)}%`;
+                g.appendChild(stats);
+
+                g.addEventListener('mouseenter', (e) => {
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = (e.clientX + 10) + 'px';
+                    tooltip.style.top = (e.clientY + 10) + 'px';
+                    tooltip.innerHTML = `
+                        <h4>${node.name}</h4>
+                        <div>实例数: ${node.instanceCount}</div>
+                        <div>健康: ${node.healthy ? '是' : '否'}</div>
+                        <div>QPS: ${node.qps || 0}</div>
+                        <div>错误率: ${(node.errorRate || 0).toFixed(1)}%</div>
+                    `;
+                });
+                g.addEventListener('mouseleave', () => {
+                    tooltip.style.display = 'none';
+                });
+
+                svg.appendChild(g);
+            });
+        }
+
+        fetchTopology();
+        setInterval(fetchTopology, 10000);
+    </script>
+</body>
+</html>

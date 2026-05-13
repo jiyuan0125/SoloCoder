@@ -1,9 +1,11 @@
-用 Rust actix-web 写一个协议转换网关，在 HTTP 和自定义二进制协议之间做转换。
+需要一个协议转换网关，在HTTPJSON和二进制之间做桥接，Rustactix-web实现。
 
-协议定义：自定义协议叫 BFP（Binary Frame Protocol），帧结构是 4 字节魔数 + 2 字节帧类型 + 4 字节载荷长度 + 载荷 + 2 字节 CRC 校验。帧类型有：REQUEST(0x01)、RESPONSE(0x02)、HEARTBEAT(0x03)、ERROR(0xFF)。REQUEST 载荷是：2 字节方法名长度 + 方法名 + 4 字节 body 长度 + body（UTF-8 JSON）。
+REQUEST载荷是：2字节方法名长度+方法名+4字节body长度+body（UTF-8JSON）。
 
-HTTP 转 BFP：客户端发 HTTP POST，网关把路径映射为方法名，请求体作为 BFP 的 body，构造 BFP 帧发送到后端 BFP 服务。后端返回 BFP RESPONSE 帧，网关解析后转为 HTTP 响应。
+HTTP转BFP：客户端发HTTPPOST，网关把路径映射为方法名，请求体作为BFP的body，构造BFP帧发送到后端BFP服务。后端返回BFPRESPONSE帧，网关解析后转为HTTP响应。
 
-BFP 转 HTTP：后端 BFP 服务可以主动推送 BFP REQUEST 帧，网关收到后转为 HTTP 回调请求发送到配置的回调地址。回调超时 5 秒。
+BFP转HTTP：后端BFP服务可以主动推送BFPREQUEST帧，网关收到后转为HTTP回调请求发送到配置的回调地址。回调超时5秒。
 
-连接管理：网关维护与后端 BFP 服务的长连接池。连接空闲超过 30 秒发 HEARTBEAT。心跳超时或 CRC 校验失败的帧丢弃并记录。有个协议统计接口展示帧收发数量、转换成功失败数、当前活跃连接数。端口环境变量 PORT 指定，cargo build 能编译通过。
+连接空闲超过30秒发HEARTBEAT。心跳超时或CRC校验失败的帧丢弃并记录。有个协议统计接口展示帧收发数量、转换成功失败数、当前活跃连接数。
+
+包含 converter、proto、mapper、error 模块。

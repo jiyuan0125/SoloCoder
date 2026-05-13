@@ -1,4 +1,4 @@
-链路追踪需要跨异步消息传播。用 Spring Boot 写，Span 采集、传播层和查询 API 分文件。
+同步调用的链路追踪做完了，但异步消息那一段断掉了，整条链路看不全。Spring Boot 写个支持跨异步消息传播的追踪，Span 采集、传播层和查询 API 分文件。
 
 HTTP 请求自动注入 TraceID（通过 filter）。异步消息（通过消息队列发送的消息）也携带 TraceID 在消息 header 里。
 

@@ -1,0 +1,8 @@
+V2 要上线，服务网格 sidecar 代理的工具还没写，Go 赶一个。
+
+服务网格 sidecar 代理。拦截服务流量，注入 header（trace ID），转发请求。配置驱动。
+统计的时候排除周末和法定节假日。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+需要维护数据源和查询配置。查询配置引用数据源。
+
+Go 实现，只用标准库，交叉编译友好。

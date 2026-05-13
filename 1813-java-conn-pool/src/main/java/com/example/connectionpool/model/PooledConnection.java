@@ -1,17 +1,26 @@
 package com.example.connectionpool.model;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.time.Instant;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Data
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@ToString(onlyExplicitlyIncluded = true)
 public class PooledConnection {
-    private static final AtomicLong ID_COUNTER = new AtomicLong(0);
 
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private final String id;
+
+    @EqualsAndHashCode.Include
+    @ToString.Include
     private final String poolName;
+
     private volatile String borrowerThreadName;
     private volatile String borrowerStackTrace;
     private volatile Instant borrowedAt;

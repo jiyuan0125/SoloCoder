@@ -1,9 +1,5 @@
-前端一个页面要调 5 个后端接口，串行加载慢得要死——光网络往返就 500ms 起步。能不能一个请求把多个后端的数据打包返回？Go 标准库写一个 API 聚合网关，专门干这个。
+前端一个页面调 5 个接口串行 500ms 起。Go 标准库 API 聚合网关一个请求打包多后端。
 
-聚合规则配置：POST /compose 创建聚合规则，参数包含 path（虚拟路径如 /api/dashboard）、endpoints（后端接口列表，每个有 url、method、params、timeout_ms）、mode（parallel 或 sequential）。并行模式下所有后端同时发请求。串行模式下前面接口的响应字段可以引用到后面接口的请求参数——用 ${response.field_name} 语法，引擎自动从上一个响应里提取值填入下一个请求。
+POST /compose 创建规则含 path（虚拟路径）/endpoints（后端列表各有 url/method/params/timeout_ms）/mode（parallel/sequential）。并行同时发串行前面响应可引用后面参数用 ${response.field_name}。
 
-响应合并规则。多个后端响应合并成一个 JSON 对象。POST /compose/{id}/merge 配置合并规则——pick（取某个字段）、merge_array（合并数组）、coalesce（取第一个非空值）。字段名可以重命名，避免多个后端返回同名字段冲突。比如两个后端都返回 name 字段，一个 rename 成 user_name，另一个 rename 成 order_name。
-
-超时控制。每个后端接口独立超时，默认 5 秒。部分超时不影响其他接口的结果，超时的接口在最终响应里对应字段标记为 {"error": "timeout", "backend": "xxx", "timeout_ms": 5000}。所有接口都超时才返回整体 504。
-
-路由支持路径参数和多级路径。
+合并规则 POST /compose/{id}/merge 配——pick（取字段）/merge_array（合并数组）/coalesce（取首个非空）。字段可重命名避免同名冲突。超时每个后端独立默认 5 秒部分超时不影响其他对应字段标 error。全部超时才 504。路由支持路径参数和多级路径。`PORT` 环境变量，`go build` 通过。

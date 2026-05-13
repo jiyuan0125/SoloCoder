@@ -1,0 +1,5 @@
+SRE团队那边提了个需求，要一个配置分层叠加，Go CLI。
+层之间覆盖规则明确。
+最终配置是各层叠加结果。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+go build 能编译通过，不依赖第三方库。

@@ -2,6 +2,7 @@ use log::{info, warn};
 use std::time::Duration;
 use tokio::net::TcpStream;
 use tokio::time::timeout;
+use url::Url;
 
 use crate::app_state::AppState;
 
@@ -44,9 +45,26 @@ async fn perform_health_checks(state: &AppState) {
     }
 }
 
+fn extract_host_port(address: &str) -> Option<String> {
+    if let Ok(url) = Url::parse(address) {
+        let host = url.host_str()?;
+        let port = url.port().unwrap_or_else(|| {
+            if url.scheme() == "https" { 443 } else { 80 }
+        });
+        Some(format!("{}:{}", host, port))
+    } else {
+        Some(address.to_string())
+    }
+}
+
 async fn check_backend(address: &str) -> bool {
+    let target = match extract_host_port(address) {
+        Some(t) => t,
+        None => return false,
+    };
+
     let duration = Duration::from_secs(HEALTH_CHECK_TIMEOUT);
-    match timeout(duration, TcpStream::connect(address)).await {
+    match timeout(duration, TcpStream::connect(target)).await {
         Ok(Ok(_)) => true,
         _ => false,
     }

@@ -1,7 +1,5 @@
-上个月发版出了个回归事故，测试组花了整整一天手动造数据才复现。当时就说要搞个流量录制回放工具，拖到现在终于排上期了。Go 标准库 net/http 写一个，不依赖任何第三方包。
+发版出回归事故造数据才复现。Go 标准库 net/http 流量录制回放不依赖第三方包。
 
-整个工具以反向代理的形式部署在线上流量入口。录制模式下，每个经过的请求——方法、完整路径、Header 全部、Body 原文，以及后端返回的状态码和响应体——全部落盘到本地文件。录制文件用 JSONL 格式，每行一条记录，包含 request_id、method、path、headers、request_body、response_status、response_body、timestamp 八个字段。为了不让录制文件无限膨胀，同一接口路径下 5 分钟内 Body 的 SHA256 前 16 位相同的请求只保留第一条。录制文件按天分目录存储，每个文件大小上限 50MB，超过自动滚动到新文件。
+录制：反向代理部署线上入口每请求方法/路径/Header/Body 和后端状态码/响应体落盘 JSONL。同路径 5 分钟 Body SHA256 前 16 位相同只保留第一条。按天分目录每文件 50MB 超了滚动。
 
-回放阶段按录制的时间顺序逐个发送到目标环境。目标地址通过 POST /replay/start 的 target_url 参数指定，支持设置 concurrency 和 interval 两个参数控制回放节奏。回放过程中可以调 POST /replay/pause 暂停，暂停之后调 POST /replay/resume 从断点继续，不需要重头再来。
-
-回放结束自动做结果比对。状态码不同直接标记差异。Body 里面用户指定的关键字段（比如 order_id、status）值不一致也标出来。
+回放：按时间顺序逐个发目标 POST /replay/start 指定 target_url/support concurrency/interval。POST /replay/pause 暂停 /replay/resume 断点续播。结束自动比对状态码不同标差异用户指定关键字段值不一致也标。`PORT` 环境变量，`go build` 通过。

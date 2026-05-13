@@ -37,6 +37,7 @@ export class ElderService {
         request.emergencyContactPhone,
         request.medicalHistory || null,
         careLevel,
+        'active',
         checkInDate,
         request.roomNumber || null,
         request.bedNumber || null,

@@ -1,5 +1,5 @@
-重试与幂等需要支持多活，用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建 先做个重试与幂等服务。
+跨系统同步失败自动重试，增量只传变更数据，冲突按规则解决（时间戳或来源优先）。Netty 实现。
 
 数据同步重试服务，增量同步，跨系统同步失败自动重试。重试时检查目标是否已存在。增量同步只传变更数据。冲突按规则解决（时间戳或来源优先）。失败记录持久化可手动重新同步。同步任务格式 source/target/status/last_sync/conflict_rule。
 
-用 Netty 实现裸 HTTP 服务，不用 Spring，Maven 构建。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17，端口 PORT 环境变量，mvn clean package 编译 java -jar 跑。

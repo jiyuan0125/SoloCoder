@@ -1,5 +1,7 @@
-Rust/tokio 写一个重试与幂等框架。多个请求同时带相同的幂等键，只有一个应该执行实际调用，其他等待结果。幂等存储在写入结果的同时可能有请求在读，不能读到半写状态。
+tokio 重写幂等重试，DashMap原子操作+状态机保证幂等。端口环境变量，数据存内存。
 
-重试调度器在触发重试的同时，同一个请求的另一次重试可能刚好执行完。退避计时器的启动和取消之间有竞争。幂等键的 24 小时过期清理不能误删还没过期的记录。
+多请求同幂等键到达，只有一个执行其他等结果。用DashMap的get_or_insert保证不读半写状态。重试调度器用状态机管理生命周期（pending→executing→retrying→completed/failed），状态转换用CAS保证原子。
 
-端口环境变量指定。
+退避计时器启动和取消竞争用CancellationToken——取消时置标记，到期先检查再决定是否执行。幂等键24小时过期用tokio::time定时扫描精确比较防误删。
+
+接口：POST /requests 提交（idempotency_key、target_url、payload）。GET /requests/{key} 查询状态和结果。

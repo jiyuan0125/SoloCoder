@@ -1,13 +1,5 @@
-actix-web 做认证网关。OAuth2 授权码模式。
+六个微服务每个都写 JWT 校验逻辑代码重复，Token 格式改了漏了一个导致部分接口裸奔。认证网关挡在业务前面统一验身份，签发验证 JWT，通过后把用户 ID 和角色注入 Header 转发下游。下游不用碰 Token 代码。支持黑名单机制注销后 Token 立即失效。
 
-角色：客户端（client_id + client_secret）、用户（username + password）、授权服务器（就是本服务）。
+OAuth2 授权码模式——客户端重定向用户→用户登录同意→授权码换 Token。用 actix-web 做认证网关。角色：客户端（client_id + client_secret）、用户（username + password）、授权服务器。Token 含 access_token（1 小时）和 refresh_token（7 天），JWT 签发，签名密钥从环境变量读。
 
-授权流程：客户端重定向用户到授权页面 → 用户登录并同意 → 授权服务器返回授权码 → 客户端用授权码换 Token。
-
-Token 有 access_token 和 refresh_token。access_token 有效期 1 小时，refresh_token 有效期 7 天。
-
-所有 Token 用 JWT 签发。签名密钥从环境变量读取。
-
-管理接口：注册客户端、管理用户。
-
-PORT 环境变量，cargo build 通过。
+管理接口注册客户端和管理用户。Rust tokio/actix-web，cargo build 编译通过。端口 PORT 环境变量。

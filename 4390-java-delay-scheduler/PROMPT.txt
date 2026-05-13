@@ -1,7 +1,1 @@
-有些任务不是定时跑的——比如用户下完单 30 分钟未支付就自动取消。这种场景用 cron 不合适，需要一个延迟任务调度器。Spring Boot 来做。
-
-提交延迟任务时指定延迟时长（秒）和回调信息。POST /tasks 接口接收任务，请求体包含 delaySeconds、callbackUrl、payload（任意 JSON）。任务创建后返回唯一 taskId。到期后服务端自动调用 callbackUrl，请求体包含 taskId 和 payload。回调失败按退避策略重试（1s、2s、4s，最多 3 次）。任务可以通过 DELETE /tasks/{id} 取消，但已经执行的任务不能取消。
-
-任务持久化用本地文件。每次创建任务追加写入文件，任务执行完成后标记为 done。重启时扫描文件恢复未执行的任务，重新计算剩余延迟时间（= 原始延迟 - 已过去时间）。如果恢复时任务已经过期，立即触发回调。
-
-管理接口查看任务状态。GET /tasks/{id} 查询单个任务详情——状态（PENDING/EXECUTING/DONE/CANCELLED）、创建时间、预计执行时间、回调结果。GET /tasks 批量查询，支持按状态过滤。scheduler 管任务调度和触发、store 管持久化和恢复、callback 管回调执行和重试、admin 管查询接口。Maven 构建，端口写在配置文件里。
+用 Java Spring Boot 写有些任务不是定时跑的：比如用户下完单 30 分钟未支付就自动取消。提交延迟任务时指定延迟时长（秒）和回调信息。POST /tasks 接口接收任务，请求体包含 delaySeconds、callbackUrl、payload（任意 JSON）。回调失败按退避策略重试（1s、2s、4s，最多 3 次）。如果恢复时任务已经过期，立即触发回调。管理接口查看任务状态。GET /tasks/{id} 查询单个任务详情：状态（PENDING/EXECUTING/DONE/CANCELLED）、创建时间、预计执行时间、回调结果。GET /tasks 批量查询，支持按状态过滤。Maven 构建，端口写在配置文件里。

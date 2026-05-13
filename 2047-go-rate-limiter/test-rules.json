@@ -1,0 +1,22 @@
+[
+  {
+    "id": "sliding-test",
+    "name": "Sliding Test",
+    "dimension": "user",
+    "algorithm": "sliding",
+    "threshold": 3,
+    "window_size": 60000000000,
+    "target": "user001"
+  },
+  {
+    "id": "token-test",
+    "name": "Token Test",
+    "dimension": "api",
+    "algorithm": "token",
+    "threshold": 1,
+    "window_size": 0,
+    "bucket_capacity": 10,
+    "fill_rate": 2,
+    "target": "/api/test"
+  }
+]

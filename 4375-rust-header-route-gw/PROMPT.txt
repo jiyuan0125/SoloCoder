@@ -1,7 +1,1 @@
-有些 API 网关只看路径匹配，但实际场景里经常需要根据请求 Header 做路由——比如移动端和 PC 端走不同的后端、内部调用和外部调用用不同的服务。Rust axum 写一个基于 Header 匹配的 API 网关。
-
-路由规则由两部分组成：匹配条件和目标地址。匹配条件定义在哪些 Header 上做什么样的匹配——支持精确值（User-Agent 等于某个字符串）、前缀匹配（X-Client-Version 以 2. 开头）、正则匹配（Cookie 包含某个模式）。多条规则按优先级排序（数字越小优先级越高），先匹配到的生效，后面的不再检查。
-
-匹配成功后在转发前可以对 Header 做操作：添加新 Header、删除指定 Header、修改已有 Header 的值。操作定义在路由规则里。比如匹配到移动端 UA 后添加 X-Client-Type: mobile，同时删除 X-Desktop-Only 这个内部 Header。这些操作对后端透明，后端只需要关心自己需要的 Header。
-
-规则管理通过 HTTP 接口：POST /rules 创建、PUT /rules/{id} 修改、DELETE /rules/{id} 删除。规则变更不需要重启网关，内存中的路由表实时更新。每次变更记录操作日志（谁改了什么）。router 管路由分发、matcher 管 Header 匹配、forwarder 管请求转发、admin 管规则 CRUD。Cargo build，PORT 环境变量。
+有些 API 网关只看路径匹配，但实际场景里经常需要根据请求 Header 做路由：比如移动端和 PC 端走不同的后端、内部调用和外部调用用不同的服务。Rust axum 写一个基于 Header 匹配的 API 网关。匹配成功后在转发前可以对 Header 做操作：添加新 Header、删除指定 Header、修改已有 Header 的值。操作定义在路由规则里。规则管理通过 HTTP 接口：POST /rules 创建、PUT /rules/{id} 修改、DELETE /rules/{id} 删除。router 管路由分发、matcher 管 Header 匹配、forwarder 管请求转发、admin 管规则 CRUD。Cargo build，PORT 环境变量。

@@ -1,0 +1,5 @@
+闲着没事想做一个Goroutine泄漏检测自己用，Go 写。
+检测未关闭的 channel。
+缺少 WaitGroup Add 的 goroutine。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+纯标准库实现，go run . 能跑。

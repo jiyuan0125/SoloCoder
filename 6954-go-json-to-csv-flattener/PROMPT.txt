@@ -1,0 +1,8 @@
+Go 标准库的filepath模块挺适合做JSON 转 CSV 平铺工具的，试一下。
+
+JSON 转 CSV 平铺工具。把嵌套的 JSON 对象平铺为 CSV 列。支持数组展开和自定义分隔符。
+排序的时候中文按拼音排，英文按字母排，混合内容中文优先。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+需要维护数据源和查询配置。查询配置引用数据源。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

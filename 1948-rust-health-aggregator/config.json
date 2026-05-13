@@ -1,0 +1,14 @@
+[
+  {
+    "name": "service-a",
+    "health_url": "http://localhost:9505/health",
+    "interval": 5,
+    "timeout": 3
+  },
+  {
+    "name": "service-b",
+    "health_url": "http://localhost:9506/health",
+    "interval": 5,
+    "timeout": 3
+  }
+]

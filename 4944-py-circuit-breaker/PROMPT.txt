@@ -1,9 +1,7 @@
-FastAPI 做熔断器。被保护的服务按接口路径粒度熔断——同一个服务的不同接口独立计算。
+下游变慢上游线程池被占满整个调用链雪崩。必须独立熔断，一个下游出问题不影响其他。
 
-熔断规则：最近 N 秒内，失败率超过 X% 就熔断。失败包括：超时、5xx 响应、连接失败。
+用 FastAPI 做按接口路径粒度的熔断器。POST /circuits 注册被保护接口（downstream_url + path_pattern + 熔断参数：window_seconds 默认 10、failure_threshold 默认 50%、min_requests 默认 5）。失败判定：连接超时 3 秒、HTTP 5xx、连接拒绝；4xx 不算。
 
-熔断恢复后有个慢启动过程：前 10 秒只放 10% 的流量，后面逐步恢复到 100%。
+状态机：Closed→Open（直接 503）→Half-Open（30 秒后进入，放 10% 流量试探，成功率 >80% 则逐步恢复到 50%、100%，任一步又超标直接回 Open）。
 
-统计接口要返回每个被保护接口的最近 N 次请求结果和当前熔断状态。
-
-异步实现，端口 PORT 环境变量。
+GET /circuits/{id}/status 返回状态、最近 20 次请求结果、当前窗口失败率。GET /circuits 列出所有熔断器。Python FastAPI。端口 PORT 环境变量。

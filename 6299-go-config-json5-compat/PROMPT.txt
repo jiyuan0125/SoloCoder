@@ -1,0 +1,5 @@
+之前用过 Python 做文件转换脚本，这次换 Go 试试JSON5兼容处理。
+去掉注释、尾逗号。
+转换成标准 JSON。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+纯标准库实现，go run . 能跑。

@@ -27,9 +27,12 @@ impl CacheManager {
         
         if let Some(entry) = self.store.get(key) {
             if entry.expiry > now {
+                let value = entry.value.clone();
+                drop(entry);
                 self.touch_lru(key).await;
-                return Some(entry.value.clone());
+                return Some(value);
             } else {
+                drop(entry);
                 self.store.remove(key);
             }
         }

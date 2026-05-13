@@ -1,0 +1,7 @@
+Go 的encoding/json刚好能解决并发 API 测试器的需求，拿来写个工具。
+
+并发 API 测试器。同时发送多个不同接口的请求，汇总结果。支持定义测试场景（登录→查询→下单）。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+
+Go 标准库，命令行参数用 flag 包解析。

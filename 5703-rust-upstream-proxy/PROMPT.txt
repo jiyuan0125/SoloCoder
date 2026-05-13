@@ -1,5 +1,5 @@
-有个老模块是硬编码写的，维护不动了，用Rust/tokio重写分块上传转发服务。
+有个老模块是硬编码写的，维护不动了，用 Rust tokio 重写分块上传转发服务。
 
-上传接口 POST /upload/{file_id}/{chunk_index}，代理按文件ID一致性哈希选存储节点。同一文件的所有块必须发到同一个节点。上传完成标志通过 POST /upload/{file_id}/complete 触发合并。合并失败重试 3 次。代理维护上传进度，查询接口 GET /upload/{file_id}/progress 返回已上传块列表。
+上传接口 POST /upload/{file_id}/{chunk_index}，代理按文件 ID 一致性哈希选存储节点。同一文件的所有块必须发到同一个节点。上传完成标志通过 POST /upload/{file_id}/complete 触发合并。合并失败重试 3 次。代理维护上传进度，查询接口 GET /upload/{file_id}/progress 返回已上传块列表。
 
-Rust tokio（裸 TCP/HTTP）。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。
+tokio 裸 TCP/HTTP，端口 PORT 环境变量，cargo run 跑起来。

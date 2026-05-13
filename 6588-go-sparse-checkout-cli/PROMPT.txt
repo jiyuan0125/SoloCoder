@@ -1,0 +1,8 @@
+想做个管理 Git sparse-checkout 配置练练 Go，命令行工具就行。
+
+管理 Git sparse-checkout 配置。支持添加/移除目录、列出当前配置。比原生命令更易用。
+统计的时候排除周末和法定节假日。
+工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+
+用 Go 标准库写，go run . 或 go build 都行。

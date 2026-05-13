@@ -96,7 +96,7 @@ pub async fn get_stats(State(state): State<AppState>) -> Json<Vec<Stats>> {
 pub async fn proxy(
     State(state): State<AppState>,
     headers: HeaderMap,
-    mut req: Request<axum::body::Body>,
+    req: Request<axum::body::Body>,
 ) -> Response<axum::body::Body> {
     let request_id = Uuid::new_v4();
     let path = req.uri().path().to_string();

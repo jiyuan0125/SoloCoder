@@ -1,5 +1,5 @@
-Spring Boot 2.x，Maven，JDK 17 的特性挺适合做健康检查这块的，试一下健康检查服务。
+依次检测所有依赖，任一不健康则服务不健康。/liveness 返回存活/readiness 返回就绪。Spring Boot 2.x。
 
 多依赖级联健康检查，liveness + readiness，依次检测所有依赖，任一不健康则服务不健康。/liveness 返回存活，/readiness 返回就绪。依赖恢复自动就绪。依赖配置 name/type/address/timeout/interval。结果含依赖名、状态、last_check、error。所有依赖 healthy 才 200。
 
-Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17，端口 PORT 环境变量，mvn clean package 编译 java -jar 跑。

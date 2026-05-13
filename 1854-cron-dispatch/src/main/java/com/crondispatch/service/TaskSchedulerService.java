@@ -13,10 +13,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -26,14 +24,13 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class TaskSchedulerService {
     private static final Logger logger = LoggerFactory.getLogger(TaskSchedulerService.class);
-    private static final int MAX_QUEUE_SIZE = 5;
+    private static final long MIN_SCHEDULE_DELAY_MS = 100;
 
     private final TaskStore taskStore;
     private final TaskExecutorService taskExecutorService;
     private final ScheduledExecutorService scheduler;
     private final Map<String, ScheduledFuture<?>> scheduledTasks = new ConcurrentHashMap<>();
-    private final Map<String, Queue<String>> taskQueues = new ConcurrentHashMap<>();
-    private final Map<String, Boolean> runningTasks = new ConcurrentHashMap<>();
+    private final Map<String, Object> schedulingLocks = new ConcurrentHashMap<>();
 
     public TaskSchedulerService(TaskStore taskStore, TaskExecutorService taskExecutorService) {
         this.taskStore = taskStore;
@@ -103,7 +100,7 @@ public class TaskSchedulerService {
 
     public boolean deleteTask(String taskId) {
         cancelScheduledTask(taskId);
-        taskQueues.remove(taskId);
+        taskExecutorService.cleanupTask(taskId);
         return taskStore.delete(taskId);
     }
 
@@ -119,44 +116,81 @@ public class TaskSchedulerService {
         cancelScheduledTask(task.getId());
 
         if (task.getType() == TaskType.CRON) {
-            scheduleCronTask(task);
+            doScheduleCronTask(task);
         } else {
             scheduleDelayedTask(task);
         }
     }
 
-    private void scheduleCronTask(Task task) {
-        CronExpressionParser parser = new CronExpressionParser(task.getCronExpression());
-        Instant nextExecution = task.getNextExecutionTime();
-        
-        if (nextExecution == null || nextExecution.isBefore(Instant.now())) {
-            nextExecution = parser.getNextExecutionTime(Instant.now());
-            task.setNextExecutionTime(nextExecution);
-            taskStore.save(task);
-        }
+    private void doScheduleCronTask(Task task) {
+        Object lock = schedulingLocks.computeIfAbsent(task.getId(), k -> new Object());
+        synchronized (lock) {
+            Instant now = Instant.now();
+            CronExpressionParser parser = new CronExpressionParser(task.getCronExpression());
+            Instant nextExecution = task.getNextExecutionTime();
+            
+            if (nextExecution == null || !nextExecution.isAfter(now)) {
+                nextExecution = parser.getNextExecutionTime(now);
+                if (nextExecution == null) {
+                    logger.error("无法计算任务 [{}] '{}' 的下次执行时间", task.getId(), task.getName());
+                    return;
+                }
+            }
 
-        long delay = Duration.between(Instant.now(), nextExecution).toMillis();
-        if (delay < 0) {
-            delay = 0;
-        }
-
-        ScheduledFuture<?> future = scheduler.schedule(() -> {
-            try {
-                triggerTask(task.getId());
-            } catch (Exception e) {
-                logger.error("执行Cron任务失败: {}", task.getId(), e);
+            long delay = Duration.between(now, nextExecution).toMillis();
+            
+            if (delay <= 0) {
+                logger.warn("任务 [{}] '{}' 计算出的延迟 {}ms 为非正值，从下次执行时间点重新计算", 
+                    task.getId(), task.getName(), delay);
+                Instant nextMinute = nextExecution.plusMillis(1);
+                nextExecution = parser.getNextExecutionTime(nextMinute);
+                if (nextExecution == null) {
+                    logger.error("无法计算任务 [{}] '{}' 的下次执行时间", task.getId(), task.getName());
+                    return;
+                }
+                delay = Duration.between(now, nextExecution).toMillis();
             }
             
-            Task updatedTask = taskStore.get(task.getId());
-            if (updatedTask != null) {
-                Instant newNextExecution = parser.getNextExecutionTime(Instant.now());
-                updatedTask.setNextExecutionTime(newNextExecution);
-                taskStore.save(updatedTask);
-                scheduleCronTask(updatedTask);
+            if (delay < MIN_SCHEDULE_DELAY_MS) {
+                logger.warn("任务 [{}] '{}' 计算出的延迟 {}ms < {}ms，跳过本次调度，等待下一轮", 
+                    task.getId(), task.getName(), delay, MIN_SCHEDULE_DELAY_MS);
+                Instant nextMinute = nextExecution.plusMillis(1);
+                nextExecution = parser.getNextExecutionTime(nextMinute);
+                if (nextExecution == null) {
+                    logger.error("无法计算任务 [{}] '{}' 的下次执行时间", task.getId(), task.getName());
+                    return;
+                }
+                delay = Duration.between(now, nextExecution).toMillis();
             }
-        }, delay, TimeUnit.MILLISECONDS);
 
-        scheduledTasks.put(task.getId(), future);
+            task.setNextExecutionTime(nextExecution);
+            taskStore.save(task);
+
+            logger.info("调度Cron任务 [{}] '{}', cron: {}, 下次执行: {}, 延迟: {}ms", 
+                task.getId(), task.getName(), task.getCronExpression(), nextExecution, delay);
+
+            final Instant scheduledNextExecution = nextExecution;
+            ScheduledFuture<?> future = scheduler.schedule(() -> {
+                logger.info("===== 触发Cron任务 [{}] '{}', 计划执行时间: {} =====", 
+                    task.getId(), task.getName(), scheduledNextExecution);
+                try {
+                    taskExecutorService.executeTask(task.getId());
+                } catch (Exception e) {
+                    logger.error("执行Cron任务失败: {}", task.getId(), e);
+                }
+                
+                Task updatedTask = taskStore.get(task.getId());
+                if (updatedTask != null) {
+                    logger.info("准备重新调度Cron任务 [{}] '{}'", updatedTask.getId(), updatedTask.getName());
+                    scheduleTask(updatedTask);
+                } else {
+                    logger.warn("任务 [{}] 已被删除，跳过重新调度", task.getId());
+                }
+            }, delay, TimeUnit.MILLISECONDS);
+
+            scheduledTasks.put(task.getId(), future);
+            logger.debug("任务 [{}] 已加入调度队列，future: {}", task.getId(), future);
+        }
     }
 
     private void scheduleDelayedTask(Task task) {
@@ -165,14 +199,19 @@ public class TaskSchedulerService {
             delay = 0;
         }
 
+        logger.info("调度延迟任务 [{}] '{}', 延迟: {}ms, 计划执行时间: {}", 
+            task.getId(), task.getName(), delay, task.getNextExecutionTime());
+
         ScheduledFuture<?> future = scheduler.schedule(() -> {
+            logger.info("触发延迟任务 [{}] '{}'", task.getId(), task.getName());
             try {
-                triggerTask(task.getId());
+                taskExecutorService.executeTask(task.getId());
             } catch (Exception e) {
                 logger.error("执行延迟任务失败: {}", task.getId(), e);
             }
             taskStore.delete(task.getId());
             scheduledTasks.remove(task.getId());
+            logger.info("延迟任务 [{}] '{}' 已从存储中移除", task.getId(), task.getName());
         }, delay, TimeUnit.MILLISECONDS);
 
         scheduledTasks.put(task.getId(), future);
@@ -182,35 +221,7 @@ public class TaskSchedulerService {
         ScheduledFuture<?> future = scheduledTasks.remove(taskId);
         if (future != null) {
             future.cancel(false);
-        }
-    }
-
-    public void triggerTask(String taskId) {
-        Task task = taskStore.get(taskId);
-        if (task == null) {
-            return;
-        }
-
-        Boolean isRunning = runningTasks.get(taskId);
-        if (Boolean.TRUE.equals(isRunning)) {
-            handleMisfire(task);
-            return;
-        }
-
-        taskExecutorService.executeTask(taskId);
-    }
-
-    private void handleMisfire(Task task) {
-        if (task.getMisfireStrategy() == MisfireStrategy.QUEUED) {
-            Queue<String> queue = taskQueues.computeIfAbsent(task.getId(), k -> new LinkedList<>());
-            if (queue.size() < MAX_QUEUE_SIZE) {
-                queue.offer(task.getId());
-                logger.info("任务 {} 正在执行中，加入队列 (队列大小: {})", task.getId(), queue.size());
-            } else {
-                logger.warn("任务 {} 正在执行中，队列已满，跳过本次触发", task.getId());
-            }
-        } else {
-            logger.info("任务 {} 正在执行中，触发跳过策略", task.getId());
+            logger.info("已取消任务 [{}] 的调度", taskId);
         }
     }
 }

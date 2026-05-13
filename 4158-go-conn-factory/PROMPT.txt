@@ -1,9 +1,7 @@
-连接池这东西写起来不难，写好很难。创建连接慢——复用生命周期管理麻烦——泄漏了还不好查。Go 标准库实现一个通用连接池工厂，池里的连接不绑定具体协议，上层拿来复用就行。
+连接池创建慢复用管理难泄漏不好查。Go 标准库通用连接池工厂不绑定协议。
 
-连接用结构体表示：目标地址、创建时间戳、最后活跃时间戳、状态标记（idle/borrowed/leaky）。每条连接有最大生命周期 max_lifetime，超期关闭重建，防止底层连接变质。factory 模块负责创建和销毁连接。
+连接结构体：目标地址/创建时间/最后活跃/状态（idle/borrowed/leaky）。每连接 max_lifetime 超期关重建防底层变质。factory 负责创建销毁。借出：先从空闲队列取空的没达上限就新建达上限排队等归还有 timeout 超时返错。借出超 max_borrow_time monitor 标 leaky 强制回收。
 
-借出逻辑在 pool 模块：先从空闲队列取。队列空了但总连接数没到上限就新建一个。达到上限了就排队等归还，等待有 timeout，超时返回错误。借出的连接如果超过 max_borrow_time 没归还，monitor 模块把它标记为 leaky 并强制回收——资源不能被占着不干活。
+validator 定期对空闲连接 TCP dial 探测失败的丢低于 min_idle 补建新连接频率和下限可配。
 
-validator 模块做两件事：一是定期对空闲连接做 TCP dial 探测，失败的丢弃；二是丢弃后检查空闲连接数是否低于 min_idle，低于就补建新连接。探测频率和空闲下限都可配。
-
-池参数（max_total、min_idle、max_lifetime、borrow_timeout）通过接口管理。边界输入——零值取默认值、负数返回 400 错误。端口 PORT 环境变量，go build 能过。
+池参数（max_total/min_idle/max_lifetime/borrow_timeout）接口管理零值取默认负数 400。`PORT` 环境变量，`go build` 通过。

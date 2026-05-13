@@ -1,0 +1,5 @@
+业务上遇到个问题：脚本维护不动了。打算用 Go 搞个分级压缩。
+小文件快速压缩，大文件高压缩比。
+输出压缩报告。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+不用第三方包，go build 通过就行。

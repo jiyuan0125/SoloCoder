@@ -1,0 +1,8 @@
+帮我做一套管理 .git-blame-ignore-revs 文件的 CLI 工具，Go 实现。
+
+管理 .git-blame-ignore-revs 文件。添加/移除要忽略的 commit hash（如格式化 commit）。自动运行 git blame 使用此文件。
+输入可能包含乱码和特殊字符。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+
+Go 标准库，命令行参数用 flag 包解析。

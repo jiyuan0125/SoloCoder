@@ -1,9 +1,5 @@
-数据库扛不住了。读写全打到 db 上，慢查询把连接池占满，正常请求全部超时。Rust actix-web 做一层缓存代理，挡在应用和数据库之间，把读流量挡掉一大半。
+数据库扛不住读写全打上去。Rust actix-web 缓存代理挡在应用和数据库间。
 
-缓存操作三种。GET /cache/{key} 查缓存，命中返回值和 TTL 剩余秒数。PUT /cache/{key} 写缓存，通过请求参数或 header 指定 TTL。DELETE /cache/{key} 删缓存。缓存 key 支持前缀匹配删除——DELETE /cache/prefix:user:* 一次删除所有 user 开头的 key。扫描 key 列表用 GET /cache/keys?prefix=user&limit=100，返回匹配的 key 数组。
+GET /cache/{key} 查返回值和 TTL 剩余。PUT /cache/{key} 写 X-Cache-TTL header 指定默认 300 秒。DELETE /cache/{key} 删。前缀匹配删 DELETE /cache/prefix:user:*。GET /cache/keys?prefix=user&limit=100 列出。
 
-1. TTL 机制。缓存项 TTL 精度到秒。过期后访问返回 miss 并异步删除。后台每 60 秒批量清理过期项，清理时记录清理数量到日志。清理期间正常读写不受阻塞。TTL 通过写入时 X-Cache-TTL header 指定，默认 300 秒。
-
-2. 缓存穿透防护。查询不存在的 key 时缓存一个空值标记，TTL 设短一点（30 秒），防止同一个 key 反复穿透到数据库。空值标记和正常值用 is_null 字段区分。GET /cache/{key} 命中空值标记时返回 404 而不是穿透。GET /cache/stats 返回命中率、当前 key 数量、穿透次数。
-
-3. 缓存预热。启动时从 warmup.json 加载热点 key。热点 key 列表通过 POST /cache/warmup 动态配置，参数包含 key、value、ttl。预热异步执行不阻塞正常请求。
+穿透防护：不存在的 key 缓存空值标记 TTL 30 秒防反复穿透。空值返回 404。后台每 60 秒批量清过期不阻塞。缓存预热：启动从 warmup.json 加载热点 POST /cache/warmup 动态配 key/value/ttl 异步执行不阻塞。GET /cache/stats 返回命中率/key 数量/穿透次数。`Cargo build`，`PORT` 环境变量。

@@ -1,0 +1,6 @@
+server:
+  port: 9304
+
+queue:
+  max-retry: 3
+  dead-letter-queue-suffix: -dlq

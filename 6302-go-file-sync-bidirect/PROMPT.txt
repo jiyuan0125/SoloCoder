@@ -1,0 +1,5 @@
+闲着没事想做一个双向文件同步自己用，Go 写。
+两侧都有修改时标记冲突。
+冲突的文件保留两个版本。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+纯标准库实现，go run . 能跑。

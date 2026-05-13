@@ -1,0 +1,5 @@
+我们DBA团队最近需要一套测试代码生成，用 Go 标准库做。
+表驱动测试格式。
+包含正常和异常 case 占位。
+多级命令：config get、config set、config list、config env switch。
+不用第三方包，go build 通过就行。

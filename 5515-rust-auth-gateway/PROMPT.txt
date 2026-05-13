@@ -1,5 +1,5 @@
-用 actix-web 写一个 JWT 认证网关。客户端带 Bearer Token 访问受保护的接口，网关校验 JWT 的签名、过期时间、签发者。校验通过后把 Token 中的用户信息（user_id、roles）注入到请求头转发到后端。
+客户端带 Bearer Token 访问受保护接口，网关校验 JWT 的签名、过期时间和签发者，通过后把 Token 中的 user_id、roles 注入请求头转发到后端。actix-web 实现。Token 过期返回 401 附带 WWW-Authenticate 头，签名无效返回 403。支持 Token 黑名单——通过接口可以把某个 Token 加入黑名单，加入后即使未过期也被拒绝，黑名单定期清理已过期的 Token。
 
-Token 过期返回 401，附带 WWW-Authenticate 头。签名无效返回 403。支持 Token 黑名单——通过管理接口可以把某个 Token 加入黑名单，加入后即使未过期也被拒绝。黑名单定期清理已过期的 Token。
+Rate Limiting：每个用户每分钟最多 60 次请求（可配），超限返回 429。未认证请求按 IP 限流，每分钟 20 次。接口展示当前活跃 Token 数和黑名单大小。
 
-支持 Rate Limiting——每个用户每分钟最多 60 次请求（可配）。超限返回 429。未认证的请求按 IP 限流，每分钟 20 次。管理接口展示当前活跃 Token 数、黑名单大小。端口环境变量指定，cargo run 能跑。
+端口环境变量指定，cargo run 能跑。

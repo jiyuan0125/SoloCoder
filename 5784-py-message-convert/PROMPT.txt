@@ -1,4 +1,4 @@
-试了三个现成方案都不满足设备用MQTT协议上报，平台内部用HTTP这个需求，只能Python/FastAPI自己写IoT协议网关。
+IoT 设备上报走 MQTT 协议，平台内部全是 HTTP 接口，中间缺个转换。Python/FastAPI 写个 IoT 协议网关。
 
 模拟MQTT消息接收：HTTP接口接收原始格式解析后转HTTP调用。MQTT Topic 映射到 HTTP URL：sensor/temperature → POST /api/sensors/temperature。消息保留（QoS）映射：at-least-once 对应 HTTP重试。支持批量上报：一条MQTT消息包含多个设备数据，拆分为多个HTTP调用。设备认证：MQTT username/password 转为HTTP认证Header。管理接口查看Topic映射和转换统计。
 

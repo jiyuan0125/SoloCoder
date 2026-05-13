@@ -42,7 +42,7 @@ function RegistrationHall() {
     fetchData();
     const interval = setInterval(fetchData, 5000);
 
-    const ws = new WebSocket('ws://localhost:8080/ws');
+    const ws = new WebSocket('ws://localhost:8300/ws');
     wsRef.current = ws;
 
     ws.onmessage = (event) => {

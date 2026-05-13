@@ -1,0 +1,189 @@
+{
+  "backup_records": [
+    {
+      "id": "bee6341c922babcca6b092591db46dba",
+      "start_time": "2026-05-13T13:45:00.923019037+08:00",
+      "end_time": "2026-05-13T13:45:00.936228149+08:00",
+      "source_path": "test_source",
+      "target_path": "test_backup",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "file1.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T13:44:51.727985185+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T13:44:51.727985185+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "67fce4e2c26e1120539a356b00e2a91f",
+      "start_time": "2026-05-13T17:39:33.196432208+08:00",
+      "end_time": "2026-05-13T17:39:33.225412924+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test_dest",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "e7862e99ce9daec158f83cb03d17d847",
+      "start_time": "2026-05-13T17:39:44.575518832+08:00",
+      "end_time": "2026-05-13T17:39:44.575974884+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test_dest",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 12,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "fdf11d4781ff8c05b4119295ecec2114",
+      "start_time": "2026-05-13T17:39:44.581780338+08:00",
+      "end_time": "2026-05-13T17:39:44.587674616+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test_dest",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:44.576189328+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "3affc6e2136cfb7499e2a6012667fc07",
+      "start_time": "2026-05-13T17:39:44.594005086+08:00",
+      "end_time": "2026-05-13T17:39:44.62910553+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test.zip",
+      "is_compressed": true,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:44.576189328+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "6a2db3a6193f33c68ed61cefc1469345",
+      "start_time": "2026-05-13T17:40:16.718590657+08:00",
+      "end_time": "2026-05-13T17:40:16.747511434+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test_err",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:44.576189328+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    },
+    {
+      "id": "cf63d907537a5515a2e8bdaee833abad",
+      "start_time": "2026-05-13T17:40:42.26094878+08:00",
+      "end_time": "2026-05-13T17:40:42.28369475+08:00",
+      "source_path": "/tmp/backup_test_source",
+      "target_path": "/tmp/backup_test_err",
+      "is_compressed": false,
+      "status": "success",
+      "files": [
+        {
+          "relative_path": "bigfile.bin",
+          "size": 2097152,
+          "mod_time": "2026-05-13T17:39:25.95372648+08:00"
+        },
+        {
+          "relative_path": "file1.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:44.576189328+08:00"
+        },
+        {
+          "relative_path": "subdir/file2.txt",
+          "size": 17,
+          "mod_time": "2026-05-13T17:39:25.941104749+08:00"
+        }
+      ],
+      "failed_files": null
+    }
+  ],
+  "latest_id": "cf63d907537a5515a2e8bdaee833abad"
+}

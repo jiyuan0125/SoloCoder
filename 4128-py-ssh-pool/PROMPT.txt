@@ -1,9 +1,7 @@
-管 200 多台服务器，每台都要 SSH 上去执行命令——连接建了断断了建，效率极低。Python FastAPI 写个 SSH 连接池管理服务，把连接复用起来。
+管 200 多台服务器 SSH 连了断断了建。Python FastAPI SSH 连接池管理。
 
-每个目标机器独立维护一个连接池。POST /target 注册目标机器，参数包含 host、port（默认 22）、username、auth_type（password 或 key）、auth_value（密码或密钥路径）、pool_size（最大连接数默认 10）。注册后自动建立最小空闲数（默认 2）的初始连接。每个连接建立后执行 echo hello 验证可用性，验证失败的丢弃不放池子。
+POST /target 注册目标含 host/port（默认 22）/username/auth_type（password/key）/auth_value/pool_size（默认 10）。注册后自动建最小空闲数（默认 2）初始连接每连接验证可用性。
 
-执行命令接口 POST /exec——指定 target（host 或注册时的别名）和 command（字符串），从池子取连接执行，执行完归还。返回结果四个字段：stdout（标准输出）、stderr（标准错误）、exit_code（退出码）、exec_time_ms（执行耗时毫秒）。超时的命令强制终止并返回已收集的部分结果，exit_code 设为 -1。超时阈值通过 exec_timeout 参数指定，默认 60 秒。
+执行命令 POST /exec 含 target 和 command 从池取连接执行完归还。返回 stdout/stderr/exit_code/exec_time_ms。超时强杀返回部分结果 exit_code=-1 默认 60 秒可配。
 
-连接健康检查。后台每 check_interval 秒（默认 30）对空闲连接执行 echo test，失败的关闭并移除，然后补建新连接到最小空闲数。补建失败记 warning 日志不影响其他机器。GET /pool/{host}/status 返回该机器的连接池详情——active_count、idle_count、total_created、total_errors、last_error。
-
-目标机器管理。
+健康检查：后台每 check_interval（默认 30 秒）空闲连接执行 echo test 失败的关补建到最小空闲补建失败记 warning。GET /pool/{host}/status 返回 active/idle/created/errors/last_error。`PORT` 环境变量。

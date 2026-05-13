@@ -1,1 +1,5 @@
-axum 实现一个 WebSocket-HTTP 桥。客户端通过 WebSocket 连接到桥接服务，消息被转换为 HTTP 请求发给后端，HTTP 响应转回 WebSocket 消息。WebSocket 连接保持长连接，多个消息复用。后端 HTTP 服务不可用时 WebSocket 返回错误帧。支持消息过滤：只转发符合规则的消息（比如 type 字段为 request 的）。连接管理：超时 5 分钟无消息自动断开，客户端可以主动关闭。管理接口展示活跃 WebSocket 连接数和消息转发量。端口 PORT 环境变量。
+axum 实现一个 WebSocket-HTTP 桥。
+
+有个老系统只有 HTTP 接口，但新前端想用 WebSocket 保持长连接做实时更新。做一个桥接服务：客户端通过 WebSocket 连进来发消息，桥接服务把每条消息转成 HTTP 请求打给后端，后端的 HTTP 响应再转回 WebSocket 消息。连接保持长连接，多个消息复用同一条 WebSocket。
+
+后端 HTTP 服务不可用时 WebSocket 返回错误帧。支持消息过滤：只转发符合规则的消息（比如 type 字段为 request 的才转发，心跳包之类的忽略）。连接超时 5 分钟无消息自动断开，客户端也可以主动关闭。管理接口展示当前有多少活跃 WebSocket 连接和消息转发量。端口 PORT 环境变量。

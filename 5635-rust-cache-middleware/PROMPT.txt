@@ -1,5 +1,5 @@
-内部缓存中间件服务一直裸奔，用 tokio 做异步运行时，裸 TCP/HTTP 处理 加个缓存中间件服务。
+GET 按 URL 加参数做 key，带 Authorization 不缓存，POST/PUT/DELETE 自动失效前缀匹配缓存。tokio 实现。
 
-API 响应缓存，GET 按 URL+参数做 key，支持标签批量失效，不同 Content-Type 分开缓存。带 Authorization 不缓存。容量满 LRU。POST/PUT/DELETE 自动失效前缀匹配缓存。缓存项可关联标签，按标签批量失效。管理接口查缓存和手动清理。
+API 响应缓存，GET 按 URL 加参数做 key，支持标签批量失效。不同 Content-Type 分开缓存。带 Authorization 头的不缓存。容量满用 LRU 淘汰。POST/PUT/DELETE 自动失效前缀匹配缓存。缓存项可关联标签，按标签批量失效。管理接口查缓存和手动清理。
 
-用 tokio 做异步运行时，裸 TCP/HTTP 处理。数据存内存，用合适的集合类型。端口通过环境变量 PORT 指定。cargo build 能编译通过，cargo run 能跑起来。
+tokio 裸 TCP/HTTP，端口 PORT 环境变量，cargo run 跑起来。

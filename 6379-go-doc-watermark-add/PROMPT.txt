@@ -1,0 +1,5 @@
+V2 版本月底上线，先把文档水印做了，Go CLI。
+水印在页眉或页脚。
+支持文本水印。
+工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+go build 能编译通过，不依赖第三方库。

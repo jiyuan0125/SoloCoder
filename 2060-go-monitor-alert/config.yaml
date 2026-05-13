@@ -1,0 +1,73 @@
+global:
+  collect_interval: 10s
+  evaluate_interval: 30s
+
+storage:
+  data_dir: ./data
+  retention: 7d
+
+rules:
+  - name: high_cpu_usage
+    description: CPU 使用率过高
+    condition: cpu_usage > 80
+    duration: 5m
+    severity: warning
+    reminder_interval: 10m
+    channels:
+      - stdout
+      - webhook_alert
+
+  - name: high_memory_usage
+    description: 内存使用率过高
+    condition: memory_usage > 90
+    duration: 5m
+    severity: warning
+    reminder_interval: 10m
+    channels:
+      - stdout
+
+  - name: high_cpu_and_memory
+    description: CPU 和内存同时过高
+    condition: cpu_usage > 70 AND memory_usage > 80
+    duration: 3m
+    severity: critical
+    reminder_interval: 5m
+    channels:
+      - stdout
+      - email_admin
+      - webhook_alert
+
+  - name: low_disk_space
+    description: 磁盘空间不足
+    condition: disk_usage > 95
+    duration: 10m
+    severity: critical
+    reminder_interval: 30m
+    channels:
+      - stdout
+      - email_admin
+
+channels:
+  - name: stdout
+    type: stdout
+
+  - name: email_admin
+    type: email
+    config:
+      smtp_host: smtp.example.com
+      smtp_port: 587
+      from: alerts@example.com
+      to:
+        - admin@example.com
+      username: alerts@example.com
+      password: your_password
+
+  - name: webhook_alert
+    type: webhook
+    config:
+      url: http://localhost:8080/alert
+      method: POST
+      timeout: 10s
+      headers:
+        Authorization: Bearer your_token
+        Content-Type: application/json

@@ -1,0 +1,8 @@
+Go 的os刚好能解决遍历 DNS 区域记录的需求，拿来写个工具。
+
+遍历 DNS 区域记录。通过 AXFR 或逐个查询常见子域名。输出发现的记录列表。
+日志中记录了完整的请求参数。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,0 +1,5 @@
+重复代码越来越多但没工具检测。所以想做一个配置查询语言，Go 写。
+支持路径查询、条件过滤。
+查询结果输出为 JSON。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+纯标准库实现，go run . 能跑。

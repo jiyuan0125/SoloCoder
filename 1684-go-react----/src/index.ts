@@ -7,7 +7,7 @@ import { familyRoutes } from './routes/family';
 import { getDb } from './database';
 
 const app: Express = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8114;
+const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8200;
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

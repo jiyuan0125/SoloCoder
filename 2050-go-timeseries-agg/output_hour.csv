@@ -1,0 +1,2 @@
+time,temperature_avg,humidity_sum,cpu_usage_count
+2024-01-01T10:00:00+08:00,28.115384615384617,850,13

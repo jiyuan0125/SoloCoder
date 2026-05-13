@@ -1,9 +1,7 @@
-日志聚合能用了，但 DEBUG 日志太多存储撑不住——一周 50 个 G，跨服务查一条链路也很费劲。Python FastAPI 加强，把日志管理和查询都做细。
+日志聚合能用但 DEBUG 太多存储撑不住跨服务查链路费劲。Python FastAPI 加强。
 
-1. 日志分级：DEBUG/INFO/WARN/ERROR/FATAL 五级。每个 service 独立设最低输出级别，低于的直接丢弃不存储。级别通过 PUT `/services/{name}/level` 动态调，改完立即生效——生产环境平时设 INFO，排查问题时临时改成 DEBUG，查完改回去。
+日志五级 DEBUG/INFO/WARN/ERROR/FATAL。每 service 独立设最低级别低于的丢弃。PUT `/services/{name}/level` 动态调立即生效。
 
-2. 缓冲写入：日志先写内存缓冲区，缓冲区满了或定时到了（默认每 5 秒）再批量刷到持久存储。缓冲区大小和刷新间隔按 service 配，减少磁盘 IO 压力。服务挂了缓冲区里的日志会丢——这是预期的，关键日志应用 WARN 以上级别直接写不缓冲。
+缓冲写入：先写内存缓冲区满了或定时到（默认 5 秒）批量刷持久。大小和间隔按 service 配。WARN 以上直接写不缓冲。
 
-3. 链路关联：客户端在日志里带 trace_id，聚合服务按它建索引。GET `/logs/trace/{trace_id}` 一条链路跨几个 service 也能按时间顺序串起来。
-
-4. 查询导出：GET `/logs` 支持按 service、level、时间范围、关键字、trace_id 组合过滤，结果按时间排序，可导出 JSON。代码按接收、缓冲、存储、查询、级别管理五个模块拆。`PORT` 环境变量读端口。
+链路关联：带 trace_id 的按它建索引，GET `/logs/trace/{trace_id}` 跨 service 按时间串链路。GET `/logs` 按 service、level、时间、关键字、trace_id 组合过滤可导出 JSON。代码按接收、缓冲、存储、查询、级别管理拆。`PORT` 环境变量。

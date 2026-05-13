@@ -370,29 +370,36 @@ func queryLogs(c *gin.Context) {
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8080"
+		port = "8304"
 	}
 
 	r := gin.Default()
 
-	r.Use(rateLimitMiddleware())
+	admin := r.Group("/")
+	{
+		admin.POST("/keys", createKey)
+		admin.DELETE("/keys/:key", deleteKey)
+		admin.GET("/keys", listKeys)
 
-	r.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-	})
+		admin.POST("/rules", createRule)
+		admin.GET("/rules", listRules)
 
-	r.POST("/keys", createKey)
-	r.DELETE("/keys/:key", deleteKey)
-	r.GET("/keys", listKeys)
+		admin.POST("/blacklist", addBlacklist)
+		admin.DELETE("/blacklist/:entry", removeBlacklist)
+		admin.GET("/blacklist", listBlacklist)
 
-	r.POST("/rules", createRule)
-	r.GET("/rules", listRules)
+		admin.GET("/logs", queryLogs)
+	}
 
-	r.POST("/blacklist", addBlacklist)
-	r.DELETE("/blacklist/:entry", removeBlacklist)
-	r.GET("/blacklist", listBlacklist)
-
-	r.GET("/logs", queryLogs)
+	api := r.Group("/", rateLimitMiddleware())
+	{
+		api.GET("/health", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
+		api.GET("/test", func(c *gin.Context) {
+			c.JSON(http.StatusOK, gin.H{"status": "ok"})
+		})
+	}
 
 	log.Printf("Rate Gate server starting on port %s", port)
 	if err := r.Run(":" + port); err != nil {

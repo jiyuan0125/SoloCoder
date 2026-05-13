@@ -1,0 +1,174 @@
+{
+  "courses": [
+    {
+      "id": "C0001",
+      "name": "Go语言基础",
+      "credits": 5,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "必修"
+    },
+    {
+      "id": "C0002",
+      "name": "Go高级编程",
+      "credits": 8,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "必修"
+    },
+    {
+      "id": "C0003",
+      "name": "Docker基础",
+      "credits": 4,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "必修"
+    },
+    {
+      "id": "C0004",
+      "name": "Kubernetes入门",
+      "credits": 5,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "必修"
+    },
+    {
+      "id": "C0005",
+      "name": "敏捷开发",
+      "credits": 3,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "选修"
+    },
+    {
+      "id": "C0006",
+      "name": "团队协作",
+      "credits": 4,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "选修"
+    },
+    {
+      "id": "C0007",
+      "name": "时间管理",
+      "credits": 3,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "选修"
+    },
+    {
+      "id": "C0008",
+      "name": "沟通技巧",
+      "credits": 4,
+      "validUntil": "2026-12-31T00:00:00Z",
+      "type": "选修"
+    }
+  ],
+  "employeeCredits": [
+    {
+      "employeeId": "E001",
+      "employeeName": "张三",
+      "department": "技术部",
+      "courseId": "C0001",
+      "courseName": "Go语言基础",
+      "credits": 5,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:41.839054156+08:00"
+    },
+    {
+      "employeeId": "E001",
+      "employeeName": "张三",
+      "department": "技术部",
+      "courseId": "C0002",
+      "courseName": "Go高级编程",
+      "credits": 8,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:41.842892794+08:00"
+    },
+    {
+      "employeeId": "E001",
+      "employeeName": "张三",
+      "department": "技术部",
+      "courseId": "C0003",
+      "courseName": "Docker基础",
+      "credits": 4,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:41.845994506+08:00"
+    },
+    {
+      "employeeId": "E001",
+      "employeeName": "张三",
+      "department": "技术部",
+      "courseId": "C0005",
+      "courseName": "敏捷开发",
+      "credits": 3,
+      "courseType": "选修",
+      "completedAt": "2026-05-13T11:16:41.85010021+08:00"
+    },
+    {
+      "employeeId": "E001",
+      "employeeName": "张三",
+      "department": "技术部",
+      "courseId": "C0006",
+      "courseName": "团队协作",
+      "credits": 4,
+      "courseType": "选修",
+      "completedAt": "2026-05-13T11:16:41.853020831+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0001",
+      "courseName": "Go语言基础",
+      "credits": 5,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:50.166668395+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0002",
+      "courseName": "Go高级编程",
+      "credits": 8,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:50.169814815+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0004",
+      "courseName": "Kubernetes入门",
+      "credits": 5,
+      "courseType": "必修",
+      "completedAt": "2026-05-13T11:16:50.173493218+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0005",
+      "courseName": "敏捷开发",
+      "credits": 3,
+      "courseType": "选修",
+      "completedAt": "2026-05-13T11:16:50.177370997+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0007",
+      "courseName": "时间管理",
+      "credits": 3,
+      "courseType": "选修",
+      "completedAt": "2026-05-13T11:16:50.180665914+08:00"
+    },
+    {
+      "employeeId": "E002",
+      "employeeName": "李四",
+      "department": "技术部",
+      "courseId": "C0008",
+      "courseName": "沟通技巧",
+      "credits": 4,
+      "courseType": "选修",
+      "completedAt": "2026-05-13T11:16:50.184366505+08:00"
+    }
+  ],
+  "carryOvers": [],
+  "lastResetYear": 0
+}

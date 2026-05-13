@@ -1,0 +1,5 @@
+Go 标准库的io刚好能用，写个认证授权工具工具。
+工具要能Token 内省（检查活跃状态）、吊销列表管理、刷新 Token 轮换。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+可能一次处理上万条记录。
+go build 能过，命令行工具能正常运行。

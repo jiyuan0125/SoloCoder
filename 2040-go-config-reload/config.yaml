@@ -1,0 +1,47 @@
+services:
+  - name: web-service
+    host: 127.0.0.1
+    port: 8082
+    enabled: true
+    timeout: 30
+    maxRetries: 3
+    logLevel: info
+    environment: production
+    features:
+      - http2
+      - compression
+      - cache
+    settings:
+      maxConnections: 1000
+      keepAlive: 60
+      responseTimeout: 5
+
+  - name: database-service
+    host: db.example.com
+    port: 5432
+    enabled: true
+    timeout: 60
+    maxRetries: 5
+    logLevel: warn
+    environment: production
+    features:
+      - connectionPool
+      - readReplicas
+    settings:
+      poolSize: 20
+      maxIdleTime: 300
+
+  - name: cache-service
+    host: cache.example.com
+    port: 6379
+    enabled: true
+    timeout: 10
+    maxRetries: 2
+    logLevel: debug
+    environment: production
+    features:
+      - cluster
+      - persistence
+    settings:
+      maxMemory: "2gb"
+      ttl: 3600

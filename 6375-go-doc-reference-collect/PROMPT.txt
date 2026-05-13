@@ -1,0 +1,5 @@
+看到别人的数据校验工具挺有意思，自己也做一个文档引用收集，Go。
+验证引用来源是否存在。
+输出引用列表。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+不用第三方包，go build 通过就行。

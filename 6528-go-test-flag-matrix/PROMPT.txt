@@ -1,0 +1,8 @@
+用 Go 写用不同 flag 组合运行同一个 Go 测试，检测 flag 敏感问题比较合适，性能好、跨平台、单二进制。
+
+用不同 flag 组合运行同一个 Go 测试，检测 flag 敏感问题。用户定义 flag 矩阵（如 -race, -tags, -cover），工具自动组合并运行。
+输入文件可能是空的或者只有 header 行。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+
+Go 标准库，命令行参数用 flag 包解析。

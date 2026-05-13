@@ -1,7 +1,5 @@
-FastAPI 做日志级别聚合。按服务来源统计各级别日志的数量。
+FastAPI 实现日志级别聚合统计——不存日志内容，只统计各服务各级别日志量。上报 POST /logs/ingest：传入 service、level（DEBUG/INFO/WARN/ERROR）、count（默认 1）、timestamp，支持批量数组一次最多 100 条。按 service + level + 时间窗口累加。
 
-统计窗口可配（1 分钟、5 分钟、15 分钟）。窗口滑动统计。ERROR 级别超过阈值（可配）触发告警。
+统计窗口：1 分钟、5 分钟、15 分钟（WINDOW_SIZE 环境变量配置），滑动窗口每秒推进。GET /stats/{service} 返回该服务各级别当前窗口日志数，GET /stats 全局统计。
 
-告警通过 HTTP 回调发送。告警内容包含服务名、级别、数量、阈值。告警有冷却期（可配），冷却期内不重复告警。
-
-提供接口查看各服务的日志级别分布和告警历史。端口 PORT 环境变量，能正常跑起来。
+ERROR 告警：POST /admin/alerts 配置 service、error_threshold、callback_url。窗口内 ERROR 超阈值则 POST 告警，冷却期默认 5 分钟。GET /admin/alerts/history 返回最近 50 条告警。端口 PORT 环境变量。

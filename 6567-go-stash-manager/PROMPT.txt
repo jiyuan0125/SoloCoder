@@ -1,0 +1,8 @@
+市面上的增强的 Git stash 管理工具要么太重要么收费，Go 标准库写一个。
+
+增强的 Git stash 管理。支持命名 stash、按名称检索、批量应用/删除。显示每个 stash 的摘要（涉及哪些文件）。
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+Go 标准库，命令行参数用 flag 包解析。

@@ -1,7 +1,7 @@
-Go 标准库做认证注入网关。网关统一处理认证，认证结果注入到 Header 转发给后端。
+Go 标准库做认证注入网关。后端不想各自实现认证——请求先过网关验身份，验完把用户信息塞 Header 转发后端。
 
-认证方式：API Key 校验。Key 存储在内存中，通过接口管理。请求带 X-API-Key Header。
+认证用 API Key：请求头带 X-API-Key。Key 存内存，通过管理接口增删。创建 Key 时传入 user_id 和 role，返回 32 位随机 hex。Key 可以设过期时间。
 
-认证通过后注入 X-User-Id 和 X-User-Role Header。认证失败返回 401。
+认证流程：没有 X-API-Key 返回 401。Key 无效（不存在、过期、已吊销）返回 401。有效则注入 X-User-Id 和 X-User-Role 转发。
 
-部分路径可以配置为免认证（白名单）。白名单通过接口管理。端口 PORT 环境变量。
+白名单路径跳过认证。后端地址从 UPSTREAM_URL 环境变量读。端口 PORT 环境变量，go build 能过。

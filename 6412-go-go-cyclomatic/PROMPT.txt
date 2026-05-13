@@ -1,0 +1,5 @@
+季度末了，运维自动化的数据还是手动处理的，赶紧搞个圈复杂度计算，Go。
+if、for、case、&&、|| 都计算。
+复杂度排行。
+子命令结构：db migrate、db rollback、db status、db seed。
+go build 能编译通过，不依赖第三方库。

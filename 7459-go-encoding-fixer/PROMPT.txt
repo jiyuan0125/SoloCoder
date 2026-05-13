@@ -1,0 +1,4 @@
+群里有人说缺文本处理转换工具，用 Go 搞一个。
+工具要能Diff 生成和应用、三路合并、冲突处理、模板渲染（Go template）。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+go build 能过，命令行工具能正常运行。

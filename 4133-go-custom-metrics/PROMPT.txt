@@ -1,9 +1,7 @@
-Prometheus 固定的指标类型不够用，业务想自己定义指标——比如"订单金额分布"、"用户活跃度评分"这种。Go Gin 写一个自定义指标采集平台，业务方自己注册指标类型、自己上报数据。
+业务想自定义指标如订单金额分布。Go Gin 自定义指标采集平台。
 
-指标注册。POST /metrics/register 定义新指标，参数包含 name（指标名，唯一）、type（counter/gauge/histogram/summary）、description（描述文字）、labels（标签名列表，比如 method、path）。同一个 name 不能重复注册，重复注册返回 409。注册后立刻可以上报数据。GET /metrics/list 返回所有已注册指标的元数据。
+注册 POST /metrics/register 含 name/type（counter/gauge/histogram/summary）/description/labels。重名返回 409。注册后可上报。GET /metrics/list 返回元数据。上报 POST /metrics/report JSON 数组上限 500 点每点含 name/labels/value/timestamp（可选默认当前）。校验名是否注册标签是否完整失败 400 加错误。
 
-数据上报。POST /metrics/report 接受 JSON 数组批量上报，单次上限 500 个数据点。每个数据点包含 name、labels（键值对 map）、value（float64）、timestamp（可选，默认当前时间）。上报时校验指标名是否已注册、标签是否完整。校验失败返回 400 加上具体错误。
+聚合查询 GET /metrics/query 按名/标签/时间窗口。窗口 1min/5min/1hour。counter 求增量 gauge 求平均和最新 histogram 算 P50/P90/P99/Max/Min summary 求分位数。窗口无数据返空数组。
 
-聚合查询。GET /metrics/query 按指标名、标签和时间窗口查询聚合数据。时间窗口支持 1min、5min、1hour 三种粒度。聚合方式按类型不同：counter 求增量（当前值减上一个窗口值），gauge 求平均和最新值，histogram 计算 P50/P90/P99/Max/Min，summary 求分位数。时间窗口内没有数据返回空数组不报错。
-
-派生指标。POST /metrics/derived 定义派生指标——用数学表达式组合已有指标。
+派生指标 POST /metrics/derived 用数学表达式组合已有指标。`PORT` 环境变量，`go build` 通过。

@@ -1,11 +1,5 @@
-FastAPI 事件调度。可以定时执行任务。
+crontab 管定时任务太原始，改 cron 还得 SSH 登机器。做定时任务调度器全走 HTTP 接口，Cron 定义周期延迟任务，到期调回调 URL 通知，失败自动重试，执行历史一目了然。
 
-定时规则怎么定义你选。
+用 FastAPI 实现。简化版 cron（分 时 日 月 星期），POST /tasks 注册（name、cron、action_url、method、headers/body）。后台每分钟检查到期任务 aiohttp 异步调用，失败重试 1 次（30 秒间隔），再失败标 failed。GET /tasks/{name}/runs 返回执行历史倒序最多 50 条。
 
-任务执行失败了怎么办你来定。
-
-要能看到任务的执行情况。具体看什么你定。
-
-有个接口可以手动触发任务执行。
-
-端口 PORT 环境变量。
+POST /tasks/{name}/trigger 手动触发补跑。GET /tasks 列出所有任务及下次执行时间。Python FastAPI。端口 PORT 环境变量。数据存内存。

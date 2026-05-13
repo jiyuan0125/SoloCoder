@@ -115,6 +115,9 @@ func (s *PaperService) Create(paper *model.Paper, meetingAbbreviation string) er
 		return err
 	}
 
+	authors := paper.Authors
+	paper.Authors = nil
+
 	paper.UUID = utils.NewUUID()
 	if paper.Status == "" {
 		paper.Status = model.PaperStatusDraft
@@ -132,15 +135,23 @@ func (s *PaperService) Create(paper *model.Paper, meetingAbbreviation string) er
 		return err
 	}
 
-	for i := range paper.Authors {
-		paper.Authors[i].PaperID = paper.ID
-		paper.Authors[i].Order = i
-		if err := tx.Create(&paper.Authors[i]).Error; err != nil {
+	for i := range authors {
+		author := &model.PaperAuthor{
+			PaperID:         paper.ID,
+			Name:            authors[i].Name,
+			Affiliation:     authors[i].Affiliation,
+			Email:           authors[i].Email,
+			IsFirstAuthor:  authors[i].IsFirstAuthor,
+			IsCorresponding: authors[i].IsCorresponding,
+			Order:           i,
+		}
+		if err := tx.Create(author).Error; err != nil {
 			tx.Rollback()
 			return err
 		}
 	}
 
+	paper.Authors = authors
 	tx.Commit()
 	return nil
 }

@@ -1,4 +1,4 @@
-需要把 MQTT 消息桥接到 HTTP。用 Go/Gin 写。
+IoT 设备上报的 MQTT 消息要转到内部的 HTTP 接口，现在靠一个 shell 脚本转，时不时就挂。Go/Gin 写个 MQTT-HTTP 桥接。
 
 MQTT 客户端连接到指定 topic。收到消息后转成 HTTP POST 请求发送到配置的回调 URL。消息 topic 映射到 HTTP 路径。
 

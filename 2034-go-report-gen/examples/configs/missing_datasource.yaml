@@ -1,0 +1,22 @@
+name: 不存在的数据源测试
+description: 测试数据源不存在的情况
+
+data_source:
+  type: csv
+  path: examples/data/nonexistent.csv
+  delimiter: ","
+  columns:
+    - name: date
+      type: date
+    - name: amount
+      type: number
+
+template:
+  name: 测试模板
+  title: 测试报表
+  columns:
+    - date
+    - amount
+
+output_format: text
+output_path: examples/output/test.txt

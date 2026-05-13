@@ -1,0 +1,8 @@
+马上要用，先出一个能跑的管理 .mailmap 文件，Go 命令行。
+
+管理 .mailmap 文件。分析仓库中同一作者的多个邮箱，建议合并映射。自动生成或更新 .mailmap。
+文件处理流水线：读取 → 解析 → 校验 → 转换 → 输出，每步可以独立失败。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+需要维护数据源和查询配置。查询配置引用数据源。
+
+用 Go 标准库写，go run . 或 go build 都行。

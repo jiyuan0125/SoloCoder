@@ -1,0 +1,10 @@
+server:
+  port: 9701
+
+spring:
+  application:
+    name: service-dependency-graph
+
+logging:
+  level:
+    com.depgraph: INFO

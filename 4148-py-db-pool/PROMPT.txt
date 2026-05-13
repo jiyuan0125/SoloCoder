@@ -1,9 +1,5 @@
-每个应用自己管数据库连接，连接数失控把数据库搞挂了好几次——有个应用泄漏了连接池里 200 个连接没关，数据库的 max_connections 直接打满。Python FastAPI 写一个数据库连接池管理器，所有应用统一通过这个服务代理，连接数全局可控。
+连接数失控把数据库搞挂了好几次。Python FastAPI 数据库连接池管理器全局可控。
 
-连接池按数据库实例分组。POST /pool 创建连接池，参数包含 db_host、db_port、db_name、db_user、db_password、max_connections（上限默认 50）、min_idle（最小空闲默认 5）、connect_timeout（建连超时默认 10 秒）、idle_timeout（空闲回收秒数默认 600）、max_lifetime（最大生命周期秒数默认 3600）。达到 max_lifetime 的连接即使空闲也关闭重建。
+POST /pool 创建含 db_host/port/name/user/password/max_connections（默认 50）/min_idle（默认 5）/connect_timeout（默认 10 秒）/idle_timeout（默认 600 秒）/max_lifetime（默认 3600 秒）。达 max_lifetime 即使空闲也关闭重建。
 
-连接分配。POST /pool/{pool_id}/acquire 获取连接——返回一个 connection_id。有空闲的返回，没有且未达上限就新建，达到上限就排队等待。等待超时返回 503 pool_exhausted。连接使用完必须调 POST /pool/{pool_id}/release/{conn_id} 归还。
-
-连接健康检查。后台定期对空闲连接执行 SELECT 1。失败的关闭并补充新连接到 min_idle。检查间隔可配默认 60 秒。补充失败的连接记 warning 日志包含 pool_id 和错误原因。
-
-连接泄漏检测。连接借出超过 leak_timeout 秒（默认 300）未归还标记为泄漏。泄漏的连接强制回收并关闭。
+POST /pool/{pool_id}/acquire 获取返回 connection_id。有空闲返回没达上限新建达上限排队超时 503。POST /pool/{pool_id}/release/{conn_id} 归还。健康检查后台定期 SELECT 1 失败关补到 min_idle 默认 60 秒。泄漏检测借出超 leak_timeout（默认 300）未还标泄漏强制回收关闭。`PORT` 环境变量。

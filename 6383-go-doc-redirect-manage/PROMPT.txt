@@ -1,0 +1,5 @@
+之前买的 SaaS 到量了，续费太贵，Go 自建文档重定向管理。
+旧路径到新路径的映射表。
+检查重定向链是否有效。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+纯标准库实现，go run . 能跑。

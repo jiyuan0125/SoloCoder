@@ -1,9 +1,4 @@
-先说问题。服务挂了不知道，等用户投诉才发现——这种事发生了三次。不是没有监控，是监控规则配得太粗糙，没有针对每个依赖做细粒度检查。Spring Boot 做一个多级健康检查器，自己能发现问题。
-
-第一步，注册检查项。每个检查项包含名称、类型（HTTP 或 TCP）、目标地址、检查间隔、超时时间、连续失败阈值。HTTP 检查发 GET 请求，状态码 2xx 为健康。TCP 检查尝试建立连接，连接成功为健康。超时视为失败。检查项可以启用和禁用。
-
-第二步，后台定期执行检查。状态分三级：UP、DEGRADED、DOWN。连续 N 次失败从 UP 变 DEGRADED（N 可配），再连续 M 次从 DEGRADED 变 DOWN。任何一次成功直接恢复到 UP。
-
-第三步，检查项之间可以配依赖关系。依赖项 DOWN 时，被依赖的检查项自动标为 DEGRADED——虽然自己没出问题，但依赖挂了也该告警。依赖恢复后级联影响的项也自动恢复。
-
-checker 管检查执行和状态判定、scheduler 管定时调度、cascade 管依赖关系和级联、handler 管接口和通知。Maven 构建，端口走配置文件。
+用 Java Spring Boot 写多级健康检查器。注册检查项含名称、类型 HTTP 或 TCP、目标地址、检查间隔、超时、连续失败阈值。HTTP 发 GET 2xx 健康 TCP 连接成功健康超时失败。可启用禁用。
+后台定期检查状态分 UP、DEGRADED、DOWN。连续 N 次失败 UP→DEGRADED 再 M 次 DEGRADED→DOWN。任一成功直接恢复 UP。
+检查项间可配依赖。依赖项 DOWN 时被依赖项自动标 DEGRADED。依赖恢复后级联影响也自动恢复。
+拆 checker 检查状态、scheduler 定时调度、cascade 依赖级联、handler 接口通知。Maven 构建端口走配置文件。

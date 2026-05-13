@@ -1,9 +1,7 @@
-Go 标准库写一个协议转换网关。后端有 gRPC 服务，前端只发 HTTP JSON 请求，需要中间转换。
+后端用 gRPC 前端只发 HTTP JSON，每次新接口都要写转换代码。Go 标准库写协议转换网关，自动把 HTTP JSON 转 gRPC 调用。
 
-HTTP JSON 转 gRPC：接收前端的 JSON 请求，转换成 gRPC 调用后端服务。Proto 定义文件通过接口上传，网关解析后自动生成映射。路径映射规则：/v1/users 对应 grpc UserService/ListUsers。
+HTTP JSON 转 gRPC：根据映射规则把 JSON 请求转成 gRPC 调用。Proto 文件通过接口上传，网关解析后自动生成路径到方法的映射，如 /v1/users 对应 UserService/ListUsers。
 
-gRPC 响应转 JSON：后端 gRPC 返回的 protobuf 消息转成 JSON。嵌套的 message 和 repeated 字段要正确处理。枚举类型转成字符串而不是数字。时间戳转成 ISO 8601 格式。
+gRPC 响应转 JSON：protobuf 消息转 JSON，嵌套 message 和 repeated 字段正确处理，枚举转字符串不转数字，时间戳转 ISO 8601。
 
-错误处理：gRPC 的 status code 映射到 HTTP status code。NOT_FOUND→404，ALREADY_EXISTS→409，PERMISSION_DENIED→403，以此类推。gRPC 错误详情里如果有 error info 要一并返回给前端。
-
-至少包含 converter、proto、mapper、error 四个模块。编译通过，端口 PORT 环境变量。
+错误处理：gRPC status code 映射 HTTP status code，NOT_FOUND→404、ALREADY_EXISTS→409、PERMISSION_DENIED→403，错误详情一并返回。包含 converter、proto、mapper、error 模块。编译通过，端口 PORT 环境变量。

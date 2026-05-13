@@ -1,0 +1,14 @@
+server:
+  port: 9206
+
+spring:
+  application:
+    name: stateful-load-balancer
+
+loadbalancer:
+  session:
+    window-seconds: 60
+
+logging:
+  level:
+    com.loadbalancer: INFO

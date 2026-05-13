@@ -1,5 +1,5 @@
-用 Rust actix-web 写一个基于路径前缀的反向代理。不同的路径前缀对应不同的上游服务地址，比如 /api/* 转到后端A，/web/* 转到后端B。路径匹配支持多级，像 /api/v2/users/{id}/orders 这种。
+一台机器跑多个内部站点，Nginx 配置几百行改错就全挂。用 Rust actix-web 写轻量路径前缀反向代理，/api/* 转后端 A，/web/* 转后端 B，配置简单不易出错。
 
-上游服务需要做健康检查，每10秒探一次。检查失败的上游标记为不可用，不可用的上游不再转发请求。连续3次检查通过后恢复可用。探针超时5秒算失败。
+路由规则通过 YAML/JSON 配置，每条含路径前缀和上游地址。支持多级路径匹配和路径参数提取（如 /users/{id}/profile 提 id）。上游每 10 秒 TCP 健康检查，连续 3 次失败标不可用，连续 3 次通过恢复。探针超时 5 秒。
 
-请求转发时要注入 X-Proxy-Id 和 X-Forwarded-For 头。响应回来后把 Server 头和 X-Powered-By 头去掉再返回客户端。上游地址通过配置文件加载，支持运行时重新加载配置。端口环境变量 PORT 指定，cargo build 能过就行。
+转发注入 X-Proxy-Id 和 X-Forwarded-For，响应去掉 Server 和 X-Powered-By。支持 SIGHUP 或 /admin/reload 热重载配置不重启。端口 PORT 环境变量，cargo build 能过。

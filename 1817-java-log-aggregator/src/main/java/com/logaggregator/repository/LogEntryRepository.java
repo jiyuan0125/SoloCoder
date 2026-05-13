@@ -34,9 +34,7 @@ public interface LogEntryRepository extends JpaRepository<LogEntry, Long> {
     @Query("SELECT l.level, COUNT(l) FROM LogEntry l GROUP BY l.level")
     List<Object[]> countByLevel();
 
-    @Query("SELECT FUNCTION('DATE_FORMAT', l.timestamp, '%Y-%m-%d %H:00'), COUNT(l) " +
-           "FROM LogEntry l WHERE l.level = 'ERROR' AND l.timestamp >= :since GROUP BY FUNCTION('DATE_FORMAT', l.timestamp, '%Y-%m-%d %H:00')")
-    List<Object[]> countErrorsByHour(@Param("since") LocalDateTime since);
+    List<LogEntry> findByLevelAndTimestampGreaterThanEqual(LogLevel level, LocalDateTime since);
 
     @Query("SELECT COUNT(l) FROM LogEntry l WHERE l.timestamp BETWEEN :start AND :end")
     long countByTimestampBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);

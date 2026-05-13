@@ -4,7 +4,7 @@ import tracesRoutes from './routes/traces';
 import { store } from './storage/InMemoryStore';
 
 const app: Express = express();
-const PORT = parseInt(process.env.PORT || '3000', 10);
+const PORT = parseInt(process.env.PORT || '8103', 10);
 
 app.use(cors());
 app.use(express.json());

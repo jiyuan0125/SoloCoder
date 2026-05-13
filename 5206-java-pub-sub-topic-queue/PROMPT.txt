@@ -1,7 +1,7 @@
-Spring Boot 做发布订阅消息队列。消息发到 Topic，订阅该 Topic 的消费者组各收到一份。
+Spring Boot 做发布订阅消息队列。消息发到 Topic，订阅该 Topic 的消费者组各收到一份——同组内只有一个消费者处理（负载均衡），不同组各自独立消费。
 
-消息持久化到文件。消费者记录消费进度（offset）。重启后从上次位置继续。
+消息持久化到本地文件（追加写入 JSON Lines）。消费者组的消费进度（offset）也持久化。启动时从文件恢复，接着上次的 offset 继续。
 
-消费者组内只有一个消费者收到消息（负载均衡）。组内消费者变更时重新分配 partition。
+Topic 分多个 partition（默认 4 个），消息按 topic 哈希分配 partition。同组消费者均分 partition。消费者变更时触发 rebalance 重新分配。接口包括创建 Topic、发消息、注册消费者、拉取消息、ACK 确认。
 
-提供接口创建 Topic、发布消息、注册消费者、查看消费进度。端口 server.port 配置，Maven 构建。
+端口 server.port 配置，Maven 构建。

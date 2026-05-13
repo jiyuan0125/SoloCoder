@@ -1,0 +1,5 @@
+写个 Go 命令行工具做表驱动测试生成。
+参数组合自动枚举。
+边界条件占位。
+命令行格式：cli import --source csv --target db --filter 'age>18'。
+不用第三方包，go build 通过就行。

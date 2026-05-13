@@ -1,4 +1,4 @@
-Go 标准库做多策略认证网关。系统有多种客户端：Web 前端用 JWT、移动端用 API Key、第三方用 OAuth2。网关需要根据请求特征选择认证策略。
+Web 前端用 JWT、移动端用 API Key、第三方合作伙伴用 OAuth2——三种客户端三种认证方式，后端不想各自实现一遍。Go 标准库做多策略认证网关，根据请求特征选认证方式。
 
 认证策略优先级：先看 Authorization 头有没有 Bearer token（JWT），再看 X-API-Key 头（API Key），都没有返回 401。JWT 验证签名和过期。API Key 查内存映射表（key → 权限信息）。API Key 有使用频率限制，每个 key 每分钟最多 100 次。
 

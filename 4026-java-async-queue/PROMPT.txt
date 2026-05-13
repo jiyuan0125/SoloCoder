@@ -1,7 +1,7 @@
-进程内消息队列跑起来了，但投递确认机制太弱——消费者处理完没 ACK 消息就丢了，重启后从头消费重复一大堆。Java Netty 重写一个高性能版本。
+消息队列投递确认太弱重启重复一大堆。Java Netty 高性能版本。
 
-故事从生产者说起——发消息到 Topic，消息分配到 Consumer Group 内的某个消费者。投递后消费者必须在超时内（默认 30 秒）ACK，未确认的重新投给同 Group 内其他消费者。同一个 Consumer Group 内，一条消息同一时刻只能被一个消费者持有，超时未确认自动变为可投递状态。
+发消息到 Topic 分配到 Group 内某消费者。投递后须在超时内（默认 30 秒）ACK 未确认重新投给 Group 内其他消费者。同 Group 同时刻一条消息只能被一个消费者持有超时自动变可投递。
 
-消息持久化用本地文件——先写 WAL（Write-Ahead Log）保证不丢，消费者 ACK 后标记已消费。重启后从 WAL 恢复未确认消息重新投递。Topic 可设消息过期时间（TTL），过期消息后台定时清理。消息体上限 1MB，超出的直接丢弃但记审计日志（消息 ID、Topic、大小、时间）。
+持久化用本地文件先写 WAL 保证不丢 ACK 后标记已消费。重启从 WAL 恢复未确认消息重投。Topic 可设 TTL 后台定时清理。消息体上限 1MB 超出丢弃记审计日志。
 
-GET `/topics` 列出所有 Topic 的消息数、消费者数和配置。GET `/topics/{name}/deadletter` 查看死信队列。消费速率和积压量通过 GET `/stats` 查询。Maven 构建，端口通过命令行参数或 `PORT` 环境变量指定。
+GET `/topics` 列消息数、消费者数和配置。GET `/topics/{name}/deadletter` 查死信。GET `/stats` 查消费速率和积压量。Maven 构建，`PORT` 环境变量。

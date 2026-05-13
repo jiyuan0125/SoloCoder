@@ -1,9 +1,5 @@
-每个服务自己管注册发现，代码到处重复，改一个心跳逻辑要改十几个项目。Go 标准库写一个 Sidecar 模式的服务注册代理，业务代码一行不改就能享受注册发现。
+每服务自己管注册发现代码到处重复。Go 标准库 Sidecar 模式服务注册代理业务代码不改。
 
-第一步，启动注册。Sidecar 启动时通过 --app-port 参数指定应用监听的端口。应用启动后调 POST /sidecar/register 上报服务名、标签和权重。Sidecar 心跳检查应用是否存活——每隔 5 秒 TCP dial 一次应用端口，连续 3 次失败判定应用挂了，自动向注册中心注销。应用恢复后自动重新注册。
+启动：--app-port 指定应用端口。应用启动后 POST /sidecar/register 上报服务名/标签/权重。Sidecar 每 5 秒 TCP dial 应用连续 3 次失败判定挂了自动注销恢复后自动重注册。
 
-第二步，服务发现。Sidecar 提供 GET /sidecar/services/{name} 查询指定服务的所有实例，返回 IP、端口、状态、标签和最后心跳时间。支持按标签过滤：GET /sidecar/services/{name}?tag=version:v2。应用需要调其他服务时问自己的 Sidecar 就行，不需要知道注册中心地址。
-
-第三步，流量代理。Sidecar 在应用前面做一层反向代理，外部请求先到 Sidecar 再到应用。Sidecar 监听端口通过 PORT 环境变量指定。应用挂了 Sidecar 直接返回 503 Service Unavailable，同时标记应用 down 并停止续约。注册信息存在本地 sidecar.json 文件里，Sidecar 重启后自动恢复。正在代理的请求不受应用重启影响——Sidecar 会等请求完成再切换。
-
-第四步，多实例管理。同一机器上跑多个 Sidecar 实例没问题，每个 --sidecar-port 指定各自端口。
+发现：GET /sidecar/services/{name} 查实例支持按标签过滤 ?tag=version:v2。流量代理：Sidecar 在应用前做反向代理外部先到 Sidecar 再到应用。PORT 环境变量指定。应用挂了返回 503 标 down 停续约。注册信息存 sidecar.json 重启恢复。代理中的请求不受应用重启影响等完成再切换。同机多实例各自 --sidecar-port。`go build`，`PORT` 环境变量。

@@ -1,12 +1,1 @@
-Go Gin 实现 OAuth2 授权服务——各个应用的登录认证不能各搞各的，统一走这里。
-
-授权码模式给 Web 应用用。客户端把用户重定向到授权页面，用户确认后回调客户端带授权码。客户端拿授权码换 Token。授权码有效期 10 分钟且只能用一次——第二次来换就报错，防止码被截获重放。
-
-客户端凭证模式给服务间调用用，不需要用户参与。客户端用 ID + Secret 换 Token，适合后台 Job 或微服务之间互相调用的场景。Token 有效期可配，默认 1 小时。
-
-每个 Token 关联一组 Scope，Scope 定义可访问的资源范围。客户端申请 Token 时指定需要的 Scope，授权服务根据客户端配置决定批准还是拒绝。比如普通客户端只能申请 read Scope，管理客户端可以申请 read + write。
-
-authorize 管授权码的生成和校验，token 管 Access Token 的签发和刷新，scope 管 Scope 权限定义和校验，client 管客户端注册和凭证管理。端口 PORT 环境变量，go build 能过。
-
-
-客户端注册时分配 client_id 和 client_secret。client_id 是公开的，client_secret 必须保密。客户端的 redirect_uri 也要注册，授权回调时校验 redirect_uri 是否匹配，防止开放重定向攻击。
+Go Gin 实现 OAuth2 授权服务：各个应用的登录认证不能各搞各的，统一走这里。授权码模式给 Web 应用用。客户端把用户重定向到授权页面，用户确认后回调客户端带授权码。Token 有效期可配，默认 1 小时。authorize 管授权码的生成和校验，token 管 Access Token 的签发和刷新，scope 管 Scope 权限定义和校验，client 管客户端注册和凭证管理。端口 PORT，go build 。客户端注册时分配 client_id 和 client_secret。客户端的 redirect_uri 也要注册，授权回调时校验 redirect_uri 是否匹配，防止开放重定向攻击。

@@ -1,7 +1,7 @@
-上次全量上线出了事故，回滚花了 40 分钟。新版本上线不敢直接全量了——想让 10% 的用户先试试再说。Python FastAPI 做流量染色网关，把灰度和版本路由管起来。
+全量上线出事故回滚 40 分钟。Python FastAPI 流量染色网关做灰度和版本路由。
 
-团队里的做法是：请求进来先按规则打标签，标签决定路由到哪个后端版本。规则可以从四个地方取值——Header（`X-Env`）、Cookie（`env`）、URL 参数（`env`）、客户端 IP。优先级 Header > Cookie > URL 参数 > IP。比如 Header 带 `X-Env: canary` 的走 canary 后端，没带任何标记的走 stable。
+请求先按规则打标签再路由。标签从 Header `X-Env`、Cookie `env`、URL 参数 `env`、客户端 IP 取值，优先级 Header > Cookie > URL > IP。带 `X-Env: canary` 的走 canary 后端，无标记走 stable。
 
-后端版本通过接口管理——POST `/versions` 注册新版本（名称 + 后端地址），DELETE `/versions/{name}` 删除。删除时如果还有规则指向它则拒绝并返回 409。每个版本的流量比例可配置，比如 canary 10%、stable 90%，比例分配要均匀随机，不能连续打到同一版本。精确匹配规则和比例规则共存时精确匹配优先，匹配到精确规则的不进比例分配。
+POST `/versions` 注册版本（名称+后端地址），DELETE `/versions/{name}` 删除（有规则指向则拒绝返回 409）。每版本流量比例可配如 canary 10%、stable 90%，均匀随机分配。精确匹配优先于比例分配。
 
-统计接口 GET `/stats` 返回各版本的请求数、错误数、平均响应时间。所有路由决策记日志，包含匹配到的规则和最终目标版本。`PORT` 环境变量读端口。
+GET `/stats` 返回各版本请求数、错误数、平均响应时间。路由决策记日志含匹配规则和目标版本。`PORT` 环境变量。

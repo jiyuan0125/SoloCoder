@@ -1,0 +1,11 @@
+server:
+  port: 9900
+
+spring:
+  application:
+    name: registry-server
+
+registry:
+  heartbeat-interval: 5000
+  max-missed-heartbeats: 3
+  health-check-timeout: 3000

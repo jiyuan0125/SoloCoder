@@ -1,0 +1,8 @@
+tasks:
+    - name: test1
+      cron: '*/2 * * * * *'
+      command: echo test1 executed
+      description: ""
+      retries: 0
+      retry_delay: 1
+      paused: true

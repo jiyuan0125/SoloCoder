@@ -20,7 +20,7 @@ func main() {
 		port = os.Getenv("PORT")
 	}
 	if port == "" {
-		port = "8300"
+		port = "8500"
 	}
 	if !strings.HasPrefix(port, ":") {
 		port = ":" + port

@@ -10,9 +10,10 @@ use std::time::Duration;
 use axum::{
     routing::{get, post, delete},
     Router,
-    extract::{State, Path, Json},
+    extract::{State, Path, Json, Request},
     http::{HeaderMap, StatusCode},
     response::{IntoResponse, Response},
+    body::Body,
 };
 use tokio::sync::RwLock;
 use tracing_subscriber;
@@ -37,7 +38,7 @@ struct AppState {
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let port = std::env::var("PORT").unwrap_or_else(|_| "3000".to_string());
+    let port = std::env::var("PORT").unwrap_or_else(|_| "8306".to_string());
     let default_timeout_secs: u64 = std::env::var("DEFAULT_TIMEOUT")
         .ok()
         .and_then(|v| v.parse().ok())
@@ -60,7 +61,9 @@ async fn main() {
     let app = Router::new()
         .route("/routes", post(add_route).get(list_routes))
         .route("/routes/:id", delete(delete_route))
+        .route("/aggregates", post(add_aggregate_scene).get(list_aggregate_scenes))
         .route("/aggregate/:scene_name", get(handle_aggregate))
+        .fallback(handle_proxy)
         .with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", port)).await.unwrap();
@@ -101,6 +104,18 @@ async fn delete_route(
     }
 }
 
+async fn add_aggregate_scene(
+    State(state): State<AppState>,
+    Json(payload): Json<AggregateScene>,
+) -> Result<Json<AggregateScene>, StatusCode> {
+    state.aggregate_scenes.write().await.add(payload.clone());
+    Ok(Json(payload))
+}
+
+async fn list_aggregate_scenes(State(state): State<AppState>) -> Json<Vec<AggregateScene>> {
+    Json(state.aggregate_scenes.read().await.list())
+}
+
 async fn handle_aggregate(
     State(state): State<AppState>,
     Path(scene_name): Path<String>,
@@ -127,7 +142,7 @@ async fn handle_aggregate(
         &headers,
     ).await;
 
-    let total_duration = state.stats.write().await.record_aggregate_complete(&scene_name);
+    let _total_duration = state.stats.write().await.record_aggregate_complete(&scene_name);
     
     let response = match result {
         Ok(data) => {
@@ -149,6 +164,78 @@ async fn handle_aggregate(
         Err(e) => {
             (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({
                 "error": e
+            }))).into_response()
+        }
+    };
+
+    response
+}
+
+async fn handle_proxy(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    req: Request<Body>,
+) -> Response {
+    let path = req.uri().path().to_string();
+    let method = req.method().clone();
+    
+    let route = state.route_registry.read().await.get_by_path(&path).cloned();
+    
+    let route = match route {
+        Some(r) => r,
+        None => {
+            return (StatusCode::NOT_FOUND, Json(serde_json::json!({
+                "error": "route not found"
+            }))).into_response();
+        }
+    };
+
+    let auth_registry = state.auth_registry.read().await;
+    if !auth_registry.validate(&route.auth_policy, &headers) {
+        return (StatusCode::UNAUTHORIZED, Json(serde_json::json!({
+            "error": "unauthorized"
+        }))).into_response();
+    }
+
+    state.stats.write().await.record_route(&route.path);
+
+    let backend_url = format!("{}{}", route.backend, req.uri().path_and_query().map(|pq| pq.as_str()).unwrap_or(""));
+    
+    let mut proxy_req_builder = state.http_client
+        .request(method, &backend_url);
+    
+    for (name, value) in headers.iter() {
+        if name != "host" {
+            proxy_req_builder = proxy_req_builder.header(name, value);
+        }
+    }
+
+    let body_bytes = match axum::body::to_bytes(req.into_body(), usize::MAX).await {
+        Ok(b) => b,
+        Err(e) => {
+            return (StatusCode::BAD_REQUEST, Json(serde_json::json!({
+                "error": format!("failed to read body: {}", e)
+            }))).into_response();
+        }
+    };
+
+    let proxy_req = proxy_req_builder.body(body_bytes).build().unwrap();
+
+    let response = match state.http_client.execute(proxy_req).await {
+        Ok(resp) => {
+            let status = resp.status();
+            let headers = resp.headers().clone();
+            let body = resp.bytes().await.unwrap_or_default();
+            
+            let mut builder = Response::builder().status(status);
+            for (name, value) in headers.iter() {
+                builder = builder.header(name, value);
+            }
+            builder.body(Body::from(body)).unwrap()
+        }
+        Err(e) => {
+            (StatusCode::BAD_GATEWAY, Json(serde_json::json!({
+                "error": format!("backend error: {}", e)
             }))).into_response()
         }
     };

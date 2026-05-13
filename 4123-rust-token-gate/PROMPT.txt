@@ -1,9 +1,5 @@
-有个第三方合作方昨晚把我们接口打挂了——他们的爬虫每秒发 2000 个请求，自己的限流配置还写错了等于没开。Rust axum 写个令牌桶网关，这次做扎实点。
+第三方爬虫每秒 2000 请求把接口打挂。Rust axum 令牌桶网关。
 
-每个客户端独立维护一个令牌桶。客户端身份优先从请求的 Authorization header 提取，没有 header 的用源 IP 标识。桶两个参数——capacity（桶容量，最大令牌数）和 refill_rate（每秒填充令牌数）——按客户端级别配置，默认 capacity=100、refill_rate=10。配置通过 POST /config/{client_id} 管理，改完立刻生效。
+每客户端独立桶身份从 Authorization header 提取没 header 用源 IP。两参数 capacity（容量）和 refill_rate（每秒填充）按客户端级别配默认 100/10。POST /config/{client_id} 动态改立即生效。每请求消耗 1 令牌桶空返回 429 带 X-RateLimit-Remaining=0 和 X-RateLimit-Reset。通过后也带 Remaining 和 Limit。
 
-每个请求消耗 1 个令牌。桶空了返回 429，响应头带 X-RateLimit-Remaining=0 和 X-RateLimit-Reset（秒数，下次填充时间）。请求通过后响应头也带上 X-RateLimit-Remaining 和 X-RateLimit-Limit，让客户端知道自己还能发多少。突发流量支持 burst 参数，默认等于 capacity，允许短时间内超限消耗。
-
-黑名单机制：60 秒内触发限流超过 50 次的客户端自动进黑名单，直接返回 403 不看桶。黑名单有效期 1 小时，到期自动解封。DELETE /ban/{client_id} 手动解封，POST /ban/{client_id} 手动封禁（可指定时长）。GET /ban 列出当前所有黑名单客户端和剩余封禁时间。
-
-白名单机制：白名单内客户端不限流，POST /whitelist 管理。
+黑名单：60 秒内限流超 50 次自动进直接 403 有效期 1 小时到期解封。DELETE /ban/{client_id} 手动解 POST 手动封可指定时长。GET /ban 列出黑名单和剩余时间。白名单 POST /whitelist 管不限流。`Cargo build`，`PORT` 环境变量。

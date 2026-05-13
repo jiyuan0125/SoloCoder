@@ -7,7 +7,7 @@ import warningsRouter from './routes/warnings';
 import { checkAndGenerateProjectWarnings } from './services/warning-service';
 
 const app = express();
-const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8107;
+const PORT = process.env.PORT ? parseInt(process.env.PORT) : 8206;
 
 app.use(express.json());
 

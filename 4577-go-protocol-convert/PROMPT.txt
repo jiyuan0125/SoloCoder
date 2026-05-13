@@ -1,7 +1,8 @@
-有些老系统还在用 SOAP/XML，新服务全是 REST/JSON，中间需要转换。用 Go 标准库 net/http 写一个协议转换网关。
+前这块没有统一方案，各团队自己搞，有些老系统还在用 SOAP/XML，新服务全是 REST/JSON，中间需要转换。
 
-网关监听 HTTP 请求，根据 Content-Type 判断协议类型。收到 JSON 请求时转换成 XML（按预定义的 SOAP envelope 模板包装），转发到后端 SOAP 服务，拿到 XML 响应后解析出数据转回 JSON 返回。反过来也能接收 SOAP/XML 请求，转成 JSON 调后端 REST 服务。
+网关监听 HTTP 请求，根据 Content-Type 判断协议类型。收到 JSON 请求时转换成 XML，转发到后端 SOAP 服务，拿到 XML 响应后解析出数据转回 JSON 返回。
+转换规则按接口粒度配置，每个接口定义：入站路径、出站地址、字段映射表。字段映射支持重命名、类型转换、嵌套路径。映射规则存在 JSON 文件里，启动时加载，运行时可接口热更新。
 
-转换规则按接口粒度配置，每个接口定义：入站路径、出站地址、字段映射表。字段映射支持重命名、类型转换、嵌套路径（比如 JSON 的 data.items 对应 XML 的 Response>Items>Item）。映射规则存在 JSON 文件里，启动时加载，运行时可通过接口热更新。
+还支持 WebSocket 桥接，客户端通过 WebSocket 连接网关，网关把消息转成 HTTP 请求发给后端，后端响应再通过 WebSocket 推回去。
 
-还支持 WebSocket 桥接，客户端通过 WebSocket 连接网关，网关把消息转成 HTTP 请求发给后端，后端响应再通过 WebSocket 推回去。如果后端地址不可达或者转换出错，返回明确的错误信息而不是挂掉。端口环境变量 PORT 指定，go build 能编译通过。
+包含 converter、proto、mapper、error。

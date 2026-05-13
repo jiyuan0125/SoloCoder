@@ -2,4 +2,4 @@
 
 SaaS 多租户请求路由，按 Host 头把请求转到对应租户后端，租户配置含域名、后端地址、状态（启用/停用/欠费）。新租户通过 API 添加不用重启。活跃租户正常转发，停用返回 410，欠费跳转缴费页。后端连续失败 10 次自动禁用。路由匹配不到返回 404。
 
-Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17。端口 PORT 环境变量。mvn clean package 编译，java -jar 跑起来。

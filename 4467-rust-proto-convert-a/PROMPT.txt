@@ -1,9 +1,1 @@
-老服务只认 JSON，新服务用 Protobuf 通信效率高很多，两边协议对不上怎么办？用 Rust axum 做一个协议转换代理架在中间，请求过来自动识别方向做转换。
-
-Protobuf schema 通过接口注册，每个 schema 有名称和版本号。同一名称可以挂多个版本，查询时默认返回最新的，也能指定版本。schema 注册时做基本校验——字段名不能为空、字段类型必须合法。
-
-请求 Body 是 JSON 的情况，根据 URL 路径确定目标 schema 然后转成 Protobuf 二进制。转换时校验字段和 schema 是否匹配，类型不对、必填字段缺失的返回 422 并带错误详情说明哪个字段什么问题。嵌套对象递归处理，支持 repeated 和 map 类型。
-
-请求 Body 是二进制 Protobuf 的情况，根据 Content-Type 和路径确定 schema，转出来的 JSON 保持 schema 定义的字段命名而不是用 proto 的序号，枚举类型转成字符串而不是数字方便前端使用。
-
-schema 管 schema 注册和版本管理，encoder 管 JSON→Protobuf 编码，decoder 管 Protobuf→JSON 解码，validate 管字段校验和错误详情。Cargo build，端口 PORT 环境变量。
+用 Rust axum 做一个协议转换代理架在中间，请求过来自动识别方向做转换。Protobuf schema 通过接口注册，每个 schema 有名称和版本号。同一名称可以挂多个版本，查询时默认返回最新的，也能指定版本。schema 注册时做基本校验：字段名不能为空、字段类型必须合法。请求 Body 是 JSON 的情况，根据 URL 路径确定目标 schema 然后转成 Protobuf 二进制。schema 管 schema 注册和版本管理，encoder 管 JSON→Protobuf 编码，decoder 管 Protobuf→JSON 解码，validate 管字段校验和错误详情。Cargo build，端口 PORT。

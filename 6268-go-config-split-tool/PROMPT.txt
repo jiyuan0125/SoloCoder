@@ -1,0 +1,5 @@
+群里有人说缺一个配置拆分，我寻思 Go 能搞。
+拆分规则按顶层键名。
+拆分后的文件按模块命名。
+子命令结构：db migrate、db rollback、db status、db seed。
+go build 能编译通过，不依赖第三方库。

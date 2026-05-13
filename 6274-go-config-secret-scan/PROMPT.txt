@@ -1,0 +1,5 @@
+V2 版本月底上线，先把配置敏感信息扫描做了，Go CLI。
+密码、密钥、Token 等模式匹配。
+风险等级标注。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+go build 能编译通过，不依赖第三方库。

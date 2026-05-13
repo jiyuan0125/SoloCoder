@@ -1,7 +1,7 @@
-Spring Boot 做TraceID 和 Span 树服务。每个请求入口生成全局唯一 TraceID。内部每次调用生成 Span（带 ParentSpanID）。
+Spring Boot 做 TraceID 和 Span 树管理服务。微服务链路追踪的核心：请求入口生成 TraceID，每次服务调用产生 Span，通过 ParentSpanID 构成调用树。
 
-Span 记录：操作名称、开始时间、结束时间、标签（KV）、状态。Span 之间通过 ParentSpanID 构成树。
+批量上报 Span（一次最多 100 个），每个 Span 包含 trace_id、span_id、parent_span_id、operation_name、start_time、end_time、tags、status。
 
-提供接口上报 Span 数据。查询接口按 TraceID 返回完整的 Span 树。树以层级结构展示。
+查询接口按 trace_id 返回完整 Span 树——找到根 Span 递归构建层级结构，子节点按 start_time 排序。支持按 operation_name、时间范围、最小耗时过滤。Span 数据存内存，上限 10 万条，超过淘汰最早的 Trace。
 
 端口 server.port 配置，Maven 构建。

@@ -1,0 +1,5 @@
+开源的现成方案功能太多但自定义模板没做好，Go 从零写批量文件行处理。
+可以只处理匹配模式的部分文件。
+处理前后文件行数对比输出。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+不用第三方包，go build 通过就行。

@@ -1,7 +1,7 @@
-API Key 认证走了一个服务，JWT 认证走了另一个，用户名密码又是第三套——每次加个认证方式就得改三个地方？Rust actix-web 做一个统一认证网关，所有认证逻辑集中到一处。
+API Key/JWT/用户名密码三套认证改一处动三处。Rust actix-web 统一认证网关。
 
-支持三种认证方式：API Key 是固定密钥直接校验，JWT 验证签名和 claims，用户名密码调用后端认证接口。每种认证方式可以有多个 provider——比如 JWT 可以同时配两个签名密钥做密钥轮换。客户端通过 Authorization header 指定用哪种方式，Bearer 打头走 JWT，Token 打头走 API Key，Basic 打头走用户名密码。
+三种认证：API Key 固定密钥校验、JWT 验签名 claims、用户名密码调后端接口。每方式可有多个 provider 如 JWT 配两密钥做轮换。Authorization header 区分：Bearer→JWT、Token→API Key、Basic→用户名密码。
 
-认证结果缓存：相同的凭证在 TTL 内不重复校验，直接从缓存取结果。缓存命中率统计在 /metrics 端点暴露。缓存淘汰用 LRU，容量可配置。缓存 key 包含认证方式和凭证的哈希值。
+认证缓存：同凭证 TTL 内不重复校验直接取缓存。命中率 /metrics 暴露。LRU 淘汰容量可配 key 含认证方式和凭证哈希。
 
-RBAC 权限模型：用户属于角色，角色有权限列表。权限校验在网关层完成，通过的请求在 header 里带上 X-User-Id 和 X-User-Roles 转发给后端。权限变更时主动清除相关用户的认证缓存。登录失败次数限制：同一 IP 或用户名在 N 分钟内失败超过 M 次就临时封禁，封禁时长可配置。模块：auth（认证处理）、cache（结果缓存）、rbac（权限校验）、guard（防护）。Cargo build，PORT 环境变量。
+RBAC：用户属角色角色有权限列表网关层校验通过带 X-User-Id/X-User-Roles 转发。权限变更清相关缓存。登录失败限制：同 IP/用户名 N 分钟失败超 M 次临时封禁时长可配。模块：auth/cache/rbac/guard。`Cargo build`，`PORT` 环境变量。

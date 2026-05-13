@@ -148,13 +148,47 @@ async fn heartbeat(
     registry: web::Data<SharedRegistry>,
     instance_id: web::Path<Uuid>,
 ) -> impl Responder {
-    let instance_id = instance_id.into_inner();
+    let old_instance_id = instance_id.into_inner();
     let mut state = registry.lock().await;
     
-    let instance = state.instances.get_mut(&instance_id);
+    let instance = state.instances.get(&old_instance_id);
     
     match instance {
-        Some(instance) => {
+        Some(instance) if instance.status == InstanceStatus::Deregistered => {
+            let old_instance = instance.clone();
+            let new_instance_id = Uuid::new_v4();
+            
+            state.instances.remove(&old_instance_id);
+            if let Some(ids) = state.service_index.get_mut(&old_instance.service_name) {
+                ids.retain(|&x| x != old_instance_id);
+                if ids.is_empty() {
+                    state.service_index.remove(&old_instance.service_name);
+                }
+            }
+            
+            let new_instance = ServiceInstance {
+                instance_id: new_instance_id,
+                service_name: old_instance.service_name.clone(),
+                ip: old_instance.ip.clone(),
+                port: old_instance.port,
+                metadata: old_instance.metadata.clone(),
+                status: InstanceStatus::Healthy,
+                heartbeat_interval: old_instance.heartbeat_interval,
+                last_heartbeat: Instant::now(),
+                unhealthy_since: None,
+                registered_at: Utc::now(),
+            };
+            
+            state.instances.insert(new_instance_id, new_instance);
+            state.service_index
+                .entry(old_instance.service_name.clone())
+                .or_default()
+                .push(new_instance_id);
+            
+            HttpResponse::Ok().json(RegisterResponse { instance_id: new_instance_id })
+        }
+        Some(_) => {
+            let instance = state.instances.get_mut(&old_instance_id).unwrap();
             instance.last_heartbeat = Instant::now();
             instance.unhealthy_since = None;
             
@@ -168,11 +202,11 @@ async fn heartbeat(
                 _ => {}
             }
             
-            HttpResponse::Ok().finish()
+            HttpResponse::Ok().json(RegisterResponse { instance_id: old_instance_id })
         }
         None => {
             HttpResponse::NotFound().json(ErrorResponse {
-                error: format!("Instance not found: {}", instance_id),
+                error: format!("Instance not found: {}", old_instance_id),
             })
         }
     }

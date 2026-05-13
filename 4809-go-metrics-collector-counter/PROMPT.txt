@@ -1,9 +1,5 @@
-用 net/http 写一个指标采集服务。支持 Counter、Gauge、Histogram 三种指标类型。
+给 Prometheus 对接指标 Histogram bucket 累计值算错监控图尖峰排查两天才定位。用 Go net/http 写指标采集服务封装好导出逻辑。
 
-Counter（计数器）：只能递增，记录事件总数。Gauge（仪表盘）：可增可减，记录当前值（如在线用户数）。Histogram（直方图）：记录值的分布，配置分位数（如 P50/P90/P99）。
+Counter 只增记事件总数，Gauge 可增减记当前值，Histogram 记分布配分位数（P50/P90/P99）。API 上报 POST /metrics 含指标名、类型、值、标签。同名同标签 Counter 累加、Gauge 取最后值、Histogram 记录所有值。
 
-指标通过 API 上报：POST /metrics，body 是指标名、类型、值、标签（键值对）。相同指标名 + 相同标签的多次上报，Counter 累加、Gauge 取最后值、Histogram 记录所有值。
-
-查询接口：按指标名和标签过滤查询当前值。Histogram 查询返回各分位数值。Prometheus 格式导出接口：/metrics/prometheus。
-
-指标过期：超过 5 分钟没有上报的指标标记为过期，查询时不返回但保留历史数据。管理接口查看所有指标列表和最近上报时间。端口 PORT 环境变量。
+查询按指标名和标签过滤。Histogram 返回分位数值。/metrics/prometheus 导出 Prometheus text format。超 5 分钟没上报标过期查询不返回但保留历史。管理接口看指标列表和最近上报时间。数据存内存重启丢失可接受。端口 PORT 环境变量，go build 编译通过。

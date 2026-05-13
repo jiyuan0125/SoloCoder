@@ -1,0 +1,5 @@
+最近在搞开发工具链，需要一个文档侧边栏生成，Go 实现。
+从目录结构推断层级。
+支持排序和分组。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。
+纯标准库实现，go run . 能跑。

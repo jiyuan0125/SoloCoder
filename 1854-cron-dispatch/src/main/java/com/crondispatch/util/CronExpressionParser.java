@@ -78,7 +78,7 @@ public class CronExpressionParser {
 
     public Instant getNextExecutionTime(Instant from) {
         ZoneId zoneId = ZoneId.systemDefault();
-        LocalDateTime current = LocalDateTime.ofInstant(from, zoneId).withSecond(0).withNano(0);
+        LocalDateTime current = LocalDateTime.ofInstant(from, zoneId).withSecond(0).withNano(0).plusMinutes(1);
         
         for (int i = 0; i < 525600; i++) {
             LocalDateTime candidate = current.plusMinutes(i);

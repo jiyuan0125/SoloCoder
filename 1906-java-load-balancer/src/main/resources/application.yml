@@ -1,0 +1,17 @@
+server:
+  port: 8400
+
+spring:
+  application:
+    name: load-balancer
+
+load-balancer:
+  health-check:
+    interval-ms: 5000
+    timeout-ms: 3000
+    path: /health
+  initial-strategy: round_robin
+
+logging:
+  level:
+    com.example: DEBUG

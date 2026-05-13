@@ -2,4 +2,4 @@
 
 路由规则按路径前缀匹配，如 /user/ 开头的转用户服务，/order/ 转订单服务。匹配不到返回 404。转发时注入 X-Forwarded-For 和 X-Request-Id 头。后端响应超时设为 10 秒，超时返回 504。后端列表启动时从配置文件加载，运行时通过 /routes 接口可增删。
 
-Spring Boot 2.x，Maven，JDK 17。数据用内存存储（ConcurrentHashMap 之类）。端口通过环境变量 PORT 指定。mvn clean package 能编译通过，java -jar 能跑起来。
+Spring Boot 2.x + Maven + JDK 17，端口 PORT 环境变量，mvn clean package 编译 java -jar 跑。

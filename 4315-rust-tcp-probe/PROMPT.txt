@@ -1,11 +1,4 @@
-你有没有遇到过这种场景——上游服务挂了，网关还在傻乎乎地转发请求，每个请求都要等超时才返回，前端等半天看到一个 504？如果网关能知道上游挂了，直接返回 503 多好。Rust tokio 写一个 JWT 认证网关，认证和上游健康绑定在一起。
-
-请求进来带 Authorization Header，格式 Bearer {token}。网关解析 JWT，验证签名（RS256）和过期时间。签名密钥通过环境变量 JWT_SECRET 传入。过期 token 返回 401。请求完全不带 token 也返回 401，除非路径在白名单里。
-
-token 里带角色信息（roles 字段）。不同路径要求不同角色，路径和角色的映射通过接口配置（POST /api/permissions）。角色不足返回 403。白名单通过 POST /api/whitelist 配置，新增项立即生效。
-
-关键是上游健康检查——定期检测上游服务的 gRPC 健康状态（发 HealthCheck 请求）。上游不健康时所有请求直接返回 503，不再转发也不认证了，省得浪费 CPU。上游恢复后自动开始正常转发。
-
-每个请求的认证结果都记下来：请求路径、token 用户信息、认证结果、耗时毫秒数。失败的认证日志单独标记，方便安全审计。
-
-auth 管认证和鉴权、permission 管角色映射、probe 管上游健康检查、logger 管认证日志。Cargo build，PORT 环境变量。
+用 Rust tokio 写 JWT 认证网关认证和上游健康绑定。请求带 Bearer {token} 解析 JWT 验签名 RS256 和过期。密钥环境变量 JWT_SECRET。过期返 401 不带 token 也 401 除非路径在白名单。
+token 里带 roles 字段。不同路径要求不同角色映射走接口 POST /api/permissions。角色不足返 403。白名单 POST /api/whitelist 立即生效。
+上游健康检查定期检测 gRPC HealthCheck。不健康所有请求直接 503 不转发不认证。恢复后自动正常转发。
+认证结果记下来：路径、用户信息、结果、耗时毫秒。失败日志单独标记方便审计。拆 auth 认证鉴权、permission 角色映射、probe 上游健康、logger 认证日志。Cargo build，PORT 环境变量。

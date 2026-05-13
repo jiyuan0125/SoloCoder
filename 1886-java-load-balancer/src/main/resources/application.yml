@@ -1,0 +1,8 @@
+server:
+  port: 8806
+
+load-balancer:
+  health-check:
+    default-interval-seconds: 10
+    default-timeout-seconds: 3
+    path: /health

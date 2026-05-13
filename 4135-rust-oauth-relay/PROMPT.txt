@@ -1,9 +1,7 @@
-公司有十几个应用都要接 OAuth2，每个自己实现一遍太蠢了——code 换 token 的逻辑复制粘贴了十几次，token 刷新的 bug 修了又修。Rust actix-web 做一个认证中继服务，应用不直接对接 OAuth2 提供方，统一走这个中继。
+十几个应用各接 OAuth2 复制粘贴 bug 修了又修。Rust actix-web 认证中继统一走。
 
-支持的 OAuth2 流程两种：Authorization Code（用于有用户的场景）和 Client Credentials（用于服务间调用）。Authorization Code 流程中，中继帮应用完成 code 换 token——应用只需要调 POST /oauth/token 传入 code，中继用 client_secret 换回 access_token 和 refresh_token。Client Credentials 流程更简单，POST /oauth/client-token 直接返回 access_token。
+两种流程：Authorization Code（有用户）和 Client Credentials（服务间）。Code 流程中继帮换 token 应用只须 POST /oauth/token 传 code。Client Credentials POST /oauth/client-token 直接返回。
 
-Token 存储。中继缓存每个用户的 access_token 和 refresh_token。token 过期前 5 分钟自动用 refresh_token 刷新。刷新失败标记该用户 token 为 expired，下次请求时返回 401 让应用重新走授权流程。token 加密存储在内存里，用 AES-256 加密，密钥从环境变量读取。
+Token 存储：中继缓存每个用户 token 过期前 5 分钟自动用 refresh 刷新失败标 expired 下次返回 401 让应用重新授权。AES-256 加密存储密钥从环境变量读。
 
-用户信息。中继用 access_token 从 OAuth2 提供方获取用户信息——用户名、邮箱、头像 URL。用户信息缓存 30 分钟。GET /oauth/userinfo?access_token=xxx 返回缓存的用户信息。
-
-多应用支持。
+用户信息：中继用 access_token 从提供方获取用户名/邮箱/头像缓存 30 分钟。GET /oauth/userinfo 返回。多应用：POST /oauth/apps 注册每应用独立 client_id/secret/redirect_uri。GET /oauth/apps 列出。`Cargo build`，`PORT` 环境变量。

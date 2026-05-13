@@ -1,0 +1,7 @@
+马上要用，先出一个能跑的OAuth2 token 获取工具，Go 命令行。
+
+OAuth2 token 获取工具。支持 client_credentials 和 authorization_code 流程。缓存 token 到本地文件。输出 access_token。
+工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+
+用 Go 标准库写，go run . 或 go build 都行。

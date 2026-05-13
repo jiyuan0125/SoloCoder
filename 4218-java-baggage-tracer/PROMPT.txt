@@ -1,5 +1,9 @@
-Spring Boot 写一个链路追踪服务——解决微服务调用链太长、出问题不知道卡在哪的麻烦。市面上有 Jaeger Zipkin，但我们只需要基础的 Trace 和 Baggage 能力，不想引入整套分布式追踪系统。
-每个请求进来生成一个 TraceID（UUID v4）。跨服务调用时通过 HTTP Header（X-Trace-Id）传播 TraceID。每个操作创建一个 Span，记录开始时间、结束时间、操作名称、服务名。Span 有父子关系——调用方是父 Span，被调用方是子 Span，形成调用树。
-用户自定义的 Baggage 数据也在调用链上传播。每个服务可以通过 HTTP Header 读取和添加 Baggage（X-Baggage-Key）。Baggage 大小有限制，单个KV不超过256字节，总大小不超过1KB，超过的截断并记一条警告日志。
-调用树按 TraceID 查询，展示每个 Span 的耗时和层级关系。总耗时超过阈值（默认3秒）的自动标记为慢请求。Span 数据存内存，保留最近一万条 Trace（LRU淘汰）。Span 数据的写入和查询有简单的读写锁保护——写入不能阻塞查询。
-支持按服务名和操作名搜索 Trace 列表，返回匹配的 TraceID 和概要信息。tracer（追踪核心）、span（Span生命周期）、baggage（Baggage传播）、querier（查询接口）。Maven 构建。
+Spring Boot 链路追踪服务提供基础 Trace 和 Baggage 能力。
+
+请求生成 TraceID（UUID v4）跨服务通过 X-Trace-Id Header 传播。每操作创建 Span 记开始结束时间操作名服务名。Span 有父子关系形成调用树。
+
+Baggage 数据沿调用链传播通过 X-Baggage-Key Header。单个 KV 不超 256 字节总不超 1KB 超过截断记警告。
+
+调用树按 TraceID 查展示每 Span 耗时和层级。总耗时超阈值（默认 3 秒）标慢请求。Span 存内存保留最近一万条（LRU 淘汰）读写锁保护写不阻塞查。
+
+按服务名和操作名搜索返回 TraceID 和概要。tracer（核心）、span（生命周期）、baggage（传播）、querier（查询）。Maven 构建。

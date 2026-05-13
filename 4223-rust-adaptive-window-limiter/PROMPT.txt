@@ -1,4 +1,7 @@
-Rust axum 写一个多维度限流器——限流维度从请求的 Header、Query 参数、Body 字段里提取，现有方案的配置都不够灵活。
-限流维度可以自定义组合：从请求的 Header 提取（比如 X-Tenant-Id）、从 Query 参数提取（比如 user_id）、从 Body 的 JSON 字段提取（比如 order_type）。维度定义在管理端点上配置，比如可以配一条规则："按 X-Tenant-Id Header 加上请求路径组合限流，每分钟100次"。Body 字段提取只支持 JSON 格式的请求体。
-多条规则可以叠加——请求进来后依次匹配所有规则，只要有一个超限就拒绝（返回429）。规则有优先级，优先级高的先匹配。匹配到的第一条就执行，不继续往下。规则变更后实时生效，不需要重启。限流窗口支持固定窗口和滑动窗口两种模式，按规则单独配置。
-超限请求的响应头里带上当前规则的限流信息：X-RateLimit-Limit（总配额）、X-RateLimit-Remaining（剩余配额）、Retry-After（建议等待秒数）。管理端点可以查看每个规则的当前使用情况和最近一小时的统计数据。limiter（限流核心）、rule（规则引擎）、matcher（维度提取和匹配）、counter（计数器管理）四个包。
+Rust axum 多维度限流器维度从 Header Query Body 提取。
+
+维度自定义组合：从 Header（如 X-Tenant-Id）、Query（如 user_id）、Body JSON（如 order_type）提取。在管理端点配置如"按 X-Tenant-Id 加路径组合限流每分钟 100 次"。
+
+多条规则可叠加依次匹配只要一个超限就 429。规则有优先级高的先匹配到第一条执行不继续。变更实时生效。限流窗口支持固定和滑动两种按规则单独配。
+
+超限响应头带限流信息 X-RateLimit-Limit、X-RateLimit-Remaining、Retry-After。管理端点查规则使用情况和最近一小时统计。limiter（核心）、rule（规则引擎）、matcher（维度提取匹配）、counter（计数器）。

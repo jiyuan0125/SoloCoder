@@ -1,0 +1,5 @@
+新接了个医疗项目，他们要求有CSV结构验证的功能，Go 搞。
+列数一致、引号配对、编码正确。
+问题行标注行号。
+多级命令：config get、config set、config list、config env switch。
+纯标准库实现，go run . 能跑。

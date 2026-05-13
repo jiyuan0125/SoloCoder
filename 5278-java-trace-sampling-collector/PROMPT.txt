@@ -1,5 +1,5 @@
-Spring Boot 做采样追踪服务。不是每个请求都记录链路。按比例采样（可配，默认 10%）。
+Spring Boot 做采样追踪服务。全量采集太贵，但错误和慢请求不能丢。正常请求按比例随机采样（默认 10%），错误（状态码>=400）和慢请求（超 500ms）全部保留。采样用 TraceID 哈希决定，同一 TraceID 所有 Span 采样一致。
 
-错误请求（状态码 >= 400）和慢请求（耗时 > 阈值）不采样，全部记录。采样用 TraceID hash 决定，同一 Trace 的所有 Span 采样结果一致。
+Span 通过 POST /spans 上报（traceId、spanId、operationName、tags、duration）。已采样 Trace 按 TraceID 索引存内存，支持查完整 Span 树。GET /sampling/stats 返回当前采样比例、已采样数、被丢弃数。
 
-提供接口查看采样比例和被采样的 Trace 数量。端口 server.port 配置，Maven 构建。
+采样比例通过 PUT /sampling/rate 动态调整，立即生效。端口 server.port 配置，Maven 构建。数据存内存。

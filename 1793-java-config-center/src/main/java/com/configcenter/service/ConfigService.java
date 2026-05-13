@@ -8,13 +8,16 @@ import com.configcenter.model.ConfigItem;
 import com.configcenter.repository.AuditLogRepository;
 import com.configcenter.repository.ConfigHistoryRepository;
 import com.configcenter.repository.ConfigItemRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Service
@@ -24,7 +27,8 @@ public class ConfigService {
     private final ConfigItemRepository configItemRepository;
     private final ConfigHistoryRepository configHistoryRepository;
     private final AuditLogRepository auditLogRepository;
-    private final ConfigChangeNotifier configChangeNotifier;
+    private final ApplicationEventPublisher eventPublisher;
+    private final EntityManager entityManager;
     
     public void validateKeyParams(String namespace, String group, String key) {
         if (namespace == null || namespace.trim().isEmpty()) {
@@ -41,6 +45,22 @@ public class ConfigService {
     public Optional<ConfigItem> getConfig(String namespace, String group, String key) {
         validateKeyParams(namespace, group, key);
         return configItemRepository.findByNamespaceAndGroupAndKey(namespace, group, key);
+    }
+    
+    @Transactional(readOnly = true)
+    public Optional<ConfigItem> getConfigFresh(String namespace, String group, String key) {
+        validateKeyParams(namespace, group, key);
+        entityManager.flush();
+        entityManager.clear();
+        
+        Optional<ConfigItem> configOpt = configItemRepository.findByNamespaceAndGroupAndKey(namespace, group, key);
+        
+        if (configOpt.isPresent()) {
+            ConfigItem config = configOpt.get();
+            entityManager.refresh(config);
+            return Optional.of(config);
+        }
+        return Optional.empty();
     }
     
     @Transactional
@@ -64,7 +84,7 @@ public class ConfigService {
         saveHistory(configItem, operator, clientIp);
         saveAuditLog("CREATE", namespace, group, key, null, value, null, 1L, operator, clientIp);
         
-        configChangeNotifier.notifyChange(namespace, group, key);
+        eventPublisher.publishEvent(new ConfigChangedEvent(this, namespace, group, key));
         
         return configItem;
     }
@@ -91,7 +111,7 @@ public class ConfigService {
         saveHistory(configItem, operator, clientIp);
         saveAuditLog("UPDATE", namespace, group, key, oldValue, value, oldVersion, newVersion, operator, clientIp);
         
-        configChangeNotifier.notifyChange(namespace, group, key);
+        eventPublisher.publishEvent(new ConfigChangedEvent(this, namespace, group, key));
         
         return configItem;
     }
@@ -110,7 +130,7 @@ public class ConfigService {
         
         configItemRepository.delete(configItem);
         
-        configChangeNotifier.notifyChange(namespace, group, key);
+        eventPublisher.publishEvent(new ConfigChangedEvent(this, namespace, group, key));
     }
     
     @Transactional
@@ -150,7 +170,7 @@ public class ConfigService {
                 .build();
         auditLogRepository.save(auditLog);
         
-        configChangeNotifier.notifyChange(namespace, group, key);
+        eventPublisher.publishEvent(new ConfigChangedEvent(this, namespace, group, key));
         
         return currentConfig;
     }
@@ -171,9 +191,24 @@ public class ConfigService {
         return configItemRepository.findAll(spec, pageable);
     }
     
-    public Page<ConfigHistory> listHistory(String namespace, String group, String key, Pageable pageable) {
+    public Page<ConfigHistory> listHistory(String namespace, String group, String key, 
+                                            LocalDateTime startTime, LocalDateTime endTime,
+                                            Pageable pageable) {
         validateKeyParams(namespace, group, key);
-        return configHistoryRepository.findByNamespaceAndGroupAndKeyOrderByVersionDesc(namespace, group, key, pageable);
+        
+        Specification<ConfigHistory> namespaceSpec = (root, query, cb) -> cb.equal(root.get("namespace"), namespace);
+        Specification<ConfigHistory> groupSpec = (root, query, cb) -> cb.equal(root.get("group"), group);
+        Specification<ConfigHistory> keySpec = (root, query, cb) -> cb.equal(root.get("key"), key);
+        Specification<ConfigHistory> spec = namespaceSpec.and(groupSpec).and(keySpec);
+        
+        if (startTime != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), startTime));
+        }
+        if (endTime != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), endTime));
+        }
+        
+        return configHistoryRepository.findAll(spec, pageable);
     }
     
     public Optional<ConfigHistory> getHistoryVersion(String namespace, String group, String key, Long version) {
@@ -181,9 +216,24 @@ public class ConfigService {
         return configHistoryRepository.findByNamespaceAndGroupAndKeyAndVersion(namespace, group, key, version);
     }
     
-    public Page<AuditLog> listAuditLogs(String namespace, String group, String key, Pageable pageable) {
+    public Page<AuditLog> listAuditLogs(String namespace, String group, String key,
+                                         LocalDateTime startTime, LocalDateTime endTime,
+                                         Pageable pageable) {
         validateKeyParams(namespace, group, key);
-        return auditLogRepository.findByNamespaceAndGroupAndKeyOrderByCreatedAtDesc(namespace, group, key, pageable);
+        
+        Specification<AuditLog> namespaceSpec = (root, query, cb) -> cb.equal(root.get("namespace"), namespace);
+        Specification<AuditLog> groupSpec = (root, query, cb) -> cb.equal(root.get("group"), group);
+        Specification<AuditLog> keySpec = (root, query, cb) -> cb.equal(root.get("key"), key);
+        Specification<AuditLog> spec = namespaceSpec.and(groupSpec).and(keySpec);
+        
+        if (startTime != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("createdAt"), startTime));
+        }
+        if (endTime != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("createdAt"), endTime));
+        }
+        
+        return auditLogRepository.findAll(spec, pageable);
     }
     
     private void saveHistory(ConfigItem configItem, String operator, String clientIp) {

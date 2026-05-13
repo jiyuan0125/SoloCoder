@@ -1,11 +1,5 @@
-aiohttp 写日志收集服务。服务通过 HTTP 接口收集日志。
+查问题要登五六台服务器 grep 日志对时间戳拼链路。日志集中聚合是基本需求。
 
-日志内容是用户提交的文本。日志可以搜索。搜索接口支持关键词搜索。
+各微服务通过 HTTP 推日志过来集中查。用 aiohttp 实现日志收集服务。POST /logs 上报：请求体含 message（必填）和 level（默认 INFO），来源从 X-Source-Service 头取（缺失返回 400），自动附加 timestamp 和自增 log_id。支持单条或数组批量（最多 200 条）。
 
-日志有来源字段，标识是哪个服务发的。来源字段从请求的 Header 里取。
-
-日志按时间存储，可以按时间范围查询。也可以按来源过滤。
-
-有个统计接口返回各来源的日志数量。
-
-端口 PORT 环境变量。异步实现。
+GET /logs/search 支持 keyword（模糊匹配）、source、level、start_time/end_time 过滤，倒序默认 50 条（limit 上限 500）。GET /logs/range 按分钟聚合返回时间段内日志条数。GET /logs/stats 返回各来源条数、级别分布。内存列表按时间排序，超 50000 条淘汰最旧。Python aiohttp。端口 PORT 环境变量。

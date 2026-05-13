@@ -1,0 +1,5 @@
+线上的shell 脚本太难用了，重写一个YAML转CSV，Go 实现。
+只有数组类型的 YAML 才能转。对象的值如果是数组也支持展平。
+指定输出编码，默认 UTF-8。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+go build 能编译通过，不依赖第三方库。

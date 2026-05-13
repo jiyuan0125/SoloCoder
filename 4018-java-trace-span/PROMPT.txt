@@ -1,7 +1,7 @@
-线上一个请求要经过七八个服务，哪一步卡住了全靠猜——日志翻半天也串不起来。Spring Boot 写一个简单链路追踪，把调用链可视化。
+线上请求经七八个服务卡在哪全靠猜。Spring Boot 简单链路追踪。
 
-每个请求分配全局唯一 TraceID（UUID v4），在服务间通过 `X-Trace-Id` Header 传递。每个服务内部的操作生成 Span——Span 有名称、起止时间戳、标签（key-value 用于标记业务信息如 `db.query`、`cache.hit`）。Span 之间有父子关系组成树：根 Span 是请求入口，子 Span 是内部调用，深度可能达到 10+ 层。各微服务通过 POST `/spans` 上报 Span 数据。
+每请求分配 TraceID（UUID v4）通过 `X-Trace-Id` Header 传递。每服务操作生成 Span 有名称、起止时间、标签（key-value 标记如 `db.query`）。Span 有父子关系组成树，根 Span 是入口，深度可达 10+ 层。各服务 POST `/spans` 上报。
 
-查询能力：GET `/traces/{id}` 按 TraceID 查完整调用链，返回 Span 树（正确展示父子层级）。GET `/traces` 按服务名和时间范围查慢请求，支持设置耗时阈值，只返回超过阈值的 Trace。Span 上报可能乱序——子 Span 比父 Span 先到，后到的父 Span 要正确挂到已有子 Span 上。孤立 Span（没有父 Span 也不是根 Span）单独存，也能查到。
+GET `/traces/{id}` 按 TraceID 查完整调用链返回 Span 树。GET `/traces` 按服务名和时间范围查慢请求，支持设耗时阈值只返回超限的。Span 可能乱序到达，后到的父 Span 须正确挂到子 Span。孤立 Span 单独存也可查。
 
-GET `/stats` 返回已收集的 Trace 数、Span 总数、平均耗时。代码按 trace、span、storage、query 四个职责拆模块。Maven 构建，端口走配置文件。
+GET `/stats` 返回 Trace 数、Span 总数、平均耗时。代码按 trace、span、storage、query 拆模块。Maven 构建，端口走配置文件。

@@ -1,0 +1,8 @@
+有个老的 Python 工具做管理 Kubernetes namespace 的部署，速度跟不上，换成 Go。
+
+管理 Kubernetes namespace 的部署。列出 namespace 下的资源、检查资源配额、对比两个 namespace 的差异。
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

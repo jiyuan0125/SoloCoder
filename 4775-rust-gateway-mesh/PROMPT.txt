@@ -1,7 +1,3 @@
-用 Rust axum 写一个简易 API 网关。主要做三件事：路由、认证、聚合。
+七八个微服务各暴露一个端口，运维配防火墙到崩溃，认证逻辑不一致导致部分接口裸奔两天。用 Rust axum 做统一 API 网关，外部流量统一走网关负责路由认证聚合。
 
-路由这块，配置文件定义路径到上游的映射，支持精确匹配和前缀匹配。前缀匹配要处理多级路径，比如 /gateway/service-a/v1/resource 和 /gateway/service-b/v2/resource 要分别路由到不同上游。路径中可以带参数，像 /gateway/orders/{id}/items/{itemId}/refund 这种三级资源操作。
-
-认证这块，网关统一做 JWT 校验，校验通过后把用户信息（user_id, role）塞到 Header 里传给下游。某些白名单路径不需要认证。
-
-聚合这块，某些接口需要同时调用多个上游，把结果合并返回。上游调用失败的，聚合结果里标注该字段为 null。端口环境变量 PORT 指定。
+路由：配置文件定义路径到上游映射，支持精确匹配和前缀匹配，正确处理多级路径。支持路径参数提取如 /gateway/orders/{id}/items/{itemId}/refund 提取 id 和 itemId。认证：统一 JWT 校验，通过后 user_id、role 塞 Header 传下游，白名单路径（/health、/login）免认证。聚合：某些接口需调多个上游合并返回（如首页要用户信息、通知数、推荐），网关并发调多个上游合并 JSON，某个失败对应字段标 null 不影响其他。端口 PORT 环境变量。

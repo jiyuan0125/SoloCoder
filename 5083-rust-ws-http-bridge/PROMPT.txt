@@ -1,9 +1,5 @@
-tokio 写一个 WebSocket 和 HTTP 桥接服务。WebSocket 客户端发消息，网关转换为 HTTP 请求调用后端。
+tokio 写一个 WebSocket 和 HTTP 桥接服务。WebSocket 客户端发消息，网关转为 HTTP 请求调用后端。WebSocket 连接管理：连接时分配唯一 ID，断开时清理资源，同一客户端可建立多个连接。
 
-WebSocket 连接管理：客户端连接时分配唯一连接ID。连接断开时清理资源。同一个客户端可以建立多个连接。
+消息转换：文本消息作为 HTTP POST body，二进制消息 Base64 编码后作为 body。HTTP 响应转回 WebSocket 消息（文本或二进制根据 Content-Type）。后端地址根据 WebSocket 连接路径决定（如 /ws/echo 对应 http://echo-service/echo），路径映射通过配置文件定义。
 
-消息转换：WebSocket 文本消息作为 HTTP POST body 发送。二进制消息 Base64 编码后作为 body。HTTP 响应转回 WebSocket 消息（文本或二进制根据响应 Content-Type）。
-
-后端地址根据 WebSocket 连接时指定的路径决定。比如 /ws/echo 对应 http://echo-service/echo。路径映射通过配置文件定义。
-
-并发场景：一个 WebSocket 连接可能快速发送多条消息，每条消息对应一个 HTTP 请求。消息按序处理（后一条等前一条完成）。连接断开时正在处理的请求正常完成。端口 PORT 环境变量。
+并发场景：一个连接可能快速发送多条消息，每条对应一个 HTTP 请求，消息按序处理。连接断开时正在处理的请求正常完成。端口 PORT 环境变量。

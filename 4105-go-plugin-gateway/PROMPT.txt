@@ -1,7 +1,5 @@
-你有没有遇到过这种情况——网关里堆了十几个中间件，日志的、认证的、限流的、加签的，全写在同一个 main.go 里。改一个功能要动主代码，出了 bug 全站挂。受够了。这次 Go Gin 做一个插件化网关，核心就是插件机制，用 Go 的 plugin 包动态加载 .so 文件。
+网关堆十几个中间件全写 main.go 改一个出 bug 全站挂。Go Gin 插件化网关 Go plugin 包动态加载 .so。
 
-网关启动时扫描 plugins 目录，挨个 dlopen 加载里面的 .so。每个插件必须实现四个方法：Name() string 返回插件名、Init(config map[string]interface{}) error 做初始化、Handle(c *gin.Context) error 处理请求、Destroy() 清理资源。请求进来后按配置文件定义的插件链顺序过一遍——任何一个插件返回 error 就中断链，直接给客户端响应 500 加上插件名和错误信息。插件之间通过 c.Set("key", value) 和 c.Get("key") 传递数据，比如认证插件解析出 user_id 后面限流插件直接拿来用。
+启动扫描 plugins 目录加载 .so。每插件实现 Name()/Init(config)/Handle(c *gin.Context)/Destroy()。请求按插件链顺序过任何插件返回 error 中断响应 500 加插件名错误。插件间 c.Set/Get 传数据。
 
-内置三个插件打个样：logger 记录请求方法、路径、响应状态码和耗时；auth 校验 JWT 签名和过期时间，从 Authorization header 的 Bearer token 解析出 claims；ratelimit 按客户端 IP 做固定窗口限流，每分钟 60 次为默认值。
-
-热更新怎么搞？替换 .so 文件后调 POST /plugins/reload/{name}，网关先调旧插件的 Destroy 再调新插件的 Init。reload 期间新请求排队等插件就绪，已经处理中的请求不受影响。
+内置三插件：logger 记方法/路径/状态码/耗时；auth 校验 JWT Bearer 解析 claims；ratelimit 按 IP 固定窗口每分钟 60 次。热更新：替换 .so 后 POST /plugins/reload/{name} 先 Destroy 旧再 Init 新 reload 期间新请求排队处理中不受影响。`PORT` 环境变量，`go build` 通过。

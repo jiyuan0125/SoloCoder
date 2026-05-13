@@ -1,9 +1,5 @@
-LRU 缓存能用了，但线上的缓存穿透、击穿、雪崩问题还没防。上周一次大促缓存集体过期，数据库瞬间被打爆——得把这三层防护加上。Rust + axum 在 TTL 缓存基础上做防护。
+LRU 缓存能用但穿透击穿雪崩没防。Rust + axum TTL 缓存加三层防护。
 
-1. 穿透防护：查询不存在的 key 时缓存一个空值（30 秒有效），防止同一个不存在的 key 反复打到后端。空值和正常值在返回时要区分——空值返回 200 但 Body 里标记 `hit: false, empty: true`，正常命中 `hit: true`。
+穿透防护：查不存在 key 缓存空值 30 秒防反复打后端。空值返回 200 Body 标记 `hit:false, empty:true`，正常 `hit:true`。击穿防护：热点 key 过期瞬间只放一个请求加载（singleflight），其他等待超时（默认 5 秒）返回 miss。雪崩防护：TTL 加随机抖动 ±10% 避免同秒过期。
 
-2. 击穿防护：热点 key 过期瞬间可能涌入大量并发请求。只放一个请求去后端加载（singleflight 模式），其他请求等待结果。等待超时（默认 5 秒）返回 miss，让调用方自行处理。
-
-3. 雪崩防护：写入 TTL 时加随机抖动（±10%），避免大量 key 在同一秒过期。比如配置 TTL 300 秒，实际存储 270-330 秒随机值。
-
-基础功能仍是 KV 存储：PUT `/cache/{key}` 写入，GET `/cache/{key}` 读取，DELETE `/cache/{key}` 删除，POST `/cache/flush` 清空。统计接口 GET `/stats` 返回命中率（含穿透拦截次数）、当前条目数、击穿等待次数。`Cargo build` 通过，`PORT` 环境变量。
+基础 KV：PUT/GET/DELETE `/cache/{key}`，POST `/cache/flush` 清空。GET `/stats` 返回命中率（含穿透拦截）、条目数、击穿等待次数。`Cargo build` 通过，`PORT` 环境变量。

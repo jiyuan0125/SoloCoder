@@ -1,7 +1,7 @@
-最近搞可观测性，翻了一下现有的日志系统——十几个服务各写各的文件，排查问题要登录每台机器 grep，跨服务的调用链根本串不起来。Python aiohttp 做一个日志收集聚合服务，把散落的日志收拢到一处。
+十几个服务各写日志 grep 串不起来。Python aiohttp 日志收集聚合。
 
-服务端接收 POST /logs 批量推送的结构化日志。单条日志格式：timestamp（ISO 8601 格式）、level（DEBUG/INFO/WARN/ERROR 四选一）、service（来源服务名）、message（日志正文）、tags（可选的键值对标签，最多 10 个）。按服务名分文件存储，文件名格式 service-YYYY-MM-DD.log，每天一个文件。单次推送上限 1000 条，超过返回 413。每条日志写入前校验必填字段，缺 timestamp 自动补当前时间，缺 level 默认 INFO。
+POST /logs 批量推送格式：timestamp（ISO 8601）/level/service/message/tags（可选键值对最多 10 个）。按服务名分文件 service-YYYY-MM-DD.log 每天一个。单次上限 1000 超返 413。缺 timestamp 补当前缺 level 默认 INFO。
 
-1. 日志查询。GET /logs/query 支持五个过滤参数：start_time、end_time（ISO 8601）、level（逗号分隔多选）、service（逗号分隔多选）、keyword（message 字段的子串匹配）。查询结果按时间倒序返回，分页参数 page 和 page_size，默认每页 50 条。大文件查询用文件偏移量实现，不整个加载到内存。响应 header 带 X-Total-Count 方便前端分页。
+查询：GET /logs/query 五过滤 start_time/end_time/level/service/keyword。结果时间倒序分页默认 50。大文件用偏移量不整个加载。响应带 X-Total-Count。
 
-2. 动态级别调整。PUT /logs/level/{service} 临时调整某服务的最低日志级别，比如从 INFO 调到 DEBUG 抓线上问题。调整有有效期，默认 30 分钟，过期自动恢复到 INFO。调整立即生效，不需要重启任何服务。
+动态级别：PUT /logs/level/{service} 临时调如 INFO→DEBUG 有效期默认 30 分钟过期自动恢复。`PORT` 环境变量。

@@ -1,7 +1,5 @@
-Spring Boot 做区域感知负载均衡。后端注册时标注所在区域。
+Spring Boot 做区域感知负载均衡。后端分布在不同机房，请求优先打同区域减少延迟。注册 POST /api/backends：address、zone（如 us-east）、weight（默认 1）。
 
-优先选择与请求同区域的后端。同区域后端全部不可用时，跨区域选择（延迟加倍计分）。
+路由：请求来源区域从 X-Zone header 取，没带走 DEFAULT_ZONE。先在同区域加权轮询。同区域全不可用则跨区域，跨区域延迟计分翻倍（权重减半），优先选最近可用区域。
 
-每个区域有独立的健康状态。区域级别熔断：某区域错误率超过 50% 暂停该区域 30 秒。
-
-请求来源区域通过 X-Zone Header 指定。没带的话走默认区域。端口 server.port 配置，Maven 构建。
+区域级健康：每个区域独立统计错误率（最近 100 次），超 50% 触发区域熔断暂停 30 秒。30 秒后放一个试探，成功恢复失败继续暂停。GET /api/zones 返回各区域状态（active/circuit_open/recovering）和错误率。GET /api/stats 返回各区域请求分布和跨区域比例。端口 server.port 配置，Maven 构建。

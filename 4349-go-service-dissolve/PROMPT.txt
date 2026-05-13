@@ -1,11 +1,1 @@
-先说问题。服务实例挂了，注册中心还留着它的记录，请求还在往那个死实例发——等到 TTL 过期才发现，太慢了。需要一种更主动的注销机制。Go/Gin 做一个服务自动注销的注册中心。
-
-实例状态流转：REGISTERED → HEALTHY → UNHEALTHY → DEREGISTERED。注册时是 REGISTERED（POST /api/register），第一次心跳后变 HEALTHY。心跳超时变 UNHEALTHY。UNHEALTHY 超过宽限期（默认 60 秒）变 DEREGISTERED。宽限期内恢复心跳可以变回 HEALTHY。
-
-实例定期上报心跳，POST /api/heartbeat/{instanceID}。心跳包含实例信息和自定义指标（可选）。心跳间隔可配（默认 10 秒）。3 次未上报触发状态变更。
-
-状态变更通知订阅者。通知走 HTTP 回调，POST /api/subscribe 注册回调地址。回调失败排队重试 3 次。通知内容包含实例完整信息和新旧状态。
-
-DEREGISTERED 的实例保留一段时间（默认 30 分钟），保留期间可以通过 GET /api/instances/{id}/history 查询历史状态。保留期过后彻底删除。宽限期内的实例在查询接口要能返回，状态标记为 UNHEALTHY。
-
-registry 管注册和状态机、heartbeat 管心跳检测、notify 管订阅和推送、lifecycle 管宽限和清理。端口 PORT 环境变量，go build 能过。
+用 Go 写服务实例挂了，注册中心还留着它的记录，请求还在往那个死实例发：等到 TTL 过期才发现，太慢了。注册时是 REGISTERED（POST /api/register），第一次心跳后变 HEALTHY。心跳超时变 UNHEALTHY。实例定期上报心跳，POST /api/heartbeat/{instanceID}。心跳间隔可配（默认 10 秒）。3 次未上报触发状态变更。状态变更通知订阅者。通知走 HTTP 回调，POST /api/subscribe 注册回调地址。回调失败排队重试 3 次。registry 管注册和状态机、heartbeat 管心跳检测、notify 管订阅和推送、lifecycle 管宽限和清理。端口 PORT，go build 。

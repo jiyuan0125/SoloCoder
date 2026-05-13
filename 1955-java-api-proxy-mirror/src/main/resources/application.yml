@@ -1,0 +1,18 @@
+server:
+  port: 8602
+
+proxy:
+  target-url: http://localhost:8603
+  timeout: 10000
+
+recording:
+  max-records: 5000
+  enabled: false
+
+spring:
+  application:
+    name: api-proxy-mirror
+
+logging:
+  level:
+    com.example.apiproxymirror: INFO

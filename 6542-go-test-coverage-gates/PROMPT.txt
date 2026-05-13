@@ -1,0 +1,8 @@
+每次做检查 Go 项目的覆盖率是否达标都容易出错，写个 Go 工具自动化。
+
+检查 Go 项目的覆盖率是否达标。支持全局阈值和按包阈值。解析 coverage profile，不达标时输出具体包的覆盖率。可配置白名单。
+有可能一次导入上万条数据。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+CLI 用子命令组织：`tool group command subcommand`，支持三级。
+
+Go 标准库，命令行参数用 flag 包解析。

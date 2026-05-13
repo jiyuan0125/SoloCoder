@@ -1,11 +1,1 @@
-有个场景挺常见的——配置变了要通知下游服务，下游要么轮询来拉，要么你推给它。轮询太蠢了，延迟高还浪费资源。Rust axum 做一个 KV 配置的 Watch 服务，变了就推，不轮询。
-
-配置以路径形式组织，比如 /app/db/host、/app/db/port。值是字符串。支持按前缀列举，GET /api/config?prefix=/app/db。支持事务性写入——多个 key 同时改，PUT /api/config/batch，要么全成功要么全失败。
-
-客户端订阅一个路径，POST /api/watch，指定路径和回调地址。该路径或子路径的任何变更都通知，通知走 HTTP POST 回调。回调失败排队重试，最多重试 3 次，间隔 5/15/45 秒递增。超过 3 次放弃通知，但变更本身仍然生效。
-
-每次变更记录旧值和新值，变更历史保留最近 100 条。历史通过 GET /api/history?path=/app/db 查询。
-
-系统启动时可以导入初始配置，POST /api/config/import，导入是覆盖语义——已存在的 key 覆盖，不存在的创建。导入过程中 watch 通知正常触发，不会丢失。
-
-store 管存储和读写、watcher 管订阅和通知、history 管变更历史、importer 管批量导入。Cargo build，PORT 环境变量。
+有个场景挺常见的：配置变了要通知下游服务，下游要么轮询来拉，要么你推给它。Rust axum 做一个 KV 配置的 Watch 服务，变了就推，不轮询。支持按前缀列举，GET /api/config?prefix=/app/db。支持事务性写入：多个 key 同时改，PUT /api/config/batch，要么全成功要么全失败。客户端订阅一个路径，POST /api/watch，指定路径和回调地址。该路径或子路径的任何变更都通知，通知走 HTTP POST 回调。回调失败排队重试，最多重试 3 次，间隔 5/15/45 秒递增。历史通过 GET /api/history?path=/app/db 查询。Cargo build，PORT 环境变量。

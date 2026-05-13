@@ -1,0 +1,5 @@
+写个 Go 命令行工具做跨平台路径检查。
+Windows 不允许的字符、大小写冲突。
+列出有问题的路径和建议修复。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+go build 能编译通过，不依赖第三方库。

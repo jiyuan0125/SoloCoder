@@ -1,7 +1,7 @@
-线上排障全靠 grep 日志，一个调用链涉及 5 个服务，每个服务一个日志文件，时间戳还对不齐，排查一次问题半小时起步。Spring Boot 写一个轻量链路追踪，不用 OpenTelemetry 那套重型方案。
+排障靠 grep 日志 5 个服务时间戳对不齐。Spring Boot 轻量链路追踪。
 
-TraceID 和 SpanID 都是 16 位十六进制字符串。请求进来时没有 TraceID 就生成一个，有就沿用。每个处理环节创建新的 Span——记录开始时间、结束时间、操作名和服务名。Span 之间有父子关系，parent_span_id 指向上一级。Span 可以附加标签（key-value 格式，记录业务信息比如 user_id、order_id）和日志（带时间戳的文本，记录关键事件比如"缓存未命中"）。
+TraceID/SpanID 16 位十六进制。请求没 TraceID 就生成有则沿用。每环节创建 Span 记开始结束时间操作名服务名。Span 有父子关系可附加标签（key-value 业务信息）和日志（时间戳文本关键事件）。
 
-一个 Trace 下可能几百个 Span，深度到 20 层。查询接口 GET /trace/{trace_id} 返回完整调用树，按开始时间排序。缺失的 Span（有些环节没上报）在树里标注为 gap，不隐藏也不猜测。GET /traces 搜索 Trace 列表，支持 service_name、start_time、end_time 三个过滤条件。返回 TraceID 列表加每个 Trace 的根 Span 摘要。
+GET /trace/{trace_id} 返回完整调用树按开始时间排。缺失 Span 标 gap 不隐藏。GET /traces 搜索支持 service_name/start_time/end_time 过滤返回 TraceID 列表加根 Span 摘要。
 
-数据存储全在内存。超过 10000 条 Trace 自动淘汰最老的，环形缓冲区实现，满了覆盖最早的。淘汰前先把聚合统计（每个服务的 Span 数、平均耗时、错误率）写入本地文件做持久化。Span 数据查询做分页，page_size 默认 50。单个 Trace 的 Span 太多时也分页返回。
+数据内存超 10000 Trace 自动淘汰最老环形缓冲区满了覆盖。淘汰前把聚合统计（每服务 Span 数/平均耗时/错误率）写本地文件。查询分页默认 50。Maven 构建，端口配置文件。

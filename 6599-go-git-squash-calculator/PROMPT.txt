@@ -1,0 +1,8 @@
+之前用过 Python 做计算应该 squash 的 commit 组，这次换 Go 试试性能。
+
+计算应该 squash 的 commit 组。分析连续的小修改 commit（如 fix typo、wip），建议合并。输出 squash 计划。
+支持多个终端同时操作同一个数据目录。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
+
+Go 实现，只用标准库，交叉编译友好。

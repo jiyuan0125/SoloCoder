@@ -1,9 +1,1 @@
-Prometheus 采集指标有个前提——你的服务得暴露 /metrics 端点输出它认识的格式。Rust axum 做一个指标采集和导出服务：其他服务通过 HTTP 上报指标，这个服务聚合并导出 Prometheus text format。
-
-1. 指标类型三种。Counter 只增不减，适合请求计数、错误计数。Gauge 可增可减，适合当前在线连接数、队列深度。Histogram 记录分布，适合响应延迟——上报的是单次耗时，服务端维护桶分布，可以查 P50/P90/P95/P99。指标上报接口 POST /metrics/report，请求体包含 name、type、value、labels（键值对数组）。
-
-2. 存储按 name+labels 聚合。相同 name+labels 的 Counter 值累加。Gauge 值直接覆盖为最新。Histogram 每个 name+labels 组合维护一组桶，桶的边界可配（默认 [10, 50, 100, 500, 1000, 5000] 毫秒）。所有数据存内存，重启清零。
-
-3. 导出端点 GET /metrics 输出 Prometheus text format。支持按 name 前缀过滤——比如只导出 http_ 开头的指标。输出格式严格遵循 Prometheus 规范，TYPE 和 HELP 行都要有。采集端拉取间隔建议 15 秒。
-
-内部模块：collector 接收和解析上报、store 管聚合存储、exporter 管格式化输出、registry 管指标注册和元数据。Cargo build 能过，PORT 环境变量。
+用 Rust 写Prometheus 采集指标有个前提：你的服务得暴露 /metrics 端点输出它认识的格式。Gauge 可增可减，适合当前在线连接数、队列深度。Histogram 记录分布，适合响应延迟：上报的是单次耗时，服务端维护桶分布，可以查 P50/P90/P95/P99。2. 存储按 name+labels 聚合。Histogram 每个 name+labels 组合维护一组桶，桶的边界可配（默认 [10, 50, 100, 500, 1000, 5000] 毫秒）。3. 导出端点 GET /metrics 输出 Prometheus text format。支持按 name 前缀过滤：比如只导出 http_ 开头的指标。采集端拉取间隔建议 15 秒。Cargo build ，PORT 环境变量。

@@ -1,5 +1,5 @@
-Go 标准库做REST-SOAP 转换网关。接收 RESTful JSON 请求，转换为 SOAP XML 发送到后端。SOAP 响应转换为 JSON 返回。
+Go 标准库做 REST-SOAP 转换网关。前端发 JSON，网关转 SOAP XML 给后端，后端 SOAP 响应转回 JSON。核心是 WSDL 文件：上传后自动解析 Service、Operation、Message 定义，每个 Operation 映射成 REST 路径（如 GetUserRequest→GET /api/users/{id}）。JSON 字段按 WSDL Message part 映射，嵌套递归转换。
 
-WSDL 通过接口上传。自动解析 Service、Operation、Message 定义。每个 Operation 映射为 REST 路径。
+SOAP Fault 转统一 JSON 错误格式（code、message、detail）。字段名不匹配或类型不对返回 400，指出具体字段。
 
-SOAP Fault 转换为 JSON 错误格式。端口 PORT 环境变量，go build 能过。
+WSDL 管理：POST /wsdl 上传，GET 列出服务和操作，DELETE 移除。端口 PORT 环境变量，go build 能过。数据存内存。

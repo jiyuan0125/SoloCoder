@@ -1,9 +1,7 @@
-Rust axum 做链路追踪收集器——不追求完整 Jaeger 替代品，就做调用树可视化的数据底座。
+Rust axum 链路追踪收集器做调用树可视化数据底座。
 
-tracer 模块接收 Span 上报。每个 Span 包含 trace_id、span_id、parent_span_id、服务名、操作名、开始时间和结束时间。上报接口支持批量提交，用 async 处理保证高吞吐。数据先写内存缓冲区再异步落存储。
+tracer 接收 Span 上报含 trace_id/span_id/parent_span_id/服务名/操作名/开始结束时间。批量提交 async 处理保证吞吐先写内存缓冲再异步落存储。
 
-span 模块构建调用树。根据 trace_id 把所有 Span 聚合到一起，按 parent_span_id 建父子关系。根 Span 的 parent_span_id 为空。树深度不限，但构建时如果发现某个 parent_span_id 找不到对应 Span，这个节点标为 missing，不丢弃。调用树构建完后可以做基本分析——总耗时、最慢的 Span、错误 Span 比例。
+span 构建调用树按 trace_id 聚合 parent_span_id 建父子关系根 parent 为空。深度不限 parent 找不到的标 missing 不丢弃。分析总耗时/最慢 Span/错误比例。
 
-sampler 模块控制数据量。全量采集太吃内存。支持按比例采样——比如配置 10% 只留一成的 trace。但错误请求（Span 标记 error=true）永远保留，不受采样率影响。采样率可以按服务名单独配。
-
-exporter 模块提供查询接口：按 trace_id 拿完整调用树，按服务名查最近的 trace 列表（支持时间范围过滤和分页）。Cargo build，端口 PORT 环境变量。
+sampler 控制数据量按比例采样如 10% 但错误请求（error=true）永远保留不受采样率影响。采样率按服务名单独配。exporter 查询：trace_id 拿完整树服务名查最近 trace 列表时间范围过滤分页。`Cargo build`，`PORT` 环境变量。

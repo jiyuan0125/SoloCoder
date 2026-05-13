@@ -1,0 +1,5 @@
+想用 Go 练手数据处理这块，做个Makefile生成。
+build、test、lint、clean 目标。
+支持交叉编译。
+多级命令：config get、config set、config list、config env switch。
+go build 能编译通过，不依赖第三方库。

@@ -1,7 +1,5 @@
-Spring Boot 做配置加密存储。标记为敏感的配置值存储前加密，读取时自动解密。
+Spring Boot 做配置加密存储。敏感配置不能明文，加密存储读取时自动解密。POST /config/set：key、value、sensitive（布尔）。sensitive=true 用 AES-256-GCM 加密。GET /config/get/{key}：admin 权限（X-Role Header）返回明文，否则敏感值脱敏。GET /config/list 列出所有 Key 标注敏感。
 
-加密算法 AES-256-GCM。加密密钥通过接口管理，支持密钥轮换。轮换后旧密钥还能解密旧数据，新数据用新密钥加密。
+密钥管理：POST /admin/keys/rotate 轮换密钥，新写入用新密钥，旧密文解密时逐个试历史密钥。GET /admin/keys 返回密钥版本和创建时间。
 
-非敏感配置明文存储。查询接口根据调用者权限决定返回明文还是脱敏值。
-
-配置变更审计日志：谁、什么时候、改了什么。日志不可删除。端口 server.port 配置，Maven 构建。
+审计日志：每次 set/delete 记录谁、时间、Key、操作、旧值新值（脱敏），追加 data/audit.jsonl 不可删除。GET /admin/audit 支持按 key 和时间范围过滤。端口 server.port 配置，Maven 构建。

@@ -1,7 +1,1 @@
-前端团队用 JSON，后端团队用 Protobuf，两边都不愿意改。中间加一层协议转换代理，各自用自己熟悉的格式。Rust tokio 来写，性能不是问题。
-
-1. JSON 转 Protobuf。前端发 JSON 请求到网关，网关根据请求路径找到对应的 Protobuf schema，按 schema 把 JSON 字段映射到 Protobuf 字段然后转发给后端。字段名映射不是简单的同名对应——有些字段前端叫 userId 后端叫 user_id，映射关系通过配置文件定义。转换失败返回 400 并指出哪个字段有问题。
-
-2. Protobuf 转 JSON。后端返回 Protobuf 响应，网关转成 JSON 返回给前端。嵌套消息递归展开，repeated 字段转成 JSON 数组，enum 转成字符串（不是数字）。google.protobuf.Timestamp 类型的字段转成 ISO 8601 格式（2024-01-15T10:30:00Z），前端处理起来更方便。
-
-3. Schema 管理。Protobuf schema 文件通过接口上传，上传时做语法检查。schema 变更后自动重新加载，不需要重启。支持多版本 schema 并存——不同路径可以用不同版本。代码组织为 converter（协议转换）、schema（schema 加载和校验）、proxy（请求转发）、mapper（字段映射配置）。Cargo build，PORT 环境变量。
+前端团队用 JSON，后端团队用 Protobuf，两边都不愿意改。中间加一层协议转换代理，各自用自己熟悉的格式。Rust tokio 来写，性能不是问题。1. JSON 转 Protobuf。前端发 JSON 请求到网关，网关根据请求路径找到对应的 Protobuf schema，按 schema 把 JSON 字段映射到 Protobuf 字段然后转发给后端。转换失败返回 400 并指出哪个字段有问题。2. Protobuf 转 JSON。后端返回 Protobuf 响应，网关转成 JSON 返回给前端。3. Schema 管理。支持多版本 schema 并存：不同路径可以用不同版本。Cargo build，PORT 环境变量。

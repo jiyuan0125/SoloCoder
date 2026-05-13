@@ -1,0 +1,18 @@
+server:
+  port: 8505
+
+proxy:
+  timeout: 10000
+  default-version: v1
+  cache:
+    enabled: true
+    ttl-seconds: 5
+  retry:
+    max-attempts: 2
+  backends:
+    v1:
+      - http://localhost:8081
+      - http://localhost:8082
+    v2:
+      - http://localhost:8083
+      - http://localhost:8084

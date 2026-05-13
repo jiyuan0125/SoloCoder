@@ -129,8 +129,22 @@ func (s *Scheduler) handleSuccess(taskID string) {
 	for _, depID := range dependents {
 		s.mu.Lock()
 		depTask, ok := s.tasks[depID]
-		if ok && depTask.Status == StatusPending && s.checkDependencies(depID) {
-			s.updateStatus(depTask, StatusReady, "")
+		if ok && depTask.Status == StatusPending {
+			allDepsSuccess := true
+			for _, d := range depTask.Dependencies {
+				if dep, depExists := s.tasks[d]; depExists {
+					if dep.Status != StatusSuccess {
+						allDepsSuccess = false
+						break
+					}
+				} else {
+					allDepsSuccess = false
+					break
+				}
+			}
+			if allDepsSuccess {
+				s.updateStatus(depTask, StatusReady, "")
+			}
 		}
 		s.mu.Unlock()
 	}
@@ -294,7 +308,19 @@ func (s *Scheduler) addTask(id, name string, deps []string) (*Task, int, string)
 		s.dependents[depID] = append(s.dependents[depID], id)
 	}
 
-	if s.checkDependencies(id) {
+	allDepsSuccess := true
+	for _, depID := range deps {
+		if dep, ok := s.tasks[depID]; ok {
+			if dep.Status != StatusSuccess {
+				allDepsSuccess = false
+				break
+			}
+		} else {
+			allDepsSuccess = false
+			break
+		}
+	}
+	if allDepsSuccess {
 		s.updateStatus(task, StatusReady, "")
 		s.cond.Signal()
 	}

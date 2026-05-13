@@ -1,5 +1,5 @@
-Spring Boot 做日志搜索+聚合分析。场景是运维排障，需要在海量日志中快速定位问题。
+Spring Boot 实现日志搜索和聚合分析，按服务名、级别、时间范围、关键词快速定位。数据存H2。
 
-日志上报接口支持批量写入，每条日志包含服务名、trace_id、span_id、level、message、timestamp、extra（Map）。数据存 H2。搜索接口支持多条件组合：trace_id 精确匹配、message 模糊匹配、级别过滤、时间范围。支持按 extra 字段的某个 key 过滤。搜索结果按时间排序，支持分页。
+日志上报接口支持批量写入，每条含服务名、trace_id、span_id、level、message、timestamp、extra（Map）。搜索支持多条件：trace_id精确、message模糊、级别过滤、时间范围、extra字段过滤。结果按时间排序支持分页。
 
-聚合接口：按服务名统计各级别数量、按时间段统计日志量趋势、按 trace_id 聚合完整链路（一条 trace 下所有 span 的日志按时间排序）。聚合接口的结果可以导出为 JSON。
+聚合：按服务名统计级别数量、按时间段日志量趋势、按trace_id聚合完整链路（所有span按时间排序）。聚合结果可导出JSON。

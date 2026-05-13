@@ -1,11 +1,5 @@
-现有的健康检查只能判断通不通，没有连续性判断——偶尔一次超时就告警，半夜被叫起来发现是网络抖动，白跑一趟。Spring Boot 做一个支持多种探针和自定义阈值的健康检查，连续 N 次失败才算真挂。
+偶尔一次超时就告警半夜白跑。Spring Boot 多种探针自定义阈值连续 N 次才算真挂。
 
-第一步，定义探针。POST /probe 创建探针，参数包含 name、type（http/tcp/script）、target（URL 或 host:port 或脚本路径）、timeout（超时秒数，默认 5）、interval（检查间隔秒数，默认 10）、success_threshold（连续多少次成功才标记 healthy，默认 2）、failure_threshold（连续多少次失败才标记 unhealthy，默认 3）。
+POST /probe 创建含 name/type（http/tcp/script）/target/timeout（默认 5s）/interval（默认 10s）/success_threshold（默认 2）/failure_threshold（默认 3）。HTTP GET 2xx 成功记响应时间。TCP 建连成功记连接时间。Script 执行退出码 0 成功记 stdout/stderr。线程池并行执行。
 
-第二步，检查执行。HTTP 探针发 GET 到 target，2xx 算成功，其他算失败，记录响应时间。TCP 探针尝试建连，连上算成功，记录连接时间。Script 探针执行指定脚本，退出码 0 算成功，记录 stdout 和 stderr。所有探针用线程池并行执行。
-
-第三步，结果判定。三级状态：healthy（连续 success_threshold 次成功）、unhealthy（连续 failure_threshold 次失败）、degraded（中间状态，有成功有失败）。状态变更时记录日志并触发回调通知（如果配置了 webhook）。
-
-第四步，探针编排。多个探针可以组合。POST /group 创建探针组，指定 probes 列表和 logic（AND 或 OR）。AND 组全通过才算通过，OR 组任一通过就算通过。组的结果也要满足连续性阈值。
-
-第五步，历史记录。
+三级状态：healthy（连续 success_threshold 成功）/unhealthy（连续 failure_threshold 失败）/degraded（中间态）。状态变更记日志触发回调。探针编排 POST /group 创建组含 probes 列表和 logic（AND/OR）。AND 全通过才算 OR 任一通过。组也满足连续性阈值。Maven 构建，端口配置文件。

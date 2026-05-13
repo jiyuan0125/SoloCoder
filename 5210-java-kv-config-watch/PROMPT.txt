@@ -1,7 +1,7 @@
-Spring Boot 做 KV 配置中心，支持 Watch 变更推送。配置以 Key-Value 形式存储，通过接口增删改查。
+Spring Boot 做 KV 配置中心——配置以 Key-Value 形式存，客户端可以 Watch 某个 Key 或前缀的变化，变了就收到推送。
 
-客户端可以 Watch 指定 Key 或前缀。Key 变更时通过 HTTP 回调通知 Watch 者。回调失败按指数退避重试，最多 3 次。
+配置操作：set/get/delete/list（按前缀查询）。每个配置值有版本号，每次 set 或 delete 全局版本递增。支持查指定版本的值——做回滚的时候很有用。
 
-配置有版本号，每次变更递增。支持查询指定版本的值。
+Watch 机制：注册 key（或 key_prefix）和 callback_url。Key 变更时向 callback_url 发 POST 通知，body 包含 old_value、new_value、version。回调失败按指数退避重试（1s/2s/4s，最多 3 次）。
 
-所有变更记录持久化到文件。启动时从文件加载。端口 server.port 配置，Maven 构建。
+变更记录持久化到本地文件（追加写入）。启动时从 changelog 重建最新配置状态。端口 server.port 配置，Maven 构建。

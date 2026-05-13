@@ -1,0 +1,5 @@
+隔壁组做了个相关工具，我们顺便把数据转换映射也做了，Go。
+工具要能编码标准化（统一 UTF-8）、BOM 处理、非法字符替换策略、分桶/分箱（连续值离散化）。
+密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+用 text/template 的自定义函数。
+go build 能过，命令行工具能正常运行。

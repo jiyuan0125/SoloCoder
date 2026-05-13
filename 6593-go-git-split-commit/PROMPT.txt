@@ -1,0 +1,8 @@
+用 Go 写一个把一个 commit 拆分成多个的命令行工具。
+
+把一个 commit 拆分成多个。用户指定文件分组，每个组生成一个 commit。保持原始 commit message 的相关部分。
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+文件状态有 新增、处理中、已完成、归档。处理完后可以归档。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+
+用 Go 标准库写，go run . 或 go build 都行。

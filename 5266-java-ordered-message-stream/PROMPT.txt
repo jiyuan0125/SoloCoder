@@ -1,7 +1,5 @@
-Spring Boot 做有序消息队列。相同 Key 的消息严格按发送顺序投递。
+Spring Boot 做有序消息队列。同一个业务 Key 的消息严格按发送顺序消费（如订单的创建→支付→发货不能乱序）。发送 POST /messages/send：传入 key 和 content。用 key hash 对 partition 取模路由，同一 key 永远在同一 partition，partition 内严格有序。PARTITION_COUNT 环境变量配（默认 16）。
 
-消息通过 Key 路由到固定 partition。Partition 内严格有序。跨 Key 不保证顺序。
+消费：注册 POST /consumers/register，partition 均分给同组消费者。拉消息 GET /messages/poll?consumer_id={id}，ACK 后才投递下一条，保证顺序。NACK 消息重新入队到 partition 头部，最多 3 次后进死信。
 
-消费者 ACK 后才投递下一条。NACK 后重试（最多 3 次）。超过重试次数进死信。
-
-partition 数量可配。Key 路由策略：hash 取模。端口 server.port 配置，Maven 构建。
+GET /admin/partitions 各 partition 消息数和分配。GET /admin/dead-letter 查看死信。GET /admin/stats 各 partition 堆积数和消费速率。端口 server.port，Maven 构建。

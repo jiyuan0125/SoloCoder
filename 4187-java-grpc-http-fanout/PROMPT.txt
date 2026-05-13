@@ -1,9 +1,9 @@
-新服务全是 gRPC，老系统的前端只认 HTTP JSON，中间缺一个转换层。Spring Boot 做一个 gRPC-HTTP 协议桥接服务，支持双向转换和批量请求。
+Spring Boot gRPC-HTTP 协议桥接双向转换和批量请求。
 
-fanout 模块是入口。HTTP 请求到达后，converter 模块把 JSON 请求体转成 protobuf 格式，grpc 模块发起 gRPC 调用。gRPC 响应再转回 JSON 返回给客户端。protobuf 定义通过接口上传 .proto 文件，上传后自动解析生成字段映射关系。
+fanout 入口 HTTP 到达后 converter 把 JSON 转 protobuf grpc 发起调用响应转回 JSON。proto 文件接口上传自动解析生成字段映射。
 
-字段映射有约定规则：protobuf 的 snake_case 自动转 JSON 的 camelCase。枚举类型转成字符串名称。嵌套 message 转成嵌套 JSON 对象。repeated 字段转成数组。遇到无法自动映射的自定义类型保留原始字节用 base64 编码。
+映射规则：snake_case 转 camelCase 枚举转字符串嵌套 message 转嵌套 JSON repeated 转数组。无法映射的自定义类型 base64 编码。
 
-错误映射把 gRPC status code 对应到 HTTP 状态码：INVALID_ARGUMENT → 400、NOT_FOUND → 404、ALREADY_EXISTS → 409、PERMISSION_DENIED → 403、INTERNAL → 500。自定义错误码放在 gRPC metadata 里透传。
+错误映射 gRPC→HTTP：INVALID_ARGUMENT→400、NOT_FOUND→404、ALREADY_EXISTS→409、PERMISSION_DENIED→403、INTERNAL→500。自定义错误码放 metadata 透传。
 
-http 模块支持批量请求——一个 HTTP 请求包含多条独立的 gRPC 调用。fanout 模块并行执行所有调用，等全部完成后聚合返回。部分失败不影响成功的，每条独立返回状态。Maven 构建，端口写在配置文件里。
+http 批量请求一个 HTTP 含多条 gRPC 调用并行执行聚合返回部分失败每条独立状态。Maven 构建端口在配置文件里。

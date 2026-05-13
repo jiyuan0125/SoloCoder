@@ -1,0 +1,5 @@
+下周要给开发组演示那个文件处理流程，先出个能跑的空白差异对比，Go。
+只关注实质内容的变更。
+选项控制忽略程度。
+子命令结构：db migrate、db rollback、db status、db seed。
+纯标准库实现，go run . 能跑。

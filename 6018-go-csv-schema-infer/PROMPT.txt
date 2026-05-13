@@ -1,0 +1,5 @@
+调研了一圈，Go 做CSV Schema推断比较合适，编译成单文件部署方便。
+采样前 N 行推断类型（string、int、float、date、bool）。
+支持指定采样行数。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用第三方包，go build 通过就行。

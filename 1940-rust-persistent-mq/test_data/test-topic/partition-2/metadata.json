@@ -1,0 +1,5 @@
+{
+  "topic": "test-topic",
+  "partition": 2,
+  "next_offset": 1
+}

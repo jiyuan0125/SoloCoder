@@ -1,0 +1,5 @@
+最近在搞代码生成，需要一个配置导出环境变量，Go 实现。
+嵌套键用下划线连接。
+值中的特殊字符转义。
+子命令结构：db migrate、db rollback、db status、db seed。
+纯标准库实现，go run . 能跑。

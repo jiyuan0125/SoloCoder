@@ -1,0 +1,15 @@
+[package]
+name = "health-aggregator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+actix-web = "4"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+reqwest = { version = "0.12", default-features = false, features = ["json"] }
+chrono = { version = "0.4", features = ["serde"] }
+parking_lot = "0.12"
+anyhow = "1"
+uuid = { version = "1", features = ["v4", "serde"] }

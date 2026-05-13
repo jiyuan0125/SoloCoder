@@ -27,6 +27,9 @@ impl SummaryWindow {
     pub fn push(&mut self, value: f64) {
         self.sum += value;
 
+        let mut need_recalc_min = false;
+        let mut need_recalc_max = false;
+
         if self.count < self.window_size {
             self.samples.push(value);
             self.count += 1;
@@ -34,6 +37,13 @@ impl SummaryWindow {
             let old_value = self.samples[self.next_idx];
             self.sum -= old_value;
             self.samples[self.next_idx] = value;
+
+            if old_value == self.min {
+                need_recalc_min = true;
+            }
+            if old_value == self.max {
+                need_recalc_max = true;
+            }
         }
 
         if value < self.min {
@@ -41,6 +51,13 @@ impl SummaryWindow {
         }
         if value > self.max {
             self.max = value;
+        }
+
+        if need_recalc_min {
+            self.min = self.samples.iter().cloned().fold(f64::INFINITY, f64::min);
+        }
+        if need_recalc_max {
+            self.max = self.samples.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
         }
 
         self.next_idx = (self.next_idx + 1) % self.window_size;

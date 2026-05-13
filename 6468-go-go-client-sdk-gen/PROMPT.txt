@@ -1,0 +1,5 @@
+有个老工具是 Python 写的，维护不动了，用 Go 重写客户端SDK生成。
+请求构造、响应解析。
+错误处理封装。
+子命令结构：db migrate、db rollback、db status、db seed。
+不用第三方包，go build 通过就行。

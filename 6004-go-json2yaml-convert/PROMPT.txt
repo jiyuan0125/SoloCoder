@@ -1,0 +1,5 @@
+最近在搞文件处理，需要一个JSON转YAML，Go 实现。
+缩进用 2 空格，字符串加引号的情况按 YAML 规范处理。
+大文件要注意内存占用。
+子命令结构：db migrate、db rollback、db status、db seed。
+go build 能编译通过，不依赖第三方库。

@@ -1,7 +1,7 @@
-Span 上报到收集器后按 TraceID 归组，但异步调用里子 Span 可能比父 Span 先到达——乱序到达怎么正确拼装调用树是核心难点。Java Netty 做一个异步链路追踪收集器，不要求 Span 按序到达就能拼出完整的调用树。
+异步调用子 Span 比父 Span 先到乱序怎么拼调用树。Java Netty 异步链路追踪收集器。
 
-Span 的创建和上报是异步的，业务线程不阻塞。Span 数据先写入内存队列，后台线程批量持久化。队列满时丢弃最老的 Span，不阻塞业务线程——丢了少量 Span 好过拖慢业务。批量大小和刷盘间隔可配置。
+Span 异步上报不阻塞业务线程。先写内存队列后台批量持久化队列满丢弃最老不阻塞。批量大小和刷盘间隔可配。一个 Span 可有多个子 Span 乱序到达用时间窗口缓冲等迟到的 Span 超时还没到的标丢失。
 
-异步调用链：一个 Span 可以有多个子 Span（比如并行调用了多个下游）。子 Span 的 parent_span_id 指向父 Span。多个子 Span 可能乱序到达，收集器用时间窗口缓冲——收到 Span 后等一段时间再拼装，给迟到的 Span 留出时间。超时后还没到达的 Span 标记为丢失。
+Trace 完成：N 秒没新 Span 判定完成后分析总耗时最慢 Span 错误数。查询：按 TraceID 查调用树按服务名查最近 N 条按耗时查慢 Top N。树不完整标为不完整。
 
-Trace 的完成判定：一个 Trace 在超过 N 秒没收到新 Span 后判定为完成。完成后对整棵 Trace 树做分析——总耗时、最慢 Span、错误 Span 数量。分析结果存下来供查询。查询接口：按 TraceID 查完整调用树，按服务名查最近 N 条 Trace，按耗时查慢请求 Top N。查询 Trace 树时如果还有 Span 没到达，标记为不完整。模块：collector（收集）、assembler（拼装）、analyzer（分析）、query（查询）。端口配置文件。
+模块：collector/assembler/analyzer/query。端口配置文件不依赖外部存储用内存。

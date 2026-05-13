@@ -1,9 +1,7 @@
-Fiber 写一个带缓存层的反向代理。有些后端接口返回的数据不常变，可以在代理层缓存。
+后端有些接口返回数据不常变，每次查库太浪费。Fiber 写带缓存层的反向代理。
 
-代理转发：收到请求后转发到后端。根据响应头里的 Cache-Control 和 Age 判断是否缓存。可缓存的响应存到内存里，下次相同路径和查询参数的请求直接返回缓存。缓存 key 包含请求方法、路径、查询参数、Accept header。
+代理转发：收到请求转发到后端，根据响应头 Cache-Control 和 Age 判断是否缓存。可缓存的存内存，相同路径和查询参数直接返回缓存。缓存 key 含请求方法、路径、查询参数、Accept header。
 
-缓存管理：缓存条目有 TTL，过期后自动失效。支持手动清除指定路径的缓存。缓存总量有上限，满了按 LRU 淘汰。缓存命中率统计。
+缓存管理：条目有 TTL 过期自动失效，支持手动清除指定路径缓存，总量有上限满时 LRU 淘汰，统计命中率。
 
-请求改写：转发时添加 X-Cache header 标记命中（HIT/MISS/EXPIRED）。后端返回 304 时用缓存的完整响应填充返回给客户端。不支持缓存 POST/PUT/DELETE 请求。
-
-至少包含 proxy、cache、rewriter、stats 四个模块。编译通过，端口 PORT 环境变量。
+请求改写：转发时添加 X-Cache header 标记 HIT/MISS/EXPIRED，后端返回 304 时用缓存完整响应填充，不缓存 POST/PUT/DELETE 请求。包含 proxy、cache、rewriter、stats 模块。编译通过，端口 PORT 环境变量。

@@ -1,0 +1,5 @@
+上个月备份恢复出了个事故，配置推错了环境。现在要上嵌套XML展平CSV，用 Go。
+嵌套元素展平成多列，列名用路径表示。
+同名兄弟元素用后缀区分。
+支持嵌套命令：project create、project build、project test run、project test coverage。
+go build 能编译通过，不依赖第三方库。

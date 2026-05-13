@@ -1,0 +1,10 @@
+server:
+  port: 9902
+
+spring:
+  application:
+    name: control-plane
+
+control-plane:
+  registry-url: http://localhost:9900
+  topology-refresh-interval: 10000

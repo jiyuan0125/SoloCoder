@@ -1,9 +1,5 @@
-Go 标准库做协议转换网关。接收 JSON 请求转成 XML 发给下游，下游返回 XML 再转回 JSON。
+内部微服务全用 JSON，但要对接一个只认 XML 的老系统。用 Go 标准库做 JSON↔XML 双向转换网关，映射规则外置到 YAML 配置。
 
-转换规则从配置文件加载。配置文件路径从环境变量读取。
+POST /bridge/forward 接收 JSON，按映射规则转 XML 发给下游，下游 XML 响应转回 JSON。映射定义 endpoint（下游 URL）、请求映射（JSON 字段→XML 元素路径）、响应映射（反向）。嵌套用点号路径，数组指定 XML 包装元素名（Items + Item）。XML 属性用 @ 前缀，JSON null 在 XML 中省略。规则未覆盖字段跳过记 WARNING。
 
-转换过程日志记录完整的请求和响应内容。
-
-管理接口可以查看转换规则和统计信息。
-
-端口 PORT 环境变量，go build 通过。
+GET /admin/config 返回规则摘要，GET /admin/stats 返回转换次数和最近 10 次耗时。Go 标准库，go build 编译通过。端口 PORT 环境变量。

@@ -1,0 +1,8 @@
+现有的现有工具不支持我们需要的功能，不如用 Go 自己写CSV 日志格式转换。
+
+CSV 日志格式转换。读取 CSV 格式的日志，转换为 JSON 或自定义文本格式。支持列名映射和类型转换。
+文件可能很大，超过内存要能处理。
+处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+
+用 Go 标准库写，go run . 或 go build 都行。

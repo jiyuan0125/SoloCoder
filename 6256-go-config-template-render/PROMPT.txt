@@ -1,0 +1,5 @@
+上个月发布出了个事故，丢了一天的数据。现在要上配置模板渲染，用 Go。
+模板变量从环境变量或变量文件读取。
+支持条件判断和循环。
+多级命令：config get、config set、config list、config env switch。
+go build 能编译通过，不依赖第三方库。

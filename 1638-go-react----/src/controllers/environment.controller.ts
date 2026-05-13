@@ -104,8 +104,14 @@ export const environmentController = {
     try {
       const { id } = req.params;
       const { version } = req.body as RollbackRequest;
-      const env = await environmentService.rollback(id, version);
-      res.status(200).json(env);
+      const result = await environmentService.rollback(id, version);
+      const response: Record<string, unknown> = {
+        environment: result.environment,
+      };
+      if (result.warning) {
+        response.warning = result.warning;
+      }
+      res.status(200).json(response);
     } catch (err) {
       next(err);
     }

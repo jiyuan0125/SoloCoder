@@ -1,9 +1,7 @@
-Spring Boot 做一个分布式链路追踪服务。微服务调用链出了问题要能快速定位。
+微服务调用链出问题只能看日志猜，猜半小时不知哪个服务慢，Java 实现。
 
-Trace 采集：服务通过接口上报 Span 数据。每个 Span 包含 trace_id、span_id、parent_span_id、操作名、开始时间、结束时间、tags、状态（正常/错误）。同一个 trace_id 的所有 span 组成一条完整调用链。
+Trace 采集：服务上报 Span 数据，含 trace_id、span_id、parent_span_id、操作名、开始/结束时间、tags、状态。
 
-链路查询：按 trace_id 查完整调用树。按操作名和时间范围查 trace 列表。支持按耗时筛选慢请求（比如耗时 > 1 秒）。查询结果展示调用树和每层的耗时占比。
+链路查询：按 trace_id 查完整调用树，按操作名和时间范围查 trace 列表，支持按耗时筛选慢请求（如 >1 秒），展示调用树和每层耗时占比。
 
-服务拓扑：根据采集到的 Span 数据自动生成服务调用拓扑图。记录每个服务的调用量、错误率、平均耗时。拓扑数据按分钟更新。
-
-至少包含 collector、query、topology、store 四个模块。Maven 构建，端口配置文件。
+服务拓扑：根据 Span 数据自动生成服务调用拓扑图，记录每个服务调用量、错误率、平均耗时，按分钟粒度更新。包含 collector、query、topology、store 模块。

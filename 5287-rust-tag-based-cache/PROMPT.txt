@@ -1,7 +1,5 @@
-axum 做标签缓存。缓存值可以关联标签，按标签批量失效。
+axum 做带标签的缓存服务。写入时给 key 指定一组标签（如 user:123、region:east）。标签和 key 多对多。失效时按标签一次性清除所有关联 key——如某地区数据源更新，按 region:east 标签一次搞定。
 
-set 时指定值和标签列表。按标签 invalidate 时，该标签下所有 Key 一次性失效。
+接口：POST /cache/set 写入值和标签列表。GET /cache/{key} 读取。DELETE /cache/tags/{tag} 按标签批量失效。GET /cache/tags/{tag}/keys 查看标签下有哪些 key。GET /stats 返回缓存条目总数、标签总数和各标签 key 数量。
 
-标签和 Key 是多对多关系。一个 Key 可以有多个标签。一个标签可以关联多个 Key。
-
-提供接口：按标签查询 Key 列表、按标签失效、查看标签统计。端口 PORT 环境变量，Cargo build 能过。
+端口 PORT 环境变量，cargo build 能过。数据存内存，TTL 可选。

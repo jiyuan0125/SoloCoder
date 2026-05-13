@@ -79,11 +79,12 @@ type CategoryFinalDetail struct {
 }
 
 var (
-	projects         = make(map[string]*Project)
-	reimbursements   = make(map[string]*Reimbursement)
-	projectReimbs    = make(map[string][]*Reimbursement)
-	mu               sync.RWMutex
-	projectCounter   = 0
+	projects             = make(map[string]*Project)
+	reimbursements       = make(map[string]*Reimbursement)
+	projectReimbs        = make(map[string][]*Reimbursement)
+	mu                   sync.RWMutex
+	counterMu            sync.Mutex
+	projectCounter       = 0
 	reimbursementCounter = 0
 )
 
@@ -151,15 +152,15 @@ func padZero(n int64) string {
 }
 
 func generateProjectID() string {
-	mu.Lock()
-	defer mu.Unlock()
+	counterMu.Lock()
+	defer counterMu.Unlock()
 	projectCounter++
 	return "P" + time.Now().Format("20060102") + strconv.Itoa(projectCounter)
 }
 
 func generateReimbursementID() string {
-	mu.Lock()
-	defer mu.Unlock()
+	counterMu.Lock()
+	defer counterMu.Unlock()
 	reimbursementCounter++
 	return "R" + time.Now().Format("20060102") + strconv.Itoa(reimbursementCounter)
 }

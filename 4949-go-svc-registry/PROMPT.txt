@@ -1,11 +1,7 @@
-Gin 实现服务发现。服务实例注册上来后可以被查询到。
+服务上下线全靠手动改配置太原始，自动注册发现才是正道。
 
-实例有健康状态。怎么判断健康你来定。
+不依赖 etcd 或 Consul——自己做简单的服务注册中心，支持命名空间隔离和元数据过滤。用 Gin 实现。POST /services/{name}/instances 注册实例（host:port + 可选 metadata），注册后状态 healthy。每 10 秒 PUT heartbeat 续约，超 30 秒标 unhealthy，再超 30 秒自动剔除。
 
-服务可以分组。分组策略自己选。
+GET /services/{name}/instances 返回 healthy 实例列表，支持按元数据过滤。服务按命名空间隔离（默认 default），不同 namespace 互不可见。
 
-查询接口返回某个服务的可用实例列表。可用实例怎么定义你来定。
-
-有接口管理实例。
-
-端口 PORT 环境变量。
+管理接口：DELETE 手动下线、PUT 更新元数据、GET /admin/overview 返回所有服务概览。数据存内存。Go+Gin，go build 编译通过。端口 PORT 环境变量。

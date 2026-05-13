@@ -1,0 +1,8 @@
+调研了一圈，Go 做数据库 schema 导出最方便，编译出来直接跑。
+
+数据库 schema 导出。读取 SQLite 的表结构，输出为 SQL DDL、JSON Schema 或 Markdown 文档。
+执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。
+命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+
+Go 实现，只用标准库，交叉编译友好。

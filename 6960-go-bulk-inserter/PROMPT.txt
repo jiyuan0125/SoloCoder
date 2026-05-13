@@ -1,0 +1,8 @@
+用 Go 写批量数据插入工具比较合适，性能好、跨平台、单二进制。
+
+批量数据插入工具。读取 CSV/JSON 数据，生成批量 INSERT SQL。支持指定 batch size 和去重。
+支持多个终端同时操作同一个数据目录。
+任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
+子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。

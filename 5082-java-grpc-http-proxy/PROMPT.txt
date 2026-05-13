@@ -1,9 +1,5 @@
-Spring Boot 写一个 HTTP 和 gRPC 协议转换代理。客户端用 RESTful HTTP 调用，网关转换为 gRPC 调用内部服务。
+Spring Boot 写一个 HTTP 和 gRPC 协议转换代理。客户端用 RESTful HTTP 调用，网关转为 gRPC 调用内部服务。HTTP 方法和路径映射到 gRPC 的 service/method。请求 body（JSON）转为 protobuf message，响应转回 JSON。
 
-转换模块：HTTP 方法和路径映射到 gRPC 的 service/method。请求 body（JSON）转换为 gRPC 的 protobuf message。响应转换回 JSON。
+错误映射：gRPC status code 映射到 HTTP 状态码。NOT_FOUND→404，PERMISSION_DENIED→403，INVALID_ARGUMENT→400，INTERNAL→500。gRPC error details 透传到 HTTP 响应体。
 
-错误映射：gRPC 的 status code 映射到 HTTP 状态码。NOT_FOUND 对应 404，PERMISSION_DENIED 对应 403，INVALID_ARGUMENT 对应 400，INTERNAL 对应 500。gRPC 的 error details 透传到 HTTP 响应体。
-
-流式处理：gRPC server streaming 转换为 HTTP chunked transfer 或 SSE（可配）。客户端 streaming 和 bidi streaming 不支持，返回 400。
-
-模块结构：协议映射模块、消息转换模块、错误处理模块、流式处理模块。映射模块和消息转换模块配合工作。端口 PORT 环境变量。
+流式处理：gRPC server streaming 转为 HTTP chunked transfer 或 SSE（可配）。客户端 streaming 和 bidi streaming 不支持，返回 400。模块结构：协议映射、消息转换、错误处理、流式处理，映射和消息转换配合工作。端口 PORT 环境变量。

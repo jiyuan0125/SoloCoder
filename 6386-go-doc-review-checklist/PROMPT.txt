@@ -1,0 +1,5 @@
+我们客服团队最近需要一套文档审阅检查，用 Go 标准库做。
+完整性、准确性、格式规范。
+审阅结果导出。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+纯标准库实现，go run . 能跑。

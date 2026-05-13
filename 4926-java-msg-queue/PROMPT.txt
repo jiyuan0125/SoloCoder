@@ -1,9 +1,7 @@
-Spring Boot 消息队列服务。消息发送时带优先级（1-5，5 最高）。
+服务间异步通信需要轻量消息代理，Kafka 太重。用 Spring Boot 实现带优先级的消息队列。
 
-同一 Topic 内，高优先级消息优先投递。同优先级内按发送时间排序。
+POST /topics/{topic}/send 发消息（content + priority 1-5，默认 3）。投递按优先级排序，同优先级 FIFO。消费者 POST /consumers/register 注册 Topic，拉模式 GET /topics/{topic}/poll?consumer={id} 获取最高优先级消息，30 秒内 POST /messages/{id}/ack 确认，超时回队列重投。
 
-消费者确认消息后从队列删除。如果消费者拉取消息后 30 秒内没确认，消息重新入队。
+消息有 TTL：发送时带 ttl_seconds 或用 Topic 级默认值，过期移入过期日志（GET /admin/expired-log 查看）。优雅关机：SIGTERM 把未消费消息和过期日志刷到本地 JSON，启动时读回恢复。
 
-消息有 TTL，超过 TTL 的消息自动丢弃并记录到过期日志。TTL 按消息级别设置，没设置的用 Topic 默认 TTL。
-
-Maven 项目，端口 server.port。
+Maven 构建，端口 server.port。

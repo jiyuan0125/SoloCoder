@@ -1,0 +1,39 @@
+server:
+  port: ${SERVER_PORT:10105}
+
+spring:
+  application:
+    name: reverse-proxy
+
+proxy:
+  request-timeout: ${PROXY_REQUEST_TIMEOUT:5000}
+  connect-timeout: ${PROXY_CONNECT_TIMEOUT:5000}
+  load-balance-strategy: ${PROXY_LOAD_BALANCE_STRATEGY:round-robin}
+  failure-recovery-time: ${PROXY_FAILURE_RECOVERY_TIME:60000}
+  consecutive-5xx-threshold: ${PROXY_CONSECUTIVE_5XX_THRESHOLD:3}
+  health-check:
+    interval: ${PROXY_HEALTH_CHECK_INTERVAL:10000}
+    path: ${PROXY_HEALTH_CHECK_PATH:/health}
+    consecutive-failures-threshold: ${PROXY_HEALTH_CHECK_FAILURES:3}
+    consecutive-successes-recovery: ${PROXY_HEALTH_CHECK_RECOVERY:2}
+  access-log:
+    max-entries: ${PROXY_ACCESS_LOG_MAX_ENTRIES:10000}
+  routes:
+    - path: /api/users
+      type: prefix
+      backends:
+        - url: http://localhost:10106
+          weight: 1
+        - url: http://localhost:10107
+          weight: 2
+    - path: /api/orders
+      type: prefix
+      backends:
+        - url: http://localhost:10106
+          weight: 1
+  management:
+    base-path: /admin
+
+logging:
+  level:
+    com.example.proxy: DEBUG

@@ -1,5 +1,5 @@
-FastAPI 做DAG 工作流引擎。任务定义依赖关系（A→B→C 表示 A 完成后执行 B，B 完成后执行 C）。DAG 不允许环。
+FastAPI 做 DAG 工作流引擎。任务执行顺序由依赖决定——A 在 B 前，B 和 C 并行，D 等 B 和 C 完成。定义 POST /workflows：name 和 tasks 数组（task_name、callback_url、depends_on）。Kahn 算法验证，有环返回 400。
 
-任务按拓扑排序执行。支持并行执行没有依赖关系的任务。并行度可配。某任务失败时后续依赖它的任务不执行。
+执行 POST /workflows/{name}/trigger：入度为 0 的任务并行（MAX_PARALLEL 默认 5），每个异步 POST 到 callback_url，超时 30 秒。成功后继续调度新任务，失败则下游标记 skipped，已成功不受影响。
 
-已执行成功的任务不受影响。提供接口查看执行进度和结果。端口 PORT 环境变量，能正常跑起来。
+GET /workflows/{name}/status 返回每个任务状态和时间。GET /workflows/{name}/result 返回最终结果和耗时。GET /workflows 列出所有工作流。端口 PORT 环境变量。

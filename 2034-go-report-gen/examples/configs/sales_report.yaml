@@ -1,0 +1,38 @@
+name: 销售报表
+description: 按区域和产品统计销售情况
+
+data_source:
+  type: csv
+  path: examples/data/sales.csv
+  delimiter: ","
+  columns:
+    - name: date
+      type: date
+    - name: region
+      type: string
+    - name: product
+      type: string
+    - name: quantity
+      type: number
+    - name: amount
+      type: number
+    - name: customer
+      type: string
+
+template:
+  name: 销售明细模板
+  title: 销售明细表
+  columns:
+    - date
+    - region
+    - product
+    - quantity
+    - amount
+    - customer
+  anomaly_rules:
+    - field: amount
+      operator: "<"
+      threshold: 0
+
+output_format: text
+output_path: examples/output/sales_report.txt

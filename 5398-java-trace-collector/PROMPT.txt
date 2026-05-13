@@ -1,5 +1,7 @@
-Spring Boot 写一个链路追踪服务。Span 上报时包含服务名、操作名、标签等用户定义的元数据。查询接口支持按服务名、操作名和标签搜索 Trace。搜索关键词由用户输入，直接用于匹配。
+Spring Boot 实现链路追踪，脏数据原样存查返回。端口PORT环境变量，Maven构建，数据存内存。
 
-Span 的详细信息通过查询接口返回，包含用户上报的所有元数据。有个统计接口返回各服务的 Span 数量分布，服务名按用户上报的原样展示。
+Span上报含服务名、操作名、标签等用户自定义元数据，不做校验过滤原样存储。服务名可能是任意字符串（中文、特殊字符、超长），标签key/value也是自由格式。
 
-端口 PORT 环境变量指定。
+查询支持按服务名、操作名、标签搜索，关键词直接字符串匹配不转义。Span详情原样返回JSON。统计返回各服务Span数量分布，服务名原样展示。
+
+接口：POST /spans 批量上报（traceId、spanId、operationName、service、tags、duration）。GET /traces 搜索。GET /traces/{traceId} Trace树。GET /stats/span-distribution 按service分组统计。

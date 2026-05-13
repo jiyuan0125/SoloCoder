@@ -1,9 +1,5 @@
-上周有人把数据库密码明文写进配置里，被安全扫描扫出来了。还有一次把端口号写成字符串导致启动失败。Spring Boot 给配置中心加上校验和加密，类型不对的写不进去，敏感值自动加密存储。
+密码明文写配置端口写成字符串导致启动失败。Spring Boot 配置校验+加密。
 
-配置校验。每个配置项有类型定义，通过 POST /schema 注册。支持类型：string、number、boolean、json、url、email。写入时校验值的类型和格式。string 类型可以配正则约束。number 类型可以配 min 和 max 范围。json 类型可以配 JSON Schema 做深度校验。校验失败拒绝写入返回 400，响应包含 key、期望类型和实际值。
+校验：POST /schema 注册类型定义支持 string/number/boolean/json/url/email。string 可配正则 number 配 min/max。写入时校验类型格式失败 400 返回 key/期望/实际。加密：标记 sensitive 自动 AES-256 加密密钥从 CONFIG_ENCRYPTION_KEY 读。查询默认返脱敏前 4 位加星。带 X-Decrypt:true 返原文。GET /config/sensitive 列敏感项。
 
-配置加密。标记为 sensitive 的配置项存储时自动用 AES-256 加密。密钥从环境变量 CONFIG_ENCRYPTION_KEY 读取。查询时默认返回脱敏值——前 4 位加星号，比如 db_password → db_p********。带 X-Decrypt: true header 的请求返回原文。GET /config/sensitive 列出所有敏感配置项。
-
-配置引用。一个配置项可以用 ${ref.key} 引用另一个配置项的值。写入时递归解析引用链。循环引用检测——写入时跟踪引用路径，如果发现成环直接拒绝返回 422 加上引用链（比如 a → b → c → a）。引用的配置项不存在也拒绝写入返回 404。
-
-配置快照。每小时自动对当前所有配置做快照，快照存储在 snapshots/ 目录。保留最近 24 个快照（约 1 天）。
+引用：${ref.key} 引用另一配置写入递归解析。循环引用检测拒绝返回 422 加引用链。引用不存在拒绝 404。快照：每小时自动快照存 snapshots/ 保留最近 24 个约 1 天。Maven 构建端口配置文件。

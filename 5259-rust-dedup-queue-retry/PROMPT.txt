@@ -1,7 +1,5 @@
-axum 做去重重试队列。重试消息带去重 ID。相同 ID 的重试合并，不重复执行。
+axum 做去重重试队列。消息失败后重试，同一消息不重复执行——去重 ID 判断。提交 POST /queue/submit：dedup_id、payload、max_retries（默认 3）、callback_url。去重窗口默认 5 分钟（DEDUP_WINDOW_SECONDS），窗口内已存在返回 202 不重复。
 
-去重窗口可配（默认 5 分钟）。窗口内相同 ID 只执行一次。窗口外的相同 ID 视为新请求。
+执行：提交后立即 POST {callback_url}，成功 completed。失败（超时 10 秒或非 2xx）进重试队列，间隔 10s→30s→60s。达 max_retries 进死信。
 
-执行失败的消息重新入队。重试次数递增。达到最大次数后进入死信。
-
-端口 PORT 环境变量，Cargo build 能过。
+GET /queue/messages/{id} 返回状态和历史。GET /queue/dead-letter 返回死信。POST /queue/dead-letter/{id}/retry 重新入队。GET /admin/stats 返回总提交、去重命中、成功、重试中、死信数。端口 PORT 环境变量，cargo build 能过。

@@ -1,0 +1,5 @@
+之前用 Excel 管文档，数据量上来扛不住。换个接口合规检查，Go。
+方法签名是否完全匹配。
+缺少的方法列出。
+多级命令：config get、config set、config list、config env switch。
+不用第三方包，go build 通过就行。

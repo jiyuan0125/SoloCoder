@@ -1,5 +1,5 @@
-FastAPI 做蓝绿部署路由网关。蓝和绿两个环境同时存在。通过接口一键切换。
+FastAPI 做蓝绿部署路由网关。两套环境同时存在，一键切换流量。环境配置：POST /admin/environments 配 blue_url 和 green_url。GET 查看当前配置和活跃环境。
 
-切换时先等在途请求完成（优雅切换）。切换有超时（可配），超时强制切换。切换失败自动回滚。
+切换 POST /admin/switch：优雅流程——新环境标记"准备中"，旧环境停收新请求等在途清空（通过 X-Request-ID 追踪），完成后切流量。超时默认 60 秒（GRACEFUL_TIMEOUT 环境变量），超时强制切换。失败自动回滚。切换前对新环境连续 3 次 GET /health 检查。
 
-切换历史保留。提供接口查看当前活跃环境、切换历史。端口 PORT 环境变量，能正常跑起来。
+切换历史 GET /admin/history 返回最近 100 条记录。GET /admin/status 返回当前活跃环境和两个环境健康状态。端口 PORT 环境变量。

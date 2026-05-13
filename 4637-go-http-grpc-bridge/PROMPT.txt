@@ -1,9 +1,17 @@
-我们需要一个 HTTP 到 gRPC 的协议桥接服务，用 Gin 框架做。
+最近线上出了一次数据不一致的问题，根因是这一块的状态管理有bug。
 
-客户端发 HTTP JSON 请求，桥接服务把 JSON 转成 Protobuf 格式，调用后端 gRPC 服务，拿到 Protobuf 响应后再转回 JSON 返回给客户端。
+我们需要一个HTTP到gRPC的协议桥接服务，用Gin框架做。
 
-gRPC 服务的定义（proto 文件）通过接口上传管理。上传后桥接服务要能自动解析 proto 文件里的 service 和 method，生成对应的 HTTP 路由。
+客户端发HTTPJSON请求，桥接服务把JSON转成Protobuf格式，调用后端gRPC服务，拿到Protobuf响应后再转回JSON返回给客户端。
 
-HTTP 路径设计：/grpc/{service}/{method} 映射到对应的 gRPC 调用。proto 文件里的嵌套 message 类型要正确处理。
+gRPC服务的定义（proto文件）接口上传管理。
 
-如果 proto 文件定义了多个 service，每个 service 的 method 不能有重名冲突。端口 PORT 环境变量。
+支持水平扩展，多实例之间通过共享存储或者最终一致性同步状态。
+
+所有写操作要有操作日志记录，谁在什么时候做了什么要可追溯。
+
+管理接口要能看到系统的实时状态，包括当前处理的请求数、累计的统计指标等。
+
+HTTP路径设计：/grpc/{service}/{method}映射到对应的gRPC调用。
+
+包含 bridge、converter、router、config。

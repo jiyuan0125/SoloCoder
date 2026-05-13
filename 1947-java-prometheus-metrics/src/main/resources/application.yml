@@ -1,0 +1,14 @@
+server:
+  port: 9503
+
+spring:
+  application:
+    name: metrics-service
+
+metrics:
+  retention:
+    raw-data-hours: 1
+  labels:
+    max-combinations: 100
+  buckets:
+    histogram: 100,500,1000,5000

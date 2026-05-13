@@ -1,1 +1,7 @@
-Rust/actix-web 写一个限流器。拆成四个模块：RuleEngine（解析存储限流规则）、SlidingCounter（滑动窗口计数）、WaitQueue（超限请求排队超时处理）、API（接收请求调用规则引擎和计数器）。规则引擎和计数器通过共享状态存储通信。队列管理在计数器归零时唤醒排队请求。规则热更新时规则引擎通知计数器清理旧计数再初始化新规则。内部模块用 channel 通信。端口环境变量指定。
+Rust/actix-web 实现模块化限流器。端口环境变量，数据存内存。
+
+四个模块：RuleEngine管限流规则的解析存储和生命周期（增删改查）。SlidingCounter实现滑动窗口计数记录每个分组的请求数。WaitQueue管超限请求排队和超时，计数器归零时唤醒。API模块接收请求调RuleEngine匹配规则查SlidingCounter判断放行。
+
+模块间通过Arc<RwLock>共享状态通信。规则热更新时RuleEngine通知SlidingCounter清理旧计数再初始化新规则。WaitQueue和SlidingCounter通过channel做异步通信。
+
+接口：POST /rules 创建。PUT /rules/{id} 更新（触发计数器重置）。GET /rules 列出。GET /stats/{group} 实时统计。

@@ -1,0 +1,5 @@
+试了三个方案都不满足需求，Go 自己写认证授权工具工具。
+工具要能JWT 签名生成、多算法支持（HS256/RS256/ES256）、Claims 自定义。
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+日志里别打印密钥和密码等敏感信息。
+go build 能过，命令行工具能正常运行。
