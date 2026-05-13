@@ -1,5 +1,2 @@
-之前用 Excel 管文档，数据量上来扛不住。换个CSV JSON双向转换，Go。
-通过子命令切换方向：csv2json 和 json2csv。
-来回转换后数据和原始数据要一致。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-纯标准库实现，go run . 能跑。
+文档管理从 Excel 迁到自研系统，数据格式要在 CSV 和 JSON 之间来回转。通过子命令切换方向：csv2json 和 json2csv，来回转换后数据和原始数据要一致。
+命令行格式：cli import --source csv --target db --filter 'age>18'。纯标准库实现，go run . 能跑。

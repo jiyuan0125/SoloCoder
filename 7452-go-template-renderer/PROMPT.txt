@@ -1,6 +1,13 @@
-用 Go 标准库写一个文本处理转换相关的 CLI 工具。
-工具要能模板渲染（Go template）、自定义函数注册、模板继承。
-密钥轮换后用旧密钥加密的数据要能解密。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-扫描多个目录要并行处理。
+用 Go 标准库的 text/template 包写一个模板渲染工具，支持自定义函数和模板继承。Go CLI。
+
+模板渲染——加载 Go template 模板文件和数据文件（JSON/YAML），渲染后输出到 stdout 或指定文件。模板语法就是标准 text/template 语法——{{.Field}}、{{range .Items}}、{{if .Condition}} 这些。
+
+自定义函数注册——用户可以写 Go 代码注册自定义模板函数。工具内置一些常用函数：upper/lower/trim/replace/split/join/date。用户自定义函数通过插件机制加载——编译时注册或者运行时从指定目录加载 .so 文件（用 plugin 包）。
+
+模板继承——子模板可以 extends 基础模板，覆盖指定的 block。基础模板定义骨架和 block，子模板只覆盖需要定制的部分。
+
+密钥轮换兼容——旧密钥加密的数据要能解密。维护密钥版本列表，数据头标记密钥版本号，解密时按版本查密钥。搜索路径支持多层 indexes/{name}/docs/{doc_id}/fields/{field}——按索引名、文档 ID、字段名逐级查找。
+
+多目录并行扫描——用户传多个目录时，每个目录一个 goroutine 并行处理模板渲染任务。
+
 go build 能过，命令行工具能正常运行。

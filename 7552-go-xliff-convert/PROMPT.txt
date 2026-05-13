@@ -1,3 +1,9 @@
-写个XLIFF转换工具。任务有多个审批步骤。从文件读取内容，处理后输出到 stdout 或指定文件。
+XLIFF 的 XML 结构比 PO 复杂得多——有 `<trans-unit>`、`<source>`、`<target>`、`<alt-trans>` 这些嵌套元素，还有状态标记（new/needs-review/translated/final）。翻译团队在 XLIFF 和 PO 之间互转来配合不同工具协作，但现有的转换工具丢状态信息。审批流程有好几步：翻译→审校→终审，每个步骤都要在 XLIFF 里标记状态。
 
-遇到无法识别的字符编码要尝试常见编码自动检测。输出保持原始换行结构。Go 标准库。
+`xliff-tool`，子命令 `parse`、`convert`、`export`。`xliff-tool parse` 读 XLIFF 文件，提取所有翻译单元，输出 JSON。每个单元包含 source、target、状态、注释、上下文信息。`xliff-tool convert` 做 XLIFF↔PO 互转，状态映射是重点——XLIFF 的 `translated` 对应 PO 的已翻译、`needs-review` 对应 PO 的 fuzzy。`xliff-tool export` 导出为标准格式（TBX 术语库、TSV 表格）方便其他工具导入。
+
+从文件读取内容，处理后输出到 stdout 或 `--output` 指定的文件。翻译条目的新增、修改、删除要跟踪——每次处理完生成一个变更日志，记录哪些条目是新增的、哪些修改了 target、哪些被删除了。
+
+字符编码：遇到无法识别的编码尝试 UTF-8 → Latin-1 → Shift-JIS 的顺序自动检测。输出保持原始换行结构（LF 或 CRLF）。
+
+Go 标准库。`go build` 通过。

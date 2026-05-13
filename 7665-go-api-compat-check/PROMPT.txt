@@ -1,3 +1,17 @@
-API兼容性检查涉及多个配置文件，手动管理容易遗漏。多种子命令处理不同操作。
+我们对外提供 SDK，上个月改了接口没通知下游客户，结果对接方的系统全挂了——赔了三天工时善后。自此以后凡是动 API，必须检查兼容性。
 
-工具支持模板渲染，公共变量只维护一份。敏感信息支持从环境变量注入。Go 标准库实现，go build 通过。
+API 定义实体有 ID、接口名称、HTTP 方法、路径、请求参数（JSON Schema 描述）、响应格式、版本号。VersionSnapshot 有 ID、版本标签、包含的 API 定义列表、创建时间。多个配置文件对应多个版本的 API 定义（v1.json、v2.json），工具统一管理。
+
+`diff <v1> <v2>` 子命令对比两个版本——输出新增的接口、删除的接口、修改的接口（参数增删、类型变化）。breaking change 包括：删除接口、删除请求参数、改变参数类型。`check` 子命令检查当前 API 定义是否符合兼容性规则——不能删除已有参数、不能改变返回类型。
+
+模板渲染用于生成 API 文档——`render --version <v> --template <file> --output <file>` 从模板文件生成 Markdown 文档。公共变量（如 base_url、auth_type）维护一份，所有版本共享。敏感信息（如 API Key）支持从环境变量注入。
+
+- `api add --name <text> --method <method> --path <text> --version <v>`
+- `snapshot create --version <v>`
+- `diff <v1> <v2>`：版本对比
+- `check --version <v>`：兼容性检查
+- `render --version <v> --template <file> --output <file>`
+- `list [--version <v>]`
+- `inject --var <name> --from-env <ENV_VAR>`
+
+Go 标准库实现，go build 通过。

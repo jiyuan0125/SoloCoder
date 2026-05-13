@@ -1,3 +1,16 @@
-写个Docker环境管理工具，CI 环境用。处理完成后自动归档。
+本地 Docker 环境没人管——镜像 tag 各写各的（有人用 latest 有人用具体版本），Compose 文件散落在三个目录里，容器命名完全没有规范。上周 CI 环境因为镜像版本不一致出了问题，排查发现有人悄悄把 redis:7 改成了 redis:latest。
 
-工具支持锁定当前版本生成锁文件。后续构建用锁文件确保一致性。锁文件包含 hash 校验。Go 标准库。
+DockerEnv 实体有 ID、名称、Compose 文件路径、镜像列表（每个镜像有名称和标签）、状态（active/stopped/archived）。创建环境时（`env create <name> --compose <file>`），解析 Compose 文件提取镜像信息。`env list` 显示所有环境和状态。
+
+锁定版本——`lock generate <env>` 从当前环境的镜像信息生成 lock.json，包含每个镜像的精确 digest（SHA256）。`lock verify <env>` 对比当前运行的镜像 digest 和 lock.json，不一致的输出差异。处理完成后（验证通过），自动归档——把 lock.json 和环境配置一起移到 archive 目录，主列表不再显示。
+
+`env start <name>` 和 `env stop <name>` 管理容器生命周期。`env export <name>` 打包环境配置和锁文件为 tar.gz。
+
+- `env create <name> --compose <file>`
+- `env list` / `env start <name>` / `env stop <name>`
+- `lock generate <env>`：生成版本锁
+- `lock verify <env>`：校验一致性
+- `env archive <name>`：归档
+- `env export <name>`：导出为 tar.gz
+
+Go 标准库实现。

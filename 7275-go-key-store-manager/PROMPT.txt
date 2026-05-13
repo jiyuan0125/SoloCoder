@@ -1,5 +1,13 @@
-管理混乱找不到哪个在用，所以想做一个证书密钥管理工具，Go 实现。
-工具要能证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查、TLS 配置文件生成。
-消息处理后自动发确认，确认发送失败静默跳过。
-消息格式升级后旧的消费者要能兼容处理。
-go build 能过，命令行工具能正常运行。
+十几个证书文件散落在各个服务器上，不知道哪个在用哪个过期了。Go 写证书信息解析工具，主题/颁发者/扩展/指纹、SAN 提取、密钥用途检查、TLS 配置生成。
+
+证书信息解析：`ksm parse --cert server.pem` 输出所有字段。Subject/Issuer 按 CN/OU/O/C 展开。扩展字段列表。指纹 SHA-1 和 SHA-256。
+
+SAN 提取：`ksm san --cert server.pem` 列出 DNS、IP、Email 类型的 SAN。JSON 输出。
+
+密钥用途检查：`ksm check-usage --cert server.pem --expect server-auth`。Key Usage 和 EKU 是否匹配预期。TLS 服务端需要 serverAuth，CA 需要 keyCertSign。
+
+TLS 配置生成：`ksm gen-tls --cert server.pem --key server.key --output tls.json`。根据证书类型推荐密码套件和最低版本。
+
+消息处理后自动确认？本工具不做消息。消息格式升级兼容？证书解析要兼容 PEM 和 DER 两种输入，自动检测。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,6 +1,11 @@
-上次出了事故，现在要上加密解密工具工具，用 Go。
-工具要能文件完整性校验（SHA256/SHA512/BLAKE2）、校验和文件对比、增量校验。
-数据库查询需要连接配置，连接怎么配不提。
-表结构变更后依赖该表的查询和报告要更新。
-日志里别打印密钥和密码等敏感信息。
-go build 能过，命令行工具能正常运行。
+离职员工的笔记本上有未加密的客户数据，法务追责了。Go 写文件完整性校验工具，SHA256/SHA512/BLAKE2b、校验和文件对比、增量校验。
+
+哈希：`tlock hash --algo sha256 --input sensitive.db`。批量 `tlock batch-hash --input-dir ./data/ --algos sha256,blake2b --output checksums.json`，一次 I/O 用 `io.MultiWriter` 同时算多哈希。
+
+对比：`tlock compare --baseline checksums.json --input-dir ./data/`。输出 matched/mismatched（含两个哈希）/missing。
+
+增量校验：首次 `tlock baseline --input big.image --chunk-size 1M --output baseline.json` 按 1MB 分块。后续只检查修改时间，变了找到变化分块重算。
+
+不用数据库，纯文件操作。日志不打印敏感内容只打路径和状态。baseline 格式升级时自动迁移。
+
+`go build` 能过，命令行工具能正常运行。

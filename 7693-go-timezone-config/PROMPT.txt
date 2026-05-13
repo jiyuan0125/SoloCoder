@@ -1,3 +1,18 @@
-Go 项目的时区配置需要自动化。更新配置时自动刷新缓存，刷新也要读配置。
+排查一个线上 bug 的时候对日志时间戳心算了半天——服务端记的是 UTC，本地开发机是 CST，Docker 容器里又是 UTC。三个时间戳对不上，定位问题多花了二十分钟。
 
-解析 go.mod 和 go.sum，提取所有依赖版本。对比最新版本列出可更新项。区分大版本和小版本更新。Go 标准库实现。
+TimezoneConfig 实体有 ID、项目名、时区标识（如 Asia/Shanghai、UTC）、时区偏移量（+0800）、关联的配置文件列表（如 app.yaml、Dockerfile、CI YAML）、状态（active/overridden）。`config add --project <name> --tz <timezone> --files <list>` 添加配置。
+
+`scan` 解析项目目录下的配置文件——go.mod 中的 Go 版本（推断默认时区处理方式）、Dockerfile 中的 TZ 环境变量、应用配置文件中的时区设置。对比最新记录列出可更新项（不一致的时区配置）。区分大版本差异（如 +0800 vs UTC）和小版本差异（同一天区的不同表示）。
+
+更新配置时（`config set <id> --tz <timezone>`），自动刷新内存缓存（缓存放着项目时区映射表），刷新时重新从 JSON 文件读取配置。
+
+`report` 输出所有项目的时区配置对比——哪些用 UTC、哪些用本地时区、是否有冲突。
+
+- `config add --project <name> --tz <timezone> --files <list>`
+- `config list` / `config set <id> --tz <timezone>`
+- `scan <dir>`：扫描项目配置
+- `report`：时区配置对比
+- `check --project <name>`：一致性检查
+- `export --project <name>`：输出 TZ 配置片段
+
+Go 标准库实现。

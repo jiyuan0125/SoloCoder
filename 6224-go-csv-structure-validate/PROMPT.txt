@@ -1,5 +1,3 @@
-新接了个医疗项目，他们要求有CSV结构验证的功能，Go 搞。
-列数一致、引号配对、编码正确。
-问题行标注行号。
-多级命令：config get、config set、config list、config env switch。
-纯标准库实现，go run . 能跑。
+客户发的 CSV 每次格式都不太对，导入就报错。Go 实现一个 CSV 结构验证：列数是否一致、引号有没有配对、编码对不对，问题行标出行号方便定位。
+
+CLI 用多级命令设计，参考 config get、config set、config list、config env switch 这种层级。纯标准库实现，go run . 能跑。

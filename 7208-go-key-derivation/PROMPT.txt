@@ -1,4 +1,9 @@
-想用 Go 练手，做个加密解密工具工具。
-工具要能流式加密（CTR 模式）、管道式处理（stdin/stdout）、进度显示。
-校验完成后自动生成报告，报告模板不存在就跳过。
-go build 能过，命令行工具能正常运行。
+线上六个服务的密钥派生方式各搞各的——有的 1 万次迭代，有的 10 万次，还有的直接硬编码 salt。安全审计直接标红，整改单昨天就下来了。Go 命令行工具，PBKDF2 密钥派生、流式加密、管道式处理。
+
+PBKDF2 派生：`kdf derive --password "xxx" --salt "randomsalt" --iterations 100000 --key-length 32` 输出十六进制密钥。PRF 固定 HMAC-SHA256，不提供选项。salt 不指定自动生成 16 字节随机值。迭代次数默认 10 万，最低 1 万（低于报错）。
+
+流式加密：`kdf encrypt --input - --output - --key <derived-key>`，AES-256-CTR 模式，不需要 padding。管道串联：`echo "password" | kdf derive --salt auto | kdf encrypt --input plaintext.txt`，密钥输出干净只有 hex 串。
+
+进度显示到 stderr，每处理 1MB 打印百分比，不污染 stdout。任务状态 `idle`/`working` 两种，同步操作不需要排队。
+
+`go build` 能过，命令行工具能正常运行。

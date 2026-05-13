@@ -1,5 +1,11 @@
-隔壁组做了个相关工具，我们顺便把加密解密工具也做了，Go。
-工具要能密钥分片（Shamir Secret Sharing）、门限恢复、分片验证、密码哈希（bcrypt/scrypt）。
-证书续签后依赖该证书的 TLS 配置要同步更新。
-证书签发需要 CA，CA 怎么初始化不提。
-go build 能过，命令行工具能正常运行。
+PBKDF2 工具隔壁组做好了，密钥分片和密码哈希顺势也补上。Go 写，密钥分片（Shamir Secret Sharing）、门限恢复、分片验证、密码哈希（bcrypt/scrypt）。
+
+Shamir 密钥分片：`kstretch split --input master.key --threshold 3 --shares 5`。GF(256) 上构造随机多项式，常数项是原始密钥的每个字节。生成 5 份分片，每份一个 JSON 文件 `share_N.json`。随机系数用 `crypto/rand` 生成。
+
+门限恢复：`kstretch recover --shares "share_1.json,share_2.json,share_3.json"`。拉格朗日插值恢复每个字节。提供少于 threshold 个分片时报错退出码 1。恢复结果输出到 stdout（十六进制格式）。
+
+分片验证：`kstretch verify share_3.json`。检查 JSON 结构完整性：`index` 在 1 到 total 范围内、`data` 是合法 base64、`threshold ≤ total`。输出验证结果 JSON。
+
+密码哈希：`kstretch hash-password --password "xxx" --algo scrypt`。bcrypt cost 默认 12（范围 4-31），scrypt 用 N=32768 r=8 p=1。哈希输出标准模块字符串格式。证书续签后 TLS 配置同步更新？本工具不涉及 TLS。CA 初始化？不涉及。
+
+`go build` 能过，命令行工具能正常运行。

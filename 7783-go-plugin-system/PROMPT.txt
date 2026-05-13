@@ -1,3 +1,13 @@
-用 Go 标准库做个插件系统组件。主流程完成后自动生成关联记录。
+功能扩展每次都要改主程序代码，耦合越来越严重。插件系统把扩展点抽出来，新功能做成插件独立加载。
 
-支持多种输出格式（JSON、YAML、表格）。输出格式通过参数切换。数据驱动，传入结构体自动渲染。Go 标准库实现。
+plugin-system 用 Go 标准库实现，`go build -o plugin-demo ./cmd/plugin` 编译。
+
+插件接口：`Plugin` 包含 `Name()`、`Init(ctx) error`、`Handle(input) (output, error)`。主流程完成后自动调用插件的 PostProcess 处理结果，自动生成关联记录。
+
+加载机制：Go plugin 包加载 `.so` 动态库，也支持内建插件（直接 import 注册）。搜索目录：`./plugins/` > `~/.app/plugins/`。加载失败不阻塞主程序，报 warning 跳过。
+
+输出格式支持 JSON、YAML、表格，`--format` 切换。数据驱动——传入结构体自动渲染。插件也可以注册自己的输出格式处理器。
+
+插件间通过共享 Context 对象传递数据。可以注册事件回调，其他插件触发时收到通知。加载顺序通过 Priority() 控制。
+
+子命令：`list` 显示已加载插件；`load <path>` 手动加载；`call <plugin> <method>` 测试。API：`pm := plugin.NewManager()`、`pm.LoadDir("./plugins")`。`go test ./...` 跑测试。

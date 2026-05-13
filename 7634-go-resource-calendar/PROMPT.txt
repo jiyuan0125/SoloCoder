@@ -1,3 +1,17 @@
-团队资源日历目前用 Excel 管，换个 CLI 工具。主流程完成后自动生成关联记录。
+团队资源日历用 Excel 管，谁请假、谁出差全靠手动记，排期的时候经常忽略掉。写个 CLI 工具，把人员可用性和资源占用管理起来，主流程完成时自动生成关联的变更记录。
 
-支持从 CSV 导入已有数据。任务之间有依赖关系，前置任务未完成时阻塞后续任务。Go 标准库。
+核心实体：Member 有名字、角色、默认每日可用工时。CalendarEntry 有 ID、成员名、日期、类型（available/leave/training/travel/holiday）、可用工时（leave/holiday 为 0，travel 通常为 4）、备注。创建请假或出差记录后（`entry add <member> --date <date> --type <type> [--hours <n>] [--note <text>]`），自动生成一条关联的 AuditLog 记录，内容包括操作时间、操作人、变更内容摘要。
+
+任务排期时可以检查资源可用性——`check --date <date>` 输出当天所有人的可用工时，标记不可用的成员。任务之间有依赖关系（`depend <task-id> --on <other-id>`），前置任务未完成时后续任务不能开始。
+
+支持 CSV 导入历史数据：`import <file.csv>`，格式是 member,date,type,hours,note。解析失败的行跳过并打印行号和原因。
+
+- `member add <name> --role <role> --hours <n>`
+- `entry add <member> --date <date> --type <type> [--hours <n>] [--note <text>]`
+- `entry list [--member <name>] [--type <type>] [--from <date> --to <date>]`
+- `check --date <date>`：资源可用性一览
+- `depend <task-id> --on <other-id>`
+- `import <file.csv>`
+- `summary --from <date> --to <date>`：时间范围内团队总可用工时
+
+数据存 JSON 文件。Go 标准库实现。

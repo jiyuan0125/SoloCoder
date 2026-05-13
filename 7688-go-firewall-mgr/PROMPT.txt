@@ -1,3 +1,16 @@
-团队里防火墙规则管理不统一导致构建经常出问题，写个工具规范化。多种子命令处理不同操作。
+防火墙规则没人统一管——有人调试的时候开了 8080 端口忘了关，有人该开 3306 给数据库用却忘了开，结果服务连不上。出了问题问一圈"你改没改 iptables？"，互相推。
 
-工具能检测当前环境是否符合项目要求。不符合的列出差异项和修复建议。Go 标准库实现。
+Rule 实体有 ID、方向（inbound/outbound）、协议（tcp/udp/icmp）、端口范围（如 8080 或 8000-9000）、源地址（CIDR）、目标动作（allow/deny）、描述、状态（active/disabled）。`rule add --direction <dir> --protocol <proto> --port <range> [--source <cidr>] --action <action> --desc <text>` 添加规则。
+
+子命令分组：`rule` 管理（add/list/remove/enable/disable），`policy` 管理默认策略（default-allow/default-deny），`check` 检测当前环境——对比工具管理的规则和实际 iptables/nftables 规则，不符合的列出差异项和修复建议（如"缺少 inbound tcp/8080 allow 规则，执行 iptables -A INPUT -p tcp --dport 8080 -j ACCEPT"）。
+
+`export --format iptables|nftables|ufw` 按格式输出规则命令。`template apply` 从模板文件生成规则集，公共变量（如服务网段）维护一份。
+
+- `rule add --direction <dir> --protocol <proto> --port <range> --action <action>`
+- `rule list [--direction <dir>] [--action <action>] [--status <status>]`
+- `rule enable <id>` / `rule disable <id>` / `rule remove <id>`
+- `policy set --default <allow|deny>`
+- `check`：环境一致性检测
+- `export --format iptables|nftables|ufw`
+
+Go 标准库实现。

@@ -1,3 +1,17 @@
-项目Shell配置管理的配置散落在好几个地方，写个工具统一管理。处理一个记录的时候需要自动更新关联的统计。
+团队里有人用 bash 有人用 zsh 有人用 fish，三个 shell 的配置文件改来改去。上周在 .bashrc 里加了一个环境变量，忘了在 .zshrc 里也加——用 zsh 的同事 build 死活过不了。环境变量在三个文件里重复定义，改一处忘两处。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+ShellProfile 实体有名称（bash/zsh/fish）、配置文件路径、变量列表、别名列表、PATH 追加项。`profile add <name> --path <file>` 注册配置。`var set <key>=<value> --profile <name>` 设置变量，自动写入对应文件。`alias add <name> <command> --profile <name>` 添加别名。
+
+合并功能——`merge --source <file1> --source <file2> --output <file>` 合并多个 shell 配置源。同名变量后面的覆盖前面的，PATH 类变量支持追加模式（用冒号连接），函数定义支持深度合并（同名函数保留最新定义）。
+
+处理某条记录时自动更新统计——每个 profile 的变量数量、别名数量、PATH 条目数、最后修改时间。`stats` 输出所有 profile 的对比表格。`diff <profile1> <profile2>` 显示两个 profile 之间的配置差异。
+
+- `profile add <name> --path <file>`
+- `profile list` / `profile sync <name>`：同步到磁盘
+- `var set|list|get --profile <name>`
+- `alias add|list --profile <name>`
+- `path add <dir> --profile <name>`
+- `merge --source <file> --source <file> --output <file> [--append]`
+- `diff <profile1> <profile2>` / `stats`
+
+Go 标准库实现。

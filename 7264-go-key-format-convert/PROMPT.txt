@@ -1,6 +1,11 @@
-新规要求合规检查，得加个证书密钥管理工具，Go。
-工具要能PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
-任务有注册→排队→执行→成功/失败→重试的状态。
-校验完成后自动生成报告，报告模板不存在就跳过。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+合规团队上周发了通知，要求所有密钥统一转 PKCS8 格式，给了两周整改期。Go 写密钥格式转换工具，PKCS12/PKCS8、PEM/DER、密钥格式标准化。
+
+PKCS12：`kfmt from-p12 --input client.p12 --password "xxx" --output-dir ./out/` 提取 PEM。`kfmt to-p12 --cert c.pem --key k.pem --ca chain.pem --output client.p12 --password "xxx"` 打包含证书链和私钥。
+
+PEM↔DER：`kfmt pem-to-der --input cert.pem --output cert.der`。`kfmt der-to-pem --input cert.der --type certificate --output cert.pem`。DER 需 `--type`（certificate/private-key/csr/crl）。
+
+标准化：`kfmt normalize --input key.pem --output standard.pem`。PKCS1→PKCS8，加密→解密（需 `--password`），DER→PEM，统一输出 PKCS8 PEM。
+
+任务 registered→queued→executing→success/failed，失败最多重试 1 次。批量 `--input-dir ./mixed/ --output-dir ./standard/` 递归处理。代码：`pkcs12.go`、`encoding.go`、`normalize.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

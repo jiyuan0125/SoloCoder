@@ -1,6 +1,13 @@
-老板说要搞数字化，第一步先做个证书密钥管理，Go CLI。
-工具要能密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
-消息发送需要 topic，topic 怎么创建不提。
-任务有注册→排队→执行→成功/失败→重试的状态。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+密钥生命周期管理排在今年技术规划的第一位，密钥轮换是核心功能。Go CLI 工具，密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
+
+密钥轮换：`klc rotate --key-id db-encryption --output-dir ./keys/`。生成新的 AES-256 密钥版本并标记为 active，旧版本自动降级为 archived。密钥库存 `~/.klc/keys.json`，每条记录包含 `key_id`、`version`（自增整数）、`status`（active/archived/destroyed）、`created_at`、`archived_at`。同一个 key_id 只有一个 active 版本。
+
+旧密钥安全归档：`klc archive --key-id db-encryption --version 1 --output archive.enc`。归档前用当前 active 版本密钥加密旧密钥内容（AES-256-GCM）。归档后可选安全擦除——用 `crypto/rand` 生成随机数据覆写密钥字段后删除记录。
+
+无缝切换的核心设计：加密操作永远用 active 版本密钥，解密操作根据密文头部记录的 key_id 和版本号自动选择对应密钥。调用方不需要知道轮换发生。
+
+证书过期检查和预警：`klc check-expiry --watch-dir ./certs/ --warn-days 30`。递归扫描 PEM 证书文件，剩余天数不足 30 天的输出警告 JSON。
+
+消息发送需要 topic？不适用。任务状态 `registered`→`queued`→`executing`→`success`/`failed`，失败最多重试 1 次。
+
+`go build` 能过，命令行工具能正常运行。

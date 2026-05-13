@@ -1,5 +1,9 @@
-试了三个方案都不满足需求，Go 自己写证书密钥管理工具。
-工具要能证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
-认证检查要查角色，角色检查也要验证认证状态。
-批量操作并发执行，结果按顺序汇总。
-go build 能过，命令行工具能正常运行。
+OpenSSL 命令参数太长根本记不住、Python cryptography 库装了半天版本冲突、Web 工具把私钥传上去谁敢用——三种方案全试过了，Go 自己写证书过期检查工具。批量检查目录下所有证书、报告 JSON 输出。
+
+批量证书检查：`bundler batch-check --input-dir ./certs/ --warn-days 30 --output report.json`。递归扫描 `.pem` 文件，解析 X.509 证书，检查有效期。4 goroutine 并行处理。报告 JSON 数组按过期时间排序（最先过期的排前面），每个元素：`{file, subject, issuer, not_before, not_after, days_remaining, warning, san}`。
+
+单证书检查：`bundler check --cert server.pem --warn-days 30`。显示完整证书信息加过期预警。或者 `bundler check --endpoint https://example.com:443` 直接连 TLS 服务获取证书。
+
+认证检查查角色？本工具无认证层。批量操作并发执行结果按顺序汇总：文件名排序后按序输出 JSON 数组。报告格式可选 `json` 或 `table`。
+
+`go build` 能过，命令行工具能正常运行。

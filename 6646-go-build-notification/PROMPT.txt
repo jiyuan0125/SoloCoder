@@ -1,6 +1,5 @@
-帮我做一套构建完成后发送通知的 CLI 工具，Go 实现。
+构建失败了没人知道，看日志才发现晚了半天。Go 工具构建完成后发通知，支持 webhook URL、邮件内容、Slack 消息，成功失败用不同模板。
 
-构建完成后发送通知。支持多种输出格式：webhook URL、邮件内容、Slack 消息。根据构建结果（成功/失败）使用不同模板。
 子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 解析完日志后自动触发告警检查。没有错误日志的时候不检查。
 

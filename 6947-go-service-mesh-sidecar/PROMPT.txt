@@ -1,6 +1,5 @@
-V2 要上线，服务网格 sidecar 代理的工具还没写，Go 赶一个。
+V2 的服务网格架构确定了，每个服务旁边要挂一个 sidecar 代理，负责拦截流量和注入 trace header。时间紧，先实现核心功能：拦截服务的出入流量，注入 trace ID 到请求 header 里，然后转发到目标服务。配置驱动，不需要硬编码任何地址。
 
-服务网格 sidecar 代理。拦截服务流量，注入 header（trace ID），转发请求。配置驱动。
 统计的时候排除周末和法定节假日。
 子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 需要维护数据源和查询配置。查询配置引用数据源。

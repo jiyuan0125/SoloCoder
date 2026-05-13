@@ -1,3 +1,15 @@
-做个时间日志分析工具来跟踪技术决策。处理完成后自动归档。
+团队每天填时间日志，但从来没人分析过——到底时间花在哪儿了、哪些会议在浪费生命，全靠感觉。写个时间日志分析工具，把记录的结构化数据变成能指导决策的报告，处理完自动归档老数据。
 
-每条记录有状态（提议、已接受、已废弃、已替代）。被替代的记录要关联到新记录。Go 标准库，go build 通过。
+时间日志条目有这些字段：ID、日期、开始时间、结束时间、活动类型（meeting/coding/review/communication/admin）、描述、项目名。活动类型是枚举值，创建时检查合法性。时长自动从开始和结束时间计算，结束时间必须晚于开始时间。
+
+分析功能分三块。第一是时间分布分析——`analyze --date <date>` 输出某天各活动类型的时间占比，柱状图用字符画表示。第二是趋势分析——`analyze --from <date> --to <date>` 输出时间范围内每天的有效工作时间（排除时长为 0 的条目），以及各类型时间趋势。第三是异常检测——连续三天 meeting 类型超过总工时的 50%，在分析结果末尾给个提醒。
+
+记录状态有四种：proposed、accepted、deprecated、superseded。新建条目默认 proposed，`accept <id>` 确认，`deprecate <id>` 废弃。被替代的记录用 `supersede <id> --by <new-id>`，操作时 old-id 自动标记 deprecated 并关联到 new-id。自动归档的触发条件是：accepted 状态的条目超过 30 天，执行 `archive` 命令时把它们移到单独的 archive.json，主数据文件里不再包含。
+
+- `log add --date <date> --start <time> --end <time> --type <activity> --desc <text> [--project <name>]`
+- `log list [--type <activity>] [--project <name>] [--from <date> --to <date>]`
+- `log accept <id>` / `log deprecate <id>` / `log supersede <id> --by <new-id>`
+- `analyze --date <date>` 或 `--from <date> --to <date>`
+- `archive`：归档 30 天前的 accepted 条目
+
+数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。

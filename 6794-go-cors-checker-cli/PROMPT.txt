@@ -1,6 +1,5 @@
-看到别人的测试 CORS 配置挺好用，自己也做一个，Go 标准库。
+前后端联调时跨域问题排查了半天，不确定是服务端 CORS 没配好还是前端请求方式不对。写个工具发 OPTIONS 预检请求，检查 Access-Control-Allow-Origin 等相关 header，输出 CORS 策略分析。
 
-测试 CORS 配置。发送 OPTIONS 预检请求，检查 Access-Control-Allow-Origin 等 header。输出 CORS 策略分析。
 并行扫描多个文件或目录。
 处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
 数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。

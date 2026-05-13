@@ -1,5 +1,7 @@
-线上的老工具太难用了，重写个认证授权工具，Go 实现。
-工具要能OAuth2 Token 处理、Token 刷新流程、Scope 验证。
-扫描有排队→扫描中→分析中→报告生成→完成状态。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+线上跑的那个 OAuth2 Token 处理工具是别人写的，代码逻辑绕来绕去没人敢动。用 Go 重写一个清晰版本的 OAuth2 Token 工具，覆盖 Token 处理、刷新和 Scope 验证。
+
+Token 处理要能解析 OAuth2 的 Access Token 和 Refresh Token。Access Token 可能是 JWT 格式（Opaque Token 不做解码，只做传递），解析后提取 scope、exp、client_id 这些关键字段。刷新流程实现标准的 OAuth2 Refresh Token Grant——拿着 refresh_token 调 token endpoint 换新的 access_token，处理刷新失败的重试逻辑（带指数退避，最多重试三次），刷新成功后自动更新本地存储的 token。
+
+Scope 验证要支持层级 scope——read 和 read:write 的关系、admin 隐含 user 的权限。验证请求的 scope 是否在 token 允许的 scope 范围内，不在就拒绝。Scope 匹配要精确，不能因为 scope 名字有前缀匹配就放行。
+
+扫描过程有五个状态：排队→扫描中→分析中→报告生成→完成。代码按三个文件组织：Token 解析和刷新逻辑、Scope 验证逻辑、命令行入口。go build 能过，命令行工具能正常运行。

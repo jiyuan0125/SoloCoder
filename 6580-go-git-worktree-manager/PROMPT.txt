@@ -1,4 +1,4 @@
-帮我做一套管理 Git worktree的 CLI 工具，Go 实现。
+git worktree 命令记不住参数，add/remove/list 每次都要 man。自动关联分支名，输出格式比原生命令友好一点就行。
 
 管理 Git worktree。支持创建、列出、删除 worktree。自动关联分支名。比原生命令更友好的输出格式。
 处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。

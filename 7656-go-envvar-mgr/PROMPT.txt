@@ -1,3 +1,18 @@
-做个环境变量管理的 CLI 工具。更新配置时自动刷新缓存，刷新也要读配置。支持多套配置，按名称切换。
+.env 文件里改了一个数据库密码，忘了 Docker Compose 里也硬编码了一份，忘了 CI 的环境变量里还有一份。结果本地连上了新数据库，CI 还在连旧的——数据写岔了。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+Profile 实体有名称、描述、变量列表（每个变量有键、值、是否敏感标记）。配置文件存 JSON 格式。切换配置用 `use <profile-name>`——切换时验证完整性（检查该 Profile 是否包含所有必需的变量，必需变量列表在 meta.json 中定义），缺失的变量列出来但不阻止切换，只是输出警告。
+
+缓存机制——当前活跃 Profile 的变量缓存在内存中，`config set <key>=<value>` 修改变量时自动刷新缓存（从 JSON 文件重新读取整个 Profile），刷新过程也读配置文件确保一致。`current` 命令输出当前活跃 Profile 名和所有变量。
+
+导出功能——`export --format env` 输出 .env 格式（KEY=VALUE 每行一个），`export --format shell` 输出 export KEY=VALUE 格式。敏感变量在导出时值替换为 ***。
+
+- `profile create <name> [--desc <text>]`
+- `profile list` / `profile delete <name>`
+- `var set <key>=<value> [--sensitive]`：设置变量（在当前 Profile）
+- `var list [--show-sensitive]`：列出当前 Profile 所有变量
+- `use <name>`：切换 Profile，带完整性校验
+- `current`：当前状态
+- `export --format env|shell`：导出
+- `config set <key>=<value>`：修改后刷新缓存
+
+Go 标准库实现。

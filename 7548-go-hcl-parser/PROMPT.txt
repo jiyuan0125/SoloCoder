@@ -1,3 +1,9 @@
-线上HCL解析的数据格式经常出问题，写个工具来检查和修复。修改主体后关联数据要同步。工具分三个子命令：check、convert、validate。
+Terraform 模块的 HCL 文件格式三天两头出问题——缩进不统一、变量引用拼错、块嵌套层级不对，部署的时候才报错。HCL（HashiCorp Configuration Language）既有 JSON 的键值对，又有块结构、变量插值 `${...}` 和条件表达式，得有个工具能自动检查和修复。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+`hcl-tool`，三个子命令：`check`、`convert`、`validate`。`hcl-tool check` 做语法检查——解析 HCL 文件，验证块类型、属性名、变量插值语法、嵌套关系。错误报行号和列号。`hcl-tool convert` 做 HCL↔JSON 互转（HCL 是 JSON 的超集，所以 HCL 可以转 JSON，反过来也行）。`hcl-tool validate` 用 Terraform 的语义规则做更深层的检查——变量是否声明了、resource 类型是否存在。
+
+check 不修改文件。convert 才写入。validate 在 convert 后运行。修改主体（比如 convert 改了某个块的属性）后，关联数据（比如变量定义文件里的引用）要同步检查。
+
+空输入返回空结果。非标准格式（比如 Terraform 0.12 之前的老语法、HCL2 的新特性）给警告。变量插值里的表达式语法要正确解析，`var.name` 和 `local.name` 的引用关系要能追踪。
+
+Go 标准库。`go build`。

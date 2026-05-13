@@ -1,3 +1,15 @@
-老板要看项目的迭代回顾报告数据，写个工具导出。引用了其他表的数据。
+迭代回顾会每次都是大家轮着说两句就结束了，该改进的点没有跟踪，下次回顾的时候翻不出上次的记录。我想写个迭代回顾报告工具，把每次回顾的内容结构化存下来，还能跨迭代对比。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+回顾报告包含几类条目：做得好的（well）、需要改进的（improve）、行动项（action）。每类条目有内容文本、提交人、投票数。工具支持团队成员对条目投票（`vote <report-id> <item-id> --who <name>`），同一个人对同一条目只能投一票，重复投票忽略。投票数据单独记录在报告实体里。
+
+Report 实体有 ID、Sprint 名称、日期、状态（open/closed）。open 状态的条目可以继续添加和投票，closed 之后锁定。关闭时自动生成摘要：well 类投票最高的前三条、improve 类投票最高的前三条、所有 action 条目。摘要输出到终端，也可以用 `export <report-id> --format md` 导出 Markdown 格式。
+
+- `report create --sprint <name> [--date <date>]`：创建回顾报告
+- `report list`：列出所有报告及状态
+- `report close <id>`：关闭并生成摘要
+- `item add <report-id> --type well|improve|action --text <content> --who <name>`
+- `vote <report-id> <item-id> --who <name>`
+- `summary <report-id>`：查看摘要
+- `export <report-id> --format md|csv`：导出，Markdown 包含完整条目和投票数，CSV 每行一条目
+
+跨迭代对比用 `compare <report-id-1> <report-id-2>`，输出两个迭代的 action 完成情况对比（需要 action 条目有状态字段 done/pending，`action-done <report-id> <item-id>` 标记完成）。按时间范围筛选加 `--from` 和 `--to` 参数。数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。

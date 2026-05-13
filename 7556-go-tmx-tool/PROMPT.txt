@@ -1,3 +1,9 @@
-给翻译团队写个翻译记忆库TMX工具。状态按顺序流转。
+翻译记忆库是翻译团队最宝贵的资产——之前翻译过的句子可以复用，提高效率和质量。TMX（Translation Memory eXchange）是翻译记忆库的标准交换格式，基于 XML，结构很深——`<tmx>` → `<body>` → `<tu>` → `<tuv>` → `<seg>`。状态按顺序流转：每个翻译单元有创建时间、修改时间、使用次数、来源系统。
 
-支持导出为标准格式方便导入其他工具。翻译条目有新增、修改、删除标记。Go 标准库，go build 通过。
+`tmx-tool`，子命令 `parse`、`merge`、`export`。`tmx-tool parse` 读 `.tmx` 文件，提取所有翻译单元（TU），每个 TU 包含多个语言版本（TUV），输出 JSON。`tmx-tool merge` 合并多个 TMX 文件——相同的源语言句子合并 TUV，保留最新的翻译和最高的使用次数。`tmx-tool export` 导出为标准格式——TBX（术语库）、CSV、XLIFF。
+
+翻译条目的新增、修改、删除标记：和另一个 TMX 文件对比，新增的 TU 标 `+`，修改的（翻译内容变了）标 `~`，对方有但自己没有的标 `-`。
+
+支持导出为标准格式方便导入 SDL Trados、memoQ 等专业翻译工具。大 TMX 文件（几 GB）要用 XML 的流式解析，不能 `ioutil.ReadAll`。
+
+Go 标准库，`go build` 通过。

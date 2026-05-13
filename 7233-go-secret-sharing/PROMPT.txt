@@ -1,5 +1,11 @@
-线上的老工具太难用了，重写个加密解密工具，Go 实现。
-工具要能HMAC 签名和验证、多算法支持（SHA256/SHA512）、流式签名、文件完整性校验（SHA256/SHA512/BLAKE2）。
-消息 topic 支持多层通配符 a.b.c.# 的匹配。
-可能一次处理上万条记录。
-go build 能过，命令行工具能正常运行。
+线上签名工具是 2018 年的 Perl 脚本，600 多行，没人敢动。Go 重写，HMAC 签名验证、多算法（SHA256/384/512）、流式签名、文件完整性校验（SHA256/SHA512/BLAKE2b）。
+
+HMAC 签名：`ss-tool sign --key-file hmac.key --algo sha512 --input payload.bin`。密钥自动检测二进制/hex。输出纯十六进制到 stdout。
+
+流式签名：`io.CopyBuffer` 64KB 缓冲区，`cat big.log | ss-tool sign --key-file key.bin --algo sha256`。进度可选 `--progress`。
+
+文件校验：`hash --input data.bin --algo blake2b`。`check --input data.bin --expected <hash>` 自动检测算法。批量 `batch-hash --input-dir ./release/ --algo sha256` 输出 sha256sum 格式。
+
+批量签名几千文件用 4 goroutine 并发。错误分层：文件不存在 exit 1、密钥读不到 exit 2、算法不支持 exit 3。
+
+`go build` 能过，命令行工具能正常运行。

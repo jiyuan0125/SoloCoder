@@ -1,5 +1,11 @@
-新项目要求有加密解密工具能力，用 Go 搞。
-工具要能流式加密（CTR 模式）、管道式处理（stdin/stdout）、进度显示。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+新项目安全架构评审的时候，架构师明确要求所有数据传输必须加密，而且密钥管理由工具统一负责。Go 流式加密工具，CTR 模式、stdin/stdout 管道、进度显示。
+
+AES-256-CTR 流式加密的关键设计：加密头 16 字节放随机 IV，后面紧跟密文流。CTR 模式的优势是不需要 padding，输入多长输出就多长。`blind-sign encrypt --key-file aes.key --input data.tar --output data.tar.enc`。管道形式：`cat data.tar | blind-sign encrypt --key-file aes.key > data.tar.enc`。
+
+stdin/stdout 管道处理要处理好边界：如果输入是 stdin，用 `os.Stdin`；如果输出是 stdout，用 `os.Stdout`。同时要注意 `--progress` 标志的输出必须写到 stderr，不能污染 stdout 的加密数据。进度格式：`[=====>          ] 23% 120MB/s ETA: 45s`，每秒刷新一次。
+
+密钥文件格式：32 字节二进制文件，或 64 字符十六进制文本文件。自动检测方式：文件内容全是 hex 字符就当十六进制解析。
+
+搜索深层路径？本工具不做搜索。代码组织分三个文件：`stream.go`（流式加密/解密核心逻辑）、`progress.go`（进度条）、`main.go`（命令行入口）。关联校验：加密完成后自动对比输入和输出文件大小，CTR 模式下两者应该完全一致——不一致说明出了问题，要报错。
+
+`go build` 能过，命令行工具能正常运行。

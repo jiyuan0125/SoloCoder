@@ -1,3 +1,7 @@
-做个zlib压缩解压工具，同事那边提的需求。删除后要清理关联记录。支持递归处理目录下所有匹配的文件。
+为什么要单独写个 zlib 工具？因为 zlib 格式在游戏资源包和某些二进制协议里特别常见，但标准 `gzip` 命令不认 zlib 的头部。前阵子解包一批 Unity AssetBundle 的中间文件，全卡在 zlib 格式上，同事手动一个个转太费劲了。
 
-文件名保持不变只改扩展名。遇到权限错误跳过并记录。Go 标准库。
+用 Go 写个 `zlib-tool`，两个主子命令：`compress` 和 `decompress`。输入来源灵活——`-s` 传字符串、`--input` 读文件、stdin 管道，三种都支持。`zlib-tool compress` 把输入数据用 `compress/zlib` 压缩，输出 `.zlib` 文件。压缩级别 `--level` 0-9 可调，默认 6。`zlib-tool decompress` 解压 `.zlib` 文件，自动检测 zlib 头部（0x78 开头的两个字节），校验 Adler-32 校验和。
+
+递归模式用 `--recursive` 指定目录，遍历所有匹配扩展名的文件（压缩时找非 `.zlib` 文件，解压时找 `.zlib` 文件）。文件名只改扩展名——`data.bin` 变成 `data.bin.zlib`，反过来也成立。碰到权限错误跳过，stderr 记录文件路径和错误原因，处理完汇总：成功几个、跳过几个、失败几个及原因。
+
+Go 标准库，`compress/zlib` 和 `compress/flate`。纯命令行，`go build`。

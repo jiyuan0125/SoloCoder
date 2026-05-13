@@ -1,3 +1,7 @@
-写个Unicode排序工具。调整后相关的汇总也要更新。从文件读取内容，处理后输出到 stdout 或指定文件。
+Unicode 排序比 ASCII 排序复杂得多——不同语言的排序规则不一样，德语的 `ä` 排在 `a` 后面还是和 `ae` 等价？中文按拼音排还是按笔画排？日语按五十音排还是按 Unicode 码点排？调整排序规则后，相关的汇总统计（比如字母频率分布）也要跟着更新。
 
-遇到无法识别的字符编码要尝试常见编码自动检测。输出保持原始换行结构。Go 标准库。
+`unicode-sort`，子命令 `sort`、`compare`、`analyze`。`unicode-sort sort` 读文本文件按行排序，`--locale` 参数指定排序规则（`zh-CN` 按拼音、`ja` 按五十音序、`de` 按德语规则、`sv` 按瑞典语规则——瑞典语 `å` 排在 `z` 后面）。默认按 Unicode 码点排序。`--reverse` 倒序。`unicode-sort compare` 比较两种排序规则的差异——同一个文件按 `en` 和 `de` 排序，输出位置变化的行。`unicode-sort analyze` 分析文本的字符组成——Unicode 块分布、脚本分布、最常见的字符频率。
+
+遇到无法识别的字符编码，尝试 UTF-8 失败后按 Latin-1 或 Shift-JIS 解码（`--fallback-encoding` 指定）。输出保持原始换行结构（LF/CRLF 保留）。从文件读取内容，处理后输出到 stdout 或 `--output` 文件。
+
+Go 标准库。`go build`。

@@ -1,3 +1,17 @@
-团队里GOPATH管理不统一导致构建经常出问题，写个工具规范化。更新配置时自动刷新缓存，刷新也要读配置。
+上周迁移一个老项目到新机器，go build 疯狂报 cannot find package——排查半天发现是 GOPATH 没配对。团队里每个人的 GOPATH 位置都不一样，有人 ~/go 有人 ~/workspace/go，还有几个用 Go Modules 的压根不管这个变量。
 
-工具能检测当前环境是否符合项目要求。不符合的列出差异项和修复建议。Go 标准库实现。
+Profile 实体有名称、GOPATH 路径、GOBIN 路径、关联的项目列表、状态（active/archived）。配置存在当前目录的 JSON 文件里。`profile create <name> --gopath <path> [--gobin <path>]` 创建配置，gopath 必须是绝对路径且目录存在，不存在则报错。
+
+环境检测——`check` 命令读取当前活跃 Profile 的配置，对比系统环境变量（os.Getenv("GOPATH")、os.Getenv("GOBIN")），列出差异项。比如"期望 GOPATH=/home/user/workspace/go，实际为 /home/user/go"。差异项附带修复建议——输出 `export GOPATH=/home/user/workspace/go` 这样的命令让用户直接复制执行。
+
+`switch <name>` 切换活跃 Profile，切换后刷新内存缓存（缓存存着当前 Profile 的路径配置），刷新时重新从 JSON 文件读取。`check` 在切换后自动执行一次。
+
+- `profile create <name> --gopath <path> [--gobin <path>]`
+- `profile list`：列出所有 Profile 和状态
+- `profile delete <name>` / `profile archive <name>`
+- `switch <name>`：切换并刷新缓存
+- `check`：检测当前环境与活跃 Profile 的差异
+- `fix --dry-run`：输出修复命令但不执行
+- `project link <name> --profile <profile>`：关联项目到 Profile
+
+Go 标准库实现。

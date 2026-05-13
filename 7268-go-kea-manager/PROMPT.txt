@@ -1,6 +1,11 @@
-想用 Go 练手，做个证书密钥管理工具。
-工具要能TLS 配置文件生成、密码套件合规检查、协议版本建议。
-密钥有生成→激活→轮换→归档→销毁的状态。
-加密需要密钥，密钥怎么导入不提。
-用 encoding/json 的 Decoder 流式处理。
-go build 能过，命令行工具能正常运行。
+`crypto/tls` 的类型定义刚好适合做 TLS 配置生成，练手写一个。TLS 配置文件生成、密码套件合规检查、协议版本建议。
+
+TLS 配置文件生成：`kea gen-tls --cert server.pem --key server.key --min-version 1.2 --output tls.json`。RSA 证书推荐 ECDHE-RSA-AES256-GCM-SHA384，ECDSA 推荐 ECDHE-ECDSA-AES256-GCM-SHA384。输出包含 cert_file、key_file、min_version、cipher_suites、curve_preferences。
+
+密码套件合规检查：`kea check-ciphers --config tls.json --profile intermediate`。三种配置文件：modern（TLS 1.3）、intermediate（TLS 1.2+ AEAD）、old（兼容旧客户端）。不满足的套件标红输出。
+
+协议版本建议：`kea suggest --cert server.pem`。ECDSA P-384 → TLS 1.3，RSA-2048 → TLS 1.2 可接受。
+
+密钥状态：`generated`→`active`→`rotating`→`archived`→`destroyed`？TLS 配置里不管理密钥生命周期。加密需要密钥怎么导入？TLS 配置引用文件路径，不直接处理密钥。用 `encoding/json` 流式处理配置文件。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,5 +1,11 @@
-用 Go 标准库写一个证书密钥管理相关的 CLI 工具。
-工具要能证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
-校验时需要查关联表的规则，查关联表时也要校验触发方状态。
-用 regexp 的命名捕获组。
-go build 能过，命令行工具能正常运行。
+Go 标准库 `crypto/x509` 和 `encoding/pem` 足以覆盖证书过期检查的场景。批量检查目录、报告 JSON 输出、续签后依赖同步。
+
+批量检查：`auditlog batch-check --input-dir ./certs/ --warn-days 30 --output report.json`。递归扫描 `.pem` 文件，解析证书检查有效期。4 goroutine 并行。报告按过期时间排序，每个元素：`{file, subject, issuer, not_before, not_after, days_remaining, warning, san}`。
+
+单证书检查：`auditlog check --cert server.pem --warn-days 30`。或者 `auditlog check --endpoint https://example.com:443` 直接获取 TLS 证书。
+
+校验时需要查关联规则？如果证书文件有对应的配置文件（同目录下同名 `.conf`），检查配置中引用的证书路径是否一致。
+
+续签后同步：`auditlog sync-deps --cert server.pem --new-cert renewed.pem --dep-dir ./configs/`。扫描配置文件中引用旧证书路径的地方，替换为新证书路径。用 `regexp` 命名捕获组匹配证书路径模式。
+
+`go build` 能过，命令行工具能正常运行。

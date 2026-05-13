@@ -1,5 +1,11 @@
-我们需要一个加密解密工具工具，用 Go 标准库写个命令行工具。
-工具要能AES-GCM 文件加密解密、密钥从密码派生（PBKDF2）、大文件分块加密、信封加密（RSA+AES 混合）。
-字段映射变更后已有的转换任务结果要标记为过时。
-扫描多个目录要并行处理。
-go build 能过，命令行工具能正常运行。
+上一个加密工具不支持信封加密，密钥派生也是硬编码的，没法用了。Go 标准库写一个命令行工具，AES-GCM 文件加密解密、密钥从密码派生（PBKDF2）、大文件分块加密、信封加密（RSA+AES 混合）。
+
+AES-GCM 加密解密：密码通过 PBKDF2-HMAC-SHA256（10 万次迭代）派生 32 字节密钥。`hkdf encrypt --password "xxx" --input data.db`。加密文件格式：salt（16B）+ nonce（12B）+ 密文 + tag（16B）。解密 `hkdf decrypt --password "xxx" --input data.db.enc`。
+
+信封加密是另一套密钥管理方案：`hkdf envelope-encrypt --pubkey pub.pem --input data.tar`。随机生成 AES 会话密钥，用 RSA 公钥加密会话密钥，用会话密钥加密数据。输出包含加密的会话密钥 + 密文。解密用 `envelope-decrypt --privkey priv.pem`。
+
+大文件分块：4MB 一块，每块独立 nonce。分块间通过 AAD 串联——第 N 块的 AAD 是第 N-1 块密文的哈希，形成链式认证。
+
+字段映射变更后任务结果标记过时？这里指的是密钥版本变更后，旧版本加密的文件要能识别。文件头包含密钥版本号，解密时根据版本找对应密钥。扫描目录并发处理用 `filepath.Walk` + goroutine pool（4 workers）。
+
+`go build` 能过，命令行工具能正常运行。

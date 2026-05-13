@@ -1,5 +1,3 @@
-给朋友的小店写个缓存层生成，Go 命令行工具。
-内存缓存、TTL、LRU 淘汰。
-缓存键生成。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-纯标准库实现，go run . 能跑。
+热点数据每次都查库，数据库扛不住。生成内存缓存，TTL 和 LRU 淘汰策略配好，缓存键自动生成。命令行格式：cli import --source csv --target db --filter 'age>18'。
+
+标准库搞定，go run . 跑起来。

@@ -1,5 +1,11 @@
-审计全靠人工，所以想做一个加密解密工具工具，Go 实现。
-工具要能数字签名（RSA-PSS/ECDSA）、签名验证、签名时间戳。
-任务有注册→排队→执行→成功/失败→重试的状态。
-文件操作要注意权限检查。
-go build 能过，命令行工具能正常运行。
+审计发现去年 17 次代码提交没有签名验证记录。Go 命令行工具，数字签名（RSA-PSS/ECDSA）、签名验证、签名时间戳。
+
+签名支持 RSA-PSS（最小 2048 位）和 ECDSA（P-256）。`asym-tool sign --key priv.pem --scheme rsa-pss --input release.tar.gz`。签名 JSON：`{algorithm, signature(base64), signed_at, key_fingerprint}`。PSS 盐值长度等于哈希长度。
+
+签名时间戳是强制的。签名时内部取 `time.Now().Unix()` 编入签名数据。验证可选 `--max-age 86400` 检查时间窗口。时间戳必须工具内部生成，防止伪造。
+
+验证流程：解析签名→确认算法→计算消息哈希→数学验证→检查时间戳。每步失败给具体原因。结果 JSON：`{valid, algorithm, signed_at, expired, reason}`。
+
+文件操作注意权限：签名文件 0644，私钥权限高于 0600 时警告。任务不需要排队，同步执行。
+
+`go build` 能过，命令行工具能正常运行。

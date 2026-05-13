@@ -1,4 +1,4 @@
-开源的那个库功能太多但批量模式没做好，Go 从零写姓名数据标准化。
+HR 系统里的姓名格式乱得离谱，有「张 三」有「三,张」还有英文名「Zhang San」。Go 从零写姓名数据标准化。
 英文姓名按「名 姓」或「姓, 名」格式统一。
 复姓要识别。
 多级命令：config get、config set、config list、config env switch。

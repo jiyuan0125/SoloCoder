@@ -1,6 +1,11 @@
-业务那边要一个加密解密工具相关的工具，Go CLI 实现。
-工具要能信封加密（RSA+AES 混合）、密钥轮换、加密元数据管理。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-扫描完自动提交报告，提交失败只记录。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+信封加密 + 密钥轮换 + 加密元数据管理，业务侧昨天提的需求。Go CLI 加密工具。
+
+信封加密：注册 RSA 公钥后加密时自动用公钥加密 AES 会话密钥。`sym-tool add-key --name prod-key --pubkey pub.pem`，`sym-tool encrypt --key prod-key --input config.yaml`。输出 `.enc` 格式：4B 头长度 + JSON 头（algo/key_id/nonce/created_at）+ 加密会话密钥 + 密文 + GCM tag。解密 `sym-tool unseal --privkey priv.pem --input config.yaml.enc`。
+
+密钥轮换：`sym-tool rotate --key prod-key --new-pubkey v2.pem`，旧密钥标记 deprecated 但保留。加密用 active 版本，解密根据文件头密钥版本自动匹配。
+
+元数据管理：`meta list` 列出所有密钥和版本，`meta show --file config.enc` 显示文件元数据。密钥库存 `~/.sym-tool/keys.json`。
+
+代码分文件：`envelope.go`、`rotation.go`、`metadata.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

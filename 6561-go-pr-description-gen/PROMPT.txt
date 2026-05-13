@@ -1,4 +1,4 @@
-之前的项目里因为根据分支的 commit 记录和 diff 自动生成 PR 描述经常出问题，写个专门的工具来处理，Go 实现。
+PR 描述写了"fix bug"三个字就交了，review 的人一头雾水。根据分支的 commit 记录和 diff 自动提取关键变更，按类型分类，输出 Markdown 格式的 PR 描述。
 
 根据分支的 commit 记录和 diff 自动生成 PR 描述。提取关键变更，按类型分类。输出 Markdown 格式。
 日志文件可能存在各种编码。

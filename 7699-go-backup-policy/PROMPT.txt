@@ -1,3 +1,17 @@
-给项目写个备份策略配置工具。任务有多个审批步骤。
+磁盘挂了才想起来问"这个目录有没有备份？"——有，但是三个月前配的，备份频率从 daily 变成了 never，谁改的、为什么改的，文档里没有记录。全凭记忆管备份策略，不出事才怪。
 
-扫描依赖列表，检查每个依赖的许可证类型。输出许可证兼容性报告。已知的不兼容组合要标红。Go 标准库。
+BackupPolicy 实体有 ID、名称、目标路径（要备份的目录或文件）、备份类型（full/incremental/differential）、频率（hourly/daily/weekly）、保留策略（保留最近 N 份）、存储位置、状态（draft/approved/active/disabled）。审批流程——`propose <id>` 提交审批，`review <id> --by <name>` 审查，`approve <id> --by <name>` 批准。只有 approved 状态的策略才会出现在导出结果中。
+
+BackupRecord 有 ID、Policy ID、执行时间、状态（success/partial/failed）、备份大小、耗时。`record <policy-id> --status <status> [--size <n>] [--duration <n>]` 记录备份结果。
+
+`check` 对比实际备份记录和策略要求——如果某个 daily 策略超过 24 小时没有新记录，输出告警。`report` 输出策略概览——每个策略的执行频率、最近一次状态、存储使用量。
+
+- `policy add --name <text> --target <path> --type <type> --frequency <freq> --retain <n>`
+- `policy list [--status <status>]`
+- `propose <id>` / `review <id> --by <name>` / `approve <id> --by <name>`
+- `record <policy-id> --status <success|failed> [--size <n>]`
+- `check`：备份执行检查
+- `report`：策略报告
+- `export --format md`
+
+Go 标准库实现。

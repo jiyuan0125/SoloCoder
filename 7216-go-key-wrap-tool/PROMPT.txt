@@ -1,5 +1,11 @@
-之前手动配置改了谁都不知道太慢了，用 Go 重写个加密解密工具工具。
-工具要能文件完整性校验（SHA256/SHA512/BLAKE2）、校验和文件对比、增量校验。
-规则校验需要规则组，规则组怎么来的不提。
-多核机器上跑的时候多个 goroutine 同时处理。
-go build 能过，命令行工具能正常运行。
+手动比对文件哈希太慢了，上周排查配置篡改花了三小时。Go 写文件完整性校验工具，SHA256/SHA512/BLAKE2b、校验和文件对比、增量校验。
+
+哈希计算：`wrap hash --algo sha256 --input data.bin`。批量 `wrap batch-hash --input-dir ./dist/ --output checksums.jsonl` 每行 JSON `{file, hash, size}`。4 goroutine 并行。
+
+校验和对比：`wrap compare --baseline checksums.jsonl --input-dir ./dist/` 重新算哈希比对。输出 matched/mismatched（含两个哈希值）/missing 三组。
+
+增量校验：首次 `wrap baseline --input big.image --chunk-size 1M --output baseline.json` 按 1MB 分块记录。后续 `wrap incremental --baseline baseline.json --input big.image` 检查修改时间，变了就找到变化的分块重算。
+
+流式读取 `io.CopyBuffer`，内存不超过 16MB。代码组织：`hasher.go`、`comparer.go`、`incremental.go`、`main.go`。规则校验需要规则组？不适用。
+
+`go build` 能过，命令行工具能正常运行。

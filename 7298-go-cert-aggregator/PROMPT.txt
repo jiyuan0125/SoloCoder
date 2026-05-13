@@ -1,5 +1,11 @@
-想用 Go 练手，做个证书密钥管理工具。
-工具要能TLS 配置文件生成、密码套件合规检查、协议版本建议。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-批量操作并发执行，结果按顺序汇总。
-go build 能过，命令行工具能正常运行。
+`crypto/tls` 和 `crypto/x509` 的 API 熟悉了，TLS 配置生成和密码套件检查刚好可以练手。TLS 配置文件生成、密码套件合规检查、协议版本建议。
+
+TLS 配置文件生成：`cagg gen --cert server.pem --key server.key --min-version 1.2 --output tls.json`。根据证书的密钥类型自动推荐密码套件——RSA 证书推荐 ECDHE-RSA-AES256-GCM-SHA384 优先，ECDSA 证书推荐 ECDHE-ECDSA-AES256-GCM-SHA384 优先。输出 JSON 包含 `cert_file`、`key_file`、`min_version`、`cipher_suites`（有序列表）、`curve_preferences`（P-256、P-384）。
+
+密码套件合规检查：`cagg check --config tls.json --profile intermediate`。三种安全配置文件：modern（仅 TLS 1.3，限制为 AES-128-GCM、AES-256-GCM、ChaCha20-Poly1305）、intermediate（TLS 1.2+，仅 AEAD 套件）、old（兼容旧客户端，允许 3DES 和 CBC）。当前配置不满足配置文件要求的套件标红输出，同时给出推荐的替代套件。
+
+协议版本建议：`cagg suggest --cert server.pem`。根据证书签名算法推荐最低 TLS 版本。ECDSA P-384 + SHA-384 推荐 TLS 1.3，RSA-2048 + SHA-256 推荐 TLS 1.2 及以上。
+
+批量操作：多个配置文件同时检查时按文件名排序输出结果。
+
+`go build` 能过，命令行工具能正常运行。

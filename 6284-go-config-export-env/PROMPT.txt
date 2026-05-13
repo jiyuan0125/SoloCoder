@@ -1,5 +1,3 @@
-最近在搞代码生成，需要一个配置导出环境变量，Go 实现。
-嵌套键用下划线连接。
-值中的特殊字符转义。
-子命令结构：db migrate、db rollback、db status、db seed。
-纯标准库实现，go run . 能跑。
+Docker 容器需要环境变量配置，手动一个个 export 太蠢。Go 实现配置导出环境变量：嵌套键用下划线连接（db.host → DB_HOST），值中的特殊字符自动转义。
+
+子命令结构参考 db migrate、db rollback、db status、db seed。纯标准库实现，go run . 能跑。

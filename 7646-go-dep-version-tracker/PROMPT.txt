@@ -1,3 +1,17 @@
-老板要看项目的依赖版本跟踪数据，写个工具导出。修改主体后关联数据要同步。
+Log4j 漏洞爆出来那天，我们紧急排查线上依赖版本，发现有两个项目的 commons-lang 还是两年前的。老板当时就说：以后每个项目的依赖版本都要定期审计，自动生成报告。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+Dependency 实体有 ID、名称、当前版本、最新稳定版（手动录入或从 go.mod 解析）、许可证类型、最后检查日期。VersionLog 有 ID、依赖 ID、旧版本、新版本、变更日期、变更原因、操作人。修改依赖的主记录（当前版本）时，自动在 VersionLog 里生成一条变更记录，同步关联数据。
+
+`scan` 命令从当前目录的 go.mod 文件解析所有依赖，和已有记录对比——新增的依赖自动创建记录，版本变化的自动记录日志。不存在的依赖不影响扫描继续。
+
+导出支持 Markdown 和 CSV 两种格式。`export --format md` 输出 Markdown 表格，列包括依赖名、当前版本、最新版本、许可证、是否过时（当前版本 ≠ 最新版本则标 ⚠️）。`export --format csv` 输出同结构的 CSV。时间范围筛选用 `--from <date> --to <date>` 过滤 VersionLog。
+
+- `dep add --name <text> --version <v> [--latest <v>] [--license <type>]`
+- `dep list [--outdated]`：--outdated 只显示当前版本和最新版本不同的
+- `dep update <id> --version <v> --reason <text> --who <name>`：触发 VersionLog
+- `scan`：从 go.mod 解析并更新
+- `history <dep-id>`：版本变更历史
+- `export --format md|csv [--from <date> --to <date>]`
+- `report`：总览——依赖总数、过时数量、按许可证分组统计
+
+数据存 JSON 文件。Go 标准库实现，go build 通过。

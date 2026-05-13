@@ -1,3 +1,9 @@
-最近在搞X.509 DER/PEM转换相关的数据迁移，需要一个转换工具。调整后相关的汇总也要更新。工具支持多种输入输出格式。
+X.509 证书在 DER 和 PEM 格式之间转换——这活儿用 `openssl x509 -inform DER -outform PEM` 能做，但批量处理几百个证书文件的时候，写循环太累。而且有时候还需要调整证书链的顺序，PEM 文件里有多个证书时得按顺序排列。
 
-转换过程中保留注释和元数据。字段映射可以自定义。Go 标准库，go build 能跑。
+`x509-tool`，子命令 `convert`、`info`、`chain`。`x509-tool convert` 做 DER↔PEM 互转。`--from der --to pem` 或反过来。批量模式 `--batch` 指定目录，`.der` 文件转成 `.pem`，`.pem` 转成 `.der`（如果内容是纯 DER 编码的 PEM）。每个文件独立处理。
+
+`x509-tool info` 显示证书详情——Subject、Issuer、序列号、有效期、签名算法、SAN 扩展、密钥用途。输出格式 JSON 或文本。`x509-tool chain` 处理 PEM 证书链——读取包含多个证书的 PEM 文件，解析每个证书的 Subject 和 Issuer，按链式顺序重新排列（根证书在最下面）。
+
+转换完了之后如果证书有自定义扩展，info 要显示 OID 和值。调整后的证书链顺序变了，相关的验证结果也要更新——chain 子命令会自动验证链的完整性。
+
+Go 标准库，`crypto/x509`、`encoding/pem`。`go build` 能跑。

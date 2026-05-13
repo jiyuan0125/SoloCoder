@@ -1,5 +1,11 @@
-季度末了赶紧搞个证书密钥管理工具，Go 命令行。
-工具要能证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查。
-证书签发需要 CA，CA 怎么初始化不提。
-用 crypto 包做对称加密。
-go build 能过，命令行工具能正常运行。
+季度末合规检查要出证书资产报告，解析工具还没做。Go 命令行，证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查。
+
+证书信息解析：`trustmgr parse --cert server.pem` 输出所有字段到 JSON。Subject 和 Issuer 按 CN、OU、O、C 字段拆开。扩展字段逐一列出：Basic Constraints（CA 标志和 pathlen）、Key Usage（bitmask 展开为可读名称）、Extended Key Usage（serverAuth/clientAuth 等）、Subject Alternative Name、Authority Key Identifier、Subject Key Identifier。指纹同时输出 SHA-1 和 SHA-256。
+
+SAN 提取和显示：`trustmgr san --cert server.pem` 列出所有 SAN 条目，区分 DNS 名称、IP 地址、email 地址三种类型。输出 JSON 数组。
+
+密钥用途检查：`trustmgr check-usage --cert server.pem --expect server-auth`。TLS 服务端需要 serverAuth，CA 需要 keyCertSign。不符合的输出 warning 或 error 级别。
+
+本工具不做 CA 初始化，不做加密——只做证书信息读取和展示。输出 JSON 到 stdout，错误信息到 stderr。
+
+`go build` 能过，命令行工具能正常运行。

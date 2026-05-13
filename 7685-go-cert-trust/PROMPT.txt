@@ -1,3 +1,16 @@
-写个证书信任管理工具，CI 环境用。主流程完成后自动生成关联记录。
+新来的同事第一周就遇到了 HTTPS 请求失败的问题——排查了半天才发现是公司内部 CA 证书没导入。这种事每个新人都要踩一遍，每次都要重新教一遍，太浪费时间了。
 
-工具支持锁定当前版本生成锁文件。后续构建用锁文件确保一致性。锁文件包含 hash 校验。Go 标准库。
+CertEntry 实体有 ID、证书别名、文件路径、颁发者、有效期起止、指纹（SHA256）、状态（trusted/expired/revoked）。`cert add --alias <name> --path <file>` 添加证书，自动计算指纹并解析有效期。`cert list` 显示所有证书和状态。过期的证书自动标记 expired 并在列表中标红。
+
+`trust <id>` 把证书标记为 trusted 并生成安装命令——输出 "sudo cp cert.pem /usr/local/share/ca-certificates/ && sudo update-ca-certificates" 这样的命令让用户复制执行。`untrust <id>` 反向操作。主流程完成后（trust 或 untrust 操作），自动生成 AuditLog 记录——操作时间、证书别名、操作类型、操作前后的状态。
+
+锁定当前信任列表——`lock generate` 生成包含所有 trusted 证书指纹的锁文件。`lock verify` 对比当前系统信任库和锁文件，检测是否被外部修改。
+
+- `cert add --alias <name> --path <file>`
+- `cert list [--status trusted|expired|revoked]`
+- `cert trust <id>` / `cert untrust <id>`
+- `cert verify <id>`：验证证书有效性
+- `lock generate` / `lock verify`
+- `cert remove <id>`
+
+Go 标准库实现。

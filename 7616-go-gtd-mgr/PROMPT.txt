@@ -1,3 +1,17 @@
-最近项目多起来了，需要一个GTD任务管理工具。写入数据后自动触发校验，校验也需要访问同一份数据。
+最近同时在跟四个项目，邮件、即时消息、文档里到处都是待办事项，到底哪些做完了哪些忘了完全不清楚。需要一个 GTD 管理工具把所有事情归拢到一处，按项目和上下文组织起来。
 
-支持多项目，每个项目独立的任务列表。可以按负责人、优先级、状态筛选。Go 标准库实现。
+工具以项目为顶层分组，每个项目有独立的任务列表。项目有名称、状态（active/someday/completed）、描述。任务有 ID、标题、所属项目、上下文标签（如 @office @home @call，可多个）、优先级（high/medium/low）、状态（inbox/next/scheduled/delegated/done）、截止日期、负责人。
+
+GTD 的核心流程是收件箱处理——新任务默认进 inbox 状态，`process <task-id>` 命令触发交互式处理（用参数模拟）：必须指定目标状态、如果是 next 要指定上下文、如果是 scheduled 要指定日期、如果是 delegated 要指定负责人。处理完自动校验——比如标记为 next 但没给上下文就报错，标记为 scheduled 但日期在过去也报错。校验和写入操作共享同一份数据，写入时触发校验函数。
+
+- `project add <name> [--desc <text>]`
+- `project list [--status <status>]`
+- `task add --title <text> --project <name> [--priority <level>]`：初始 inbox
+- `task process <id> --status <status> [--context <tags>] [--due <date>] [--who <name>]`
+- `task list [--project <name>] [--status <status>] [--context <tag>] [--priority <level>] [--assignee <name>]`：多种筛选条件
+- `task done <id>`：标记完成
+- `task show <id>`：完整信息
+- `inbox`：列出所有 inbox 状态的任务
+- `next`：列出所有 next 状态的任务，按上下文分组显示
+
+数据存当前目录 JSON 文件，按项目分文件存储。每次操作后立即写盘。Go 标准库实现。

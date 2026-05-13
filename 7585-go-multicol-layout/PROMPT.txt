@@ -1,3 +1,9 @@
-多列布局排版的处理逻辑比较复杂，特别是 Unicode 相关的部分。修改主体后关联数据要同步。
+`ls` 的多列输出、`diff` 的并排显示、终端仪表盘的多面板——多列布局看着简单，Unicode 相关的部分让人抓狂：不同列的内容宽度各异，全角字符和半角字符混在一起，分隔符和边距怎么算？修改主体内容后，关联的列宽和布局数据还得同步。
 
-工具要能处理各种 Unicode 规范化形式（NFC、NFD、NFKC、NFKD）。两个看起来一样但编码不同的字符串要能识别。Go 标准库实现。
+`multicol-tool`，子命令 `layout`、`balance`、`preview`。`multicol-tool layout` 读数据，按指定列数（`--columns`，默认自动检测终端宽度）排成多列。布局策略：`--flow vertical`（先填满第一列再填第二列，像 `ls`）或 `--flow horizontal`（先填满第一行再填第二行，像表格）。`multicol-tool balance` 平衡列内容——让各列的行数尽量接近。`multicol-tool preview` 预览布局效果，不输出数据，只输出列数和每列行数。
+
+Unicode 规范化：内容文本先统一成 NFC 形式再算宽度，NFC/NFD/NFKC/NFKD 四种形式都支持。两个看起来一样但编码不同的字符串，宽度计算结果要一致。
+
+列间用 `  `（两空格）分隔。终端宽度不够时自动减少列数。宽度计算考虑全角字符和 ANSI 转义序列。
+
+Go 标准库实现。`go build`。

@@ -1,3 +1,9 @@
-做个ADR模板的 CLI 工具。流程分多个阶段。
+架构决策记录（ADR）这东西，写过的人都知道有用，但每次打开空白文档又不知道从哪下笔。为什么不搞个模板工具，把 ADR 的常见结构固化下来？
 
-比较两个版本的文档，高亮差异部分。差异包括新增、删除、修改。输出为并排对比格式。Go 标准库实现，go build 通过。
+adr-tmpl 用 Go 标准库实现，`go build -o adr-tmpl ./cmd/adr-tmpl` 编译。它管理架构决策记录的全生命周期——从创建到最终状态。
+
+ADR 模型包含：编号、标题、状态（提议→已接受→已废弃/已替代）、背景、决策内容、后果、参与者、创建日期。编号自增，格式 `ADR-NNNN`。流程分多个阶段——新建时状态为"提议"，经过讨论后 `accept` 变为"已接受"，如果后续被推翻则 `supersede <new-adr-id>` 标记为"已被替代"。
+
+模板引擎用 Go `text/template`，内置 Michael Nygard 风格和 Alexandrian 风格两套模板。用户可自定义模板放在 `~/.adr-tmpl/templates/` 目录。模板变量自动填充：编号、日期从系统获取，项目名从 `go.mod` 或 `package.json` 探测。
+
+核心操作：`new "选择数据库"` 创建新 ADR，自动打开编辑器填写内容和决策部分；`list` 按状态过滤，`--status proposed` 只看提议中的；`accept <id>` 接受决策；`supersede <old-id> <new-id>` 替代。比较两个版本时高亮差异——新增、删除、修改用颜色区分，并排对比格式输出。数据存在 `docs/adr/` 目录下，每条一个 Markdown 文件。`go test ./...` 跑测试，`go build` 编译通过。

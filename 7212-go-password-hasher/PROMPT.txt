@@ -1,5 +1,11 @@
-用 Go 标准库写一个加密解密工具相关的 CLI 工具。
-工具要能RSA 密钥对生成（2048/4096 位）、RSA 加密解密、密钥格式转换。
-消息 topic 支持多层通配符 a.b.c.# 的匹配。
-批量操作并发执行，结果按顺序汇总。
-go build 能过，命令行工具能正常运行。
+上季度安全审计发现生产环境有 200 多个账号的密码还在用 MD5 存储，CTO 直接在全员会上点名批评了。我拿到任务：做一个 Go 命令行工具，RSA 密钥对生成、RSA 加密解密、密钥格式转换，再加上密码哈希的辅助功能。
+
+RSA 密钥对生成支持 2048 和 4096 两种位宽，`pw-hasher keygen --bits 4096 --output-dir ./keys/`。私钥默认 PKCS8 PEM 格式，公钥 PKCS1。RSA 加密解密要注意数据长度限制——2048 位密钥最多加密 245 字节（OAEP with SHA-256），超了直接报错不截断。加密结果 Base64 编码输出。
+
+密钥格式转换覆盖这些组合：PEM 转 DER、DER 转 PEM、PKCS1 转 PKCS8、PKCS8 转 PKCS1。如果输入是加密私钥（比如 `ENCRYPTED PRIVATE KEY`），转换时需要先解密再重新编码。`pw-hasher convert --input key.pem --from pkcs1-pem --to pkcs8-der` 这样的命令行风格。
+
+消息 topic 支持多层通配符？这是消息队列的概念，本工具不涉及。但批量操作要并发执行：`pw-hasher batch-encrypt --input-dir ./secrets/ --pubkey pub.pem` 用 4 个 goroutine 并行加密目录下的文件，结果按文件名字典序汇总输出 JSON。
+
+错误处理要细：密钥文件读不到（exit 1）、格式解析失败（exit 2）、密码错误（exit 3）、数据超长（exit 4）。所有错误信息写 stderr，不污染 stdout 的加密结果。
+
+`go build` 能过，命令行工具能正常运行。

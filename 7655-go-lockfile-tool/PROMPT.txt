@@ -1,3 +1,17 @@
-团队里版本锁定文件不统一导致构建经常出问题，写个工具规范化。处理一个记录的时候需要自动更新关联的统计。
+团队里每个人生成的锁文件格式不一样，有人用 go.sum 有人用自定义的，构建结果时好时坏。写个版本锁定工具规范化，能检测当前环境是否符合项目要求，处理记录时自动更新关联统计。
 
-工具能检测当前环境是否符合项目要求。不符合的列出差异项和修复建议。Go 标准库实现。
+LockProfile 实体有 ID、项目名、Go 版本、依赖列表（每个依赖有名称、精确版本、SHA256 校验）、创建时间、创建人。环境检查结果有 ID、Profile ID、检查时间、差异项列表（每个差异项包含依赖名、期望版本、实际版本、状态 match/mismatch/missing）。
+
+`generate --project <name>` 从当前目录的 go.mod 和 go.sum 生成锁文件配置。`check --profile <id>` 对比当前环境和 Profile 的依赖版本——不符合的列出差异项和修复建议（如"依赖 X 期望 v1.2.3 实际 v1.2.4，执行 go get X@v1.2.3"）。
+
+处理差异记录时（标记为已修复），自动更新 Profile 的统计——通过率（无差异的环境检查次数 / 总检查次数）、最近一次检查时间。
+
+- `generate --project <name>`：生成锁文件配置
+- `profile list`：列出所有 Profile
+- `check --profile <id>`：环境检查
+- `diff list <check-id>`：查看差异项
+- `diff fix <diff-id>`：标记差异已修复，触发统计更新
+- `report --profile <id>`：通过率和历史趋势
+- `export --profile <id>`：导出为 JSON 文件供 CI 使用
+
+Go 标准库实现。

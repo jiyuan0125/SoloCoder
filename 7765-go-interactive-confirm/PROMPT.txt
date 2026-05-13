@@ -1,3 +1,13 @@
-用 Go 标准库做个交互式确认组件。修改主体后关联数据要同步。
+危险操作前让用户确认一下——比如删除文件、覆盖配置。先弹个确认提示，用户输入 y 才继续，输入 n 就取消。看似简单，但做好还得处理不少细节。
 
-支持多种输出格式（JSON、YAML、表格）。输出格式通过参数切换。数据驱动，传入结构体自动渲染。Go 标准库实现。
+interactive-confirm 用 Go 标准库实现，`go build -o confirm-demo ./cmd/confirm` 编译。
+
+先构造提示。`confirm := New("确定要删除所有临时文件吗？")`。提示文本自动加后缀 ` [y/N]`。默认值可以配置——`Default(true)` 时显示 `[Y/n]`，回车等同于 yes。修改主体后关联数据同步——确认结果自动写回调用方的流程控制变量。
+
+再显示。提示输出到 stderr，不干扰 stdout 的管道数据。支持 ANSI 颜色——危险操作提示用黄色或红色。`--input <response>` 跳过交互直接传入答案，方便脚本调用。
+
+最后处理响应。输入 `y`/`yes`/`Y` 返回 true，`n`/`no`/`N` 返回 false，其他输入提示重新输入。超时处理：`WithTimeout(30 * time.Second)` 设定超时，超时后按默认值处理。最多允许重试 3 次无效输入。
+
+输出格式支持多种：JSON、YAML、表格。格式通过参数切换。数据驱动，传入结构体自动渲染确认结果。
+
+API：`ok, err := confirm.Ask()`、`ok := confirm.Run()`（忽略错误直接返回布尔值）。可以链式设置选项：`New("msg").Default(true).WithTimeout(30*time.Second).Ask()`。`go test ./...` 跑测试。

@@ -1,4 +1,4 @@
-调研了一圈，Go 做交互式选择 hunks 进行部分 commit最方便，编译出来直接跑。
+git add -p 用着顺手但没法定制。想做一个纯 CLI 的交互式 hunk 选择器——逐个显示 diff hunk，y/n 选择暂存，部分 commit 一气呵成。
 
 交互式选择 hunks 进行部分 commit。逐个显示 diff hunk，用户选择 y/n 暂存。类似 git add -p 但纯 CLI 实现。
 金额用整数存储（分为单位），显示的时候转为元。除法截断不是四舍五入。

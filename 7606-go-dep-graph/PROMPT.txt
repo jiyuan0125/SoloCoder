@@ -1,3 +1,16 @@
-依赖关系图工具，要能处理多人协作的场景。主记录依赖配置数据。
+上次系统改了一个底层库的接口，改完才发现上游有七个模块依赖它——直接炸了。我们缺一个能把模块间依赖链列清楚的工具，不用画图，至少文本形式能看明白谁依赖谁、改一个东西会影响多少模块。
 
-每个人有任务负载上限。分配新任务时检查负责人当前负载。超载时要提示。Go 标准库实现。
+核心实体两个：Module 和 Dependency。Module 有名称、版本、负责人、状态（active/deprecated）、依赖上限。Dependency 记录谁依赖谁，依赖类型（direct/indirect），可选备注。每个模块有一个负载上限，表示同时能承担的被依赖数量。
+
+添加依赖关系时（`dep add <source> <target>`），如果 target 模块当前被依赖数量已达上限，拒绝操作并提示当前负载。target 已被 deprecated 也拒绝。负责人在创建模块时指定（`--owner <name>`），方便追责。
+
+- `module add <name> --version <v> --owner <name> --limit <n>`：注册模块，limit 默认 10
+- `module list [--owner <name>] [--status active|deprecated]`
+- `module deprecate <name>`：标记废弃前检查是否有 active 模块依赖它，有的话拒绝并列出
+- `dep add <source> <target> [--type direct|indirect] [--note <text>]`
+- `dep remove <source> <target>`
+- `graph <module>`：输出依赖树，直接依赖缩进一层，间接依赖再缩进一层
+- `graph --reverse <module>`：反向图，谁依赖了我
+- `check`：全局检查，找出循环依赖、孤立模块、超过负载上限的模块
+
+graph 输出格式是文本缩进树，类似 tree 命令。循环依赖用 DFS 检测，发现环路时输出路径。数据存当前目录 JSON 文件，每次操作立刻持久化。Go 标准库实现，不引入第三方框架。go build 能编译就行。

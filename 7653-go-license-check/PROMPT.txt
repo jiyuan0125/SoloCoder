@@ -1,3 +1,16 @@
-给项目写个许可证合规检查工具。修改主体后关联数据要同步。
+法务团队要求每个项目的依赖许可证都要审查，但我们连项目里用了哪些许可证都不清楚。写个许可证合规检查 CLI 工具，扫描依赖列表，输出兼容性报告。
 
-扫描依赖列表，检查每个依赖的许可证类型。输出许可证兼容性报告。已知的不兼容组合要标红。Go 标准库。
+依赖许可证记录有 ID、依赖名称、版本、许可证类型（MIT/Apache-2.0/GPL-2.0/GPL-3.0/BSD-2-Clause/BSD-3-Clause/LGPL/MPL-2.0/proprietary/unknown）、许可证文本路径（可选）、来源（手动录入/go.mod 解析）。项目配置有名称、项目许可证（自身用的许可证类型）、兼容策略（permissive/strict）。
+
+扫描时（`scan`），从 go.mod 解析依赖列表，和已有记录匹配。没有许可证信息的标记为 unknown。修改某个依赖的许可证类型时（`license set <dep-name> --type <license>`），自动重算兼容性报告——这就是"修改主体后关联数据同步"。
+
+兼容性检查基于规则表——已知不兼容组合：GPL 系列与 proprietary 不兼容、GPL-3.0 与 Apache-2.0 有争议（标黄）。项目自身是 MIT 的情况下，GPL 依赖可以接受但需要标注。`check` 输出报告——每个依赖的许可证、与项目许可证的兼容性（compatible/warning/conflict/unknown）。conflict 和 unknown 的用红色标记，warning 用黄色。
+
+- `project init --name <text> --license <type> --policy <level>`
+- `scan`：解析依赖
+- `license set <dep-name> --type <license>`
+- `check`：兼容性报告
+- `list [--status compatible|warning|conflict|unknown]`
+- `export --format md`：Markdown 格式的许可证清单
+
+Go 标准库实现。

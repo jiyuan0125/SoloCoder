@@ -1,3 +1,16 @@
-做个间接依赖分析的 CLI 工具。更新配置时自动刷新缓存，刷新也要读配置。支持多套配置，按名称切换。
+go.mod 里 indirect 标记的依赖堆了五十多个，上次 Log4j 那种供应链漏洞出来的时候，安全团队问"这个间接依赖是谁引的"，查了半天说不清楚。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+配置集有 ID、名称、go.mod 路径、状态（active/archived）。`config create <name> --modfile <path>` 创建配置集，`config switch <name>` 切换活跃配置——切换时验证该配置指向的 go.mod 文件是否存在，不存在则警告但允许切换。支持 JSON 格式存储。
+
+分析核心——`analyze` 解析活跃配置指向的 go.mod，区分直接依赖（require 块中有 // direct 注释或不在 indirect 列表中的）和间接依赖（// indirect 标记的）。构建依赖图后，对每个间接依赖追溯引入链——`trace <module>` 输出从根模块到目标模块的完整路径。
+
+`report` 输出统计——总依赖数、直接依赖数、间接依赖数、间接依赖占比。按模块分组显示哪些直接依赖引入了最多的间接依赖。配置更新时（`config update <name> --modfile <new-path>`），自动刷新内存缓存（缓存放的是上次分析的依赖图），刷新时重新读配置文件确保一致。
+
+- `config create <name> --modfile <path>`
+- `config list` / `config switch <name>` / `config update <name> --modfile <path>`
+- `analyze`：解析依赖图
+- `trace <module>`：追踪引入链
+- `report`：依赖统计
+- `list-deps [--type direct|indirect]`：列出依赖
+
+Go 标准库实现。

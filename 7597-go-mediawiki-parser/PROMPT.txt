@@ -1,3 +1,7 @@
-我们项目文档有多语言版本，做个MediaWiki解析工具来管理。多种子命令处理不同操作。
+维基百科的标记语言——`==Title==`、`[[link]]`、`{{template}}`、`'''bold'''`——项目文档有多语言版本，各语言维基之间的内容同步全靠手工对比。写个解析工具来管理和比对。
 
-工具支持比较不同语言版本的完整性，缺失的翻译条目要列出来。Go 标准库实现，go build 通过。
+`mediawiki-tool`，子命令 `parse`、`convert`、`compare`。`mediawiki-tool parse` 读 MediaWiki 文本，解析标题（`=` 到 `======`）、内部链接（`[[target|text]]`）、外部链接（`[url text]`）、模板调用（`{{name|param}}`）、列表（`*` `#` `;` `:`）、表格（`{|...|}`）、分类（`[[Category:...]]`）、魔法字（`__NOTOC__`）。输出 AST 的 JSON。`mediawiki-tool convert` 转 Markdown 或 HTML。`mediawiki-tool compare` 比较不同语言版本的文档——按标题对齐，找出缺失的章节和翻译不完整的段落。
+
+工具支持比较不同语言版本的完整性，缺失的翻译条目列出来——哪些标题在英文版有但中文版没有，哪些模板参数没翻译。
+
+Go 标准库实现，`go build` 通过。

@@ -1,3 +1,11 @@
-给团队做个sitemap生成工具。命令和子命令的多级结构。
+Sitemap——搜索引擎优化绕不开的东西。文档站点页面一多手动维护 sitemap.xml 不现实，必须自动生成。这个工具从文档目录结构直接生成标准 sitemap。
 
-支持代码片段的增删改查和搜索。每个片段有语言标签和描述。导出为 Markdown 格式。Go 标准库实现，go build 通过。
+sitemap-gen 用 Go 标准库实现，`go build -o sitemap-gen ./cmd/sitemap-gen` 编译。
+
+生成策略：递归扫描目录下所有 `.html` 和 `.md` 文件，每个文件对应一个 URL。URL 由配置的基础路径 + 文件相对路径拼接。每个 URL 条目包含 loc（地址）、lastmod（最后修改时间，取文件 mtime）、changefreq（更新频率，根据目录位置推断——首页 daily、文档 weekly、归档 monthly）、priority（优先级，首页 1.0、一级页面 0.8、二级 0.6）。
+
+命令和子命令多级结构：`gen <dir>` 生成 sitemap；`ping` 生成后自动通知搜索引擎（Google、Bing 的 ping 接口）；`validate <file>` 验证生成的 XML 是否符合协议。
+
+代码片段管理也集成进来——如果文档中有引用代码文件，代码文件的变更时间也纳入 lastmod 计算。每个代码片段有语言标签和描述，导出为 Markdown 格式方便审查。
+
+输出标准 sitemap XML，文件超过 50000 个 URL 自动切分成 sitemap index + 多个 sitemap 文件。XML 中特殊字符正确转义。`--base-url` 必填，指定站点根路径。子命令还包括 `stats` 显示 URL 统计。`go test ./...` 跑测试，`go build` 编译通过。

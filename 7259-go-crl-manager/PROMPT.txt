@@ -1,5 +1,13 @@
-闲着没事写个证书密钥管理工具自己用，Go CLI。
-工具要能密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
-校验分三阶段：格式校验→规则校验→关联校验，前一步通过才能做下一步。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警——这几个功能做在一起就是个完整的密钥生命周期管理工具。Go CLI。
+
+密钥轮换流程：`crlmgr rotate --key-id db-encryption --output-dir ./keys/`。生成新的 AES-256 密钥，标记为 active。旧密钥标记 `archived`（只解密不加密）。密钥库存 `~/.crlmgr/keys.json`，每条记录包含 `key_id`、`version`、`status`（active/archived/destroyed）、`created_at`、`archived_at`。
+
+旧密钥安全归档：`crlmgr archive --key-id db-encryption --version 2 --output archived_v2.key.enc`。归档前用当前 active 密钥加密旧密钥内容。归档文件存储在指定路径。`destroy --key-id db-encryption --version 1` 用 `crypto/rand` 覆写密钥内容后删除记录。
+
+无缝切换：加密操作永远用 active 版本，解密时根据密文头里的版本号自动选择对应密钥。调用方不需要知道轮换发生了。
+
+证书过期检查和预警：`crlmgr check-expiry --watch-dir ./certs/ --warn-days 30`。扫描目录下 PEM 证书，剩余天数不足 30 天的输出警告。
+
+校验三阶段：格式校验（密钥文件是否合法）→ 规则校验（密钥长度是否达标）→ 关联校验（密钥是否在库中注册）。输入格式自动检测。
+
+`go build` 能过，命令行工具能正常运行。

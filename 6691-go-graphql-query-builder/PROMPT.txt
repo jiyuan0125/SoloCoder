@@ -1,6 +1,5 @@
-想做个交互式构建 GraphQL query练练 Go，命令行工具就行。
+GraphQL query 字符串太长手写容易拼错。自己用写个交互式工具，输入类型和字段选择，自动输出格式化的 query 字符串，支持 fragment 和变量。
 
-交互式构建 GraphQL query。输入类型和字段选择，输出格式化的 query 字符串。支持 fragment 和变量。
 需要用到 regexp.Regexp 等标准库功能。
 处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。
 子命令结构：`tool namespace resource action`，比如 `tool db table export`。

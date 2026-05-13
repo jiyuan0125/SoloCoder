@@ -1,3 +1,17 @@
-团队预算跟踪目前用 Excel 管，换个 CLI 工具。任务有多个审批步骤。
+团队预算全靠 Excel 管，每月对账总要花半天。换 CLI 工具，录入支出后走审批流程，支持 CSV 导入老数据。
 
-支持从 CSV 导入已有数据。任务之间有依赖关系，前置任务未完成时阻塞后续任务。Go 标准库。
+预算条目有 ID、项目名、类别（hardware/software/travel/training/other）、金额、描述、日期、提交人、状态（draft/submitted/approved/rejected）、审批人。状态流转有三步：draft → submitted → approved/rejected。每步都可以添加备注。
+
+提交条目时（`submit <id>`），检查金额是否为正数、项目名是否已注册、类别是否合法。审批操作（`approve <id> --by <name>` 或 `reject <id> --by <name> --reason <text>`）会检查当前状态是否是 submitted。条目之间有依赖——比如"硬件采购"依赖"预算申请"先被审批通过。`depend <id> --on <other-id>` 建立依赖，前置条目未 approved 时，后续条目不能 submit。
+
+支持从 CSV 导入：`import <file.csv>`，格式是 project,category,amount,description,date,submitter。逐条处理，金额非法或项目不存在的行跳过并打印警告，不阻塞后续导入。
+
+- `project add <name> --budget <amount>`：设定项目总预算
+- `entry add --project <name> --category <type> --amount <n> --desc <text> --date <date> --who <name>`
+- `entry submit <id>` / `entry approve <id> --by <name>` / `entry reject <id> --by <name> --reason <text>`
+- `depend <id> --on <other-id>`
+- `import <file.csv>`
+- `summary <project>`：总预算、已用、剩余、按类别分布
+- `list [--project <name>] [--status <status>] [--category <type>]`
+
+数据存 JSON 文件。Go 标准库实现。

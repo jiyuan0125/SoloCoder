@@ -1,5 +1,3 @@
-写个 Go 命令行工具做跨平台路径检查。
-Windows 不允许的字符、大小写冲突。
-列出有问题的路径和建议修复。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-go build 能编译通过，不依赖第三方库。
+项目在 Linux 上跑得好好的，同事 Windows 一拉就崩——路径里有冒号和空格。Go 命令行做跨平台路径检查：Windows 不允许的字符、大小写冲突问题检出，列出有问题的路径和修复建议。
+
+支持多种操作模式，参考 convert csv json、convert yaml toml、validate json、diff json 这种风格。go build 能编译通过，不依赖第三方库。

@@ -1,6 +1,11 @@
-组长说要搞工具化，先做个加密解密工具，Go CLI。
-工具要能AES-GCM 文件加密解密、密钥从密码派生（PBKDF2）、大文件分块加密。
-支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
-认证需要用户角色，用户角色怎么创建不提。
-处理用户输入的路径要注意别让目录遍历出问题。
-go build 能过，命令行工具能正常运行。
+密码学工具这一块还缺个 AES-GCM 文件加密解密，密钥从密码派生（PBKDF2），大文件分块加密。Go 命令行工具。
+
+AES-GCM 加密解密的核心流程：用户通过 `--password` 传入密码，工具用 PBKDF2-HMAC-SHA256 派生 32 字节密钥（迭代 10 万次、随机 16 字节 salt）。加密文件格式：salt（16B）+ nonce（12B）+ 密文 + GCM tag（16B）。`zk-prove encrypt --password "xxx" --input data.db --output data.db.enc`。解密时从文件头读取 salt 和 nonce，派生密钥后解密。
+
+大文件分块加密：每 4MB 一块，每块独立 nonce。块之间有依赖关系——第 N 块的 AAD 包含第 N-1 块密文的 SHA256 哈希。这样删除或篡改中间任何一块都会导致后续解密失败。加密后的文件头 64 字节是全局元数据（魔数、版本、块大小、文件总大小），后面是分块的密文数据。
+
+子命令风格：`zk-prove encrypt`、`zk-prove decrypt`、`zk-prove info`（显示加密文件元数据）。路径安全要注意 `filepath.Clean` 后检查 `..`，防止目录遍历。输入文件不存在报错退出码 1，密码错误导致解密失败退出码 2。
+
+多层级规则路径 `rules/{group}/{name}/{version}`？这是规则引擎的概念，本工具没有规则。认证和角色？纯本地工具。多核场景用 goroutine 并行处理不同块的加密，用 `sync.WaitGroup` 等所有块完成。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,4 +1,4 @@
-用 Go 写一个把 WireMock stub 定义转换为 Go http.Handler mock 代码的命令行工具。
+WireMock 是 Java 生态的，Go 项目里用不上它那一套 stub 定义。但 JSON 格式的 stub 规则写得挺好的，能不能直接读进来转成 Go http.Handler mock 代码？请求匹配、响应模板、优先级都要保留。
 
 把 WireMock stub 定义转换为 Go http.Handler mock 代码。读取 JSON 格式的 stub 定义，输出 Go 源码。支持请求匹配、响应模板、优先级。
 子命令结构：`tool namespace resource action`，比如 `tool db table export`。

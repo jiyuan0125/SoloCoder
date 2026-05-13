@@ -1,5 +1,11 @@
-之前买的工具续费太贵，Go 自建证书密钥管理工具。
-工具要能证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查、TLS 配置文件生成。
-搜索索引时要更新引用计数，更新计数也要查索引完整性。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+去年买的证书管理工具续费报价涨了 80%，直接不续了。Go 自建证书信息解析工具，主题/颁发者/扩展/指纹、SAN 提取、密钥用途检查、TLS 配置文件生成。
+
+证书信息解析：`deployer parse --cert server.pem` 输出所有证书字段。Subject 和 Issuer 按 CN、OU、O、C 字段展开显示。扩展字段逐一列出：Basic Constraints、Key Usage、Extended Key Usage、SAN、AKI、SKI。同时输出 SHA-1 和 SHA-256 指纹。
+
+SAN 提取和显示：`deployer san --cert server.pem` 列出所有 SAN 条目，区分 DNS 名称、IP 地址和 email 地址。输出 JSON 数组：`[{"type": "dns", "value": "..."}, ...]`。
+
+密钥用途检查：`deployer check-usage --cert server.pem --expect server-auth`。检查 Key Usage 和 EKU 是否匹配。TLS 服务端需要 serverAuth，CA 需要 keyCertSign。不符合输出 warning 或 error。
+
+TLS 配置文件生成：`deployer gen-tls --cert server.pem --key server.key --output tls.json`。根据证书密钥类型推荐密码套件和最低 TLS 版本。
+
+`go build` 能过，命令行工具能正常运行。

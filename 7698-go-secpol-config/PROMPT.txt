@@ -1,3 +1,16 @@
-给项目写个安全策略配置工具。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+安全策略改了只同步了两台服务器，第三台忘了。上周密码复杂度规则更新，三台机器两台生效了一台没生效——等安全审计扫出来才发现。改安全配置这种事不能靠人记。
 
-扫描依赖列表，检查每个依赖的许可证类型。输出许可证兼容性报告。已知的不兼容组合要标红。Go 标准库。
+PolicyRule 实体有 ID、类别（password/access/network/encryption/audit）、规则名、描述、当前值、期望值、合规状态（compliant/non-compliant/unknown）、严重级别（high/medium/low）。`rule add --category <type> --name <text> --expected <value>` 添加规则。`rule list [--category <type>] [--status <status>]` 列出规则。
+
+辅助检查机制——主操作（如 `rule set <id> --value <new>`）执行前调用辅助检查函数，验证新值是否符合策略约束（如密码长度至少 8 位、SSH 不允许 root 登录等）。辅助检查函数和主操作读同一份数据文件。检查不通过拒绝修改并输出原因。
+
+`scan` 对比当前系统安全配置和工具管理的期望值——非合规的规则标红输出。许可证模式参考——类似许可证合规报告，按类别分组显示合规状态。
+
+- `rule add --category <type> --name <text> --expected <value>`
+- `rule list [--category <type>] [--status <status>]`
+- `rule set <id> --value <value>`：带辅助校验
+- `scan`：合规性扫描
+- `report`：合规报告
+- `export --format md`
+
+Go 标准库实现。

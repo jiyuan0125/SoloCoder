@@ -1,5 +1,5 @@
-现在用的现成的转换工具不支持递归目录，自己加太麻烦，不如 Go 写个项目脚手架生成。
-模板包含 main.go、go.mod、Makefile。
-项目名和模块路径通过参数指定。
+新人入职搭环境要半天，项目结构全靠复制粘贴。生成模板包含 main.go、go.mod、Makefile，项目名和模块路径通过参数指定。
+
 工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-go build 能编译通过，不依赖第三方库。
+
+go build 能过，不依赖第三方库。

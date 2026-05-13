@@ -1,6 +1,5 @@
-客户催了好几次了，先把根据 OpenAPI spec 中的 examples 字段生成 mock 数据做出来，Go 工具。
+前端需要 mock 数据但 OpenAPI spec 里的 examples 字段没人填。客户等着要，Go 工具优先用 examples，没有的话根据类型生成随机值，输出 JSON。
 
-根据 OpenAPI spec 中的 examples 字段生成 mock 数据。没有 examples 时根据类型生成随机值。输出 JSON。
 去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。
 数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
 管理分组和组内成员。成员操作基于分组进行。

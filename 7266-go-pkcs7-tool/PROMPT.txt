@@ -1,5 +1,11 @@
-那个开源工具自定义规则没做好，Go 从零写证书密钥管理。
-工具要能证书续签流程、自动续签定时检查、续签通知。
-导出数据时要验证权限，权限检查也要查导出记录。
-多核机器上跑的时候多个 goroutine 同时处理。
-go build 能过，命令行工具能正常运行。
+开源证书工具对 PKCS7 支持不好，自定义扩展字段也加不了，提了 PR 半年没合并。Go 从零写证书续签工具，续签流程、自动续签定时检查、续签通知。
+
+证书续签：`pkcs7 renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365 --output renewed.pem`。保留原 SAN 和扩展字段。新序列号随机生成。续签后显示新旧证书指纹对比。
+
+自动续签定时检查：`pkcs7 auto-renew --watch-dir ./certs/ --ca-dir ./ca/ --threshold-days 30 --interval 3600`。每小时扫描一次，发现证书不足 30 天自动续签。CA 密钥从 `--ca-dir` 读取。续签前先备份原文件（`.bak` 后缀）。
+
+续签通知：成功/失败都触发通知。默认 stdout 输出，可选 `--notify-webhook https://hooks.example.com/cert` 发 HTTP POST。通知 JSON：`{event, cert, new_expiry, status, timestamp}`。
+
+导出数据验证权限？本工具无权限层。多核并行：批量续签时用 goroutine pool（4 workers），每个证书独立续签。输出格式默认 JSON 详情到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

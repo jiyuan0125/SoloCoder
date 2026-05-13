@@ -1,3 +1,13 @@
-用 Go 写一个中间件链库，给自己其他项目用。命令和子命令的多级结构。
+中间件链——请求进来经过日志→认证→限流→业务处理→响应，每层处理一部分逻辑。不用中间件模式的话这些逻辑全堆在 handler 里，代码根本没法维护。
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+middleware-chain 用 Go 标准库实现，`go build -o mw-demo ./cmd/mw` 编译。命令和子命令的多级结构：根命令管理中间件，子命令执行具体业务。
+
+先定义中间件接口。`Middleware` 函数签名：`func(next Handler) Handler`。每个中间件接收下一个 handler，可以在调用前后加自己的逻辑。链式组装：`chain.Use(logging).Use(auth).Use(rateLimit).Then(handler)`。
+
+再执行链。请求进入后按注册顺序执行 Before 逻辑，到达最终 handler 处理业务，然后按反序执行 After 逻辑。任何中间件可以短路返回（不调用 next），后续中间件和最终 handler 都不执行。
+
+错误传播：中间件或 handler 返回错误，错误沿调用链向上传播。错误处理中间件统一捕获并转换成用户友好的输出。库支持嵌套子命令——每个子命令可以有独立的中间件链。
+
+最后输出。帮助信息按子命令分组展示。未知子命令给出最接近的建议（Levenshtein 距离）。每个中间件有独立的帮助说明。
+
+API：`c := chain.New()`、`c.Use(mw1, mw2)`、`c.Handle(businessHandler)`。零依赖。`go test ./...` 跑测试，`go build` 编译通过。

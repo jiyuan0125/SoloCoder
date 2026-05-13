@@ -1,3 +1,17 @@
-团队里Homebrew管理不统一导致构建经常出问题，写个工具规范化。多个关联的实体。
+Brewfile 提交到仓库了，但没人记得更新。张三本地装了 grpcurl 1.8，Brewfile 里还写着 1.5，CI 环境按 Brewfile 装——构建能过但测试数据对不上。差一个版本就出问题。
 
-工具能检测当前环境是否符合项目要求。不符合的列出差异项和修复建议。Go 标准库实现。
+Formula 实体有 ID、名称、当前版本、安装状态（installed/missing/outdated）、安装选项。Brewfile 实体有 ID、项目名、文件路径、包含的公式列表、最后同步时间。FormulaDependency 有公式 ID、依赖的公式 ID——某些 formula 依赖其他 formula（如 grpcurl 依赖 grpc）。
+
+`scan` 解析 Brewfile 或 brew list 输出，提取所有公式和版本。和已有记录对比，新增的自动创建，版本变化的标记 outdated。`check` 检测当前环境是否符合项目 Brewfile 的要求——不符合的列出差异项和修复建议（如"grpcurl 期望 v1.8.0 实际未安装，执行 brew install grpcurl"）。
+
+`diff <project1> <project2>` 对比两个项目的 Brewfile 差异。`sync <project>` 把 Brewfile 和本地安装的公式同步——以 Brewfile 为准，多出来的公式列出来让用户决定是否保留。
+
+- `formula add <name> --version <v>` / `formula list`
+- `brewfile add --project <name> --path <file>`
+- `scan [--brewfile <path>]`：扫描公式
+- `check --project <name>`：环境一致性检查
+- `diff <project1> <project2>`
+- `sync <project>`：同步 Brewfile
+- `report`：公式版本总览
+
+Go 标准库实现。

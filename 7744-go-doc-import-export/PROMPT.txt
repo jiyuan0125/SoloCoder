@@ -1,3 +1,9 @@
-给团队做个文档导入导出工具。写入数据后自动触发校验，校验也需要访问同一份数据。
+文档迁移——团队要从旧系统搬到新工具，格式转换是个大坑。有的用 Confluence 导出的 HTML，有的用纯 Markdown，有的用自定义格式。需要一个统一的导入导出工具，把这些异构数据转换成标准格式。
 
-支持代码片段的增删改查和搜索。每个片段有语言标签和描述。导出为 Markdown 格式。Go 标准库实现，go build 通过。
+doc-import-export 用 Go 标准库实现，`go build -o doc-import-export ./cmd/doc-import-export` 编译。
+
+导入支持多种来源。Markdown 导入：解析 frontmatter 和正文，提取标题、标签、分类、内容。HTML 导入：用标准库解析 HTML，提取标题（h1-h6）、段落、代码块、图片引用，转成 Markdown。纯文本导入：按空行分段，首行作为标题。写入数据后自动触发格式校验——校验也需要访问同一批导入数据。检查标题是否为空、代码块语言标注是否完整、图片路径是否有效。
+
+导出也支持多种目标格式。Markdown 是默认格式，JSON 导出包含完整元数据，HTML 导出带内置样式。代码片段管理功能集成——导入时识别代码块，每个片段有语言标签和描述，单独建索引支持搜索。
+
+子命令：`import <source-dir> --format html` 导入指定格式；`export <target-dir> --format json` 导出；`convert <input> <output>` 单文件格式转换；`batch <dir>` 批量处理。`go test ./...` 跑测试，`go build` 编译通过。

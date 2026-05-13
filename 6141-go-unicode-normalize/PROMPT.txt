@@ -1,4 +1,4 @@
-我们SRE团队最近需要一套Unicode标准化，用 Go 标准库做。
+SRE 团队的监控数据里有各种 Unicode 变体，同样的字符编码不同导致匹配不上。Go 标准库做 Unicode 标准化。
 NFC、NFD、NFKC、NFKD 可选。
 中日韩字符统一处理。
 命令格式是 tool action target options，比如 tool scan dir --depth 3。

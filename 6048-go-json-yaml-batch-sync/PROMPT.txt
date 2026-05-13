@@ -1,5 +1,2 @@
-有个老工具是 Python 写的，维护不动了，用 Go 重写JSON YAML批量同步。
-检测哪边更新时间更晚，以新的为准覆盖旧的。
-不支持转换的格式跳过。
-多级命令：config get、config set、config list、config env switch。
-不用第三方包，go build 通过就行。
+配置管理平台要同步 JSON 和 YAML 两种格式的文件，之前用 Python 脚本做的，环境依赖太多不好迁移。Go 重写：检测哪边更新时间更晚，以新的为准覆盖旧的，不支持转换的格式跳过。
+多级命令：config get、config set、config list、config env switch。不用第三方包，go build 通过就行。

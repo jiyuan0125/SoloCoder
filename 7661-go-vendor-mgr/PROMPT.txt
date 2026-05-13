@@ -1,3 +1,18 @@
-做个Vendor目录管理的 CLI 工具。处理完成后自动归档。支持多套配置，按名称切换。
+vendor 目录要不要提交到 Git 这个问题我们吵了三轮了，最后达成一致：提交，但要有人管。问题是没人管——有人 vendor 了有人没 vendor，有人 vendor 完改了 go.mod 又忘了重新跑 go mod vendor，构建结果一天一个样。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+VendorSnapshot 实体有 ID、名称、创建时间、Go 版本、依赖数量、状态（active/archived）、依赖列表（每个依赖有模块路径和版本）。`snapshot create <name>` 从当前 vendor 目录读取依赖信息并记录。`snapshot list` 显示所有快照和状态。
+
+多套配置支持——每个项目可以有多套 vendor 配置（比如 full-vendor 和 minimal-vendor），用 `config create <name>` 创建，`config switch <name>` 切换。切换时验证配置完整性——检查 vendor 目录是否存在、go.mod 是否匹配。配置文件用 JSON 格式存储。
+
+自动归档——创建新快照后，之前的 active 快照自动标记为 archived。archived 的快照可以查看但不能切换回去。
+
+- `snapshot create <name>`：记录当前 vendor 状态
+- `snapshot list`：列出所有快照
+- `snapshot show <id>`：快照详情
+- `snapshot archive <id>`：手动归档
+- `config create <name>`：创建配置集
+- `config switch <name>`：切换配置，带完整性校验
+- `config list`
+- `verify`：验证当前 vendor 目录与记录是否一致
+
+Go 标准库实现。

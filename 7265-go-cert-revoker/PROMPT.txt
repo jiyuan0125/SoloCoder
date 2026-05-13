@@ -1,4 +1,9 @@
-之前买的工具续费太贵，Go 自建证书密钥管理工具。
-工具要能证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查。
-数据转换需要映射模板，模板怎么定义不提。
-go build 能过，命令行工具能正常运行。
+去年买的证书管理工具 license 到期了，续费报价翻了一倍。Go 自建，证书信息解析、SAN 提取和显示、密钥用途检查。
+
+证书信息解析：`revoker parse --cert server.pem` 显示完整证书字段。Subject 和 Issuer 按 CN/OU/O/C 拆开。扩展字段逐一列出：Basic Constraints、Key Usage、EKU、SAN、AKI、SKI。指纹 SHA-1 和 SHA-256。
+
+SAN 提取：`revoker san --cert server.pem` 列出所有 SAN，区分 DNS、IP、Email 类型。输出 JSON 数组：`[{"type": "dns", "value": "svc.example.com"}, ...]`。
+
+密钥用途检查：`revoker check-usage --cert server.pem --expected-usage server-auth`。检查 Key Usage 和 EKU 是否包含预期用途。TLS 服务端需要 serverAuth，CA 需要 keyCertSign + crlSign。不符合输出警告级别（warning vs error）。
+
+数据转换需要映射模板？本工具不做数据转换。`go build` 能过，命令行工具能正常运行。

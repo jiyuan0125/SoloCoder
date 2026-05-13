@@ -1,3 +1,9 @@
-做个历史命令管理组件，CLI 工具用的。状态按顺序流转。
+用过的命令下次还想用，得翻历史记录。但历史记录多了以后找起来也费劲，得有搜索和标签功能。
 
-组件要支持动态更新。长时间操作显示已用时间和预估剩余时间。输出不破坏终端当前行。Go 标准库。
+history-mgr 用 Go 标准库实现，`go build -o history-demo ./cmd/history` 编译。它管理 CLI 工具的历史命令，数据存在 `~/.app-history/history.json`。每次命令执行后自动记录命令文本、参数、执行时间、退出码、工作目录。记录时自动去重——连续相同的命令只保留最后一条。
+
+查询方面，`history search <keyword>` 全文搜索命令文本，`history list` 按时间倒序展示，`--limit 20` 限制条数。组件支持动态更新——命令执行过程中可以追加标记，比如给命令打标签或加备注。长时间操作显示已用时间和预估剩余时间，输出不破坏终端当前行。
+
+`history stats` 输出统计：总命令数、最常用命令 Top10、平均执行间隔。会话分组——同一个终端会话的命令归为一组，`--session` 按组查看。时间范围过滤：`--since "2024-01-01"` `--until "2024-01-31"`。`history export --format json` 导出历史数据，`history clear --keep 100` 只保留最近 100 条。
+
+API：`h := history.New("~/.app-history")`、`h.Record(cmd, args, exitCode)`、`h.Search(keyword)`。并发安全写入。`go test ./...` 跑测试。

@@ -1,3 +1,17 @@
-用 Go 写个DNS配置管理工具。处理完成后自动归档。
+上次有人把内部域名 api.internal 指到了错误的 IP 地址，排查了两小时才发现是 /etc/hosts 被手动改了。改了 DNS 配置没人记录，改了 /etc/resolv.conf 也没人说一声——出了问题全靠猜。
 
-工具扫描指定目录，分析依赖关系并生成报告。报告包含直接依赖和间接依赖。Go 标准库实现，go build 通过。
+DNSRecord 实体有 ID、域名、记录类型（A/AAAA/CNAME/MX/TXT）、值、TTL、来源（hosts文件/手动录入）、状态（active/archived）。`record add --domain <name> --type <type> --value <value> [--ttl <n>]` 添加记录。`record list [--type <type>] [--status <status>]` 列出记录。
+
+扫描功能——`scan <dir>` 扫描指定目录下的 /etc/hosts 和 /etc/resolv.conf，提取 DNS 记录。分析依赖关系——如果某条 CNAME 指向的目标也有记录，生成依赖报告（直接和间接依赖链）。报告包含域名→目标→目标的依赖链。
+
+`diff` 对比当前配置和上次扫描的差异——新增、修改、删除的记录分别列出。处理完成后自动归档——把上次的 active 记录移到 archive.json，保留当前记录为 active。
+
+- `record add --domain <name> --type <type> --value <value>`
+- `record list [--type <type>]`
+- `scan <dir>`：扫描 DNS 配置文件
+- `report`：依赖关系报告
+- `diff`：变更对比
+- `archive`：归档老配置
+- `record update <id> --value <value>`：修改值
+
+Go 标准库实现，go build 通过。

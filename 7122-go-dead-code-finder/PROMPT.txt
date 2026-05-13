@@ -1,6 +1,5 @@
-用 Go 标准库写一个数据库工具相关的 CLI 工具。
-工具要能两个数据库 Schema 对比、差异报告 Markdown 生成、同步脚本 SQL 生成。
-数据库查询需要连接配置，连接怎么配不提。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+几百张表不知道哪些还在用，哪些是历史遗留。
+
+两个数据库的 schema 对比，差异生成 Markdown 报告，同步 SQL 脚本输出。数据库查询需要连接配置，连接怎么配不提你看着办。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+
+Go 标准库写个 CLI 工具，代码分文件组织：核心逻辑、IO 处理、命令行入口分开。go build 能过就行。

@@ -1,3 +1,17 @@
-做个日志轮转配置工具来管理开发环境。处理完成后自动归档。
+磁盘被日志撑满了两次才想起来配 logrotate。配了之后发现——有的日志按天轮转，有的按大小轮转，有的压根没人配过。轮转规则散落在 /etc/logrotate.d/ 下的好几个文件里，每个文件的配置风格都不一样。
 
-支持创建、删除、列出环境。环境之间完全隔离。环境配置导出为可共享的文件。Go 标准库。
+LogConfig 实体有 ID、日志文件路径（glob 模式支持）、轮转条件（daily/size-based/weekly）、最大文件数量、压缩选项（gzip/none）、postrotate 命令、所属环境标签、状态（active/archived）。`config add --pattern <glob> --rotate <condition> --keep <n> [--compress] [--postrotate <cmd>]` 添加轮转配置。
+
+环境管理——`env create <name>` 创建独立的配置环境，`env list` 列出所有环境，`env delete <name>` 删除。环境之间完全隔离——每个环境有独立的轮转规则集。`env switch <name>` 切换活跃环境。
+
+处理完成后自动归档——当轮转配置被新版本替代时，旧配置自动移到 archive 集合，主列表不再显示。
+
+`export <env>` 输出 logrotate 格式到 stdout，可以重定向到 /etc/logrotate.d/。`env export <name>` 打包整个环境配置为 JSON 文件，`env import <file>` 导入到其他机器。
+
+- `env create <name>` / `env list` / `env delete <name>` / `env switch <name>`
+- `config add --pattern <glob> --rotate <condition> --keep <n>`
+- `config list [--env <name>]`
+- `export <env>`：输出 logrotate 格式
+- `env export <name>` / `env import <file>`
+
+Go 标准库实现。

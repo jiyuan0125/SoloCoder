@@ -1,3 +1,15 @@
-写个私有仓库认证工具，自动化环境配置。引用了其他表的数据。
+新人入职第一天 go get 公司私有仓库，认证失败。帮他配 .gitconfig、配 .netrc、配 SSH key，折腾了两小时才好。每个人配法还不一样，下个人来还得重来一遍。
 
-支持检测系统中已安装的工具和版本。缺少的工具提供安装命令。版本过旧的工具提示升级。Go 标准库实现，go build 通过。
+AuthConfig 实体有 ID、仓库域名、认证方式（token/ssh/https-embedded）、用户名、token/密钥路径、状态（configured/untested/verified）。`add --host <domain> --method <type> --user <name> --token <value>` 添加认证配置。`test <host>` 验证配置是否有效——尝试 HTTP GET 该域名的一个已知仓库路径，成功标记 verified，失败输出错误原因。
+
+检测功能——`detect` 扫描系统环境：检查 .gitconfig 中是否有 insteadOf 配置、.netrc 中是否有对应条目、SSH config 中是否有该域名的配置、环境中是否有 GOPRIVATE 设置。每项检测输出状态（found/missing/invalid）。missing 的项提供安装/配置命令——比如"缺少 .netrc 条目，执行：echo 'machine git.example.com login user password token' >> ~/.netrc"。
+
+版本过旧的工具提示升级——`doctor` 检查 git、go、ssh 的版本，和已知最低要求版本对比。低于要求的输出升级命令。
+
+- `add --host <domain> --method <type> --user <name> --token <value>`
+- `list` / `test <host>` / `delete <host>`
+- `detect`：扫描系统配置
+- `doctor`：检查工具版本
+- `export --format json`：导出配置（脱敏）
+
+Go 标准库实现，go build 通过。

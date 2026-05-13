@@ -1,3 +1,17 @@
-项目多模块管理的配置散落在好几个地方，写个工具统一管理。修改主体后关联数据要同步。
+monorepo 里有十几个模块，每个模块自己的 go.mod、根目录的 go.work、CI 的构建脚本——改了一个地方其他地方没跟上，构建直接失败。上周升级了一个公共模块的版本，三个下游模块没同步，CI 红了一下午。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+Module 实体有路径、名称、版本、依赖列表、状态（active/deprecated）。ModuleRelation 有来源模块、目标模块、关系类型（direct-dependency/workspace-member/shared-dependency）。修改某个模块的版本时（`version <module> --set <v>`），自动检查所有依赖该模块的其他模块，输出受影响模块的清单。这就是"修改主体后关联数据同步"。
+
+配置合并——`merge --source <dir1> --source <dir2>` 扫描两个目录下的 go.mod 文件，合并依赖列表。同名依赖版本不同时，后面的覆盖前面的。数组类型（如 exclude、replace 列表）支持追加模式。对象类型深度合并。
+
+`report` 输出模块关系图（文本格式）——每个模块一行，下面缩进列出它的直接依赖。`check` 全局检查——循环依赖、版本冲突（多个模块依赖同一模块但版本不同）、孤立模块。
+
+- `module add --path <dir>`：注册模块
+- `module list` / `module deprecate <path>`
+- `version <module> --set <v>`：修改版本，触发关联同步
+- `merge --source <dir1> --source <dir2> [--append]`
+- `report`：模块关系图
+- `check`：全局检查
+- `summary`：模块统计
+
+Go 标准库实现。

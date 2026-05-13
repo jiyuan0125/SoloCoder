@@ -1,6 +1,11 @@
-现在用的工具不支持自定义规则，用 Go 写个证书密钥管理工具。
-工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证。
-数据转换需要映射模板，模板怎么定义不提。
-证书有申请→签发→生效→过期→续签的状态流转。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+CSR 的自定义参数在现有工具里加不了，只好自己搞。Go 写证书生成工具，X.509 证书生成、CSR 处理、证书链验证。
+
+证书生成：`acme gen-self --cn "dev.local" --san "DNS:dev.local,IP:127.0.0.1" --days 365 --output-dir ./certs/`。CA 签发：`acme ca-sign --ca-cert ca.pem --ca-key ca.key --csr request.csr --days 90`。证书带 AKI/SKI。
+
+CSR：`acme create-csr --cn "client" --org "MyOrg" --output request.csr`。`acme show-csr --input request.csr`。
+
+链验证：`acme verify --cert leaf.pem --intermediate intermediate.pem --root root.pem`。签名→有效期→Key Usage 逐级检查。
+
+数据转换需要映射模板？本工具只处理证书。证书状态 `applied`→`issued`→`active`→`expired`→`renewed`，但本工具不做状态管理，只做签发和验证。输出 JSON 到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

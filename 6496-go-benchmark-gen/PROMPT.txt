@@ -1,5 +1,3 @@
-DBA团队那边提了个需求，要一个基准测试生成，Go CLI。
-不同输入大小的 case。
-内存分配统计。
-多级命令：config get、config set、config list、config env switch。
-go build 能编译通过，不依赖第三方库。
+性能基线没有数据，优化了也说不出快了多少。生成不同输入大小的 benchmark case，内存分配统计也带上。多级命令：config get、config set、config list、config env switch。
+
+go build 能过，不依赖第三方库。

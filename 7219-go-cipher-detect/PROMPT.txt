@@ -1,6 +1,11 @@
-群里有人说缺加密解密工具工具，用 Go 搞一个。
-工具要能混合加密（自动选择算法）、加密配置管理、批量加密。
-密钥有生成→激活→轮换→归档→销毁的状态。
-消息处理后自动发确认，确认发送失败静默跳过。
-处理流程有预处理、主处理、后处理三个步骤。
-go build 能过，命令行工具能正常运行。
+有人在群里扔了个加密文件问"这是什么加密的"，没人答得出来。干脆写个 Go 命令工具，自动检测加密方式，混合加密、加密配置管理、批量加密。
+
+混合加密自动选择：数据 ≤ RSA-OAEP 上限用 RSA 直接加密，否则 AES-256-GCM + RSA 加密会话密钥。`cipher-d auto-encrypt --pubkey pub.pem --input data.bin`。文件头 1B 标识算法（0x01=RSA-only, 0x02=hybrid）。
+
+配置管理：`config init` → `.cipher-d.yaml`（默认 RSA 2048、AES-GCM）。`config show` 显示，`config set rsa.bits 4096` 修改。
+
+批量加密：`batch --input-dir ./secrets/ --pubkey pub.pem --workers 4`，每文件独立，成功输出 `.enc`，失败记 `errors.json`，汇总 JSON 数组。
+
+密钥生成：`keygen --bits 2048 --name prod-key`。密钥状态 `generated`→`active`→`rotating`→`archived`→`destroyed`，本工具只管生成和使用。输入格式自动检测。
+
+`go build` 能过，命令行工具能正常运行。

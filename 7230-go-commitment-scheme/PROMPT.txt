@@ -1,5 +1,11 @@
-朋友那边需要一个加密解密工具工具，Go 写命令行。
-工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
-扫描规则更新后历史扫描结果的严重级别要重新评估。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+去中心化应用需要一个承诺方案（Commitment Scheme）工具。Go 写命令行工具，密码哈希、密码强度检查、哈希验证，加上承诺方案的实现。
+
+承诺方案的工作方式：Alice 想向 Bob 承诺一个值但不透露内容。`commit create --value "secret_message" --output commitment.json`，生成随机 nonce（16 字节），计算 commitment = SHA256(nonce + value)，输出 JSON：`{"commitment": "hex...", "nonce": "hex...", "created_at": "..."}`。之后 Alice 公开 commitment 给 Bob。
+
+揭示阶段：`commit reveal --value "secret_message" --nonce "hex..." --commitment "hex..."`，重新计算 SHA256(nonce + value) 跟 commitment 比对。一致则验证通过。这保证了 Alice 不能在承诺后改变值。
+
+密码哈希（bcrypt/scrypt）用于给承诺值本身加一层保护。`commit hash --value "secret" --algo bcrypt --cost 12` 输出哈希串。密码强度检查在创建承诺时自动触发：检查值是否太弱（少于 8 字符、纯数字等）。`commit strength --value "xxx"` 输出评分。
+
+扫描规则更新后重新评估？本工具没有扫描规则。任务状态简洁：`waiting`→`running`→`success`/`failed`。输出格式默认 JSON。
+
+`go build` 能过，命令行工具能正常运行。

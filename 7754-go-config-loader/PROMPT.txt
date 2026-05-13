@@ -1,3 +1,11 @@
-做个配置文件加载工具处理文件操作。变更时自动通知下游。
+配置加载——几乎每个 CLI 工具都要做，但每次从头写一遍太无聊了。不同格式的配置文件、环境变量覆盖、默认值回退，这些逻辑到处重复。抽个通用组件出来。
 
-文件写入用原子操作（先写临时文件再 rename）。支持文件变更监听。并发安全。Go 标准库。
+config-loader 用 Go 标准库实现，`go build -o config-loader-demo ./cmd/config-loader` 编译。它处理配置文件的加载、解析和合并。
+
+支持的配置格式：JSON（默认）、YAML（手写简易解析器，不用第三方库）、TOML（手写基础解析）。配置文件搜索路径按优先级：`./config.json` > `~/.apprc.json` > `/etc/app/config.json`。找到第一个存在的就加载，也可以 `--config <path>` 指定。
+
+文件操作原子性保证——文件写入用临时文件+rename。支持文件变更监听，`Watch(path, callback)` 注册回调，文件修改时自动触发重新加载。并发安全——读操作用 RWMutex 保护，写操作用互斥锁。多个 goroutine 同时读配置不会阻塞。
+
+变更时自动通知下游——注册了 `OnChange(name string, fn func(old, new Value))` 回调的调用方在配置变更时收到通知。支持嵌套配置——`database.host`、`database.port` 用点号路径访问。
+
+配置合并策略：文件配置 + 环境变量覆盖 + 命令行参数覆盖。环境变量名映射规则：`DATABASE_HOST` → `database.host`。API 简洁：`loader := New(configDef)`、`loader.Load()`、`loader.GetString("database.host")`。`go test ./...` 跑测试。

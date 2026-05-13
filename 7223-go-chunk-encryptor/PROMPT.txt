@@ -1,4 +1,11 @@
-之前用 Python 做，这次换 Go 试试加密解密工具。
-工具要能HMAC 签名和验证、多算法支持（SHA256/SHA512）、流式签名。
-索引有初始化→构建中→可用→重建→下线的状态。
-go build 能过，命令行工具能正常运行。
+那个 Python HMAC 工具只能算 SHA256，多算法支持、流式签名全没有。换 Go 重写，HMAC 签名和验证、多算法支持、流式签名，做全了。
+
+HMAC 签名支持 SHA-256、SHA-384、SHA-512 三种算法。`chunk-enc sign --key-file secret.key --algo sha512 --input data.bin`。密钥文件支持二进制和十六进制两种格式，自动检测——如果内容全是 `[0-9a-fA-F]` 且长度是偶数就当十六进制解析，否则当原始字节。签名输出到 stdout，格式是纯十六进制字符串，不带换行（方便管道）。
+
+流式签名的重点是内存占用恒定。无论文件多大，内存只用一个 `hash.Hash` 实例的大小（几十字节）。`chunk-enc sign --key-file key.bin --algo sha256 --input /dev/stdin` 从管道读取也没问题。读取用 `bufio.Scanner` 或 `io.CopyBuffer`，缓冲区 64KB。
+
+验证功能：`chunk-enc verify --key-file secret.key --algo sha256 --input data.bin --expected <hex_hmac>`。用 `hmac.Equal` 做恒定时间比较。验证结果 JSON 输出：`{"match": true, "algo": "hmac-sha256", "file": "data.bin"}`。
+
+索引状态 `initializing`→`building`→`ready`→`rebuilding`→`offline`？这是搜索引擎的概念。本工具没有索引，只有签名和验证两个同步操作。输出格式用标准的 JSON。
+
+`go build` 能过，命令行工具能正常运行。

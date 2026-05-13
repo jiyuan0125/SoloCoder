@@ -1,5 +1,11 @@
-V2 版本月底上线，先把加密解密工具做了，Go 命令行。
-工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
-校验分三阶段：格式校验→规则校验→关联校验，前一步通过才能做下一步。
-错误情况怎么处理你自己定。
-go build 能过，命令行工具能正常运行。
+V2 版本月底要上线，密码哈希这块还没着落。Go 命令行工具，密码哈希（bcrypt/scrypt）、强度检查、哈希验证，三个功能先做出来。
+
+密码哈希用 bcrypt 和 scrypt 两种算法。`sig-verifier hash --password "xxx" --algo bcrypt --cost 12` 输出哈希串。bcrypt 的 cost 参数默认 12，范围 4-31，超出范围报错。scrypt 用 N=32768、r=8、p=1 的标准参数。哈希输出格式是标准模块字符串：`$2b$12$...`（bcrypt）或 `$scrypt$32768$8$1$...`（scrypt），方便其他语言对接。
+
+密码强度检查要对标 NIST SP 800-63B 的建议：最少 8 个字符，检查常见弱密码（top 1000 密码字典内置）、连续重复字符（如"aaa"）、键盘序列（如"qwerty"）。`sig-verifier strength --password "xxx"` 输出 JSON：`{"score": 4, "warnings": ["包含连续重复字符"], "pass": true}`。score 从 0 到 4，3 以上算通过。
+
+哈希验证：`sig-verifier verify --password "xxx" --hash "$2b$12$..."`，自动检测哈希算法前缀，选对应的验证逻辑。验证结果就是 true 或 false，输出到 stdout。
+
+校验流程分三阶段：格式校验先检查哈希串的格式是不是合法的模块字符串；规则校验检查 cost/N 参数是否在合理范围内；关联校验确保密码和哈希匹配。前一步通过才做下一步，节省计算量——格式都不对就没必要跑 bcrypt 了。
+
+`go build` 能过，命令行工具能正常运行。

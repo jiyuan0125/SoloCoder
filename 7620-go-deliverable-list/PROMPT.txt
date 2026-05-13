@@ -1,3 +1,17 @@
-Sprint 的交付物清单需要自动化，写个 CLI 工具。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+上个 Sprint 交付了什么、每个交付物的状态如何，没人说得清。需要一个交付物清单工具，自动追踪每个交付物的验收情况，主操作和辅助检查要共享同一份数据。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+Sprint 有 ID、名称、时间范围、状态（active/closed）。Deliverable 有 ID、标题、类型（document/code/infra/test）、关联 Sprint、负责人、验收状态（pending/submitted/accepted/rejected）、提交时间、验收人、验收备注。
+
+主操作是提交交付物（`submit <id> --by <name>`），这一步先调用辅助检查函数——验证该交付物所属 Sprint 是否还在 active 状态（已关闭的 Sprint 不允许提交）、负责人字段是否匹配提交人、标题是否为空。辅助检查函数和主操作读写同一个数据文件，检查不通过就不执行提交。
+
+验收操作（`accept <id> --reviewer <name> [--note <text>]`）把状态改为 accepted，rejected 同理（`reject <id> --reason <text> --reviewer <name>`）。rejected 的交付物可以重新提交，状态回到 pending 再到 submitted。
+
+- `sprint create --name <text> --start <date> --end <date>`
+- `deliverable add <sprint-id> --title <text> --type <type> --owner <name>`
+- `deliverable submit <id> --by <name>`：带辅助校验
+- `deliverable accept <id> --reviewer <name>` / `deliverable reject <id> --reason <text> --reviewer <name>`
+- `list <sprint-id> [--status <status>] [--type <type>]`
+- `sprint close <id>`：关闭 Sprint，未完成的交付物标记 carry-over
+- `report <sprint-id>`：完成率、各类型交付物数量、延期率
+
+Sprint 报告包含完成率、延期率。数据存 JSON 文件，Go 标准库实现。

@@ -1,5 +1,5 @@
-闲着没事想做一个JSON omitempty检查自己用，Go 写。
-布尔类型和数字类型不适合 omitempty 的地方。
-零值和缺失的语义区分。
+布尔类型加了 omitempty，false 值序列化后字段直接没了，前端拿到 undefined 报错。标出布尔类型和数字类型不适合 omitempty 的地方，零值和缺失的语义区分也要检查。
+
 支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-go build 能编译通过，不依赖第三方库。
+
+go build 能过，不依赖第三方库。

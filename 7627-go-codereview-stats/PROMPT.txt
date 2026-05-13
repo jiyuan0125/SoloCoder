@@ -1,3 +1,15 @@
-做个代码审查统计工具来跟踪技术决策。支持管道和重定向。
+代码审查数据散落在 GitLab 和邮件里，谁审了谁的代码、审查周期多长、有没有积压，完全看不出来。写个代码审查统计工具，把审查记录结构化，用数据驱动改进审查流程。
 
-每条记录有状态（提议、已接受、已废弃、已替代）。被替代的记录要关联到新记录。Go 标准库，go build 通过。
+每条审查记录有：ID、PR 标题、作者、审查人、提交时间、首次审查时间、审查完成时间、状态（pending/reviewed/approved/changes-requested）、审查意见数、变更文件数。另外有一层决策标记——每条审查可以关联一个技术决策状态（proposed/accepted/deprecated/superseded），表示这次审查是否涉及架构决策。如果涉及，用 `decide <review-id> --status <decision>` 标记。被 superseded 的审查记录要关联到新的记录 ID。
+
+统计功能分几个维度：`by-author` 按代码作者统计审查数量和平均等待时间，`by-reviewer` 按审查人统计审查量和平均响应时间，`summary` 输出整体数据——总 PR 数、平均审查周期、积压数（pending 状态超过 48 小时的）。输出格式是纯文本表格，支持管道和重定向。
+
+- `review add --pr <title> --author <name> --reviewer <name> --files <n> [--submitted <datetime>]`
+- `review first-look <id> --at <datetime>`：记录首次审查时间
+- `review complete <id> --status <status> --comments <n> --at <datetime>`
+- `decide <review-id> --status <decision>`：关联技术决策，superseded 要加 --by <new-id>
+- `stats by-author` / `stats by-reviewer` / `stats summary`
+- `list [--author <name>] [--reviewer <name>] [--status <status>]`
+- `export`：CSV 输出到 stdout，可重定向到文件
+
+数据存 JSON 文件。Go 标准库，go build 通过。

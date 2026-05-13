@@ -1,5 +1,4 @@
-闲着没事想做一个双向文件同步自己用，Go 写。
-两侧都有修改时标记冲突。
-冲突的文件保留两个版本。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-纯标准库实现，go run . 能跑。
+NAS 和本地开发机两边的代码老是对不上号，手动 rsync 每次都怕覆盖错。
+Go 写个双向文件同步：两侧都有修改时标记冲突，冲突文件保留两个版本让人选。
+命令要支持嵌套：project create、project build、project test run、project test coverage。
+纯标准库，go run . 能跑。

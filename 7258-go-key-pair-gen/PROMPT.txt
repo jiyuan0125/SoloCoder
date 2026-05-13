@@ -1,5 +1,11 @@
-新项目要求有证书密钥管理能力，用 Go 搞。
-工具要能TLS 配置文件生成、密码套件合规检查、协议版本建议。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-校验分语法检查、语义检查、引用检查三个阶段。
-go build 能过，命令行工具能正常运行。
+新项目的安全规范要求 TLS 配置必须标准化，不能像之前那样每个服务自己随便配。Go 工具，TLS 配置生成、密码套件合规检查、协议版本建议。
+
+配置生成：`keypairgen gen-config --cert server.pem --key server.key --min-version 1.2 --output tls.json`。RSA 推荐 ECDHE-RSA-AES256-GCM-SHA384，ECDSA 推荐 ECDHE-ECDSA-AES256-GCM-SHA384。输出 cert_file、key_file、min_version、cipher_suites、curve_preferences。
+
+合规检查：`check-ciphers --config tls.json --profile modern`。三种配置：modern（TLS 1.3 only）、intermediate（TLS 1.2+ AEAD only）、old（兼容旧客户端）。不满足的套件标红。
+
+版本建议：`suggest-version --cert server.pem`。ECDSA P-384 → TLS 1.3，RSA-2048 → TLS 1.2。
+
+校验三阶段：语法检查 JSON 格式、语义检查密码套件是否存在、引用检查证书文件是否存在。操作记录 JSONL 到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

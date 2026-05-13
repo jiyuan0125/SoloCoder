@@ -1,3 +1,17 @@
-做个磁盘配额管理的 CLI 工具。嵌套的资源路径。支持多套配置，按名称切换。
+开发环境磁盘空间又满了。df 一看，某个项目的日志目录占了 50GB，没人管。每个项目应该分配多少磁盘空间全凭自觉——自觉这东西靠不住。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+QuotaConfig 实体有 ID、项目名、路径、软限制（MB）、硬限制（MB）、当前使用量、状态（normal/warning/critical）。路径按嵌套结构组织——`quota show project/myapp/data` 显示 myapp 项目 data 目录的配额。`quota set project/myapp/data --soft <n> --hard <n>` 设置配额。
+
+多套配置支持——`profile create <name>` 创建配额配置集，`profile switch <name>` 切换活跃配置集。切换时验证完整性——检查配置集中所有路径是否存在，不存在的列出警告。配置文件兼容 JSON 格式。
+
+`scan` 扫描所有受管理目录的实际使用量，和配额对比。超过软限制的标黄，超过硬限制的标红并输出告警。`report` 输出所有项目的配额使用率排名。
+
+- `profile create <name>` / `profile switch <name>`
+- `quota set project/<name>/<dir> --soft <n> --hard <n>`
+- `quota show project/<name>/<dir>`
+- `scan`：扫描使用量
+- `report`：配额使用排名
+- `alert`：列出超限项目
+- `profile list`
+
+Go 标准库实现。

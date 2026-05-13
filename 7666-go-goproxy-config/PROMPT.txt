@@ -1,3 +1,18 @@
-模块代理配置涉及多个配置文件，手动管理容易遗漏。更新配置时自动刷新缓存，刷新也要读配置。
+GOPROXY 这东西在 shell profile 里设一份，Makefile 里又设一份，CI YAML 里还有一份。上周公司代理地址换了，改了 .bashrc 忘了改 CI，构建直接拉不下来包，卡了半小时。
 
-工具支持模板渲染，公共变量只维护一份。敏感信息支持从环境变量注入。Go 标准库实现，go build 通过。
+ProxyConfig 实体有 ID、环境名（local/ci/production）、代理服务器地址、直连模块列表（不走代理的私有模块）、校验和跳过列表（GONOSUMCHECK）、状态（active/disabled）。多个配置文件（~/.gitconfig 里的 insteadOf、环境变量 GOPROXY/GONOSUMCHECK/GONOSUMDB）由工具统一管理。
+
+`set <env> --proxy <url> [--direct <modules>] [--nosumcheck <modules>]` 设置某个环境的代理配置，设置时自动刷新内存缓存（缓存存着当前活跃环境的配置快照），刷新时重新从持久化文件读取确保一致。
+
+`current` 输出当前所有代理相关配置的值——GOPROXY、GONOSUMCHECK、GONOSUMDB、insteadOf 规则。`apply <env>` 把配置写入对应的配置文件（.bashrc 或 CI YAML），写入前输出将要变更的内容让用户确认。
+
+模板渲染——`template render --env <env>` 生成配置片段，公共变量（如公司代理地址）维护一份。敏感信息（如 .netrc 中的 token）从环境变量注入。
+
+- `set <env> --proxy <url> [--direct <modules>] [--nosumcheck <modules>]`
+- `current`：当前配置状态
+- `apply <env>`：写入配置文件
+- `list`：所有环境配置
+- `template render --env <env>`
+- `inject --var <name> --from-env <ENV_VAR>`
+
+Go 标准库实现，go build 通过。

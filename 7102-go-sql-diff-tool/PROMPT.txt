@@ -1,5 +1,5 @@
-调研了一圈，Go 做数据库工具比较合适。
-工具要能两个数据库 Schema 对比、差异报告 Markdown 生成、同步脚本 SQL 生成。
-扫描完自动提交报告，提交失败只记录。
-用 encoding/json 的 Decoder 流式处理。
-go build 能过，命令行工具能正常运行。
+手头五个数据库，每次对比 schema 都要手动导出再 diff，眼睛都看花了。
+
+两个库的 schema 要能逐字段对比，差异生成 Markdown 报告，同步用的 SQL 脚本也一起输出。扫完自动提交报告，提交失败只记日志别中断。用 encoding/json 的 Decoder 做流式处理，别把大 JSON 一次性加载到内存。
+
+Go 命令行工具，go build 通过即可。

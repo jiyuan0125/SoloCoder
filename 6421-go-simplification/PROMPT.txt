@@ -1,6 +1,5 @@
-我们数据组最近需要一套代码简化建议，用 Go 标准库做。
-可以简化的 if-else、冗余的类型转换。
-建议以 diff 格式展示。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-go build 能编译通过，不依赖第三方库。
+code review 时经常看到冗余的 if-else 和不必要的类型转换，一个个说太累。工具自动扫描可以简化的代码，建议以 diff 格式展示，直接贴到 review 评论里。
+
+命令格式是 tool action target options，比如 tool scan dir --depth 3。校验完成后自动更新统计信息，首次运行没有历史统计。
+
+go build 能过，不依赖第三方库。

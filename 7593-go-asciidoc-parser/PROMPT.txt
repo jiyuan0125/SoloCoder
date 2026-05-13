@@ -1,3 +1,7 @@
-做个AsciiDoc解析工具来处理 Markdown 文档。流程分多个阶段。
+AsciiDoc 比 Markdown 功能强不少——表格合并、条件包含、属性替换都能做，但解析也更复杂。流程分多个阶段：词法分析→语法分析→AST 构建→输出渲染。技术文档团队选了 AsciiDoc 但手头没有好用的解析工具，自己写一个。
 
-解析器要能处理嵌套列表、表格和代码块。输出保持语义等价但格式标准化。Go 标准库实现。
+`asciidoc-tool`，子命令 `parse`、`convert`、`check`。`asciidoc-tool parse` 读 AsciiDoc 文件，解析文档结构——标题（`= Title`）、段落、列表（有序/无序/标注）、表格（支持列格式和跨列）、代码块（`----` 或 `[source]`）、内联格式（粗体/斜体/等宽/链接）、属性引用（`{attr}`）、包含指令（`include::file[]`）。输出 AST 的 JSON 表示。
+
+`asciidoc-tool convert` 转 Markdown 或 HTML。嵌套列表、表格和代码块的解析要正确处理——列表里可以嵌套代码块，表格单元格里可以有内联格式。输出保持语义等价但格式标准化。`asciidoc-tool check` 检查格式——标题层级是否连续、表格语法是否正确、属性是否已定义。
+
+Go 标准库实现。`go build`。

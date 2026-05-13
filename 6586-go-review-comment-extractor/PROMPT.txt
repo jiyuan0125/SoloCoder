@@ -1,4 +1,4 @@
-试了几个现成方案都不满足需求，只能 Go 自己写从 Git log 中提取 code review 评论（如果是 gerrit 或特定格式）。
+Gerrit 的 review 评论嵌在 commit message 里，手工提取太痛苦。从 Git log 中按 gerrit 或特定格式解析出 code review 评论，按文件和 reviewer 汇总。
 
 从 Git log 中提取 code review 评论（如果是 gerrit 或特定格式）。按文件和 reviewer 汇总。
 任务有多个阶段，每个阶段完成后自动进入下一个。

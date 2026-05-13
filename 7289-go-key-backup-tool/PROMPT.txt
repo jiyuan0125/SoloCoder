@@ -1,6 +1,11 @@
-闲着没事写个证书密钥管理工具自己用，Go CLI。
-工具要能密钥轮换流程、旧密钥安全归档、无缝切换。
-消息 topic 支持多层通配符 a.b.c.# 的匹配。
-转换完后自动写入目标，目标不可用时不报错。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+周末抽空写个密钥轮换工具自己用，同时把密钥备份也做进去。Go CLI，密钥轮换流程、旧密钥安全归档、无缝切换。
+
+密钥轮换：`keybak rotate --key-id tls-key --output-dir ./keys/`。生成新的 AES-256 密钥并标记为 active 版本，旧版本自动降级为 archived。密钥库存 `~/.keybak/keys.json`，每条记录包含 `key_id`、`version`（自增整数）、`status`（active/archived/destroyed）、`created_at`、`archived_at`。同一个 key_id 可以有多个版本，但只有一个 active。
+
+旧密钥安全归档：`keybak archive --key-id tls-key --version 1 --output archive.enc`。归档前用当前 active 版本的密钥加密旧密钥内容，输出加密文件。加密用 AES-256-GCM，随机 nonce。归档后可选 `--destroy` 标志安全擦除原始记录——用 `crypto/rand` 生成随机数据覆写密钥字段后删除记录。
+
+无缝切换的关键设计：加密操作永远使用 active 版本密钥，解密操作根据密文头部记录的版本号自动选择对应密钥。调用方完全不需要知道密钥轮换的发生。密文头格式：4 字节 key_id 长度 + key_id + 4 字节版本号 + nonce + 密文 + tag。
+
+消息 topic 通配符？不适用。代码分文件：`rotation.go` 放轮换逻辑，`archive.go` 放归档和加密，`store.go` 放密钥库读写，`main.go` 放命令行入口。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,3 +1,19 @@
-写个回滚计划的 CLI 工具。嵌套的资源路径。每个任务有预估工时和实际工时两个字段。
+上线出了问题要回滚，结果没人记得之前的配置是什么——回滚方案停留在"口头说一下"的阶段。写个回滚计划 CLI 工具，每个回滚步骤有明确的执行路径和验证标准。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+回滚计划实体有 ID、关联的发布版本、创建时间、状态（draft/approved/executed）。RollbackStep 有 ID、计划 ID、步骤序号、描述、验证命令（执行后检查输出是否包含预期字符串）、预估工时、实际工时、状态（pending/done/failed）、嵌套的子步骤列表（JSON 数组，每个子步骤有描述和状态）。
+
+嵌套的资源路径体现在——`step show <plan-id>/<step-id>` 用斜杠分隔计划 ID 和步骤 ID。子步骤用 `substep add <plan-id>/<step-id> --desc <text>` 添加，显示时在父步骤下缩进一层。
+
+执行回滚时，步骤按序号顺序执行。`execute <plan-id>` 开始执行后，每个步骤的状态从 pending 变为 done 或 failed。failed 的步骤暂停后续执行，输出失败信息让操作者决定是重试还是跳过。
+
+偏差率统计——`deviation <plan-id>` 输出总预估工时和总实际工时的差异。`stats --period week|month` 统计历史回滚频率和耗时趋势。
+
+- `plan create --release <version> [--desc <text>]`
+- `plan approve <id>` / `plan execute <id>`
+- `step add <plan-id> --desc <text> --verify <cmd> --estimate <hours>`
+- `substep add <plan-id>/<step-id> --desc <text>`
+- `step done <plan-id>/<step-id> --actual <hours>` / `step fail <plan-id>/<step-id> --reason <text>`
+- `show <plan-id>`：完整回滚计划含执行状态
+- `deviation <plan-id>` / `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

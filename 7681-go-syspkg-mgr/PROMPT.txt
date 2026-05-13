@@ -1,3 +1,16 @@
-项目系统包管理器的配置散落在好几个地方，写个工具统一管理。更新配置时自动刷新缓存，刷新也要读配置。
+/etc/apt/ 下面 sources.list、preferences、pin 配置各有各的文件。上次加了一个 PPA 源，只在 sources.list 里加了，忘了 preferences 里的优先级配置，结果 apt install 装了错误的版本。一台机器一台机器地改，痛苦得要命。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+PkgSource 实体有 ID、名称、URL、发行版代号、组件列表、架构、优先级（APT pin）、状态（active/disabled）。配置存在当前目录的 JSON 文件里。`source add --name <text> --url <url> --distro <codename> --components <list>` 添加源。`source list` 显示所有源和状态。
+
+`merge --source <file1> --source <file2> --output <file>` 合并多个配置源——同名源后面的覆盖前面的，组件列表支持追加模式（用逗号连接），优先级数值取较高者。`export` 输出 sources.list 格式到 stdout，可以重定向到 /etc/apt/sources.list.d/。
+
+更新配置时（`source update <id> --url <new-url>`），自动刷新内存缓存（缓存存着当前有效的源列表），刷新时重新从 JSON 文件读取。`generate` 把当前配置生成完整的 APT 配置文件集——sources.list、preferences、apt.conf。
+
+- `source add --name <text> --url <url> --distro <codename> --components <list> [--priority <n>]`
+- `source list` / `source update <id> --url <url>`
+- `merge --source <file> --source <file> --output <file> [--append]`
+- `export`：输出 sources.list 格式
+- `generate`：生成完整配置文件集
+- `verify`：验证配置合法性
+
+Go 标准库实现。

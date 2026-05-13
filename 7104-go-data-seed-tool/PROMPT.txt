@@ -1,5 +1,7 @@
-给朋友的小业务写个数据库工具工具，Go CLI。
-工具要能CSV 数据导入 SQLite、导入冲突处理策略、导入进度显示。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-用 database/sql 的预处理语句。
-go build 能过，命令行工具能正常运行。
+测试环境要造数据，每次手工插 CSV 又慢又容易出错，给朋友的小业务也弄一个自动化工具。
+
+CSV 导入 SQLite，碰到冲突有处理策略（跳过、覆盖、报错），导入过程显示进度条。用 database/sql 的预处理语句，别拼 SQL。
+
+审计日志按 audits/{year}/{month}/{day}/{id} 的路径组织。
+
+Go CLI，go build 能过就行。

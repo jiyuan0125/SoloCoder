@@ -1,3 +1,16 @@
-用 Go 写个Git配置管理工具。命令和子命令的多级结构。
+Git 配置分布在三个地方——全局 .gitconfig、仓库级 .git/config、还有 .gitignore。改了全局的 user.email 忘了改某个仓库的，提交记录就串了。上个星期有人把公司的 GPG 签名配置加到了全局，结果个人项目也走签名了。
 
-工具扫描指定目录，分析依赖关系并生成报告。报告包含直接依赖和间接依赖。Go 标准库实现，go build 通过。
+命令结构是两级——顶级命令有 config、alias、ignore、hook。`config get <key>` 从所有层级（system/global/local）读取某个配置项，显示每层的值和最终生效值。`config set <key> <value> --level local|global` 在指定层级设置。`config list --level <level>` 列出该层所有配置。
+
+`alias add <name> <command>` 管理 Git 别名。`alias list` 和 `alias remove <name>`。`ignore add <pattern> --repo <path>` 往指定仓库的 .gitignore 追加规则。`ignore list --repo <path>` 显示当前忽略规则。`ignore global <pattern>` 管理全局 gitignore。
+
+`scan <dir>` 扫描指定目录下的所有 Git 仓库，分析依赖关系（submodule）并生成报告——报告包含每个仓库的 remote URL、当前分支、submodule 列表（直接依赖），以及 submodule 自身的 remote（间接依赖）。
+
+- `config get|set|list --level <level>`
+- `alias add|list|remove`
+- `ignore add|list --repo <path>` / `ignore global`
+- `hook list --repo <path>`：列出 Git hooks
+- `scan <dir>`：扫描仓库和依赖关系
+- `summary`：全局配置概览
+
+Go 标准库实现，go build 通过。

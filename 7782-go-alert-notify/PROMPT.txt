@@ -1,3 +1,11 @@
-做个告警通知组件，CLI 工具用的。多种子命令处理不同操作。
+上周线上出问题了，日志里一堆 ERROR 但没人看到——监控邮件被垃圾箱吞了。告警通知不能只靠邮件，得有命令行级别的通知机制，跑脚本、发 webhook、输出到文件，多种渠道并行。
 
-组件要支持动态更新。长时间操作显示已用时间和预估剩余时间。输出不破坏终端当前行。Go 标准库。
+alert-notify 用 Go 标准库实现，`go build -o alert-notify-demo ./cmd/alert-notify` 编译。它是个给 CLI 工具用的告警通知组件。
+
+告警模型：每条告警包含级别（INFO/WARN/ERROR/CRITICAL）、标题、详情、时间戳、来源。组件支持动态更新——告警规则可以在运行时添加修改，不需要重启。长时间操作显示已用时间和预估剩余时间。输出不破坏终端当前行。
+
+通知渠道通过配置文件 `.alert-notify.json` 定义。内置几种：终端输出（彩色到 stderr）、文件追加（JSON 格式，方便后续处理）、Webhook（POST JSON 到指定 URL）、执行命令（`--exec "sendmail ..."`）。多个渠道同时启用，某个失败不影响其他。
+
+告警去重：相同标题+级别的告警在 N 分钟内只发一次（默认 5 分钟），避免刷屏。频率阈值可配——超过阈值后提升告警级别（WARN→ERROR）。
+
+多种子命令处理不同操作：`alert send --level ERROR --title "disk full"` 发送告警；`alert history` 查看告警历史；`alert config` 管理通知渠道配置；`alert test` 发送测试告警验证渠道。`go test ./...` 跑测试。

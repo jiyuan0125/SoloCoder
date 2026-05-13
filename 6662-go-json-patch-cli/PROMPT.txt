@@ -1,6 +1,5 @@
-市面上的实现 JSON Patch（RFC 6902）操作工具要么太重要么收费，Go 标准库写一个。
+JSON Patch（RFC 6902）操作每次都手写 JSON 太痛苦，市面上的工具依赖太重。Go 标准库写一个：支持 add/remove/replace/move/copy/test，从文件读取 patch 定义应用到目标 JSON。
 
-实现 JSON Patch（RFC 6902）操作。支持 add/remove/replace/move/copy/test 操作。从文件读取 patch 定义并应用到目标 JSON。
 有可能一次导入上万条数据。
 命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。

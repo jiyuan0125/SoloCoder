@@ -1,3 +1,17 @@
-做个项目模板工具来跟踪技术决策。任务有多个审批步骤。
+每个新项目都要从头搭目录结构、写 README、配 CI，重复劳动太多。写个项目模板工具，把常用项目结构存成模板，一键生成新项目骨架，模板本身也需要审批和版本管理。
 
-每条记录有状态（提议、已接受、已废弃、已替代）。被替代的记录要关联到新记录。Go 标准库，go build 通过。
+Template 实体有 ID、名称、描述、类型（service/library/cli/webapp）、内容定义（目录结构 + 文件列表，JSON 格式）、状态（proposed/accepted/deprecated/superseded）、版本号、创建者。模板提交后需要审批——proposed 状态的模板经过 `approve <id> --by <name>` 才变成 accepted。deprecated 的模板不能用于创建项目。
+
+被替代的模板用 `supersede <id> --by <new-id>` 关联到新版本，old-id 自动标记 deprecated。新项目生成用 `generate --template <name> --output <dir>`，从 accepted 状态的模板创建目录和文件骨架。
+
+审批步骤分两步——先内容审批（`review <id> --type content --by <name>`），再安全审批（`review <id> --type security --by <name>`），两步通过后才 accepted。
+
+- `template add --name <text> --type <type> --structure <json> --creator <name>`：创建模板
+- `template list [--type <type>] [--status <status>]`
+- `review <id> --type content|security --by <name>`
+- `approve <id> --by <name>`：两步 review 通过后执行
+- `deprecate <id>` / `supersede <id> --by <new-id>`
+- `generate --template <name> --output <dir>`
+- `show <id>`：模板详情含审批状态和关联链
+
+Go 标准库，go build 通过。

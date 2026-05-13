@@ -1,3 +1,17 @@
-Sprint 的CI流水线状态需要自动化，写个 CLI 工具。修改主体后关联数据要同步。
+CI 流水线状态散落在 Jenkins/GitLab 界面上，每次 Sprint Review 都得打开好几个页面看。写个 CLI 工具统一记录 CI 构建状态，修改构建记录时关联的 Sprint 数据也要同步更新。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+Sprint 有 ID、名称、时间范围、状态（active/closed）。Build 有 ID、流水线名称、分支、构建号、状态（success/failed/running/cancelled）、触发时间、完成时间、触发人、关联 Sprint ID。录入构建数据后，如果构建状态是 failed，自动在关联 Sprint 的失败计数上加一。修改构建记录（比如从 failed 改为 success）时，Sprint 的失败计数也要同步调整——这就是"修改主体后关联数据同步"的含义。
+
+`status <sprint-id>` 输出该 Sprint 内所有构建的汇总——总构建数、成功率、平均构建时长、失败最多的流水线。失败超过 3 次的流水线高亮显示。
+
+Sprint 到期关闭时，未完成的 running 状态构建标记为 cancelled，输出 carry-over 提示。报告用 `report <sprint-id>` 输出完成率、延期率、CI 健康度（成功率 × 构建频率加权）。
+
+- `sprint create --name <text> --start <date> --end <date>`
+- `build add --pipeline <name> --branch <text> --number <n> --status <status> --trigger <name> --sprint <id> [--at <datetime>]`
+- `build update <id> --status <status>`：触发关联 Sprint 数据同步
+- `build list [--pipeline <name>] [--status <status>] [--sprint <id>]`
+- `status <sprint-id>`：Sprint 内构建汇总
+- `sprint close <id>`
+- `report <sprint-id>`
+
+数据存 JSON 文件。Go 标准库实现。

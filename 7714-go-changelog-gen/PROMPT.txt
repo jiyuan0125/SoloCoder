@@ -1,3 +1,9 @@
-用 Go 做个变更日志生成工具。状态按顺序流转。
+版本发布时手动写 changelog 太痛苦了——要么漏掉重要改动，要么描述模糊不清。从 Git 提交记录自动生成变更日志才是正道。
 
-支持多标签，一个条目可以有多个标签。按标签聚合显示。标签层级关系支持父子标签。Go 标准库实现。
+changelog-gen 用 Go 标准库实现，`go build -o changelog-gen ./cmd/changelog-gen` 编译。
+
+生成逻辑——调用 `git log` 命令获取提交记录（通过 `os/exec`），按 Conventional Commits 规范分类。`feat:` 归入新特性，`fix:` 归入修复，`refactor:` 归入重构，`docs:` 归入文档，`chore:` 归入杂项。未按规范写的提交归入"其他变更"。每个分类下按时间倒序列出提交摘要和作者。
+
+条目有多个标签，一条提交可能同时影响多个模块。按标签聚合显示时，同一提交可能出现在多个分类下。标签支持层级——比如 `feature/auth` 和 `feature/cache` 都属于 `feature`。版本号从最新的 git tag 提取，如果没有 tag 则标记为 "Unreleased"。
+
+状态流转：草稿→已发布→已归档。`generate` 命令生成草稿，用户编辑确认后 `publish` 发布到 `CHANGELOG.md`。输出格式支持 Markdown 和 JSON，`--format` 切换。`--since <tag>` 指定起始版本，`--until <tag>` 指定截止版本。输出到 stdout 或 `--output` 指定文件。纯 Go 标准库，`go test ./...` 跑单测。

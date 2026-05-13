@@ -1,5 +1,11 @@
-想用 Go 练手，做个加密解密工具工具。
-工具要能流式加密（CTR 模式）、管道式处理（stdin/stdout）、进度显示。
-安全扫描需要扫描策略，策略怎么配不提。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+AES-CTR 流式加密、stdin/stdout 管道、进度显示——刚好适合练手 Go 密码学编程。
+
+AES-256-CTR 流式加密：`pbkdf enc --key-file aes.key --input plaintext --output ciphertext`。密钥文件 32 字节二进制。加密时随机生成 16 字节 IV，放在密文最前面。CTR 模式不需要 padding，天然流式。管道形式：`cat data | pbkdf enc --key-file key.bin > data.enc`。
+
+管道处理要同时支持 stdin 输入和 stdout 输出。进度显示到 stderr：`[====>           ] 35% 85MB/s`。总大小只有输入是普通文件时才能获取，stdin 模式只显示已处理量和速度。
+
+安全扫描策略？纯本地工具，不做网络通信。任务状态 `idle`→`working`→`done`/`failed`，同步操作不需要排队。
+
+解密：`pbkdf dec --key-file aes.key --input ciphertext --output plaintext`。从密文前 16 字节读 IV，剩余部分送进 CTR 解密器。如果密钥不正确，CTR 模式不会报错——解密出来的是乱码。如果需要完整性验证，加 `--hmac` 标志，加密时在 IV 前面额外放一个 HMAC-SHA256（密文+IV 的认证标签）。
+
+`go build` 能过，命令行工具能正常运行。

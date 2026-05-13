@@ -1,5 +1,11 @@
-下周要演示，先出个能跑的加密解密工具工具，Go CLI。
-工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
-密钥轮换后用旧密钥加密的数据要能解密。
-扫描有排队→扫描中→分析中→报告生成→完成状态。
-go build 能过，命令行工具能正常运行。
+密钥管理方案下周要给安全委员会演示，密码哈希、密码强度检查、哈希验证、密钥轮换——Go CLI 工具。
+
+密码哈希：`rotator hash --password "xxx" --algo bcrypt --cost 12`。bcrypt cost 默认 12（4-31），scrypt N=32768 r=8 p=1。标准模块字符串输出。验证 `rotator verify --password "xxx" --hash "$2b$12$..."`，自动检测算法前缀。
+
+密钥轮换：旧密钥加密的数据必须还能解。方案是密钥版本管理。`rotator generate --name db-key` 生成 active 版本，`rotator rotate --name db-key` 生成新版本旧版本 deprecated。加密用 active，解密按密文头版本号找密钥。
+
+密码强度检查：最少 8 字符、top-1000 弱密码字典、不允许纯数字/纯字母、连续重复不超过 3 个。`rotator strength --password "xxx"` 输出 `{score, warnings, pass}`，score ≥3 通过。
+
+密钥状态 active/deprecated/revoked。revoked 不可加密不可解密，用于密钥泄露场景。
+
+`go build` 能过，命令行工具能正常运行。

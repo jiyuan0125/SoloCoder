@@ -1,3 +1,11 @@
-Sprint规划工具，要能处理多人协作的场景。状态按顺序流转。
+上个迭代结束开复盘会的时候，大家发现 Sprint 规划全靠拍脑袋——谁手里有多少活、这轮能塞多少任务，心里完全没数。我想用 CLI 工具把 Sprint 规划这件事管起来，至少让任务分配有据可查。
 
-每个人有任务负载上限。分配新任务时检查负责人当前负载。超载时要提示。Go 标准库实现。
+这是个命令行工具，数据用当前目录下的 JSON 文件存储。核心实体有两个：Sprint 和 Task。Sprint 有名称、开始日期、结束日期、状态（planning/active/completed），Task 有标题、描述、负责人、Story Point 预估值、状态（todo/doing/done/review）。Sprint 创建时必须指定时间范围，结束日期不能早于开始日期。
+
+关键的业务规则是每人每轮 Sprint 有任务负载上限。创建 Sprint 的时候设定团队配置，包含每个成员的名字和最大 Story Point 上限。往 Sprint 里分配任务时（`assign <task-id> <member>`），工具自动累加该成员当前 Sprint 内所有未完成任务的 Story Point，如果加上新任务超过了上限，就拒绝分配并打印当前负载和上限值。已完成（done）的任务不计入负载。
+
+任务状态流转必须按顺序走：todo → doing → review → done，不能跳步。比如一个 todo 状态的任务不能直接 `move 7 done`，必须先 doing 再 review 再 done。尝试非法流转时报错提示当前状态和允许的目标状态。
+
+命令包括：`sprint create <name> --start <date> --end <date>`、`sprint list`、`sprint close <id>`（关闭 Sprint，所有未完成任务标记为 carried-over）、`task add <sprint-id> --title <title> --points <n>`、`task assign <task-id> <member>`、`task move <task-id> <status>`、`report <sprint-id>`（输出成员负载分布、总完成率、未完成任务清单）。report 支持按成员过滤 `--member <name>`。
+
+Sprint 到期关闭时，自动检查有没有 doing 或 review 状态的任务，有的话给个提醒说这些任务将被标记为 carried-over，但仍然执行关闭。数据每次操作后立即写文件。Go 标准库实现，go build 能编译就行。

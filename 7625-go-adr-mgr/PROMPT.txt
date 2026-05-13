@@ -1,3 +1,18 @@
-用 Go 写个决策记录ADR的命令行工具。更新配置时自动刷新缓存，刷新也要读配置。
+架构决策散落在聊天记录和邮件里，半年后新人问"为什么用 gRPC 不用 REST"，没人答得上来。写个 ADR（Architecture Decision Record）CLI 工具，把决策过程结构化存下来。
 
-数据存本地 JSON 文件。支持添加、查询、更新、删除操作。查询支持按多种条件筛选。Go 标准库实现，go build 通过。
+ADR 实体有 ID、标题、状态（proposed/accepted/deprecated/superseded）、上下文描述、决策内容、后果分析、决策日期、决策参与者、关联的替代方案 ID。数据存本地 JSON 文件，支持完整的增删改查。
+
+添加 ADR 用 `add --title <text> --context <text> --decision <text> [--consequences <text>] [--participants <names>]`，初始状态 proposed。`accept <id>` 把状态改为 accepted，`deprecate <id>` 改为 deprecated。被替代的记录用 `supersede <id> --by <new-id>`，old-id 自动标记 superseded 并关联到 new-id，new-id 必须是 proposed 或 accepted 状态。
+
+查询支持多条件筛选：`list [--status <status>] [--participant <name>] [--from <date> --to <date>]`。`show <id>` 显示完整信息包含关联链（如果被替代了，显示替代者；如果是替代者，显示被替代者）。搜索用 `search <keyword>` 在标题、上下文、决策三个字段做子串匹配。
+
+配置方面，默认配置可以设置参与者的常用列表、存储目录等。`config set --default-participants <names>` 修改后自动刷新内存缓存，缓存存着最近查询的 ADR 列表，刷新时重新从配置文件读取。
+
+- `add --title <text> --context <text> --decision <text> [--consequences <text>]`
+- `accept <id>` / `deprecate <id>` / `supersede <id> --by <new-id>`
+- `list [--status <status>] [--participant <name>]`
+- `show <id>`：完整信息含关联链
+- `search <keyword>`
+- `config set --default-participants <names>`
+
+Go 标准库实现，go build 通过。

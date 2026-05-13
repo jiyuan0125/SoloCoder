@@ -1,5 +1,11 @@
-试了三个方案都不满足需求，Go 自己写加密解密工具工具。
-工具要能RSA 密钥对生成（2048/4096 位）、RSA 加密解密、密钥格式转换。
-规则修改后所有引用该规则的校验结果要重新计算。
-扫描多个目录要并行处理。
-go build 能过，命令行工具能正常运行。
+试了三个方案——OpenSSL 命令太长记不住、Python 库太慢、现有 Go 工具不支持 4096 位——自己写。RSA 密钥对生成（2048/4096 位）、RSA 加密解密、密钥格式转换。
+
+密钥生成：`homocalc keygen --bits 4096 --output-dir ./keys/`。私钥 PKCS8 PEM，公钥 PKCS1 PEM。4096 位生成可能要几秒，显示 spinner。完成后打印公钥指纹（SHA256 前 16 字符）用于快速确认。
+
+加密用 OAEP-SHA256 填充，不用 PKCS1v15（有安全漏洞）。2048 位密钥最多 190 字节，4096 位最多 446 字节，超出报错退出码 4。`encrypt --pubkey pub.pem --input msg.dat` 输出 Base64 到 stdout。解密 `decrypt --privkey priv.pem --input msg.dat.enc`。
+
+格式转换覆盖 PEM↔DER、PKCS1↔PKCS8。`convert --input key.pem --from pkcs1-pem --to pkcs8-der`。加密私钥转换需 `--password` 参数。自动检测输入格式：PEM 有 `-----BEGIN` 头，DER 没有。
+
+批量操作：输入目录递归扫描 `.pem` 文件，4 goroutine 并发转换，结果按文件名字典序汇总 JSON 数组。
+
+`go build` 能过，命令行工具能正常运行。

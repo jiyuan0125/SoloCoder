@@ -1,3 +1,9 @@
-SSH密钥格式转换的处理流程比较复杂，工具要支持管道模式。属性变更影响计算结果。
+SSH 密钥格式也挺混乱的——OpenSSH 格式、PEM 格式、PuTTY 的 PPK 格式，互相转换没有统一工具。`ssh-keygen` 只支持部分转换，PPK 格式根本不管。管道模式在这类工具里特别重要：`cat key.pem | ssh-tool convert --to openssh`。
 
-大文件分块处理，内存占用不超过 100MB。提供进度显示。处理中断后可以从断点继续。Go 标准库实现。
+写个 `ssh-tool`，子命令 `convert`、`info`、`fingerprint`。`ssh-tool convert` 做 OpenSSH↔PEM 的互转（`--from openssh --to pem` 或反过来）。`ssh-tool info` 显示密钥类型（ed25519/rsa/ecdsa）、密钥长度、公钥指纹、注释。`ssh-tool fingerprint` 计算密钥指纹，支持 MD5 和 SHA256 两种哈希（`--hash` 参数）。
+
+大文件不适用——密钥文件都很小。但管道模式要流畅，stdin/stdout 的读写不能有额外的 buffering 问题。属性变更影响计算结果——比如密钥格式从 PEM 换成 OpenSSH 后，指纹应该是一样的（指纹是密钥内容的哈希，跟格式无关），如果变了说明转换有问题。
+
+处理中断后不需要断点续传（文件太小），但要验证输出——convert 之后自动对比原始密钥的公钥指纹和转换后的公钥指纹，不一样就报错。
+
+Go 标准库，`crypto/ssh`、`crypto/ed25519`、`crypto/rsa`。`go build`。

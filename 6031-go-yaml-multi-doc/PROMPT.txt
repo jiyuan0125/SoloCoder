@@ -1,5 +1,2 @@
-现在用的批处理工具不支持递归目录，自己加太麻烦，不如 Go 写个YAML多文档处理。
-支持按索引选择文档、按条件过滤文档。
-选出的文档合并输出或单独保存。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-go build 能编译通过，不依赖第三方库。
+批处理工具不支持多文档 YAML，一个文件里用 --- 分隔的几段配置只能手动拆开处理。Go 写个 YAML 多文档处理器：按索引选择文档、按条件过滤，选出的文档合并输出或单独保存。
+命令行格式：cli import --source csv --target db --filter 'age>18'。go build 能编译通过，不依赖第三方库。

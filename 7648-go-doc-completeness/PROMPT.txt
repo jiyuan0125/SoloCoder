@@ -1,3 +1,18 @@
-最近项目多起来了，需要一个文档完成度工具。达到阈值时自动触发告警。
+新人入职第一周问了三个问题，每个问题的回答都是"你看看那个文档"——然后他找了半天没找到。文档有没有人写、写完了没有、有没有过时，完全没人检查。
 
-支持多项目，每个项目独立的任务列表。可以按负责人、优先级、状态筛选。Go 标准库实现。
+文档条目有 ID、标题、所属项目、文档类型（api/design/runbook/tutorial/config）、负责人、完成状态（not-started/draft/reviewed/published）、最后更新时间、必填字段检查结果（是否包含概述、是否包含示例、是否包含版本号）。创建条目时（`doc add --title <text> --project <name> --type <type> --owner <name>`），自动检查必填字段是否完整，不完整的在列表里标黄。
+
+每个项目有独立的任务列表（文档条目就是任务）。按项目统计完成率——`completeness <project>` 输出各类型的已完成比例和整体完成率。告警阈值可以按项目设定（`threshold <project> --value <percent>`），默认 80%。某个项目整体完成率低于阈值时，`status` 命令输出该项目名和当前完成率，附带红色警告。
+
+支持按负责人、优先级（文档也可以标记优先级 high/medium/low）、状态筛选——`list --project <name> --owner <name>`、`list --status draft`。
+
+- `project add <name>`
+- `project list`
+- `doc add --title <text> --project <name> --type <type> --owner <name> [--priority <level>]`
+- `doc update <id> --status <status>`：状态流转，not-started → draft → reviewed → published
+- `doc list [--project <name>] [--owner <name>] [--status <status>] [--priority <level>]`
+- `completeness <project>`：按类型统计完成率
+- `status`：所有项目的完成率和告警
+- `threshold <project> --value <percent>`
+
+数据存 JSON 文件。Go 标准库实现。

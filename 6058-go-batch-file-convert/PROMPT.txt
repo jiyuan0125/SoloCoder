@@ -1,5 +1,2 @@
-群里有人说缺一个批量文件编码转换，我寻思 Go 能搞。
-源编码和目标编码通过参数指定。
-二进制文件自动跳过。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-go build 能编译通过，不依赖第三方库。
+群里有人问批量文件编码转换怎么做，我寻思 Go 搞一个不难。源编码和目标编码通过参数指定，二进制文件自动跳过。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。go build 能编译通过，不依赖第三方库。

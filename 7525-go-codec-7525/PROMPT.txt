@@ -1,3 +1,9 @@
-之前用的那个 ASN.1编解码工具不支持自定义选项，自己写一个。任务有多个审批步骤。
+之前用的那个 ASN.1 编解码工具是 Python 写的，功能不少但没法自定义——想改个输出格式都费劲。审批流程走了一周才让改代码，太慢了。干脆自己用 Go 写一个。
 
-配置通过命令行参数传入。支持 verbose 模式输出详细信息。Go 标准库实现，go build 通过。
+工具叫 `asn1-tool`，两个子命令：`asn1-tool decode` 和 `asn1-tool encode`。decode 读入 DER 编码的二进制数据，逐层解析 ASN.1 的 Tag-Length-Value 结构，输出树形文本。每个节点显示 tag class（universal/application/context/private）、tag number、constructed/primitive 标志、长度、以及尝试解码的值（UTF8String、Integer、OID、BitString 等）。encode 反过来，从一个描述文件生成 DER 二进制。
+
+配置全部通过命令行参数传入：`--input` 指定输入文件、`--output` 指定输出文件、`--format` 选择输出格式（text/json/tree）。`--verbose` 模式输出详细信息——每个字节的十六进制值、解析过程、字段的偏移位置。非 verbose 模式只输出结构化的摘要。
+
+审批步骤体现在工具的 workflow 上：先 `--dry-run` 预览将要执行的操作，确认无误后再去掉 dry-run 真正执行。这比直接改完发现错了再回滚要好得多。
+
+Go 标准库，`encoding/asn1` 包。`go build` 通过。

@@ -1,5 +1,13 @@
-上次出了事故，现在要上文本处理转换工具，用 Go。
-工具要能JSON/YAML/TOML 格式互转、格式美化（缩进/排序）、Schema 验证。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
+上次出事故——手动改 JSON 配置文件把逗号漏了，服务启动失败。需要一个格式验证和互转工具。Go 实现。
+
+JSON/YAML/TOML 格式互转——三种格式之间任意转换。输入格式自动检测：JSON 检测 {}[] 开头，YAML 检测缩进+冒号，TOML 检测 [section]。输出格式通过 -format json|yaml|toml 指定。
+
+格式美化——统一缩进（2 或 4 空格可选，通过 -indent-size 参数），键名按字母排序（-sort-keys 开启），数组元素换行对齐。美化不改变数据内容，只改格式。
+
+Schema 验证——用户提供 JSON Schema 文件，转换完后验证输出是否符合。验证失败列出不符合的字段和原因。无 Schema 时跳过。
+
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}——按层级查找定位到具体字段，支持读取和修改。
+
+代码组织：格式转换引擎放 convert.go，Schema 验证放 validate.go，命令行入口放 main.go。
+
 go build 能过，命令行工具能正常运行。

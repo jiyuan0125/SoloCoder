@@ -1,3 +1,17 @@
-Cron任务管理涉及多个配置文件，手动管理容易遗漏。属性变更影响计算结果。
+Cron 任务到处都是——/etc/cron.d/ 里有系统的，用户的 crontab 里有个人的，还有 systemd timer 跑的定时任务。哪个在跑哪个停了？没人知道。上周一个数据同步任务挂了三天才被发现，就是因为它在某个不起眼的 crontab 里，没人检查。
 
-工具支持模板渲染，公共变量只维护一份。敏感信息支持从环境变量注入。Go 标准库实现，go build 通过。
+CronJob 实体有 ID、名称、时间表达式（cron 格式）、命令、用户、来源（crontab/systemd/cron.d）、描述、状态（active/paused/disabled）。修改时间表达式时（`schedule <id> --cron <expr>`），自动重算下次执行时间并输出，方便确认表达式是否正确。这就是"属性变更影响计算结果"。
+
+模板渲染——`template render --template <file> --output <file>` 从模板生成 crontab 文件。公共变量（如日志目录、用户名）维护一份，模板中用 {{.VAR}} 占位。敏感信息（如密码参数）支持从环境变量注入（`inject --var <name> --from-env <ENV>`）。
+
+`list` 显示所有任务及下次执行时间。`check` 对比工具管理的任务和系统中实际存在的 cron 任务，差异项列出。`export --format crontab` 输出标准 crontab 格式。
+
+- `job add --name <text> --cron <expr> --command <cmd> --user <name> [--source <type>]`
+- `job list [--source <type>] [--status <status>]`
+- `job pause <id>` / `job resume <id>`
+- `schedule <id> --cron <expr>`：修改并重算下次执行时间
+- `check`：系统一致性检查
+- `template render --template <file> --output <file>`
+- `export --format crontab`
+
+Go 标准库实现，go build 通过。

@@ -1,3 +1,9 @@
-写个表格数据嵌入的 CLI 工具。命令和子命令的多级结构。处理 Markdown 文件。
+Markdown 里嵌入表格数据——手动对齐列宽简直折磨人，稍微改个字就要重新调空格。这个工具自动格式化表格，还能从 CSV 和 JSON 数据源生成 Markdown 表格。
 
-工具检查文档中的链接是否有效。外部链接发 HTTP 请求验证，内部链接检查文件是否存在。Go 标准库。
+table-embed 用 Go 标准库实现，`go build -o table-embed ./cmd/table-embed` 编译。命令和子命令多级结构：根命令处理文件操作，子命令处理具体转换。
+
+解析 Markdown 中的表格语法（管道符分隔），也解析 CSV 和 JSON 数组。每张表有列定义（名称、对齐方式）和行数据。列宽根据所有单元格内容自动计算，支持 ANSI 颜色字符正确处理宽度。表格嵌入到 Markdown 文件时用 `<!-- table: name -->` 标记定位，更新时只替换标记内的内容。
+
+数据源转换：`from-csv <file>` 把 CSV 转成 Markdown 表格输出；`from-json <file>` 把 JSON 数组转表格，`--columns name,age` 指定列；`embed <md-file> --csv data.csv --name users` 把 CSV 数据嵌入到 Markdown 文件指定位置。链接检查也集成进来——表格中的链接字段发 HTTP 请求验证可达性，内部链接检查文件存在。
+
+输出格式默认终端表格，`--format markdown` 输出 Markdown 格式，`--format json` 输出 JSON。`fmt <file>` 格式化文件中所有表格使其对齐。并发处理多个文件时用 goroutine pool 控制并发数。`go test ./...` 跑测试。

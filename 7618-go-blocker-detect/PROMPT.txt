@@ -1,3 +1,18 @@
-用 Go 写个阻塞项检测的命令行工具。更新配置时自动刷新缓存，刷新也要读配置。
+上周有个任务被阻塞了三天没人发现，整个下游链条全卡住了。写个阻塞项检测 CLI 工具，能自动识别哪些任务卡住了、卡了多久、影响范围有多大。
 
-数据存本地 JSON 文件。支持添加、查询、更新、删除操作。查询支持按多种条件筛选。Go 标准库实现，go build 通过。
+任务实体有 ID、标题、状态（blocked/in-progress/completed）、阻塞原因（可选）、阻塞开始时间、负责人、依赖任务列表（ID 数组）。依赖关系在创建任务时指定（`--depends <id1,id2>`），依赖的任务不完成，当前任务不能标记 completed。标记 completed 时自动检查所有依赖，有未完成的报错。
+
+标记阻塞用 `block <id> --reason <text>`，此时自动记录阻塞开始时间。解除阻塞用 `unblock <id>`，计算阻塞持续时长并输出。`detect` 命令是核心功能——扫描所有 in-progress 但超过 48 小时没有状态变更的任务，以及所有 blocked 状态的任务，输出阻塞清单（任务 ID、标题、负责人、阻塞时长、阻塞原因）。按阻塞时长降序排列。
+
+配置支持自定义阈值（默认 48 小时），`config set --block-threshold <hours>` 修改后刷新内存缓存。缓存放的是上次扫描的快照，`detect --refresh` 强制重新扫描全量数据（而不是只看增量），刷新时也要重新读取配置。
+
+- `task add --title <text> --assignee <name> [--depends <id1,id2>]`
+- `task block <id> --reason <text>`
+- `task unblock <id>`
+- `task done <id>`：检查依赖
+- `detect [--refresh]`：扫描阻塞项
+- `list [--status <status>] [--assignee <name>]`
+- `config set --block-threshold <hours>`
+- `show <id>`：详情含阻塞历史
+
+数据存本地 JSON 文件。Go 标准库实现，go build 通过。

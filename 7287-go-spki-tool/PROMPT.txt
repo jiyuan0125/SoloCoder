@@ -1,6 +1,11 @@
-之前用脚本手动检查几百个字段太容易漏了扛不住了，换 Go 写证书密钥管理工具。
-工具要能证书链构建和验证、签名/有效期/用途检查、信任锚管理、证书吊销列表管理。
-认证需要用户角色，用户角色怎么创建不提。
-支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
-用 text/template 的自定义函数。
-go build 能过，命令行工具能正常运行。
+几百个证书逐个手动检查字段，漏了两个过期证书导致线上故障。Go 写证书链验证工具，链构建和验证、签名/有效期/用途检查、信任锚管理、CRL 管理。
+
+链构建：`spki build-chain --cert leaf.pem --intermediate-dir ./inters/ --output chain.pem`。按 Issuer + AKI 匹配。缺失时报错。
+
+链验证：`spki verify --chain chain.pem --trust-store ~/.spki/trust.json`。签名→有效期→Key Usage→CA:TRUE 逐级检查。
+
+信任锚：`spki trust add --root root-ca.pem --name "My Root"`。`trust list`、`trust remove`。信任锚 JSON。
+
+CRL：`spki crl-init`、`spki crl-revoke --serial 0xABC --reason keyCompromise`。
+
+认证需要用户角色？纯本地工具。多层规则路径？不需要。用 `text/template` 自定义函数生成报告。`go build` 能过，命令行工具能正常运行。

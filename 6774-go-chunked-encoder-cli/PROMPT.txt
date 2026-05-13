@@ -1,6 +1,5 @@
-新接了个项目，要求HTTP chunked transfer encoding 工具，用 Go 标准库写。
+调试流式接口的时候要手动处理 chunked 编码，很烦。写个工具把输入转成 chunked 格式，也能反过来把 chunked 内容还原，管道友好可以直接接上下游。
 
-HTTP chunked transfer encoding 工具。编码：把输入转为 chunked 格式。解码：还原 chunked 内容。管道友好。
 需要用到 filepath.Walk 等标准库功能。
 扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
 映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。

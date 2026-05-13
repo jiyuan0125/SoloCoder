@@ -1,3 +1,9 @@
-线上CBOR编解码的数据格式经常出问题，写个工具来检查和修复。任务有多个审批步骤。工具分三个子命令：check、convert、validate。
+传感器网关的 CBOR 数据格式又出问题了——有些固件版本生成的 CBOR 少了字段，有些多了未知 tag。CBOR 结构类似 JSON 但更紧凑，IoT 和 CoAP 协议里到处都是。排查需要能检查和修复 CBOR 数据的工具。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+`cbor-tool`，三个子命令：`check`、`convert`、`validate`。`cbor-tool check` 读 CBOR 二进制数据，逐项解析主要类型（unsigned integer、byte string、text string、array、map、tag、simple values/float），输出每个 item 的类型、长度、值和偏移位置。`cbor-tool convert` 做 CBOR↔JSON 互转。`cbor-tool validate` 用给定的 schema 验证 CBOR 数据结构。
+
+check 只读不修改。convert 才写文件。validate 在 convert 之后自动运行，确保输出合法。check 和 convert 有依赖：convert 之前先 check 格式，发现致命错误（比如截断的数据、不匹配的长度）就终止。
+
+空输入返回空结果。非标准格式（比如未注册的 tag 值、非规范的整数编码）check 时给警告但不停止。CBOR 的简单值 true/false/null 要正确映射到 JSON。
+
+Go 标准库。`go build`。

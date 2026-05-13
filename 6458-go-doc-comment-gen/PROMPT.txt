@@ -1,5 +1,3 @@
-帮我做一套文档注释生成，Go 命令行工具。
-根据函数名和参数推断注释内容。
-godoc 格式。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-纯标准库实现，go run . 能跑。
+三百个导出函数没写注释，godoc 页面一片空白。根据函数名和参数推断注释内容，输出 godoc 格式。支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+
+纯标准库，go run . 就行。

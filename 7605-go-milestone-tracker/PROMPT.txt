@@ -1,3 +1,7 @@
-老板要看项目的里程碑追踪数据，写个工具导出。任务有多个审批步骤。
+老板上周突然要看各项目的里程碑进度，我花了一下午从好几个地方拼数据。先建里程碑实体，再关联任务，最后手动算百分比——这活儿应该让工具干。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+实体设计是这样的：Milestone 有 ID、名称、目标日期、状态（planning/in_progress/completed/overdue）、所属项目名。Task 有 ID、标题、所属里程碑 ID、状态（pending/approved/in_progress/completed/rejected）、预估工时。每个 Task 完成前需要走审批流程——状态从 pending 到 approved 要标记审批人，approved 之后才能 in_progress，in_progress 之后 completed。`task approve <task-id> --approver <name>` 会检查当前状态是否是 pending，不是就报错。
+
+里程碑的状态由关联任务驱动。创建或更新任务时自动算完成率（已完成任务数 / 总任务数），达到 100% 自动标记 completed。目标日期过了但完成率不到 100%，标记为 overdue。
+
+命令有：`ms add <project> --name <text> --due <date>`、`ms list <project>`（显示完成率）、`task add <ms-id> --title <text> --hours <n>`、`task approve <task-id> --approver <name>`、`task complete <task-id>`、`report <project> --from <date> --to <date>`。report 支持两种导出格式：`--format csv` 输出 CSV（每行一个里程碑，列包括名称、状态、完成率、任务数、目标日期），`--format md` 输出 Markdown 表格。不指定格式默认终端输出。数据存当前目录 JSON 文件，Go 标准库实现，go build 通过。

@@ -1,4 +1,4 @@
-数据组那边提了个需求，要一个文本大小写转换，Go CLI。
+数据组那批文本大小写完全乱了，有的是全大写有的是驼峰有的是混合。Go CLI 做文本大小写转换。
 支持全大写、全小写、首字母大写、驼峰。
 中文不受影响。
 支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。

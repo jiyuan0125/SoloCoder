@@ -1,3 +1,19 @@
-写个自动化检查项的 CLI 工具。更新配置时自动刷新缓存，刷新也要读配置。每个任务有预估工时和实际工时两个字段。
+部署前的检查项每次都要手动过一遍，不是忘了备份数据库就是漏了通知运维。写个自动化检查项 CLI 工具，配置更新时自动刷新缓存，检查结果按周月统计趋势。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+检查项配置有 ID、名称、类别（pre-deploy/post-deploy/monitoring）、检查命令模板（一个字符串，实际执行时替换参数）、超时时间（秒）、是否关键（关键项失败则整体不通过）。执行结果记录有 ID、检查项 ID、执行时间、结果（pass/fail/skip）、耗时、输出信息、执行人。
+
+配置更新时（`config update <id> --timeout <n>` 或修改检查命令等），自动刷新内存中的缓存。缓存放的是检查项配置的完整快照，刷新时重新从 JSON 文件读取配置，确保运行时和持久化数据一致。
+
+`run` 命令执行所有 active 状态的检查项，按类别分组输出结果。关键项失败的用 ❌ 标记并给出失败原因。非关键项失败用 ⚠️ 标记但不影响整体结果。执行完毕后输出汇总——通过率、总耗时、失败项清单。
+
+任务维度：每个检查项可以关联改进任务（有预估工时和实际工时），用于跟踪为什么某个检查经常失败。`stats --period week|month` 输出每类检查项的通过率趋势和平均耗时。
+
+- `checklist init`：初始化
+- `item add --name <text> --category <type> --command <cmd> --timeout <n> [--critical]`
+- `item list [--category <type>]`
+- `config update <id> --timeout <n>` / `--command <cmd>` / `--critical true|false`
+- `run [--category <type>]`：执行检查
+- `result list --check <id>`：历史结果
+- `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

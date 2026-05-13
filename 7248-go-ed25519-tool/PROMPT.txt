@@ -1,5 +1,13 @@
-Go 标准库的archive/zip刚好能用，写个加密解密工具工具。
-工具要能流式加密（CTR 模式）、管道式处理（stdin/stdout）、进度显示。
-规则校验需要规则组，规则组怎么来的不提。
-文件操作要注意权限检查。
-go build 能过，命令行工具能正常运行。
+`archive/zip` 和 `crypto/aes` 的 API 刚好能满足需求，不用拉第三方包。流式加密工具，AES-CTR 流式加密、stdin/stdout 管道、进度显示。
+
+AES-256-CTR 流式加密：`ed25519 enc --key-file aes.key --input data.tar --output data.tar.enc`。16 字节随机 IV 放在密文前面。CTR 不需要 padding。管道：`cat data | ed25519 enc --key-file key.bin > data.enc`。
+
+stdin/stdout 处理：`--input -` 读 stdin，`--output -` 写 stdout。默认 stdin 到 stdout，方便串联。密钥文件 32 字节二进制或 64 字符 hex，自动检测。
+
+进度显示到 stderr（`--progress` 标志）：`[=====>    ] 23% 120MB/s ETA: 32s`。总大小只有普通文件能获取，stdin 模式只显示已处理量和速度。
+
+规则校验需要规则组？本工具没有规则引擎。文件权限：加密输出文件默认继承输入文件权限，如果是 stdin 则 0644。如果 key 文件权限高于 0600 打印警告。
+
+解密 `ed25519 dec --key-file aes.key --input data.tar.enc --output data.tar`。加 `--hmac` 标志时加密文件额外包含 HMAC-SHA256 认证标签，解密时验证完整性。
+
+`go build` 能过，命令行工具能正常运行。

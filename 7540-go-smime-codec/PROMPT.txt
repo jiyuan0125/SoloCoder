@@ -1,3 +1,9 @@
-做个S/MIME编解码的 CLI 工具。处理一个记录的时候需要自动更新关联的统计。输入支持文件路径和管道两种方式。
+金融和政务系统的 S/MIME 邮件调试起来特别痛苦——OpenSSL 的 smime 子命令碰到嵌套的 multipart 结构就不好使了，报错信息也看不懂。上周排查一个签名验证失败的工单，折腾了两个小时才发现是中间 MIME 层的 boundary 不匹配。
 
-工具要有 round-trip 能力——编码后的结果再解码要和原始数据一致。处理过程中遇到错误不要直接 panic，收集所有错误最后一起输出。Go 标准库实现。
+`smime-tool`，子命令 `parse` 和 `verify`。`smime-tool parse` 读 S/MIME 格式的邮件文件，解析外层 MIME 结构，识别 Content-Type 是 `application/pkcs7-mime`（加密）还是 `application/pkcs7-signature`（签名），提取签名数据和证书信息。输出每层的 MIME 类型、编码方式、边界字符串、以及 PKCS#7 结构的 ASN.1 摘要。输入支持文件路径和管道两种方式。
+
+`smime-tool verify` 用指定的 CA 证书（`--ca` 参数）验证签名，输出验证结果和签名证书的 Subject。Round-trip 验证：parse 解析出来的结构可以重新组装成 S/MIME 消息（`--repack`），组装后再 parse 对比结构是否一致。
+
+错误收集：不 panic，把 PKCS#7 解析错误、证书验证错误、MIME 解析错误全部收集到一个列表，最后统一输出。每个错误标注是在哪个 MIME 层（第几层嵌套）、什么操作（解析/验证/组装）出的错。
+
+Go 标准库实现。`go build`。

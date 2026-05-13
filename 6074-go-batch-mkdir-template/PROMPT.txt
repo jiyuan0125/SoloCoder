@@ -1,5 +1,2 @@
-最近在搞配置管理，需要一个批量目录创建，Go 实现。
-模板支持变量替换（日期、序号、名称）。
-已存在的目录跳过不报错。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-纯标准库实现，go run . 能跑。
+新项目要按固定模板建目录结构，每次手动 mkdir 太繁琐。Go 做批量目录创建：模板支持变量替换（日期、序号、名称），已存在的目录跳过不报错。
+支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。纯标准库实现，go run . 能跑。

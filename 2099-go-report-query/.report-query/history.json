@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "query": "SELECT id, name, age, department, salary, city, hire_date FROM `employees`",
+    "timestamp": "2026-05-13T23:01:38.102180415+08:00"
+  },
+  {
+    "id": 2,
+    "query": "SELECT name, age, salary FROM `employees` WHERE age \u003e 28 AND city = '北京'",
+    "timestamp": "2026-05-13T23:01:43.087533368+08:00"
+  },
+  {
+    "id": 3,
+    "query": "SELECT department, COUNT(*), AVG(salary) FROM `employees` GROUP BY department",
+    "timestamp": "2026-05-13T23:01:49.626756732+08:00"
+  },
+  {
+    "id": 4,
+    "query": "SELECT id, name, age, department, salary, city, hire_date FROM `employees` WHERE name LIKE '张%' OR name LIKE '李%'",
+    "timestamp": "2026-05-13T23:01:55.627059569+08:00"
+  },
+  {
+    "id": 5,
+    "query": "SELECT id, name, age, department, salary, city, hire_date FROM `employees` WHERE id = 999",
+    "timestamp": "2026-05-13T23:03:13.131121026+08:00"
+  },
+  {
+    "id": 6,
+    "query": "SELECT name, age, salary FROM `employees` WHERE city = '北京'",
+    "timestamp": "2026-05-13T23:03:20.16392608+08:00"
+  },
+  {
+    "id": 7,
+    "query": "SELECT name, age, salary FROM `employees` WHERE city = '北京'",
+    "timestamp": "2026-05-13T23:03:34.137606431+08:00"
+  }
+]

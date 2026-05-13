@@ -1,3 +1,17 @@
-Sprint 的关键路径分析需要自动化，写个 CLI 工具。操作前需要先有基础数据。
+老板问这轮 Sprint 哪个任务链最长，我指着白板画了半天也没画明白。关键路径分析这种事应该交给工具算——找出耗时最长的任务序列，那就是项目的瓶颈。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+工具以 Sprint 为核心。Sprint 有 ID、名称、开始日期、结束日期、状态（planning/active/closed）。Task 有 ID、标题、预估工时（小时）、实际工时、状态（todo/doing/done）、所属 Sprint、前置依赖（ID 列表）。创建 Sprint 后先往里加任务，再建立依赖关系——`depend <task-id> --on <predecessor-id>`，循环依赖检测在添加时执行，发现环路拒绝并输出路径。
+
+关键路径算法基于拓扑排序加动态规划。从没有前置依赖的任务出发，逐步计算每个任务的最早开始时间（所有前置完成的最大时间）、最早结束时间（最早开始 + 预估工时），最后找出最早结束时间最大的那条路径就是关键路径。操作前提是 Sprint 里至少有一个任务和一个依赖关系，否则提示先录入基础数据。
+
+Sprint 到期时（`sprint close <id>`），未完成的 done 以外的任务自动标记 carry-over，输出提示说这些任务将移到下一个 Sprint。报告用 `report <sprint-id>` 输出——包含总任务数、完成率、延期率（超过 Sprint 结束日期才完成的任务比例）、关键路径上的任务列表和总工时。
+
+- `sprint create --name <text> --start <date> --end <date>`
+- `task add <sprint-id> --title <text> --estimate <hours>`
+- `depend <task-id> --on <predecessor-id>`
+- `critical <sprint-id>`：输出关键路径
+- `sprint close <id>`
+- `report <sprint-id>`
+- `task done <id> --actual <hours>`：记录实际工时并标记完成
+
+数据存当前目录 JSON 文件。Go 标准库实现。

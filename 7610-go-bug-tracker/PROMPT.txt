@@ -1,3 +1,17 @@
-缺陷跟踪工具，要能处理多人协作的场景。多个关联的实体。
+我们线上问题追踪靠微信群接龙，上周出了个 P0 故障，处理完才发现两个月前有人报过类似的 Bug 但被淹没了。得有个正经的缺陷跟踪 CLI 工具，把 Bug 的生命周期管起来。
 
-每个人有任务负载上限。分配新任务时检查负责人当前负载。超载时要提示。Go 标准库实现。
+三个关联实体：Bug、Comment、Attachment 元信息。Bug 有 ID、标题、描述、严重级别（critical/major/minor/trivial）、优先级（p1/p2/p3/p4）、状态、负责人、报告人、创建时间、解决时间。Comment 有 ID、关联 Bug ID、内容、作者、时间。Attachment 元信息只有文件名和关联 Bug ID（不实际存文件）。
+
+Bug 状态流转：open → assigned → fixing → verified → closed，以及任何状态都可以转回 open（reopen）。流转时有约束——assigned 必须指定负责人（`assign <bug-id> --to <name>`），verified 需要验证人（`verify <bug-id> --by <name>`），closed 自动记录解决时间。
+
+人员负载检查是关键——每个人同时处于 open/assigned/fixing 状态的 Bug 不能超过上限（默认 5，可以在配置里调整）。分配时超过上限拒绝并提示当前负载。
+
+- `bug add --title <text> --severity <level> --priority <p> [--desc <text>] --reporter <name>`
+- `bug list [--severity <level>] [--priority <p>] [--assignee <name>] [--status <status>]`
+- `bug show <id>`：显示完整信息、所有评论、状态变更历史
+- `bug assign <id> --to <name>`：分配，触发负载检查
+- `bug move <id> <status>`：状态流转
+- `comment add <bug-id> --text <content> --author <name>`
+- `stats`：按严重级别统计各状态的 Bug 数量
+
+数据存当前目录 JSON 文件，每次操作立刻持久化。Go 标准库实现，go build 能编译就行。

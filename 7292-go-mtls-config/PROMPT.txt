@@ -1,4 +1,9 @@
-试了三个方案都不满足需求，Go 自己写证书密钥管理工具。
-工具要能证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
-任务有注册→排队→执行→成功/失败→重试的状态。
-go build 能过，命令行工具能正常运行。
+OpenSSL 命令参数记不住、Python cryptography 装不上、Web 工具传私钥不敢用——三条路都走不通。Go 自己写证书过期检查工具，批量检查目录下所有证书、报告 JSON 输出。
+
+批量证书检查：`mtls batch-check --input-dir ./certs/ --warn-days 30 --output report.json`。递归扫描目录下所有 `.pem` 文件，逐个解析 X.509 证书，检查有效期和剩余天数。用 4 个 goroutine 并行处理，结果按过期时间排序（最先过期的排前面）。报告 JSON 数组，每个元素包含 `file`（文件路径）、`subject`（CN）、`issuer`（颁发者 CN）、`not_before`、`not_after`、`days_remaining`、`warning`（布尔值，剩余天数不足阈值时为 true）、`san`（SAN 列表）。
+
+单证书检查：`mtls check --cert server.pem --warn-days 30` 显示完整证书信息加过期预警。或者用 `mtls check --endpoint https://example.com:443` 直接连接 TLS 服务获取证书信息，不需要本地证书文件。连接超时 5 秒。
+
+任务状态管理：每个检查任务有 `registered`→`queued`→`executing`→`success`/`failed` 四种状态。失败的任务（证书解析失败、文件读不到）记录原因，最多重试 1 次。汇总输出包含总数、成功数、失败数、警告数。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,3 +1,18 @@
-项目Secret管理的配置散落在好几个地方，写个工具统一管理。删除后要清理关联记录。
+项目要下线了，清理资源的时候发现 Secret 散落在七八个文件里——API Key、数据库密码、OAuth Token——删了一个忘了另一个，过期半年后某个 Key 还在生效。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+SecretGroup 实体有 ID、名称、项目名、描述。SecretEntry 有 ID、所属 Group ID、键名、值（加密存储，用简单的 base64 编码模拟）、环境标签（local/dev/prod）、创建时间。所有 Secret 按项目分组管理。
+
+合并功能——`merge --source <file1> --source <file2> --output <file>` 把多个 JSON 配置源合并成一个，后面的覆盖前面的同名键。支持数组追加（如果值是数组类型，用 --append 模式追加而非覆盖）和对象深度合并（嵌套对象递归合并而非整体替换）。
+
+删除 Group 时，自动检查并删除所有关联的 SecretEntry 记录。如果 Group 下有 prod 环境的 Secret，删除前要求确认（输出"即将删除 N 个生产环境 Secret，确认吗？"）。
+
+- `group add <name> --project <name> [--desc <text>]`
+- `group list [--project <name>]` / `group delete <name>`：级联清理
+- `secret add <group> --key <text> --value <text> --env <label>`
+- `secret list <group> [--env <label>]`：值显示为 ****
+- `secret show <group> <key> --env <label>`：显示明文
+- `secret delete <group> <key> --env <label>`
+- `merge --source <file> --source <file> --output <file> [--append]`
+- `export <group> --format env`：导出为 .env 格式
+
+Go 标准库实现。

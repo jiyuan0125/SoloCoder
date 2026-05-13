@@ -1,3 +1,12 @@
-Sprint 的燃尽图计算需要自动化，写个 CLI 工具。嵌套的资源路径。
+每次 Sprint 结束我都被追问"这轮燃尽图怎么样"，可实际没人画——手算太费劲，Jira 又太重。干脆自己写个 CLI 工具，给定一个 Sprint 的时间范围和每日剩余任务数据，算出理想燃尽线和实际燃尽线，最后把结果输出成 CSV 或者直接在终端打印表格。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+工具的核心输入是一组日志记录，每天每条记录包含日期、当天剩余的任务数（或 Story Point 总数）。数据存在当前目录的 JSON 文件里。Sprint 实体有 ID、名称、开始日期、结束日期、总工作量（任务数或 SP 数）。DailyLog 实体有日期、剩余工作量、备注。
+
+计算逻辑分两步——先算理想燃尽线：从 Sprint 开始的总工作量线性递减到 Sprint 结束时归零，按自然日计算每天的期望剩余值。再把用户录入的每日实际数据连成实际燃尽线。两条线一起输出时，差距大的日期高亮标注。
+
+1. `sprint create <name> --start <date> --end <date> --total <points>`：创建 Sprint 并自动生成理想燃尽数据
+2. `log add <sprint-id> --date <date> --remaining <n> --note <text>`：录入每日数据，日期不能超出 Sprint 范围，同一日期重复录入则覆盖
+3. `log list <sprint-id>`：列出该 Sprint 的所有日志，按日期排序
+4. `calc <sprint-id>`：计算并输出对比结果，包含每日的理想值和实际值，最后给个偏差总结
+
+Sprint 到期时如果还有未完成的任务（remaining > 0），calc 命令输出提示这些任务应该移到下一个 Sprint，并在日志中标记 carry-over。`report <sprint-id>` 生成文字版 Sprint 报告：总任务数、完成率、延期率、平均每日完成速度。报告可以导出为 Markdown 格式（`--format md`），内容包含文本表格。`export <sprint-id> --format csv` 把理想线和实际线输出成 CSV 文件，第一列日期，第二列理想值，第三列实际值。Go 标准库实现，go build 通过即可。

@@ -1,6 +1,11 @@
-现在用的工具不支持自定义规则，用 Go 写个证书密钥管理工具。
-工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证、PKCS12/PKCS8 格式转换。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-消息处理后自动发确认，确认发送失败静默跳过。
-文件可能有好几 GB 大，要能处理。
-go build 能过，命令行工具能正常运行。
+现有工具不支持 X.509 v3 自定义扩展，每次都得手动 OpenSSL 改。Go 写证书密钥管理工具，X.509 证书生成、CSR 处理、证书链验证、PKCS12/PKCS8 转换。
+
+证书生成：`certgen self-sign --cn "my-service" --days 365 --san "DNS:svc.example.com,IP:10.0.0.1"`。默认 RSA-2048 SHA-256。CA 签发：`certgen ca-sign --ca-cert ca.pem --ca-key ca.key --csr request.csr --days 90`。证书带 AKI 和 SKI 扩展。
+
+CSR：`certgen create-csr --cn "client" --org "MyOrg" --key-file client.key --output client.csr`。`certgen show-csr --input client.csr` 解析显示全部字段。
+
+链验证：`certgen verify-chain --cert leaf.pem --intermediate intermediate.pem --root root.pem`。逐级验证签名、有效期、Key Usage、Basic Constraints，失败报具体原因。
+
+格式转换：`certgen to-p12 --cert c.pem --key k.pem --ca ca.pem --output c.p12 --password "xxx"`。`certgen to-p8 --key rsa.pem --output k.p8`。操作记录输出 JSONL。
+
+`go build` 能过，命令行工具能正常运行。

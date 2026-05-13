@@ -1,6 +1,5 @@
-给朋友写个根据 OpenAPI spec 生成 mock server的小工具，Go 实现，跑在本地就行。
+前端等后端接口等了一周，给朋友写个小工具根据 OpenAPI spec 直接生成 mock server。每个接口返回示例数据，支持自定义响应和延迟，生成的 Go 代码直接跑。
 
-根据 OpenAPI spec 生成 mock server。每个接口返回示例数据。支持自定义响应数据和延迟。生成的 Go 代码可直接运行。
 执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。
 工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。

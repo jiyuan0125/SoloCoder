@@ -1,3 +1,16 @@
-写个SLA监控的 CLI 工具。写入数据后自动触发校验，校验也需要访问同一份数据。每个任务有预估工时和实际工时两个字段。
+跟客户签的合同里写着响应时间不超过 4 小时、解决时间不超过 24 小时，但到底有没有达标心里完全没数。写个 SLA 监控 CLI 工具，记录每个工单的时间数据，自动算达标率，写入后校验数据完整性。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+SLA 规则实体有 ID、名称、响应时间上限（小时）、解决时间上限（小时）、适用的工作日类型（weekday/all）。Ticket 实体有 ID、标题、客户名、创建时间、首次响应时间、解决时间、预估处理工时、实际处理工时、状态（open/responded/resolved）、关联的 SLA 规则 ID。
+
+写入 Ticket 数据时自动触发校验——检查首次响应时间是否在创建时间之后、解决时间是否在响应时间之后、实际工时是否非负。校验函数和写入操作读同一份数据文件，校验不通过输出错误但仍然保存数据（标记为 unvalidated）。
+
+达标率计算：对于已响应的工单，判断响应时间是否在 SLA 规则的上限内；对于已解决的工单，判断解决时间是否在上限内。`compliance` 命令输出响应达标率和解决达标率，以及偏差最大的工单列表。预估偏差率（实际工时 vs 预估工时）也一并计算。
+
+- `sla add --name <text> --response <hours> --resolution <hours>`
+- `ticket add --title <text> --customer <name> --sla <id> --estimate <hours> [--created <datetime>]`
+- `ticket respond <id> --at <datetime>`：记录首次响应
+- `ticket resolve <id> --at <datetime> --actual <hours>`
+- `compliance [--sla <id>] [--period week|month]`：达标率报告
+- `list [--status <status>] [--customer <name>]`
+
+数据存 JSON 文件。Go 标准库实现。

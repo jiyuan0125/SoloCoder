@@ -1,3 +1,9 @@
-线上TOML解析的数据格式经常出问题，写个工具来检查和修复。数据有生命周期。工具分三个子命令：check、convert、validate。
+TOML 格式看着简单，但嵌套表、数组表、内联表混在一起的时候，手工改很容易出错——线上的配置文件就因为这个出了两次事故。数据是有生命周期的：配置文件有创建时间、修改时间，有些键值对只在特定版本有效。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+写个 `toml-tool`，三个子命令：`check`、`convert`、`validate`。`toml-tool check` 读入 TOML 文件，验证语法合法性——表名不能重复定义、数组表的语法、日期时间格式、多行字符串的闭合。报错带行号。`toml-tool convert` 把 TOML 转成 JSON 或 YAML（`--format` 指定），转换时 TOML 的表变成 JSON 对象，数组表变成 JSON 数组，日期时间转成 ISO 8601 字符串。`toml-tool validate` 在 convert 之后跑一遍，确保输出格式合法。
+
+check 不会修改任何东西，只读。convert 才写文件。validate 读 convert 的输出。空输入（空文件）返回空对象 `{}`，不报错。非标准格式（比如键名没引号但有特殊字符）在 check 时警告。
+
+TOML 里的整数和浮点数类型要保留，不能全转成 JSON number 丢了精度信息。本地日期时间、偏移日期时间、本地日期这些 TOML 特有的类型要标注。
+
+Go 标准库。`go build`。

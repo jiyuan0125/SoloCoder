@@ -1,5 +1,4 @@
-现在用的工具不支持自定义规则，用 Go 写个数据校验验证工具。
-工具要能JSON Schema 验证支持 $ref 引用和自定义关键字、字段值域检查（数值范围/日期区间）、跨字段关联校验、XML Schema 验证支持命名空间。
+现有校验不支持跨格式，JSON 和 XML 要分别用不同工具。Go 写一个统一的：JSON Schema 验证支持 $ref 和自定义关键字，字段值域检查覆盖数值范围和日期区间，跨字段关联校验。XML Schema 命名空间也得能校。
 审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
 用 encoding/csv 的 Reader 和 Writer。
 go build 能过，命令行工具能正常运行。

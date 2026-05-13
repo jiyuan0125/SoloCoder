@@ -1,5 +1,11 @@
-V2 版本月底上线，先把加密解密工具做了，Go 命令行。
-工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
-密钥有生成→激活→轮换→归档→销毁的状态。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+V2 月底上线，密码哈希这块先做出来。Go 命令行，bcrypt/scrypt、密码强度检查、哈希验证。
+
+密码哈希：`argon hash --password "xxx" --algo bcrypt --cost 12`。bcrypt cost 4-31（超出报错）。scrypt N=32768 r=8 p=1。标准模块字符串输出。
+
+强度检查：最少 8 字符、top-1000 弱密码字典、不允许纯数字/字母/符号、连续重复不超过 3 个。`strength --password "xxx"` 输出 `{score, warnings, pass}`，score ≥3 通过。
+
+验证：`verify --password "xxx" --hash "$2b$12$..."` 自动检测算法前缀。
+
+密钥状态 generated→active→rotating→archived→destroyed。轮换指提高 cost 重新哈希：`rotate --hash "$2b$10$..." --new-cost 14`。输入文件编码 UTF-8/GBK 自动检测。
+
+`go build` 能过，命令行工具能正常运行。

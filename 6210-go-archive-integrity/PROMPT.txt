@@ -1,5 +1,3 @@
-试了三个现成方案都不满足自定义输出格式，只能 Go 自己写压缩包完整性校验。
-检测损坏的文件头、CRC 错误。
-列出校验结果。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-不用第三方包，go build 通过就行。
+用户上传的 zip 包时不时有损坏的，解压到一半报错太晚。Go 写一个压缩包完整性校验：文件头损坏、CRC 校验错误这些问题提前检测出来，校验结果逐项列出。
+
+CLI 要支持多种操作模式，格式参考 convert csv json、convert yaml toml、validate json、diff json 这种风格。不用第三方包，go build 通过就行。

@@ -1,3 +1,20 @@
-做个会议纪要管理工具，敏捷团队用的。多个关联的实体。
+每周的站会纪要散落在各个群里，上周讨论的结论这周没人记得。写个会议纪要管理工具，把会议内容、决议、行动项关联起来，敏捷团队用。
 
-任务有状态流转，从新建到关闭中间有好几个阶段。每个阶段可以添加备注。数据存 JSON。Go 标准库。
+三个关联实体：Meeting、Topic、ActionItem。Meeting 有 ID、标题、日期、参会人列表（逗号分隔）、状态（draft/published/archived）。Topic 有 ID、关联 Meeting ID、内容、讨论结果、排序序号。ActionItem 有 ID、关联 Meeting ID（通过 Topic 间接关联）、内容、负责人、截止日期、状态（open/in-progress/completed）。
+
+会议创建后是 draft 状态，可以往里添加 Topic（`topic add <meeting-id> --content <text> [--order <n>]`）和 ActionItem（`action add <meeting-id> --content <text> --who <name> --due <date>`）。Topic 的状态流转：raised → discussed → resolved。每个阶段可以添加备注（`note <topic-id> --text <content> [--author <name>]`）。
+
+发布会议纪要用 `publish <meeting-id>`，状态改为 published，这时候不能再编辑 Topic 内容（但 ActionItem 状态可以继续更新）。`archive <meeting-id>` 归档老纪要。
+
+查询方面：`meetings [--from <date> --to <date>]` 按时间范围筛选、`actions --who <name>` 查某人的所有行动项、`actions --status open` 查未完成的、`search <keyword>` 在 Topic 和 ActionItem 内容里模糊搜索。
+
+- `meeting create --title <text> --date <date> --attendees <names>`
+- `topic add <meeting-id> --content <text>`
+- `topic move <topic-id> <status>`：状态流转
+- `action add <meeting-id> --content <text> --who <name> --due <date>`
+- `action done <action-id>`
+- `note <topic-id> --text <content>`
+- `publish <meeting-id>` / `archive <meeting-id>`
+- `meetings` / `actions` / `search <keyword>`
+
+数据存 JSON 文件。Go 标准库实现。

@@ -1,5 +1,11 @@
-给朋友的小业务写个证书密钥管理工具，Go CLI。
-工具要能PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
-扫描完自动提交报告，提交失败只记录。
-处理用户输入的路径要注意别让目录遍历出问题。
-go build 能过，命令行工具能正常运行。
+搭内部 PKI，Go CLI 工具。PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
+
+PKCS12：`ca-setup to-p12 --cert client.pem --key client.key --ca-chain chain.pem --output client.p12 --password "changeit"`。反方向 `from-p12 --input client.p12 --password "changeit" --output-dir ./extracted/` 提取 PEM 证书和密钥。
+
+PKCS8：`to-pkcs8 --key rsa_key.pem --output rsa_pkcs8.pem`，PKCS1 转 PKCS8 标准化。加密私钥需 `--password`。
+
+PEM↔DER：`pem-to-der --input cert.pem --output cert.der`。`der-to-pem --input cert.der --type certificate --output cert.pem`。DER 需要 `--type`（certificate/private-key/csr/crl）。
+
+标准化：`normalize --input messy_key.pem --output standard.pem` 自动检测格式，统一输出 PKCS8 PEM。结果 JSON：`{input_format, output_format, input_size, output_size}`。路径安全 `filepath.Clean` 检查 `..`。
+
+`go build` 能过，命令行工具能正常运行。

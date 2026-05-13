@@ -1,3 +1,9 @@
-调研了一圈 Go 标准库里MessagePack编解码相关的包，写个工具整合一下。流程分多个阶段。
+为什么选 MessagePack？它比 JSON 紧凑得多，二进制编码还保持了自描述性。但调试的时候不太方便——不能直接 cat 看内容，不像 JSON 有 `jq` 那样的瑞士军刀。流程上分几个阶段：先读取输入，检测格式，然后根据子命令执行操作。
 
-工具支持 dry-run 模式先预览再执行。输出用颜色区分不同状态。Go 标准库，命令行工具。
+写个 `msgpack-tool`，子命令 `encode` 和 `decode`。`msgpack-tool encode` 把 JSON 输入转成 MessagePack 二进制，支持从文件或 stdin 读 JSON。`msgpack-tool decode` 把 MessagePack 二进制转回 JSON 格式输出。
+
+加一个 `--dry-run` 模式，encode 时只报告"将把 N 字节 JSON 编码为约 M 字节 MessagePack"，不真正执行。decode 的 dry-run 报告"将解码 N 字节 MessagePack，预计 M 个顶层元素"。dry-run 的输出用黄色，正常操作用绿色，错误用红色。检测 stdout 是否连接终端，管道时关闭颜色。
+
+encode 阶段先检查 JSON 合法性，decode 阶段检查 MessagePack 格式。两阶段都通过才真正执行。遇到格式不合法的数据报具体位置。
+
+Go 标准库。纯命令行工具，`go build`。

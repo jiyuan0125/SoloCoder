@@ -1,6 +1,5 @@
-调研了一圈，Go 做数据库 schema 导出最方便，编译出来直接跑。
+文档里缺数据库表结构说明，每次新人来都要问一遍。写个数据库 schema 导出工具，读 SQLite 的表结构，输出成 SQL DDL（可以直接用来建表）、JSON Schema（前端用）、或者 Markdown 文档（写进技术文档）。选哪种格式命令行参数指定。
 
-数据库 schema 导出。读取 SQLite 的表结构，输出为 SQL DDL、JSON Schema 或 Markdown 文档。
 执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
 系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。

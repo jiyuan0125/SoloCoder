@@ -1,5 +1,11 @@
-帮我做一个证书密钥管理工具，Go 命令行实现。
-工具要能CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理。
-转换主流程中调用子转换，子转换也需要读同一份映射表。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+CA 初始化和证书签发，Go 命令行。根证书 + 中间证书一起初始化，签发流程、CRL 管理都做进去。
+
+CA 初始化：`escrow init-ca --org "MyOrg" --country "CN" --root-years 20 --inter-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间证书 RSA-2048，CA:TRUE pathlen:0。
+
+证书签发：`escrow issue --csr request.csr --days 90 --output issued.pem`。签发前验证 CSR。Key Usage: digitalSignature + keyEncipherment，EKU: serverAuth。序列号 `crypto/rand` 生成。
+
+CRL 管理：`escrow crl-init --output ca.crl.pem`。`escrow crl-revoke --serial 0xABC --reason keyCompromise`。CRL PEM 格式，Next Update 7 天。
+
+转换主流程调用子转换？签发流程是多步骤：解析 CSR→生成序列号→签发→写入文件。每步错误独立捕获。输出格式默认 JSON 详情到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

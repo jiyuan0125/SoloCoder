@@ -1,3 +1,7 @@
-终端里Textile解析总对不齐，写个工具处理一下。主流程完成后自动生成关联记录。
+Ruby 的 Redmine 和一些博客系统用 Textile 标记——`*bold*`、`_italic_`、`"link(text":url)`、`h2. title`，语法和 Markdown 不一样但定位类似。终端里解析渲染时对不齐的问题跟 BBCode 差不多。主流程完成后自动生成关联记录——比如解析统计信息。
 
-表格列宽按内容自适应，表头和内容对齐。支持 Unicode 字符和 ANSI 转义序列。Go 标准库。
+`textile-tool`，子命令 `parse`、`render`、`convert`。`textile-tool parse` 读 Textile 文本，解析标题（`h1.` 到 `h6.`）、段落、粗体（`*text*`）、斜体（`_text_`）、删除线（`-text-`）、链接（`"text":url`）、图片（`!url!`）、列表（`*` 无序 `#` 有序）、代码块（`bc..` 或 `pre..`）、表格（`|cell|cell|`）、引用（`bq..`）、脚注（`[1]`）。输出 JSON。`textile-tool render` 渲染成终端格式。`textile-tool convert` 转 Markdown 或 HTML。
+
+表格列宽按内容自适应——Textile 表格的列宽要考虑 Unicode 字符。支持 Unicode 字符和 ANSI 转义序列。
+
+Go 标准库。`go build`。

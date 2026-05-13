@@ -1,5 +1,2 @@
-开源的现成方案功能太多但自定义模板没做好，Go 从零写批量文件行处理。
-可以只处理匹配模式的部分文件。
-处理前后文件行数对比输出。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-不用第三方包，go build 通过就行。
+开源的批量文本处理工具太重了，我们就需要一个简单的按模式处理文件行的功能。Go 从零写：可以只处理匹配模式的部分文件，处理前后文件行数对比输出。
+命令格式是 tool action target options，比如 tool scan dir --depth 3。不用第三方包，go build 通过就行。

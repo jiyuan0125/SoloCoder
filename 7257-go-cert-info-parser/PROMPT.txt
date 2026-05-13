@@ -1,6 +1,11 @@
-之前用脚本散落在各处没法统一扛不住了，换 Go 写证书密钥管理工具。
-工具要能证书链构建和验证、签名/有效期/用途检查、信任锚管理。
-转换主流程中调用子转换，子转换也需要读同一份映射表。
-字段映射变更后已有的转换任务结果要标记为过时。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+证书文件散落在十几个服务器上。Go 写证书链构建和验证工具，签名/有效期/用途检查、信任锚管理。
+
+链构建：`certinfo build-chain --cert leaf.pem --intermediate-dir ./intermediates/ --root root.pem --output chain.pem`。按 Issuer + AKI 匹配中间证书，缺失报错提示缺少哪个 Issuer。
+
+验证：`certinfo verify --chain chain.pem --root root.pem`。逐级检查签名、有效期、Key Usage（中间需 keyCertSign）、CA:TRUE。每级独立报告。
+
+信任锚管理：`certinfo trust-anchor add --root root-ca.pem --name "My Root CA"`。`trust-anchor list` 显示指纹和名称。`trust-anchor remove` 按名称删除。信任锚存 `~/.certinfo/trust-store.json`。
+
+代码分文件：`chain.go`、`verify.go`、`trust.go`、`main.go`。信任锚更新后已验证的链要重新验证。
+
+`go build` 能过，命令行工具能正常运行。

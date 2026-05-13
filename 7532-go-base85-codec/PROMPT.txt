@@ -1,3 +1,9 @@
-用 Go 写个Base85编解码的命令行工具。能从文件或 stdin 读取输入，输出到文件或 stdout。命令和子命令的多级结构。
+Base85（也叫 Ascii85）在 PostScript 和 PDF 文件里出现，Git 的二进制补丁也用这个编码。虽然不像 Base64 那么主流，但碰到 PostScript 文件需要解码的时候没有工具就很头疼。
 
-处理大文件时用流式，不要一次性全部加载到内存。遇到格式不合法的输入记录行号和原因后继续处理后面的数据。Go 标准库实现，go build 能过。
+用 Go 写个 `base85-tool`，两级命令结构：根命令 `base85-tool`，子命令 `encode` 和 `decode`。从文件或 stdin 读输入，输出到文件或 stdout。`--variant` 参数选择变体：`ascii85`（Adobe/PostScript 风格，`<~...~>` 包裹）、`z85`（ZeroMQ 风格）、`rfc1924`（RFC 1924 风格）。默认 ascii85。
+
+处理大文件流式——Base85 的编码单元是 4 字节→5 字符，用固定大小的 buffer 循环读写。不一次性加载到内存。碰到格式不合法的输入（解码时遇到不属于当前 variant 字符集的字符），记录位置（第几个字符、实际值、期望范围），然后跳过这个编码单元继续处理后面的。
+
+编码输出默认用 `<~...~>` 包裹（ascii85 模式），`--no-wrapper` 去掉包裹。行宽度用 `--wrap` 控制，默认 80 字符。
+
+Go 标准库实现，`encoding/ascii85` 包。`go build` 能过。

@@ -1,5 +1,5 @@
-朋友那边需要个Go接口检查，Go 命令行跑在本地就行。
-未实现的接口方法列出。
-接口方法签名变更检测。
+接口改了但实现没跟着改，编译时不一定报错，线上才炸。未实现的接口方法列出来，方法签名变更也检测一下。
+
 支持嵌套命令：project create、project build、project test run、project test coverage。
-go build 能编译通过，不依赖第三方库。
+
+go build 能过，不依赖第三方库。

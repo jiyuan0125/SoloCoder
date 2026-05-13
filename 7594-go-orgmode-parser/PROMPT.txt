@@ -1,3 +1,7 @@
-写个Org-mode解析工具。命令和子命令的多级结构。从文件读取内容，处理后输出到 stdout 或指定文件。
+Emacs 用户那一堆 `*.org` 文件，`*` 表示标题、`-` 表示列表、`#+BEGIN_SRC` 表示代码块——Org-mode 格式在外面不常见但 Emacs 圈子里是标配。写个解析工具把 Org-mode 文件转成 Markdown 或 HTML，两级命令结构——根命令 `org-tool`，子命令 `parse`、`convert`、`export`。
 
-遇到无法识别的字符编码要尝试常见编码自动检测。输出保持原始换行结构。Go 标准库。
+`org-tool parse` 读 Org-mode 文件，解析标题（`* Title`、`** Subtitle`）、段落、列表（有序 `-` 无序 `+` 描述 `::`）、代码块（`#+BEGIN_SRC ... #+END_SRC`）、表格（`| cell |`）、链接（`[[url][text]]`）、属性抽屉（`:PROPERTIES:`...`:END:`）、时间戳（`<2024-01-15 Mon>`）、TODO 状态。输出 JSON。`org-tool convert` 转 Markdown 或 HTML。`org-tool export` 导出其他格式——ICalendar（从 TODO 和时间戳生成）、纯文本（去掉标记）。
+
+从文件读取内容，处理后输出到 stdout 或 `--output` 指定文件。字符编码自动检测——UTF-8 优先，失败尝试 Latin-1。输出保持原始换行结构（LF 或 CRLF）。遇到不认识的 Org-mode 语法（比如 `#+KEYWORD:` 自定义属性）原样保留，不丢弃。
+
+Go 标准库。`go build`。

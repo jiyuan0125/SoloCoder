@@ -1,5 +1,2 @@
-写个 Go 命令行工具做JSON字段过滤。
-支持通配符和点号路径。
-数组中的每个对象都过滤同样的字段。
-多级命令：config get、config set、config list、config env switch。
-go build 能编译通过，不依赖第三方库。
+API 返回的 JSON 字段太多，传给前端之前要过滤掉敏感字段和不必要的内部字段。Go 命令行工具做 JSON 字段过滤：支持通配符和点号路径，数组中的每个对象都过滤同样的字段。
+多级命令：config get、config set、config list、config env switch。go build 能编译通过，不依赖第三方库。

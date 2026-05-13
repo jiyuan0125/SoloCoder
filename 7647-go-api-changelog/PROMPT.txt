@@ -1,3 +1,18 @@
-做个API变更日志工具来跟踪技术决策。多个关联的实体。
+对外提供的 API 每次改了什么只有开发自己知道，对接方一脸懵。写个 API 变更日志工具，把接口变更结构化记录下来，支持版本对比和状态流转。
 
-每条记录有状态（提议、已接受、已废弃、已替代）。被替代的记录要关联到新记录。Go 标准库，go build 通过。
+三个关联实体：APIEndpoint（路径 + 方法）、ChangeRecord（变更记录）、ImpactNote（影响分析）。APIEndpoint 有 ID、HTTP 方法、路径、描述、当前版本号。ChangeRecord 有 ID、关联 APIEndpoint ID、版本号、变更类型（added/modified/deprecated/removed/breaking）、描述、状态（proposed/accepted/deprecated/superseded）、变更日期、负责人。ImpactNote 有 ID、关联 ChangeRecord ID、影响面描述、受影响的客户端列表。
+
+变更记录有状态流转——proposed → accepted 是正常流程，deprecated 和 superseded 用于标记过时的变更。被替代的记录用 `supersede <id> --by <new-id>` 关联到新记录。`changes <endpoint-id>` 输出该接口的所有变更历史，按版本号排序。
+
+`diff <version1> <version2>` 输出两个版本间的所有变更，breaking 类型的变更高亮显示。`export` 输出完整变更日志，支持 Markdown 格式。
+
+- `endpoint add --method <method> --path <text> --desc <text>`
+- `endpoint list`
+- `change add <endpoint-id> --type <type> --desc <text> --who <name>`
+- `change accept <id>` / `change deprecate <id>` / `supersede <id> --by <new-id>`
+- `impact <change-id> --description <text> --clients <names>`
+- `changes <endpoint-id>`：变更历史
+- `diff <v1> <v2>`：版本对比
+- `export --format md`
+
+Go 标准库实现，go build 通过。

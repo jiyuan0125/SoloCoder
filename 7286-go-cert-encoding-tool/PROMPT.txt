@@ -1,5 +1,11 @@
-上次出了事故，现在要上证书密钥管理工具，用 Go。
-工具要能证书续签流程、自动续签定时检查、续签通知。
-扫描规则更新后历史扫描结果的严重级别要重新评估。
-用 database/sql 的预处理语句。
-go build 能过，命令行工具能正常运行。
+上周五线上证书过期 3 天才发现，服务挂了整整一上午。Go 写证书续签工具，续签流程、自动续签定时检查、续签通知。
+
+续签：`certenc renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365`。保留原 SAN 和扩展，新序列号。指纹对比输出。
+
+自动续签：`certenc auto-renew --watch-dir ./certs/ --ca-dir ./ca/ --threshold-days 30 --interval 3600`。每小时扫描。不足 30 天自动续签，备份原文件 `.bak`。
+
+通知：成功/失败都触发。stdout 默认，可选 `--notify-webhook URL`。JSON：`{event, cert, new_expiry, status, timestamp}`。
+
+扫描规则更新后重新评估？如果续签策略变更（比如 threshold-days 从 30 改为 60），之前未续签的证书要重新检查。`database/sql` 预处理语句？本工具数据存 JSON 文件，不用数据库。
+
+`go build` 能过，命令行工具能正常运行。

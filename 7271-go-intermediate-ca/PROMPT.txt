@@ -1,5 +1,13 @@
-我们需要一个证书密钥管理工具，用 Go 标准库写个命令行工具。
-工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证、PKCS12/PKCS8 格式转换。
-搜索索引时要更新引用计数，更新计数也要查索引完整性。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+现有的证书工具不支持 PKCS12 导出，X.509 v3 扩展字段也加不了，卡了两个需求了。Go 标准库写一个命令行工具，X.509 证书生成、CSR 处理、证书链验证、PKCS12/PKCS8 格式转换。
+
+X.509 证书生成：`interca gen-self --cn "dev.local" --san "DNS:dev.local,IP:127.0.0.1" --days 365`。CA 签发：`interca ca-sign --ca-cert ca.pem --ca-key ca.key --csr request.csr --days 90`。证书带 AKI 和 SKI 扩展。
+
+CSR 处理：`interca create-csr --cn "client" --org "MyOrg" --output request.csr`。密钥对同时生成。`interca show-csr --input request.csr` 解析显示。
+
+证书链验证：`interca verify --cert leaf.pem --intermediate intermediate.pem --root root.pem`。签名→有效期→Key Usage 逐级检查。
+
+PKCS12：`interca to-p12 --cert client.pem --key client.key --ca ca.pem --output client.p12`。`interca from-p12 --input client.p12 --output-dir ./out/`。PKCS8：`interca to-p8 --key rsa.pem`。
+
+搜索索引时更新引用计数？本工具不做索引。输入格式自动检测。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,3 +1,17 @@
-Go 项目的编辑器配置同步需要自动化。嵌套的资源路径。
+团队六个人，三个人 VS Code，两个人 GoLand，一个 Vim 老哥。格式化规则各管各的——VS Code 用 tab size 4，GoLand 用 2，Vim 那位根本不管。代码 review 的时候缩进风格乱七八糟，每次都要在评论里吵一轮。
 
-解析 go.mod 和 go.sum，提取所有依赖版本。对比最新版本列出可更新项。区分大版本和小版本更新。Go 标准库实现。
+EditorConfig 实体有编辑器类型（vscode/goland/vim）、配置文件路径（嵌套路径如 vscode/settings.json、goland/options/editor.xml）、配置项列表（键值对）。嵌套资源路径体现在——`show vscode/settings.json` 显示 VS Code 的配置，`edit vscode/launch.json --set KEY=VALUE` 修改。
+
+`init` 命令生成基础配置——从当前目录的 go.mod 解析模块信息，推断合理的编辑器配置（如 Go 版本、lint 工具路径、格式化命令）。`sync` 把公共配置（.editorconfig 文件中的规则）推送到所有已注册的编辑器配置文件中。比如 .editorconfig 里 indent_size=4，sync 时自动更新 VS Code 的 tabSize、GoLand 的 indent 设置、Vim 的 shiftwidth。
+
+`diff <editor>` 显示某个编辑器的当前配置和公共配置的差异。`export <editor>` 导出该编辑器的配置为独立文件，方便分享给同事。
+
+- `init`：从 go.mod 生成基础配置
+- `register <editor> --path <file>`：注册编辑器
+- `show <editor>/<config-file>`：查看配置
+- `edit <editor>/<config-file> --set KEY=VALUE`
+- `sync`：同步公共配置到所有编辑器
+- `diff <editor>` / `export <editor>`
+- `list`：已注册的编辑器
+
+Go 标准库实现。

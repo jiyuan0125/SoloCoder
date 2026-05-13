@@ -1,3 +1,20 @@
-Sprint 的事件复盘报告需要自动化，写个 CLI 工具。写入数据后自动触发校验，校验也需要访问同一份数据。
+线上出了事故，事后复盘全靠开会口述，PPT 写完就忘。写个事件复盘工具，把事故的时间线、影响面、根因、改进措施结构化记录，写入后自动校验完整性。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+工具以 Sprint 为组织单位——Sprint 有 ID、名称、时间范围、状态。Incident 有 ID、标题、严重级别（p1/p2/p3）、发生时间、恢复时间、影响面描述、根因分析、关联 Sprint ID。Timeline 有 ID、关联 Incident ID、时间戳、事件描述、类型（detection/response/fix/recovery）。
+
+复盘报告有状态（draft/complete）。创建事件时关联 Sprint（`incident add --sprint <id> --title <text> --severity <level> --occurred <datetime>`），写入操作完成后自动触发校验函数——检查必填字段是否齐全（标题、严重级别、发生时间），以及如果严重级别是 p1，是否已填写恢复时间。校验函数和写入操作共享同一份数据文件。校验不通过的输出缺失项清单。
+
+时间线按时间戳排序。`timeline add <incident-id> --at <datetime> --desc <text> --type <type>` 添加事件节点。`timeline show <incident-id>` 输出完整时间线，用缩进表示时间顺序。
+
+改进措施用 Action 实体——ID、关联 Incident ID、描述、负责人、截止日期、状态（open/completed）。
+
+- `sprint create --name <text> --start <date> --end <date>`
+- `incident add --sprint <id> --title <text> --severity <level> --occurred <datetime>`
+- `incident update <id> --impact <text>` / `--rootcause <text>` / `--resolved <datetime>`
+- `timeline add <incident-id> --at <datetime> --desc <text> --type <type>`
+- `action add <incident-id> --desc <text> --who <name> --due <date>`
+- `action done <action-id>`
+- `report <incident-id>`：输出完整复盘报告
+- `sprint report <sprint-id>`：Sprint 内所有事故汇总，含完成率和延期率
+
+数据存 JSON 文件。Go 标准库实现。

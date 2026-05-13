@@ -1,3 +1,9 @@
-用 Go 写个iCalendar解析生成的命令行工具。能从文件或 stdin 读取输入，输出到文件或 stdout。主流程完成后自动生成关联记录。
+日历系统之间互导数据全靠 iCalendar（.ics 文件）——会议邀请、日程安排、任务提醒都走这个格式。上周从 Google Calendar 导出一批日程导入 Outlook，有几个 .ics 文件的 RRULE 解析出错，重复事件全乱了。得有个工具能检查和转换 .ics 文件。从文件或 stdin 读输入，输出到文件或 stdout。
 
-处理大文件时用流式，不要一次性全部加载到内存。遇到格式不合法的输入记录行号和原因后继续处理后面的数据。Go 标准库实现，go build 能过。
+子命令 `parse`、`generate`、`filter`。`ical-tool parse` 读 .ics 文件，解析出 VCALENDAR 里的 VEVENT、VTODO、VJOURNAL 等组件，输出 JSON。每个组件的字段（DTSTART、DTEND、SUMMARY、DESCRIPTION、LOCATION、ATTENDEE、RRULE）独立解析，日期时间统一转成 RFC 3339 格式。`ical-tool generate` 从 JSON 输入生成 .ics 文件。`ical-tool filter` 按条件过滤事件——`--from` 和 `--to` 指定日期范围，`--summary-regex` 按标题过滤。
+
+处理大文件时流式——用 `bufio.Scanner` 逐行读取 iCal 的 `BEGIN:VCALENDAR`...`END:VCALENDAR` 结构，不把整个文件加载到内存。遇到格式不合法的行（比如不认识的属性名、日期格式不对）记录行号和原因，跳过这一行继续处理。
+
+主流程（parse）完成后自动生成关联记录——比如统计信息：事件总数、时间跨度、最常见的 RRULE 频率、参会者最多的前 10 个事件。这些统计输出到 stderr 或 JSON 的 `meta` 字段。
+
+Go 标准库实现，`go build` 能过。

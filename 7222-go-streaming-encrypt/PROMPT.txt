@@ -1,6 +1,11 @@
-调研了一圈，Go 做加密解密工具比较合适。
-工具要能RSA 密钥对生成（2048/4096 位）、RSA 加密解密、密钥格式转换。
-任务有注册→排队→执行→成功/失败→重试的状态。
-安全扫描需要扫描策略，策略怎么配不提。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+Go 加密工具找了一圈，要么不支持任务排队，要么密钥管理做得很糙。自己写一个，RSA 密钥对生成、加密解密、格式转换，密钥管理和任务排队都要做好。
+
+密钥生成：`stream-enc keygen --bits 4096 --output-dir ./keys/`。私钥 PKCS8 PEM，公钥 PKCS1 PEM。4096 位显示 spinner。输出公钥指纹用于确认。
+
+加密用 OAEP-SHA256，不用 PKCS1v15。2048 位最多 190 字节，4096 位最多 446 字节，超出报错。`encrypt --pubkey pub.pem --input msg.txt` 输出 Base64。解密 `decrypt --privkey priv.pem`。
+
+格式转换：PEM↔DER、PKCS1↔PKCS8。自动检测输入格式。加密私钥转换需 `--password`。
+
+任务排队：批量加密 FIFO 排队，最多 4 并发。任务 `registered`→`queued`→`executing`→`success`/`failed`，失败最多重试 2 次。状态输出到 stderr 不干扰 stdout。
+
+`go build` 能过，命令行工具能正常运行。

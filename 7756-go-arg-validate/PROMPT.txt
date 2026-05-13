@@ -1,3 +1,13 @@
-用 Go 写一个参数验证库，给自己其他项目用。嵌套的资源路径。
+参数校验这活烦不烦？每个命令行工具都要写一堆 if-else 检查参数格式——邮箱是不是合法的、端口是不是数字、文件路径存不存在。为什么不抽个通用验证库？
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+arg-validate 用 Go 标准库实现，`go build -o arg-validate-demo ./cmd/arg-validate` 编译。它给自己其他项目用的参数验证库。
+
+验证规则定义方式：链式调用。`Validate(arg).Required().Email()` 检查必填且是合法邮箱。内置验证器：Required、Min(n)/Max(n) 数值范围、MinLen(n)/MaxLen(n) 字符串长度、Regex(pattern) 正则匹配、OneOf(values...) 枚举值、FileExists 文件存在、Port 端口号范围。自定义验证器通过 `Custom(fn)` 传入。
+
+嵌套的资源路径验证——`user.profile.email` 这样的嵌套路径，逐级校验每层存在性和类型。验证失败时返回完整路径和错误信息，不只是说"验证失败"。
+
+库支持嵌套子命令的参数校验——每个子命令有独立的参数定义和验证规则集。帮助信息也按子命令分组，包含参数约束说明。未知子命令给出建议——最接近的命令名。
+
+错误收集策略：默认遇到第一个错误就返回。`CollectAll()` 模式收集所有验证错误一次性返回，方便一次性提示用户所有问题。错误信息可自定义模板。
+
+API 设计：`v := NewValidator()`、`v.Add("email", email).Required().Email()`、`errs := v.Validate()`。零依赖纯标准库。`go test ./...` 跑测试，`go build` 编译通过。

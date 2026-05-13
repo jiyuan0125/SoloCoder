@@ -1,3 +1,17 @@
-团队里Host文件管理不统一导致构建经常出问题，写个工具规范化。状态按顺序流转。
+开发环境靠 /etc/hosts 解析内部域名，但每个人的 hosts 文件内容都不一样。张三配了 10 条，李四只配了 5 条——服务调用时好时坏。有新人入职忘了配 hosts，接口联调直接废了一上午。
 
-工具能检测当前环境是否符合项目要求。不符合的列出差异项和修复建议。Go 标准库实现。
+HostEntry 实体有 ID、IP 地址、主机名（可多个）、来源（项目名）、状态（draft/active/deprecated）、创建时间。状态流转按顺序——draft → active → deprecated。draft 状态的条目不会出现在导出结果中，必须先 `activate <id>` 变成 active。deprecated 的条目保留在记录里但不导出。
+
+`check` 检测当前 /etc/hosts 是否符合项目要求——对比 active 状态的所有条目和实际 /etc/hosts 内容，缺少的条目标红并输出修复建议（"缺少 10.0.0.5 api.internal，追加到 /etc/hosts"）。多余的条目（在 /etc/hosts 中但不在管理范围内的）也列出来。
+
+`add --ip <addr> --hostnames <names> --project <name>` 创建条目，初始 draft。`export` 输出 hosts 文件格式到 stdout，可以重定向：`export >> /etc/hosts`。`import <file>` 从现有 /etc/hosts 文件导入条目，自动标记为 active。
+
+- `add --ip <addr> --hostnames <names> --project <name>`
+- `list [--status <status>] [--project <name>]`
+- `activate <id>`：draft → active
+- `deprecate <id>`：active → deprecated
+- `check`：环境一致性检测
+- `export`：输出 hosts 格式
+- `import <file>`
+
+Go 标准库实现。

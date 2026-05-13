@@ -1,3 +1,20 @@
-写个 Go 工具做风险登记册。属性变更影响计算结果。
+我们项目每次风险评估都在 PPT 里画个红黄绿格子，改了数据全得手动重算。写个风险登记册 CLI 工具，属性改了自动重算风险分数。
 
-支持标签和分类两种组织方式。搜索支持模糊匹配。数据变更记录操作历史。Go 标准库。
+每条风险记录有这些字段：ID、标题、描述、分类（technical/organizational/external/process）、标签（可多个）、可能性（1-5）、影响程度（1-5）、风险分数（自动计算 = 可能性 × 影响程度）、状态（open/mitigated/accepted/closed）、缓解措施（文本）、负责人、创建时间、最后更新时间。
+
+可能性或影响程度变更时，风险分数自动重算并更新记录。分数 1-6 为低风险、7-14 为中风险、15-25 为高风险，级别变了要输出提示。比如从 14 改到 15，提示"风险已升级为高风险"。
+
+搜索支持模糊匹配——`search <keyword>` 在标题、描述、缓解措施三个字段中做子串匹配，不区分大小写。按标签和分类过滤——`list --category <type>` 或 `list --tag <tag>`，两个条件可以组合。
+
+数据变更记录操作历史——每条风险有个 changelog 数组，记录每次变更的时间、操作类型（created/updated/mitigated/accepted/closed）、变更前后的值。`history <id>` 输出完整变更时间线。
+
+- `risk add --title <text> --category <type> --likelihood <n> --impact <n> [--tags t1,t2] [--desc <text>] [--owner <name>]`
+- `risk list [--category <type>] [--tag <tag>] [--status <status>]`
+- `risk update <id> --likelihood <n>` 或 `--impact <n>` 或其他字段，触发分数重算
+- `risk mitigate <id> --measure <text>`：记录缓解措施，状态改为 mitigated
+- `risk accept <id> --reason <text>`：接受风险
+- `risk close <id>`
+- `search <keyword>`：模糊搜索
+- `history <id>`：变更历史
+
+数据存当前目录 JSON 文件。Go 标准库实现。

@@ -1,3 +1,16 @@
-做个需求池管理工具，敏捷团队用的。多个关联的实体。
+需求文档散落在飞书文档、邮件、聊天记录里，做优先级排序的时候还得一个个翻。写个需求池管理的 CLI 工具，把需求统一归拢，加上状态流转和备注功能。
 
-任务有状态流转，从新建到关闭中间有好几个阶段。每个阶段可以添加备注。数据存 JSON。Go 标准库。
+需求实体有 ID、标题、详细描述、来源（document/email/chat/manual）、优先级（must-have/should-have/could-have/wont-have）、状态、负责人、创建时间。状态流转分五个阶段：new → triaged → scheduled → in-progress → closed。每个阶段切换时可以添加备注（`note <req-id> --text <content> [--author <name>]`），备注有时间戳和作者。退回操作也支持——triaged 可以退回 new，scheduled 可以退回 triaged，`rollback <req-id>` 执行。
+
+关联关系方面，需求之间可以有依赖。`depend <req-id> --on <other-id>` 表示当前需求依赖另一个需求。被依赖的需求没有 closed 之前，当前需求不能进入 scheduled 状态，否则报错提示依赖链。
+
+- `req add --title <text> --source <type> [--desc <text>] [--priority <level>]`：创建需求，初始 new
+- `req list [--status <status>] [--priority <level>] [--source <type>]`：列表支持多种过滤条件
+- `req show <id>`：显示详情、所有备注、状态变更历史、依赖关系
+- `req move <id> <status>`：状态流转，校验合法性
+- `req rollback <id>`：退回上一状态
+- `note <req-id> --text <content> [--author <name>]`
+- `depend <req-id> --on <other-id>`
+- `stats`：按状态和优先级分组统计
+
+数据存当前目录 JSON 文件，备注和依赖关系内嵌在需求对象里。Go 标准库实现，不引入第三方框架。

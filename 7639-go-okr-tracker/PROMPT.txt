@@ -1,3 +1,18 @@
-写个OKR追踪的 CLI 工具。多种子命令处理不同操作。每个任务有预估工时和实际工时两个字段。
+OKR 写了没人跟，季度末才发现一个 Key Result 都没完成。写个 OKR 追踪 CLI 工具，用多个子命令管理目标、关键结果和进度，确保过程可追踪。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+实体分三层。Objective 有 ID、标题、季度标签（如 2025-Q1）、状态（draft/active/completed/missed）。KeyResult 有 ID、关联 Objective ID、标题、目标值、当前值、单位（percent/count/amount）、权重（所有 KR 权重之和应为 100%）、状态。CheckIn 有 ID、关联 KR ID、更新值、备注、日期。
+
+KR 的完成率 = 当前值 / 目标值。Objective 的完成率 = Σ(KR完成率 × 权重)。每次 CheckIn 写入后自动重算关联 KR 和 Objective 的完成率，输出更新后的百分比。
+
+任务有预估工时和实际工时两个字段——每个 KR 可以关联多个 Task，KR 的进度也可以由 Task 完成情况驱动。`stats --period week|month` 按周期统计 OKR 推进速度（每周完成率增长了多少）。
+
+- `obj add --title <text> --quarter <label>`
+- `obj list [--quarter <label>] [--status <status>]`
+- `kr add <obj-id> --title <text> --target <n> --unit <type> --weight <n>`
+- `kr checkin <kr-id> --value <n> --note <text>`：更新进度
+- `task add <kr-id> --title <text> --estimate <hours>`
+- `task done <id> --actual <hours>`
+- `progress <obj-id>`：查看 Objective 及所有 KR 的完成率
+- `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

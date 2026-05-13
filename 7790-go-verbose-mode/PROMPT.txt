@@ -1,3 +1,9 @@
-用 Go 写一个verbose模式库，给自己其他项目用。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+上周排查一个诡异 bug，正常运行时日志太简洁看不出问题，加了 print 才找到原因。如果有 verbose 模式，调试时开一下就能看详细信息，不用到处加 print 再删。
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+verbose-mode 用 Go 标准库实现，`go build -o verbose-demo ./cmd/verbose` 编译。它给自己其他项目用的 verbose 控制库。`--verbose` 或 `-v` 启用，可以叠加：`-v` 基础详细，`-vv` 更详细，`-vvv` 最详细（等同于 debug 级别），`VERBOSE=2` 环境变量方式。主操作执行时调用辅助检查，辅助检查也读同一份 verbose 级别数据来决定输出内容。
+
+Level 1 输出基本进度信息，每个主要步骤的开始和完成。Level 2 输出中间数据，比如解析结果、转换前后的值。Level 3 输出详细调试信息，函数调用参数、内部状态变化。不同级别的输出用不同颜色区分，默认输出到 stderr 不影响 stdout。可以指定 verbose 输出文件 `--verbose-file debug.log`，时间戳可选 `--verbose-timestamp`。格式 `[DEBUG] [subsys] message`。
+
+库支持嵌套子命令，每个子命令有独立的帮助信息说明 verbose 模式的输出内容，未知子命令给出最接近的建议。
+
+API：`v := verbose.New(1)`、`v.Info("step done")`、`v.Debug("value: %v", val)`、`v.Trace("internal state: %+v", state)`。`go test ./...` 跑测试，`go build` 编译通过。

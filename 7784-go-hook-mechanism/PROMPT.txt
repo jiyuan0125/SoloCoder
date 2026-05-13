@@ -1,3 +1,13 @@
-用 Go 写一个Hook机制库，给自己其他项目用。数据有生命周期。
+Hook 机制——在程序执行的关键节点插入自定义逻辑，比如操作前校验、操作后通知、失败时回滚。不侵入主流程代码，通过注册钩子函数实现扩展。
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+hook-mechanism 用 Go 标准库实现，`go build -o hook-demo ./cmd/hook` 编译。它给自己其他项目用的钩子机制库。
+
+Hook 定义：每个 hook 有名称、触发点（Before/After/OnError）、优先级、回调函数。数据有生命周期——hook 注册后可以设置过期时间，过期自动移除。库支持嵌套子命令——每个子命令可以有独立的 hook 注册表。帮助信息按子命令分组。未知子命令给出建议。
+
+执行顺序：同一触发点的多个 hook 按优先级排序（数字小的先执行）。Before hook 返回 error 时中止主操作。After hook 无论主操作成功失败都执行。OnError hook 只在主操作失败时执行，接收错误对象可以做日志或通知。
+
+Hook 链式执行：前一个 hook 的输出作为下一个 hook 的输入，类似中间件链。任何一个 hook 可以通过返回 `ErrAbort` 中断链。
+
+上下文传递：hook 和主操作共享 `Context` 对象。可以存取任意键值对，用于在 hook 间传递数据。
+
+API：`h := hook.New()`、`h.Before("validate", func(ctx) error { ... })`、`h.After("log", func(ctx) { ... })`、`h.Execute(mainFn)`。零依赖纯标准库。`go test ./...` 跑测试，`go build` 编译通过。

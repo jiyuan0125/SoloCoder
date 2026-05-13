@@ -1,3 +1,15 @@
-写个项目健康度的 CLI 工具。多种子命令处理不同操作。每个任务有预估工时和实际工时两个字段。
+项目到底健不健康不能拍脑袋说，得有数据支撑。写个项目健康度 CLI 工具，用多个子命令处理不同维度的评估，每个任务有预估和实际工时来算偏差。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+工具以项目为核心实体，包含名称、团队人数、开始日期、状态。每个项目下有两类数据：Task（任务，有预估工时和实际工时）和 Metric（健康指标，如 bug 数、代码覆盖率、部署频率）。健康度评估分五个维度，每个维度一个子命令：
+
+`schedule <project>`——进度健康。计算所有任务的完成率，以及预估偏差率（总实际工时 / 总预估工时 - 1）。偏差超过 30% 标黄，超过 50% 标红。`quality <project>`——质量健康。基于 bug 数和未解决 bug 数，输出缺陷密度（bug 数 / 总任务数）和缺陷修复率。`load <project>`——负载健康。统计每个人的任务数和总工时，找出负载最重的人和最轻的人，差距超过 2 倍发出不均衡警告。
+
+`velocity <project> --period week|month`——速率健康。按周或按月统计已完成任务数和总工时，输出趋势（增长、持平、下降）。`summary <project>`——综合健康评分。五个维度各占权重（进度 30%、质量 25%、负载 15%、速率 15%、整体完成率 15%），每维度 0-100 分，加权求和。低于 60 分的输出具体改进建议。
+
+- `project add <name> --team <n> --start <date>`
+- `task add <project> --title <text> --estimate <hours> --assignee <name>`
+- `task done <id> --actual <hours>`
+- `metric add <project> --type <bug|coverage|deploy> --value <n> --date <date>`
+- `schedule <project>` / `quality <project>` / `load <project>` / `velocity <project>` / `summary <project>`
+
+数据存 JSON 文件。Go 标准库实现。

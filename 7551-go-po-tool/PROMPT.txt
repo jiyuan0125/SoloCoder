@@ -1,3 +1,7 @@
-PO文件解析编译的处理逻辑比较复杂，特别是 Unicode 相关的部分。处理一个记录的时候需要自动更新关联的统计。
+翻译团队每周要处理上百个 PO 文件（gettext 的翻译源文件），PO 格式本身不复杂——msgid/msgstr 对，还有复数形式的 msgid_plural/msgstr[0]/msgstr[1]。但 Unicode 相关的处理特别容易出问题，比如有的翻译条目用了 NFC 规范化，有的用了 NFD，看起来一样但字节不同，导致重复条目检测失败。
 
-工具要能处理各种 Unicode 规范化形式（NFC、NFD、NFKC、NFKD）。两个看起来一样但编码不同的字符串要能识别。Go 标准库实现。
+写个 `po-tool`，子命令 `parse`、`compile`、`check`。`po-tool parse` 读 `.po` 文件，解析头部（Project-Id-Version、Language、Plural-Forms 等）和所有翻译条目，输出 JSON。`po-tool compile` 把 `.po` 文件编译成 `.mo` 二进制文件（gettext 的运行时格式）。`po-tool check` 做完整性检查——空的 msgstr、格式化占位符不匹配（`%s`、`%d`、`{0}` 在 msgid 里有但 msgstr 里没有）、复数形式数量和 Plural-Forms 声明不一致。
+
+处理每个条目时自动更新关联统计——翻译完成率、未翻译条目数、模糊翻译数、按翻译者的贡献统计。工具要能处理 NFC/NFD/NFKC/NFKD 四种规范化形式，两个视觉上相同但编码不同的字符串要识别为同一翻译。
+
+Go 标准库实现。`go build`。

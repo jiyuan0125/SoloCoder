@@ -1,5 +1,11 @@
-之前用 Python 做，这次换 Go 试试证书密钥管理。
-工具要能CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理。
-数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
-文件操作要注意权限检查。
-go build 能过，命令行工具能正常运行。
+Python 做证书链验证在 Windows 和 macOS 上各种路径和编码问题。换 Go，CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理。
+
+CA 初始化：`chainv init-ca --org "MyCompany" --country "CN" --years 10 --output-dir ./ca/`。根证书 RSA-4096，中间证书 RSA-2048。中间证书 CA:TRUE pathlen:0。输出 root-ca.pem/key、intermediate-ca.pem/key。
+
+签发：`chainv issue --ca-cert intermediate-ca.pem --ca-key intermediate-ca.key --csr request.csr --days 90 --output issued.pem`。签发前验证 CSR 格式。Key Usage: digitalSignature + keyEncipherment，EKU: serverAuth。序列号 `crypto/rand` 随机生成。
+
+CRL：`chainv crl-init --ca-cert intermediate-ca.pem --ca-key intermediate-ca.key --output ca.crl.pem`。`chainv crl-revoke --serial 0xA1B2C3 --reason keyCompromise`。CRL PEM 格式，Next Update 7 天。
+
+CA 私钥权限必须 0600 否则警告。数据存 JSON 文件。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,5 +1,5 @@
-想用 Go 练手文档管理这块，做个Go依赖图。
-画出依赖树。检测循环依赖。
-输出依赖关系为 DOT 格式。
+项目依赖越来越乱，手动梳理根本看不过来。写个 Go 工具画依赖树、检测循环依赖，输出 DOT 格式。
+
 支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-不用第三方包，go build 通过就行。
+
+零外部依赖，go build 通过即可。

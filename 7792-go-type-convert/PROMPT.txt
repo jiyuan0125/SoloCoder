@@ -1,3 +1,13 @@
-用 Go 写一个类型转换工具库，给自己其他项目用。状态按顺序流转。
+类型转换太零碎——命令行参数全是 string，转 int、float64、bool、time.Duration 每次都要手写 strconv。更烦的是转换失败还要给有用的错误信息。
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+type-convert 用 Go 标准库实现，`go build -o typeconv-demo ./cmd/typeconv` 编译。给自己其他项目用的类型转换库。
+
+支持的转换：string↔int/int64、string↔float64、string↔bool（"true"/"1"/"yes" 都识别）、string↔time.Duration（"5s"/"1h30m"）、string↔[]string（逗号分隔）、string↔map[string]string（key:value 格式）。状态按顺序流转——输入→验证→转换→输出。
+
+错误处理：失败返回 ConversionError，含输入值、目标类型、失败原因、建议格式。比如 "abc" 转整数提示 `"abc" cannot be converted to int. Example: "42"`。
+
+库支持嵌套子命令，每个有独立帮助。未知子命令给建议。
+
+自定义转换器：`Register("MyType", func(s string) (interface{}, error))`。
+
+API：`conv.ToInt("42")`、`conv.ToDuration("1h30m")`、`conv.To("int", "42")`。零依赖。`go test ./...` 跑测试，`go build` 编译通过。

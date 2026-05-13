@@ -1,3 +1,11 @@
-调研了一圈 Go 标准库里固定宽度文本解析相关的包，写个工具整合一下。主记录依赖配置数据。
+银行对账文件，每个字段写死占 20 位、12 位——没有逗号没有 tab，纯靠位置切。上周手算偏移量错了两列，对账多出 300 万差额，吓出一身冷汗。这种固定宽度格式在金融系统里太常见了，每次监管改报表格式就得重新算一遍偏移量，人工维护迟早要出事。
 
-工具支持 dry-run 模式先预览再执行。输出用颜色区分不同状态。Go 标准库，命令行工具。
+写个 `fw-tool`，布局用 JSON 配置文件定义（`--schema`），格式是 `[{"name": "account", "start": 0, "width": 20, "align": "right", "pad": "0"}, {"name": "amount", "start": 20, "width": 12, "type": "decimal"}, ...]`。主记录的数据结构依赖这个配置——没有 schema 就没法解析。
+
+`fw-tool parse` 读取固定宽度文本文件，按 schema 切分每一行，输出 JSON 或 CSV。反过来 `fw-tool generate` 读 JSON 数据，按 schema 的对齐和填充规则输出固定宽度文本。两个方向都得支持，因为上游系统要固定宽度输入，下游分析要 JSON。
+
+Dry-run 模式先预览：parse 时报告"将解析 N 行数据，每行 M 个字段"，generate 时报告"将生成 N 行固定宽度文本，总宽度 W"。输出用颜色区分：绿色表示正常数据，黄色表示 dry-run，红色表示 schema 错误或数据越界。终端检测，管道时关闭颜色。
+
+字段类型支持：string（默认）、integer、decimal、date（`--date-format` 指定）。对齐方式：left、right、center，填充字符可自定义。
+
+Go 标准库，命令行工具，`go build`。

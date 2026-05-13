@@ -1,3 +1,17 @@
-写个PATH环境管理工具，CI 环境用。写入数据后自动触发校验，校验也需要访问同一份数据。
+PATH 变量在 .bashrc 里加了一条，忘了 Makefile 里也硬编码了一份，CI YAML 里还有一份。改了 .bashrc 加了新工具路径，Makefile 里的旧 PATH 没有，make 的时候 command not found。这种事已经出过三次了。
 
-工具支持锁定当前版本生成锁文件。后续构建用锁文件确保一致性。锁文件包含 hash 校验。Go 标准库。
+PATHEntry 实体有 ID、路径、优先级（数字越小越靠前）、来源标签（shell/docker/ci/manual）、状态（active/disabled）、描述。PATHConfig 实体有名称、PATH 条目列表、目标文件路径（要写入的目标配置文件）。`entry add <path> --priority <n> --source <tag> [--desc <text>]` 添加条目，路径必须是绝对路径。
+
+写入操作（`config apply <name>`）把 PATHConfig 渲染成 export PATH=... 格式并写入目标文件。写入后自动触发校验——检查每个 active 条目的路径在文件系统中是否存在，不存在的不从 PATH 中移除但输出警告。校验函数和写入操作共享同一份数据文件。
+
+锁定当前 PATH——`lock generate` 生成 lock.json，包含当前完整 PATH 的 SHA256。`lock verify` 对比当前 PATH 和锁文件，检测是否被外部修改。
+
+- `entry add <path> --priority <n> --source <tag>`
+- `entry list [--source <tag>] [--status <status>]`
+- `entry disable <id>` / `entry enable <id>`
+- `config create <name> --output <file>`
+- `config apply <name>`：写入并校验
+- `lock generate` / `lock verify`
+- `current`：显示当前 PATH 和来源分解
+
+Go 标准库实现。

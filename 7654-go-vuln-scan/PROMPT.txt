@@ -1,3 +1,17 @@
-做个漏洞扫描工具来管理开发环境。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+被人扫出来项目里有个两年前的 CVE，丢人。开发环境里的依赖漏洞从来没人主动查过——不出事就不查，出了事再查，这种状态不能继续了。
 
-支持创建、删除、列出环境。环境之间完全隔离。环境配置导出为可共享的文件。Go 标准库。
+环境实体有 ID、名称、Go 版本、依赖文件路径、状态（active/archived）、创建时间。环境之间完全隔离——每个环境独立维护自己的依赖列表和扫描结果。`env create <name> --go-version <v> --modfile <path>` 初始化，`env delete <name>` 删除前检查有无活跃的扫描任务。
+
+Vulnerability 有 ID、环境 ID、依赖名称、CVE 编号、严重级别（critical/high/medium/low）、描述、发现时间、状态（open/fixed/accepted/ignored）。扫描操作（`scan <env>`）分两步——主操作是记录发现的漏洞，辅助检查是验证该环境的依赖文件是否仍然存在且可读。辅助检查和主操作读同一份环境数据文件，检查不通过（文件不存在）则中止扫描。
+
+`report <env>` 输出扫描结果——按严重级别分组显示漏洞列表，每个漏洞一行（CVE 编号、依赖名、版本、状态）。critical 级别的漏洞标红。统计：各级别数量、已修复比例。
+
+- `env create <name> --go-version <v> --modfile <path>`
+- `env list` / `env delete <name>`
+- `scan <env>`：扫描漏洞，带辅助校验
+- `vuln list <env> [--severity <level>] [--status <status>]`
+- `vuln fix <id>` / `vuln accept <id> --reason <text>` / `vuln ignore <id>`
+- `report <env>`
+- `env export <name>`：导出环境配置为 JSON 文件
+
+Go 标准库实现。

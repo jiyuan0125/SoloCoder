@@ -1,6 +1,9 @@
-新规要求合规检查，得加个加密解密工具工具，Go。
-工具要能信封加密（RSA+AES 混合）、密钥轮换、加密元数据管理。
-导入完成后自动更新索引，索引更新失败只记日志。
-表结构变更后依赖该表的查询和报告要更新。
-多核机器上跑的时候多个 goroutine 同时处理。
-go build 能过，命令行工具能正常运行。
+合规审查上周新增了一条硬性要求：所有传输数据必须有信封加密 + 密钥轮换记录。Go 工具，信封加密（RSA+AES 混合）、密钥轮换、加密元数据管理。
+
+信封加密流程：RSA-2048 公钥加密随机 AES-256-GCM 会话密钥，用会话密钥加密数据。`mac-gen seal --pubkey pub.pem --input config.yaml`。输出文件：JSON 头（固定 512B，含 algo/key_id/nonce/created_at）+ 加密会话密钥（256B）+ 密文 + GCM tag。解密 `unseal --privkey priv.pem --input config.yaml.enc`。
+
+密钥轮换：`rotate --key-id prod-encryption-key` 生成新密钥对，旧密钥标记 deprecated（只解密不加密）。加密用 active 版本，解密根据文件头的 key_id 和版本自动匹配。密钥元数据存 `~/.mac-gen/keys/`。
+
+元数据管理：`meta list` 显示所有密钥版本和状态，`meta show --file config.enc` 显示文件元数据，`meta export` 导出全部。批量加密用 4 goroutine 并行。
+
+`go build` 能过，命令行工具能正常运行。

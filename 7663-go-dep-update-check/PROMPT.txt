@@ -1,3 +1,18 @@
-用 Go 写个依赖更新检测工具。删除后要清理关联记录。
+依赖多久没更新了？没人知道。上次看了一眼 go.mod，有个核心库落后三个大版本——连安全补丁都没打。
 
-工具扫描指定目录，分析依赖关系并生成报告。报告包含直接依赖和间接依赖。Go 标准库实现，go build 通过。
+Dependency 实体有 ID、模块路径、当前版本、最新版本、更新类型（major/minor/patch/none）、最后检查时间、状态（tracked/ignored）。UpdateCheck 记录有 ID、依赖 ID、检查时间、发现的新版本、变更摘要。
+
+`scan <dir>` 扫描指定目录的 go.mod 文件，解析所有依赖和版本。和已有记录对比——新增的依赖自动创建 tracked 状态记录，版本有变化的更新记录。扫描完毕后输出报告——总依赖数、可更新数、major 更新数量、按更新类型分组的列表。
+
+删除依赖记录时（`dep remove <id>`），自动删除所有关联的 UpdateCheck 记录，防止孤立数据。状态标记为 ignored 的依赖不参与报告输出但仍然保留记录。
+
+`report` 输出文本表格——模块路径、当前版本、最新版本、更新类型、变更摘要（如果有的话）。major 更新用 ⚠️ 标记。
+
+- `scan <dir>`：扫描依赖
+- `dep list [--type major|minor|patch|none]`
+- `dep ignore <id>` / `dep track <id>`
+- `dep remove <id>`：级联删除关联检查记录
+- `check <id> --latest <version> --summary <text>`：手动录入更新信息
+- `report`：更新检测报告
+
+Go 标准库实现，go build 通过。

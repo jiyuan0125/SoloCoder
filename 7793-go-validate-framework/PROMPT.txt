@@ -1,3 +1,13 @@
-用 Go 标准库做个校验框架组件。属性变更影响计算结果。
+数据校验——API 输入、配置文件、命令行参数，到处都要校验。每次写一堆 if-else 检查空值、范围、格式、正则。零散的校验逻辑散落在各处，维护和测试都是噩梦。
 
-支持多种输出格式（JSON、YAML、表格）。输出格式通过参数切换。数据驱动，传入结构体自动渲染。Go 标准库实现。
+validate-framework 用 Go 标准库实现，`go build -o validate-demo ./cmd/validate` 编译。
+
+规则定义方式：结构体 tag。`Name string \`validate:"required,min=2,max=100"\``。内置规则：required（非空）、min/max（数值范围）、minLen/maxLen（字符串长度）、regex（正则匹配）、email（邮箱格式）、url（URL格式）、oneOf（枚举值）、custom（自定义函数）。属性变更影响计算结果——规则修改后重新校验。
+
+多种输出格式：JSON（`{"field": "name", "error": "must be at least 2 characters"}`）、YAML、表格（字段名|规则|当前值|错误）。格式通过 `--format` 参数切换。数据驱动设计——传入结构体自动提取规则和值，渲染校验结果。
+
+嵌套校验：结构体字段也是结构体时，递归校验。切片类型逐元素校验。map 类型校验 key 和 value。校验深度限制 10 层。
+
+错误收集策略：默认收集所有错误一次返回。也可以 `FailFast()` 遇到第一个错误就停。错误按字段分组，每个字段可能有多个违规。
+
+API：`v := validate.New()`、`errs := v.Struct(myStruct)`、`errs := v.Var(email, "required,email")`。`go test ./...` 跑测试。

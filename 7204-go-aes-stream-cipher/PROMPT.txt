@@ -1,6 +1,9 @@
-新规要求合规检查，得加个加密解密工具工具，Go。
-工具要能信封加密（RSA+AES 混合）、密钥轮换、加密元数据管理。
-数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
-加密完自动删除原文，删除失败继续执行。
-处理用户输入的路径要注意别让目录遍历出问题。
-go build 能过，命令行工具能正常运行。
+上周合规审查开出的整改项第一条就是"传输层加密工具缺失"，给了两周时间。AES 流式加密工具，Go 命令行，信封加密、密钥轮换、加密元数据管理，得赶紧搞出来。
+
+信封加密：用 RSA-2048 公钥加密随机 AES-256-GCM 会话密钥，再用会话密钥加密数据。`aes-stream envelope-encrypt --pubkey pub.pem --input data.tar`。解密：`aes-stream envelope-decrypt --privkey priv.pem --input data.tar.enc`。
+
+密钥轮换后旧密钥不能删，标记 `deprecated`。加密元数据记录密钥版本（key_version），解密时按版本号找密钥。元数据以 JSON 头放在加密文件开头（固定 512 字节），字段：算法、密钥版本、Nonce、加密时间、原始大小。子命令 `key list`/`key rotate` 管理密钥库，存在 `~/.aes-stream/keys/` 下。
+
+路径安全：`filepath.Clean` 后检查 `..` 防目录遍历。输出文件加 `.enc` 后缀，目标已存在报错退出码 2。加密完自动删除原文，删除失败继续执行。
+
+`go build` 能过，命令行工具能正常运行。

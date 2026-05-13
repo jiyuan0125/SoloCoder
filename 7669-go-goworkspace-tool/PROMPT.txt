@@ -1,3 +1,16 @@
-做个工作空间模式工具来管理开发环境。调整后相关的汇总也要更新。
+go.work 文件倒是把多个模块串起来了，编译方便了不少。但时间一长，哪个模块在哪个目录、哪个模块依赖了哪个，全凭记忆。上周有人删了一个本地目录没改 go.work，build 报错找了半天。
 
-支持创建、删除、列出环境。环境之间完全隔离。环境配置导出为可共享的文件。Go 标准库。
+Workspace 实体有名称、go.work 文件路径、状态（active/archived）。ModuleEntry 有模块路径、磁盘路径、Go 版本要求、在 workspace 中的角色（main/library/tool）。`workspace create <name> --path <dir>` 从指定目录的 go.work 文件初始化。`workspace list` 显示所有工作空间。
+
+`modules <workspace>` 列出工作空间中的所有模块及依赖关系。`sync <workspace>` 同步工作空间——扫描 go.work 文件确保所有 use 指令指向的目录都存在且包含 go.mod，缺失的模块标红。同步完成后自动更新汇总——模块总数、主模块数、库模块数、工具模块数。
+
+环境完全隔离——每个工作空间有独立的配置目录。`workspace export <name>` 把整个工作空间配置导出为 JSON 文件，`workspace import <file>` 在另一台机器上导入。导入时同名工作空间自动加后缀 _1。
+
+- `workspace create <name> --path <dir>`
+- `workspace list` / `workspace delete <name>` / `workspace archive <name>`
+- `modules <workspace>`：列出模块
+- `sync <workspace>`：同步并更新汇总
+- `workspace export <name>` / `workspace import <file>`
+- `summary`：所有工作空间的概览
+
+Go 标准库实现。

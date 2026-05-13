@@ -1,3 +1,9 @@
-线上MIME编码的数据格式经常出问题，写个工具来检查和修复。嵌套的资源路径。工具分三个子命令：check、convert、validate。
+邮件系统那边出了个乱码问题，最后查出来是 MIME 编码环节把嵌套的多部分结构搞乱了——`Content-Transfer-Encoding` 的 boundary 嵌套层级不对，附件和正文搅到一块去了。写个工具来检查和修复这类问题。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+工具叫 `mime-tool`，三个子命令：`check`、`convert`、`validate`。`mime-tool check` 解析输入的 MIME 消息，递归遍历所有嵌套的 multipart 层级，报告每个 part 的编码方式（base64 / quoted-printable / 7bit / 8bit / binary）、Content-Type、Content-Disposition 和嵌套深度。如果 boundary 参数和实际分隔符不匹配就报错。
+
+嵌套的资源路径用类似文件路径的方式展示，比如 `/part1/part1.1/attachment.pdf`，这样多深都不会搞混。`mime-tool convert` 把指定编码的 part 转成另一种编码，比如把 quoted-printable 转成 base64，或者反过来。转换后自动更新对应的 Content-Transfer-Encoding 头部。`mime-tool validate` 检查转换后的输出：编码是否正确、boundary 是否闭合、各 part 的长度和声明是否一致。
+
+空输入和空 part 要能正常处理，不 panic。碰到非标准格式（比如缺少 MIME-Version 头、boundary 里带了特殊字符）给警告但继续处理。输入从文件或 stdin 读取。
+
+Go 标准库，`mime`、`mime/multipart`、`encoding/base64` 这些包。纯 CLI，`go build`。

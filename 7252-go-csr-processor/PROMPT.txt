@@ -1,6 +1,13 @@
-调研了一圈，Go 做证书密钥管理比较合适。
-工具要能证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
-支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
-密钥轮换后用旧密钥加密的数据要能解密。
-扫描多个目录要并行处理。
-go build 能过，命令行工具能正常运行。
+证书过期检查和批量管理，Go 做比较合适——TLS 连接、X.509 解析、并发扫描都是标准库的强项。证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
+
+证书过期检查：`csr-proc check --cert server.pem` 显示证书的 Not Before、Not After、剩余天数、SAN 列表、颁发者。加 `--warn-days 30` 参数，剩余天数不足 30 天时输出 JSON 中 `warning: true`。`csr-proc check --endpoint https://example.com:443` 直接连 TLS 服务获取证书信息（不需要本地证书文件）。
+
+批量检查：`csr-proc batch-check --input-dir ./certs/ --warn-days 30 --output report.json`。递归扫描目录下所有 `.pem` 文件，提取证书，逐个检查有效期。并发 4 goroutine 处理，结果按过期时间排序（最先过期的排前面）。
+
+报告输出：JSON 数组，每个元素包含 `file`、`subject`、`issuer`、`not_before`、`not_after`、`days_remaining`、`warning`、`san`。加 `--format table` 可以输出 ASCII 表格到终端。
+
+CSR 处理功能：`csr-proc create-csr --cn "svc.internal" --org "MyOrg" --san "DNS:svc.internal" --output request.csr`。密钥对同时生成，默认 RSA-2048。
+
+多层级规则路径和密钥轮换？本工具专注于证书检查和 CSR，不做密钥管理。扫描多个目录并行处理。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,6 +1,5 @@
-Go 标准库的io模块挺适合做生成 HTTP 认证 header的，试一下。
+对接各种服务要用不同的认证方式——Basic Auth、Bearer Token、AWS Signature V4、HMAC，每次查文档拼 header 太容易出错。写个工具生成好认证 header，直接复制到 curl 里用。
 
-生成 HTTP 认证 header。支持 Basic Auth、Bearer Token、AWS Signature V4、HMAC。输出可直接用于 curl。
 金额用整数存储（分为单位），显示的时候转为元。除法截断不是四舍五入。
 任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
 映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。

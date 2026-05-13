@@ -1,6 +1,5 @@
-老板说要提效，先搞个把 Swagger/OpenAPI spec 转换为 HTTP 请求文件（.http 格式），Go 命令行。
+老板说接口文档和测试要提效，Swagger spec 里明明有所有接口信息。Go 工具把 Swagger/OpenAPI spec 转换为 .http 文件格式，每个接口一个请求块带参数和示例值，IDE 直接跑。
 
-把 Swagger/OpenAPI spec 转换为 HTTP 请求文件（.http 格式）。每个接口一个请求块，包含参数和示例值。
 日志文件可能存在各种编码。
 扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
 工具管理配置模板和配置实例。实例基于模板生成。

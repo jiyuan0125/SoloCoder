@@ -1,3 +1,17 @@
-团队测试覆盖率跟踪目前用 Excel 管，换个 CLI 工具。调整后相关的汇总也要更新。
+测试覆盖率数据一直用 Excel 跟踪，每次有人问"这个模块覆盖率多少"，我都得打开表格找半天。换 CLI 工具管理，改了数据相关的汇总也自动更新。
 
-支持从 CSV 导入已有数据。任务之间有依赖关系，前置任务未完成时阻塞后续任务。Go 标准库。
+模块实体有名称、负责人、当前覆盖率百分比、目标覆盖率。CoverageEntry 有 ID、模块名、覆盖率、记录日期、来源（手动录入或从报告导入）。录入覆盖率数据时（`entry add <module> --coverage <percent> --date <date>`），自动检查覆盖率是否达到模块目标，没达到的输出提示。同时更新模块实体的当前覆盖率为最新值——这就是"调整后汇总也更新"的意思。
+
+任务之间有依赖关系——某些模块依赖其他模块先达到目标覆盖率（比如集成测试依赖单元测试）。`depend <module> --on <other-module>` 建立依赖。查看覆盖率报告时，如果前置模块没达标，在输出里标注"被阻塞"。
+
+支持从 CSV 导入已有数据：`import <file.csv>`。CSV 格式是 module,coverage,date。导入时逐条处理，模块不存在的跳过并打印警告，不会因为部分失败而终止整个导入。导入完成后更新所有相关模块的汇总。
+
+- `module add <name> --owner <name> --target <percent>`
+- `module list`：显示名称、当前覆盖率、目标、是否达标
+- `entry add <module> --coverage <percent> --date <date>`
+- `entry list <module> [--from <date> --to <date>]`
+- `import <file.csv>`：批量导入
+- `depend <module> --on <other-module>`
+- `report`：按模块汇总，标注依赖关系和达标状态
+
+数据存 JSON 文件。Go 标准库实现。

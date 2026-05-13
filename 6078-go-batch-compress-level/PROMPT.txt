@@ -1,5 +1,2 @@
-业务上遇到个问题：脚本维护不动了。打算用 Go 搞个分级压缩。
-小文件快速压缩，大文件高压缩比。
-输出压缩报告。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-不用第三方包，go build 通过就行。
+日志归档脚本维护不动了，而且压缩级别写死了，小文件和大文件用同一级压缩不合理。Go 搞个分级压缩：小文件快速压缩，大文件高压缩比，输出压缩报告。
+支持嵌套命令：project create、project build、project test run、project test coverage。不用第三方包，go build 通过就行。

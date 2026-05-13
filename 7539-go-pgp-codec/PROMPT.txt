@@ -1,3 +1,9 @@
-用 Go 写个PGP消息编解码的命令行工具。能从文件或 stdin 读取输入，输出到文件或 stdout。写入数据后自动触发校验，校验也需要访问同一份数据。
+以前用 GPG 命令行工具解密签名，但没法嵌入到自己的流程里——想先看看 PGP 消息结构再决定要不要解密，GPG 做不到这一点。得先把 Packet 拆开看看里面是什么，再决定下一步操作。
 
-处理大文件时用流式，不要一次性全部加载到内存。遇到格式不合法的输入记录行号和原因后继续处理后面的数据。Go 标准库实现，go build 能过。
+写个 `pgp-tool`，两个子命令：`pgp-tool decode` 和 `pgp-tool encode`。`decode` 读 PGP 格式的二进制数据（ASCII Armor 或原始二进制），解析 Packet Tag（公钥加密会话密钥、签名、压缩数据、加密数据、字面数据等），输出每个 packet 的类型、长度、版本号和可读的元数据。如果 packet 里是字面数据（未加密的），直接展示内容。
+
+从文件或 stdin 读取输入。处理大文件时用流式——`bufio.NewReader` 分块读，PGP packet 有自己的长度编码（old format 和 new format），按 packet 边界切分，不一次性加载全部。遇到格式不合法的 packet（比如 tag 值超出范围、长度字节不够）记录偏移位置和原因，然后跳过这个 packet 尝试定位下一个。
+
+encode 暂时只做最简单的——把明文包装成 PGP 字面数据 packet（Literal Data Packet，tag 11），不做加密和签名。够用于测试和调试了。
+
+Go 标准库，`go build` 能过。

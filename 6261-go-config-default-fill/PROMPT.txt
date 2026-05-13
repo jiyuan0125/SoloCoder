@@ -1,6 +1,3 @@
-Go 标准库的filepath.Walk挺适合做代码质量的，试一下配置默认值填充。
-默认值定义在单独文件中。
-已有值保留，只填充缺失的。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-不用第三方包，go build 通过就行。
+新加的配置项老项目里没有，启动就报错。Go 做配置默认值填充：默认值定义在单独文件中，已有的值不动，只填充缺失的键。
+
+命令格式参考 tool action target options，比如 tool scan dir --depth 3。填充完自动更新统计，首次跑没有历史统计要正常处理。不用第三方包，go build 通过就行。

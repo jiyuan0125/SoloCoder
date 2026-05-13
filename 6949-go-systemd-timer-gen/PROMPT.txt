@@ -1,6 +1,5 @@
-搞一个生成 systemd timer unit，Go 标准库，不依赖第三方包。
+cron 不如 systemd timer 好管理——timer 能看执行日志、能设依赖关系。但写 .timer 文件太烦了。写个生成 systemd timer unit 的工具，输入 cron 表达式，输出 .timer 和配套的 .service 文件，直接 `systemctl enable` 就能用。
 
-生成 systemd timer unit。从 cron 表达式转换，生成 .timer 和配套的 .service 文件。
 日志中记录了完整的请求参数。
 扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
 命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。

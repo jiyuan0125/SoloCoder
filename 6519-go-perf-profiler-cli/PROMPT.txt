@@ -1,4 +1,4 @@
-试了几个现成方案都不满足需求，只能 Go 自己写对比两份 Go pprof profile 文件，输出函数级别的 CPU/内存差异。
+pprof 文件对比全靠肉眼，两个 profile 放在一起看不出哪个函数慢了多少。按函数级别对比 CPU 和内存差异，文本报告一目了然，想要火焰图也能输出 folded stack 格式。
 
 对比两份 Go pprof profile 文件，输出函数级别的 CPU/内存差异。支持文本报告和火焰图数据（folded stack format）。按差异大小排序。
 日志文件可能存在各种编码。

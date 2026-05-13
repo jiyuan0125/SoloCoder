@@ -1,3 +1,7 @@
-写个Box-drawing字符工具。删除后要清理关联记录。从文件读取内容，处理后输出到 stdout 或指定文件。
+上周同事写了个终端菜单，手动拼 `┌─┐│└┘├┤┬┴┼` 框线拼了半小时，稍微改个宽度就得重新拼。Box-drawing 字符在终端 UI 里确实好用，但手拼太浪费时间了。
 
-遇到无法识别的字符编码要尝试常见编码自动检测。输出保持原始换行结构。Go 标准库。
+`boxdraw-tool`，子命令 `rect`、`tree`、`table`。`boxdraw-tool rect` 生成矩形框——`--width 40 --height 10` 输出一个指定大小的框。框内可以放文本（`--text "Hello"`），自动居中。支持 Unicode box-drawing 字符（默认）和 ASCII 字符（`+` `-` `|`，`--ascii` 参数）。`boxdraw-tool tree` 生成树形结构——从缩进文本或 JSON 描述生成 `├── └──` 树。`boxdraw-tool table` 生成表格框线——读 TSV 数据，加上 box-drawing 边框和分隔线。
+
+删除框线后如果有残留的空行或空格要清理。从文件读取内容，处理后输出到 stdout 或 `--output` 指定的文件。遇到无法识别的字符编码尝试 UTF-8 和 Latin-1 自动检测。输出保持原始换行结构（LF 或 CRLF 保留）。
+
+Go 标准库。`go build`。

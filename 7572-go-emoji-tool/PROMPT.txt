@@ -1,3 +1,7 @@
-Unicode emoji处理的处理逻辑比较复杂，特别是 Unicode 相关的部分。操作前需要先有基础数据。
+Emoji 处理比想象中复杂——一个 emoji 可能是多个 Unicode 码点组成的（比如 👨‍👩‍👧‍👦 是 7 个码点通过零宽连接符 ZWJ 组合的），不同平台渲染宽度不一样，有些 emoji 有肤色修饰符，有些有性别变体。操作前需要先有基础数据——内置一个 emoji 数据表（从 Unicode 官方的 emoji-data.txt 解析）。
 
-工具要能处理各种 Unicode 规范化形式（NFC、NFD、NFKC、NFKD）。两个看起来一样但编码不同的字符串要能识别。Go 标准库实现。
+`emoji-tool`，子命令 `list`、`count`、`strip`。`emoji-tool list` 列出文本中的所有 emoji，显示每个 emoji 的 Unicode 码点序列、CLDR 短名称、分组（Smileys/People/Animals 等）、是否是 ZWJ 序列。`emoji-tool count` 统计 emoji 数量——不是统计码点数，是统计视觉上的 emoji 个数（一个 ZWJ 序列算一个 emoji）。`emoji-tool strip` 去掉文本中的所有 emoji，可选替换为指定字符（`--replace "?"`）。
+
+Unicode 规范化处理：emoji 的修饰符序列（比如 👦+🏻 = 👦🏻）在 NFC 和 NFD 下可能不同。工具要处理 NFC/NFD/NFKC/NFKD 四种形式，两个视觉上一样的 emoji 序列要识别为同一个。emoji 序列的解析要按 Unicode 标准的最大匹配原则——优先匹配最长的合法序列。
+
+Go 标准库实现。`go build`。

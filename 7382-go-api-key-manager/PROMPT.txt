@@ -1,5 +1,7 @@
-试了三个方案都不满足需求，Go 自己写认证授权工具工具。
-工具要能JWT 签名生成、多算法支持（HS256/RS256/ES256）、Claims 自定义。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-日志里别打印密钥和密码等敏感信息。
-go build 能过，命令行工具能正常运行。
+试了好几种 JWT 签发方案——在线工具不安全（密钥上传到别人服务器），现成的库只支持单算法。Go 自己写一个多算法 JWT 签名工具，Claims 完全自定义。
+
+三种算法族覆盖。HMAC 系列（HS256/HS384/HS512）用共享密钥，生成时验证密钥长度满足安全要求——HS256 至少 32 字节，不够就警告。RSA 系列（RS256/RS384/RS512）用 RSA 私钥签名，密钥格式支持 PEM 编码的 PKCS1 和 PKCS8。ECDSA 系列（ES256/ES384/ES512）对应 P-256、P-384、P-521 曲线。
+
+Claims 通过 JSON 文件或 --claim key=value 命令行参数传入。工具自动添加 iat 和 jti，exp 和 nbf 可配。Token 输出到标准输出或指定文件。
+
+搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}，可以做字段级精确查询。日志里不能打印密钥和密码等敏感信息，遇到这类字段做脱敏处理。输出 JSON 格式。go build 能过，命令行工具能正常运行。

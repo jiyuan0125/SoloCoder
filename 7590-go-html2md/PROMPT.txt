@@ -1,3 +1,7 @@
-终端里HTML转Markdown总对不齐，写个工具处理一下。数据有生命周期。
+老系统的文档全是 HTML，要迁到 Markdown 格式的文档系统——这种迁移活儿做了不下十次了。HTML 可能有多个版本，Markdown 输出得和最新的 HTML 版本保持同步。终端里做对齐时表格宽度还要考虑 Unicode 字符。
 
-表格列宽按内容自适应，表头和内容对齐。支持 Unicode 字符和 ANSI 转义序列。Go 标准库。
+`html2md-tool`，子命令 `convert`、`batch`、`check`。`html2md-tool convert` 读 HTML 文件，转成 Markdown。转换规则：`<h1>` → `#`，`<h2>` → `##`，`<b>/<strong>` → `**text**`，`<i>/<em>` → `*text*`，`<a href="url">text</a>` → `[text](url)`，`<img src="url" alt="alt">` → `![alt](url)`，`<code>` → `` `code` ``，`<pre><code>` → ` ```code``` `，`<ul>/<li>` → `- item`，`<ol>/<li>` → `1. item`，`<table>` → Markdown 表格。`html2md-tool batch` 批量转换目录下所有 `.html` 文件。`html2md-tool check` 验证转换后的 Markdown 是否语义完整——有没有丢失的元素。
+
+表格列宽按内容自适应，表头和内容对齐。支持 Unicode 字符和 ANSI 转义序列。
+
+Go 标准库。`go build`。

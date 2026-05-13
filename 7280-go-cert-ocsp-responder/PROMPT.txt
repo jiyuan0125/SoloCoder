@@ -1,5 +1,9 @@
-下周要演示，先出个能跑的证书密钥管理工具，Go CLI。
-工具要能证书吊销列表管理、OCSP 检查工具、吊销原因记录。
-规则修改后所有引用该规则的校验结果要重新计算。
-用 regexp 的命名捕获组。
-go build 能过，命令行工具能正常运行。
+下周要给架构评审演示证书管理能力，CRL 管理工具得先出个能跑的版本。Go CLI，CRL 管理、OCSP 检查、吊销原因记录。
+
+CRL 管理：`ocsp-resp crl-init --ca-cert ca.pem --ca-key ca.key --output ca.crl.pem`。吊销：`ocsp-resp crl-revoke --serial 0xABCDEF --reason keyCompromise`。原因枚举：unspecified、keyCompromise、cACompromise、superseded。Next Update 7 天。查询：`ocsp-resp crl-check --serial 0xABCDEF --crl ca.crl.pem`。
+
+OCSP 检查：`ocsp-resp ocsp-check --cert server.pem --issuer ca.pem --responder http://ocsp.example.com`。5 秒超时。返回 good/revoked/unknown + Next Update。
+
+规则修改后校验结果重新计算？吊销原因变更后基于 CRL 的检查结果要重评估。用 `regexp` 命名捕获组匹配 CRL 中的序列号格式。
+
+`go build` 能过，命令行工具能正常运行。

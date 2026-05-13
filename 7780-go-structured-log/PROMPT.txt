@@ -1,3 +1,11 @@
-写个结构化日志工具，帮助快速构建 CLI 应用。主记录依赖配置数据。
+结构化日志——运维排查问题要在几百 MB 日志里找特定请求的完整链路，纯文本根本没法高效过滤。需要结构化输出，每条日志带字段，方便 grep 和 jq。
 
-支持从环境变量、配置文件、命令行参数三个来源读取配置。优先级：命令行 > 环境变量 > 配置文件 > 默认值。Go 标准库实现。
+structured-log 用 Go 标准库实现，`go build -o slog-demo ./cmd/slog` 编译。
+
+先定义字段。`log := slog.New().With("service", "api")` 创建带基础字段的 logger。后续调用 `log.Info("request", "method", "GET", "path", "/users")` 自动合并基础字段。字段值支持 string、int、float、bool、error 类型。
+
+再配置输出。配置来自环境变量、配置文件、命令行参数三处，优先级：命令行 > 环境变量 > 配置文件 > 默认值。输出格式两种：纯文本给人看（带颜色），JSON 给机器解析。`LOG_FORMAT=json` 切换。
+
+请求链路 ID——`log.WithTraceID("abc-123")` 给后续所有日志打上追踪 ID，方便关联同一请求的所有日志。错误包装——`log.Error("query failed", "err", err)` 自动提取错误类型和消息。
+
+输出到 stderr 或 `--log-file` 指定文件。文件输出支持轮转和压缩。`Close()` 刷新缓冲区并关闭文件。API：`l := slog.New()`、`l.Info("msg", "k1", "v1")`、`l.Close()`。`go test ./...` 跑测试。

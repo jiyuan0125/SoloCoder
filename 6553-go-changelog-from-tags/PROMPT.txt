@@ -1,4 +1,4 @@
-下周要演示根据 Git tags 和 commits 自动生成 changelog，Go 命令行工具先出个原型。
+每次发版手写 changelog，翻了半天 commit 记录还漏了重要变更。根据 Git tags 和 commits 自动生成，按版本分组，提取 feat/fix/breaking 类型的 commit，输出 Markdown。
 
 根据 Git tags 和 commits 自动生成 changelog。按版本分组，提取 feat/fix/breaking 类型的 commit。输出 Markdown 格式。
 执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。

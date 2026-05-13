@@ -1,5 +1,7 @@
-群里有人说缺安全扫描审计工具，用 Go 搞一个。
-工具要能安全基线检查、CIS Benchmark 对比、差距分析报告、依赖漏洞检查（go.sum/go.mod 解析）。
-数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
-扫描时发现漏洞要生成报告，报告生成也要扫描关联文件。
-go build 能过，命令行工具能正常运行。
+群里有个哥们吐槽说每次审计都要手动对着 CIS Benchmark 一条条查，累得不行。那就写个工具把这个过程自动化——先做安全基线检查，再跑 CIS Benchmark 自动对比，最后输出差距分析。Go 命令行实现，顺便把依赖漏洞检查也集成进来。
+
+安全基线检查涵盖几个方面：系统用户和组配置（空密码账户、UID 0 的非 root 账户）、SSH 配置（PermitRootLogin、PasswordAuthentication 这些关键项）、文件系统挂载选项（nosuid、noexec 该设的设了没有）、防火墙规则（默认策略是不是 DROP）。CIS Benchmark 对比的时候，内置一套 CentOS/Ubuntu 的 Level 1 和 Level 2 规则，逐条检查当前系统的实际配置和推荐值之间的差距。
+
+依赖漏洞检查这块要解析 go.sum 和 go.mod，提取版本号，和本地 CVE 数据库做匹配。数据库操作用多层路径 tables/{table}/rows/{id}/columns/{col} 的形式组织。
+
+扫描有个联动：发现漏洞的时候要生成报告，报告生成过程中也要回头扫描相关联的配置文件——因为有些漏洞的根本原因在配置层面。差距分析结果按严重程度排序输出。go build 能过，命令行工具能正常运行。

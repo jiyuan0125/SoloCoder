@@ -1,6 +1,11 @@
-给朋友的小业务写个证书密钥管理工具，Go CLI。
-工具要能PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
-加密完自动删除原文，删除失败继续执行。
-签名时需要验证证书状态，验证时也要检查签名链。
-用 encoding/json 的 Decoder 流式处理。
-go build 能过，命令行工具能正常运行。
+朋友的创业公司需要密钥格式转换，PKCS12/PKCS8、PEM/DER、统一标准化，Go CLI 工具。
+
+PKCS12：`certrot from-p12 --input client.p12 --password "xxx" --output-dir ./out/`。`certrot to-p12 --cert c.pem --key k.pem --ca ca.pem --output client.p12`。
+
+PEM↔DER：`certrot pem-to-der --input cert.pem --output cert.der`。`certrot der-to-pem --input cert.der --type certificate --output cert.pem`。
+
+标准化：`certrot normalize --input key.pem --output standard.pem`。统一 PKCS8 PEM。加密私钥需 `--password`。
+
+加密完删除原文？转换后保留原文件，除非 `--replace` 标志。签名时验证证书状态？本工具不做签名。验证时检查签名链？不涉及。用 `encoding/json` 流式处理配置文件。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,6 +1,11 @@
-闲着没事写个加密解密工具工具自己用，Go CLI。
-工具要能混合加密（自动选择算法）、加密配置管理、批量加密、RSA 密钥对生成（2048/4096 位）。
-证书快过期自动发通知，通知失败不中断续签。
-权限路径支持多层 resources/{type}/{id}/actions/{action}。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+最近对密码学产生了兴趣，混合加密、加密配置管理、批量加密、RSA 密钥对生成，写个 Go 命令行工具自己用。
+
+混合加密的自动选择逻辑：根据数据大小决定方案。数据 ≤ RSA 密钥能加密的上限（2048 位 → 190 字节，OAEP-SHA256）时直接 RSA 加密；超出时用 AES-256-GCM 加数据 + RSA 加密会话密钥。`ring-sig auto-encrypt --pubkey pub.pem --input payload.bin` 一条命令搞定，用户不需要知道走了哪条路径。加密文件头标识走了哪种方案：0x01 = RSA-only，0x02 = hybrid。
+
+加密配置管理：`ring-sig config init` 在当前目录生成 `.ring-sig.yaml`，定义默认 RSA 位宽、AES 模式、并发度。`config show` 显示当前配置，`config set rsa.bits 4096` 修改单项。配置不存在就用默认值，不报错。
+
+批量加密：`ring-sig batch-encrypt --input-dir ./docs/ --pubkey pub.pem --concurrency 8`。每个文件独立加密，成功的输出 `.enc` 文件，失败的不影响其他文件。结果汇总到 stdout 的 JSON 数组。并发用 `sync.WaitGroup` 控制 goroutine 数量。
+
+RSA 密钥对生成：`ring-sig keygen --bits 2048 --output ./keys/`，输出 `private.pem`（0600 权限）和 `public.pem`（0644）。证书快过期自动通知？纯本地工具，不做证书管理。权限多层路径？不需要。
+
+`go build` 能过，命令行工具能正常运行。

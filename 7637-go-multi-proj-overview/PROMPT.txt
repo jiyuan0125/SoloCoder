@@ -1,3 +1,15 @@
-用 Go 写个多项目总览的命令行工具。写入数据后自动触发校验，校验也需要访问同一份数据。
+同时管五个项目，每个项目进度不一、优先级不同，老板随时要总览。写个多项目总览 CLI 工具，把所有项目的关键指标集中展示，写入数据时自动校验。
 
-数据存本地 JSON 文件。支持添加、查询、更新、删除操作。查询支持按多种条件筛选。Go 标准库实现，go build 通过。
+项目实体有名称、描述、状态（active/on-hold/completed）、优先级（p1/p2/p3）、负责人、开始日期、目标日期、进度百分比。写入项目数据时触发校验函数——检查名称不重复、进度百分比在 0-100 之间、目标日期不早于开始日期。校验和写入共享同一份数据，校验不通过的不写入并输出错误原因。
+
+关键指标按项目汇总——`overview` 输出所有项目的状态、进度、距离目标日期剩余天数。有项目超过目标日期但进度不到 100% 的标红。按状态或优先级过滤——`overview --status active`、`overview --priority p1`。
+
+- `project add <name> --priority <level> --owner <name> --start <date> --target <date> [--desc <text>]`
+- `project update <name> --progress <n>` / `--status <status>` / `--priority <level>`
+- `project delete <name>`：确认后删除
+- `overview [--status <status>] [--priority <level>]`：总览表格
+- `detail <name>`：项目详情含变更历史
+- `at-risk`：列出可能延期的项目（剩余天数 < 7 且进度 < 80%）
+- `list [--status <status>]`：简单列表
+
+数据存本地 JSON 文件。Go 标准库实现，go build 通过。

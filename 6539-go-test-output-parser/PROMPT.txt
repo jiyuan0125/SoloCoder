@@ -1,4 +1,4 @@
-新接了个项目，要求解析多种测试框架的输出（Go test、pytest、JUnit XML），统一为 JSON 格式，用 Go 标准库写。
+多语言项目的测试报告格式不统一，Go test 输出一种格式，pytest 输出一种，JUnit XML 又是一种。全部解析后统一成 JSON，用例名、状态、耗时、错误信息提取出来出汇总报告。
 
 解析多种测试框架的输出（Go test、pytest、JUnit XML），统一为 JSON 格式。提取用例名、状态、耗时、错误信息。输出汇总报告。
 输入文件可能是空的或者只有 header 行。

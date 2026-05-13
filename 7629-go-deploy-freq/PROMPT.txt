@@ -1,3 +1,17 @@
-做个部署频率统计工具，敏捷团队用的。任务有多个审批步骤。
+团队想看 DORA 指标里的部署频率，但没人记过部署记录。写个部署频率统计工具，记录每次部署，自动算出周/月频率和趋势。
 
-任务有状态流转，从新建到关闭中间有好几个阶段。每个阶段可以添加备注。数据存 JSON。Go 标准库。
+部署记录有这些字段：ID、版本号、环境（dev/staging/production）、部署时间、操作人、状态（success/failed/rolled-back）、变更说明、关联的任务 ID 列表（可选）。每次部署创建后走审批流程——状态从 pending → approved → deployed。审批步骤分两步：先技术审批（`approve <id> --type tech --by <name>`），再运维审批（`approve <id> --type ops --by <name>`），两步都过了才能执行部署（`deploy <id>`）。
+
+每阶段可以添加备注（`note <deploy-id> --text <content> [--author <name>]`），比如审批人写审核意见、部署失败的回滚原因等。
+
+统计命令按月或按周聚合——`stats --period month` 输出每月的部署次数（按环境分组）、成功率（success / total）、平均部署间隔天数。趋势用字符画表示每月数量的变化。
+
+- `record add --version <v> --env <environment> --who <name> [--desc <text>] [--tasks <id1,id2>]`：创建记录，初始 pending
+- `approve <id> --type tech|ops --by <name>`：两步审批
+- `deploy <id> --status <success|failed|rolled-back>`：执行部署
+- `note <id> --text <content> [--author <name>]`
+- `list [--env <env>] [--status <status>] [--from <date> --to <date>]`
+- `stats --period week|month`：频率统计和趋势
+- `report --from <date> --to <date>`：文字版报告
+
+数据存 JSON 文件。Go 标准库实现。

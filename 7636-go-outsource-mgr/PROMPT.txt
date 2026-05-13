@@ -1,3 +1,18 @@
-写个外包任务管理的 CLI 工具。主记录依赖配置数据。每个任务有预估工时和实际工时两个字段。
+外包团队做的活到底花了多少时间、质量怎么样、有没有超预算，全凭乙方一张嘴。写个外包任务管理 CLI 工具，把外包合同、任务、工时都管起来，用数据说话。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+外包合同有 ID、供应商名、合同金额、开始日期、结束日期、状态（active/expired/terminated）。外包任务有 ID、标题、合同 ID、预估工时、实际工时、状态（assigned/in-progress/submitted/accepted/rejected）、提交时间、验收人。
+
+主记录（任务）依赖配置数据（合同）——创建任务时必须指定有效的 active 状态合同，合同过期或已终止则拒绝创建。合同到期时自动检查是否有未完成的任务，有的话输出提醒。
+
+统计方面，偏差率是核心——按合同维度计算（总实际工时 / 总预估工时 - 1），偏差超过 20% 标黄，超过 40% 标红。`stats --period week|month` 按周或月聚合每个供应商的工时和偏差。`cost <contract-id>` 计算该合同的实际花费（实际工时 × 合同中约定的时薪）。
+
+- `contract add --vendor <name> --amount <n> --start <date> --end <date>`
+- `contract list [--status <status>]`
+- `task add --contract <id> --title <text> --estimate <hours>`
+- `task start <id>`：assigned → in-progress
+- `task submit <id> --actual <hours>`：in-progress → submitted
+- `task accept <id> --by <name>` / `task reject <id> --reason <text> --by <name>`
+- `stats --period week|month`
+- `cost <contract-id>`
+
+数据存 JSON 文件。Go 标准库实现。

@@ -1,6 +1,5 @@
-之前用 shell 脚本做做CSV 格式转换，太脆了，用 Go 重写。
+之前用 shell 脚本做 CSV 格式转换，iconv 和 dos2unix 各种配合，遇到 Shift-JIS 编码的日文文件就傻了。Go 重写一个，支持编码转换（UTF-8、GBK、Shift-JIS）、分隔符转换（逗号变 Tab）、行尾符转换（CRLF 变 LF）。管道友好，可以接在其他命令后面用。
 
-CSV 格式转换。支持编码转换（UTF-8/GBK/Shift-JIS）、分隔符转换、行尾符转换。管道友好。
 多个 worker 并发处理输入数据。
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
 解析完日志后自动触发告警检查。没有错误日志的时候不检查。

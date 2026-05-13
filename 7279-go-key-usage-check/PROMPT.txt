@@ -1,6 +1,13 @@
-群里有人说缺证书密钥管理工具，用 Go 搞一个。
-工具要能密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
-索引有初始化→构建中→可用→重建→下线的状态。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+密钥轮换工具还没着落，赶在 Q2 结束前搞出来。Go，密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查。
+
+密钥轮换：`usagechk rotate --key-id db-key --output-dir ./keys/`。新版本 active，旧版本 archived。密钥库 `~/.usagechk/keys.json`。
+
+归档：`usagechk archive --key-id db-key --version 1 --output archive.enc`。用当前 active 密钥加密旧密钥。安全擦除覆写后删除。
+
+无缝切换：加密用 active，解密按密文头版本号选密钥。
+
+证书过期检查：`usagechk check-expiry --watch-dir ./certs/ --warn-days 30`。扫描 PEM 证书，预警输出。
+
+索引状态初始化→构建中→可用→重建→下线？本工具无索引。审计日志按 `audits/{year}/{month}/{day}/{id}` 组织？操作记录 JSONL 到 stdout。代码分文件：`rotation.go`、`archive.go`、`checker.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

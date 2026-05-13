@@ -1,5 +1,9 @@
-那个开源工具自定义规则没做好，Go 从零写加密解密工具。
-工具要能文件完整性校验（SHA256/SHA512/BLAKE2）、校验和文件对比、增量校验。
-任务有注册→排队→执行→成功/失败→重试的状态。
-用 database/sql 的预处理语句。
-go build 能过，命令行工具能正常运行。
+开源校验工具不支持 BLAKE2b。Go 从零写文件完整性校验工具，SHA256/SHA512/BLAKE2b、校验和文件对比、增量校验。
+
+哈希：`iv-gen hash --input firmware.bin --algo blake2b`。支持 SHA-256/SHA-512/BLAKE2b-256。`detect-algo --hash "abcdef..."` 根据长度判断。
+
+对比：`iv-gen compare --baseline checksums.sha256 --input-dir ./dist/`。输出 matched/mismatched（含两个哈希）/missing。
+
+增量校验：首次 `baseline --input big.image --chunk-size 1M --output baseline.json`。后续 `incremental --baseline baseline.json --input big.image` 只检查变化的分块。
+
+任务 `registered`→`queued`→`executing`→`success`/`failed`，失败不重试。`go build` 能过，命令行工具能正常运行。

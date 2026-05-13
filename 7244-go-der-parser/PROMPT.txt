@@ -1,5 +1,11 @@
-业务那边要一个加密解密工具相关的工具，Go CLI 实现。
-工具要能信封加密（RSA+AES 混合）、密钥轮换、加密元数据管理。
-加密需要密钥，密钥怎么导入不提。
-字段值可能有各种奇怪格式，要能容错。
-go build 能过，命令行工具能正常运行。
+信封加密、密钥轮换、加密元数据管理——业务那边昨天提了三个功能需求，要在一个 Go CLI 加密工具里搞定。
+
+信封加密：RSA-2048 公钥加密 AES 会话密钥，会话密钥加密数据。`derparse seal --pubkey pub.pem --input sensitive.yaml`。输出文件格式：4 字节头长度（大端）+ JSON 元数据头（algo、key_id、nonce、created_at）+ 加密会话密钥（256B）+ 密文 + GCM tag。反密封：`derparse unseal --privkey priv.pem --input sensitive.yaml.enc`。
+
+密钥轮换：`derparse rotate --key-id main-key --new-pubkey new_pub.pem`。旧公钥保留但标记 `deprecated`。加密用 active 版本，解密根据文件头里的 key_id 和版本自动匹配。
+
+加密元数据管理：`derparse meta list` 显示密钥库，`derparse meta show --input file.enc` 显示文件元数据，`derparse meta export` 导出全部。密钥库存 `~/.derparse/keys.json`。
+
+加密需要密钥但密钥怎么导入？通过 `derparse import-key --name my-key --pubkey pub.pem` 导入公钥，私钥文件路径在解密时通过 `--privkey` 指定，不存储到密钥库。字段值容错：元数据 JSON 解析失败时尝试修复（截断补齐、非 JSON 头跳过），实在不行报错。
+
+`go build` 能过，命令行工具能正常运行。

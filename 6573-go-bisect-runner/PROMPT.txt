@@ -1,4 +1,4 @@
-闲着没事想写一个包装 git bisect 的自动化工具自己用，Go 命令行工具。
+git bisect 的 good/bad 标记要手动一个个跑，50 个 commit 要交互 6 次。包装一下——指定 good/bad commit 和测试命令，自动跑完 bisect 找到引入问题的那个 commit。
 
 包装 git bisect 的自动化工具。用户指定 good/bad commit 和测试命令，自动运行 bisect 找到引入问题的 commit。
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。

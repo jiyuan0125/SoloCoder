@@ -1,3 +1,17 @@
-给项目写个交叉编译配置工具。删除后要清理关联记录。
+Makefile 里交叉编译的 target 硬编码了一堆：linux-amd64、linux-arm64、darwin-amd64、darwin-arm64、windows-amd64…… 加一个平台要改三处，少改一处就漏编。昨天新加了个 windows-arm64，忘了改 release 脚本里的 target 列表。
 
-扫描依赖列表，检查每个依赖的许可证类型。输出许可证兼容性报告。已知的不兼容组合要标红。Go 标准库。
+Target 实体有 ID、操作系统、架构、环境变量覆盖（如 CGO_ENABLED、CC 编译器路径）、输出文件名模板、状态（active/disabled）。BuildRecord 有 ID、Target ID、构建时间、Go 版本、状态（success/failed）、输出文件路径、文件哈希。
+
+`target add --os <os> --arch <arch> [--env KEY=VALUE] [--output <template>]` 添加编译目标。`target list` 显示所有目标。删除目标时（`target remove <id>`），自动删除所有关联的 BuildRecord。
+
+`build --target <id>` 执行交叉编译——设置 GOOS 和 GOARCH 环境变量，执行 go build，成功后记录输出文件路径和 SHA256 哈希到 BuildRecord。`build --all` 按顺序编译所有 active 目标。
+
+许可证检查集成——`license-check` 扫描依赖列表，检查每个依赖的许可证类型。已知不兼容的组合（如 GPL + proprietary）标红输出。和交叉编译分开执行但共享依赖数据。
+
+- `target add --os <os> --arch <arch> [--env KEY=VALUE]`
+- `target list` / `target remove <id>`：级联清理
+- `build --target <id>` / `build --all`
+- `build history [--target <id>]`
+- `license-check`：许可证合规检查
+
+Go 标准库实现。

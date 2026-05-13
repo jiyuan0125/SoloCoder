@@ -1,5 +1,11 @@
-帮我做一个加密解密工具工具，Go 命令行实现。
-工具要能HMAC 签名和验证、多算法支持（SHA256/SHA512）、流式签名。
-消息格式升级后旧的消费者要能兼容处理。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+HMAC 签名验证、多算法哈希、流式签名，还要把消息格式兼容性考虑进去——v1 纯 hex 和 v2 JSON 两种格式都得支持。Go 命令行工具。
+
+HMAC 签名和验证：`pemparse sign --key-file hmac.key --algo sha256 --input data.bin`。密钥文件支持二进制和 hex 格式（自动检测）。算法支持 SHA-256、SHA-384、SHA-512，默认 SHA-256。签名输出纯十六进制到 stdout。验证 `pemparse verify --key-file hmac.key --algo sha256 --input data.bin --expected <hmac_hex>`，用 `hmac.Equal` 恒定时间比较。
+
+流式签名用 `io.Copy` 把数据灌进 `hash.Hash`，内存恒定。管道场景：`cat data.bin | pemparse sign --key-file key.bin --algo sha512`。
+
+消息格式升级兼容：签名输出格式从 v1（纯 hex 字符串）升级到 v2（JSON 包含 algo、signature、timestamp）。v2 格式：`{"version": 2, "algo": "hmac-sha256", "signature": "hex...", "signed_at": 1705312800}`。验证时先检测格式版本，v1 格式也能验证。用 `--output-version 2` 控制输出格式。
+
+输出格式：签名和验证结果默认 JSON，`--raw` 标志切换到纯文本。错误信息始终到 stderr。
+
+`go build` 能过，命令行工具能正常运行。

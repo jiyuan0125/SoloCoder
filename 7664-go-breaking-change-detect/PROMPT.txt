@@ -1,3 +1,16 @@
-Go 项目的重大变更检测需要自动化。主记录依赖配置数据。
+昨天升级了一个依赖，编译直接炸了。错误信息是接口签名变了，但到底哪个依赖引起的 breaking change？翻了半天 changelog 才找到。这种事不能再靠眼睛看。
 
-解析 go.mod 和 go.sum，提取所有依赖版本。对比最新版本列出可更新项。区分大版本和小版本更新。Go 标准库实现。
+ChangeRecord 实体有 ID、依赖模块路径、旧版本、新版本、变更类型（major/minor/patch）、检测时间、状态（detected/reviewed/accepted/reverted）。主记录（ChangeRecord）依赖配置数据（go.mod 文件内容），`scan` 命令解析 go.mod 提取所有依赖版本，和上次记录的版本对比——主版本号变了（如 v1 到 v2）标记为 major，次版本号变了标记为 minor，补丁号变了标记为 patch。
+
+`report` 输出检测结果——每个有版本变化的依赖一行，包含模块路径、旧版本、新版本、变更类型。major 类型的变更高亮显示，附带提示"主版本变更可能包含 breaking changes"。区分大版本和小版本更新。
+
+`review <id>` 标记为已审查，`accept <id>` 确认接受变更，`revert <id>` 标记为回退。`history <module>` 输出某个依赖的完整变更时间线。
+
+- `scan`：解析 go.mod 对比版本
+- `list [--type major|minor|patch] [--status <status>]`
+- `review <id>` / `accept <id>` / `revert <id>`
+- `history <module>`：变更时间线
+- `report`：变更检测报告
+- `export --format md`：Markdown 格式输出
+
+Go 标准库实现。

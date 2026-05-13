@@ -1,5 +1,11 @@
-帮我做一个加密解密工具工具，Go 命令行实现。
-工具要能HMAC 签名和验证、多算法支持（SHA256/SHA512）、流式签名、文件完整性校验（SHA256/SHA512/BLAKE2）。
-证书签发需要 CA，CA 怎么初始化不提。
-处理分多个阶段，每个阶段输出是下个阶段输入。
-go build 能过，命令行工具能正常运行。
+帮个忙——HMAC 签名验证、多算法哈希、流式签名、文件完整性校验，Go 命令行工具。签名的活儿比较急。
+
+HMAC 签名：`fic sign --key-file secret.key --algo sha256 --input data.bin`。算法支持 SHA-256/384/512，默认 SHA-256。密钥文件自动检测二进制/hex 格式。验证用 `hmac.Equal` 恒定时间比较。结果 JSON：`{match, algo, file}`。
+
+流式签名用 `io.CopyBuffer`，64KB 缓冲区，内存恒定。`cat big.tar | fic sign --key-file key.bin --algo sha512` 管道直接用。
+
+文件完整性校验：`fic hash --input data.bin --algo blake2b`。支持 SHA-256/512、BLAKE2b。`fic check --input data.bin --expected <hash>` 自动检测哈希长度判断算法。批量 `fic batch-hash --input-dir ./release/ --output checksums.json`。
+
+处理分阶段：读密钥→初始化 HMAC→流式处理→输出。每阶段错误分别捕获：密钥读不到（phase 1）、文件打不开（phase 2）、签名不匹配（phase 3）。CA 签发需要 CA？不涉及。
+
+`go build` 能过，命令行工具能正常运行。

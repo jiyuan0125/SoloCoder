@@ -1,3 +1,13 @@
-做个日志分级输出工具处理文件操作。多种子命令处理不同操作。
+日志分级——生产环境不能一股脑全输出，开发时又要看详细日志。级别控制是最基本的日志需求，但标准库 `log` 包连个级别都没有。
 
-文件写入用原子操作（先写临时文件再 rename）。支持文件变更监听。并发安全。Go 标准库。
+leveled-logging 用 Go 标准库实现，`go build -o log-demo ./cmd/logger` 编译。它处理文件操作等场景的分级日志输出。
+
+五个级别：DEBUG、INFO、WARN、ERROR、FATAL。默认级别 INFO——DEBUG 不输出，其他都输出。级别通过 `LOG_LEVEL` 环境变量或 `--log-level` 参数控制。FATAL 级别输出后调用 `os.Exit(1)`。
+
+多种子命令处理不同操作。格式：`[2024-01-15 10:30:45] [INFO] message key=value`。时间格式可配。字段支持——`logger.Info("request done", "method", "GET", "status", 200)` 自动拼进输出行。
+
+文件写入用原子操作（临时文件+rename）。日志文件支持变更监听——外部工具（logrotate）触发文件轮转后自动重新打开文件句柄。并发安全——多个 goroutine 写日志不串行，用 channel 异步写入。
+
+输出目标：默认 stderr。可以同时输出到文件 `--log-file app.log`。文件输出支持按大小轮转（默认 100MB）和按天轮转。历史文件保留 N 个（默认 5），超出自动删除。
+
+API：`log := logger.New(logger.WithLevel(INFO))`、`log.Info("msg")`、`log.With("key", "val").Info("msg")`。`go test ./...` 跑测试。

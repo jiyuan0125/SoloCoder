@@ -1,5 +1,13 @@
-组长说要搞工具化，先做个证书密钥管理，Go CLI。
-工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证、PKCS12/PKCS8 格式转换。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-消息发送需要 topic，topic 怎么创建不提。
-go build 能过，命令行工具能正常运行。
+证书生成和格式转换排在本迭代第一位，X.509 证书生成、CSR 处理、证书链验证、PKCS12/PKCS8 转换。Go CLI。
+
+证书生成：`jwtcert gen-self --cn "dev.local" --san "DNS:dev.local,IP:127.0.0.1" --days 365`。CA 签发：`jwtcert ca-sign --ca-cert ca.pem --ca-key ca.key --csr req.csr --days 90`。
+
+CSR：`jwtcert create-csr --cn "client" --org "MyOrg" --output req.csr`。`jwtcert show-csr --input req.csr`。
+
+链验证：`jwtcert verify --cert leaf.pem --intermediate intermediate.pem --root root.pem`。逐级签名+有效期+Key Usage 检查。
+
+PKCS12：`jwtcert to-p12 --cert c.pem --key k.pem --output c.p12`。`jwtcert from-p12 --input c.p12 --output-dir ./out/`。PKCS8：`jwtcert to-p8 --key rsa.pem`。
+
+搜索深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`？用 `filepath.Walk` 递归查找证书文件。消息发送需要 topic？不适用。
+
+`go build` 能过，命令行工具能正常运行。

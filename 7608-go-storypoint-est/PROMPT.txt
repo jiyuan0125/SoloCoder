@@ -1,3 +1,15 @@
-老板要看项目的Story Point估算数据，写个工具导出。状态按顺序流转。
+上次做规划的时候 Product Owner 让每个人报 Story Point，结果报出来的数谁也不服谁——有的说 3 有的说 13，差了四倍。需要一个工具把估算过程记录下来，有历史数据可以回看，避免同样的争论反复发生。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+工具的核心是估算记录和任务实体。Task 有 ID、标题、描述、最终 Story Point（待定或已确认）、创建时间。Estimate 记录某个人对某个任务的估算值，包含任务 ID、估算人、SP 值（必须是 Fibonacci 数列：1/2/3/5/8/13/21/34，其他值拒绝）、估算时间、备注。
+
+任务状态流转：draft → estimating → confirmed → closed。draft 状态下可以编辑标题和描述，`open <task-id>` 把任务改为 estimating，这时候大家开始提交估算。所有人都提交完了或者手动调用 `finalize <task-id>`，任务进入 confirmed 状态，系统自动取中位数作为最终 SP。如果某个估算偏离中位数超过 50%（比如中位数是 5，有人报了 13），在 finalize 的输出里标出这些异常估算，提示需要讨论。confirmed 之后不能再提交估算。
+
+- `task add --title <text> [--desc <text>]`：创建任务，初始 draft
+- `task list [--status <status>]`：列出任务
+- `task open <id>`：开放估算
+- `estimate <task-id> --points <n> --who <name> [--note <text>]`：提交估算，检查 Fibonacci 合法性
+- `task finalize <id>`：关闭估算窗口，计算中位数和异常
+- `task show <id>`：查看所有估算和最终结果
+- `export --from <date> --to <date> --format csv|md`：按时间范围导出，Markdown 表格或 CSV 格式
+
+导出内容每行一个任务，列包括标题、最终 SP、参与估算人数、最大偏差百分比。Go 标准库实现，go build 通过。

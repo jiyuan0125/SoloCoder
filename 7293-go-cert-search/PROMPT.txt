@@ -1,6 +1,13 @@
-线上的老工具太难用了，重写个证书密钥管理，Go 实现。
-工具要能CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理。
-索引有初始化→构建中→可用→重建→下线的状态。
-证书续签后依赖该证书的 TLS 配置要同步更新。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+线上证书管理工具是三年前的 Bash 脚本，1000 多行没人敢改。Go 重写，CA 初始化、证书签发、CRL 管理。
+
+CA 初始化：`certsearch init-ca --org "MyOrg" --country "CN" --root-years 20 --inter-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间 RSA-2048。
+
+签发：`certsearch issue --csr req.csr --days 90 --output issued.pem`。签发前验证 CSR 格式。
+
+CRL：`certsearch crl-init`、`certsearch crl-revoke --serial 0xABC --reason keyCompromise`。Next Update 7 天。
+
+索引状态 `initializing`→`building`→`ready`→`rebuilding`→`offline`？证书库维护一个内存索引，新签发/吊销后自动重建。证书续签后 TLS 配置同步更新：扫描引用旧证书的配置文件。
+
+代码分文件：`ca.go`、`issue.go`、`crl.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

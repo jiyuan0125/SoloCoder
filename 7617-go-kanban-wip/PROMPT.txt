@@ -1,3 +1,17 @@
-看板WIP限制工具，要能处理多人协作的场景。变更时自动通知下游。
+看板上的"进行中"那一列经常堆了二十几个任务，所有人都觉得自己在并行推进，实际上哪个都没做完。我们需要一个 WIP 限制工具——每个列、每个人都有在制品上限，超过就禁止再拉任务进来，变更时还要通知下游负责人。
 
-每个人有任务负载上限。分配新任务时检查负责人当前负载。超载时要提示。Go 标准库实现。
+看板有三列：todo、doing、done。WIP 限制分两级——列级限制（整列最多 N 个任务）和人员级限制（每个人在 doing 列最多 M 个任务）。配置在首次初始化时设定（`board init --col-limit <n> --person-limit <n>`），可以后续修改（`config set --col-limit <n>`），修改时立即刷新缓存，缓存里存着当前的计数状态，刷新过程也要读取配置文件确保一致。
+
+任务实体有 ID、标题、负责人、当前列、优先级（high/medium/low）、创建时间。`add --title <text> --assignee <name>` 创建任务并放入 todo。`move <id> doing` 把任务拉到 doing——这一步触发 WIP 检查：doing 列总数是否超限、该负责人在 doing 列的任务数是否超限。任一超限则拒绝移动，输出当前列计数和限制值。
+
+任务完成用 `move <id> done`。done 列不设限制。`done` 操作触发下游通知——输出一条提示，列出该负责人在 doing 列还剩多少个任务、下一个最该优先处理的是哪个（按优先级排序取第一个）。
+
+- `board init --col-limit <n> --person-limit <n>`
+- `config set --col-limit <n>` / `config set --person-limit <n>`
+- `add --title <text> --assignee <name> [--priority <level>]`
+- `move <id> <column>`：带 WIP 校验
+- `list [--column <col>] [--assignee <name>]`
+- `board status`：输出每列的任务数和限制值，超限的标红
+- `who`：输出每个人的 doing 列任务数和限制值
+
+数据存当前目录 JSON 文件，每次操作后立刻写盘。Go 标准库实现。

@@ -1,5 +1,3 @@
-用 Go 写一个INI配置段合并。合并多个 INI 文件的配置段。。
-同名段内的键值合并。
-段级别的优先级。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-不用第三方包，go build 通过就行。
+三个 INI 配置文件要合成一个，同名段内键值冲突不知道该用谁的。Go 写 INI 配置段合并：同名段内的键值合并，段级别可以设优先级——哪个文件的配置优先。
+
+支持多种操作模式，参考 convert csv json、convert yaml toml、validate json、diff json。不用第三方包，go build 通过就行。

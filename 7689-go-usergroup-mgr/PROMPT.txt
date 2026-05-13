@@ -1,3 +1,16 @@
-项目用户组管理的配置散落在好几个地方，写个工具统一管理。任务有多个审批步骤。
+服务器上的用户组配置来源五花八门——/etc/group 里有一份，LDAP 里有一份，应用自己的配置文件里还有一份。上次有人把某用户加到了 LDAP 组里，忘了加到 /etc/group，结果 SSH 登不上。变更没有审批流程，谁想改就改。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+Group 实体有 ID、名称、描述、来源（system/ldap/app）、成员列表、权限列表、状态（active/frozen）。Member 实体有用户名、所属 Group 列表、角色（admin/member/viewer）。变更审批流程分三步——proposed → reviewed → approved。`propose --group <name> --action <add|remove> --member <user> --who <requester>` 发起变更请求，reviewed 状态需要管理员确认（`review <id> --by <name>`），approved 后执行实际变更。
+
+合并功能——`merge --source <file1> --source <file2> --output <file>` 合并多个用户组配置源。同名组合并成员列表（去重），权限列表追加，描述保留较新的版本。
+
+`list [--group <name>]` 按组显示成员。`check --member <user>` 查看用户所属的所有组和权限。`export --format json` 导出完整配置。
+
+- `group add <name> --desc <text> --source <type>`
+- `member add <group> <user> --role <role>`
+- `list [--group <name>]` / `check --member <user>`
+- `propose --group <name> --action <type> --member <user> --who <name>`
+- `review <id> --by <name>` / `approve <id> --by <name>`
+- `merge --source <file> --source <file> --output <file>`
+
+Go 标准库实现。

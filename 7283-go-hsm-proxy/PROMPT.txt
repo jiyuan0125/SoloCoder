@@ -1,5 +1,13 @@
-之前用 Python 做，这次换 Go 试试证书密钥管理。
-工具要能CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理、证书续签流程。
-消息处理后自动发确认，确认发送失败静默跳过。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+Python 做 CA 管理的性能和兼容性都一般，这次换 Go 试试看。CA 初始化、证书签发、CRL 管理、证书续签。
+
+CA 初始化：`hsm init-ca --org "MyOrg" --country "CN" --root-years 20 --inter-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间 RSA-2048，CA:TRUE pathlen:0。
+
+签发：`hsm issue --csr request.csr --days 90 --output issued.pem`。Key Usage: digitalSignature + keyEncipherment，EKU: serverAuth。
+
+CRL：`hsm crl-init`、`hsm crl-revoke --serial 0xABC --reason keyCompromise`。
+
+续签：`hsm renew --cert expiring.pem --days 365`。保留原 SAN，新序列号。
+
+消息处理确认发送失败跳过？操作日志输出到 stdout，不阻塞主流程。代码分文件：`ca.go`、`issue.go`、`crl.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

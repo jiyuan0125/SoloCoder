@@ -1,5 +1,5 @@
-组长说要搞工具化，先做个数据库工具，Go CLI。
-工具要能SQLite Schema 迁移版本化管理、迁移脚本执行和回滚、迁移冲突检测、CSV 数据导入 SQLite。
-数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+DELETE 了 100 万条数据，磁盘空间一点没少。组长说要搞工具化。
+
+SQLite schema 迁移做版本化管理，迁移脚本能执行能回滚，冲突检测，CSV 数据导入 SQLite。数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。输入数据格式常见的都支持。
+
+Go CLI 工具，go build 能过就行。

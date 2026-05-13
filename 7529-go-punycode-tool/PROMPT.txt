@@ -1,3 +1,9 @@
-Punycode编解码的处理流程比较复杂，工具要支持管道模式。修改主体后关联数据要同步。
+先说场景：国际化域名的 Punycode 编码（比如 `中文.com` 变 `xn--fiq228c.com`）在 DNS 配置里经常需要手动转换。管道模式的支持很关键——运维脚本里 `echo "中文.com" | puny-tool encode` 这种链式调用。
 
-大文件分块处理，内存占用不超过 100MB。提供进度显示。处理中断后可以从断点继续。Go 标准库实现。
+写个 `puny-tool`，子命令 `encode` 和 `decode`。`puny-tool encode` 把 Unicode 域名转成 ACE（ASCII Compatible Encoding）格式，前缀 `xn--`。`puny-tool decode` 反过来。支持批量——`--batch` 读文件列表，每行一个域名。修改主体域名后，关联数据（比如域名对应的配置记录）要同步更新，这个通过 `--config` 参数指定关联配置文件。
+
+大文件处理：域名列表可能有几万条，分块读取，每块 1000 条，内存占用不超过 100MB。进度显示：已处理数量、成功数量、失败数量，每秒刷新一次。处理中断后可以 `--resume` 从断点继续——断点文件记录上次处理的行号。
+
+TLD（顶级域名）的编码有特殊规则：中文 TLD 也得能处理。输入格式不合法（域名里有空格、特殊字符）记录行号和原因，跳过继续。输出到 stdout 或 `--output` 文件。
+
+Go 标准库实现，`golang.org/x/net/idna` 用标准库的话就用 `net/url` 和手写 punycode。`go build`。

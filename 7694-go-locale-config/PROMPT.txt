@@ -1,3 +1,16 @@
-做个语言区域配置的 CLI 工具。修改主体后关联数据要同步。支持多套配置，按名称切换。
+项目部署到日本区域后排序结果全乱了——排查发现是 LC_ALL 设成了 zh_CN.UTF-8 而不是 ja_JP.UTF-8。有人改了 LC_ALL 忘了同步改 LANG，有人改了 Dockerfile 里的 locale 忘了改 CI 环境变量，各处配置不一致。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+LocaleConfig 实体有 ID、名称（如 zh_CN.UTF-8、en_US.UTF-8）、LANG、LC_ALL、LC_TIME、LC_NUMERIC、LC_COLLATE、关联的应用列表、状态（active/testing/disabled）。`config add --name <text> --lang <locale> [--lc-all <locale>]` 创建配置，支持多套配置按名称切换。
+
+切换配置时（`switch <name>`）验证完整性——检查指定的 locale 在系统中是否已生成（locale -a），未生成的列出来并给出 locale-gen 命令。配置文件用 JSON 格式存储。修改某个 locale 配置后（`config update <id> --lang <new-locale>`），自动同步关联的应用配置——检查哪些应用引用了这个 locale 配置，输出变更通知。
+
+`export --format env` 输出环境变量格式（export LANG=zh_CN.UTF-8）。`export --format dockerfile` 输出 Dockerfile ENV 指令格式。`detect` 扫描当前系统 locale 设置。
+
+- `config add --name <text> --lang <locale>`
+- `config list` / `config update <id> --lang <locale>`
+- `switch <name>`：切换并验证
+- `detect`：扫描系统 locale
+- `export --format env|dockerfile`
+- `config delete <id>`：删除并解除关联
+
+Go 标准库实现。

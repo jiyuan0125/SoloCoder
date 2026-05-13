@@ -1,6 +1,5 @@
-每次做worker 池管理都容易出错，写个 Go 工具自动化。
+每次写并发处理都要重新实现 worker pool，goroutine 漫天飞，channel 到处传。干脆抽一个独立的 worker 池管理工具出来：启动 N 个 worker，任务扔进来空闲的 worker 自动接，支持运行时动态加减 worker 数量。优雅停止也加上，不能让正在处理的任务被中途杀掉。
 
-worker 池管理。启动指定数量的 worker，分发任务到空闲 worker。支持动态扩缩容和优雅停止。
 文件状态有 新增、处理中、已完成、归档。处理完后可以归档。
 命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 

@@ -1,3 +1,17 @@
-Go 项目的构建标签管理需要自动化。主流程完成后自动生成关联记录。
+grep -r "//go:build" 跑了一下项目，出来两百多个结果—— linux、darwin、cgo、!cgo、ignore 各种组合。哪些还在用、哪些早就废弃了？没人知道。上周有人删了一个"废弃"的 build tag，结果 CI 上一组测试被跳过了。
 
-解析 go.mod 和 go.sum，提取所有依赖版本。对比最新版本列出可更新项。区分大版本和小版本更新。Go 标准库实现。
+BuildTag 实体有 ID、标签表达式（如 "linux"、"darwin && !cgo"）、文件路径列表、使用次数、状态（active/unused）。`scan` 命令扫描当前目录下所有 .go 文件，解析 //go:build 和 // +build 注释行，收集所有标签表达式和它们出现的文件。
+
+扫描完成后自动生成关联记录——TagUsage 统计每个标签在多少个文件中使用、涉及哪些模块。处理完成后，unused 状态的标签（上次扫描存在但本次没找到）自动归档到单独的 archive.json。
+
+`list` 输出所有标签和状态，`show <tag>` 显示该标签出现的所有文件路径。`report` 输出汇总——总标签数、active 数、unused 数、最常用的标签排行。按模块路径分组统计。
+
+- `scan`：扫描 build tags 并更新统计
+- `list [--status active|unused]`
+- `show <tag>`：使用详情
+- `report`：标签使用报告
+- `tag deprecate <tag>`：手动标记废弃
+- `tag restore <tag>`：恢复
+- `archive`：归档 unused 标签
+
+数据存当前目录 JSON 文件。Go 标准库实现。

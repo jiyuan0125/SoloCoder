@@ -1,5 +1,11 @@
-闲着没事写个文本搜索匹配工具自己用，Go CLI。
-工具要能通配符匹配（glob 模式）、路径匹配、排除规则。
-认证需要用户角色，用户角色怎么创建不提。
-用 encoding/xml 的 Marshal/Unmarshal。
+闲着没事想写一个搜索工具自己用，Go CLI。平时要翻很多配置文件和日志，通配符加正则的组合筛选比纯 grep 方便。
+
+通配符匹配走 glob 模式——"*.conf" 或 "nginx-*.log" 筛选文件名。路径匹配支持递归遍历。排除规则用 -exclude 排掉 .git、vendor 等干扰目录。多个排除规则逗号分隔。
+
+正则搜索用 Go 标准库 regexp，RE2 语法。通配符和正则组合使用：先 glob 筛文件列表，再 regex 匹配内容。匹配结果输出文件名、行号、匹配文本。
+
+认证这块需要用户角色——admin 全权限，viewer 只能搜公开文件。角色怎么创建不在这里规定，用配置文件或内存 map 都行，关键是搜索前先校验。
+
+用 encoding/xml 的 Marshal/Unmarshal 处理 XML 格式的配置文件和搜索结果。搜索结果支持导出为 XML 格式——Marshal 时字段用 XML tag 标注。读取 XML 配置文件时用 Unmarshal 解析到结构体，解析失败给明确错误信息。
+
 go build 能过，命令行工具能正常运行。

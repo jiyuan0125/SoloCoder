@@ -1,5 +1,11 @@
-新规要求合规检查，得加个证书密钥管理工具，Go。
-工具要能PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
-校验分三阶段：格式校验→规则校验→关联校验，前一步通过才能做下一步。
-扫描多个目录要并行处理。
-go build 能过，命令行工具能正常运行。
+合规审查上周出了新规，所有密钥格式必须统一为 PKCS8，两周内整改。Go 写密钥格式转换工具，PKCS12/PKCS8、PEM/DER、密钥格式标准化。
+
+PKCS12：`keylog from-p12 --input client.p12 --password "xxx" --output-dir ./out/`。`keylog to-p12 --cert c.pem --key k.pem --ca ca.pem --output client.p12`。
+
+PEM↔DER：`keylog pem-to-der --input cert.pem --output cert.der`。`keylog der-to-pem --input cert.der --type certificate --output cert.pem`。
+
+标准化：`keylog normalize --input key.pem --output standard.pem`。统一 PKCS8 PEM。
+
+校验三阶段：格式校验（文件格式是否合法）→ 规则校验（密钥长度是否达标）→ 关联校验（密钥是否在库中注册）。前一步通过才做下一步。扫描多个目录并行处理。
+
+`go build` 能过，命令行工具能正常运行。

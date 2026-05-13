@@ -1,3 +1,9 @@
-之前那个属性文件解析脚本太慢了，用 Go 重写。多个关联的实体。支持并发处理多个输入文件。
+Java 的 `.properties` 文件到处都是——Spring Boot、Logback、老系统配置。之前用 Bash 脚本批量处理这些文件，速度慢得让人抓狂，遇到 Unicode 转义更是没法搞。用 Go 重写，第一件事就是并发。
 
-加一个校验模式，验证编解码的对称性。错误信息要包含文件名和具体位置。Go 标准库，命令行工具。
+工具叫 `props-tool`，子命令 `get`、`set`、`list`、`convert`。1. `props-tool get app.name` 读取指定键的值。2. `props-tool set app.name=myservice` 设置值，文件不存在就创建。3. `props-tool list` 列出所有键值对。4. `props-tool convert` 把 `.properties` 转成 `.json` 或 `.yaml`，反向也行。
+
+并发处理多个文件用 `--batch` 指定目录，goroutine 池并发读，channel 收结果。每个文件有独立的属性表，转成 JSON 时保留键的顺序（properties 文件本身是有序的）。关联实体：convert 时，如果目标文件已存在，先读它的内容做合并——新键追加，已有键更新，不存在的键保留（除非 `--clean` 模式）。
+
+校验模式 `--verify`：编码后的 properties 文件再解码，和原始内容对比。Unicode 转义（`\uXXXX`）要正确处理——`get` 时自动解码成 UTF-8 显示，`set` 时可选保持 Unicode 转义或直接 UTF-8。错误信息包含文件名和行号。
+
+Go 标准库，命令行工具。`go build`。

@@ -1,5 +1,3 @@
-下周要给开发组演示那个文件处理流程，先出个能跑的空白差异对比，Go。
-只关注实质内容的变更。
-选项控制忽略程度。
-子命令结构：db migrate、db rollback、db status、db seed。
-纯标准库实现，go run . 能跑。
+代码 review 被一堆空白变动刷屏，真正的改动反而找不到。Go 写一个空白差异对比：只关注实质内容变更，忽略程度可以通过选项控制——是只忽略尾部空格还是所有空白变动。
+
+子命令设计参考 db migrate、db rollback、db status、db seed 这种结构。纯标准库实现，go run . 能跑。

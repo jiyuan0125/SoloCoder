@@ -1,4 +1,4 @@
-调研了一圈，Go 做检查 changelog 文件格式最方便，编译出来直接跑。
+changelog 版本号居然倒退了，日期格式也不统一，review 没看出来。验证版本号递增、日期格式、条目分类，支持 Keep a Changelog 格式。
 
 检查 changelog 文件格式。验证版本号递增、日期格式、条目分类。支持 Keep a Changelog 格式。
 有可能一次导入上万条数据。

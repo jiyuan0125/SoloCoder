@@ -1,6 +1,5 @@
-之前用的 SaaS 工具到量了，Go 自建在 protobuf 二进制格式和 JSON 之间转换。
+protobuf 二进制和 JSON 互转的工具 SaaS 到量了收费太贵。Go 自己写：读取 .proto 文件获取消息定义，支持嵌套消息和枚举类型的双向转换。
 
-在 protobuf 二进制格式和 JSON 之间转换。读取 .proto 文件获取消息定义。支持嵌套消息和枚举类型。
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。

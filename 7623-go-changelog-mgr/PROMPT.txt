@@ -1,3 +1,16 @@
-变更日志工具，要能处理多人协作的场景。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+版本发布之后产品经理问"这次改了什么"，开发翻了半天提交记录才拼出来——太狼狈了。需要一个变更日志工具，多人维护变更条目，最终自动生成格式化日志。
 
-每个人有任务负载上限。分配新任务时检查负责人当前负载。超载时要提示。Go 标准库实现。
+核心实体 Change 有：ID、标题、描述、类型（feature/fix/breaking/deprecation/security）、影响范围、负责人、状态（draft/reviewed/published）。团队成员各自提交自己负责模块的变更，最后由发布负责人汇总。
+
+录入变更时（`add --title <text> --type <type> --scope <module> --who <name>`），主操作执行前调用辅助检查函数，检查同一模块下是否有重复标题的变更（防止重复录入），辅助检查和主操作读同一份数据文件。重复条目只是警告，不阻止提交。
+
+每人有负载上限——同一轮发布中每人最多维护 5 条变更。录入时检查该负责人当前的 draft 和 reviewed 状态变更数，超限拒绝。
+
+- `add --title <text> --type <type> --scope <module> --who <name> [--desc <text>]`
+- `list [--type <type>] [--who <name>] [--status <status>] [--scope <module>]`
+- `review <id>`：draft → reviewed
+- `publish`：把所有 reviewed 的变更生成 CHANGELOG.md 文件，按类型分组（breaking changes 在最前面），每条包含标题、负责人、scope。生成后状态全部改为 published
+- `show <id>`：完整信息
+- `config set --per-person-limit <n>`：调整负载上限
+
+生成的 CHANGELOG.md 包含版本号（自动递增）、日期、变更列表。Go 标准库实现。

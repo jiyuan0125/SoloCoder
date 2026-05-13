@@ -1,4 +1,11 @@
-线上的老工具太难用了，重写个证书密钥管理，Go 实现。
-工具要能CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理、证书续签流程。
-认证通过后自动记录日志，日志写入失败不影响结果。
-go build 能过，命令行工具能正常运行。
+线上证书管理工具是三年前写的 Bash 脚本，1000 多行，谁都不敢改。Go 重写一个，CA 初始化（根证书+中间证书）、证书签发流程、CRL 管理、证书续签。
+
+CA 初始化：`san-mgr init-ca --org "MyCompany" --country "CN" --root-years 20 --intermediate-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间证书 RSA-2048。中间证书 CA:TRUE, pathlen:0。
+
+证书签发：`san-mgr issue --csr request.csr --days 90 --san "DNS:svc1.example.com,DNS:svc2.example.com" --output issued.pem`。签发前验证 CSR 格式。序列号随机生成。Key Usage: digitalSignature + keyEncipherment，EKU: serverAuth。
+
+CRL 管理：`san-mgr crl-init`、`san-mgr crl-revoke --serial 0xABC --reason keyCompromise`。CRL PEM 输出，Next Update 7 天后。
+
+证书续签：`san-mgr renew --cert expiring.pem --days 365`。保留原 SAN 和扩展，新序列号。认证通过后记录操作日志（JSONL 格式到 stdout）。
+
+`go build` 能过，命令行工具能正常运行。

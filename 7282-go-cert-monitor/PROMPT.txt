@@ -1,5 +1,9 @@
-调研了一圈，Go 做证书密钥管理比较合适。
-工具要能证书过期检查和预警、批量检查目录下所有证书、报告 JSON 输出。
-导入完成后自动更新索引，索引更新失败只记日志。
-配置项有哪些你自己设计，够用就行。
-go build 能过，命令行工具能正常运行。
+证书监控方案评估下来，Go 的 `crypto/x509` 和并发能力做这个最合适。证书过期检查、批量检查目录、报告 JSON 输出。
+
+批量检查：`certmon batch-check --input-dir ./certs/ --warn-days 30 --output report.json`。递归扫描 `.pem` 文件，4 goroutine 并行。报告按过期时间排序，每条：`{file, subject, issuer, not_before, not_after, days_remaining, warning, san}`。
+
+单证书检查：`certmon check --cert server.pem --warn-days 30` 或 `certmon check --endpoint https://example.com:443`。
+
+导入完成后自动更新索引？扫描结果缓存到 `~/.certmon/cache.json`，下次只检查修改时间变化的文件。索引更新失败只记日志。配置项自行设计：`--concurrency`、`--warn-days`、`--output-format`（json/table）。
+
+`go build` 能过，命令行工具能正常运行。

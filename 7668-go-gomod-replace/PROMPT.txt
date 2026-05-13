@@ -1,3 +1,19 @@
-替换指令管理涉及多个配置文件，手动管理容易遗漏。调整后相关的汇总也要更新。
+go.mod 里的 replace 指令没人管得清——根目录一份，子模块一份，CI 环境还偷偷加了一份。上次清理依赖，改了根 go.mod 的 replace，子模块的根本没同步，本地能跑 CI 跑不了。
 
-工具支持模板渲染，公共变量只维护一份。敏感信息支持从环境变量注入。Go 标准库实现，go build 通过。
+ReplaceRule 实体有 ID、原始模块路径、替换目标路径/版本、来源文件（go.mod 路径）、注释/原因、状态（active/disabled）。工具扫描指定目录下所有 go.mod 文件，收集 replace 指令形成统一视图。
+
+`scan <dir>` 扫描并收集所有 replace 指令。`list [--source <file>]` 按来源文件筛选。`add --module <path> --replacement <path> --source <file> --reason <text>` 添加新 replace 指令。添加后自动更新汇总——当前有多少个 active 的 replace、按来源文件分组计数。这就是"调整后汇总也要更新"。
+
+`remove <id>` 删除 replace 规则，同时从来源 go.mod 文件中移除对应行。`disable <id>` 临时禁用（不删除，注释掉）。
+
+模板渲染——`render --template <file> --output <file>` 生成统一的 replace 配置文件。公共变量（如本地模块路径前缀）维护一份。敏感信息（如私有仓库 token）从环境变量注入。
+
+- `scan <dir>`：扫描所有 go.mod
+- `list [--source <file>]`
+- `add --module <path> --replacement <path> --source <file> --reason <text>`
+- `remove <id>` / `disable <id>`
+- `summary`：汇总统计
+- `render --template <file> --output <file>`
+- `inject --var <name> --from-env <ENV_VAR>`
+
+Go 标准库实现，go build 通过。

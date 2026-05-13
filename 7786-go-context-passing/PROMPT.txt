@@ -1,3 +1,13 @@
-做个上下文传递库，处理终端表格输出。操作前需要先有基础数据。
+上下文传递——函数调用链好几层，每层都要传一堆参数，改一个参数签名要改一串函数。有没有更优雅的方式？用 Context 对象把这些值都装进去，谁需要谁取。
 
-表格支持多行单元格、合并单元格、条件格式化。列宽自适应内容。支持 ANSI 颜色。Go 标准库实现，go build 通过。
+context-passing 用 Go 标准库实现，`go build -o ctx-demo ./cmd/ctx` 编译。它处理终端表格输出和上下文传递。
+
+Context 模型：键值对存储，支持 string、int、bool、自定义类型。类型安全取值——`ctx.GetString("key")`、`ctx.GetInt("count")`，类型不匹配返回零值和 error。操作前需要先有基础数据——Context 可以有父级，子级覆盖父级的同名键，读的时候先查自己再查父级。
+
+取消传播：Context 绑定 `context.Context`，父级取消时所有子级自动取消。超时也支持——`ctx.WithTimeout(30*time.Second)`。goroutine 可以通过 `ctx.Done()` 监听取消信号。
+
+表格输出：上下文中的数据可以用表格形式展示。支持多行单元格、合并单元格、条件格式化（比如超时的请求标红）。列宽自适应内容。支持 ANSI 颜色。
+
+子命令：`dump` 输出当前上下文所有键值对；`tree` 以树形展示父子关系；`trace` 展示上下文在调用链中的传递路径。调试模式 `--verbose` 输出每个 key 的设置时间和调用栈。
+
+API：`c := ctx.New()`、`c.Set("key", "value")`、`v, ok := c.Get("key")`、`child := c.Child()`。`go test ./...` 跑测试，`go build` 编译通过。

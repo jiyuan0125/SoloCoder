@@ -1,4 +1,4 @@
-给朋友写个从 Go struct 定义生成 property-based test 骨架的小工具，Go 实现，跑在本地就行。
+property-based testing 手写太累，随机值策略和属性检查函数每个 struct 都要编。从 Go struct 定义直接生成——序列化 round-trip、零值不影响逻辑这些基本属性自动输出骨架。
 
 从 Go struct 定义生成 property-based test 骨架。根据字段类型生成随机值策略和基本属性（如序列化 round-trip、零值不影响逻辑）。
 处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。

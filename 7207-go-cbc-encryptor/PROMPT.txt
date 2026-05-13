@@ -1,5 +1,11 @@
-隔壁组做了个相关工具，我们顺便把加密解密工具也做了，Go。
-工具要能密钥分片（Shamir Secret Sharing）、门限恢复、分片验证。
-认证需要用户角色，用户角色怎么创建不提。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+隔壁组的 AES-GCM 工具上周上线了，我们这边的场景有个特殊需求：CBC 模式 + 密钥分片。Shamir Secret Sharing 把主密钥拆成多份，门限恢复，分片验证。Go 命令行工具。
+
+CBC 加密用 AES-256 + PKCS7 填充。CBC 本身不提供认证，密文后附加 HMAC-SHA256 认证标签。流程：随机 16 字节 IV → AES-CBC 加密 → 对 IV+密文算 HMAC → 输出。解密先验证 HMAC 防止 padding oracle 攻击。
+
+Shamir 分片：`cbc-tool split --threshold 3 --shares 5 --key master.key` 把主密钥拆成 5 份，任意 3 份恢复。分片 JSON 格式：`{index, data(base64), threshold, total}`，每份一个文件 `share_N.json`。
+
+门限恢复：`cbc-tool recover --shares share_1.json,share_3.json,share_5.json` 拉格朗日插值。分片不足阈值报错。验证 `cbc-tool verify-share share_2.json` 只检查格式不恢复。
+
+随机数用 `crypto/rand`，不用 `math/rand`。纯本地工具不需要认证。
+
+`go build` 能过，命令行工具能正常运行。

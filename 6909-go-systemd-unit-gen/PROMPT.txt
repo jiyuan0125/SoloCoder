@@ -1,6 +1,5 @@
-给朋友写个生成 systemd service unit 文件的小工具，Go 实现，跑在本地就行。
+帮朋友的创业公司写个生成 systemd service unit 文件的工具。他那边 30 多台服务器，每次部署新服务都要手动写 .service 文件，经常写错字段。从命令行参数读配置，直接生成标准 .service 文件，环境变量、依赖关系、重启策略都能指定。
 
-生成 systemd service unit 文件。从配置参数生成 .service 文件。支持自定义环境变量、依赖、重启策略。
 输入可能包含乱码和特殊字符。
 命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。

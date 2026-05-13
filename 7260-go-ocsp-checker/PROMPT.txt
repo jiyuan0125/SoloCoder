@@ -1,6 +1,11 @@
-朋友那边需要一个证书密钥管理工具，Go 写命令行。
-工具要能证书吊销列表管理、OCSP 检查工具、吊销原因记录。
-加密完自动删除原文，删除失败继续执行。
-密钥轮换后用旧密钥加密的数据要能解密。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+运维团队的证书吊销检查需要工具化。Go 命令行，CRL 管理、OCSP 检查、吊销原因记录。
+
+CRL：`ocsp-check crl-init --ca-cert ca.pem --ca-key ca.key --output ca.crl.pem`。吊销：`crl-revoke --serial 0xABCDEF --reason keyCompromise --ca-key ca.key --crl ca.crl.pem`。原因枚举：unspecified/keyCompromise/cACompromise/superseded/cessationOfOperation。Next Update 默认 7 天。
+
+OCSP 检查：`ocsp-check check --cert server.pem --issuer ca.pem --responder http://ocsp.example.com`。返回 good/revoked/unknown。超时 5 秒。带 Next Update 时间显示。`--staple` 保存 OCSP 响应文件。
+
+吊销记录：`~/.ocsp-check/revocations.jsonl` 每行一条：`{serial, reason, revoked_at, revoked_by}`。查询 `show-revocations --serial 0xABCDEF`。
+
+代码分文件：`crl.go`、`ocsp.go`、`records.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

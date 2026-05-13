@@ -1,3 +1,7 @@
-终端里BBCode解析总对不齐，写个工具处理一下。多种子命令处理不同操作。
+论坛和老式 CMS 里全是 BBCode——`[b]bold[/b]`、`[url=http://...]link[/url]`、`[quote]...[/quote]`。要做数据迁移，把这些帖子内容转出来，`[code]` 块得保持原样，嵌套的 `[quote]` 要缩进，终端渲染的时候对不齐的问题很烦。
 
-表格列宽按内容自适应，表头和内容对齐。支持 Unicode 字符和 ANSI 转义序列。Go 标准库。
+`bbcode-tool`，子命令 `parse`、`render`、`convert`。`bbcode-tool parse` 读 BBCode 文本，解析所有标签——简单标签（`[b]`、`[i]`、`[u]`、`[s]`）、带参数标签（`[url=...]`、`[img width=...]`）、块标签（`[code]`、`[quote]`、`[list]`）。输出标签树的 JSON。`bbcode-tool render` 渲染成终端格式——粗体用 ANSI 加粗、斜体用 ANSI 斜体、链接显示 `text (url)`、引用块用缩进 `> `。`bbcode-tool convert` 转 Markdown 或 HTML。
+
+表格列宽按内容自适应——BBCode 的 `[table]` 标签要正确解析为表格。支持 Unicode 字符和 ANSI 转义序列。
+
+Go 标准库。`go build`。

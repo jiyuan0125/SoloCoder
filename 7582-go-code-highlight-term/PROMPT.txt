@@ -1,3 +1,9 @@
-线上日志输出的代码高亮终端格式不统一，写个工具标准化一下。处理完成后自动归档。
+线上日志输出里的代码片段需要语法高亮，但不同模块用的格式不统一——有的用 ANSI 颜色码，有的纯文本，有的用 HTML 标签。处理完成后自动归档——转换过的日志文件移到归档目录。写个工具标准化一下。
 
-自动检测输入格式，统一输出到目标格式。处理速度要快，支持管道输入。Go 标准库。
+`code-highlight-term`，子命令 `highlight`、`strip`、`list`。`code-highlight-term highlight` 读代码文件，用简单的规则高亮输出到终端——关键字（语言特定的保留字列表）加粗蓝色，字符串绿色，注释灰色，数字黄色。支持的语言：Go、Python、Java、JavaScript、Rust（通过 `--lang` 指定，默认自动检测文件扩展名）。`code-highlight-term strip` 去掉已有的 ANSI 颜色码，输出纯文本。`code-highlight-term list` 列出支持的语言和高亮规则。
+
+自动检测输入格式——有 ANSI 转义序列的先 strip 再重新 highlight，纯文本的直接 highlight。处理速度要快，大文件（几千行的代码）用流式处理。管道输入支持：`cat main.go | code-highlight-term highlight --lang go`。
+
+高亮规则通过 JSON 配置文件可以自定义（`--theme` 参数指定），覆盖默认的颜色方案。
+
+Go 标准库。`go build`。

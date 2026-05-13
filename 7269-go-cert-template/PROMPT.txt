@@ -1,5 +1,11 @@
-老板说要搞数字化，第一步先做个证书密钥管理，Go CLI。
-工具要能密钥轮换流程、旧密钥安全归档、无缝切换。
-证书续签后依赖该证书的 TLS 配置要同步更新。
-多核机器上跑的时候多个 goroutine 同时处理。
-go build 能过，命令行工具能正常运行。
+技术规划里密钥生命周期管理排在本季度第一位，密钥轮换流程是核心功能。Go CLI，密钥轮换流程、旧密钥安全归档、无缝切换。
+
+密钥轮换：`certtpl rotate --key-id tls-key --output-dir ./keys/`。生成新密钥版本，标记 active，旧版本标记 archived。密钥库 `~/.certtpl/keys.json`，每条记录：key_id、version、status（active/archived/destroyed）、created_at。
+
+旧密钥安全归档：`certtpl archive --key-id tls-key --version 1 --output archive.enc`。归档前用当前 active 密钥加密。安全擦除用 `crypto/rand` 覆写后删除记录。
+
+无缝切换：加密用 active 版本，解密根据密文头版本号自动选密钥。证书续签后 TLS 配置同步更新：`certtpl sync-tls --key-id tls-key --config /etc/nginx/nginx.conf`，自动替换配置文件中的密钥路径指向新版本。
+
+多核并行：密钥操作本身很快，不需要。扫描多个目录？`certtpl scan --dir ./configs/` 查找引用旧密钥版本的配置文件。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,4 +1,4 @@
-调研了一圈，Go 做JSON键名大小写统一比较合适，性能比脚本好。
+前端的 key 用 camelCase，后端用 snake_case，数据中台两边都要对接。Go 做 JSON 键名大小写统一。
 支持 camelCase、snake_case、PascalCase。
 嵌套对象的键名也要统一。
 导入成功后自动通知下游系统，本地模式没有下游配置。

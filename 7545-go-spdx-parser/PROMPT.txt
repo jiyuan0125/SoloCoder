@@ -1,3 +1,9 @@
-之前那个SPDX解析脚本太慢了，用 Go 重写。更新配置时自动刷新缓存，刷新也要读配置。支持并发处理多个输入文件。
+安全合规团队下了个硬要求：每个发布包都得带 SPDX 文件（Software Package Data Exchange，开源许可证的标准交换格式）。之前用 Python 脚本批量生成和校验 SPDX 文件，速度太慢，而且更新 SPDX 模板时缓存没刷新，导致用了旧模板。用 Go 重写。
 
-加一个校验模式，验证编解码的对称性。错误信息要包含文件名和具体位置。Go 标准库，命令行工具。
+`spdx-tool`，子命令 `generate`、`validate`、`diff`。`spdx-tool generate` 从项目目录扫描依赖信息（读 `go.sum` 或 `package-lock.json`），生成 SPDX 格式的 SBOM 文件。模板通过 `--template` 指定。`spdx-tool validate` 校验 SPDX 文件的格式——字段完整性（必有 Document Name、Creator、Package Name 等）、许可证表达式语法、Package Verification Code 是否正确。
+
+`spdx-tool diff` 比较两个 SPDX 文件的差异——新增了哪些包、删除了哪些包、哪些包的版本变了。更新配置（比如添加新的许可证例外）时，自动刷新缓存的许可证列表，这个刷新过程也要读配置文件。所以配置读取和校验之间有依赖。
+
+并发处理多个文件用 `--batch`。校验模式验证编解码对称性——generate 出来的 SPDX 再 parse 回来，数据结构一致。错误信息包含文件名和具体位置。
+
+Go 标准库，命令行工具。`go build`。

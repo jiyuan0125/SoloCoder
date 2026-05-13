@@ -1,5 +1,11 @@
-之前买的工具续费太贵，Go 自建加密解密工具工具。
-工具要能数字签名（RSA-PSS/ECDSA）、签名验证、签名时间戳。
-处理消息时触发关联操作，关联操作也访问同一个队列状态。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+去年买的加密工具一年 license 要 5 万，续费报价又涨了。自建一个数字签名工具，Go 写，RSA-PSS/ECDSA 签名、签名验证、签名时间戳。
+
+数字签名：`nonce-mgr sign --key priv.pem --scheme rsa-pss --input artifact.tar.gz`。RSA-PSS 盐值长度自动等于哈希输出长度。ECDSA 用 P-256 曲线。签名文件 JSON 格式：`{"algorithm": "rsa-pss-sha256", "signature": "base64...", "signed_at": 1705312800, "key_fingerprint": "SHA256:abc..."}`。
+
+签名验证：`nonce-mgr verify --key pub.pem --input artifact.tar.gz --sig artifact.sig`。验证步骤：解析签名文件→确认算法→重新计算消息哈希→验证签名→检查时间戳。结果输出 JSON：`{"valid": true, "algorithm": "...", "signed_at": "...", "key_match": true}`。
+
+签名时间戳的细节：签名时工具内部取 `time.Now().Unix()` 编入签名数据。验证时可选 `--max-age 86400`，签名超过指定秒数判为过期。时间戳不能从外部传入，防止伪造。
+
+消息队列关联操作？本工具不做消息处理。输出格式：签名文件和验证结果都用 JSON，方便程序化处理。错误信息写到 stderr，结果写到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

@@ -1,5 +1,3 @@
-最近在搞文件处理，需要一个依赖注入容器生成，Go 实现。
-构造函数自动连接。
-生命周期管理。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-纯标准库实现，go run . 能跑。
+依赖关系手动装配，初始化顺序搞错就 panic。构造函数自动连接，生命周期管理也带上。支持嵌套命令：project create、project build、project test run、project test coverage。
+
+标准库搞定，go run . 跑起来。

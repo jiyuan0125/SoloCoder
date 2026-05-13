@@ -1,5 +1,7 @@
-帮我做一个认证授权工具工具，Go 命令行实现。
-工具要能OAuth2 Token 处理、Token 刷新流程、Scope 验证。
-证书有申请→签发→生效→过期→续签的状态流转。
-可能一次处理上万条记录。
-go build 能过，命令行工具能正常运行。
+OAuth2 Token 的解析、刷新和 Scope 验证散落在三个不同的脚本里，维护起来头疼，而且刷新失败的重试逻辑写了好几个版本都有 bug。合并成一个 Go 命令行工具。
+
+Token 处理支持 JWT 格式的 Access Token 解码——提取 scope、exp、client_id 这些关键字段。Opaque Token 只做透传不做解码。Refresh Token Grant 刷新流程实现标准流程——拿 refresh_token 调 token endpoint 换新的 access_token。刷新失败用指数退避重试最多三次，每次间隔翻倍。刷新成功自动更新本地 token 存储。
+
+Scope 验证支持层级关系——read 包含在 read:write 里，admin 隐含 user 的全部权限。验证请求 scope 是否在 token 允许的范围内，不在就拒绝。Scope 匹配要精确，前缀匹配不算——"read" 不等于 "read:data"。
+
+证书有完整状态流转：申请→签发→生效→过期→续签。状态之间有合法转换路径，不能跳步。可能一次处理上万条 Token 记录，用 goroutine 并发处理，channel 收集结果。输出 JSON 格式。go build 能过，命令行工具能正常运行。

@@ -1,5 +1,11 @@
-下周要演示，先出个能跑的加密解密工具工具，Go CLI。
-工具要能密码哈希（bcrypt/scrypt）、密码强度检查、哈希验证。
-权限路径支持多层 resources/{type}/{id}/actions/{action}。
-错误情况怎么处理你自己定。
-go build 能过，命令行工具能正常运行。
+下周要给客户演示安全工具集，密码哈希这块得有个能跑的工具。Go CLI，bcrypt/scrypt 密码哈希、密码强度检查、哈希验证。
+
+密码哈希：`shake hash --password "xxx" --algo bcrypt --cost 12`。bcrypt cost 默认 12（范围 4-31）。scrypt 参数 N=32768 r=8 p=1。输出标准模块字符串。
+
+密码强度检查：最少 8 字符、内置 top-1000 弱密码字典、不允许纯数字/纯字母、连续重复不超过 3 个。`shake strength --password "xxx"` 输出 JSON：`{"score": 4, "warnings": [], "pass": true}`。score 0-4，≥3 通过。
+
+哈希验证：`shake verify --password "xxx" --hash "$2b$12$..."`。自动检测算法前缀。结果布尔值到 stdout。
+
+权限路径多层 `resources/{type}/{id}/actions/{action}`？本工具没有资源权限系统。错误处理自行定义：密码太弱（exit 1）、哈希格式不对（exit 2）、算法不支持（exit 3）、密码不匹配（exit 4）。
+
+`go build` 能过，命令行工具能正常运行。

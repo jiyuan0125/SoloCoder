@@ -1,5 +1,5 @@
-试了三个现成方案都不满足特定的编码要求，只能 Go 自己写访问者模式生成。
-从类型定义生成 visitor 接口。
-accept 方法自动生成。
+AST 遍历每种节点都要写一遍 switch case，新增节点类型到处加分支。从类型定义生成 visitor 接口，accept 方法自动生成。
+
 支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-go build 能编译通过，不依赖第三方库。
+
+go build 能过，不依赖第三方库。

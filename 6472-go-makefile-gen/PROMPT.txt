@@ -1,5 +1,5 @@
-想用 Go 练手数据处理这块，做个Makefile生成。
-build、test、lint、clean 目标。
-支持交叉编译。
+每个项目的 Makefile 都不一样，新人来了不知道怎么编译。生成标准的 build、test、lint、clean 目标，支持交叉编译。
+
 多级命令：config get、config set、config list、config env switch。
-go build 能编译通过，不依赖第三方库。
+
+不用第三方包，编译通过就行。

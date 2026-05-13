@@ -1,3 +1,17 @@
-写个KPI看板的 CLI 工具。更新配置时自动刷新缓存，刷新也要读配置。每个任务有预估工时和实际工时两个字段。
+KPI 数据散落在好几个看板里，老板每周要汇总报告，我得一个个手动抄。写个 KPI 看板 CLI 工具，把指标集中管理，配置更新时自动刷新缓存和重算。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+KPI 实体有 ID、名称、类别（performance/quality/efficiency/satisfaction）、目标值、当前值、单位、计算公式（manual/sum/average）、更新频率（daily/weekly/monthly）、负责人、数据源标签。如果计算公式是 sum 或 average，关联的子指标值变更时自动重算主指标。比如"客户满意度"= avg(响应速度分, 解决质量分, 沟通态度分)，改了任何一个子指标都触发父指标重算。
+
+配置变更用 `config set <kpi-id> --target <n>` 修改目标值，修改后刷新内存缓存（缓存存着最近一次计算的值和达标状态），刷新过程也重新读配置文件确保一致。
+
+任务维度上，每个 KPI 改进可以关联任务（有预估和实际工时），用来跟踪改进措施的执行。`stats --period week|month` 输出每周/月的指标变化趋势和偏差率。
+
+- `kpi add --name <text> --category <type> --target <n> --unit <text> --formula <type> --owner <name>`
+- `kpi update <id> --value <n> --date <date>`：手动更新值
+- `kpi link <parent-id> --child <id>`：建立子指标关系
+- `config set <id> --target <n>`
+- `dashboard`：输出所有 KPI 的当前值、目标值、达标状态
+- `detail <id>`：KPI 详情含历史趋势
+- `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

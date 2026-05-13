@@ -1,5 +1,3 @@
-之前买的工具续费太贵，Go 自建数据库工具工具。
-工具要能数据库备份（SQL dump）、增量备份、备份恢复验证。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-用 encoding/xml 的 Marshal/Unmarshal。
-go build 能过，命令行工具能正常运行。
+同样的查询昨天 0.1 秒今天 30 秒，得分析执行计划。之前买的分析工具续费太贵了。数据库备份做 SQL dump、增量备份、备份恢复验证，密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+
+用 encoding/xml 的 Marshal/Unmarshal。Go 自建命令行工具，go build 能过就行。

@@ -1,3 +1,7 @@
-做个 dry-run模式库，处理终端表格输出。属性变更影响计算结果。
+生产环境操作前先预演一遍，看会做什么但不实际执行——这个能力 CLI 工具都应该有，但每次都要在每处操作前加 if 判断太丑了。
 
-表格支持多行单元格、合并单元格、条件格式化。列宽自适应内容。支持 ANSI 颜色。Go 标准库实现，go build 通过。
+dryrun-mode 用 Go 标准库实现，`go build -o dryrun-demo ./cmd/dryrun` 编译。它处理终端表格输出的预演模式。`--dry-run` 或 `DRY_RUN=true` 环境变量启用后，所有写操作（文件写入、网络请求、数据库操作）被拦截只记录不执行，读操作正常——dry-run 不影响查询。
+
+拦截机制通过 `Action` 接口封装：`RealAction` 实际执行，`DryRunAction` 只记录日志，模式切换时替换接口实现。记录内容包括操作类型、目标、参数、预期效果。dry-run 结果包含预计影响的文件数、数据量等。dry-run 报告用表格展示——操作序号、类型、目标、状态（将执行/将跳过），表格支持多行单元格、合并单元格、条件格式化，将执行的操作绿色，将跳过的灰色。
+
+子命令：`run <command> --dry-run` 预演；`report` 查看上次 dry-run 的结果；`diff` 对比 dry-run 和上次实际执行的结果差异。API：`runner := dryrun.NewRunner()`、`runner.Register("write-file", writeFileAction)`、`runner.Execute("write-file", params)`。`go test ./...` 跑测试，`go build` 编译通过。

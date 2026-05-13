@@ -1,6 +1,13 @@
-之前手动链断了排查半天太慢了，用 Go 重写个证书密钥管理工具。
-工具要能证书续签流程、自动续签定时检查、续签通知。
-加密完自动删除原文，删除失败继续执行。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-文件可能有好几 GB 大，要能处理。
-go build 能过，命令行工具能正常运行。
+排查证书链断裂的问题花了大半天，手动逐级比对太痛苦了。Go 重写，证书续签流程、自动续签定时检查、续签通知。
+
+证书续签：`chainbuild renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365`。保留原 SAN 和扩展。新序列号。指纹对比输出。
+
+自动续签定时检查：`chainbuild auto-renew --watch-dir ./certs/ --ca-dir ./ca/ --threshold-days 30 --interval 3600`。每小时扫描，不足 30 天自动续签。备份原文件 `.bak`。
+
+续签通知：默认 stdout。可选 `--notify-webhook URL`。通知 JSON：`{event, cert, new_expiry, status, timestamp}`。
+
+加密完删除原文？续签后旧证书备份不删除。密钥路径 `keys/{algorithm}/{key_id}/versions/{ver}`？本工具的密钥按 `--ca-dir` 组织，简单明了。文件可能几 GB？证书文件最多几百 KB。
+
+代码分文件：`renew.go`、`watcher.go`、`notify.go`、`main.go`。
+
+`go build` 能过，命令行工具能正常运行。

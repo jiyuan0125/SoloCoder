@@ -1,0 +1,12 @@
+{
+  "bj_employees": {
+    "name": "bj_employees",
+    "db_path": "test.db",
+    "table": "employees",
+    "fields": "name, age, salary",
+    "conditions": "city='北京'",
+    "where": "",
+    "group_by": "",
+    "created_at": "2026-05-13T23:03:20.164117539+08:00"
+  }
+}

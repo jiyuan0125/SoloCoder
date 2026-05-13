@@ -1,5 +1,11 @@
-季度末了赶紧搞个证书密钥管理工具，Go 命令行。
-工具要能证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查、TLS 配置文件生成。
-认证通过后自动记录日志，日志写入失败不影响结果。
-处理分多个阶段，每个阶段输出是下个阶段输入。
-go build 能过，命令行工具能正常运行。
+季度末安全检查要出报告，证书信息解析这块还没工具。Go 命令行，证书信息解析、SAN 提取、密钥用途检查、TLS 配置文件生成。
+
+解析：`certexp parse --cert server.pem` 输出全部字段。Subject/Issuer 按 CN/OU/O/C 拆开。扩展逐一列出：Basic Constraints、Key Usage、EKU、SAN、AKI、SKI。指纹 SHA-1 和 SHA-256。
+
+SAN：`certexp san --cert server.pem` 列出 DNS/IP/Email 类型的 SAN，JSON 数组输出。
+
+密钥用途检查：`certexp key-usage --cert server.pem` 检查 Key Usage 和 EKU。TLS 服务端没有 serverAuth 输出警告，CA 没有 keyCertSign 输出错误。
+
+TLS 配置生成：`certexp gen-tls-config --cert server.pem --key server.key --output tls.json`。根据证书类型推荐密码套件和最低版本。处理分阶段：解析→检查→生成，每阶段错误独立捕获。
+
+`go build` 能过，命令行工具能正常运行。

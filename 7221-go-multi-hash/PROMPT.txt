@@ -1,5 +1,9 @@
-现在用的工具不支持自定义规则，用 Go 写个加密解密工具工具。
-工具要能AES-GCM 文件加密解密、密钥从密码派生（PBKDF2）、大文件分块加密、信封加密（RSA+AES 混合）。
-扫描时发现漏洞要生成报告，报告生成也要扫描关联文件。
-文件可能有好几 GB 大，要能处理。
-go build 能过，命令行工具能正常运行。
+排查一个数据完整性问题，同一份文件要跑三遍 sha256sum、sha512sum、blake2，太浪费时间了。Go 写个支持多哈希同时输出的工具，AES-GCM 文件加密和信封加密也整合进去。
+
+多哈希：`mhash compute --algos sha256,sha512,blake2b --input data.bin` 一次 I/O 同时算三种哈希。用 `io.TeeReader` 把数据灌进多个 `hash.Hash` 实例，只读一遍文件。输出 JSON：`{sha256, sha512, blake2b, file, size}`。支持 SHA-224/256/384/512、BLAKE2b-256/512。
+
+AES-GCM 加密：`mhash encrypt --password "xxx" --input data.db`，PBKDF2 派生 32B 密钥（10 万次迭代）。格式：salt(16B)+nonce(12B)+密文+tag(16B)。大文件 4MB 分块，每块独立 nonce。
+
+信封加密（RSA+AES）：`mhash envelope-encrypt --pubkey pub.pem --input data.tar`。RSA 加密随机 AES 会话密钥，适合多用户场景。
+
+所有操作流式读取，内存不超过几 MB。进度可选 `--progress`。`go build` 能过，命令行工具能正常运行。

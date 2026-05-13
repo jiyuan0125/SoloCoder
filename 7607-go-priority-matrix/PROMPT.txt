@@ -1,3 +1,9 @@
-做个优先级矩阵工具来跟踪技术决策。流程分多个阶段。
+团队用电子表格做优先级决策，结果大家各排各的，最后谁也不知道哪个该先做。我打算写个优先级矩阵的 CLI 工具，把技术决策按影响和紧急度排好序，一目了然。
 
-每条记录有状态（提议、已接受、已废弃、已替代）。被替代的记录要关联到新记录。Go 标准库，go build 通过。
+每条决策记录有这些字段：标题、描述、影响范围（high/medium/low）、紧急程度（high/medium/low）、状态、创建时间。状态有四个阶段——proposed（提议）、accepted（已接受）、deprecated（已废弃）、superseded（已替代）。状态流转有约束：proposed 只能变成 accepted 或 deprecated，accepted 可以变成 deprecated 或 superseded。superseded 的记录必须关联到新的替代记录 ID，操作时用 `supersede <id> --by <new-id>` 指定替代者，新记录必须是 proposed 或 accepted 状态，否则报错。
+
+命令包括：`add --title <text> --impact <level> --urgency <level> [--desc <text>]`、`list [--status <status>] [--impact <level>]`（默认只显示 proposed 和 accepted，加 --all 显示全部）、`show <id>`（显示详情和替代关系链）、`accept <id>`、`deprecate <id>`、`supersede <id> --by <new-id>`。
+
+列表排序规则：先按影响和紧急的综合评分排序（high=3, medium=2, low=1，两项相乘），分数高的排前面。分数相同按创建时间排序。`matrix` 命令输出一个二维文本表格——横轴是紧急程度，纵轴是影响范围，每个格子里列出对应的决策标题。这样一眼就能看出哪些是"高影响+高紧急"要做的事。
+
+数据存当前目录 JSON 文件，每次修改立刻写盘。Go 标准库实现，go build 通过。

@@ -1,5 +1,2 @@
-市面上的转换工具要么太重要么太贵，我们只需要批量重命名，Go 写一个。
-数组表转成 JSON 数组，每个元素是对象。
-支持嵌套数组表的递归解析。
-多级命令：config get、config set、config list、config env switch。
-纯标准库实现，go run . 能跑。
+TOML 的数组表语法在其他格式里没有直接对应，转 JSON 的时候容易搞错。我们只需要这个特定功能，不需要那些功能花哨的转换工具。Go 写一个：数组表转成 JSON 数组，每个元素是对象，支持嵌套数组表的递归解析。
+多级命令：config get、config set、config list、config env switch。纯标准库实现，go run . 能跑。

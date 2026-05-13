@@ -1,3 +1,18 @@
-写个环境配置跟踪的 CLI 工具。数据有生命周期。每个任务有预估工时和实际工时两个字段。
+开发、测试、预发、生产四个环境的配置项总有差异，出了好几次生产配了测试数据库地址的事故。写个环境配置跟踪 CLI 工具，把每个环境的配置统一管理起来，变更也有生命周期追溯。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+环境实体有 ID、名称（dev/staging/production 等）、描述、状态（active/deprecated）。ConfigEntry 有 ID、环境 ID、配置键、配置值、值类型（string/number/boolean）、变更原因、最后修改时间、最后修改人、生命周期状态（current/superseded）。同一环境同一键只允许一条 current 状态的配置，新增或更新时旧值自动标记为 superseded。
+
+配置对比是核心功能——`diff <env1> <env2>` 输出两个环境间所有配置差异（一边有另一边没有的、两边值不同的）。差异用表格展示，包含键名、env1 的值、env2 的值、是否仅存在于单侧。
+
+偏差率用任务维度计算——每个配置变更可以关联一个变更任务（有预估和实际工时），`deviation --env <name>` 输出该环境变更任务的总偏差。`stats --period week|month` 统计变更频率趋势。
+
+- `env add <name> [--desc <text>]`
+- `env list` / `env deprecate <name>`
+- `config add <env> --key <text> --value <text> --type <type> --who <name> --reason <text>`
+- `config update <env> --key <text> --value <text> --who <name> --reason <text>`
+- `config list <env> [--key <keyword>]`
+- `config history <env> --key <text>`：某个键的历史变更
+- `diff <env1> <env2>`
+- `deviation --env <name>` / `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

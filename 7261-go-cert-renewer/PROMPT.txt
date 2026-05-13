@@ -1,5 +1,9 @@
-组长说要搞工具化，先做个证书密钥管理，Go CLI。
-工具要能X.509 证书生成（自签名/CA 签发）、CSR 处理、证书链验证。
-证书签发需要 CA，CA 怎么初始化不提。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+证书管理工具化排在本迭代第一个，X.509 证书生成和 CSR 处理是基础功能。Go CLI。
+
+X.509 证书生成：`renewer gen-self --cn "dev.example.com" --san "DNS:dev.example.com,IP:127.0.0.1" --days 365 --output-dir ./certs/`。自签名证书 RSA-2048，SHA-256 签名。CA 签发：`renewer ca-sign --ca-cert ca.pem --ca-key ca.key --csr request.csr --days 90`。签发的证书带 Authority Key Identifier 和 Subject Key Identifier。
+
+CSR 处理：`renewer create-csr --cn "client.example.com" --org "MyOrg" --san "DNS:client.example.com" --output request.csr`。密钥对同时生成。`renewer show-csr --input request.csr` 显示 CSR 所有字段。
+
+证书链验证：`renewer verify-chain --cert leaf.pem --intermediate intermediate.pem --root root.pem`。逐级验证签名、有效期、Key Usage。失败报告具体原因。
+
+CA 怎么初始化？`renewer init-ca --org "Root CA" --years 20 --output-dir ./ca/` 生成自签名根证书。输出格式默认 JSON 详情到 stdout。`go build` 能过，命令行工具能正常运行。

@@ -1,3 +1,16 @@
-写个代理配置管理工具，自动化环境配置。变更时自动通知下游。
+公司代理地址上周换了，但通知走的是邮件——半天才看到。改了 .bashrc 里的 http_proxy，忘了 git config 里的代理设置，还忘了 Docker daemon.json。结果 git push 超时、docker pull 超时，一个问题排查半小时。
 
-支持检测系统中已安装的工具和版本。缺少的工具提供安装命令。版本过旧的工具提示升级。Go 标准库实现，go build 通过。
+ProxyProfile 实体有名称、HTTP 代理地址、HTTPS 代理地址、NO_PROXY 列表、状态（active/disabled）。`profile add <name> --http <addr> --https <addr> [--no-proxy <list>]` 创建配置。`profile switch <name>` 切换活跃配置——变更时自动通知下游，输出"代理已切换到 X，影响范围：http_proxy、https_proxy、no_proxy 三个环境变量，当前终端需要 source ~/.bashrc 生效"。
+
+检测功能——`detect` 检查系统中已安装的代理相关工具（如 proxychains、cntlm）和版本。缺少的工具提供安装命令（如"未安装 proxychains，执行 apt install proxychains"）。版本过旧的工具提示升级。
+
+`export --format shell` 输出 export http_proxy=... 格式，`export --format git` 输出 git config 格式，`export --format docker` 输出 Docker daemon.json 代理配置。每项导出前检测对应工具是否已安装。
+
+- `profile add <name> --http <addr> --https <addr> [--no-proxy <list>]`
+- `profile list` / `profile switch <name>` / `profile delete <name>`
+- `detect`：检测工具和版本
+- `export --format shell|git|docker`
+- `current`：当前代理配置
+- `test`：测试代理连通性
+
+Go 标准库实现，go build 通过。

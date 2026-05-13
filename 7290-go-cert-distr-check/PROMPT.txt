@@ -1,5 +1,11 @@
-朋友那边需要一个证书密钥管理工具，Go 写命令行。
-工具要能证书吊销列表管理、OCSP 检查工具、吊销原因记录。
-表结构变更后依赖该表的查询和报告要更新。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+运维团队的证书吊销检查还在手动做，效率太低。Go 命令行，CRL 管理、OCSP 检查、吊销原因记录。
+
+CRL：`distr crl-init --ca-cert ca.pem --ca-key ca.key --output ca.crl.pem`。吊销：`distr crl-revoke --serial 0xABCDEF --reason keyCompromise`。Next Update 7 天。查询：`distr crl-check --serial 0xABCDEF --crl ca.crl.pem`。
+
+OCSP：`distr ocsp-check --cert server.pem --issuer ca.pem --responder http://ocsp.example.com`。5 秒超时。good/revoked/unknown + Next Update。
+
+吊销原因记录：`~/.distr/revocations.jsonl`。查询：`distr show-revocations --serial 0xABCDEF`。
+
+表结构变更后查询和报告要更新？CRL 格式升级后旧格式自动迁移。输入文件编码不确定？CRL/证书都是 PEM 格式，不存在编码问题。
+
+`go build` 能过，命令行工具能正常运行。

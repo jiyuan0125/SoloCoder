@@ -1,5 +1,3 @@
-V2 版本月底上线，先把数据范围检查做了，Go CLI。
-范围通过参数指定。
-超出范围的记录列出。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-纯标准库实现，go run . 能跑。
+年龄字段出现了负数和 999，这种脏数据没拦住就进库了。Go CLI 做数据范围检查：范围通过参数指定，超出范围的记录列出来。
+
+命令行设计参考 cli import --source csv --target db --filter 'age>18' 这种格式。纯标准库实现，go run . 能跑。

@@ -1,4 +1,9 @@
-之前用脚本写错了匹配不到结果扛不住了，换 Go 写加密解密工具工具。
-工具要能密钥分片（Shamir Secret Sharing）、门限恢复、分片验证。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-go build 能过，命令行工具能正常运行。
+脚本密钥匹配逻辑写错了，线上加密了一半数据用错密钥，回滚花了一整天。Go 重写，Shamir Secret Sharing、门限恢复、分片验证。
+
+Shamir 分片：`fp-enc split --input master.key --threshold 3 --shares 5`。GF(256) 拉格朗日插值，每字节独立多项式。输出 5 个 JSON `share_N.json`：`{index, data(base64), threshold, total}`。随机系数 `crypto/rand`。
+
+恢复：`fp-enc recover --shares "share_1.json,share_3.json,share_5.json"` 拉格朗日插值。分片不足阈值报错退出码 1。结果 hex 输出到 stdout。
+
+验证：`fp-enc verify share_2.json` 检查 JSON 完整性——index 范围、base64 合法、threshold ≤ total。输出 `{valid, index, threshold}`。
+
+密钥存储 `~/.fp-enc/` 按 key 名称组织。`go build` 能过，命令行工具能正常运行。

@@ -1,3 +1,18 @@
-Sprint 的容量规划需要自动化，写个 CLI 工具。属性变更影响计算结果。
+每次 Sprint 规划都要掰手指算人力够不够，改了一个人力参数后面一堆数据要重算。写个容量规划 CLI 工具，属性变更时自动重算相关指标。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+三个核心实体。Team 有成员列表，每个成员有名字和每日可用工时。Sprint 有时间范围（开始/结束日期）、状态（planning/active/closed）。Task 有标题、预估工时、负责人、状态、所属 Sprint。容量计算公式：团队总容量 = Σ(成员每日可用工时 × Sprint 工作日数)，已用容量 = 所有已分配任务的预估工时之和，剩余容量 = 总容量 - 已用容量。
+
+属性变更触发重算——修改某个成员的每日可用工时（`member update <name> --hours <n>`），或给 Sprint 新增/移除任务，都自动重算容量指标。如果已用容量超过总容量的 90%，输出警告。
+
+Sprint 到期关闭时（`sprint close <id>`），未完成任务自动标记 carry-over 并输出清单。报告用 `report <sprint-id>` 输出——成员维度的负载分布（每人的已用/可用比例）、整体完成率、延期率。
+
+- `team init`：初始化团队
+- `member add <name> --hours <n>` / `member update <name> --hours <n>`
+- `sprint create --name <text> --start <date> --end <date>`
+- `task add <sprint-id> --title <text> --estimate <hours> --assignee <name>`
+- `task done <id> --actual <hours>`
+- `capacity <sprint-id>`：输出总容量、已用、剩余、负载率
+- `sprint close <id>`
+- `report <sprint-id>`
+
+数据存 JSON 文件。Go 标准库实现。

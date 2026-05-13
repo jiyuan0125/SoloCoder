@@ -1,3 +1,7 @@
-我们项目文档有多语言版本，做个CJK宽度计算工具来管理。属性变更影响计算结果。
+上次审校多语言文档，日语版本对齐得漂漂亮亮，中文版本全歪了——就是因为中日韩字符宽度算错了。CJK 字符的宽度计算在排版和对齐里是基本功，搞不定这个什么终端工具都白搭。不同终端对同一个 Unicode 字符的宽度判定还可能不同，工具得能根据不同标准计算。
 
-工具支持比较不同语言版本的完整性，缺失的翻译条目要列出来。Go 标准库实现，go build 通过。
+`cjk-width`，子命令 `measure`、`compare`、`report`。`cjk-width measure` 读文本文件，按 Unicode 东亚宽度属性（East_Asian_Width=F/W/H/Na/A/N）计算每行的显示宽度。F（Fullwidth）和 W（Wide）算两列，Na（Narrow）和 A（Ambiguous）按可配置规则处理（Ambiguous 默认算一列，`--ambiguous-wide` 算两列）。`cjk-width compare` 比较不同语言版本文档的文本宽度和行数差异，缺失的翻译条目列出来。`cjk-width report` 生成每行宽度报告——哪些行超出了终端宽度限制（`--terminal-width` 参数，默认 80），建议在哪些位置折行。
+
+输入文件可以是任意编码（自动检测 UTF-8/Latin-1），输出保持原始换行。Tab 字符按 `--tab-width`（默认 8）展开计算。控制字符（除了换行和 Tab）宽度为零。
+
+Go 标准库实现，`unicode` 包的 `RangeTable` 和 `EastAsianWidth` 属性。`go build` 通过。

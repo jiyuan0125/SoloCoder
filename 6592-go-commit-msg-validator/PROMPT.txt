@@ -1,4 +1,4 @@
-上周因为高级 commit message 校验出了个问题，排查花了半天。需要一个高级 commit message 校验，Go 实现。
+commit message 写错 scope 上线受阻，CI 检查没拦住。自定义规则链——类型检查、scope 白名单、body 必填、引用 issue 编号，规则用 YAML 配置。
 
 高级 commit message 校验。支持自定义规则链：类型检查、scope 白名单、body 必填、引用 issue 编号。规则用 YAML 配置。
 有可能一次导入上万条数据。

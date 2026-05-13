@@ -1,5 +1,11 @@
-用 Go 标准库写一个加密解密工具相关的 CLI 工具。
-工具要能RSA 密钥对生成（2048/4096 位）、RSA 加密解密、密钥格式转换。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-导入完成后自动更新索引，索引更新失败只记日志。
-go build 能过，命令行工具能正常运行。
+Go 标准库的 `crypto/rsa` 和 `encoding/pem` 就够了，不需要第三方库。RSA 加密解密 CLI 工具：密钥对生成（2048/4096 位）、加密解密、格式转换，加上递归搜索深层路径密钥文件的能力。
+
+RSA 密钥对生成：`x509ext keygen --bits 4096 --output-dir ./keys/`。私钥 PKCS8 PEM，公钥 PKCS1 PEM。4096 位生成显示 spinner。
+
+加密解密用 OAEP-SHA256 填充。`x509ext encrypt --pubkey pub.pem --input msg.dat`。2048 位密钥最多 190 字节，4096 位最多 446 字节，超出报错。输出 Base64 到 stdout。解密 `x509ext decrypt --privkey priv.pem --input msg.dat.enc`。
+
+格式转换：PEM↔DER、PKCS1↔PKCS8。自动检测输入格式：PEM 有 `-----BEGIN` 头，DER 没有。加密私钥转换需要 `--password` 参数。
+
+搜索深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`？这个工具用 `filepath.Walk` 递归扫描目录查找密钥文件（`.pem`、`.der` 后缀），按路径模式匹配。`x509ext find --dir ./certs/ --pattern "**/prod*.pem"` 列出所有匹配的密钥文件。导入完成后自动更新索引？维护一个内存中的文件路径缓存，新文件自动加入。
+
+`go build` 能过，命令行工具能正常运行。

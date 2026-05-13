@@ -1,3 +1,17 @@
-用 Go 写个内核参数管理工具。多个关联的实体。
+上次有人把 vm.swappiness 改成了 10，没记录也没通知，三天后服务 OOM 了才排查出来。内核参数谁都能改，改了什么、为什么改、会影响谁，完全靠自觉。
 
-工具扫描指定目录，分析依赖关系并生成报告。报告包含直接依赖和间接依赖。Go 标准库实现，go build 通过。
+SysctlParam 实体有 ID、参数路径（如 net.core.somaxconn）、当前值、默认值、描述、修改记录列表、依赖参数列表（改了这个会影响哪些）。SysctlConfig 有 ID、文件路径（/etc/sysctl.d/ 下的文件）、包含的参数列表、状态（active/disabled）。多个关联实体——参数、配置文件、修改记录。
+
+`scan <dir>` 扫描 /etc/sysctl.d/ 和 /etc/sysctl.conf，收集所有参数设置。分析依赖关系——某些参数有关联（如 net.ipv4.tcp_max_syn_backlog 和 net.core.somaxconn），修改一个会影响另一个的效果。报告包含直接依赖和间接依赖。
+
+`param set <key> <value>` 设置参数。`param history <key>` 输出修改时间线。`export --format sysctl` 输出标准 sysctl.conf 格式。
+
+- `scan <dir>`：扫描 sysctl 配置
+- `param set <key> <value>`：设置参数
+- `param list [--changed]`：列出参数，--changed 只显示非默认值的
+- `param history <key>`：修改历史
+- `config add --path <file>`：注册配置文件
+- `report`：依赖关系报告
+- `export --format sysctl`
+
+Go 标准库实现，go build 通过。

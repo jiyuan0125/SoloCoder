@@ -1,3 +1,7 @@
-之前那个排版工具处理不了 CJK 字符，用 Go 重写一个阿拉伯文塑形。主记录依赖配置数据。
+阿拉伯文的同一个字母 `ب`，在词首、词中、词尾、独立四种位置各长一副面孔。之前的排版工具完全没考虑这些，连中文字符的宽度也没算对，输出一塌糊涂。字符形状映射表是从 Unicode Arabic Presentation Forms 块来的，工具启动时要先加载这份配置。
 
-中文字符算两个宽度，emoji 按实际渲染宽度计算。行截断不能把一个字符从中间截断。Go 标准库实现。
+`arabic-shape`，子命令 `shape`、`unshape`、`analyze`。`arabic-shape shape` 读阿拉伯文文本，根据每个字符在词中的位置选择正确的呈现形式——用 Unicode 的 Arabic Presentation Forms-A 和 Forms-B 块的码点替换基本阿拉伯文字符。连接规则：Lam+Alef 组合成 Lam-Alef 连字。`arabic-shape unshape` 反过来——把呈现形式还原成基本阿拉伯文字符。`arabic-shape analyze` 分析文本中的阿拉伯字符——每个字符的基本形式、位置形态、连接类型（Dual/Right/Transparent）。
+
+宽度计算：中文字符占 2 列，emoji 按实际渲染宽度。阿拉伯文字符本身占 1 列，但组合字符（如 Shadda、Fatha 等变音符号）占 0 列。行截断不能把一个字符从中间截断——如果折行位置落在一个词的中间，整词移到下一行。
+
+Go 标准库实现。`go build`。

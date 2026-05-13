@@ -1,3 +1,11 @@
-DHCP选项编解码的处理流程比较复杂，工具要支持管道模式。达到阈值时自动触发告警。
+DHCP 协议里的选项字段（Option）有上百种类型，每种类型的编解码格式不一样——有的是单字节、有的是 IP 地址列表、有的是字符串、有的是嵌套的 TLV 结构。管道模式对网络调试特别有用——`tcpdump -xx | dhcp-tool decode`。
 
-大文件分块处理，内存占用不超过 100MB。提供进度显示。处理中断后可以从断点继续。Go 标准库实现。
+写个 `dhcp-tool`，子命令 `decode` 和 `encode`。`dhcp-tool decode` 读 DHCP 报文的原始字节（从文件或 stdin），解析 Message Type、Transaction ID、各个 Option 字段。每个 Option 输出编号、名称（人类可读的）、长度和解析后的值。常见的 Option 直接解码展示（比如 Option 53 是 DHCP 消息类型、Option 51 是租期秒数、Option 54 是服务器 IP），不认识的 Option 输出原始十六进制。
+
+`dhcp-tool encode` 反过来——从 JSON 描述生成 DHCP 报文。管道模式下大文件分块处理：按报文边界分割（DHCP 报文有固定头部），每次只保留一个报文的解析状态，内存占用不超过 100MB。
+
+进度显示：终端连着时输出已解析的报文数量。达到某个阈值（比如连续 10 个报文的 Magic Cookie 不对）自动触发告警——stderr 输出醒目警告，可能是抓包格式不对。
+
+中断恢复：文件输入时记录偏移，`--resume` 从断点继续。
+
+Go 标准库实现。`go build`。

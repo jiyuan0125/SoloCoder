@@ -1,3 +1,13 @@
-用 Go 写一个Spinner组件库，给自己其他项目用。修改主体后关联数据要同步。
+有些操作没法算进度——比如等待网络请求返回、等待外部进程结束。这时候转圈动画（spinner）就比进度条合适。先显示转圈动画，操作完了自动停。
 
-库要支持嵌套子命令。每个子命令有独立的帮助信息。未知子命令给出建议。Go 标准库实现，go build 通过。
+spinner-component 用 Go 标准库实现，`go build -o spinner-demo ./cmd/spinner-demo` 编译。它给自己其他项目用的 Spinner 动画组件库。
+
+先创建。`spinner := New("Loading...")` 创建一个带描述文本的 spinner。内置几种动画帧序列：经典竖线 `|/-\`、圆点 `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`、月亮 `🌑🌒🌓🌔🌕🌖🌗🌘`。通过 `WithStyle("dots")` 选择。
+
+再启动。`spinner.Start()` 在后台启动刷新。刷新时用 `\r` 回到行首覆盖当前行，不破坏终端其他输出。修改主体后关联数据同步——spinner 描述文本动态更新，`spinner.Update("Processing item 3/10...")`。
+
+最后停止。`spinner.Stop()` 停止动画，清当前行。`spinner.Success("Done!")` 停止并在行首显示绿色勾号和成功文本。`spinner.Fail("Error!")` 显示红色叉号和错误文本。
+
+库支持嵌套子命令——每个子命令的长时间操作可以独立显示 spinner。帮助信息按子命令分组。未知子命令给出建议。
+
+额外功能：计时器——停止时显示总耗时。颜色自定义——`WithColor("cyan")`。输出到 stderr。并发安全。API：`s := spinner.New("msg")`、`s.Start()`、`s.Stop()`。`go test ./...` 跑测试，`go build` 编译通过。

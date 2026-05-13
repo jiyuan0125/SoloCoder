@@ -1,3 +1,16 @@
-用 Go 写个多环境配置切换工具。变更时自动通知下游。
+本地、开发、测试、预发四个环境来回切换，每次都得手动改配置文件，改漏了就出 bug。写个多环境配置切换工具，切换时自动通知下游（输出变更摘要）。
 
-工具扫描指定目录，分析依赖关系并生成报告。报告包含直接依赖和间接依赖。Go 标准库实现，go build 通过。
+环境配置实体有 ID、名称（local/dev/test/staging）、变量集合（键值对）。工具的核心能力是在不同环境间切换——`switch <env-name>` 从指定环境加载配置，输出本次切换变更了哪些变量（新增、修改、删除），这就是"通知下游"。比如从 local 切到 test，输出"数据库地址从 localhost 变为 test-db.internal"。
+
+`scan` 命令扫描指定目录下的配置文件（go.mod、.env、config.json），分析依赖关系并生成报告——报告列出直接依赖（import 的包）和间接依赖（这些包的依赖），帮助理解环境切换会影响哪些模块。
+
+配置文件支持从模板生成——`template apply <env>` 用模板文件渲染出目标配置。模板中用 {{.VAR}} 占位符，渲染时从环境变量注入。
+
+- `env add <name>` / `env list` / `env delete <name>`
+- `var set <env> <key>=<value>` / `var list <env>`
+- `switch <env-name>`：切换环境，输出变更摘要
+- `diff <env1> <env2>`：对比两个环境的配置差异
+- `scan <dir>`：扫描目录生成依赖报告
+- `template apply <env> --template <file> --output <file>`
+
+Go 标准库实现，go build 通过。

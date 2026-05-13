@@ -1,3 +1,17 @@
-写个团队成员负载的 CLI 工具。支持管道和重定向。每个任务有预估工时和实际工时两个字段。
+项目组五个人，活多活少全靠嘴说，实际上谁忙谁闲谁也不清楚。写个团队成员负载 CLI 工具，能把每个人的任务量和工时偏差算明白，还支持管道操作方便对接其他脚本。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+每个任务有两个关键字段：预估工时和实际工时，单位都是小时。工具的核心能力是算偏差率——公式是 (实际 - 预估) / 预估 × 100%，正数表示超估，负数表示低估。Task 实体有 ID、标题、负责人、预估工时、实际工时、状态（planning/active/completed）、所属项目、创建时间。
+
+统计维度支持按周和按月两种。`stats --period week` 输出本周每个人的任务数、总预估工时、总实际工时、平均偏差率。`stats --period month` 同理但按月聚合。周和月都基于 ISO 标准计算。
+
+管道和重定向的支持体现在两个地方——`list` 命令的输出是纯文本表格，不加颜色控制字符，方便管道到 grep/awk/sort；`export` 命令输出 CSV 到 stdout，重定向到文件即可，如 `export > report.csv`。
+
+- `task add --title <text> --assignee <name> --estimate <hours> [--project <name>]`
+- `task log <id> --actual <hours>`：记录实际工时，任务必须是 active 状态
+- `task start <id>`：planning → active
+- `task done <id>`：active → completed
+- `list [--assignee <name>] [--status <status>]`：文本表格输出
+- `stats --period week|month`：按人统计偏差
+- `export`：CSV 输出到 stdout
+
+数据存当前目录 JSON 文件。Go 标准库实现。

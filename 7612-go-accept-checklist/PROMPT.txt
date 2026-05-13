@@ -1,3 +1,19 @@
-写个 Go 工具做验收清单。达到阈值时自动触发告警。
+每次上线前都得对着一张纸质清单打勾，上个版本漏了一项安全扫描差点出事。写个验收清单 CLI 工具，支持标签分类、模糊搜索，达到完成阈值自动告警。
 
-支持标签和分类两种组织方式。搜索支持模糊匹配。数据变更记录操作历史。Go 标准库。
+清单项有 ID、标题、描述、分类（如安全、性能、功能、部署）、标签（可多个）、状态（pending/done/skipped）、跳过原因（skip 时必填）、负责人、创建时间。创建清单有两种方式——手动逐条加（`item add --title <text> --category <type> [--tags t1,t2]`），或者从模板导入（`template load <name>`，内置 release-check、security-audit、performance-review 三个模板，每个模板预置 8-12 个条目）。
+
+搜索支持模糊匹配：`search <keyword>` 会在标题、描述、标签三个字段里匹配，子串匹配即可，不区分大小写。结果按匹配度排序（标题匹配优先于描述匹配）。
+
+每条数据的变更都记录操作历史：谁在什么时间做了什么操作（创建、完成、跳过、恢复）。`history <item-id>` 输出该条目的完整变更时间线。
+
+告警机制——当某分类下的完成率低于 50% 但距离截止时间不足 24 小时时，`status` 命令输出该分类的警告。截止时间在创建清单时设定（`checklist create --name <text> --deadline <datetime>`），全局只维护一个活跃清单。
+
+- `checklist create --name <text> --deadline <datetime>`
+- `checklist status`：输出各分类完成率、总完成率、距离截止剩余时间
+- `item add --title <text> --category <type> [--tags t1,t2] [--desc <text>]`
+- `item done <id>` / `item skip <id> --reason <text>` / `item reopen <id>`
+- `search <keyword>`：模糊搜索
+- `template load <name>`：从模板批量导入条目
+- `history <item-id>`：操作历史
+
+数据存当前目录 JSON 文件。Go 标准库实现。

@@ -1,3 +1,11 @@
-彩色文本输出框架，支持插件扩展。流程分多个阶段。
+彩色输出——终端不加颜色太单调，但 ANSI 转义序列手写容易错，Windows 终端兼容性还各种坑。搞个框架把颜色输出标准化。
 
-插件通过约定接口加载。插件注册自己的命令和选项。主程序不需要修改就能添加新功能。Go 标准库。
+color-output 用 Go 标准库实现，`go build -o color-output-demo ./cmd/color-output` 编译。它支持插件扩展的彩色输出框架。
+
+核心能力：文本着色（前景色+背景色）、加粗、下划线、闪烁。预定义颜色常量：Red、Green、Yellow、Blue、Magenta、Cyan。自动检测终端是否支持颜色——输出不是 TTY 时自动去除颜色码（方便管道和重定向）。`NO_COLOR` 环境变量也支持。
+
+插件扩展机制：插件通过约定接口加载——`ColorPlugin` 接口包含 `Name()` 和 `Transform(text string, ctx Context) string`。插件注册自己的输出处理逻辑，主程序不需要修改就能添加新功能。比如一个 JSON 高亮插件，自动给 key 着色。流程分多个阶段：原始文本→插件处理→颜色渲染→终端输出。
+
+API 风格两种：函数式 `color.Red("error")` 和链式 `color.New().Red().Bold().Sprint("message")`。支持格式化：`color.Greenf("Done in %d seconds", 5)`。
+
+主题支持：预定义几套颜色主题（亮色终端/暗色终端/无颜色），`--theme` 切换。自定义主题用 JSON 文件配置语义颜色（error=red、success=green、warning=yellow、info=cyan）。`go test ./...` 跑测试。

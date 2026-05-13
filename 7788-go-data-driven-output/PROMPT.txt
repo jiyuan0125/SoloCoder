@@ -1,3 +1,13 @@
-数据驱动输出框架，支持插件扩展。删除后要清理关联记录。
+输出格式切换——今天要 JSON，明天要表格，后天又要 YAML。如果每种格式都手写渲染逻辑，代码量爆炸。数据驱动才是正解：只管生成数据，渲染交给输出层。
 
-插件通过约定接口加载。插件注册自己的命令和选项。主程序不需要修改就能添加新功能。Go 标准库。
+data-driven-output 用 Go 标准库实现，`go build -o ddo-demo ./cmd/ddo` 编译。它支持插件扩展的数据驱动输出框架。
+
+输出层设计：定义 `Renderer` 接口 `Render(data interface{}, writer io.Writer) error`。内置三种渲染器：JSON（`encoding/json`）、YAML（手写简易序列化器）、表格（终端对齐表格）。插件可以注册自己的渲染器——实现接口后调用 `RegisterRenderer("csv", csvRenderer)` 即可。主程序不需要修改就能添加新输出格式。
+
+删除后要清理关联记录——插件卸载时对应的渲染器也从注册表中移除。插件注册自己的命令和选项。比如 CSV 渲染器注册 `--csv-delimiter` 选项。
+
+数据输入：结构体或 map。结构体通过反射提取字段名作为列头，field tag 可以覆盖列名。`[]struct` 自动变成多行输出。
+
+格式切换：`--format json`/`--format table`/`--format yaml`。也可以通过 `OUTPUT_FORMAT` 环境变量。默认格式表格。输出到 stdout，`--output file` 重定向到文件。
+
+API：`out := output.New(data)`、`out.Render("json", os.Stdout)`、`output.Register("csv", csvRenderer)`。子命令 `formats` 列出所有可用格式。`go test ./...` 跑测试。

@@ -1,4 +1,11 @@
-那个开源工具自定义规则没做好，Go 从零写证书密钥管理。
-工具要能证书续签流程、自动续签定时检查、续签通知。
-规则校验需要规则组，规则组怎么来的不提。
-go build 能过，命令行工具能正常运行。
+那个开源证书工具的自定义规则做得太死板，扩展字段加不上去。Go 从零写，证书续签流程、自动续签定时检查、续签通知。
+
+续签：`extchk renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365`。保留原 SAN 和扩展，新序列号。指纹对比。
+
+自动续签：`extchk auto-renew --watch-dir ./certs/ --ca-dir ./ca/ --threshold-days 30 --interval 3600`。每小时扫描，不足 30 天自动续签。备份 `.bak`。
+
+通知：成功/失败都触发。stdout 或 `--notify-webhook URL`。JSON：`{event, cert, new_expiry, status}`。
+
+规则校验需要规则组？续签策略就是规则组——threshold-days、days、notify-webhook 组成一个策略。`extchk policy show` 显示当前策略。
+
+`go build` 能过，命令行工具能正常运行。

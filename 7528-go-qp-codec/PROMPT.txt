@@ -1,3 +1,9 @@
-做个Quoted-Printable编解码工具，同事那边提的需求。删除后要清理关联记录。支持递归处理目录下所有匹配的文件。
+邮件系统里的 Quoted-Printable 编码——用 Go 标准库的 `mime/quotedprintable` 处理就好。但同事的需求不只是简单的编解码，他有一堆 `.eml` 文件需要批量修复 QP 编码问题，特别是目录嵌套很深的那种。
 
-文件名保持不变只改扩展名。遇到权限错误跳过并记录。Go 标准库。
+工具叫 `qp-tool`，子命令 `encode` 和 `decode`。`qp-tool encode` 读输入文本，按 RFC 2045 规则编码——每行不超过 76 字符，软换行用 `=\r\n`，非 ASCII 字节用 `=XX`。`qp-tool decode` 反过来。编码时 `--max-line-len` 可调，默认 76。
+
+递归模式用 `--recursive` 指定根目录，遍历所有匹配后缀的文件（`--ext` 指定，默认 `.eml`）。文件名保持不变只改扩展名：`.txt` 编码后变 `.txt.qp`，`.qp` 解码后变 `.txt`（去掉 `.qp`）。碰到权限错误跳过，stderr 记录完整路径和错误原因。处理完后汇总报告：成功 N 个、跳过 M 个（原因列表）、失败 K 个。
+
+删除原始文件？默认不删。`--replace` 模式下解码成功后删掉 `.qp` 文件，删除后如果有关联的元数据文件（比如 `.qp.meta`）也一并清理。这是可选项，安全第一。
+
+Go 标准库，`mime/quotedprintable` 和 `path/filepath`。`go build`。

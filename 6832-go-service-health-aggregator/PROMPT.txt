@@ -1,8 +1,4 @@
-搞一个聚合多个服务的健康状态，Go 标准库，不依赖第三方包。
-
-聚合多个服务的健康状态。从配置文件读取服务列表和检查方式（HTTP/TCP/命令）。输出整体健康报告。
-多个 worker 并发处理输入数据。
-主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+20 个微服务健康检查全靠人工，每天早上花半小时逐个 curl。从配置文件读取服务列表和检查方式（HTTP/TCP/命令），输出整体健康报告。
+多个 worker 并发处理输入数据。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 
 Go 实现，只用标准库，交叉编译友好。

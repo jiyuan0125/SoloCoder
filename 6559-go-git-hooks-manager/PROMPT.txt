@@ -1,4 +1,4 @@
-新接了个项目，要求管理 Git hooks，用 Go 标准库写。
+新项目 hooks 每次手动配，commit-msg lint 和 pre-push test 写了又写。做个 hooks 管理工具，安装/卸载/列出，内置常用 hook 模板，配置存在项目根目录。
 
 管理 Git hooks。支持安装、卸载、列出 hooks。内置常用 hook 模板（commit-msg lint、pre-push test）。hooks 配置存在项目根目录。
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。

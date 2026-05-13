@@ -1,5 +1,2 @@
-看到别人的那个文件处理流程挺有意思，自己也做一个空目录清理，Go。
-只包含隐藏文件的目录也算空目录。
-删除前列出要删的目录让用户确认。
-子命令结构：db migrate、db rollback、db status、db seed。
-不用第三方包，go build 通过就行。
+项目目录里空文件夹一层套一层，删又不敢删怕有 .gitkeep。Go 做空目录清理：只包含隐藏文件的目录也算空目录，删除前列出要删的目录让用户确认。
+子命令结构：db migrate、db rollback、db status、db seed。不用第三方包，go build 通过就行。

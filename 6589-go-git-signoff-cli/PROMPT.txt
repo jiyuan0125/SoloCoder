@@ -1,4 +1,4 @@
-V2 要上线，给 commit 添加 Signed-off-by 行的工具还没写，Go 赶一个。
+开源贡献要求 Signed-off-by 行，手动加容易忘。批量给指定范围的 commit 自动补上，用户名和邮箱从 git config 读取。
 
 给 commit 添加 Signed-off-by 行。支持批量处理指定范围的 commit。自动填充用户名和邮箱。
 处理流程分好几步，上一步的输出是下一步的输入。

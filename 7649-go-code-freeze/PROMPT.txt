@@ -1,3 +1,18 @@
-Sprint 的代码冻结管理需要自动化，写个 CLI 工具。修改主体后关联数据要同步。
+发布前的代码冻结全靠群消息通知，结果总有人在冻结后还往主分支推代码。写个代码冻结管理 CLI 工具，和 Sprint 绑定，冻结状态变更时同步关联数据。
 
-Sprint 有固定时间范围，到期未完成的任务自动移到下一个 Sprint。Sprint 报告包含完成率、延期率。Go 标准库实现。
+Sprint 有 ID、名称、时间范围、状态（active/closed）。CodeFreeze 有 ID、关联 Sprint ID、开始时间、结束时间、状态（pending/active/lifted）、冻结范围（分支名列表）、创建人、解冻原因。冻结激活时（`activate <freeze-id>`），自动把关联 Sprint 的状态标记为 code-freeze 阶段（Sprint 新增一个子状态）。解冻时（`lift <freeze-id> --reason <text>`），Sprint 的子状态恢复为 active。这就是"修改主体后关联数据同步"。
+
+冻结期间可以申请例外——`exception add <freeze-id> --branch <name> --reason <text> --who <name>`，例外需要审批（`exception approve <id> --by <name>`）。批准后该分支的推送不受冻结限制。
+
+Sprint 到期关闭时，如果还有 active 的冻结，自动解除并输出提醒。报告用 `report <sprint-id>` 输出完成率、延期率、冻结持续时间占比。
+
+- `sprint create --name <text> --start <date> --end <date>`
+- `freeze create <sprint-id> --from <date> --to <date> --branches <b1,b2>`
+- `freeze activate <id>`：激活冻结，同步 Sprint 状态
+- `freeze lift <id> --reason <text>`：解除冻结
+- `exception add <freeze-id> --branch <name> --reason <text> --who <name>`
+- `exception approve <id> --by <name>`
+- `freeze status <sprint-id>`：当前冻结状态和例外列表
+- `sprint close <id>` / `report <sprint-id>`
+
+数据存 JSON 文件。Go 标准库实现。

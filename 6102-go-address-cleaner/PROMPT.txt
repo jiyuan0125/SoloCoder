@@ -1,4 +1,4 @@
-市面上的转换工具要么太重要么太贵，我们只需要简单校验，Go 写一个。
+电商发货的时候地址格式乱七八糟，有的繁体有的简体，有的带全角数字。用 Go 写个地址清洗。
 简繁体统一。英文地址保持不变。
 无法识别的地址标记异常。
 支持嵌套命令：project create、project build、project test run、project test coverage。

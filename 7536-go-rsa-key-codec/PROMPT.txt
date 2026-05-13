@@ -1,3 +1,9 @@
-最近在搞RSA密钥编解码相关的数据迁移，需要一个转换工具。变更时自动通知下游。工具支持多种输入输出格式。
+RSA 密钥格式转换是运维和 DevOps 的常见任务——PKCS#1 和 PKCS#8 之间互转、PEM 和 DER 之间互转、公钥从私钥提取。每次都得翻 OpenSSL 的 man page，参数记不住。最近在做密钥管理系统迁移，需要批量处理几百个密钥文件。
 
-转换过程中保留注释和元数据。字段映射可以自定义。Go 标准库，go build 能跑。
+`rsa-tool` 支持多种输入输出格式。子命令：`convert`（格式转换）、`pubkey`（从私钥提取公钥）、`info`（显示密钥参数）。`rsa-tool convert --from pem-pkcs1 --to pem-pkcs8 --input key.pem --output key8.pem` 这种命令格式。支持的格式组合：PEM-PKCS#1、PEM-PKCS#8、DER-PKCS#1、DER-PKCS#8，公钥还有 X.509/SPKI 格式。
+
+转换过程中保留密钥的元数据——如果 PEM 头部有自定义的注释（比如 `Proc-Type: 4,ENCRYPTED`），转换后要保留或正确处理加密标记。字段映射不需要，但密钥长度、模数指数这些参数在 `info` 子命令里要完整展示。
+
+`--passphrase` 参数处理加密密钥，不传的话如果密钥是加密的就报错提示。变更时如果输出文件已存在，`--force` 才覆盖，否则跳过。
+
+Go 标准库，`crypto/rsa`、`crypto/x509`、`encoding/pem`。`go build` 能跑。

@@ -1,3 +1,17 @@
-写个发布清单的 CLI 工具。数据有生命周期。每个任务有预估工时和实际工时两个字段。
+每次发版都是手忙脚乱地过清单，上次忘了更新版本号差点发了个错版本。写个发布清单 CLI 工具，每个检查项有生命周期管理，还需要跟踪实际执行时间和预估的偏差。
 
-工具能计算预估偏差率。支持按周、按月统计。数据存 JSON 文件。Go 标准库。
+发布计划有 ID、版本号、发布日期、状态（draft/in-review/approved/released/rolled-back）、创建人。CheckItem 有 ID、标题、分类（code/config/data/test/notify）、预估工时、实际工时、状态（pending/done/skipped）、负责人、完成时间、生命周期（active → completed 或 active → skipped）。跳过时必须填原因。
+
+生命周期管理——CheckItem 完成或跳过后状态锁定，不能改回 pending。发布计划一旦进入 approved 状态，所有 active 的 CheckItem 自动变 pending（等待执行）。released 状态的发布计划所有 pending 项自动变 skipped（因为已经发布了没做的就不做了）。
+
+偏差率按分类统计——`deviation <plan-id>` 输出每个分类的总预估工时、总实际工时、偏差率。按周或月统计历史发布的时间趋势——`stats --period week|month`，输出平均执行工时和平均偏差率。
+
+- `plan create --version <v> --date <date> --owner <name>`
+- `plan review <id>` / `plan approve <id>` / `plan release <id>` / `plan rollback <id>`
+- `item add <plan-id> --title <text> --category <type> --estimate <hours> --owner <name>`
+- `item done <id> --actual <hours>` / `item skip <id> --reason <text>`
+- `checklist <plan-id>`：查看执行进度
+- `deviation <plan-id>`：偏差统计
+- `stats --period week|month`
+
+数据存 JSON 文件。Go 标准库实现。

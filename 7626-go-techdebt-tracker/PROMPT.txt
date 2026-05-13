@@ -1,3 +1,18 @@
-老板要看项目的技术债务跟踪数据，写个工具导出。操作前需要先有基础数据。
+技术债越积越多，但老板只看新功能，不看到底多少时间花在补洞上。需要一个技术债务跟踪工具，把债务量化后导出成报告，用数据说话。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+债务条目有 ID、标题、描述、来源模块、严重程度（critical/high/medium/low）、预估修复工时（小时）、实际修复工时、状态（open/in-progress/resolved）、创建时间、解决时间。操作前提是至少录入过一个模块——首次使用需要先 `module add <name>`，然后在模块下添加债务条目。
+
+`report` 命令生成分析报告——按模块统计债务数量和总工时、按严重程度分布、平均修复时间（已解决的条目）。超过 10 条 open 状态债务的模块高亮显示。报告支持按时间范围筛选（`--from <date> --to <date>`）。
+
+导出功能支持 Markdown 和 CSV 两种格式。`export --format md` 输出 Markdown 表格（按模块分组，每组含标题、严重程度、状态、工时）。`export --format csv` 输出 CSV，每行一条债务，列包括 ID、模块、标题、严重程度、状态、预估工时、实际工时。
+
+- `module add <name>`
+- `module list`
+- `debt add --module <name> --title <text> --severity <level> --estimate <hours> [--desc <text>]`
+- `debt list [--module <name>] [--severity <level>] [--status <status>]`
+- `debt start <id>`：open → in-progress
+- `debt resolve <id> --actual <hours>`：标记解决并记录实际工时
+- `report [--module <name>] [--from <date> --to <date>]`
+- `export --format md|csv [--from <date> --to <date>]`
+
+数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。

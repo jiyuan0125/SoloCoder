@@ -1,3 +1,11 @@
-默认值处理框架，支持插件扩展。处理完成后自动归档。
+最近在搭一个插件化的 CLI 框架，遇到个问题——不同插件注册的选项都有各自的默认值逻辑，有的从配置文件读，有的从环境变量读，有的根据系统状态动态算。默认值处理散落在各处，需要一个统一的管理框架。
 
-插件通过约定接口加载。插件注册自己的命令和选项。主程序不需要修改就能添加新功能。Go 标准库。
+default-handler 用 Go 标准库实现，`go build -o default-handler-demo ./cmd/default-handler` 编译。它支持插件扩展的默认值处理框架。
+
+框架核心是 DefaultValueResolver 接口：`Resolve(key string, context map[string]string) (string, bool)`。内置几种实现：StaticResolver（固定值）、EnvResolver（从环境变量读取）、FileResolver（从配置文件读取）、ChainResolver（按优先级链式查找）。插件通过约定接口注册自己的 Resolver——实现接口并调用 `Register(resolver)` 即可，主程序不需要修改。
+
+处理完成后自动归档已解析的默认值到内存缓存，避免重复计算。缓存 key 是参数名+上下文哈希。下次查询同一参数直接返回缓存值。
+
+插件注册自己的命令和选项。每个插件可以定义：命令名、选项列表、默认值 Resolver、处理函数。框架自动合并所有插件的选项，生成统一的帮助信息。
+
+子命令：`resolve <key>` 测试某个参数的默认值解析过程（显示经过了哪些 Resolver）；`list` 显示所有已注册的 Resolver；`plugins` 列出已加载的插件。`--verbose` 输出解析链路详情。`go test ./...` 跑测试。

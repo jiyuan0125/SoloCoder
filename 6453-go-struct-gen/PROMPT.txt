@@ -1,6 +1,5 @@
-之前买的 SaaS 到量了，续费太贵，Go 自建结构体生成器。
-字段类型映射、json 标签、验证标签。
-嵌套结构递归生成。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-不用第三方包，go build 通过就行。
+前端给的接口文档是 JSON 格式，后端要一个个手动转成 struct。字段类型映射、json 标签、验证标签自动生成，嵌套结构递归处理。
+
+命令格式 tool action target options，比如 tool scan dir --depth 3。校验完成后自动更新统计信息，首次运行没有历史统计。
+
+不用第三方包，编译通过就行。

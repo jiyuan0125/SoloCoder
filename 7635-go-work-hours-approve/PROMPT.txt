@@ -1,3 +1,17 @@
-用 Go 写个工时审批的命令行工具。多种子命令处理不同操作。
+月底审批工时最头疼——每个人提交的格式不一样，超时加班没人标记，审批全靠邮件来回确认。写个工时审批 CLI 工具，用多个子命令把提交、审批、查询、统计全流程串起来。
 
-数据存本地 JSON 文件。支持添加、查询、更新、删除操作。查询支持按多种条件筛选。Go 标准库实现，go build 通过。
+工时提交有 ID、提交人、日期、工时数、项目名、描述、状态（pending/approved/rejected）、审批人、审批时间、审批备注。提交人通过 `submit --date <date> --hours <n> --project <name> --desc <text> --who <name>` 提交工时，初始 pending。
+
+审批分两步——先组长审（`approve <id> --by <name> --level team`），再经理审（`approve <id> --by <name> --level manager`），两级都通过才变 approved。任何一级 reject 则整体 rejected，需要重新提交。拒绝时必须填备注（`--reason <text>`）。
+
+查询支持多种条件组合：`list --who <name>`、`list --status <status>`、`list --project <name>`、`list --from <date> --to <date>`，这些参数可以组合。统计用 `stats --period week|month`，输出每人的总工时、审批通过率、加班天数（单日超过 8 小时的天数）。
+
+- `submit --date <date> --hours <n> --project <name> --desc <text> --who <name>`
+- `approve <id> --by <name> --level team|manager` / `reject <id> --by <name> --level team|manager --reason <text>`
+- `list [--who <name>] [--status <status>] [--project <name>] [--from <date> --to <date>]`
+- `stats --period week|month`
+- `show <id>`：完整审批链
+- `update <id> --hours <n>`：pending 状态可修改
+- `delete <id>`：pending 状态可删除
+
+数据存本地 JSON 文件。Go 标准库实现，go build 通过。

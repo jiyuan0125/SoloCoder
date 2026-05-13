@@ -1,3 +1,9 @@
-终端里谚文分解组合总对不齐，写个工具处理一下。处理完成后自动归档。
+韩文排版出了个怪事——同一个字符串，有的终端显示一行，有的显示三行。查了半天发现是谚文分解成 Jamo（初声/中声/终声）后宽度变了：完整谚文字符和分解后的 Jamo 序列显示宽度不一样。写个工具处理谚文的分解、组合和宽度计算。
 
-表格列宽按内容自适应，表头和内容对齐。支持 Unicode 字符和 ANSI 转义序列。Go 标准库。
+`hangul-tool`，子命令 `decompose`、`compose`、`jamo-info`。`hangul-tool decompose` 把完整谚文字符分解成 Jamo 序列——`한` → `한`。`hangul-tool compose` 反过来——Jamo 序列组合成完整谚文。`hangul-tool jamo-info` 显示每个 Jamo 的信息——初声/中声/终声、Unicode 码点、名称。
+
+表格列宽按内容自适应，表头和内容对齐。宽度计算考虑 Unicode 字符的显示宽度——完整谚文字符和单个 Jamo 都是全角字符（占 2 列），组合字符占 0 列。支持 Unicode 字符和 ANSI 转义序列。
+
+处理完成后自动归档——`--archive-dir` 指定归档目录，原始文件移动过去。
+
+Go 标准库。`go build`。

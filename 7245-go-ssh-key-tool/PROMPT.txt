@@ -1,5 +1,11 @@
-清洗重复劳动太多，所以想做一个加密解密工具工具，Go 实现。
-工具要能数字签名（RSA-PSS/ECDSA）、签名验证、签名时间戳、流式加密（CTR 模式）。
-扫描时发现漏洞要生成报告，报告生成也要扫描关联文件。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+每次做加密操作都要翻文档查参数格式，重复劳动太多了。Go 写一个数字签名工具，RSA-PSS/ECDSA 签名、签名验证、签名时间戳、流式加密（CTR 模式），参数设计得直觉一点。
+
+数字签名：`sshkey sign --key priv.pem --scheme ecdsa --input release.tar.gz`。RSA-PSS 盐值长度等于哈希长度，ECDSA 用 P-256。签名输出 JSON：`{"algorithm": "ecdsa-p256-sha256", "signature": "base64...", "signed_at": 1705312800, "key_id": "SHA256:abc..."}`。
+
+签名验证：`sshkey verify --key pub.pem --input release.tar.gz --sig release.sig`。完整验证链：解析签名→确认算法→计算消息哈希→数学验证→检查时间戳。结果 JSON 包含 `valid`、`reason`、`signed_at`。
+
+签名时间戳：签名时工具取系统时间编入签名数据。验证可选 `--max-age 3600`，超过 1 小时判过期。时间戳必须由工具内部生成。
+
+流式加密用 AES-256-CTR：`sshkey stream-enc --key-file aes.key --input - --output -`。管道友好，IV 放密文前 16 字节。扫描时关联文件？本工具不涉及扫描。输入编码：按字节流处理，不做编码转换。
+
+`go build` 能过，命令行工具能正常运行。

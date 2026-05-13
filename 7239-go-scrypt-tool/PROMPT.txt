@@ -1,5 +1,11 @@
-老板说要搞数字化，第一步先做个加密解密工具，Go CLI。
-工具要能混合加密（自动选择算法）、加密配置管理、批量加密。
-权限变更后用户会话里的权限信息要同步。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+内部安全工具清单第一项就是混合加密工具，今年的 Q1 OKR。Go CLI 加密解密工具，混合加密（自动选择算法）、加密配置管理、批量加密。
+
+混合加密自动选择：输入 ≤ RSA-OAEP 能加密的上限时用 RSA 直接加密，否则用 AES-256-GCM 加数据 + RSA 加密会话密钥。`scrypt-tool encrypt --pubkey pub.pem --input data.bin` 一条命令，用户不用关心算法细节。加密文件头 1 字节算法标识（0x01=RSA-only, 0x02=hybrid-AES-GCM）。
+
+加密配置管理：`scrypt-tool config init` 生成 `.scrypt-tool.yaml`。默认配置：RSA 2048 位、AES-GCM、输出 base64。`config set rsa.bits 4096` 修改。`config show` 显示。配置文件不存在用默认值不报错。
+
+批量加密：`scrypt-tool batch --input-dir ./secrets/ --pubkey pub.pem --workers 4`。每个文件独立，成功输出 `.enc`，失败记到 `errors.json`。结果汇总到 stdout JSON 数组。文件名排序后按序输出。
+
+权限变更后会话同步？本工具没有会话。输出格式：默认 base64 文本，`--binary` 输出原始二进制。错误信息到 stderr，加密结果到 stdout。
+
+`go build` 能过，命令行工具能正常运行。

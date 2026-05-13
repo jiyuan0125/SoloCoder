@@ -1,4 +1,4 @@
-试了几个现成方案都不满足需求，只能 Go 自己写本地运行 pre-commit hooks 而不实际 commit。
+pre-commit hook 只能在 commit 时触发，想提前跑一遍看看有没有问题。本地运行 hooks 但不实际 commit，选择运行哪些，输出详细结果。
 
 本地运行 pre-commit hooks 而不实际 commit。支持选择运行哪些 hooks，输出详细结果。用于提交前检查。
 输入文件可能是空的或者只有 header 行。

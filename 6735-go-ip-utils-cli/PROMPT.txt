@@ -1,6 +1,5 @@
-群里有人问有没有IP 地址工具集的工具，我寻思 Go 能搞。
+日常运维中 CIDR 计算、IP 范围展开、子网划分、判断 IP 是私有还是公网还是组播这些操作太常见了。写个工具集把这些功能都做了，命令行管道友好，方便写脚本调用。
 
-IP 地址工具集。支持 CIDR 计算、IP 范围展开、子网划分、IP 类型判断（私有/公网/组播）。管道友好。
 任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
 CLI 用子命令组织：`tool group command subcommand`，支持三级。
 

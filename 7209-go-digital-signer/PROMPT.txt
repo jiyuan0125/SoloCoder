@@ -1,6 +1,11 @@
-老板说要搞数字化，第一步先做个加密解密工具，Go CLI。
-工具要能混合加密（自动选择算法）、加密配置管理、批量加密、RSA 密钥对生成（2048/4096 位）。
-转换主流程中调用子转换，子转换也需要读同一份映射表。
-索引有初始化→构建中→可用→重建→下线的状态。
-字段值可能有各种奇怪格式，要能容错。
-go build 能过，命令行工具能正常运行。
+今年技术规划里安全基础设施排在第一位，混合加密工具是第一个要交付的。Go 加密解密命令行工具，混合加密、加密配置管理、批量加密、RSA 密钥对生成。
+
+混合加密自动选择：小数据（<256B）直接 RSA-2048 加密，大数据用 AES-256-GCM。`hybrid-signer encrypt --pubkey pub.pem --input data.bin` 一条命令搞定。文件格式：4B 魔数 `HSED` + 1B 算法标识 + 加密数据。AES-GCM 模式前面额外放 256B 的 RSA 加密会话密钥。
+
+配置管理：`config init` 生成 `.hybrid-signer.yaml`，`config show` 显示，`config set key.length 32` 修改。不存在用默认值。
+
+批量加密：`batch-encrypt --input-dir ./secrets/ --pubkey pub.pem` 用 4 goroutine 并发，失败记到 `errors.log` 不中断其他文件，结果 JSON 数组。
+
+密钥生成：`keygen --bits 2048 --output-dir ./keys/`，私钥 0600 权限。索引有初始化→构建中→可用→重建→下线的状态管理。
+
+`go build` 能过，命令行工具能正常运行。

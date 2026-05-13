@@ -1,3 +1,18 @@
-项目Systemd服务管理的配置散落在好几个地方，写个工具统一管理。支持管道和重定向。
+改了 myapp.service 的 ExecStart 路径，忘了执行 systemctl daemon-reload——服务起不来，报的还是旧路径。这种事出过不止一次了。service 文件分布在 /etc/systemd/system/、/lib/systemd/system/、~/.config/systemd/user/ 三个目录，哪个在生效自己都搞不清。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+ServiceConfig 实体有 ID、名称、文件路径、类型（simple/forking/oneshot）、ExecStart、ExecStop、Restart 策略、WorkingDirectory、Environment 变量、依赖的服务列表（After/Requires）、状态（managed/unmanaged）。`service add --name <text> --path <file>` 注册服务并解析 unit 文件。
+
+合并功能——`merge --source <dir1> --source <dir2> --output <file>` 合并两个目录下的 service 配置。同名服务后面的覆盖前面的，ExecStart 命令参数用数组追加模式，Environment 深度合并（同 key 取后者）。
+
+输出格式设计为纯文本以支持管道——`list` 输出每行一个服务（名称|路径|状态），可以管道到 grep/awk/sort。`show <name>` 输出完整 unit 文件内容，可以重定向到文件：`show myapp > /etc/systemd/system/myapp.service`。
+
+`check` 对比工具管理的配置和磁盘上的实际文件，检测过期的服务（文件被外部修改）。
+
+- `service add --name <text> --path <file>`
+- `service list` / `service show <name>`
+- `service edit <name> --set <key>=<value>`
+- `merge --source <dir> --source <dir> --output <file>`
+- `check`：配置一致性检测
+- `diff <name>`：管理配置 vs 磁盘文件
+
+Go 标准库实现。

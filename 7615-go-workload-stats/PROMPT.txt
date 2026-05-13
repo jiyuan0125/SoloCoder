@@ -1,3 +1,19 @@
-老板要看项目的工作量统计数据，写个工具导出。删除后要清理关联记录。
+老板每个季度都要看各项目的工作量统计，之前我从三个系统导数据再手动合并，整整忙了一天。这次我决定写个工具把数据统一管理起来，一键导出报告。
 
-支持导出为 Markdown 表格和 CSV 两种格式。数据按时间范围筛选。Go 标准库实现，go build 通过。
+工具围绕两个实体构建。Project 有名称、团队规模、开始日期、状态（active/completed/on-hold）。WorkEntry 有 ID、所属项目、日期、工时、活动类型（development/testing/review/meeting/other）、负责人。每个条目创建时检查项目是否存在且不是 on-hold 状态，否则报错。
+
+统计维度按负责人和活动类型两个轴展开。`summary <project>` 输出该项目按人分组的总工时、按活动类型分组的总工时、以及平均值。`summary --all` 汇总所有活跃项目，输出每个项目的总工时和人数。
+
+导出支持 Markdown 表格和 CSV 两种格式，通过 `--format md` 或 `--format csv` 指定。时间范围筛选用 `--from` 和 `--to` 参数，不指定则默认最近 30 天。CSV 输出列：项目名、日期、负责人、活动类型、工时。Markdown 输出汇总表格而非原始条目。
+
+删除条目时要注意清理关联记录——如果删除的是一个 Project，需要先确认它下面没有 WorkEntry，有的话拒绝删除并提示条目数量。只能先删完条目再删项目。
+
+- `project add <name> --team-size <n> --start <date>`
+- `project list [--status <status>]`
+- `project delete <name>`：先检查有无关联条目
+- `entry add <project> --hours <n> --type <activity> --who <name> [--date <date>]`
+- `entry list <project> [--who <name>] [--type <activity>]`
+- `summary <project>` / `summary --all`
+- `export --format csv|md [--from <date> --to <date>]`
+
+数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。

@@ -1,3 +1,7 @@
-线上XML序列化的数据格式经常出问题，写个工具来检查和修复。多种子命令处理不同操作。工具分三个子命令：check、convert、validate。
+XML 这格式虽然古老，但 SOAP 接口、Spring 配置文件、SVG 图形里到处都是。线上出过几次问题——有人手改 XML 忘了关标签，或者属性值里混了特殊字符没转义，整个解析就崩了。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+写个 `xml-tool`，三个子命令处理不同的操作。`xml-tool check` 做格式检查，读入 XML 文件，验证标签闭合、属性值引号、嵌套层级、CDATA 区域是否正确。碰到错误报行号和位置，不直接 panic。`xml-tool convert` 做格式转换——XML 和 JSON 互转、XML 和 YAML 互转。转换规则：XML 元素变 JSON 对象的键，属性用 `@attr` 前缀，文本内容用 `#text` 键，这些规则通过 `--mapping` 参数可以自定义。`xml-tool validate` 用 `encoding/xml` 把转换后的输出再解析一遍，确保格式合法。
+
+三个子命令有依赖关系——convert 之前会自动跑 check，validate 在 convert 之后跑。空输入返回空输出，不报错。非标准格式（比如标签名里有空格、属性值没引号）在 check 阶段给警告，convert 时尝试修正。命名空间前缀要保留，别丢了 `xmlns` 声明。
+
+Go 标准库，`encoding/xml` 为主。纯 CLI 工具，`go build`。

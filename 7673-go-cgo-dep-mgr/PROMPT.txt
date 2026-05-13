@@ -1,3 +1,16 @@
-项目CGO依赖管理的配置散落在好几个地方，写个工具统一管理。主记录依赖配置数据。
+CGO 项目在本地 Mac 上编译没问题，一推到 CI（Linux）就报缺少头文件。pkg-config 的搜索路径、C 编译器的版本、头文件的安装位置——每台机器都不一样，全靠手记。
 
-工具合并多个配置源，后面的覆盖前面的。支持数组追加和对象深度合并。Go 标准库。
+CGODep 实体有 ID、库名称、头文件路径（多个）、库文件路径、C 编译器（如 gcc、clang）、状态（installed/missing）。CGOConfig 有 ID、项目名、C 编译器路径、CFLAGS、LDFLAGS、pkg-config 路径。主记录（CGODep）依赖配置数据（CGOConfig）——创建 CGO 依赖时必须指定有效的 CGOConfig，配置不存在则报错。
+
+`detect` 命令检查系统环境——CC 环境变量是否设置、pkg-config 是否可用、指定的头文件和库文件是否存在。missing 状态的依赖输出修复建议（如"缺少 libssl-dev，执行 apt install libssl-dev"）。
+
+配置合并——`merge --source <file1> --source <file2> --output <file>` 合并多个 CGO 配置源，后面的覆盖前面的同名项。数组类型（如头文件路径列表）支持追加。对象类型深度合并。
+
+- `config add --project <name> --cc <path> [--cflags <flags>] [--ldflags <flags>]`
+- `config list`
+- `dep add --name <text> --config <id> --headers <paths> --libs <paths>`
+- `dep list [--status installed|missing]`
+- `detect`：检测系统 CGO 环境
+- `merge --source <file> --source <file> --output <file> [--append]`
+
+Go 标准库实现。

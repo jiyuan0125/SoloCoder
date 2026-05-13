@@ -1,4 +1,4 @@
-之前用的 SaaS 工具到量了，Go 自建为指定 tag 生成 release notes。
+release notes 每次手动整理，对比前一个 tag 的差异提取 feat/fix/breaking 变更，输出 Markdown。周末前必须搞完。
 
 为指定 tag 生成 release notes。对比前一个 tag 的差异，提取 feat/fix/breaking 变更。输出 Markdown。
 去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。

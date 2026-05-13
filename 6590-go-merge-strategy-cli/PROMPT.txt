@@ -1,4 +1,4 @@
-Git 工作流增强工具，Go 标准库实现，命令行跑。
+.gitattributes 的 merge 配置不好记，每次都要查文档。管理指定文件路径的 merge strategy，支持导入导出配置。
 
 为指定文件路径设置 Git merge strategy。管理 .gitattributes 中的 merge 属性。支持导入导出配置。
 去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。

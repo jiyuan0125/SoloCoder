@@ -1,3 +1,16 @@
-写个依赖树可视化工具，CI 环境用。数据有生命周期。
+"本地能跑 CI 跑不了"——这句话在群里每周至少出现一次。CI 环境的依赖树和本地不一样，但到底是哪里不一样没人说得清，因为没人锁过版本。
 
-工具支持锁定当前版本生成锁文件。后续构建用锁文件确保一致性。锁文件包含 hash 校验。Go 标准库。
+依赖树数据从 go.mod 解析。Module 实体有名称、版本、间接依赖标记（direct/indirect）。DependencyRelation 有来源模块、目标模块。`scan` 命令解析 go.mod，递归构建依赖树（直接和间接依赖都记录）。
+
+锁文件功能——`lock generate` 基于当前依赖树生成 lock.json，包含每个依赖的精确版本和 SHA256 校验。`lock verify` 读取 lock.json 并对比当前 go.mod 中的版本，版本不一致的列出差异。校验不通过的依赖标红。锁文件有生命周期——active（当前使用）→ superseded（有新锁文件替代后自动标记）。每次 generate 新锁文件时，旧的 active 锁文件变 superseded。
+
+`tree` 命令输出文本格式的依赖树，直接依赖缩进一层，间接依赖再缩进一层。`tree --depth <n>` 控制显示深度。`report` 输出依赖统计——总模块数、直接依赖数、间接依赖数。
+
+- `scan`：解析 go.mod 构建依赖树
+- `tree [--depth <n>]`：文本树输出
+- `lock generate`：生成锁文件
+- `lock verify`：校验一致性
+- `lock list`：列出所有锁文件及状态
+- `report`：依赖统计
+
+Go 标准库实现。

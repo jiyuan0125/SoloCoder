@@ -1,3 +1,17 @@
-做个开发容器配置的 CLI 工具。更新配置时自动刷新缓存，刷新也要读配置。支持多套配置，按名称切换。
+团队推了 DevContainer，理论上应该"开箱即用"。但实际上张三的容器能跑、李四的不行——基础镜像版本不一样、挂载路径写死了本机路径、端口还冲突了。devcontainer.json 每个人各改各的。
 
-切换环境时验证配置完整性。配置文件格式兼容 JSON 和 YAML。Go 标准库。
+ContainerConfig 实体有 ID、名称、基础镜像、安装的包列表、环境变量、挂载点、端口映射、启动后执行的命令、状态（active/disabled）。配置文件存 JSON 格式。`config create <name> --image <image>` 创建新配置，`config switch <name>` 切换活跃配置。
+
+切换时验证配置完整性——检查基础镜像是否在本地存在（docker image inspect）、挂载点路径是否存在、端口是否被占用。验证结果输出但不阻止切换，只是标记哪些项有问题。更新配置时（`config set <name> --image <new-image>`），自动刷新内存缓存（缓存存着当前配置的快照），刷新时重新从 JSON 文件读取。
+
+`generate <name>` 根据配置生成 devcontainer.json 文件到 .devcontainer/ 目录。`validate <name>` 验证配置的 JSON 格式和必填字段。`diff <name1> <name2>` 对比两套配置的差异。
+
+- `config create <name> --image <image>`
+- `config list` / `config switch <name>`
+- `config set <name> --image <image>` / `--env KEY=VALUE` / `--port <port>`
+- `config delete <name>`
+- `generate <name>`：生成 devcontainer.json
+- `validate <name>`：校验配置
+- `diff <name1> <name2>`
+
+Go 标准库实现。

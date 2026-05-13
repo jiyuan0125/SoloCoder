@@ -1,3 +1,7 @@
-线上日志输出的reStructuredText解析格式不统一，写个工具标准化一下。主记录依赖配置数据。
+Python 项目文档用的 rst 特性五花八门——有的用了 `.. note::` 指令，有的用了 `:ref:` 角色，还有的自定义了指令，解析的时候得兼容这些差异。主记录依赖配置数据——rst 的指令和角色定义可以通过配置文件扩展。
 
-自动检测输入格式，统一输出到目标格式。处理速度要快，支持管道输入。Go 标准库。
+`rst-tool`，子命令 `parse`、`convert`、`check`。`rst-tool parse` 读 rst 文件，解析标题、段落、列表、代码块、表格、指令（`.. directive::`）、角色（`:role:`text``）、脚注、引用。输出 AST 结构的 JSON。`rst-tool convert` 把 rst 转成 Markdown 或 HTML。转换时 rst 的指令映射成 Markdown 的扩展语法或 HTML div。`rst-tool check` 做 rst 语法检查——标题装饰线长度是否匹配、指令参数是否合法、角色引用是否存在。
+
+自动检测输入格式——确认是 rst（看标题装饰线模式），统一输出到目标格式。处理速度要快，管道输入支持。大文件用流式解析，不全部加载到内存。
+
+Go 标准库。`go build`。

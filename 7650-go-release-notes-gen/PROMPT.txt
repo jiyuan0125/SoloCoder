@@ -1,3 +1,17 @@
-最近项目多起来了，需要一个发布说明生成工具。引用了其他表的数据。
+每次发版产品经理都来问"这次改了什么"，开发就开始翻 Git 提交记录——一条条挑，费时又容易漏。上个月有个安全修复没写进发布说明，客户不知道升级了，出了问题又来告。
 
-支持多项目，每个项目独立的任务列表。可以按负责人、优先级、状态筛选。Go 标准库实现。
+项目实体有名称、仓库路径、状态（active/archived）。Change 实体有 ID、标题、描述、类型（feature/fix/breaking/deprecation/security）、关联项目名、关联的提交哈希或 PR 编号（可选）、影响范围、负责人、状态（draft/cherry-picked/included）。Release 有 ID、版本号、发布日期、包含的变更 ID 列表、状态（draft/published）。
+
+生成发布说明用 `generate --release <id>`，从 Release 关联的变更记录中按类型分组输出 Markdown：Breaking Changes → New Features → Bug Fixes → Deprecations → Security。每条包含标题、PR 链接（如果有）、负责人。生成后的 Markdown 写入 RELEASE_NOTES.md。
+
+支持按项目筛选变更——`changes --project <name> [--status <status>]` 列出项目下的变更。也可以按负责人筛选——`changes --owner <name>`。
+
+- `project add <name>`
+- `change add --project <name> --title <text> --type <type> --who <name> [--desc <text>] [--pr <number>]`
+- `change list --project <name> [--status <status>] [--type <type>] [--owner <name>]`
+- `release create --version <v> --date <date>`
+- `release include <release-id> --change <id>`：把变更加入发布
+- `generate --release <id>`：生成 Markdown
+- `release list` / `release show <id>`
+
+数据存 JSON 文件。Go 标准库实现。

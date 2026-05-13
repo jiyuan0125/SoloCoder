@@ -1,3 +1,13 @@
-写个重试机制工具来管理配置。操作前需要先有基础数据。
+网络请求失败重试、文件锁冲突重试、数据库连接超时重试——重试逻辑到处重复，而且每次写的重试策略都不一样。为什么不统一做个重试机制？
 
-配置支持层叠合并：全局配置 + 项目配置 + 用户配置。支持数组追加和深度合并。配置变更触发回调。Go 标准库实现，go build 通过。
+retry-mechanism 用 Go 标准库实现，`go build -o retry-demo ./cmd/retry` 编译。它管理配置化的重试策略。
+
+策略模型：重试次数（默认 3）、退避策略（固定间隔/线性递增/指数退避/自定义）、可重试的错误判断函数、最大总耗时（可选）。操作前需要先有基础数据——策略配置。没有配置就用默认策略。
+
+配置层叠合并：全局配置 + 项目配置 + 用户配置。JSON 格式配置文件。支持数组追加和深度合并。配置变更触发回调——运行时调整策略立即生效。
+
+指数退避公式：`delay = base * 2^attempt + jitter`。jitter 是随机偏移，避免多个客户端同时重试打爆服务。base 默认 1 秒。可自定义退避函数 `BackoffFn func(attempt int) time.Duration`。
+
+断路器集成：连续失败 N 次后熔断，直接返回错误不再重试。过一段时间后半开，放一个请求试，成功就恢复。
+
+API：`err := retry.Do(func() error { return call() }, retry.Attempts(5), retry.Backoff(exponential))`。也支持 `retry.DoWithContext`。`go test ./...` 跑测试，`go build` 编译通过。

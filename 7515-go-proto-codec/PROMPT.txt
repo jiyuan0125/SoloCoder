@@ -1,3 +1,7 @@
-线上Protobuf编解码的数据格式经常出问题，写个工具来检查和修复。写入数据后自动触发校验，校验也需要访问同一份数据。工具分三个子命令：check、convert、validate。
+上周 gRPC 服务端升级，Protobuf 消息格式改了，结果有几个老客户端还在用旧的消息定义，反序列化出来全是零值，排查了半天才定位到问题。这种事其实可以提前发现的——如果有个工具能检查二进制 Protobuf 消息的 wire format，看看 tag 和 type 对不对得上。
 
-check 只检查不修改，convert 执行转换，validate 验证输出合法性。空输入和非标准格式都要处理。Go 标准库。
+写个 `proto-tool`，三个子命令。`proto-tool check` 读入二进制 Protobuf 数据，逐字段解析 wire format，输出每个字段的 field number、wire type（varint/固定长度/长度分隔）、原始字节和尝试解码的值。不需要 `.proto` 文件就能工作，纯靠 wire format 推断。`proto-tool convert` 在有 `.proto` 文件的情况下，把二进制消息转成 JSON 或文本格式输出。`proto-tool validate` 验证二进制数据是否符合给定的 `.proto` 定义——检查必填字段有没有、枚举值是否在范围内、repeated 字段的格式。
+
+check 和 validate 有依赖：validate 内部先调 check 解析 wire format，再和 proto 定义比对。convert 成功后自动触发 validate 检查输出合法性。空输入返回空消息。非标准格式（比如未知 wire type、字段号超出范围）在 check 时报告但不停止，继续解析后面的字节。
+
+Go 标准库，`google.golang.org/protobuf` 用标准库替代的话，就用 `encoding/protobuf` 或自己解析 varint。纯 CLI 工具，`go build`。

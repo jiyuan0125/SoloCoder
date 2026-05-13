@@ -1,4 +1,4 @@
-上周因为WebSocket mock 工具出了个问题，排查花了半天。需要一个WebSocket mock 工具，Go 实现。
+WebSocket mock 手写消息序列太折腾了，每次联调都得临时拼。用 JSON 配置文件定义消息序列——收到 X 后延迟 200ms 发 Y，按顺序或条件触发。
 
 WebSocket mock 工具。定义消息序列，按顺序或条件发送给客户端。支持延迟、条件判断（收到X后发Y）。配置用 JSON 文件定义。
 任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。

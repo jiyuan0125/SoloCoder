@@ -1,3 +1,9 @@
-之前那个排版工具处理不了 CJK 字符，用 Go 重写一个Markdown转HTML。任务有多个审批步骤。
+Markdown 转出来的 HTML，内联代码里的中文宽度不对，表格列宽也歪了——试了几个现成工具都搞不定 CJK 字符。审批流程走了好几步：先确认转换规则的边界情况，再处理扩展语法（脚注、任务列表、数学公式），最后验证输出的 HTML 是否合法。
 
-中文字符算两个宽度，emoji 按实际渲染宽度计算。行截断不能把一个字符从中间截断。Go 标准库实现。
+`md2html-tool`，子命令 `convert`、`serve`、`check`。`md2html-tool convert` 读 Markdown 文件，转成 HTML。转换规则：标准 Markdown 语法全覆盖，加 CommonMark 的边界情况处理（列表嵌套、缩进代码块 vs 围栏代码块、链接引用定义）。输出 `--full` 模式生成完整 HTML 文档（带 `<html><head><body>`），默认只输出 body 片段。`--style` 指定 CSS 样式表链接。
+
+`md2html-tool check` 验证输出的 HTML——用简单的解析器检查标签闭合、属性语法。`md2html-tool serve` 本地预览——启动 HTTP 服务器（端口 `--port`，默认 8080），自动渲染当前目录的 `.md` 文件为 HTML。
+
+宽度计算：中文字符算两个显示宽度，emoji 按实际渲染宽度。行截断不能把一个字符从中间截断。
+
+Go 标准库实现。`go build`。

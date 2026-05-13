@@ -1,3 +1,11 @@
-做个并发任务调度工具处理文件操作。嵌套的资源路径。
+并发任务调度——多核 CPU 摆在那里不用白不用，但 goroutine 不加控制的话，一千个任务同时跑反而更慢。需要个调度器管理并发度。
 
-文件写入用原子操作（先写临时文件再 rename）。支持文件变更监听。并发安全。Go 标准库。
+concurrent-scheduler 用 Go 标准库实现，`go build -o scheduler-demo ./cmd/scheduler` 编译。它处理文件操作等并发任务的调度。
+
+调度模型：worker pool 模式，固定数量的 worker goroutine 从任务队列取任务执行。队列是有缓冲 channel，满了之后新任务阻塞等待。嵌套的资源路径——任务可以产生子任务，子任务入队后由同一个 pool 处理，深度限制 3 层防止无限递归。
+
+文件操作集成：每个文件任务用原子操作写入（临时文件+rename）。支持文件变更监听——任务执行完可以触发后续任务（比如编译完触发测试）。并发安全——共享状态用 mutex 或 channel 保护。
+
+任务优先级：高/中/低三档。高优先级插入队列头部（用双端队列模拟），低优先级追加尾部。同一优先级按提交顺序。
+
+API：`s := scheduler.New(10)`（10 个 worker）、`s.Submit(task)`、`s.SubmitWithPriority(task, High)`、`s.WaitAll()`。每个任务返回 `TaskResult` 包含执行时间、错误信息。`s.Stats()` 返回队列深度、活跃 worker 数、已完成数。`go test ./...` 跑测试。

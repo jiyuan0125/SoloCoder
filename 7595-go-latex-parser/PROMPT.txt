@@ -1,3 +1,7 @@
-LaTeX简易解析的处理逻辑比较复杂，特别是 Unicode 相关的部分。主操作执行时要调用辅助检查，辅助检查也要读同一份数据。
+LaTeX 简易解析——不是完整的 LaTeX 引擎，只是提取文档结构和文本内容的解析器。学术论文的元数据抽取（标题、作者、摘要、章节结构）是核心需求。Unicode 规范化在这个场景经常碰到——数学符号和特殊字符的 Unicode 表示方式可能有多种。主操作执行时调用辅助检查，辅助检查也要读同一份数据。
 
-工具要能处理各种 Unicode 规范化形式（NFC、NFD、NFKC、NFKD）。两个看起来一样但编码不同的字符串要能识别。Go 标准库实现。
+`latex-tool`，子命令 `parse`、`extract`、`check`。`latex-tool parse` 读 LaTeX 文件，解析文档类（`\documentclass`）、导言区的包（`\usepackage`）、标题层级（`\section`/`\subsection`/`\subsubsection`）、环境（`\begin{...}`/`\end{...}`）、数学公式（`$...$` 和 `\[...\]`）、命令（`\command{arg}`）、注释（`%`）。输出 AST 的 JSON。`latex-tool extract` 提取特定内容——`--element title` 提取标题、`--element abstract` 提取摘要、`--element bibliography` 提取参考文献列表。`latex-tool check` 检查语法——花括号匹配、环境开始和结束是否配对、命令拼写。
+
+工具要处理 NFC/NFD/NFKC/NFKD 四种 Unicode 规范化形式。两个看起来一样的 LaTeX 命令（比如 `\"o` 和 `ö`）要识别为等价。
+
+Go 标准库实现。`go build`。

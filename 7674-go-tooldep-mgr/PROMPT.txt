@@ -1,3 +1,17 @@
-Go 项目的工具依赖管理需要自动化。删除后要清理关联记录。
+golangci-lint、mockgen、protoc-gen-go、stringer——项目依赖了一堆 go install 的工具。CI 上有人用了新版 linter 规则，本地还是旧版，跑出来结果完全不一样。这些工具的版本根本没人追踪。
 
-解析 go.mod 和 go.sum，提取所有依赖版本。对比最新版本列出可更新项。区分大版本和小版本更新。Go 标准库实现。
+ToolDep 实体有 ID、工具名称、导入路径（如 github.com/golangci/golangci-lint/cmd/golangci-lint）、版本约束（semver 范围）、安装路径、状态（installed/outdated/missing）。VersionCheck 有 ID、ToolDep ID、当前安装版本、最新版本、检查时间。删除 ToolDep 时（`tool remove <id>`），级联删除所有 VersionCheck 记录。
+
+`scan` 解析当前目录的 go.mod 中 tools 导入（或独立的 tools.go 文件），提取工具列表和版本。和已有记录对比，新增的自动创建，版本变化的更新。`install <id>` 执行 go install 安装指定版本。
+
+`report` 输出所有工具的状态——名称、当前版本、最新版本、状态。outdated 的标黄，missing 的标红。区分大版本和小版本更新。
+
+- `scan`：从 go.mod 或 tools.go 解析工具依赖
+- `tool list [--status installed|outdated|missing]`
+- `tool install <id>`：安装指定工具
+- `tool update <id>`：更新到最新版本
+- `tool remove <id>`：级联删除版本检查记录
+- `check`：检查所有工具是否有新版本
+- `report`：工具状态报告
+
+Go 标准库实现。

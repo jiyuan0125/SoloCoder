@@ -1,5 +1,2 @@
-V2 版本月底上线，先把按时间归档做了，Go CLI。
-归档目录按年/月组织。
-最近修改的文件不动。
-多级命令：config get、config set、config list、config env switch。
-go build 能编译通过，不依赖第三方库。
+V2 版本月底上线，旧版本的数据文件要先归档。按年/月组织归档目录，最近修改的文件不动。
+多级命令：config get、config set、config list、config env switch。go build 能编译通过，不依赖第三方库。

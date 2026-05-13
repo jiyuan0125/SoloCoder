@@ -1,5 +1,9 @@
-Go 标准库的net/url刚好能用，写个加密解密工具工具。
-工具要能流式加密（CTR 模式）、管道式处理（stdin/stdout）、进度显示。
-导出数据时要验证权限，权限检查也要查导出记录。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+Go 标准库 `crypto` 包完全够用，不需要第三方依赖。流式加密 + 管道处理工具，AES-256-CTR 流式加密、stdin/stdout 管道、进度显示。
+
+AES-256-CTR 流式加密：随机 16 字节 IV 放密文前面，后面是密文流。CTR 不需要 padding。`hashcmp encrypt --key-file aes.key --input plaintext --output ciphertext` 或管道 `tar czf - /data | hashcmp encrypt --key-file aes.key > backup.enc`。
+
+管道处理：`--input -` 读 stdin，`--output -` 写 stdout。默认 stdin 到 stdout。密钥文件 32 字节二进制或 64 字符 hex，自动检测。
+
+进度显示到 stderr（`--progress`）：`[====>  ] 35% 120MB/s ETA: 45s`。stdin 模式只显示已处理量和速度。任务状态 `waiting`/`running`/`success`/`failed`。密钥文件权限高于 0600 打印警告。
+
+`go build` 能过，命令行工具能正常运行。

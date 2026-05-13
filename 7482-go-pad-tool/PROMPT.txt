@@ -1,4 +1,11 @@
-用 Go 标准库写一个文本处理转换相关的 CLI 工具。
-工具要能模板渲染（Go template）、自定义函数注册、模板继承。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
+用 Go 标准库写一个模板渲染工具，支持自定义函数和继承。Go CLI。
+
+模板渲染——Go text/template 标准库。加载模板文件和数据文件（JSON），渲染后输出。支持 {{.Field}}、{{range}}、{{if}}、{{with}} 全套语法。
+
+自定义函数注册——内置常用函数：upper/lower/trim/replace/split/join/date。用户可通过 plugin 包加载外部 .so 扩展函数。函数注册在模板引擎初始化时完成。
+
+模板继承——子模板 extends 基础模板，覆盖指定 block。基础模板定义骨架和 block 默认内容，子模板只覆盖需要的部分。未覆盖的 block 用默认内容渲染。
+
+审计日志——审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。每次渲染操作记录一条审计日志，包含操作时间、模板名、数据源、输出目标。日志写入用 append 模式，目录不存在自动创建。
+
 go build 能过，命令行工具能正常运行。

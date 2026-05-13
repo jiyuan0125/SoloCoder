@@ -1,3 +1,9 @@
-调研了一圈 Go 标准库里vCard解析生成相关的包，写个工具整合一下。处理一个记录的时候需要自动更新关联的统计。
+调研了一圈 Go 标准库里和文本处理相关的包，vCard（电子名片）格式的解析生成虽然结构简单但字段很多——N、FN、TEL、EMAIL、ADR、ORG、PHOTO 等等，还有版本的差异（vCard 2.1 vs 3.0 vs 4.0）。写个工具把这些能力整合起来。
 
-工具支持 dry-run 模式先预览再执行。输出用颜色区分不同状态。Go 标准库，命令行工具。
+工具叫 `vcard-tool`，子命令 `parse`、`generate`、`merge`。1. `vcard-tool parse` 读 `.vcf` 文件，解析出所有 vCard 条目，输出 JSON 格式。每个字段按类型分类——字符串字段直接输出、URI 字段（PHOTO、LOGO）输出原始值、结构化字段（N、ADR）拆成子字段。2. `vcard-tool generate` 从 JSON 输入生成 vCard 文件。3. `vcard-tool merge` 合并多个 vCard 文件，同名联系人的字段取最新值。
+
+处理一个 vCard 条目时自动更新关联统计——总条目数、每个字段的覆盖率（比如有 EMAIL 的占多少百分比）、版本分布。Dry-run 模式先预览：parse 时报告"将解析 N 个 vCard 条目"，merge 时报告"将合并 M 个联系人，预计去重后 K 个"。
+
+输出用颜色区分：绿色正常数据，黄色 dry-run 提示，红色解析错误。终端检测，管道时关闭颜色。
+
+Go 标准库，命令行工具，`go build`。

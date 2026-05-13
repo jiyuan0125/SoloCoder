@@ -1,5 +1,13 @@
-隔壁组做了个相关工具，我们顺便把证书密钥管理也做了，Go。
-工具要能证书链构建和验证、签名/有效期/用途检查、信任锚管理、证书吊销列表管理。
-消息发送需要 topic，topic 怎么创建不提。
-处理分多个阶段，每个阶段输出是下个阶段输入。
-go build 能过，命令行工具能正常运行。
+证书链验证和信任锚管理，隔壁组的格式转换工具覆盖不了这块。Go 写，签名/有效期/用途检查、信任锚管理、CRL 管理。
+
+证书链构建：`fp build-chain --cert leaf.pem --intermediate-dir ./intermediates/ --output chain.pem`。从叶子证书开始，根据 Issuer 和 AKI 匹配中间证书。缺失中间证书时报错提示缺少哪个 Issuer。
+
+证书链验证：`fp verify --chain chain.pem --trust-store ~/.fp/trust-store.json`。逐级检查签名、有效期、Key Usage、Basic Constraints。失败点具体报告。
+
+信任锚管理：`fp trust add --root root-ca.pem --name "MyCompany Root"`。`fp trust list` 显示指纹和名称。`fp trust remove --name "MyCompany Root"`。信任锚库存 JSON 文件。
+
+CRL 管理：`fp crl-init --ca-cert intermediate.pem --ca-key intermediate.key`。`fp crl-revoke --serial 0xABC --reason keyCompromise`。
+
+消息发送需要 topic？本工具不做消息。处理分阶段：解析→匹配→验证→输出，每阶段错误独立捕获。
+
+`go build` 能过，命令行工具能正常运行。
