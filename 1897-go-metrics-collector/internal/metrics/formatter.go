@@ -26,13 +26,18 @@ type GaugeValue struct {
 	Value float64
 }
 
-type HistogramValue struct {
+type HistogramBucketValue struct {
+	UpperBound float64
 	Count      int
-	Sum        float64
-	P50        float64
-	P90        float64
-	P99        float64
-	Buckets    map[float64]int
+}
+
+type HistogramValue struct {
+	Count   int
+	Sum     float64
+	P50     float64
+	P90     float64
+	P99     float64
+	Buckets []HistogramBucketValue
 }
 
 func ParseLabelKey(labelKey string) Labels {
@@ -192,6 +197,16 @@ func GetMetricValues(registry *Registry, store *Store, name string) ([]*MetricVa
 	case TypeHistogram:
 		series := store.GetHistogramSeries(name)
 		for labelKey, data := range series {
+			buckets := make([]HistogramBucketValue, 0, len(data.Buckets))
+			for bound, count := range data.Buckets {
+				buckets = append(buckets, HistogramBucketValue{
+					UpperBound: bound,
+					Count:      count,
+				})
+			}
+			sort.Slice(buckets, func(i, j int) bool {
+				return buckets[i].UpperBound < buckets[j].UpperBound
+			})
 			values = append(values, &MetricValue{
 				Name:     name,
 				Type:     TypeHistogram,
@@ -203,7 +218,7 @@ func GetMetricValues(registry *Registry, store *Store, name string) ([]*MetricVa
 					P50:     data.Percentile(0.50),
 					P90:     data.Percentile(0.90),
 					P99:     data.Percentile(0.99),
-					Buckets: data.Buckets,
+					Buckets: buckets,
 				},
 			})
 		}

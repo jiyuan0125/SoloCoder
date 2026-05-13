@@ -169,6 +169,7 @@ class EventScheduler:
 
     async def _run_task_delay(self, task_id: str) -> None:
         await self._execute_task(task_id)
+        self._apscheduler_jobs.pop(task_id, None)
 
     async def _execute_task(self, task_id: str) -> None:
         task = self.get_task(task_id)

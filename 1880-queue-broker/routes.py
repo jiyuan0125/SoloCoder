@@ -216,5 +216,5 @@ def setup_routes(app):
     app.router.add_get('/topics/{name}/groups/{gid}/consume', consume)
     app.router.add_post('/topics/{name}/groups/{gid}/failed', mark_failed)
     app.router.add_get('/topics/{name}/groups/{gid}/offset', get_offset)
-    app.router.add_get('/topics/{name}/dead-letter', get_dead_letter)
+    app.router.add_post('/topics/{name}/dead-letter', get_dead_letter)
     app.router.add_get('/topics/{name}/messages/{mid}/render', render_message)

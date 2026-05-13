@@ -14,6 +14,7 @@ func main() {
 	app := fiber.New()
 	
 	store := mapping.NewStore()
+	log.Printf("Main: Store created at %p", store)
 	
 	convertHandler := handler.NewConvertHandler(store)
 	mappingHandler := handler.NewMappingHandler(store)

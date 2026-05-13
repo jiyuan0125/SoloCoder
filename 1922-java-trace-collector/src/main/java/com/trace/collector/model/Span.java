@@ -41,8 +41,6 @@ public class Span {
 
     private Map<String, String> tags;
 
-    private Boolean slow;
-
     private Double percentage;
 
     public boolean isSlow() {

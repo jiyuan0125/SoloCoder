@@ -1,0 +1,13 @@
+items:
+  - name: 尺寸
+    standard_value: 100.0
+    tolerance_min: 99.5
+    tolerance_max: 100.5
+  - name: 重量
+    standard_value: 50.0
+    tolerance_min: 49.0
+    tolerance_max: 51.0
+  - name: 硬度
+    standard_value: 60.0
+    tolerance_min: 55.0
+    tolerance_max: 65.0

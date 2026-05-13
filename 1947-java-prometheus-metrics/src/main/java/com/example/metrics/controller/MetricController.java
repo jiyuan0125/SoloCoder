@@ -65,6 +65,7 @@ public class MetricController {
             @RequestParam String type,
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
+            @RequestParam(required = false) String granularity,
             @RequestParam(required = false) Map<String, String> allParams) {
         
         Map<String, String> labels = new HashMap<>();
@@ -72,6 +73,7 @@ public class MetricController {
             String key = entry.getKey();
             if (!"metricName".equals(key) && !"type".equals(key) && 
                 !"startTime".equals(key) && !"endTime".equals(key) &&
+                !"granularity".equals(key) &&
                 key.startsWith("label_")) {
                 labels.put(key.substring(6), entry.getValue());
             }
@@ -81,7 +83,7 @@ public class MetricController {
         Instant end = endTime != null ? Instant.parse(endTime) : null;
 
         List<QueryResponse> results = metricService.queryMetrics(metricName, type, 
-            labels.isEmpty() ? null : labels, start, end);
+            labels.isEmpty() ? null : labels, start, end, granularity);
 
         return ResponseEntity.ok(results);
     }

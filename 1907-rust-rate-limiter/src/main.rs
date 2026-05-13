@@ -98,6 +98,14 @@ fn get_fixed_window_start() -> u64 {
     current_seconds() / 60 * 60
 }
 
+fn normalize_path(path: &str) -> String {
+    if !path.starts_with('/') {
+        format!("/{}", path)
+    } else {
+        path.to_string()
+    }
+}
+
 fn check_fixed_window(tracker: &mut PathTracker, limit: u64) -> bool {
     let window_start = get_fixed_window_start();
     
@@ -140,7 +148,7 @@ async fn rate_limit_middleware(
     req: Request<axum::body::Body>,
     next: Next,
 ) -> Response {
-    let path = req.uri().path().to_string();
+    let path = normalize_path(req.uri().path());
     
     if path.starts_with("/rules") || path.starts_with("/stats") || path.starts_with("/config") {
         return next.run(req).await;
@@ -238,9 +246,11 @@ async fn put_rule(
         limit: payload.limit,
     };
     
+    let normalized_path = normalize_path(&path);
+    
     {
         let mut rules = state.rules.lock().await;
-        rules.insert(path, rule);
+        rules.insert(normalized_path, rule);
     }
     
     StatusCode::OK

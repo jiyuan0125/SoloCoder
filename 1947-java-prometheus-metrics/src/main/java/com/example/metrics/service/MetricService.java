@@ -121,11 +121,13 @@ public class MetricService {
     }
 
     public List<QueryResponse> queryMetrics(String metricName, String type, Map<String, String> labels,
-                                            Instant startTime, Instant endTime) {
+                                            Instant startTime, Instant endTime, String granularity) {
         MetricType metricType = parseType(type);
         if (metricType == null) {
             throw new IllegalArgumentException("Invalid metric type: " + type);
         }
+
+        Long windowSeconds = parseGranularity(granularity);
 
         List<DataPoint> rawData = repository.queryRawData(metricName, metricType, labels, startTime, endTime);
         
@@ -133,32 +135,95 @@ public class MetricService {
             return Collections.emptyList();
         }
 
-        Map<String, List<DataPoint>> grouped = rawData.stream()
+        Map<String, List<DataPoint>> groupedByLabel = rawData.stream()
             .collect(Collectors.groupingBy(dp -> getLabelKey(dp.getLabels())));
 
         List<QueryResponse> results = new ArrayList<>();
-        for (Map.Entry<String, List<DataPoint>> entry : grouped.entrySet()) {
-            List<Double> values = entry.getValue().stream()
-                .map(DataPoint::getValue)
-                .sorted()
-                .collect(Collectors.toList());
+        for (Map.Entry<String, List<DataPoint>> entry : groupedByLabel.entrySet()) {
+            List<DataPoint> points = entry.getValue();
+            Map<String, String> pointLabels = repository.parseLabelKey(entry.getKey());
 
-            QueryResponse resp = new QueryResponse();
-            resp.setMetricName(metricName);
-            resp.setLabels(repository.parseLabelKey(entry.getKey()));
-            resp.setCount((long) values.size());
-            resp.setAverage(values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
-            
-            if (!values.isEmpty()) {
-                resp.setP50(percentile(values, 0.5));
-                resp.setP95(percentile(values, 0.95));
-                resp.setP99(percentile(values, 0.99));
+            if (windowSeconds == null) {
+                List<Double> values = points.stream()
+                    .map(DataPoint::getValue)
+                    .sorted()
+                    .collect(Collectors.toList());
+
+                QueryResponse resp = new QueryResponse();
+                resp.setMetricName(metricName);
+                resp.setLabels(pointLabels);
+                resp.setCount((long) values.size());
+                resp.setAverage(values.stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
+                
+                if (!values.isEmpty()) {
+                    resp.setP50(percentile(values, 0.5));
+                    resp.setP95(percentile(values, 0.95));
+                    resp.setP99(percentile(values, 0.99));
+                }
+                
+                results.add(resp);
+            } else {
+                QueryResponse resp = new QueryResponse();
+                resp.setMetricName(metricName);
+                resp.setLabels(pointLabels);
+
+                Instant effectiveStart = startTime != null ? startTime : 
+                    points.stream().map(DataPoint::getTimestamp).min(Instant::compareTo).orElse(Instant.now());
+                Instant effectiveEnd = endTime != null ? endTime : 
+                    points.stream().map(DataPoint::getTimestamp).max(Instant::compareTo).orElse(Instant.now());
+
+                List<QueryResponse.TimeWindow> windows = new ArrayList<>();
+                
+                long startEpoch = effectiveStart.getEpochSecond();
+                long endEpoch = effectiveEnd.getEpochSecond();
+                long alignedStart = (startEpoch / windowSeconds) * windowSeconds;
+                
+                for (long windowStart = alignedStart; windowStart <= endEpoch; windowStart += windowSeconds) {
+                    Instant ws = Instant.ofEpochSecond(windowStart);
+                    Instant we = Instant.ofEpochSecond(windowStart + windowSeconds);
+                    
+                    List<Double> windowValues = points.stream()
+                        .filter(dp -> !dp.getTimestamp().isBefore(ws) && dp.getTimestamp().isBefore(we))
+                        .map(DataPoint::getValue)
+                        .sorted()
+                        .collect(Collectors.toList());
+                    
+                    if (!windowValues.isEmpty()) {
+                        QueryResponse.TimeWindow tw = new QueryResponse.TimeWindow();
+                        tw.setWindowStart(ws);
+                        tw.setWindowEnd(we);
+                        tw.setCount((long) windowValues.size());
+                        tw.setAverage(windowValues.stream().mapToDouble(Double::doubleValue).average().orElse(0.0));
+                        tw.setP50(percentile(windowValues, 0.5));
+                        tw.setP95(percentile(windowValues, 0.95));
+                        tw.setP99(percentile(windowValues, 0.99));
+                        windows.add(tw);
+                    }
+                }
+                
+                resp.setWindows(windows);
+                results.add(resp);
             }
-            
-            results.add(resp);
         }
 
         return results;
+    }
+
+    private Long parseGranularity(String granularity) {
+        if (granularity == null || granularity.isEmpty()) {
+            return null;
+        }
+        switch (granularity.toLowerCase()) {
+            case "1m":
+                return 60L;
+            case "5m":
+                return 300L;
+            case "1h":
+                return 3600L;
+            default:
+                throw new IllegalArgumentException("Invalid granularity: " + granularity + 
+                    ". Supported values: 1m, 5m, 1h");
+        }
     }
 
     private MetricType parseType(String type) {

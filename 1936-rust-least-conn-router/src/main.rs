@@ -391,19 +391,13 @@ async fn main() {
 
     tokio::spawn(health_check_task(state.clone()));
 
-    let admin_routes = Router::new()
+    let app = Router::new()
         .route("/backends", get(get_backends))
         .route("/backends", post(add_backend))
         .route("/backends/:id", delete(remove_backend))
         .route("/config", get(get_config))
-        .route("/config", put(update_config));
-
-    let proxy_routes = Router::new()
-        .fallback(proxy_handler);
-
-    let app = Router::new()
-        .nest("/", proxy_routes)
-        .nest("/", admin_routes)
+        .route("/config", put(update_config))
+        .fallback(proxy_handler)
         .with_state(state);
 
     let port: u16 = std::env::var("PORT")

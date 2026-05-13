@@ -1,7 +1,6 @@
 package com.solocoder.mq.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.solocoder.mq.model.ConsumerGroup;
 import com.solocoder.mq.model.Message;
 import com.solocoder.mq.model.Topic;
@@ -41,7 +40,6 @@ public class PersistenceService {
 
     public PersistenceService() {
         this.objectMapper = new ObjectMapper();
-        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
     }
 
     @PostConstruct
@@ -223,6 +221,9 @@ public class PersistenceService {
             if (json != null && !json.trim().isEmpty()) {
                 java.util.Map<String, ConsumerGroup> map = objectMapper.readValue(json,
                         new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, ConsumerGroup>>() {});
+                for (ConsumerGroup group : map.values()) {
+                    group.setCurrentOffsetAtomic(group.getCurrentOffsetValue());
+                }
                 groups.putAll(map);
             }
         } catch (IOException e) {

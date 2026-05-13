@@ -19,12 +19,19 @@ import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class NotificationService {
     private final SubscriptionStore subscriptionStore;
     private final RegistryProperties registryProperties;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
+
+    public NotificationService(SubscriptionStore subscriptionStore,
+                               RegistryProperties registryProperties,
+                               ObjectMapper objectMapper) {
+        this.subscriptionStore = subscriptionStore;
+        this.registryProperties = registryProperties;
+        this.objectMapper = objectMapper;
+    }
 
     public void notifySubscribers(String serviceName, ChangeEvent event) {
         List<Subscription> subscriptions = subscriptionStore.findByServiceName(serviceName);

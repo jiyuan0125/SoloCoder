@@ -8,6 +8,7 @@ use uuid::Uuid;
 pub struct AppState {
     pub services: Arc<RwLock<HashMap<String, HashMap<Uuid, ServiceInstance>>>>,
     pub subscriptions: Arc<RwLock<HashMap<Uuid, Subscription>>>,
+    pub deregistered_instances: Arc<RwLock<HashMap<Uuid, ServiceInstance>>>,
 }
 
 impl AppState {
@@ -15,6 +16,7 @@ impl AppState {
         Self {
             services: Arc::new(RwLock::new(HashMap::new())),
             subscriptions: Arc::new(RwLock::new(HashMap::new())),
+            deregistered_instances: Arc::new(RwLock::new(HashMap::new())),
         }
     }
 }

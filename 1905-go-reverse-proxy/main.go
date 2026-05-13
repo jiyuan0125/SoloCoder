@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"regexp"
@@ -341,33 +340,74 @@ func forwardHTTP(w http.ResponseWriter, r *http.Request, group *BackendGroup) {
 
 	_, startIdx := group.GetNextBackend()
 
+	transport := &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   10 * time.Second,
+			KeepAlive: 30 * time.Second,
+		}).DialContext,
+	}
+
 	for i := 0; i < len(backends); i++ {
 		idx := int((startIdx + uint64(i)) % uint64(len(backends)))
 		backend := backends[idx]
 		tried = append(tried, backend.Address)
 
-		targetURL, err := url.Parse("http://" + backend.Address)
+		var body io.ReadCloser
+		if r.Body != nil {
+			bodyBytes, err := io.ReadAll(r.Body)
+			if err != nil {
+				log.Printf("Failed to read request body: %v", err)
+				continue
+			}
+			r.Body.Close()
+			r.Body = io.NopCloser(strings.NewReader(string(bodyBytes)))
+			body = io.NopCloser(strings.NewReader(string(bodyBytes)))
+		}
+
+		targetURL := &url.URL{
+			Scheme:   "http",
+			Host:     backend.Address,
+			Path:     r.URL.Path,
+			RawQuery: r.URL.RawQuery,
+		}
+
+		outReq, err := http.NewRequestWithContext(r.Context(), r.Method, targetURL.String(), body)
 		if err != nil {
+			log.Printf("Failed to create request: %v", err)
 			continue
 		}
 
-		proxy := httputil.NewSingleHostReverseProxy(targetURL)
-		originalDirector := proxy.Director
-		proxy.Director = func(req *http.Request) {
-			originalDirector(req)
-			req.Host = r.Host
+		for k, vv := range r.Header {
+			for _, v := range vv {
+				outReq.Header.Add(k, v)
+			}
 		}
 
-		proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
-			log.Printf("Backend error: %v", err)
+		if clientIP, _, err := net.SplitHostPort(r.RemoteAddr); err == nil {
+			if prior, ok := outReq.Header["X-Forwarded-For"]; ok {
+				clientIP = strings.Join(prior, ", ") + ", " + clientIP
+			}
+			outReq.Header.Set("X-Forwarded-For", clientIP)
 		}
 
-		rw := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
-		proxy.ServeHTTP(rw, r)
+		outReq.Host = r.Host
+		outReq.ContentLength = r.ContentLength
 
-		if rw.status != http.StatusBadGateway {
-			return
+		resp, err := transport.RoundTrip(outReq)
+		if err != nil {
+			log.Printf("Backend %s error: %v", backend.Address, err)
+			continue
 		}
+
+		for k, vv := range resp.Header {
+			for _, v := range vv {
+				w.Header().Add(k, v)
+			}
+		}
+		w.WriteHeader(resp.StatusCode)
+		io.Copy(w, resp.Body)
+		resp.Body.Close()
+		return
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
@@ -381,16 +421,6 @@ func forwardHTTP(w http.ResponseWriter, r *http.Request, group *BackendGroup) {
 		identifier = "Unknown"
 	}
 	fmt.Fprintf(w, "502 Bad Gateway\n%s\nTried backends: %v", identifier, tried)
-}
-
-type statusRecorder struct {
-	http.ResponseWriter
-	status int
-}
-
-func (r *statusRecorder) WriteHeader(status int) {
-	r.status = status
-	r.ResponseWriter.WriteHeader(status)
 }
 
 func forwardWebSocket(w http.ResponseWriter, r *http.Request, group *BackendGroup) {

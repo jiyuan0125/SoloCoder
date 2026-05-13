@@ -2,13 +2,16 @@ use actix_web::{web, App, HttpResponse, HttpServer, Responder, HttpRequest, Erro
 use actix_web::http::StatusCode;
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
+use futures::future::Shared;
+use futures::FutureExt;
 use lru::LruCache;
 use serde::{Deserialize, Serialize};
-use std::collections::VecDeque;
+
 use std::num::NonZeroUsize;
 use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::{Mutex, RwLock, oneshot};
+use tokio::task::JoinHandle;
 use uuid::Uuid;
 
 const IDEMPOTENCY_KEY_HEADER: &str = "Idempotency-Key";
@@ -16,6 +19,7 @@ const DEFAULT_CACHE_TTL: Duration = Duration::from_secs(300);
 const DEFAULT_CACHE_CAPACITY: usize = 100_000;
 const MAX_RETRIES: u32 = 3;
 const INITIAL_BACKOFF: Duration = Duration::from_secs(1);
+const PERSISTENCE_FILE: &str = "pending_requests.json";
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Backend {
@@ -43,36 +47,31 @@ pub struct CachedResponse {
     pub cached_at: DateTime<Utc>,
 }
 
-pub type PendingMap = DashMap<Uuid, Arc<Mutex<VecDeque<oneshot::Sender<Result<CachedResponse, String>>>>>>;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PersistedRequest {
+    pub idempotency_key: Uuid,
+    pub method: String,
+    pub path: String,
+    pub query: Option<String>,
+    pub headers: Vec<(String, String)>,
+    pub body: Vec<u8>,
+    pub created_at: DateTime<Utc>,
+}
+
+pub type SharedResult = Shared<oneshot::Receiver<Result<CachedResponse, String>>>;
+
+pub struct InFlightEntry {
+    pub result: SharedResult,
+    pub handle: Option<JoinHandle<()>>,
+}
 
 pub struct AppState {
     pub backends: RwLock<Vec<Backend>>,
     pub stats: RwLock<StatsResponse>,
     pub cache: Mutex<LruCache<Uuid, CachedResponse>>,
-    pub pending: PendingMap,
+    pub in_flight: DashMap<Uuid, Arc<InFlightEntry>>,
     pub cache_ttl: Duration,
     pub http_client: reqwest::Client,
-}
-
-pub struct PendingRequest {
-    pub idempotency_key: Uuid,
-    pub method: String,
-    pub uri: String,
-    pub headers: Vec<(String, String)>,
-    pub body: Vec<u8>,
-    pub backend_url: String,
-    pub created_at: DateTime<Utc>,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct PersistedPendingRequest {
-    pub idempotency_key: Uuid,
-    pub method: String,
-    pub uri: String,
-    pub headers: Vec<(String, String)>,
-    pub body: Vec<u8>,
-    pub backend_url: String,
-    pub created_at: DateTime<Utc>,
 }
 
 fn is_retriable_status(status: StatusCode) -> bool {
@@ -136,38 +135,60 @@ async fn select_backend(backends: &RwLock<Vec<Backend>>) -> Option<Backend> {
     }
 }
 
-async fn build_forward_url(backend: &Backend, req: &HttpRequest) -> String {
-    let path = req.uri().path();
-    let query = req.uri().query().map(|q| format!("?{}", q)).unwrap_or_default();
+fn build_forward_url(backend: &Backend, path: &str, query: &Option<String>) -> String {
+    let query_str = query.as_ref().map(|q| format!("?{}", q)).unwrap_or_default();
     let target = backend.target_url.trim_end_matches('/');
-    format!("{}{}{}", target, path, query)
+    format!("{}{}{}", target, path, query_str)
 }
 
-async fn build_headers(req: &HttpRequest, idempotency_key: Uuid) -> reqwest::header::HeaderMap {
+fn build_headers_from_vec(
+    headers_vec: &[(String, String)],
+    idempotency_key: Uuid,
+) -> reqwest::header::HeaderMap {
     let mut headers = reqwest::header::HeaderMap::new();
     
-    for (name, value) in req.headers() {
-        if name.as_str().eq_ignore_ascii_case("host") {
+    for (name, value) in headers_vec {
+        if name.eq_ignore_ascii_case("host") {
             continue;
         }
-        if name.as_str().eq_ignore_ascii_case(IDEMPOTENCY_KEY_HEADER) {
+        if name.eq_ignore_ascii_case(IDEMPOTENCY_KEY_HEADER) {
             continue;
         }
-        if let Ok(val) = value.to_str() {
-            if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(name.as_str().as_bytes()) {
-                if let Ok(header_value) = reqwest::header::HeaderValue::from_str(val) {
-                    headers.insert(header_name, header_value);
-                }
+        if let Ok(header_name) = reqwest::header::HeaderName::from_bytes(name.as_bytes()) {
+            if let Ok(header_value) = reqwest::header::HeaderValue::from_str(value) {
+                headers.insert(header_name, header_value);
             }
         }
     }
     
-    headers.insert(
-        IDEMPOTENCY_KEY_HEADER,
-        reqwest::header::HeaderValue::from_str(&idempotency_key.to_string()).unwrap(),
-    );
+    if let Ok(header_value) = reqwest::header::HeaderValue::from_str(&idempotency_key.to_string()) {
+        headers.insert(IDEMPOTENCY_KEY_HEADER, header_value);
+    }
     
     headers
+}
+
+fn build_headers_vec(req: &HttpRequest) -> Vec<(String, String)> {
+    let mut headers_vec = Vec::new();
+    for (name, value) in req.headers() {
+        if let Ok(val) = value.to_str() {
+            headers_vec.push((name.as_str().to_string(), val.to_string()));
+        }
+    }
+    headers_vec
+}
+
+fn parse_method(method_str: &str) -> Result<reqwest::Method, String> {
+    match method_str {
+        "GET" => Ok(reqwest::Method::GET),
+        "POST" => Ok(reqwest::Method::POST),
+        "PUT" => Ok(reqwest::Method::PUT),
+        "DELETE" => Ok(reqwest::Method::DELETE),
+        "PATCH" => Ok(reqwest::Method::PATCH),
+        "HEAD" => Ok(reqwest::Method::HEAD),
+        "OPTIONS" => Ok(reqwest::Method::OPTIONS),
+        _ => Err(format!("Unsupported method: {}", method_str)),
+    }
 }
 
 fn parse_idempotency_key(req: &HttpRequest) -> Result<Uuid, String> {
@@ -209,6 +230,119 @@ async fn cache_insert(
     cache_guard.put(key, response);
 }
 
+fn load_all_persisted() -> Vec<PersistedRequest> {
+    match std::fs::read_to_string(PERSISTENCE_FILE) {
+        Ok(content) => serde_json::from_str(&content).unwrap_or_default(),
+        Err(_) => Vec::new(),
+    }
+}
+
+fn save_all_persisted(requests: &[PersistedRequest]) {
+    if let Ok(json) = serde_json::to_string(requests) {
+        let _ = std::fs::write(PERSISTENCE_FILE, json);
+    }
+}
+
+fn persist_request(req: &PersistedRequest) {
+    let mut all = load_all_persisted();
+    all.push(req.clone());
+    save_all_persisted(&all);
+}
+
+fn remove_persisted(key: &Uuid) {
+    let all = load_all_persisted();
+    let filtered: Vec<_> = all.into_iter().filter(|r| r.idempotency_key != *key).collect();
+    save_all_persisted(&filtered);
+}
+
+async fn execute_request_and_broadcast(
+    state: Arc<AppState>,
+    idempotency_key: Uuid,
+    method: String,
+    path: String,
+    query: Option<String>,
+    headers_vec: Vec<(String, String)>,
+    body: Vec<u8>,
+    tx: oneshot::Sender<Result<CachedResponse, String>>,
+) {
+    let persisted = PersistedRequest {
+        idempotency_key,
+        method: method.clone(),
+        path: path.clone(),
+        query: query.clone(),
+        headers: headers_vec.clone(),
+        body: body.clone(),
+        created_at: Utc::now(),
+    };
+    persist_request(&persisted);
+
+    let method = match parse_method(&method) {
+        Ok(m) => m,
+        Err(e) => {
+            let _ = tx.send(Err(e));
+            remove_persisted(&idempotency_key);
+            state.in_flight.remove(&idempotency_key);
+            return;
+        }
+    };
+
+    let backend = match select_backend(&state.backends).await {
+        Some(b) => b,
+        None => {
+            let _ = tx.send(Err("No backends available".to_string()));
+            remove_persisted(&idempotency_key);
+            state.in_flight.remove(&idempotency_key);
+            return;
+        }
+    };
+
+    let url = build_forward_url(&backend, &path, &query);
+    let headers = build_headers_from_vec(&headers_vec, idempotency_key);
+
+    let result = execute_with_retry(
+        &state.http_client,
+        method,
+        &url,
+        headers,
+        body.clone(),
+        MAX_RETRIES,
+        INITIAL_BACKOFF,
+        &state.stats,
+    ).await;
+
+    let final_result = match result {
+        Ok(resp) => {
+            let status = resp.status();
+            let body_bytes = match resp.bytes().await {
+                Ok(b) => b.to_vec(),
+                Err(e) => {
+                    let _ = tx.send(Err(format!("Failed to read response: {}", e)));
+                    remove_persisted(&idempotency_key);
+                    state.in_flight.remove(&idempotency_key);
+                    return;
+                }
+            };
+
+            if status.is_success() {
+                let cached = CachedResponse {
+                    status_code: status.as_u16(),
+                    body: body_bytes,
+                    cached_at: Utc::now(),
+                };
+                cache_insert(&state.cache, idempotency_key, cached.clone()).await;
+                Ok(cached)
+            } else {
+                Err(format!("Backend error: {}", status))
+            }
+        }
+        Err(e) => Err(format!("Request failed: {}", e)),
+    };
+
+    remove_persisted(&idempotency_key);
+    let _ = tx.send(final_result);
+    state.in_flight.remove(&idempotency_key);
+}
+
 async fn proxy_handler(
     req: HttpRequest,
     body: web::Bytes,
@@ -235,116 +369,63 @@ async fn proxy_handler(
         return Ok(HttpResponse::build(status).body(cached.body));
     }
 
-    let (tx, rx) = oneshot::channel();
-    
-    let waiters = state.pending.entry(idempotency_key).or_insert_with(|| Arc::new(Mutex::new(VecDeque::new())));
-    let is_first = {
-        let mut w = waiters.value().lock().await;
-        let was_empty = w.is_empty();
-        w.push_back(tx);
-        was_empty
-    };
-
-    if !is_first {
-        drop(waiters);
-        match rx.await {
-            Ok(Ok(cached)) => {
-                let status = StatusCode::from_u16(cached.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
-                return Ok(HttpResponse::build(status).body(cached.body));
-            }
-            Ok(Err(e)) => {
-                return Ok(HttpResponse::BadGateway().body(e));
-            }
-            Err(_) => {
-                return Ok(HttpResponse::InternalServerError().body("Request cancelled"));
-            }
-        }
-    }
-
-    let method = match req.method().as_str() {
-        "GET" => reqwest::Method::GET,
-        "POST" => reqwest::Method::POST,
-        "PUT" => reqwest::Method::PUT,
-        "DELETE" => reqwest::Method::DELETE,
-        "PATCH" => reqwest::Method::PATCH,
-        "HEAD" => reqwest::Method::HEAD,
-        "OPTIONS" => reqwest::Method::OPTIONS,
-        _ => {
-            notify_waiters(&state.pending, &idempotency_key, Err("Unsupported method".to_string()));
-            return Ok(HttpResponse::MethodNotAllowed().body("Method not allowed"));
-        }
-    };
-
-    let backend = match select_backend(&state.backends).await {
-        Some(b) => b,
-        None => {
-            notify_waiters(&state.pending, &idempotency_key, Err("No backends available".to_string()));
-            return Ok(HttpResponse::ServiceUnavailable().body("No backends registered"));
+    let (entry, is_new) = {
+        if let Some(existing) = state.in_flight.get(&idempotency_key) {
+            (existing.clone(), false)
+        } else {
+            let (tx, rx) = oneshot::channel();
+            let shared_rx = rx.shared();
+            
+            let method = req.method().as_str().to_string();
+            let path = req.uri().path().to_string();
+            let query = req.uri().query().map(|s| s.to_string());
+            let headers_vec = build_headers_vec(&req);
+            let body_vec: Vec<u8> = body.to_vec();
+            
+            let state_clone = state.get_ref().clone();
+            let key_clone = idempotency_key;
+            
+            let handle = tokio::spawn(async move {
+                execute_request_and_broadcast(
+                    state_clone,
+                    key_clone,
+                    method,
+                    path,
+                    query,
+                    headers_vec,
+                    body_vec,
+                    tx,
+                ).await;
+            });
+            
+            let in_flight_entry = Arc::new(InFlightEntry {
+                result: shared_rx,
+                handle: Some(handle),
+            });
+            
+            state.in_flight.insert(idempotency_key, in_flight_entry.clone());
+            (in_flight_entry, true)
         }
     };
 
-    let url = build_forward_url(&backend, &req).await;
-    let headers = build_headers(&req, idempotency_key).await;
-    let body_vec: Vec<u8> = body.to_vec();
+    let result_future = entry.result.clone();
+    let result = result_future.await;
 
-    let result = execute_with_retry(
-        &state.http_client,
-        method,
-        &url,
-        headers,
-        body_vec,
-        MAX_RETRIES,
-        INITIAL_BACKOFF,
-        &state.stats,
-    ).await;
-
-    let response_result = match result {
-        Ok(resp) => {
-            let status = resp.status();
-            let body_bytes = match resp.bytes().await {
-                Ok(b) => b.to_vec(),
-                Err(e) => {
-                    notify_waiters(&state.pending, &idempotency_key, Err(format!("Failed to read response: {}", e)));
-                    return Ok(HttpResponse::BadGateway().body(format!("Failed to read response: {}", e)));
-                }
-            };
-
-            if status.is_success() {
-                let cached = CachedResponse {
-                    status_code: status.as_u16(),
-                    body: body_bytes.clone(),
-                    cached_at: Utc::now(),
-                };
-                cache_insert(&state.cache, idempotency_key, cached.clone()).await;
-                notify_waiters(&state.pending, &idempotency_key, Ok(cached));
-            } else {
-                notify_waiters(&state.pending, &idempotency_key, Err(format!("Backend error: {}", status)));
+    match result {
+        Ok(Ok(cached)) => {
+            if !is_new {
+                let mut s = state.stats.write().await;
+                s.deduplication_hits += 1;
             }
-
-            Ok(HttpResponse::build(status).body(body_bytes))
+            let status = StatusCode::from_u16(cached.status_code).unwrap_or(StatusCode::INTERNAL_SERVER_ERROR);
+            Ok(HttpResponse::build(status).body(cached.body))
         }
-        Err(e) => {
-            notify_waiters(&state.pending, &idempotency_key, Err(format!("Request failed: {}", e)));
-            Ok(HttpResponse::BadGateway().body(format!("Request failed: {}", e)))
+        Ok(Err(e)) => {
+            Ok(HttpResponse::BadGateway().body(e))
         }
-    };
-
-    state.pending.remove(&idempotency_key);
-    response_result
-}
-
-fn notify_waiters(
-    pending: &PendingMap,
-    key: &Uuid,
-    result: Result<CachedResponse, String>,
-) {
-    if let Some((_, waiters)) = pending.remove(key) {
-        tokio::spawn(async move {
-            let mut w = waiters.lock().await;
-            while let Some(tx) = w.pop_front() {
-                let _ = tx.send(result.clone());
-            }
-        });
+        Err(_) => {
+            Ok(HttpResponse::InternalServerError().body("Request cancelled"))
+        }
     }
 }
 
@@ -380,12 +461,43 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok().body("OK")
 }
 
+async fn recover_pending_requests(state: Arc<AppState>) {
+    let pending = load_all_persisted();
+    if !pending.is_empty() {
+        tracing::info!("Recovering {} pending requests from disk", pending.len());
+        for req in pending {
+            let (tx, rx) = oneshot::channel();
+            let shared_rx = rx.shared();
+            
+            let in_flight_entry = Arc::new(InFlightEntry {
+                result: shared_rx,
+                handle: None,
+            });
+            state.in_flight.insert(req.idempotency_key, in_flight_entry);
+            
+            let state_clone = state.clone();
+            tokio::spawn(async move {
+                execute_request_and_broadcast(
+                    state_clone,
+                    req.idempotency_key,
+                    req.method,
+                    req.path,
+                    req.query,
+                    req.headers,
+                    req.body,
+                    tx,
+                ).await;
+            });
+        }
+    }
+}
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     tracing_subscriber::fmt::init();
 
     let port = std::env::var("PORT")
-        .unwrap_or_else(|_| "9101".to_string())
+        .unwrap_or_else(|_| "8080".to_string())
         .parse::<u16>()
         .expect("PORT must be a valid port number");
 
@@ -399,13 +511,15 @@ async fn main() -> std::io::Result<()> {
             deduplication_hits: 0,
         }),
         cache: Mutex::new(LruCache::new(cache_capacity)),
-        pending: DashMap::new(),
+        in_flight: DashMap::new(),
         cache_ttl: DEFAULT_CACHE_TTL,
         http_client: reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
             .build()
             .expect("Failed to create HTTP client"),
     });
+
+    recover_pending_requests(app_state.clone()).await;
 
     tracing::info!("Starting retry-idempotent-proxy on port {}", port);
 

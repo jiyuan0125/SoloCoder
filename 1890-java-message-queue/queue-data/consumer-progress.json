@@ -1,0 +1,1 @@
+{"test-ack:group1":{"topic":"test-ack","groupId":"group1","consumedCount":1,"lastConsumedIndex":0},"test-multi-group:groupA":{"topic":"test-multi-group","groupId":"groupA","consumedCount":3,"lastConsumedIndex":2}}

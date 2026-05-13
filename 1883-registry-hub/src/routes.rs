@@ -84,6 +84,10 @@ pub async fn deregister_instance(
     };
 
     if let Some(instance) = instance_to_notify {
+        {
+            let mut deregistered = state.deregistered_instances.write().await;
+            deregistered.insert(instance.instance_id, instance.clone());
+        }
         notify::notify_subscribers(state.clone(), "deregistered", &service_name, &instance).await;
         StatusCode::NO_CONTENT
     } else {
@@ -140,40 +144,72 @@ pub async fn handle_heartbeat(
     State(state): State<AppState>,
     Path((service_name, instance_id_str)): Path<(String, String)>,
 ) -> impl IntoResponse {
-    let instance_id = match Uuid::parse_str(&instance_id_str) {
+    let old_instance_id = match Uuid::parse_str(&instance_id_str) {
         Ok(id) => id,
         Err(_) => return (StatusCode::BAD_REQUEST, Json(None::<InstanceInfo>)),
     };
 
     let now = SystemTime::now();
     
-    let result = {
+    {
         let mut services = state.services.write().await;
 
         if let Some(service_instances) = services.get_mut(&service_name) {
-            if let Some(instance) = service_instances.get_mut(&instance_id) {
+            if let Some(instance) = service_instances.get_mut(&old_instance_id) {
                 let old_status = instance.status;
                 instance.last_heartbeat = Some(now);
                 instance.unhealthy_since = None;
                 instance.status = InstanceStatus::Healthy;
 
                 let info = heartbeat::instance_to_info(instance);
-                Some((instance.clone(), info, old_status))
-            } else {
-                None
+                if old_status != InstanceStatus::Healthy {
+                    let instance_clone = instance.clone();
+                    drop(services);
+                    notify::notify_subscribers(state.clone(), "healthy", &service_name, &instance_clone).await;
+                }
+                return (StatusCode::OK, Json(Some(info)));
             }
-        } else {
-            None
         }
+    }
+
+    let deregistered_instance = {
+        let deregistered = state.deregistered_instances.read().await;
+        deregistered.get(&old_instance_id).cloned()
     };
 
-    match result {
-        Some((instance, info, old_status)) => {
-            if old_status != InstanceStatus::Healthy {
-                notify::notify_subscribers(state.clone(), "healthy", &service_name, &instance).await;
-            }
-            (StatusCode::OK, Json(Some(info)))
+    if let Some(old_instance) = deregistered_instance {
+        let new_instance_id = Uuid::new_v4();
+        
+        let new_instance = ServiceInstance {
+            instance_id: new_instance_id,
+            service_name: old_instance.service_name.clone(),
+            host: old_instance.host.clone(),
+            port: old_instance.port,
+            metadata: old_instance.metadata.clone(),
+            status: InstanceStatus::Healthy,
+            last_heartbeat: Some(now),
+            registered_at: now,
+            unhealthy_since: None,
+        };
+
+        {
+            let mut services = state.services.write().await;
+            let service_instances = services
+                .entry(new_instance.service_name.clone())
+                .or_insert_with(HashMap::new);
+            service_instances.insert(new_instance_id, new_instance.clone());
         }
-        None => (StatusCode::NOT_FOUND, Json(None::<InstanceInfo>)),
+
+        {
+            let mut deregistered = state.deregistered_instances.write().await;
+            deregistered.remove(&old_instance_id);
+        }
+
+        notify::notify_subscribers(state.clone(), "registered", &new_instance.service_name, &new_instance).await;
+
+        let info = heartbeat::instance_to_info(&new_instance);
+        return (StatusCode::OK, Json(Some(info)));
     }
+
+    (StatusCode::NOT_FOUND, Json(None::<InstanceInfo>))
 }

@@ -116,13 +116,14 @@ public class MetricRepository {
             return Collections.emptyList();
         }
 
-        String labelKey = getLabelKey(labels);
+        boolean hasLabelFilter = labels != null && !labels.isEmpty();
+        String labelKey = hasLabelFilter ? getLabelKey(labels) : null;
         ConcurrentMap<String, List<DataPoint>> metricData = rawData.get(metricKey);
         
         List<DataPoint> result = new ArrayList<>();
         
         for (Map.Entry<String, List<DataPoint>> entry : metricData.entrySet()) {
-            if (labelKey == null || entry.getKey().equals(labelKey)) {
+            if (!hasLabelFilter || entry.getKey().equals(labelKey)) {
                 synchronized (entry.getValue()) {
                     for (DataPoint dp : entry.getValue()) {
                         if ((startTime == null || !dp.getTimestamp().isBefore(startTime)) &&

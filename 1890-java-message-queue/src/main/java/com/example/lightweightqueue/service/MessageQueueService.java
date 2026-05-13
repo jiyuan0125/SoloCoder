@@ -3,6 +3,7 @@ package com.example.lightweightqueue.service;
 import com.example.lightweightqueue.model.Consumer;
 import com.example.lightweightqueue.model.ConsumerGroup;
 import com.example.lightweightqueue.model.DeliveryFailureType;
+import com.example.lightweightqueue.model.GroupMessageState;
 import com.example.lightweightqueue.model.Message;
 import com.example.lightweightqueue.model.MessageFormat;
 import com.example.lightweightqueue.model.MessageStatus;
@@ -13,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -46,7 +48,6 @@ public class MessageQueueService {
                 .topic(topicName)
                 .body(body)
                 .format(format)
-                .retryCount(0)
                 .status(MessageStatus.PENDING_DELIVERY)
                 .createdAt(Instant.now())
                 .build();
@@ -72,8 +73,6 @@ public class MessageQueueService {
 
         Message message = findNextMessageForConsumer(topic, group, consumerId);
         if (message != null) {
-            markAsDelivered(message, consumerId);
-            group.getInFlightMessages().put(message.getId(), message);
             return Optional.of(message);
         }
 
@@ -96,7 +95,11 @@ public class MessageQueueService {
             return false;
         }
 
-        message.setStatus(MessageStatus.ACKNOWLEDGED);
+        GroupMessageState state = group.getMessageState(messageId);
+        if (state != null) {
+            state.setStatus(MessageStatus.ACKNOWLEDGED);
+        }
+
         group.setConsumedCount(group.getConsumedCount() + 1);
 
         persistenceService.saveConsumerProgress(topicName, groupId, group.getConsumedCount(), group.getLastConsumedIndex());
@@ -104,22 +107,27 @@ public class MessageQueueService {
         return true;
     }
 
-    public void handleTimeoutOrFailure(Topic topic, ConsumerGroup group, Message message, DeliveryFailureType failureType) {
-        message.setLastError(failureType.name());
-
-        if (message.getRetryCount() >= MAX_RETRY_COUNT) {
-            moveToDeadLetter(topic, message);
+    public void handleTimeoutOrFailure(Topic topic, ConsumerGroup group, String messageId, DeliveryFailureType failureType) {
+        GroupMessageState state = group.getMessageState(messageId);
+        if (state == null) {
             return;
         }
 
-        long retryInterval = RETRY_INTERVALS[Math.min(message.getRetryCount(), RETRY_INTERVALS.length - 1)];
-        message.setRetryCount(message.getRetryCount() + 1);
-        message.setStatus(MessageStatus.PENDING_DELIVERY);
-        message.setNextRetryAt(Instant.now().plusSeconds(retryInterval));
-        message.setDeliveredToConsumerId(null);
-        message.setDeliveredAt(null);
+        state.setLastError(failureType.name());
 
-        group.getInFlightMessages().remove(message.getId());
+        if (state.getRetryCount() >= MAX_RETRY_COUNT) {
+            moveToDeadLetter(topic, group, messageId);
+            return;
+        }
+
+        long retryInterval = RETRY_INTERVALS[Math.min(state.getRetryCount(), RETRY_INTERVALS.length - 1)];
+        state.setRetryCount(state.getRetryCount() + 1);
+        state.setStatus(MessageStatus.PENDING_DELIVERY);
+        state.setNextRetryAt(Instant.now().plusSeconds(retryInterval));
+        state.setDeliveredToConsumerId(null);
+        state.setDeliveredAt(null);
+
+        group.getInFlightMessages().remove(messageId);
     }
 
     private Message findNextMessageForConsumer(Topic topic, ConsumerGroup group, String consumerId) {
@@ -135,15 +143,17 @@ public class MessageQueueService {
             for (int i = 0; i < messages.size(); i++) {
                 Message msg = messages.get(i);
 
-                if (msg.getStatus() == MessageStatus.DEAD_LETTER || msg.getStatus() == MessageStatus.ACKNOWLEDGED) {
+                GroupMessageState state = group.getOrCreateMessageState(msg.getId());
+
+                if (state.getStatus() == MessageStatus.DEAD_LETTER || state.getStatus() == MessageStatus.ACKNOWLEDGED) {
                     continue;
                 }
 
-                if (msg.getStatus() == MessageStatus.DELIVERED) {
+                if (state.getStatus() == MessageStatus.DELIVERED) {
                     continue;
                 }
 
-                if (msg.getNextRetryAt() != null && msg.getNextRetryAt().isAfter(now)) {
+                if (state.getNextRetryAt() != null && state.getNextRetryAt().isAfter(now)) {
                     continue;
                 }
 
@@ -155,7 +165,9 @@ public class MessageQueueService {
                 Consumer assignedConsumer = consumers.get(assignedIndex);
 
                 if (assignedConsumer.getId().equals(consumerId)) {
+                    markAsDelivered(group, msg, consumerId);
                     group.setLastConsumedIndex(i);
+                    group.getInFlightMessages().put(msg.getId(), msg);
                     return msg;
                 }
             }
@@ -171,10 +183,11 @@ public class MessageQueueService {
         return index;
     }
 
-    private void markAsDelivered(Message message, String consumerId) {
-        message.setStatus(MessageStatus.DELIVERED);
-        message.setDeliveredAt(Instant.now());
-        message.setDeliveredToConsumerId(consumerId);
+    private void markAsDelivered(ConsumerGroup group, Message message, String consumerId) {
+        GroupMessageState state = group.getOrCreateMessageState(message.getId());
+        state.setStatus(MessageStatus.DELIVERED);
+        state.setDeliveredAt(Instant.now());
+        state.setDeliveredToConsumerId(consumerId);
     }
 
     private void registerConsumerHeartbeat(ConsumerGroup group, String consumerId) {
@@ -200,13 +213,37 @@ public class MessageQueueService {
         }
     }
 
-    public void moveToDeadLetter(Topic topic, Message message) {
-        message.setStatus(MessageStatus.DEAD_LETTER);
-        topic.getDeadLetterQueue().add(message);
-        log.warn("Message {} moved to dead letter queue for topic {}", message.getId(), topic.getName());
+    public void moveToDeadLetter(Topic topic, ConsumerGroup group, String messageId) {
+        GroupMessageState state = group.getMessageState(messageId);
+        if (state != null) {
+            state.setStatus(MessageStatus.DEAD_LETTER);
+        }
+
+        Message originalMessage = topic.getMessages().stream()
+                .filter(m -> m.getId().equals(messageId))
+                .findFirst()
+                .orElse(null);
+
+        if (originalMessage != null) {
+            Message deadLetterCopy = Message.builder()
+                    .id(originalMessage.getId() + "-" + group.getId() + "-" + UUID.randomUUID())
+                    .topic(originalMessage.getTopic())
+                    .body(originalMessage.getBody())
+                    .format(originalMessage.getFormat())
+                    .status(MessageStatus.DEAD_LETTER)
+                    .createdAt(Instant.now())
+                    .lastError("DEAD_LETTER_FROM_GROUP_" + group.getId())
+                    .build();
+            
+            topic.getDeadLetterQueue().add(deadLetterCopy);
+            log.warn("Message {} (group {}) moved to dead letter queue for topic {}", 
+                    messageId, group.getId(), topic.getName());
+        }
+
+        group.getInFlightMessages().remove(messageId);
     }
 
-    public boolean resendDeadLetter(String topicName, String messageId) {
+    public boolean resendDeadLetter(String topicName, String deadLetterMessageId) {
         Topic topic = topicManager.getTopic(topicName);
         if (topic == null) {
             return false;
@@ -219,7 +256,7 @@ public class MessageQueueService {
 
             for (int i = 0; i < deadLetters.size(); i++) {
                 Message msg = deadLetters.get(i);
-                if (msg.getId().equals(messageId)) {
+                if (msg.getId().equals(deadLetterMessageId)) {
                     target = msg;
                     targetIndex = i;
                     break;
@@ -232,21 +269,56 @@ public class MessageQueueService {
 
             deadLetters.remove(targetIndex);
 
-            target.setStatus(MessageStatus.PENDING_DELIVERY);
-            target.setRetryCount(0);
-            target.setDeliveredAt(null);
-            target.setDeliveredToConsumerId(null);
-            target.setNextRetryAt(null);
-            target.setLastError(null);
+            String newMessageId = UUID.randomUUID().toString();
+            Message newMessage = Message.builder()
+                    .id(newMessageId)
+                    .topic(topicName)
+                    .body(target.getBody())
+                    .format(target.getFormat())
+                    .status(MessageStatus.PENDING_DELIVERY)
+                    .createdAt(Instant.now())
+                    .build();
 
-            topic.getConsumerGroups().forEach((groupId, group) -> {
-                group.setConsumedCount(0);
-                group.setLastConsumedIndex(-1);
-                group.setNextConsumerIndex(0);
-                persistenceService.saveConsumerProgress(topicName, groupId, 0, -1);
-            });
+            topic.addMessage(newMessage);
+
+            log.info("Dead letter message {} resent as new message {} for topic {}", 
+                    deadLetterMessageId, newMessageId, topicName);
 
             return true;
+        }
+    }
+
+    public void checkAndHandleTimeouts(Topic topic, ConsumerGroup group) {
+        Instant now = Instant.now();
+        List<String> toHandle = new java.util.ArrayList<>();
+
+        for (GroupMessageState state : group.getMessageStates().values()) {
+            if (state.getStatus() == MessageStatus.DELIVERED &&
+                    state.getDeliveredAt() != null &&
+                    now.isAfter(state.getDeliveredAt().plusSeconds(ACK_TIMEOUT_SECONDS))) {
+                log.warn("Message {} ack timeout in group {}, retry count: {}", 
+                        state.getMessageId(), group.getId(), state.getRetryCount());
+                toHandle.add(state.getMessageId());
+            }
+        }
+
+        for (String messageId : toHandle) {
+            handleTimeoutOrFailure(topic, group, messageId, DeliveryFailureType.TIMEOUT);
+        }
+    }
+
+    public void reassignInFlightMessages(ConsumerGroup group, String consumerId) {
+        Iterator<String> it = group.getInFlightMessages().keySet().iterator();
+        while (it.hasNext()) {
+            String messageId = it.next();
+            GroupMessageState state = group.getMessageState(messageId);
+            if (state != null && consumerId.equals(state.getDeliveredToConsumerId())) {
+                state.setStatus(MessageStatus.PENDING_DELIVERY);
+                state.setDeliveredToConsumerId(null);
+                state.setDeliveredAt(null);
+                log.info("Reassigning message {} from consumer {} in group {}", 
+                        messageId, consumerId, group.getId());
+            }
         }
     }
 

@@ -101,4 +101,35 @@ class MessageQueueServiceTest {
         Optional<Message> msg = service.consume("non-existent-topic", "group1", "consumer1");
         assertFalse(msg.isPresent());
     }
+
+    @Test
+    void testMultipleConsumerGroupsIndependentProgress() {
+        String messageId1 = service.produce("test-multi-group", "msg1", "STRING");
+        String messageId2 = service.produce("test-multi-group", "msg2", "STRING");
+        String messageId3 = service.produce("test-multi-group", "msg3", "STRING");
+
+        Optional<Message> groupA1 = service.consume("test-multi-group", "groupA", "consumerA1");
+        assertTrue(groupA1.isPresent());
+        service.acknowledge("test-multi-group", "groupA", "consumerA1", groupA1.get().getId());
+
+        Optional<Message> groupA2 = service.consume("test-multi-group", "groupA", "consumerA1");
+        assertTrue(groupA2.isPresent());
+        service.acknowledge("test-multi-group", "groupA", "consumerA1", groupA2.get().getId());
+
+        Optional<Message> groupA3 = service.consume("test-multi-group", "groupA", "consumerA1");
+        assertTrue(groupA3.isPresent());
+        service.acknowledge("test-multi-group", "groupA", "consumerA1", groupA3.get().getId());
+
+        Optional<Message> groupAempty = service.consume("test-multi-group", "groupA", "consumerA1");
+        assertFalse(groupAempty.isPresent());
+
+        Optional<Message> groupB1 = service.consume("test-multi-group", "groupB", "consumerB1");
+        assertTrue(groupB1.isPresent(), "Group B should be able to consume message 1");
+
+        Optional<Message> groupB2 = service.consume("test-multi-group", "groupB", "consumerB1");
+        assertTrue(groupB2.isPresent(), "Group B should be able to consume message 2");
+
+        Optional<Message> groupB3 = service.consume("test-multi-group", "groupB", "consumerB1");
+        assertTrue(groupB3.isPresent(), "Group B should be able to consume message 3");
+    }
 }

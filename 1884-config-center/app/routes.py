@@ -82,6 +82,19 @@ async def put_config(
     body: ConfigCreate,
     db: Session = Depends(get_db)
 ):
+    from app.models import Watch
+
+    watches = db.query(Watch).filter(
+        Watch.project == project,
+        Watch.env == env,
+        Watch.key == key,
+        Watch.status == "active"
+    ).all()
+    watches_data = [
+        {"id": w.id, "callback_url": w.callback_url, "failed_count": w.failed_count}
+        for w in watches
+    ]
+
     config = db.query(Config).filter(
         Config.project == project,
         Config.env == env,
@@ -124,7 +137,14 @@ async def put_config(
     db.commit()
     db.refresh(config)
 
-    await notify_watchers(db, project, env, key, body.value, new_version)
+    results = await notify_watchers(watches_data, project, env, key, body.value, new_version)
+    if results:
+        for result in results:
+            watch = db.query(Watch).filter(Watch.id == result["id"]).first()
+            if watch:
+                watch.failed_count = result["failed_count"]
+                watch.status = result["status"]
+        db.commit()
 
     return ConfigResponse(
         project=config.project,
@@ -173,6 +193,19 @@ async def rollback_config(
     version: int = Query(..., description="Target version to rollback to"),
     db: Session = Depends(get_db)
 ):
+    from app.models import Watch
+
+    watches = db.query(Watch).filter(
+        Watch.project == project,
+        Watch.env == env,
+        Watch.key == key,
+        Watch.status == "active"
+    ).all()
+    watches_data = [
+        {"id": w.id, "callback_url": w.callback_url, "failed_count": w.failed_count}
+        for w in watches
+    ]
+
     config = db.query(Config).filter(
         Config.project == project,
         Config.env == env,
@@ -204,7 +237,14 @@ async def rollback_config(
     db.commit()
     db.refresh(config)
 
-    await notify_watchers(db, project, env, key, target_version.value, new_version)
+    results = await notify_watchers(watches_data, project, env, key, target_version.value, new_version)
+    if results:
+        for result in results:
+            watch = db.query(Watch).filter(Watch.id == result["id"]).first()
+            if watch:
+                watch.failed_count = result["failed_count"]
+                watch.status = result["status"]
+        db.commit()
 
     return ConfigResponse(
         project=config.project,

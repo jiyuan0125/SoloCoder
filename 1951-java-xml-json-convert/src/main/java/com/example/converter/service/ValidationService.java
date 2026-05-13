@@ -41,9 +41,8 @@ public class ValidationService {
             Schema schema = factory.newSchema(new StreamSource(new StringReader(xsdSchema)));
             Validator validator = schema.newValidator();
 
+            final List<FieldError> errors = new ArrayList<>();
             validator.setErrorHandler(new org.xml.sax.ErrorHandler() {
-                private final List<FieldError> errors = new ArrayList<>();
-
                 @Override
                 public void warning(org.xml.sax.SAXParseException e) {
                     addError(e, "warning");
@@ -72,6 +71,12 @@ public class ValidationService {
             Source source = new StreamSource(new ByteArrayInputStream(xmlData.getBytes()));
             validator.validate(source);
 
+            if (!errors.isEmpty()) {
+                throw new ValidationException("XML validation failed", errors);
+            }
+
+        } catch (ValidationException e) {
+            throw e;
         } catch (SAXException | IOException e) {
             log.error("XML validation failed", e);
             throw new ValidationException("XML validation failed: " + e.getMessage());
@@ -89,20 +94,36 @@ public class ValidationService {
             if (!errors.isEmpty()) {
                 List<FieldError> fieldErrors = new ArrayList<>();
                 for (ValidationMessage vm : errors) {
-                    String field = vm.getPath().isEmpty() ? "root" : vm.getPath();
+                    String path = vm.getPath();
+                    String jsonPointer = convertToJsonPointer(path);
                     fieldErrors.add(new FieldError(
-                            field,
+                            path.isEmpty() ? "root" : path,
                             vm.getMessage(),
-                            jsonNode.at(vm.getPath()).toString(),
+                            jsonNode.at(jsonPointer).toString(),
                             vm.getMessage()
                     ));
                 }
                 throw new ValidationException("JSON validation failed", fieldErrors);
             }
 
-        } catch (IOException e) {
+        } catch (ValidationException e) {
+            throw e;
+        } catch (Exception e) {
             log.error("JSON validation failed", e);
             throw new ValidationException("JSON validation failed: " + e.getMessage());
         }
+    }
+
+    private String convertToJsonPointer(String path) {
+        if (path == null || path.isEmpty() || path.equals("$")) {
+            return "";
+        }
+        if (path.startsWith("$")) {
+            path = path.substring(1);
+        }
+        if (path.startsWith(".")) {
+            path = path.substring(1);
+        }
+        return "/" + path.replace(".", "/");
     }
 }

@@ -1,7 +1,7 @@
 package mapping
 
 import (
-	"encoding/json"
+	"log"
 	"sync"
 )
 
@@ -11,9 +11,9 @@ type FieldMapping struct {
 }
 
 type Mapping struct {
-	MessageType  string         `json:"message_type"`
-	XML2JSON     []FieldMapping `json:"xml2json"`
-	JSON2XML     []FieldMapping `json:"json2xml"`
+	MessageType string         `json:"message_type"`
+	XML2JSON    []FieldMapping `json:"xml2json"`
+	JSON2XML    []FieldMapping `json:"json2xml"`
 }
 
 type Store struct {
@@ -30,12 +30,17 @@ func NewStore() *Store {
 func (s *Store) Register(mapping Mapping) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.mappings[mapping.MessageType] = mapping
+	key := mapping.MessageType
+	log.Printf("[Store.Register] Before: keys=%v", getKeys(s.mappings))
+	newKey := string([]byte(key))
+	s.mappings[newKey] = mapping
+	log.Printf("[Store.Register] After: keys=%v", getKeys(s.mappings))
 }
 
 func (s *Store) Get(messageType string) (Mapping, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	log.Printf("[Store.Get] Looking for: %q, keys=%v", messageType, getKeys(s.mappings))
 	m, ok := s.mappings[messageType]
 	return m, ok
 }
@@ -55,12 +60,15 @@ func (s *Store) Update(messageType string, mapping Mapping) bool {
 func (s *Store) Exists(messageType string) bool {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
+	log.Printf("[Store.Exists] Looking for: %q, keys=%v", messageType, getKeys(s.mappings))
 	_, ok := s.mappings[messageType]
 	return ok
 }
 
-func (s *Store) MarshalJSON() ([]byte, error) {
-	s.mu.RLock()
-	defer s.mu.RUnlock()
-	return json.Marshal(s.mappings)
+func getKeys(m map[string]Mapping) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }

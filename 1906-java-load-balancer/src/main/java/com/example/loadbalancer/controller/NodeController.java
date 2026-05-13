@@ -17,7 +17,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/nodes")
+@RequestMapping("/nodes")
 public class NodeController {
 
     private final NodeRegistry nodeRegistry;

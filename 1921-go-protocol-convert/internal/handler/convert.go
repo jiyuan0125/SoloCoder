@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/gofiber/fiber/v2"
 	
@@ -14,6 +15,7 @@ type ConvertHandler struct {
 }
 
 func NewConvertHandler(store *mapping.Store) *ConvertHandler {
+	log.Printf("ConvertHandler: Store at %p", store)
 	return &ConvertHandler{store: store}
 }
 
@@ -38,14 +40,18 @@ func getMessageType(c *fiber.Ctx, body []byte) string {
 func (h *ConvertHandler) XML2JSON(c *fiber.Ctx) error {
 	body := c.Body()
 	messageType := getMessageType(c, body)
+	log.Printf("[XML2JSON] Store: %p, messageType: %s", h.store, messageType)
 	
 	if messageType != "" {
+		log.Printf("[XML2JSON] Checking if exists...")
 		if !h.store.Exists(messageType) {
+			log.Printf("[XML2JSON] NOT FOUND")
 			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 				"error": "message_type not registered",
 				"message_type": messageType,
 			})
 		}
+		log.Printf("[XML2JSON] EXISTS")
 	}
 	
 	jsonData, err := converter.XmlToJson(body)

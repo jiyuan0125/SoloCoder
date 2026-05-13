@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	
 	"xml-json-converter/internal/mapping"
@@ -11,11 +13,13 @@ type MappingHandler struct {
 }
 
 func NewMappingHandler(store *mapping.Store) *MappingHandler {
+	log.Printf("MappingHandler: Store at %p", store)
 	return &MappingHandler{store: store}
 }
 
 func (h *MappingHandler) Register(c *fiber.Ctx) error {
 	messageType := c.Params("message_type")
+	log.Printf("[Register] Store: %p, messageType: %s", h.store, messageType)
 	
 	var m mapping.Mapping
 	if err := c.BodyParser(&m); err != nil {

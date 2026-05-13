@@ -10,7 +10,7 @@ import javax.validation.Valid;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/strategy")
+@RequestMapping("/strategy")
 public class StrategyController {
 
     private final StrategyManager strategyManager;

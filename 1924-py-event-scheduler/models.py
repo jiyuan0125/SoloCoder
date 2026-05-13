@@ -34,8 +34,12 @@ class TaskCreate(BaseModel):
     schedule: Schedule
     executor_type: ExecutorType
     executor_config: str
-    depends_on: List[str] = Field(default_factory=list)
+    depends_on: List[str] = Field(default_factory=list, alias="dependencies")
     timeout_seconds: int = 300
+
+    model_config = {
+        "populate_by_name": True
+    }
 
 
 class Task(BaseModel):

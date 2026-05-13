@@ -31,18 +31,20 @@ func main() {
 		admin.GET("/keys", handler.ListKeys(keyStore))
 	}
 
-	api := r.Group("/")
-	api.Use(middleware.BodyLimit())
-	api.Use(middleware.Auth(keyStore, nil))
-	api.Use(middleware.RateLimit(rateLimiter))
-	api.Use(middleware.Logger(logBuffer))
+	apiHandlers := gin.HandlersChain{
+		middleware.BodyLimit(),
+		middleware.Auth(keyStore, nil),
+		middleware.RateLimit(rateLimiter),
+		middleware.Logger(logBuffer),
+		gin.HandlerFunc(func(c *gin.Context) {
+			c.JSON(200, gin.H{
+				"message": "request passed through gateway",
+				"path":    c.Request.URL.Path,
+			})
+		}),
+	}
 
-	api.Any("/*path", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "request passed through gateway",
-			"path":    c.Param("path"),
-		})
-	})
+	r.NoRoute(apiHandlers...)
 
 	port := os.Getenv("PORT")
 	if port == "" {

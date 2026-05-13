@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-import os
+from collections import deque
 from typing import Dict, Optional
 
 from circuit_breaker import CircuitBreaker, CircuitConfig, CircuitState
@@ -22,7 +22,11 @@ class CircuitBreakerManager:
     ) -> CircuitBreaker:
         breaker = self.get_or_create(service_name)
         breaker.config = config
-        breaker.call_window.maxlen = config.window_size
+        old_window = breaker.call_window
+        new_window = deque(maxlen=config.window_size)
+        for record in old_window:
+            new_window.append(record)
+        breaker.call_window = new_window
         breaker.is_configured = True
         if breaker.state == CircuitState.UNCONFIGURED:
             breaker.state = CircuitState.CLOSED

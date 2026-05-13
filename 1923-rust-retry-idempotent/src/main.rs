@@ -6,7 +6,7 @@ use axum::body::Body;
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, HeaderName, HeaderValue, StatusCode};
 use axum::response::{IntoResponse, Response};
-use axum::routing::{delete, get, post, put};
+use axum::routing::{any, delete, get, post, put};
 use axum::{Json, Router};
 use http::Request;
 use reqwest::Client;
@@ -289,6 +289,27 @@ fn should_retry(status: Option<reqwest::StatusCode>) -> bool {
     }
 }
 
+fn build_target_url(base_url: &str, path: &str, query: &Option<String>) -> Result<String, ()> {
+    let base = reqwest::Url::parse(base_url).map_err(|_| ())?;
+    
+    let mut target_url = base.clone();
+    
+    if !path.is_empty() {
+        let mut segments = target_url.path_segments_mut().map_err(|_| ())?;
+        for seg in path.split('/').filter(|s| !s.is_empty()) {
+            segments.push(seg);
+        }
+    }
+    
+    if let Some(q) = query {
+        if !q.is_empty() {
+            target_url.set_query(Some(q));
+        }
+    }
+    
+    Ok(target_url.to_string())
+}
+
 enum ProxyResult {
     Success {
         response: reqwest::Response,
@@ -330,11 +351,24 @@ async fn proxy_handler(
     let (parts, body) = req.into_parts();
     let backend_id = query.backend_id;
 
-    let (target_url, config) = {
+    let (base_url, config) = {
         let backends = state.backends.read().await;
         let backend = backends.get(&backend_id).ok_or(StatusCode::NOT_FOUND)?;
         (backend.target_url.clone(), backend.retry_config.clone())
     };
+
+    let full_path = parts.uri.path().to_string();
+    let subpath = if full_path.starts_with("/proxy") {
+        full_path.strip_prefix("/proxy").unwrap_or(&full_path)
+            .trim_start_matches('/')
+            .to_string()
+    } else {
+        full_path
+    };
+
+    let query_string = parts.uri.query().map(|q| q.to_string());
+    let target_url = build_target_url(&base_url, &subpath, &query_string)
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
 
     let idempotency_key = parts
         .headers
@@ -356,36 +390,32 @@ async fn proxy_handler(
 
             if let Some(entry) = cache.get(&cache_key) {
                 if let Some(ref response) = &entry.response {
-                    let mut headers = HeaderMap::new();
+                    let mut builder = Response::builder()
+                        .status(StatusCode::from_u16(response.status).unwrap());
                     for (name, value) in &response.headers {
                         if let (Ok(n), Ok(v)) = (
                             HeaderName::from_bytes(name.as_bytes()),
                             HeaderValue::from_str(value),
                         ) {
-                            headers.insert(n, v);
+                            builder = builder.header(n, v);
                         }
                     }
-                    return Ok(Response::builder()
-                        .status(StatusCode::from_u16(response.status).unwrap())
-                        .body(Body::from(response.body.clone()))
-                        .unwrap());
+                    return Ok(builder.body(Body::from(response.body.clone())).unwrap());
                 } else if let Some(rx) = entry.in_flight.take() {
                     drop(cache);
                     let result = rx.await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
                     let cached = result.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
-                    let mut headers = HeaderMap::new();
+                    let mut builder = Response::builder()
+                        .status(StatusCode::from_u16(cached.status).unwrap());
                     for (name, value) in &cached.headers {
                         if let (Ok(n), Ok(v)) = (
                             HeaderName::from_bytes(name.as_bytes()),
                             HeaderValue::from_str(value),
                         ) {
-                            headers.insert(n, v);
+                            builder = builder.header(n, v);
                         }
                     }
-                    return Ok(Response::builder()
-                        .status(StatusCode::from_u16(cached.status).unwrap())
-                        .body(Body::from(cached.body.clone()))
-                        .unwrap());
+                    return Ok(builder.body(Body::from(cached.body.clone())).unwrap());
                 }
             }
 
@@ -449,14 +479,11 @@ async fn proxy_handler(
 
             return match result {
                 Ok((status, headers, body_vec, _)) => {
-                    let mut response_headers = HeaderMap::new();
+                    let mut builder = Response::builder().status(status);
                     for (name, value) in headers {
-                        response_headers.insert(name, value);
+                        builder = builder.header(name, value);
                     }
-                    Ok(Response::builder()
-                        .status(status)
-                        .body(Body::from(body_vec))
-                        .unwrap())
+                    Ok(builder.body(Body::from(body_vec)).unwrap())
                 }
                 Err(e) => Err(e),
             };
@@ -474,14 +501,11 @@ async fn proxy_handler(
         query.timeout,
     )
     .await?;
-    let mut response_headers = HeaderMap::new();
+    let mut builder = Response::builder().status(status);
     for (name, value) in headers {
-        response_headers.insert(name, value);
+        builder = builder.header(name, value);
     }
-    return Ok(Response::builder()
-        .status(status)
-        .body(Body::from(body_vec))
-        .unwrap());
+    return Ok(builder.body(Body::from(body_vec)).unwrap());
 }
 
 async fn do_proxy_request(
@@ -678,14 +702,8 @@ async fn main() {
         .route("/backends/:id", delete(delete_backend))
         .route("/backends/:id/retry-config", put(update_retry_config))
         .route("/stats", get(get_stats))
-        .route(
-            "/proxy",
-            get(proxy_handler)
-                .post(proxy_handler)
-                .put(proxy_handler)
-                .delete(proxy_handler)
-                .patch(proxy_handler),
-        )
+        .route("/proxy", any(proxy_handler))
+        .route("/proxy/*subpath", any(proxy_handler))
         .with_state(state);
 
     let addr = format!("0.0.0.0:{}", port);

@@ -3,12 +3,16 @@ from typing import Optional, Dict, Any
 import hashlib
 import hmac
 
-from app.models import AccessToken, RefreshToken, User, store
+from app.models import AccessToken, RefreshToken, AuthorizationCode, User, store
 
 
 def is_token_valid(token: object) -> bool:
     if token is None:
         return False
+    if isinstance(token, AuthorizationCode):
+        if token.used:
+            return False
+        return datetime.utcnow() < token.expires_at
     if isinstance(token, AccessToken) or isinstance(token, RefreshToken):
         if token.revoked:
             return False

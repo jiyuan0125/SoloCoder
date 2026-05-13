@@ -2,6 +2,7 @@ package schema
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"google.golang.org/protobuf/reflect/protodesc"
@@ -121,51 +122,55 @@ func (p *SimpleProtoParser) parseProtoToDescriptor(protoContent string, targetMe
 }
 
 func (p *SimpleProtoParser) parseField(line string, syntax string) (*descriptorpb.FieldDescriptorProto, error) {
-	parts := strings.Fields(line)
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("invalid field line: %s", line)
+	eqIdx := strings.Index(line, "=")
+	if eqIdx == -1 {
+		return nil, fmt.Errorf("invalid field line (no '='): %s", line)
+	}
+
+	beforeEq := strings.TrimSpace(line[:eqIdx])
+	afterEq := strings.TrimSpace(line[eqIdx+1:])
+
+	semicolonIdx := strings.Index(afterEq, ";")
+	if semicolonIdx == -1 {
+		return nil, fmt.Errorf("invalid field line (no ';'): %s", line)
+	}
+	numStr := strings.TrimSpace(afterEq[:semicolonIdx])
+	n, err := strconv.ParseInt(numStr, 10, 32)
+	if err != nil {
+		return nil, fmt.Errorf("invalid field number %q: %w", numStr, err)
+	}
+	fieldNumber := int32(n)
+
+	beforeParts := strings.Fields(beforeEq)
+	if len(beforeParts) < 2 {
+		return nil, fmt.Errorf("invalid field definition before '=': %s", beforeEq)
 	}
 
 	var label descriptorpb.FieldDescriptorProto_Label
 	label = descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL
+	idx := 0
+
 	if syntax == "proto2" {
-		if parts[0] == "required" {
+		if beforeParts[idx] == "required" {
 			label = descriptorpb.FieldDescriptorProto_LABEL_REQUIRED
-			parts = parts[1:]
-		} else if parts[0] == "optional" {
+			idx++
+		} else if beforeParts[idx] == "optional" {
 			label = descriptorpb.FieldDescriptorProto_LABEL_OPTIONAL
-			parts = parts[1:]
+			idx++
 		}
 	}
 
-	if parts[0] == "repeated" {
+	if idx < len(beforeParts) && beforeParts[idx] == "repeated" {
 		label = descriptorpb.FieldDescriptorProto_LABEL_REPEATED
-		parts = parts[1:]
+		idx++
 	}
 
-	if len(parts) < 3 {
-		return nil, fmt.Errorf("invalid field line after label: %s", line)
+	if idx+2 > len(beforeParts) {
+		return nil, fmt.Errorf("invalid field definition: %s", beforeEq)
 	}
 
-	fieldType := parts[0]
-	fieldName := parts[1]
-
-	eqIdx := -1
-	for i, p := range parts {
-		if strings.Contains(p, "=") {
-			eqIdx = i
-			break
-		}
-	}
-	if eqIdx == -1 {
-		return nil, fmt.Errorf("no field number found: %s", line)
-	}
-
-	var fieldNumber int32
-	numPart := parts[eqIdx]
-	numPart = strings.TrimSuffix(strings.Split(numPart, "=")[1], ";")
-	numPart = strings.TrimSpace(numPart)
-	fmt.Sscanf(numPart, "%d", &fieldNumber)
+	fieldType := beforeParts[idx]
+	fieldName := beforeParts[idx+1]
 
 	kind := typeToKind(fieldType)
 	var typeName *string
@@ -173,11 +178,15 @@ func (p *SimpleProtoParser) parseField(line string, syntax string) (*descriptorp
 		typeName = protoString("." + fieldType)
 	}
 
+	labelCopy := label
+	kindCopy := kind
+	fieldNumberCopy := fieldNumber
+
 	return &descriptorpb.FieldDescriptorProto{
 		Name:     protoString(fieldName),
-		Number:   protoInt32(fieldNumber),
-		Label:    &label,
-		Type:     &kind,
+		Number:   &fieldNumberCopy,
+		Label:    &labelCopy,
+		Type:     &kindCopy,
 		TypeName: typeName,
 	}, nil
 }

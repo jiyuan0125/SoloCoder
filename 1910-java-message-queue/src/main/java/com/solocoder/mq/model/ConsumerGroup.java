@@ -1,5 +1,7 @@
 package com.solocoder.mq.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,13 +10,17 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Data
 @NoArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ConsumerGroup {
 
     @JsonProperty("group_id")
     private String groupId;
 
-    @JsonProperty("current_offset")
+    @JsonIgnore
     private AtomicLong currentOffset = new AtomicLong(-1);
+
+    @JsonProperty("current_offset")
+    private long currentOffsetValue = -1;
 
     @JsonProperty("last_consuming_message_id")
     private volatile String lastConsumingMessageId;
@@ -37,15 +43,30 @@ public class ConsumerGroup {
         return group;
     }
 
+    @JsonIgnore
+    public long getCurrentOffsetAtomic() {
+        return currentOffset.get();
+    }
+
+    @JsonIgnore
+    public void setCurrentOffsetAtomic(long offset) {
+        currentOffset.set(offset);
+        currentOffsetValue = offset;
+    }
+
+    @JsonIgnore
+    public long incrementAndGetOffset() {
+        long offset = currentOffset.incrementAndGet();
+        currentOffsetValue = offset;
+        return offset;
+    }
+
     public long getCurrentOffsetValue() {
         return currentOffset.get();
     }
 
     public void setCurrentOffsetValue(long offset) {
         currentOffset.set(offset);
-    }
-
-    public long incrementAndGetOffset() {
-        return currentOffset.incrementAndGet();
+        currentOffsetValue = offset;
     }
 }

@@ -26,14 +26,23 @@ public class TraceService {
             String traceId = span.getTraceId();
             String spanId = span.getSpanId();
 
+            if (traceId == null || spanId == null) {
+                continue;
+            }
+
             traceStore.computeIfAbsent(traceId, k -> new ConcurrentHashMap<>()).put(spanId, span);
 
             String serviceName = span.getService();
-            services.add(serviceName);
+            if (serviceName != null && !serviceName.isEmpty()) {
+                services.add(serviceName);
 
-            serviceOperations
-                    .computeIfAbsent(serviceName, k -> ConcurrentHashMap.newKeySet())
-                    .add(span.getOperation());
+                String operation = span.getOperation();
+                if (operation != null && !operation.isEmpty()) {
+                    serviceOperations
+                            .computeIfAbsent(serviceName, k -> ConcurrentHashMap.newKeySet())
+                            .add(operation);
+                }
+            }
         }
     }
 

@@ -120,6 +120,13 @@ func (s *Store) SetGauge(metricName string, labelKey string, value float64) {
 	s.gauges[key] = &GaugeData{Value: value}
 }
 
+func (s *Store) getBucketsNoLock(metricName string) []float64 {
+	if buckets, ok := s.buckets[metricName]; ok {
+		return buckets
+	}
+	return DefaultBuckets
+}
+
 func (s *Store) ObserveHistogram(metricName string, labelKey string, value float64) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -127,7 +134,7 @@ func (s *Store) ObserveHistogram(metricName string, labelKey string, value float
 	if hist, ok := s.histograms[key]; ok {
 		hist.Observe(value)
 	} else {
-		buckets := s.GetBuckets(metricName)
+		buckets := s.getBucketsNoLock(metricName)
 		hist = NewHistogramData(buckets)
 		hist.Observe(value)
 		s.histograms[key] = hist

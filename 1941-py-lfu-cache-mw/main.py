@@ -38,28 +38,6 @@ class WarmupRequest(BaseModel):
     items: List[WarmupItem] = Field(..., min_length=1, description="List of key-value pairs to warm up")
 
 
-@app.put("/cache/{key}")
-async def put_cache(key: str, entry: CacheEntry):
-    cache.put(key, entry.value, entry.ttl)
-    return JSONResponse(content={"success": True, "key": key}, status_code=200)
-
-
-@app.get("/cache/{key}")
-async def get_cache(key: str):
-    value = cache.get(key)
-    if value is None:
-        raise HTTPException(status_code=404, detail="Key not found")
-    return {"key": key, "value": value}
-
-
-@app.delete("/cache/{key}")
-async def delete_cache(key: str):
-    success = cache.delete(key)
-    if not success:
-        raise HTTPException(status_code=404, detail="Key not found")
-    return {"success": True, "key": key}
-
-
 @app.post("/cache/warmup")
 async def warmup_cache(request: WarmupRequest):
     items = [(item.key, item.value, item.ttl) for item in request.items]
@@ -86,6 +64,28 @@ async def get_stats():
         "min_frequency": stats.min_frequency,
         "hit_rate": round(stats.hit_rate, 4),
     }
+
+
+@app.put("/cache/{key}")
+async def put_cache(key: str, entry: CacheEntry):
+    cache.put(key, entry.value, entry.ttl)
+    return JSONResponse(content={"success": True, "key": key}, status_code=200)
+
+
+@app.get("/cache/{key}")
+async def get_cache(key: str):
+    value = cache.get(key)
+    if value is None:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"key": key, "value": value}
+
+
+@app.delete("/cache/{key}")
+async def delete_cache(key: str):
+    success = cache.delete(key)
+    if not success:
+        raise HTTPException(status_code=404, detail="Key not found")
+    return {"success": True, "key": key}
 
 
 @app.get("/health")

@@ -5,6 +5,7 @@ use tokio::sync::Notify;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum LockType {
     Read,
     Write,

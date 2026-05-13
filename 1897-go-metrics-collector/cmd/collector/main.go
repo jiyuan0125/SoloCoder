@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"strings"
 
@@ -285,15 +284,12 @@ func (s *Server) handleQuery(w http.ResponseWriter, r *http.Request) {
 			series.Value = &val
 		case metrics.TypeHistogram:
 			buckets := make([]HistogramBucketResponse, 0, len(v.Histogram.Buckets))
-			for bound, count := range v.Histogram.Buckets {
+			for _, b := range v.Histogram.Buckets {
 				buckets = append(buckets, HistogramBucketResponse{
-					UpperBound: bound,
-					Count:      count,
+					UpperBound: b.UpperBound,
+					Count:      b.Count,
 				})
 			}
-			sort.Slice(buckets, func(i, j int) bool {
-				return buckets[i].UpperBound < buckets[j].UpperBound
-			})
 			series.Histogram = &HistogramResponse{
 				Count:   v.Histogram.Count,
 				Sum:     v.Histogram.Sum,

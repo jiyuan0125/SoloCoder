@@ -34,9 +34,61 @@ public class ConversionService {
             validationService.validateXml(xmlData, mapping.getXsdSchema());
         }
 
-        JsonNode root = xmlMapper.readTree(xmlData);
+        JsonNode root = parseXmlWithAttributes(xmlData, mapping);
         JsonNode result = transformXmlToJson(root, mapping);
         return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(result);
+    }
+
+    private JsonNode parseXmlWithAttributes(String xmlData, MappingConfig mapping) throws Exception {
+        org.w3c.dom.Document doc = javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                .newDocumentBuilder()
+                .parse(new java.io.ByteArrayInputStream(xmlData.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
+        doc.getDocumentElement().normalize();
+        return domToJson(doc.getDocumentElement());
+    }
+
+    private JsonNode domToJson(org.w3c.dom.Element element) {
+        ObjectNode result = objectMapper.createObjectNode();
+
+        org.w3c.dom.NamedNodeMap attributes = element.getAttributes();
+        for (int i = 0; i < attributes.getLength(); i++) {
+            org.w3c.dom.Attr attr = (org.w3c.dom.Attr) attributes.item(i);
+            result.put("@" + attr.getName(), attr.getValue());
+        }
+
+        org.w3c.dom.NodeList children = element.getChildNodes();
+        java.util.Map<String, java.util.List<JsonNode>> childMap = new java.util.HashMap<>();
+        String textContent = null;
+
+        for (int i = 0; i < children.getLength(); i++) {
+            org.w3c.dom.Node node = children.item(i);
+            if (node.getNodeType() == org.w3c.dom.Node.ELEMENT_NODE) {
+                JsonNode childJson = domToJson((org.w3c.dom.Element) node);
+                childMap.computeIfAbsent(node.getNodeName(), k -> new java.util.ArrayList<>()).add(childJson);
+            } else if (node.getNodeType() == org.w3c.dom.Node.TEXT_NODE || 
+                       node.getNodeType() == org.w3c.dom.Node.CDATA_SECTION_NODE) {
+                String text = node.getTextContent().trim();
+                if (!text.isEmpty()) {
+                    textContent = (textContent == null) ? text : textContent + text;
+                }
+            }
+        }
+
+        for (java.util.Map.Entry<String, java.util.List<JsonNode>> entry : childMap.entrySet()) {
+            if (entry.getValue().size() == 1) {
+                result.set(entry.getKey(), entry.getValue().get(0));
+            } else {
+                result.set(entry.getKey(), objectMapper.valueToTree(entry.getValue()));
+            }
+        }
+
+        if (textContent != null && childMap.isEmpty() && attributes.getLength() == 0) {
+            return objectMapper.valueToTree(textContent);
+        } else if (textContent != null) {
+            result.put("", textContent);
+        }
+
+        return result;
     }
 
     public String convertJsonToXml(String jsonData, String mappingName, boolean validate) throws Exception {
