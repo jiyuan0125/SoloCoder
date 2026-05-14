@@ -1,3 +1,9 @@
-文档内互相引用的链接改了一批路径，结果一半都指错了。检查内部链接、脚注、引用，失效的标红。
-命令有好几个子命令，每个子命令又有自己的参数，比如 sync local、sync remote、sync status。
-go build 一下就过，不用第三方包。
+先读文件列表，再逐个检查链接，最后出报告。
+
+1. 命令 `check refs --dir <dir> [--format text|json]`，扫描 `.md` 文件提取内部链接、脚注（`[^id]`→`[^id]:`）、图片引用。失效输出 `BROKEN: <file>:<line> -> <target> reason=<not_found|anchor_missing>`。孤立脚注 `ORPHAN_FOOTNOTE: <file>:<line> ref=<id>`。
+
+2. 子命令：`check links --file <p>` 单文件，`check all --dir <d>` 全目录，`check external --file <p>` 外部 URL 可达性（HEAD 超时 5s，不可达 `UNREACHABLE: <url> status=<code>`），`check anchors --dir <d>` 锚点检查。
+
+3. 报告 text 逐行列出，JSON 为 `{"file": "p", "issues": [{"line": 10, "type": "broken_link", "target": "..."}]}`。无问题 `ALL_CLEAR: <file>`。
+
+空目录 `NO_FILES: <dir>`。`go build` 一下就过，不用第三方包。

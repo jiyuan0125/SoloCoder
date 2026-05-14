@@ -1,3 +1,8 @@
-要在 1000 行配置里找到所有 timeout 相关的配置项，grep 搜不准。Go 写配置查询语言：路径查询加条件过滤，查询结果输出为 JSON 方便程序处理。
+一千行 YAML 配置，grep "timeout" 搜出来大半是注释和无关字段，精准查配置这事儿怎么这么难。Go 写配置查询语言工具——用点分隔路径精确定位字段，加条件过滤筛选结果，查询输出 JSON 方便程序处理。通配符 * 匹配任意段名，支持跨格式查询（YAML/TOML/JSON 统一接口）。
 
-命令行格式参考 cli import --source csv --target db --filter 'age>18'。纯标准库实现，go run . 能跑。
+- `cfgq query --file config.yaml --path "server.*.timeout" --where "value > 30"` 路径 * 通配，--where 支持 >, <, >=, <=, == 和 contains/startswith。输出 `[{"path":"server.api.timeout","value":60,"type":"int"}]`
+- `cfgq query --file config.yaml --path "database" --format table` 表格输出：路径 | 值 | 类型
+- `cfgq count --file config.yaml --path "*.port"` 输出匹配数量 "count: 3"
+- `cfgq paths --file config.yaml` 列出所有叶子节点完整路径，每行一个
+
+路径不存在输出空数组 []，退出码 0。--file 不存在退出码 1 报 "file not found: xxx"。JSON 输出 pretty-print 缩进 2 空格。纯标准库实现，go run . 能跑。

@@ -1,3 +1,11 @@
-Dockerfile 写得不好，镜像 800MB 启动还慢。生成多阶段构建的 Dockerfile，Go 项目优化，.dockerignore 也自动生成。命令行格式：cli import --source csv --target db --filter 'age>18'。
+线上 Dockerfile 镜像 800MB 启动 8 秒，全因为把源码和工具链塞进去了。多阶段构建明明简单，新人总漏。
 
-go build 能过，不依赖第三方库。
+扫描 Go 项目生成优化的 Dockerfile 和 .dockerignore。命令：`dockerfilegen generate <目录> [--base golang:1.21-alpine] [--port 8080] [--output Dockerfile]`。不指定 --base 自动从 go.mod 检测版本选 alpine 镜像。
+
+Dockerfile 结构：第一阶段 FROM golang:*-alpine AS builder，COPY go.mod go.sum → go mod download → COPY . → CGO_ENABLED=0 go build -ldflags="-s -w" -o /app/server。第二阶段 FROM alpine，COPY --from=builder，ENTRYPOINT ["/server"]。.dockerignore 排除 .git、*.md、test/、docs/。
+
+还支持 `dockerfilegen validate <路径>` 检查多阶段/alpine/CGO_ENABLED=0，`dockerfilegen diff <路径>` 对比差异。
+
+无 go.mod "go.mod not found" 退出码 1。--base 格式不对退出码 1。已存在需 `--force`。
+
+`go build` 能过，不依赖第三方库。

@@ -1,5 +1,8 @@
-上次硬盘挂了只恢复了全量备份，朋友小店的订单表丢了三天数据。得做个选择性恢复，Go CLI。
-可以只恢复指定目录或文件，不用整个备份还原。
-恢复前先预览要恢复的文件列表，确认无误再操作。
-多级命令：config get、config set、config list、config env switch。
-go build 能过就行，标准库写的。
+硬盘挂了只恢复了全量备份，朋友小店的订单表丢了三天——全量恢复太慢不敢经常做。Go CLI 做选择性恢复——只恢复指定目录或文件，恢复前预览确认。
+
+- `restore preview --repo /backup --id snap-20240115 --only "data/orders/"` 预览文件列表：路径 | 大小 | 修改时间，底部 "total: 45 files, 120MB"
+- `restore files --repo /backup --id snap-20240115 --only "data/orders/" --target /data-restore` 执行恢复 "restored:45, failed:0"
+- `restore files --repo /backup --id snap-20240115 --only "*.sql" --target /data` 通配符匹配
+- `restore diff --repo /backup --id snap-20240115 --file "data/orders/2024-01.csv"` 对比备份和当前版本差异
+
+目标已存在默认覆盖，--no-clobber 跳过。单个文件失败不阻塞，最后汇总失败数。恢复完输出校验摘要。多级命令：`config get/set/list`，`config env switch` 切换环境。go build 能过，标准库写的。

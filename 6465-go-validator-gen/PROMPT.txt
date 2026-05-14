@@ -1,5 +1,11 @@
-接口参数校验散落在各个 handler 里，格式不统一。生成字段验证和结构体验证的代码，验证错误统一收集。
+你见过这种代码吗？一个 handler 里校验逻辑 40 行，各种 if 字段为空 return 400，下一个 handler 又写一遍，格式还不统一。从 Go struct tag 生成校验代码，统一解决。
 
-命令有好几个子命令，每个子命令又有自己的参数，比如 sync local、sync remote、sync status。处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
+规则 tag 格式：`validate:"required"` 必填、`validate:"min=1,max=100"` 范围、`validate:"email"` 邮箱、`validate:"oneof=active inactive pending"` 枚举。struct 级 `validate:"crossfield"` 做交叉校验。
 
-不用第三方包，go build 通过就行。
+命令行：`valigen generate <目录> [--output <文件>]`。生成 Validate() error 方法，统一收集所有错误返回 ValidationErrors{Errors []FieldError}，每个 FieldError 含 Field/Value/Message。不做短路，全部校验完再返回。
+
+子命令：`sync local <目录>` 扫描本地、`sync remote <git-url>` 远程拉代码、`sync status` 上次统计。处理完主文件自动生成 _validate_test.go。无 validate tag 的 struct 跳过不报错。
+
+统计存 .valigen-cache.json。目录不存在退出码 1。无 validate tag "no validation rules found" 退出码 0。
+
+不用第三方包，`go build` 通过就行。

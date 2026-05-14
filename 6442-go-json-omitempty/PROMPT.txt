@@ -1,5 +1,19 @@
-布尔类型加了 omitempty，false 值序列化后字段直接没了，前端拿到 undefined 报错。标出布尔类型和数字类型不适合 omitempty 的地方，零值和缺失的语义区分也要检查。
+先用场景说一下：前端同学报了个 bug，用户关闭了某项设置（布尔值 false），但接口返回的 JSON 里这个字段直接没了，前端拿到的就是 undefined，等于没法区分"用户关闭了"和"用户没设置过"。根源是 bool 类型字段加了 omitempty。
 
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+处理流程：
+1. 扫描 Go struct 的 JSON tag，找出所有带 omitempty 的字段
+2. 对 bool 类型和数值类型（int/float 系列）标记为高风险——它们的零值（false/0）在 omitempty 下会被省略
+3. 对 struct 类型的指针字段加 omitempty 标记为需要确认——nil 和零值语义不同
+4. 检查同一 struct 内部分字段有 omitempty 部分没有的情况，建议统一
 
-go build 能过，不依赖第三方库。
+命令行工具支持四种操作模式：
+- `convert csv json <输入> <输出>` 转换格式
+- `convert yaml toml <输入> <输出>` 转换格式
+- `validate json <文件>` 验证 JSON 语法
+- `diff json <文件A> <文件B>` 对比两个 JSON 的差异
+
+扫描结果输出：终端彩色高亮，高风险字段红色，中风险黄色，低风险绿色。`--json` 标志输出数组，每条含 struct_name、field_name、field_type、risk_level、reason。高风险数量 > 0 时退出码 2。
+
+输入文件不存在 "file not found: <path>" 退出码 1。输入无 Go struct "no struct definitions found" 退出码 0。
+
+`go build` 能过，不依赖第三方库。

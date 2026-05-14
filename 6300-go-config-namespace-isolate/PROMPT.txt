@@ -1,3 +1,9 @@
-多租户的配置互相不能看到，但又要共享一份公共配置。Go 写配置命名空间隔离：不同命名空间独立读写，共享配置通过特殊命名空间访问——隔离和共享兼得。
+多租户 SaaS 平台，租户配置互相看不到，又要共享缓存配置。Go 写命名空间隔离工具——tenant-a 和 tenant-b 配置完全隔离读写，共享配置放 shared 命名空间，所有租户可读不可改。
 
-扫描流程：初始化→扫描中→分析中→报告生成，发现问题标记异常。不用第三方包，go build 通过就行。
+- `ns set --namespace tenant-a --key "db.host" --value "10.0.1.5"` 写入租户配置
+- `ns get --namespace tenant-a --key "db.host"` 先查租户自己的，再查 shared
+- `ns list --namespace tenant-a` 列出所有配置含 shared 继承的，标记来源 "db.host:10.0.1.5(tenant-a) / cache.ttl:300(shared)"
+- `ns delete --namespace tenant-a --key "db.host"` 删除租户配置不影响 shared
+- `ns shared set --key "cache.ttl" --value 300` 写入共享配置
+
+存储用文件系统——每命名空间一个目录 namespaces/tenant-a/。租户写 shared 报错退出码 3 "cannot write to shared namespace from tenant"。扫描流程：初始化→扫描→分析隔离性→报告，发现问题标记异常。不用第三方包，go build 通过就行。

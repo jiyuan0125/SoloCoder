@@ -1,4 +1,7 @@
-机房断网 6 小时，异地备份没跟上。副本要和源保持同步，自动校验完整性。断网期间的变更恢复后要补同步。
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
-规则修改后，已经按旧规则处理过的记录要标记为需要复核。
-go run . 能跑起来，标准库实现。
+机房断网 6 小时，异地备份没跟上——事后发现最近一次完整备份是三天前的，中间的变更全丢了。
+
+副本要和源保持同步，自动校验完整性。命令 `offsite sync --source <dir> --replica <dir>` 执行同步，`offsite verify --source <dir> --replica <dir>` 校验副本完整性（逐文件 SHA-256 对比），`offsite catchup --replica <dir> --since <timestamp>` 补同步断网期间的变更。verify 发现不一致输出 `CORRUPT: <path> expected=<hash1> actual=<hash2>`。
+
+同步流程分阶段：准备（prepare）→扫描（scan）→传输（transfer）→验证（verify）→完成（done），验证失败从传输阶段重试，最多 3 次。状态文件 `.offsite-state.json` 记录当前阶段和进度：`{"phase": "transfer", "total_files": 300, "done_files": 150, "failed_files": [], "last_sync": "..."}`。catchup 根据 `.offsite-state.json` 的 last_sync 时间戳，只扫描该时间之后变更的文件。
+
+规则修改后（`.sync-rules.json`），已经按旧规则处理过的记录标记为 `needs_review`。空源目录输出 `SOURCE_EMPTY: <dir>`。`go run .` 能跑起来，标准库实现。退出码 0=成功，1=校验失败，2=IO 错误。

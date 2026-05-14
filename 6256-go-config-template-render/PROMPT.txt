@@ -1,3 +1,7 @@
-每个环境的配置都要手动改端口、改数据库地址，上次改漏了一个服务。用 Go 做配置模板渲染：模板变量从环境变量或变量文件读，支持条件判断和循环——不同环境可以渲染出不同的配置。
+每个环境都得手动改端口、改数据库地址，上次改漏了一个服务出了事故。模板渲染能解决这问题——写一次模板，各环境自动生成。
 
-多级命令设计：config get、config set、config list、config env switch。go build 能编译通过，不依赖第三方库。
+用 Go 做配置模板渲染，用法：`tpl-render render --template config.tpl --vars vars.yaml -o config.yaml`。模板语法：`{{.VarName}}` 简单变量替换，`{{if .Debug}}...{{end}}` 条件判断，`{{range .Servers}}...{{end}}` 循环。变量来源优先级：`--var key=value` > `--vars vars.yaml` 文件 > 环境变量 `TPL_` 前缀。
+
+变量未定义时默认行为：输出 `"<undefined:varname>"` 占位符并打印警告到 stderr。加 `--strict` 则未定义变量直接报错退出码 1。模板语法错误报行号 `template error at line N: <原因>`。
+
+`tpl-render lint --template config.tpl` 检查模板语法不渲染。`tpl-render vars --template config.tpl` 列出模板中引用的所有变量名。多级命令设计：`render`、`lint`、`vars` 各自独立。输出文件已存在加 `--force` 才覆盖，否则报 "output file exists: <路径>" 退出码 3。`go build` 能编译通过，不依赖第三方库。

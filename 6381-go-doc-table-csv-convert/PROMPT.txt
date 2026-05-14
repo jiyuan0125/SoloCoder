@@ -1,4 +1,9 @@
-产品经理习惯用 Excel 写需求表格，开发用 Markdown。表格和 CSV 互转，保留对齐，合并单元格展开。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-go build 通过就行，不用第三方包。
+产品经理习惯用 Excel 写需求表格，开发用 Markdown——格式来回转换很烦，而且合并单元格一转换就乱了。
+
+1. 转换命令 `convert md2csv --input <file> --output <file>` 和 `convert csv2md --input <file> --output <file>`。Markdown 表格转 CSV：第一行为表头，后续行为数据，单元格内容中的逗号用双引号包裹，换行符用 `\n` 转义。CSV 转 Markdown：自动计算列宽对齐，数字列右对齐。合并单元格（`colspan`/`rowspan`）展开为重复值，并在旁边加注释 `(merged)`。
+
+2. 命令格式 `tool <action> <target> [options]`，具体：`tool scan table --file <path>` 扫描文件中表格数量，`tool validate csv --file <path>` 校验 CSV 格式（列数一致性），不一致输出 `INCONSISTENT_COLUMNS: line=<n> expected=<cols> got=<actual>`。
+
+3. 处理完成自动更新 `.convert-stats.json` 统计信息，字段：`{"total_conversions": 10, "md2csv": 6, "csv2md": 4, "last_run": "..."}`。首次运行没有历史统计文件时自动创建。
+
+4. 空 CSV（只有表头无数据）输出空 Markdown 表格（只有分隔行）。空 Markdown 表格输出 `EMPTY_TABLE: <file> line=<n>` 并跳过。编码统一 UTF-8。`go build` 通过就行，不用第三方包。

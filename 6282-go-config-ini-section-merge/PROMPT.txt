@@ -1,3 +1,11 @@
-三个 INI 配置文件要合成一个，同名段内键值冲突不知道该用谁的。Go 写 INI 配置段合并：同名段内的键值合并，段级别可以设优先级——哪个文件的配置优先。
+三个团队各维护自己的 INI 配置文件，合并的时候 [database] 段里 port 这个 key 出现了三次，到底用谁的得有个说法。Go 写 INI 配置段合并工具——多个 INI 文件按优先级合并，同名段内的键以高优先级文件的值为准，新增的段直接追加。
 
-支持多种操作模式，参考 convert csv json、convert yaml toml、validate json、diff json。不用第三方包，go build 通过就行。
+CLI 格式 `ini-merge -o output.ini -p "base.ini:1,override.ini:2,hotfix.ini:3"` 冒号后是优先级数字越大越优先。也可以 `ini-merge base.ini override.ini hotfix.ini -o result.ini`，这时按参数顺序后面的优先。`ini-merge --dry-run base.ini override.ini` 只输出合并结果到 stdout 不写文件。
+
+操作模式用子命令区分：
+- `convert csv json input.csv` — CSV 转 JSON
+- `convert yaml toml input.yaml` — YAML 转 TOML
+- `validate json config.json` — 校验 JSON 语法，合法退出码 0，非法报 "parse error at line 5: unexpected token"
+- `diff json a.json b.json` — 对比两个 JSON 差异，输出格式 `path: a.json value → b.json value`
+
+同名段的键冲突在输出里加注释标记 `; MERGED from hotfix.ini (priority 3)`。段名不存在（空段名）跳过并警告。纯标准库，go build 通过就行。

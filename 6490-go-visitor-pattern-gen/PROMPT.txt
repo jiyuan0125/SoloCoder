@@ -1,5 +1,13 @@
-AST 遍历每种节点都要写一遍 switch case，新增节点类型到处加分支。从类型定义生成 visitor 接口，accept 方法自动生成。
+Go AST 遍历每种节点都写一遍 switch case，十几种节点各写一遍。新增节点类型到处加分支，漏了一个运行时直接跳过。从 struct 定义生成 Visitor 模式。
 
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+写一个 types.go 含一组 struct 定义，工具生成：Visitor 接口（每个 struct 一个 Visit 方法）、每个 struct 的 Accept(visitor) 方法、BaseVisitor 空实现方便覆写。
 
-go build 能过，不依赖第三方库。
+处理流程：扫描 struct → 生成 Visit 接口 → 生成 Accept 方法 → 生成 BaseVisitor。
+
+命令：`visitorgen generate <目录> --types <文件> [--visitor-name Visitor] [--output <文件>]`。比如 `visitorgen generate ./ast --types nodes.go --visitor-name ASTVisitor --output visitor.go`。
+
+辅助：`convert csv json`、`convert yaml toml`、`validate json`、`diff json`。
+
+types 文件不存在退出码 1。无 struct 定义 "no struct definitions in <文件>" 退出码 1。小写开头 struct 跳过但打印 "skipped unexported: <名>" 到 stderr。
+
+`go build` 能过，不依赖第三方库。

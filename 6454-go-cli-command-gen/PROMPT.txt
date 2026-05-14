@@ -1,5 +1,16 @@
-CLI 工具的子命令越来越多，flag 解析写得乱七八糟。自动生成子命令、参数、帮助文本，用 flag 标准库。
+CLI 工具子命令越来越多，flag 解析逻辑散落在 main.go 各处，加一个子命令要改三个地方。自动生成子命令注册、参数解析、帮助文本的样板代码，用标准库 flag 包。
 
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。规则修改后，已经按旧规则处理过的记录要标记为需要复核。
+痛点分析：
+1. 每加一个子命令，main.go 里要改三处：定义 flag、注册 handler、帮助文本
+2. 不同子命令的参数格式不统一，有的用 -name 有的用 --name
+3. 帮助文本手写，经常和实际参数对不上
 
-纯标准库，go build 通过就行。
+工具从一个 YAML 配置文件生成 Go CLI 骨架代码。配置文件格式：顶层 commands 数组，每个 command 含 name、description、flags（name/type/default/required）、subcommands 可选嵌套。比如定义一个 sync 命令有 local、remote、status 三个子命令，每个子命令各自的 flags 自动生成对应变量和解析逻辑。
+
+生成内容——cmd/<命令名>.go 每个子命令一个文件，注册到 root command。main.go 只做命令分发。help.go 自动生成 --help 输出，格式对齐列宽，flag 显示名称、类型、默认值、说明。
+
+同步过程分五步：准备→扫描→传输→验证→完成。验证失败重试传输，最多重试 3 次。规则配置文件修改后（通过 `gen config --rules <文件>`），已按旧规则生成的代码标记为需要复核，打印 "code review needed for: <文件列表>"。
+
+配置文件不存在 "config file not found" 退出码 1。YAML 格式错误 "invalid config: <行号> <错误>" 退出码 1。
+
+纯标准库，`go build` 通过就行。

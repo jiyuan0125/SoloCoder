@@ -1,3 +1,9 @@
-Docker 部署时配置里要替换环境变量，但有些变量在本地开发时没设。Go 做环境变量替换：支持默认值语法 ${VAR:-default}，未设置的环境变量怎么处理要有策略——报错还是用空值。
+Docker 部署时 ${DB_HOST} 在本地没设，启动直接炸。但有些变量确实可以没有。Go 做环境变量替换——支持 ${VAR:-default} 默认值语法，未设置变量的处理策略可配置。
 
-每处理完一个目录更新进度，空目录跳过但计数器照加。go build 能编译通过，不依赖第三方库。
+- `envsubst replace --file config.template --output config.yaml` 执行替换，默认缺失变量报错退出码 1
+- `envsubst replace --file config.template --strategy keep` keep 策略：未设变量保留原样
+- `envsubst replace --file config.template --strategy empty` empty 策略：替换为空串
+- `envsubst replace --file config.template --strategy error` 列出所有缺失变量 "undefined: DB_HOST, REDIS_URL"
+- `envsubst preview --file config.template` 预览每行替换来源 "DB_HOST → localhost (from default)"
+
+${VAR:-default}：VAR 存在用其值，不存在用 default。${VAR:+alt}：VAR 存在用 alt，否则空。VAR 名只允许字母数字下划线。每处理完一个变量更新进度，空模板跳过。go build 编译通过，不依赖第三方库。

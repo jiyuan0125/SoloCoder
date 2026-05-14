@@ -1,3 +1,8 @@
-配置引用链太长不知道有没有环，运行时直接栈溢出了。Go 重写配置循环引用检查：${a} 引用 ${b}，${b} 又引用 ${a} 这种循环检测出来，列出完整的循环引用链。
+谁能想到 ${a} → ${b} → ${c} → ${a} 这么简单的循环引用居然把线上服务搞崩了，栈溢出错误日志刷了几百兆。Go 重写配置循环引用检查工具——扫描配置文件中所有 ${var} 引用关系，构建引用图，用 DFS 检测环，输出完整的循环链让人一目了然。
 
-带分组规则和文件分组，按规则自动分组。纯标准库实现，go run . 能跑。代码分几个文件组织，别全塞 main.go。
+- `cycle check --file config.yaml` 检查单个文件，有环退出码 1，输出 "circular reference detected: a → b → c → a"，环上每个节点的行号也标出来。无环退出码 0，输出 "no circular references found"
+- `cycle check --dir ./configs/` 递归检查目录下所有配置文件，每个文件一行结果
+- `cycle graph --file config.yaml` 输出引用关系图，格式 "node → [dep1, dep2, ...]"，每行一个节点
+- `cycle explain --file config.yaml --key "server.url"` 展示某个 key 的完整引用展开路径
+
+分组管理：`cycle group add --name "数据库配置" --pattern "db-*.yaml"` 定义分组规则，`cycle group list` 列出所有分组，`cycle group check --name "数据库配置"` 只检查某个分组内的文件。自引用（${a} 引用自己）也要检测出来。纯标准库实现，go run . 能跑，代码拆成 checker.go / graph.go / group.go / main.go。

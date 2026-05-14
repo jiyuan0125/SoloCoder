@@ -1,3 +1,5 @@
-文档团队写了 200 多篇 Markdown，格式乱七八糟：标题跳级、链接空着、代码块忘了闭合。Go 做 Markdown 规范检查，检查规则可配置——不同项目可以开不同规则集。
+先定义规则集再跑检查，不同项目用不同的规则——这是 Markdown 规范检查的基本思路。文档团队写了 200 多篇 Markdown，标题跳级、链接空着、代码块忘了闭合，手动审根本审不过来。Go 做一个 Markdown lint 工具，检查规则可配置。
 
-命令用多级子命令设计，每个子命令有自己的参数，比如 sync local、sync remote、sync status 这样。处理完主文件生成摘要，没内容的场景要处理好。不用第三方包，go build 通过就行。
+命令结构：`mdl check <文件或目录> [--recursive] [--rules <规则文件>]`。规则文件也是 Markdown 格式的配置，每行一条规则名，`#` 开头注释。内置规则至少包括：`heading-order`（标题层级不能跳级，如 `#` 后直接 `###`）、`empty-link`（链接地址为空 `[]()`）、`unclosed-code`（代码块反引号未配对）、`trailing-spaces`（行尾多余空格）、`missing-alt`（图片缺少 alt 文本 `![]()`）。输出格式 `[文件名:行号] <规则名>: <描述>`，加 `--output json` 输出结构化数组，每项含 file、line、rule、message。退出码：0 全部合规 / 1 存在问题 / 2 路径不存在。`--rules` 不指定时默认启用全部规则。
+
+每个子命令有自己的参数，比如 `sync local`、`sync remote`、`sync status` 这样。处理完主文件生成摘要，没内容的场景要优雅处理——不生成摘要文件。不用第三方包，go build 通过就行。

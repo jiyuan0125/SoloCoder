@@ -1,5 +1,15 @@
-枚举类型新增了一个值，但 switch 没加对应的 case，线上走了 default 分支出了错。检查枚举类型的 switch 缺少 default 或部分值的情况，缺失的 case 列出来。
+枚举类型新增了一个值 StatusSuspended，但 switch 没加对应 case，线上直接走了 default 分支把用户状态设成了未知——这种事已经出过两次了。
 
-命令行格式：cli import --source csv --target db --filter 'age>18'。
+工具做的事：找出所有基于枚举类型（即一组同名 const iota 定义的类型）的 switch 语句，检查两个维度：
+- switch 是否有 default 分支——没有的话标为 warning（新增枚举值时容易漏）
+- switch 是否覆盖了该枚举类型的所有值——缺失的 case 列出来
 
-纯标准库，go run . 就行。
+命令行用法：`switchcheck scan <目录或文件> --enum-type <类型名>`。不指定 --enum-type 则自动检测所有 iota const 分组。加 `--strict` 时没有 default 的 switch 视为 error 而非 warning。
+
+输出格式默认终端表格：文件、行号、switch 变量、缺失的 case 值、级别（warn/error）。加 `--json` 输出数组，每条含 file、line、enum_type、missing_cases、severity。发现 error 级问题退出码 2，只有 warn 退出码 0。
+
+空目录或无 .go 文件输出 "no Go files found" 退出码 0。--enum-type 指定的类型不存在时 "enum type not found: <name>" 退出码 1。
+
+举个例子：`switchcheck scan ./internal/model --enum-type OrderStatus --strict --json`，检查 OrderStatus 相关的 switch 完整性，严格模式，输出 JSON。
+
+纯标准库，`go run .` 就行。

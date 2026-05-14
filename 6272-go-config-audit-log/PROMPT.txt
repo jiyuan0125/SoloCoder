@@ -1,3 +1,7 @@
-配置被谁改的、什么时候改的、改了什么——出了问题查都查不到。Go 写配置审计日志：变更时间、变更内容、变更来源全部记录，审计日志持久化保存。
+配置被谁改的、什么时候改的、改了什么——出了问题查都查不到，甩锅会上谁都说不是自己改的。
 
-多级命令设计：config get、config set、config list、config env switch。纯标准库实现，go run . 能跑。
+Go 写配置审计日志。每次配置变更自动记录。用法分两组：第一组是记录 `cfg-audit log --file config.yaml --author "zhangsan" --action update --key db.port --old-value 3306 --new-value 3307`，第二组是查询 `cfg-audit query --file config.yaml --author zhangsan --since "2024-01-01" --key db.port`。
+
+日志存储在 `.cfg-audit.jsonl`，每行一条记录 `{"timestamp":"RFC3339","file":"...","author":"...","action":"create|update|delete","key":"...","oldValue":"...","newValue":"...","source":"cli|api|auto"}`。query 支持过滤参数组合，输出表格 时间 | 操作人 | 动作 | 键 | 旧值 | 新值。加 `--format json` 输出结构化结果。
+
+审计日志文件不存在自动创建。查询结果为空输出 "no matching records" 退出码 0。日志文件损坏（某行不是合法 JSON）报 "corrupted log at line N" 跳过该行继续。多级命令设计：`log`、`query` 各自独立参数。纯标准库实现，`go run .` 能跑。

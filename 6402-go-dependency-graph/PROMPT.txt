@@ -1,5 +1,9 @@
-项目依赖越来越乱，手动梳理根本看不过来。写个 Go 工具画依赖树、检测循环依赖，输出 DOT 格式。
+项目依赖越来越乱，手动梳理根本看不过来——上次引入一个日志库结果拉进来 47 个传递依赖，二进制体积翻了三倍。
 
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+1. 依赖分析命令 `dep graph --dir <project-dir> --output <file>` 扫描 Go 源码的 import 语句，构建依赖树，输出 DOT 格式到文件。DOT 节点用包名，边表示依赖关系：`"pkgA" -> "pkgB"`。标准库包用蓝色节点，第三方包红色，项目内部包绿色。`dep tree --dir <dir> --format text|json` 输出树形结构，text 格式用缩进，JSON 格式为 `{"package": "main", "imports": [{"package": "fmt", "type": "stdlib"}, ...]}`。
 
-零外部依赖，go build 通过即可。
+2. 循环依赖检测 `dep cycle --dir <dir>`，发现循环输出 `CIRCULAR: pkgA -> pkgB -> pkgC -> pkgA`。无循环输出 `NO_CYCLES: all clear`。
+
+3. 额外操作模式：`convert csv json --input <file> --output <file>`，`convert yaml toml --input <file> --output <file>`，`validate json --file <path>` 校验合法性，`diff json --left <file> --right <file>` 比较差异。
+
+无 Go 源码文件输出 `NO_SOURCES: <dir>`。空 import 的包跳过。DOT 文件可用 `dot -Tpng` 渲染。零外部依赖，`go build` 通过即可。

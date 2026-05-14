@@ -1,3 +1,7 @@
-改配置就是 vim 打开文件改，没有历史记录，改错了回不去。Go 写配置 CLI 管理器：支持嵌套路径操作（set db.connection.port 3307），操作历史记录保存。
+改配置就是 vim 打开文件改，没有历史记录，改错了回不去——能不能有个像样的 CLI 管理器？
 
-操作完生成报告，配了邮件就通知，没配就跳过。不用第三方包，go build 通过就行。
+Go 写配置 CLI 管理器。核心是支持嵌套路径操作：`cfg-mgr set db.connection.port 3307 --file config.yaml` 直接改嵌套值不用手动定位行。命令：`cfg-mgr get <路径>` 查值，`cfg-mgr set <路径> <值>` 设值，`cfg-mgr delete <路径>` 删除，`cfg-mgr list [--prefix db.connection]` 列出，`cfg-mgr history` 查操作历史。
+
+每次操作自动记录到 `.cfg-mgr-history.jsonl`，格式 `{"timestamp":"...","action":"set","path":"db.port","oldValue":"3306","newValue":"3307"}`。`history` 命令输出最近 20 条操作，加 `--all` 输出全部。`cfg-mgr undo` 撤销最后一次操作。
+
+set 路径不存在时自动创建中间对象。delete 叶子节点后如果父对象变空也保留不删除。文件格式自动检测（YAML/JSON/INI），加 `--format yaml` 强制指定。操作完生成报告，配了邮件就通知没配就跳过。不用第三方包，`go build` 通过就行。

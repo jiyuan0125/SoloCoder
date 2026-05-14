@@ -1,3 +1,8 @@
-nginx 配置用 include 引了一堆文件，不知道最终生效的完整配置长什么样。Go 做配置 Include 解析：递归把被包含的文件全部展开，include 循环检测出来报错。
+nginx 配置用 include 引了 upstream/*.conf、locations/*.conf，主文件看着干净但最终生效的完整配置长什么样谁也说不清。Go 做 include 解析——递归展开所有被 include 文件内容，循环 include 检测出来报错。
 
-主操作执行时调用辅助检查，辅助检查也要读同一批数据。不用第三方包，go build 通过就行。
+- `include resolve --file nginx.conf --output nginx-full.conf` 递归展开，include 支持通配符 `include conf.d/*.conf`
+- `include resolve --file nginx.conf --max-depth 10` 限制深度，超限报 "include depth exceeded: max 10" 退出码 2
+- `include tree --file nginx.conf` 输出 include 关系树 "nginx.conf ├─ upstream/api.conf └─ locations/*.conf (3 files)"
+- `include check --file nginx.conf` 只检查循环和文件是否存在，文件不存在报 "file not found: conf.d/missing.conf at line 15" 退出码 1
+
+展开时在被 include 内容前后加标记 `# BEGIN included: conf.d/api.conf`。路径相对主文件目录解析。不用第三方包，go build 通过就行。

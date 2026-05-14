@@ -1,3 +1,11 @@
-客户发的 CSV 每次格式都不太对，导入就报错。Go 实现一个 CSV 结构验证：列数是否一致、引号有没有配对、编码对不对，问题行标出行号方便定位。
+客户每次发来的 CSV 格式都不太对，不是列数对不上就是引号没配对，导入就报错——这种低级问题不该到生产才发现。Go 实现一个 CSV 结构验证工具，逐行检查列数一致性、引号配对、编码合法性，问题行标出行号方便定位。
 
-CLI 用多级命令设计，参考 config get、config set、config list、config env switch 这种层级。纯标准库实现，go run . 能跑。
+— 命令格式：`csv-check validate <file.csv> [--delimiter ,] [--output text|json]`
+— `--delimiter` 可指定分隔符，默认逗号，支持 tab（用 `\t` 表示）
+— 文本输出每条问题一行：`[行号] <问题类型>: <描述>`，类型包括 `column-count`（列数与首行不一致）、`quote-mismatch`（引号未配对）、`encoding-error`（非法 UTF-8 字节序列）
+— JSON 输出 `{"file": "<路径>", "header_columns": N, "total_rows": N, "errors": [{"row": N, "type": "<类型>", "detail": "<描述>", "expected_columns": N, "actual_columns": N}]}`
+— 退出码：0 合法 / 1 存在问题 / 2 文件不存在
+— 引号内的换行符不算行分隔（RFC 4180 规则），正确处理跨行字段
+— 空行（只有分隔符或空白）跳过不报错但计入总行数
+
+CLI 用多级命令设计，参考 `config get`、`config set`、`config list`、`config env switch` 这种层级。纯标准库实现，`go run .` 能跑。

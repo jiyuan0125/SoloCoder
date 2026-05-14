@@ -1,3 +1,17 @@
-新项目总要从零搭，go.mod、main.go、目录结构一个个建。自动生成这些基础文件，依赖版本管理也带上。命令有好几个子命令，每个子命令又有自己的参数，比如 sync local、sync remote、sync status。
+先运行 `modinit generate <项目名> --module <路径>`，工具创建项目目录结构、生成 go.mod、main.go 和基础目录。然后再做一次依赖分析，把间接依赖也写进 go.mod。
 
-纯标准库，go run . 跑起来。
+具体步骤：
+1. 创建目录 cmd/、internal/、pkg/、api/（如果指定了 --with-api）
+2. 生成 go.mod，模块路径取 --module 参数，Go 版本取当前环境
+3. 生成 cmd/<项目名>/main.go，包含 package main 和空 func main()
+4. 生成 internal/placeholder.go 和 pkg/placeholder.go 防止空目录被 git 忽略
+5. 如果指定了 --with-readme，生成 README.md 写上项目名和模块路径
+6. 运行 go mod tidy 检查（仅提示不自动执行）
+
+子命令用法——`sync local <目录>` 基于已有代码重建 go.mod、`sync remote <git-url>` 克隆后分析依赖、`sync status` 显示上次初始化的记录。处理完成后自动在项目根目录写 .modinit-meta.json 记录项目名、模块路径、生成时间。
+
+参数不传 --module 报错 "module path is required" 退出码 1。目录已存在且非空 "directory not empty: <path>" 退出码 1。Go 版本检测失败 "cannot determine Go version" 退出码 1。
+
+模块路径格式校验——至少包含一个 `/`，如 github.com/user/project。不合法时 "invalid module path: <path>" 退出码 1。
+
+纯标准库，`go run .` 跑起来。

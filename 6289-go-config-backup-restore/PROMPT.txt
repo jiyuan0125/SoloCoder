@@ -1,3 +1,5 @@
-上次误改配置没有备份，回滚只能凭记忆。Go 命令行做配置备份恢复：可以恢复到任意备份点，旧备份自动清理不占磁盘。
+上次手滑把 production.yaml 里的数据库连接池参数改错了，发现的时候文件已经 save 了，git 里也是最新提交，想回滚都不知道回到哪个版本。Go 命令行做配置备份恢复——每次修改前自动备份，可以恢复到任意备份点，旧备份按保留策略清理不占磁盘。
 
-模板管理也要带上——系统管理模板，用户选模板生成新文件。go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全塞 main.go。
+`cfg-backup save --file app.yaml --reason "调大连接池"` 手动备份，备份文件存到 .cfg-backups/ 目录下，文件名格式 app.yaml.20240115-143022.bak。`cfg-backup restore --file app.yaml --backup app.yaml.20240115-143022.bak` 恢复，恢复前自动对当前文件做一次快照。`cfg-backup list --file app.yaml` 列出该文件所有备份，输出表格：序号 | 备份时间 | 大小 | 备注，按时间倒序。`cfg-backup clean --file app.yaml --keep 10` 只保留最近 10 个备份，其余删除，输出 "cleaned: 5, kept: 10"。
+
+模板管理：`cfg-backup template create --name "spring-boot-base" --file template.yaml` 保存模板，`cfg-backup template apply --name "spring-boot-base" --output new-app.yaml` 从模板生成新配置。模板不存在退出码 1 报 "template not found: xxx"。go build 编译通过，不依赖第三方库，代码拆成 backup.go / restore.go / template.go / main.go。

@@ -1,5 +1,11 @@
-测试覆盖率要求 80%，一个个手写太慢。生成表驱动测试格式，包含正常和异常 case 占位。
+测试覆盖率卡 80%，三百个函数手写表驱动测试要一整天，纯体力活。
 
-多级命令：config get、config set、config list、config env switch。
+`testgen` 从 Go 源码生成表驱动测试骨架。用法：`testgen generate <目录> [--func <函数名>] [--template table|subtest] [--output stdout|file]`。--func 只生成某函数测试，不指定则全部导出函数。--template 选格式：table 用 []struct{...} 经典表驱动，subtest 用 t.Run 独立子测试。
 
-go build 能过，不依赖第三方库。
+生成内容——package 用原包名_test，import 含 testing 和目标包。每个函数两个基础 case：正常输入占位（注释 "TODO: fill valid input"）和边界/异常 case（nil、空字符串、零值，按参数类型推断）。返回 error 的函数加 `if tt.wantErr != (err != nil)` 断言。
+
+还支持配置：`config get <key>`、`config set <key> <value>`、`config list`、`config env switch <环境>` 切换配置。
+
+目录不存在退出码 1。无可导出函数退出码 0。文件已存在不加 `--force` 报 "file exists, use --force" 退出码 1。
+
+`go build` 能过，不依赖第三方库。

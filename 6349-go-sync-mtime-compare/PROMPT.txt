@@ -1,4 +1,7 @@
-NFS 上的 mtime 精度只到秒，同一秒改的文件靠时间判断不准。时间不可靠时退回用哈希对比，精度到秒。
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。
-数据源 schema 变更后，已有的转换规则要适配新 schema。
-全标准库写的，go build 一把过。
+NFS 上 mtime 精度只到秒，同一秒改的文件靠时间判断不准——上次同步把刚改完的文件用旧版本覆盖了。
+
+1. 策略：mtime 差异超 1 秒用时间判断，1 秒内退回 SHA-256 对比。命令 `mtime compare --source <dir> --target <dir> [--threshold 1s]`，输出 `SAME|NEWER|OLDER|CONFLICT <path> [mtime_diff=<d>s|hash=<h>]`。CONFLICT 表示 mtime 相同但哈希不同。`mtime sync --source <dir> --target <dir> [--dry-run]` 按结果同步，dry-run 只输出计划不执行。同步日志 `.mtime-sync.log` 记录决策：`SYNC: <path> reason=newer_mtime delta=5s` 或 `reason=hash_mismatch`。
+
+2. 数据管线：录入（ingest）→清洗（clean）→校验（validate）→发布（publish），校验不过退回清洗阶段。数据源 schema 变更后（`.schema.json`），已有的转换规则 `.transform-rules.json` 标记为 `needs_adaptation`。
+
+3. 空目录输出 `EMPTY: <dir>` 并退出码 0。符号链接跳过输出 `SKIP: <path> symlink`。目标目录不存在输出 `TARGET_NOT_FOUND: <dir>` 退出码 1。退出码：0=成功，1=参数错误，2=IO 错误。全标准库，`go build` 一把过。

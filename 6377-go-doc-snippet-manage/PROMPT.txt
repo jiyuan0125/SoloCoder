@@ -1,4 +1,9 @@
-团队共用的一些代码片段散落在各处，每次复制粘贴。片段从文件插入到文档中，片段更新后所有引用处自动更新。
-命令有好几个子命令，每个子命令又有自己的参数，比如 sync local、sync remote、sync status。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
-纯标准库写的，go run . 直接跑。
+团队共用代码片段散落各处，上次有人复制旧版错误处理片段，线上直接 panic 了。
+
+1. `snippet add --name <n> --file <p>` 注册到 `.snippets/<n>.snippet`，`snippet insert --name <n> --target <f> --after "<!-- snippet: <n> -->"` 插入。更新后 `snippet sync --dir <dir>` 替换所有引用处，输出 `UPDATED: <file> snippet=<name>`。标记格式 `<!-- snippet: <n> -->...<!-- /snippet: <n> -->`。
+
+2. `snippet list` 表格显示（名称|文件|大小|更新时间），`snippet show --name <n>` 显示内容，`snippet remove --name <n>` 删除。
+
+3. 生成 `.snippet-report.json`：`{"files_updated": 5, "snippets_synced": 3, "unchanged": 10}`。片段不存在 `SNIPPET_NOT_FOUND: <name>`，标记缺失 `MARKER_MISSING: <file> snippet=<name>`。
+
+纯标准库，`go run .` 直接跑。

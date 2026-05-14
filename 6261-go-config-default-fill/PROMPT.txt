@@ -1,3 +1,7 @@
-新加的配置项老项目里没有，启动就报错。Go 做配置默认值填充：默认值定义在单独文件中，已有的值不动，只填充缺失的键。
+新加的配置项老项目里没有，启动就崩。能不能有个工具自动把缺失的配置项补上，已有的值不碰？
 
-命令格式参考 tool action target options，比如 tool scan dir --depth 3。填充完自动更新统计，首次跑没有历史统计要正常处理。不用第三方包，go build 通过就行。
+1. Go 做配置默认值填充。用法：`cfg-fill fill --target app.yaml --defaults defaults.yaml`。默认值定义在单独文件中，填充规则：只补缺失的键，已有值不动。嵌套结构递归填充。
+2. `--dry-run` 输出将要填充的内容不写文件，格式 `+ <路径>: <默认值>`。`--report` 输出填充报告到 JSON 文件，结构 `{"filled": [...], "skipped": [...], "total": N}`。
+3. 默认值文件中某个字段标记 `@required: true` 时，如果目标文件缺少这个字段且没有默认值，报错 `required field missing: <路径>` 退出码 1。
+
+目标文件不存在则直接复制默认值文件。两个文件格式不一致（一个 YAML 一个 JSON）报 "format mismatch" 退出码 2。空目标文件视为全空全部填充。命令格式参考 `tool action target options` 比如 `tool scan dir --depth 3`。填充完自动更新统计到 `.cfg-fill-stats.json`，首次没有这个文件就创建。不用第三方包，`go build` 通过就行。

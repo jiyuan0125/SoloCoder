@@ -1,5 +1,11 @@
-每个项目的 Makefile 都不一样，新人来了不知道怎么编译。生成标准的 build、test、lint、clean 目标，支持交叉编译。
+十个项目十个 Makefile 不一样，新人不知道 make 什么。生成标准 Makefile。
 
-多级命令：config get、config set、config list、config env switch。
+命令：`makegen generate <目录> [--output Makefile] [--cross-compile linux,darwin,windows]`。扫描项目确定 main 包和模块名，生成目标：build（go build -ldflags "-s -w" -o bin/<名>）、test（go test -v -race -coverprofile=coverage.out ./...）、lint（go vet + gofmt -l）、clean（rm -rf bin/ coverage.out）、all（依赖 lint test build）。交叉编译目标 build-linux/build-darwin/build-windows 设 GOOS/GOARCH。
+
+变量：GO=go、BINARY=<名>、VERSION=$(shell git describe --tags --always --dirty)、LDFLAGS=-ldflags "-s -w -X main.version=$(VERSION)"。
+
+配置：`config get <key>`、`config set <key> <value>`、`config list`、`config env switch dev|prod`（dev 不加 -race，prod 加）。
+
+无 go.mod "go.mod not found" 退出码 1。已有 Makefile 不加 `--force` 退出码 1。
 
 不用第三方包，编译通过就行。

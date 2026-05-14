@@ -1,3 +1,13 @@
-三百个导出函数没写注释，godoc 页面一片空白。根据函数名和参数推断注释内容，输出 godoc 格式。支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+先扫描三百个导出函数，发现一半没写注释，godoc 页面白茫茫一片。手动补注释补到手软——每个函数名还要想半天怎么描述。不如让工具根据函数名、参数、返回值推断出注释骨架，开发者只需要微调。
 
-纯标准库，go run . 就行。
+工作流程：先 `docgen scan <目录>` 扫描所有无注释的导出符号（函数、类型、接口、常量），然后 `docgen generate <目录> [--style godoc|short]` 自动生成注释。godoc 风格以函数名开头写一句总结，比如 "// CreateUser creates a new user with the given name and age."。short 风格只写一句简短描述。注释插入到源文件中声明正上方，原文件其他内容不动。
+
+推断逻辑——函数名用驼峰拆分（CreateUser→Create User），参数名作为操作对象，返回值类型说明返回什么。比如 func ParseCSV(r io.Reader) ([]Record, error) 生成 "// ParseCSV reads CSV data from r and returns a slice of Record."。
+
+工具也支持数据格式转换——`convert csv json`、`convert yaml toml`、`validate json`、`diff json` 作为辅助功能，用于处理配置文件和文档元数据。
+
+扫描结果先输出到终端：文件名、符号名、类型、生成的注释预览。加 `--write` 确认后写入源文件。不加则只预览不修改。
+
+目录不存在退出码 1。没有导出符号退出码 0。`--write` 且文件无法写入 "permission denied: <path>" 退出码 1。
+
+纯标准库，`go run .` 就行。

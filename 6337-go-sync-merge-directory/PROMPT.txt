@@ -1,3 +1,10 @@
-两个团队各自维护了一版文档，现在要合并。同名文件冲突处理策略可选，合并后验证完整性。
-命令有好几个子命令，每个子命令又有自己的参数，比如 sync local、sync remote、sync status。
-go build 能编译通过，不依赖第三方库。
+先用场景说明：两个团队各自维护了一版文档目录，结构大体相同但有差异，现在要合成一个权威版本。
+
+1. 命令 `merge dir --left <dir1> --right <dir2> --output <dir> --strategy skip|overwrite|rename`。同名文件冲突处理：skip 跳过保留第一个，overwrite 用第二个覆盖，rename 两个都保留并加 `_left`/`_right` 后缀。合并完成后 `merge verify --output <dir>` 验证完整性——检查每个文件可读、非空、非零字节，失败输出 `INVALID_FILE: <path> reason=<empty|unreadable|zero_bytes>`。
+
+2. 子命令结构：
+   - `sync local --source <dir> --target <dir>`：本地目录同步
+   - `sync remote --source <dir> --target <host:path>`：输出同步计划（dry-run），不实际传输
+   - `sync status --target <dir>`：显示目标目录同步状态，格式 `{"last_sync": "...", "total": 100, "synced": 98, "conflicts": 2}`
+
+3. 合并日志 `merge.log` 记录每个文件的处理方式：`MERGED: <path> from=<left|right|both>` 或 `CONFLICT: <path> strategy=<rename> saved_as=<name>`。空目录输入输出 `EMPTY_DIR: <dir>` 并退出码 0。子目录递归合并。`go build` 能编译通过，不依赖第三方库。

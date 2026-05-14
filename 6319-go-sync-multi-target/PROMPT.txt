@@ -1,4 +1,7 @@
-三台备份服务器、两台异地、一台云存储，目标多到手动同步根本管不过来。每个目标独立追踪进度，部分失败不影响其他目标。
-构建流程是解析→编译→测试→打包，测试失败不打包。
-目录结构变了以后，缓存的路径映射要刷新。
-go build 能编译通过，不依赖第三方库。
+三台备份服务器、两台异地、一台云存储——上次手动同步有个目标漏了，整整一周没备份，出了事才发现。
+
+每个目标独立追踪进度，部分失败不影响其他目标。命令 `target add --name <name> --type local|sftp|s3 --path <path>` 注册目标，`sync run --source <dir> --targets <name1,name2>` 执行同步，`sync status [--target <name>]` 查看各目标状态。状态文件 `.targets.json` 记录每个目标的上次同步时间、成功/失败文件数：`{"targets": [{"name": "backup1", "last_sync": "...", "success": 148, "failed": 2, "status": "completed"}]}`。
+
+目标不可达时输出 `TARGET_UNREACHABLE: <name> error=<reason>`，继续同步其他目标，最终退出码：0=全部成功，1=部分失败（stderr 输出失败目标列表），2=全部失败。空源目录输出 `NO_SOURCE_FILES: <dir>`。
+
+构建流程分阶段：解析（parse）→编译（compile）→测试（test）→打包（package），测试失败不打包，输出 `TEST_FAILED: <detail>`。目录结构变了以后缓存的路径映射 `.path-cache.json` 自动刷新。`go build` 能编译通过，不依赖第三方库。

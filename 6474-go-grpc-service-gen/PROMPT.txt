@@ -1,3 +1,11 @@
-不用 protobuf 编译器，直接用 Go struct 定义消息生成服务接口和桩代码。支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
+不用 protoc，直接用 Go struct 定义消息，能生成服务接口和桩代码吗？可以。从 Go struct 出发生成 gRPC 风格的接口、客户端桩、服务端桩。
 
-只依赖标准库，go build 通过就行。
+定义方式——在 .go 文件写 type <ServiceName>Server interface {...}，方法参数返回值必须是 *Request/*Response 指针。工具解析后生成服务端注册函数、客户端调用函数、请求/响应 JSON 序列化（用 encoding/json）。
+
+命令：`grpcgen generate <目录> --service <名> [--output <目录>] [--transport http|tcp]`。http 用 net/http，tcp 用 net/rpc 风格，默认 http。生成 server.go（Register+handler 分发）、client.go（NewClient+方法封装）、types.go（struct+JSON tag）。每个 RPC 方法路由 POST /<service>/<method>。
+
+辅助功能：`convert csv json`、`convert yaml toml`、`validate json`、`diff json`。
+
+目录不存在退出码 1。接口找不到 "service interface not found: <名>" 退出码 1。签名不符 "invalid method: <名> must return (*Response, error)" 退出码 1。
+
+只依赖标准库，`go build` 通过就行。

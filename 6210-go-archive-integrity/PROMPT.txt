@@ -1,3 +1,9 @@
-用户上传的 zip 包时不时有损坏的，解压到一半报错太晚。Go 写一个压缩包完整性校验：文件头损坏、CRC 校验错误这些问题提前检测出来，校验结果逐项列出。
+用户上传的 zip 包时不时有损坏的，解压到一半才报错，浪费大量处理时间——得在校验阶段就拦截掉。Go 写一个压缩包完整性校验工具，文件头损坏、CRC 校验错误、截断文件这些问题全部提前检测出来。
 
-CLI 要支持多种操作模式，格式参考 convert csv json、convert yaml toml、validate json、diff json 这种风格。不用第三方包，go build 通过就行。
+命令格式：`archive-check check <file.zip> [--output text|json]`。默认文本输出逐项列出每个文件的校验结果，格式 `[序号] <文件名>: OK / FAIL(<原因>)`。JSON 输出结构为 `{"archive": "<路径>", "entries": [{"name": "<文件名>", "status": "ok"|"fail", "error": "<原因或null>"}], "summary": {"total": N, "passed": N, "failed": N}}`。退出码 0 全部通过 / 1 存在失败条目 / 2 文件不存在或无法打开 / 3 不是 zip 格式（魔数不匹配 `PK\x03\x04`）。
+
+— 校验项包括：本地文件头签名验证、CRC-32 校验和比对、压缩/解压大小一致性、Central Directory 定位和结构完整性
+— 单个条目校验失败不中断整体流程，继续检查剩余条目
+— 空的 zip 文件（只有 Central Directory 没有条目）输出 `empty archive` 并退出码 0
+
+CLI 同时支持多种操作模式，格式参考 `convert csv json`、`convert yaml toml`、`validate json`、`diff json` 这种风格。不用第三方包，`go build` 通过就行。

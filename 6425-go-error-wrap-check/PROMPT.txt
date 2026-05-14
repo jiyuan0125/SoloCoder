@@ -1,3 +1,18 @@
-从 errors.New 迁移到 fmt.Errorf %w 的过程中漏了不少地方。检查 fmt.Errorf 加 %w 的使用，给出 errors.Is/As 的使用建议。命令有好几个子命令，比如 sync local、sync remote、sync status。
+先说背景：项目从 errors.New 迁移到 fmt.Errorf("%w", err) 做错误包装，结果漏了不少地方，有些该用 %w 的地方还在用 %v，导致 errors.Is 和 errors.As 链路断了，线上排障时根本追踪不到根因。
 
-零外部依赖，go run . 能跑。
+处理流程分几步：
+1. 扫描所有 .go 文件，找 fmt.Errorf 调用，分析格式化动词是 %w 还是 %v
+2. 对使用 %v 包装 error 的位置，建议改为 %w，输出具体文件和行号
+3. 扫描 errors.Is 和 errors.As 调用，检查对应错误链是否完整（即上游有没有正确 wrap）
+4. 对没有 errors.Is/As 检查的 error 返回值，给出告警建议
+
+命令行用法：
+- `sync local <目录>` 扫描本地 Go 项目
+- `sync remote <git-url>` 克隆远程仓库后扫描
+- `sync status` 显示上次扫描的统计摘要
+
+`sync local` 支持 `--verbose` 打印每个文件的扫描进度，`--fix` 自动将 %v 替换为 %w 并写入原文件（先备份到 .bak）。`sync remote` 指定 `--branch <名>` 选择分支，默认 main。
+
+输出格式：每个问题一行，格式 "文件:行号: [SEVERITY] 描述"。SEVERITY 分 ERROR（必须修）和 WARN（建议修）。有 `--json` 标志时输出数组，字段：file、line、severity、message、suggestion。
+
+零外部依赖，`go run .` 能跑。

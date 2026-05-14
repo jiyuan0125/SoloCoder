@@ -1,3 +1,8 @@
-四个项目用四种配置格式，写工具对接太痛苦。Go 做多格式配置读取：JSON、YAML、TOML、ENV 统一接口，自动检测格式——文件后缀或内容嗅探都行。
+四个微服务用了四种配置格式——JSON、YAML、TOML、.env——统一管理的时候头都大了。Go 做多格式配置读取器，一个 ReadConfig(path) 接口搞定所有格式，自动检测：优先看后缀（.json/.yaml/.yml/.toml/.env），后缀不认识就嗅探内容——第一个非空字符是 { 算 JSON，含 KEY=VALUE 算 .env。
 
-扫描流程：初始化→扫描中→分析中→报告生成，发现问题标记异常。依赖关系变了后下游依赖图重新计算。go build 能编译通过，不依赖第三方库。
+- `cfgread get --file config.yaml --key "server.port"` 读取单值，统一接口
+- `cfgread get --file config.json --key "server.port" --type int` 强制类型转换，失败退出码 1 报 "type mismatch: expected int, got string 'abc'"
+- `cfgread convert --input config.yaml --output-format json` 格式转换到 stdout
+- `cfgread keys --file config.toml --prefix "database"` 列出前缀下所有 key
+
+配置加载后标记状态 loaded→parsed→validated→ready，解析失败标记 error 输出 "parse error in config.yaml: line 5: invalid TOML syntax"。依赖关系：A.yaml include 了 B.toml，B 解析失败时 A 的依赖图自动标记异常。go build 编译通过，不依赖第三方库，代码分 reader.go / detector.go / converter.go / main.go。

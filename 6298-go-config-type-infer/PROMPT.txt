@@ -1,3 +1,10 @@
-TOML 和 YAML 有类型系统，但 ENV 文件全都是字符串。Go 做配置类型推断：字符串形式的数字自动转数字类型，"true"/"false" 转布尔——让不同格式之间的类型统一。
+TOML/YAML 有类型，.env 全是字符串，合在一起 "3306" 和 3306 对不上。Go 做配置类型推断——自动推断字符串值的实际类型，让不同格式的类型统一。
 
-每处理完一条记录触发统计更新，统计更新也需要读原始记录。go build 能编译通过，不依赖第三方库。
+推断规则："3306"→int，"3.14"→float，"true"/"false"→bool，"null"→null，其余 string。--strict 模式下 "123abc" 不推断保持 string。
+
+- `typeinfer process --file config.env --output config.json` 推断转换输出 JSON
+- `typeinfer check --file config.env` 统计类型 "string:15 int:8 float:2 bool:3"
+- `typeinfer diff --file-a config.env --file-b config.yaml` 类型差异对比 "key server.port: env=string, yaml=int"
+- `typeinfer cast --file config.env --key "server.port" --type int` 强制类型，失败报 "cannot cast 'abc' to int"
+
+--infer-list 开关启用逗号分隔值推断为数组 "a,b,c"→["a","b","c"]。处理每条记录后触发统计更新。go build 编译通过，不依赖第三方库。

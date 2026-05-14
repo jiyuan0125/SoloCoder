@@ -1,4 +1,7 @@
-异机房同步带宽有限，100 个大文件堵在队列里，紧急的小文件排队等半天。大文件和小文件分别排队，紧急文件可以插队。
-构建流程是解析→编译→测试→打包，测试失败不打包。
-目录结构变了以后，缓存的路径映射要刷新。
-编译 go build，标准库，不用第三方包。
+你说带宽有限就老老实实排队？不行——上次紧急的安全补丁文件排了 40 分钟才同步完，那次事故报告到现在还没写完。
+
+1. 大文件和小文件分别排队，紧急文件可以插队。命令 `queue add --file <path> --priority low|normal|high --size-threshold 10MB`，超过 size-threshold 的自动进大文件队列。`queue process --workers 4 --bandwidth 50MB/s` 启动处理，high 优先级先出队，同优先级按添加时间 FIFO。`queue status` 显示两个队列长度和当前处理进度：`{"large_queue": 15, "small_queue": 82, "processing": ["file1.zip", "file2.conf"], "bandwidth_used": "48MB/s"}`。
+
+2. 文件状态：queued → processing → completed|failed。处理失败的重入队列，最多 3 次，超过后标记 `dead` 并输出 `DEAD_LETTER: <path> retries=3 last_error=<reason>`。`queue retry --file <path>` 手动重试 dead 文件。
+
+3. 构建流程是解析→编译→测试→打包，测试失败不打包，输出 `TEST_FAILED: <case>`。目录结构变了以后缓存的路径映射 `.path-cache.json` 要刷新。队列持久化到 `.queue-state.json`，进程重启后恢复未完成任务。编译 `go build`，标准库，不用第三方包。

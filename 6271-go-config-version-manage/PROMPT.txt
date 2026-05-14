@@ -1,3 +1,7 @@
-改了配置服务挂了，想回滚但不知道上一个版本长什么样。Go 做配置版本管理：每次变更自动记录版本号和变更内容，可以回滚到任意历史版本。
+改了配置服务挂了，想回滚但不知道上一个版本长什么样——配置也得有版本管理。
 
-命令行格式参考 cli import --source csv --target db --filter 'age>18'。go build 能编译通过，不依赖第三方库。
+Go 做配置版本管理。团队上周踩了坑，配置改错导致线上故障回滚了半小时。用法：`cfg-ver init --file config.yaml` 初始化版本管理，创建 `.cfg-versions/` 目录。每次修改通过 `cfg-ver commit --file config.yaml --message "增加 redis 超时配置"` 自动记录版本号（递增整数）和变更内容。
+
+查看历史：`cfg-ver log --file config.yaml` 输出表格 版本号 | 时间 | 变更摘要 | diff 统计。回滚：`cfg-ver rollback --file config.yaml --to 3` 回滚到指定版本，当前版本自动保存为 checkpoint。diff：`cfg-ver diff --file config.yaml --from 2 --to 5` 显示两个版本间的差异，格式 `+ key: new_value` / `- key: old_value`。
+
+版本文件存在 `.cfg-versions/<文件名>/<版本号>.yaml`。文件没有 init 过报 "not versioned: run cfg-ver init first" 退出码 1。回滚到不存在的版本号报 "version not found: <N>" 退出码 2。命令行格式参考 `cli import --source csv --target db`。`go build` 能编译通过，不依赖第三方库。

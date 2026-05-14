@@ -1,3 +1,9 @@
-YAML 锚点 &ref 和 *ref 写法其他工具解析不了，要展开才能用。Go 从零写 YAML 锚点展开：展开后的 YAML 不包含锚点语法，方便下游工具直接处理。
+问题出在这里：同事用 YAML 锚点 &defaults 和 *defaults 复用了数据库连接配置，结果 CI 里的 Python yamllint 直接报错不认这个语法，k8s configmap 也解析不了。得在进入下游流程之前把锚点全部展开。
 
-带备份策略管理，按策略自动执行备份。不用第三方包，go build 通过就行。代码分几个文件，别全塞 main.go。
+Go 从零写一个 YAML 锚点展开器，读取含锚点的 YAML，输出完全展开的等价 YAML——输出里不存在任何 & 或 * 标记，所有引用位置替换为实际内容。锚点引用了不存在的 anchor name 要报错并退出码 2，错误格式 "anchor not found: db_defaults"。嵌套锚点（锚点里引用另一个锚点）也要正确处理。
+
+1. `anchor expand input.yaml -o output.yaml`，省略 -o 则 stdout 输出
+2. `anchor check input.yaml` 只检测有无锚点不展开，退出码 0 表示包含锚点，3 表示无锚点
+3. `anchor list input.yaml` 列出所有定义的锚点名称和行号，输出格式 `anchor_name: line_number`
+
+备份策略管理：按策略名存储备份规则（策略文件 backup.yaml 里 strategy 字段），`anchor backup --strategy daily` 自动执行对应策略。纯标准库实现，go build 通过，代码拆成 parser.go / expander.go / backup.go / main.go。

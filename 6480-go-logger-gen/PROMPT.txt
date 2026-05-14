@@ -1,5 +1,11 @@
-项目里的日志格式乱七八糟，有的用 fmt.Println 有的用 log。生成统一的日志级别、格式化、输出目标，上下文字段支持。
+项目里日志有多乱？fmt.Println 调试、log.Fatal 直接退出，生产出了问题查不到上下文。
 
-多级命令：config get、config set、config list、config env switch。
+生成统一日志库。五个级别 DEBUG/INFO/WARN/ERROR/FATAL。格式化含时间戳（RFC3339）、级别、调用位置（文件:行号）、消息、上下文字段。输出目标 stdout/stderr/文件。支持 WithFields(key, value) 链式附加字段。
+
+命令：`loggergen init [--level INFO] [--format json|text] [--output stdout]`。json 输出 {"time":"...","level":"INFO","msg":"...","file":"main.go:42","fields":{...}}，text 输出 [时间] INFO main.go:42 message。
+
+配置：`config get/set <key> <value>`、`config list`、`config env switch dev|prod`（dev: DEBUG+text+stdout，prod: INFO+json+stderr）。
+
+--format 不合法 "unsupported format, use json or text" 退出码 1。--level 不合法退出码 1。FATAL 输出后 os.Exit(1)。
 
 不用第三方包，编译通过就行。

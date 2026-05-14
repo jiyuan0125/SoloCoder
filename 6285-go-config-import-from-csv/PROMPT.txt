@@ -1,3 +1,8 @@
-业务方给了个 CSV 表格让把里面的配置导入系统，手动录入 500 行会死人的。Go 命令行做 CSV 导入配置：CSV 的列映射到配置键路径，导入前先预览确认。
+业务方甩过来一个 500 行的 CSV 说是新系统的配置参数，手动录入？那我宁愿辞职。Go 做 CSV 配置导入工具——CSV 的列名通过映射文件对应到配置键路径，导入前先预览确认，确认后才真正写入。
 
-命令格式参考 tool action target options，比如 tool scan dir --depth 3。不用第三方包，go build 通过就行。
+CLI 格式 `tool action target options`：
+- `tool import config --source params.csv --mapping columns.yaml --target app.yaml --preview` 预览模式，输出表格：CSV列名 | 配置路径 | 导入值 | 状态（新增/覆盖/跳过），不写文件
+- `tool import config --source params.csv --mapping columns.yaml --target app.yaml --confirm` 确认导入，覆盖已有的值，输出统计 "imported: 480, skipped: 15, errors: 5"
+- `tool validate csv --source params.csv --mapping columns.yaml` 校验 CSV 数据，类型不匹配的行报错 "row 23: expected integer for column 'port', got 'abc'"
+
+映射文件 columns.yaml 格式：csv_column: config.path，如 "端口号: server.port"。CSV 编码支持 UTF-8 和 GBK，自动检测 BOM。空行跳过不报错。源文件不存在退出码 1，映射文件解析失败退出码 2。不用第三方包，go build 通过就行。

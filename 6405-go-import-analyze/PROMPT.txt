@@ -1,7 +1,11 @@
-第三方依赖引入了二十多个，该清理一下了。统计每个包被引用多少次，看看哪些第三方依赖可以直接换成标准库。
+第三方依赖引入了二十多个，该清理——安全扫描报告说 5 个有漏洞，3 个两年没更新了。
 
-命令格式 tool action target options，比如 tool scan dir --depth 3。
+1. `import stat --dir <dir>` 扫描 `.go` 文件，统计每个包引用次数，降序输出：`包路径|引用次数|类型(stdlib/third-party/internal)`。`--format json` 输出 `{"imports": [{"path": "fmt", "count": 15, "type": "stdlib"}]}`。
 
-校验完自动更新统计信息，首次运行没有历史数据。
+2. `import suggest --dir <dir>` 找可替换包（`pkg/errors`→`errors`、`yaml.v2`→`encoding/json`），输出 `REPLACEABLE: <pkg> -> <stdlib> used_in=<n> files`。
 
-不用第三方包，编译通过就行。
+3. `tool scan dir --depth 3` 限制深度，`tool unused --dir <dir>` 检测未使用包 `UNUSED: <path> imported_by=<file>`。
+
+4. 自动更新 `.import-stats.json`，首次创建。`{"scan_time": "...", "total": 30, "stdlib": 15, "third_party": 10}`。
+
+无 Go 文件 `NO_SOURCES: <dir>`。不用第三方包，`go build` 过就行。

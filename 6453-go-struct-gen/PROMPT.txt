@@ -1,5 +1,11 @@
-前端给的接口文档是 JSON 格式，后端要一个个手动转成 struct。字段类型映射、json 标签、验证标签自动生成，嵌套结构递归处理。
+前端给的接口文档是 JSON Schema，后端一个个手敲 Go struct，嵌套三层花了半小时。类型映射也烦——number 对应 int 还是 float，nullable 怎么表示。
 
-命令格式 tool action target options，比如 tool scan dir --depth 3。校验完成后自动更新统计信息，首次运行没有历史统计。
+工具从 JSON 或 JSON Schema 生成 Go struct。命令：`structgen scan <输入文件> --package <包名> [--output <文件>] [--tags json,db]`。比如 `structgen scan api.json --package model --output model.go --tags json,db`。自动判断输入是 JSON 示例还是 Schema。
+
+类型映射——string→string、number→float64、integer→int64、boolean→bool、array→[]T、object→嵌套 struct。null 出现过的用指针 *T。json tag 给指针和切片加 omitempty。指定 --tags db 同时生成 db:"column_name"。嵌套超过 3 层自动提取为顶层 struct。
+
+输出自动加 package 声明。文件不存在 "input file not found: <path>" 退出码 1。JSON 解析失败 "invalid JSON: <错误>" 退出码 1。空 JSON（{}）只生成空 struct。
+
+统计写入 .structgen-stats.json，记录 struct 数、字段数、嵌套深度。首次无统计跳过。
 
 不用第三方包，编译通过就行。

@@ -1,3 +1,7 @@
-配置改了要触发重新加载，不想每次手动操作。Go 命令行做配置变更回调：回调可以是命令或脚本，支持变更类型过滤——只监听关心的键，其他变动忽略。
+配置中心改了个阈值，下游服务不知道要重新加载，结果流量还是按旧阈值走。得有个东西帮我们盯着——配置文件一变就自动触发回调，Go 命令行实现。
 
-管理同步源和同步任务，创建任务关联到同步源。go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go。
+回调可以是 shell 命令或脚本路径。变更类型过滤支持三种粒度：--watch-key "database.port" 只监听特定键的变化，--watch-section "database" 监听整个段，不传就全部变更都触发。触发时把变更详情通过环境变量传给回调脚本：$CFG_CHANGED_KEY、$CFG_OLD_VALUE、$CFG_NEW_VALUE，回调退出码非零时工具打印警告但不退出。
+
+`cfg-watch start --file app.yaml --callback "/usr/local/bin/reload.sh" --watch-key "server.port"` 启动监听，Ctrl+C 停止。`cfg-watch history --file app.yaml` 查看变更历史，输出表格：时间戳 | 变更键 | 旧值 | 新值，按时间倒序，默认最近 20 条。`cfg-watch test --callback "/usr/local/bin/reload.sh"` 手动模拟一次变更测试回调是否正常。
+
+同步源管理：`sync-source add --name "生产环境" --path /etc/app/config.yaml`，`sync-source list` 列出所有注册的同步源。创建任务关联到同步源：`sync-task create --source "生产环境" --pattern "*.yaml"`。纯标准库，go build 编译通过，代码拆成 watcher.go / callback.go / sync.go / main.go。

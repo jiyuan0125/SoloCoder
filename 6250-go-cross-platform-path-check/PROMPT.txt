@@ -1,3 +1,7 @@
-项目在 Linux 上跑得好好的，同事 Windows 一拉就崩——路径里有冒号和空格。Go 命令行做跨平台路径检查：Windows 不允许的字符、大小写冲突问题检出，列出有问题的路径和修复建议。
+项目在 Linux 跑得好好的，同事 Windows 一拉就崩——路径里有冒号和空格，还有人用中文目录名。得写个跨平台路径检查工具把这些坑提前找出来。
 
-支持多种操作模式，参考 convert csv json、convert yaml toml、validate json、diff json 这种风格。go build 能编译通过，不依赖第三方库。
+Go 命令行工具，用法：`pathck scan <目录>` 检查所有文件路径，`pathck check <路径列表文件>` 批量检查指定路径，`pathck fix --input report.json --strategy rename|report` 自动修复或只出报告。
+
+检查规则——Windows 不允许的字符 `<>:"|?*`，保留名 `CON PRN AUX NUL COM1-COM9 LPT1-LPT9`，大小写冲突（同一目录下 `File.txt` 和 `file.txt`），超长路径（超过 260 字符），尾部空格或点号。输出每条结果：路径 | 问题类型 | 问题值 | 建议修复。JSON 格式 `{"path": "...", "issue": "reserved_name", "detail": "CON", "suggestion": "rename to CON_file"}`。
+
+退出码 0 没问题，1 有问题，2 参数错误。空目录输出 "0 paths checked" 退出码 0。加 `--platform windows|linux|mac` 指定目标平台（默认 windows）。加 `--format json` 输出 JSON 数组。fix 模式 rename 策略把非法字符替换为 `_` 并输出 "renamed: <旧> -> <新>"。扫描完输出汇总 "total: N, issues: N, by type: {...}"。支持多种操作模式参考 `convert csv json` 风格。`go build` 能编译通过，不依赖第三方库。

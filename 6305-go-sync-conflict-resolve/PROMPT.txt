@@ -1,4 +1,7 @@
-三台服务器之间的配置文件同步，手动 scp 经常搞出冲突。策略得明确：保留最新、保留最大、保留两侧。
-无法自动解决的冲突不能静默覆盖，要弹出来让人选。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。
-go run . 能跑，纯标准库实现。
+三台服务器之间的配置文件同步，手动 scp 经常搞出冲突——上周 nginx.conf 被覆盖了两次，线上差点出事故。
+
+策略得明确，命令行用 `resolve --strategy newest|largest|both` 指定冲突解决策略。newest 保留最新 mtime 的文件，largest 保留字节数最大的，both 两边都保留并重命名（加 `.conflict` 后缀）。无法自动解决的冲突不能静默覆盖，终端输出冲突列表让用户选，格式是 `CONFLICT: <filepath> [local=<size> remote=<size>]`，退出码返回 2 表示有未解决冲突。
+
+文件处理有几个阶段：待处理（pending）、处理中（syncing）、校验中（verifying）、已完成（done），用 JSON 状态文件记录，字段包含 `{"file": "path", "status": "syncing", "mtime": 1700000000, "size": 1024, "checksum": "sha256hex"}`。校验失败（checksum 不匹配）回到处理中重试，最多重试 3 次，超过后标记为 `failed` 并输出错误信息 `VERIFY_FAILED: <filepath> checksum mismatch, retries=3`。空文件和 0 字节文件直接跳过，输出 `SKIP: <filepath> empty file`。
+
+`go run .` 能跑，纯标准库实现，子命令包括 `sync --source <dir> --target <dir>` 和 `status [--file <path>]`，status 输出当前各文件状态表格。退出码：0=全部成功，1=有错误，2=有未解决冲突。

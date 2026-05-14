@@ -1,3 +1,5 @@
-前端同事说页面顶部总有一行空白，查了半天是文件带 BOM 头。Go 命令行工具做 BOM 标记检查和清理：支持批量处理目录，UTF-8 BOM 和 UTF-16 BOM 都要识别和处理。
+前端同事说页面顶部总有一行空白，查了半天才发现是 CSS 文件带了 BOM 头——浏览器把 BOM 当空白渲染了。这种隐藏坑必须批量清掉。Go 命令行工具做 BOM 标记检查和清理，支持批量处理整个目录。
 
-每处理完一个目录更新进度计数，遇到空目录跳过但计数器还是得往前走。纯标准库，go run . 能跑。
+CLI 用法分两种模式：`bom check <目录> [--recursive]` 只检查不修改，`bom strip <目录> [--recursive]` 检查并移除 BOM。输出格式每行一个文件：`<路径>: <BOM类型>` 或 `<路径>: no BOM`。加 `--output json` 输出数组，每项含 path、bom_type（值为 `"UTF-8"`、`"UTF-16 LE"`、`"UTF-16 BE"`、`"UTF-32 LE"`、`"UTF-32 BE"`、`"none"`）、size_bytes（BOM 占用的字节数）。strip 模式下移除后打印 `stripped: <路径> (<BOM类型>)`。退出码：0 无 BOM / 1 存在 BOM（check 模式）/ 2 目录不存在。识别的 BOM 头：`\xEF\xBB\xBF`（UTF-8）、`\xFF\xFE`（UTF-16 LE）、`\xFE\xFF`（UTF-16 BE）、`\xFF\xFE\x00\x00`（UTF-32 LE）、`\x00\x00\xFE\xFF`（UTF-32 BE）。
+
+每处理完一个目录更新进度计数，遇到空目录跳过但计数器还是得往前走。纯标准库，`go run .` 能跑。

@@ -1,3 +1,7 @@
-备份了 300 多个文件，哪个备份了哪个没备份根本记不清。做个清单管理：记录每个文件的路径、大小、哈希、备份时间，从清单快速查找。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-go build 编译过就行，全标准库。
+备份了 300 多个文件，哪个备份了哪个没备份根本记不清——上次恢复的时候才发现有两个关键配置漏了，你能信？
+
+做个清单管理工具。命令 `manifest add --dir <path>` 扫描目录下所有文件记录到清单，每条记录字段：`{"path": "relative/path", "size": 1024, "sha256": "hex", "backup_time": "2024-01-01T02:00:00Z", "status": "backed_up"}`。`manifest search --path <pattern>` 按路径模式查找（支持 `*` 通配），`manifest verify --dir <path>` 对比当前文件和清单记录，不一致的输出 `MISMATCH: <path> expected_hash=<h1> actual_hash=<h2>`。`manifest diff --left <manifest1> --right <manifest2>` 比较两份清单差异。
+
+清单文件 `manifest.json` 存在目标目录根下。文件被修改但未更新清单时，status 变为 `stale`。空目录扫描输出 `EMPTY_DIR: <path> no files found` 并正常退出。找不到清单文件时 `manifest verify` 输出 `NO_MANIFEST: <dir>` 退出码 1。
+
+嵌套命令结构：`project create --name <name>` 初始化项目，`project build` 编译，`project test run` 跑测试，`project test coverage` 输出覆盖率。`go build` 编译过就行，全标准库。

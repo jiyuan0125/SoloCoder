@@ -1,3 +1,9 @@
-线上内存泄漏查了两天，最后发现是 goroutine 没关干净。检测未关闭的 channel、缺少 WaitGroup Add 的 goroutine。命令行格式：cli import --source csv --target db --filter 'age>18'。
+先解析源码 → 构建 AST → 检测泄漏模式 → 输出报告。
 
-纯标准库写的，go run . 能跑。
+1. `goroutine scan --dir <dir>` 检测三类问题：未关闭 channel（`make(chan T)` 无 `close` → `UNCLOSED_CHANNEL: <file>:<line> ch=<name>`），缺少 WaitGroup（`go func()` 无 `wg.Add` → `MISSING_WAITGROUP: <file>:<line>`），泄漏 timer/ticker（无 `Stop()` → `LEAKED_TIMER: <file>:<line> type=<ticker|timer>`）。
+
+2. `cli import --source <dir> --target <report.json> --filter '<expr>'` 按路径或类型筛选。`cli report --input <report.json> --format text|json`，text 按类型分组，JSON `{"file": "p", "issues": [{"type": "unclosed_channel", "line": 42}]}`。
+
+3. 覆盖 `go func()`、`go method()`、匿名函数。行尾 `//nolint:goroutine` 跳过。
+
+无 Go 文件 `NO_SOURCES: <dir>`。无问题 `CLEAN: no leaks`。纯标准库，`go run .`。

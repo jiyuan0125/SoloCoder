@@ -1,4 +1,9 @@
-博客从 WordPress 迁移到静态站点，200 多篇文章要从 HTML 转成 Markdown。表格、列表、代码块要正确转换，保留语义丢掉样式。
-模板管理：用已有模板生成新文件，模板可以是任意格式。
-纯标准库，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+博客从 WordPress 迁移静态站点，200 多篇文章要从 HTML 转 Markdown，手动转了 5 篇就不想干了。
+
+1. 命令 `convert html2md --input <file|dir> --output <file|dir>`，输入目录时递归 `.html/.htm`。表格转 `| col | col |`，列表转 `- item`，`<pre><code>` 转围栏代码块保留 language class，`<h1>`~`<h6>` 转 `#`~`######`，`<strong>` 转 `**`，`<a>` 转 `[text](url)`，`<img>` 转 `![alt](src)`。内联样式丢弃。不支持标签保留原样并输出 `UNSUPPORTED_TAG: <tag> in <file> line=<n>`。
+
+2. 统计 `{"total": 200, "success": 195, "warning": 3, "failed": 2}`。空文件输出 `SKIP: <path> empty`。
+
+3. 模板：`template save --name <n> --file <p>`，`template apply --name <n> --output <p> --vars '{"k":"v"}'`，变量语法 `{{.key}}`。
+
+纯标准库，`go run .` 能跑，至少拆 main.go、converter.go、template.go、stats.go。

@@ -1,5 +1,9 @@
-接口改了但实现没跟着改，编译时不一定报错，线上才炸。未实现的接口方法列出来，方法签名变更也检测一下。
+接口改了但实现没跟着改，编译时不一定报错，线上才炸——上次 `io.Reader` 的返回值签名变了，实现了旧接口的类型编译通过了但运行时类型断言失败。
 
-支持嵌套命令：project create、project build、project test run、project test coverage。
+1. 检测命令 `iface check --dir <project-dir>` 扫描所有接口定义和类型声明，列出未实现接口方法的类型。输出格式：`UNIMPLEMENTED: <type> missing <interface>.<method>(<signature>)`。方法签名变更检测 `iface diff --old <file> --new <file>`，比较接口定义变化，输出 `SIGNATURE_CHANGED: <interface>.<method> old=<sig1> new=<sig2>`。
 
-go build 能过，不依赖第三方库。
+2. 嵌套命令结构：`project create --name <name>` 初始化项目（创建 `go.mod`），`project build` 编译，`project test run` 跑测试，`project test coverage` 输出覆盖率摘要。测试命令先跑 `iface check`，有未实现方法时不执行测试。
+
+3. 接口嵌入（interface 里 embed 另一个 interface）也要展开检查——被嵌入接口的方法全部列出。空接口（无方法）标记为 `EMPTY_INTERFACE: <name>` 不报错但记录。结构体嵌入了接口但只实现了部分方法时，列出缺失方法。
+
+4. 无接口定义输出 `NO_INTERFACES: <dir>`。所有接口都已实现输出 `ALL_IMPLEMENTED: <count> interfaces checked`。`go build` 能过，不依赖第三方库。

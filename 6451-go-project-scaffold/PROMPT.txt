@@ -1,5 +1,11 @@
-新人入职搭环境要半天，项目结构全靠复制粘贴。生成模板包含 main.go、go.mod、Makefile，项目名和模块路径通过参数指定。
+新人入职搭环境要半天，项目结构全靠复制粘贴，go.mod 里模块路径经常忘改。一个命令生成标准骨架吧。
 
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+用法：`scaffold create <项目名> --module <模块路径> [--output <目录>]`。比如 `scaffold create myapp --module github.com/user/myapp --output ./myapp`。省略 --output 在当前目录创建子目录。
 
-go build 能过，不依赖第三方库。
+生成内容——main.go 带 CLI 骨架（flag 标准库）、go.mod 填好模块路径和 Go 版本、Makefile 含 build/test/clean/lint 四个目标（build 用 go build -o bin/<名>，test 用 go test ./... -cover，clean 删 bin/）、README.md 一行项目名。目录建 cmd/、internal/、pkg/，cmd/ 下放 main.go。
+
+不传 --module 报 "module path required" 退出码 1。输出目录非空 "directory not empty: <path>" 退出码 1。模块路径不以域名开头给 warning 但继续。
+
+还支持 `scaffold list` 列模板、`scaffold inspect <目录>` 检查缺什么文件。命令分组：file convert、file check、file merge 作为附加功能。
+
+`go build` 能过，不依赖第三方库。

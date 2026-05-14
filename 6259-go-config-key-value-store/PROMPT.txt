@@ -1,3 +1,7 @@
-配置散落在十几个文件里，找某个配置项要 grep 半天。Go 搞配置 KV 存储：get、set、delete、list 四个操作，配置持久化到文件，重启不丢。
+配置散落在十几个文件里，找个配置项要 grep 半天，还经常 grep 漏——到底 max_connections 写在哪个文件里？
 
-CLI 分几个命令组：file convert、file check、file merge，每组下面有具体操作。go build 能编译通过，不依赖第三方库。
+2. 用 Go 搞配置 KV 存储。命令：`cfgkv get <key>` 查值，`cfgkv set <key> <value>` 设值，`cfgkv delete <key>` 删除，`cfgkv list [--prefix db.]` 按前缀列出。所有操作持久化到 `~/.cfgkv/store.json`，文件不存在自动创建，重启不丢数据。
+3. key 支持 `/` 分隔的路径表示嵌套，`set db/mysql/host 127.0.0.1` 等同于写入 `{"db":{"mysql":{"host":"127.0.0.1"}}}`。`list` 输出每行一个 `key=value`，加 `--format json` 输出结构化 JSON。
+4. 值类型自动推断：纯数字存为 number，`true`/`false` 存为 boolean，其余存为 string。`get` 不存在的 key 输出 "key not found: <key>" 到 stderr 退出码 1。`delete` 不存在的 key 也成功退出码 0。`set` 覆盖已有值时输出旧值到 stderr "overwritten: <key>=<旧值>"。
+
+CLI 分几个命令组：`file convert`、`file check`、`file merge`，每组下面有具体操作。`go build` 能编译通过，不依赖第三方库。

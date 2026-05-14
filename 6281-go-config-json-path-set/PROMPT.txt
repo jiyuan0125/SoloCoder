@@ -1,3 +1,9 @@
-改 JSON 配置的某个嵌套字段要用 jq 写一长串表达式，还经常写错。Go 做 JSON 配置路径操作：按路径读写，中间路径不存在就自动创建，也支持按路径删除。
+先用场景说清楚问题：运维同事改 JSON 配置里的一个嵌套字段，jq 表达式写了三遍都写错，最后直接 vim 手改差点把 JSON 结构搞坏。Go 做一个 JSON 配置路径操作工具，用点分隔路径定位字段——`jpath set config.json "server.database.pool.max" 20`，中间路径 server.database 不存在就自动创建中间对象。`jpath get config.json "server.database.pool.max"` 读值，`jpath del config.json "server.database.pool"` 删除整个 pool 对象。
 
-多级子命令，每个有自己的参数，参考 sync local、sync remote、sync status。处理完主文件后生成摘要，无内容场景正常处理。纯标准库实现，go run . 能跑。
+子命令结构参考 git 风格：
+- `jpath get <file> <path>` — 输出裸值，路径不存在退出码 1，报 "path not found: server.database.pool.max"
+- `jpath set <file> <path> <value>` — 值自动推断类型：纯数字存为 number，true/false 存为 boolean，其余存为 string。文件不存在退出码 2
+- `jpath del <file> <path>` — 删除后重写文件，pretty-print 缩进 2 空格
+- `jpath summary <file>` — 输出摘要：顶层 key 个数、最大嵌套深度、总 key 数量，格式 `top_keys:5 max_depth:3 total_keys:12`
+
+空 JSON 文件（只有 {} 或完全空）各种操作都正常处理不 panic。操作完保留原文件格式风格（缩进用 tab 还是 space 跟原来一致）。纯标准库实现，go run . 能跑。

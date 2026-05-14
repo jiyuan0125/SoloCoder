@@ -1,3 +1,7 @@
-timeout 配置项写成了 "thirty" 而不是 30，运行时解析失败。Go 命令行做配置值类型检查：字符串、数字、布尔、数组、对象——类型不对的列出具体位置和期望类型。
+timeout 配置项写成了 "thirty" 而不是 30，运行时才炸——类型错误能不能在加载配置的时候就拦住？
 
-导入数据后自动跑一致性检查，一致性检查需要读取刚导入的数据。纯标准库实现，go run . 能跑。
+Go 命令行做配置值类型检查。用法：`cfg-typecheck check --input config.yaml --rules rules.yaml`。rules 文件定义每个字段的期望类型：`string`、`integer`、`number`、`boolean`、`array`、`object`、`enum(a,b,c)`、`pattern:<正则>`。
+
+输出格式：每个错误一行 `TYPE_ERROR <路径> expected <期望类型> got <实际类型>: <实际值>`。比如 `TYPE_ERROR /timeout expected integer got string: "thirty"`。退出码 0 全部通过，1 有类型错误，2 规则文件错误，3 输入配置解析错误。
+
+加 `--strict` 把 warning 也当 error 处理。加 `--format json` 输出 `{"errors": [...], "warnings": [...], "totalChecked": N}`。空值（null/缺失）的检查取决于规则中 `required: true` 标记。自动推断无规则字段的类型并输出 `INFO <路径>: inferred type <类型>`。导入数据后自动跑一致性检查，一致性检查需要读取刚导入的数据。纯标准库实现，`go run .` 能跑。

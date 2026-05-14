@@ -1,3 +1,12 @@
-年龄字段出现了负数和 999，这种脏数据没拦住就进库了。Go CLI 做数据范围检查：范围通过参数指定，超出范围的记录列出来。
+年龄字段出现负数和 999，这种脏数据没拦住就进库了——数据质量问题不能事后补救，得在入口就卡住。Go CLI 做数据范围检查工具，范围通过参数指定，超出范围的记录列出来。
 
-命令行设计参考 cli import --source csv --target db --filter 'age>18' 这种格式。纯标准库实现，go run . 能跑。
+— 命令格式：`range-check check <文件> --field <字段名> --min <最小值> --max <最大值> [--type int|float|date] [--output text|json]`
+— `--type int` 按整数比较，`--type float` 按浮点比较，`--type date` 按 ISO 日期比较（`YYYY-MM-DD`），默认 int
+— 文本输出每条违规一行：`[行号] <字段名>=<值> (范围: <最小值>~<最大值>)`
+— JSON 输出 `{"file": "<路径>", "field": "<字段名>", "range": {"min": ..., "max": ...}, "violations": [{"row": N, "value": ...}]}`
+— 退出码：0 全部在范围内 / 1 存在越界值 / 2 文件不存在 / 3 字段不存在或参数错误
+— 输入支持 CSV 和 JSON Lines 格式，通过文件扩展名自动判断
+— 空值或非数值字段报 `invalid value at row N` 跳过该行继续检查
+— 只指定 `--min` 不指定 `--max` 时只检查下界，反之亦然
+
+命令行设计参考 `cli import --source csv --target db --filter 'age>18'` 这种格式。纯标准库实现，`go run .` 能跑。

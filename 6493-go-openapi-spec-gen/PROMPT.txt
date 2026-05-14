@@ -1,5 +1,11 @@
-API 文档和代码总是不同步，前端天天追着问。解析路由和参数定义，输出 JSON 格式的 OpenAPI 规范。
+API 文档和代码不同步，前端天天问"这接口改了吗"。从 Go 代码直接生成 OpenAPI 3.0 JSON。
 
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。数据源 schema 变更后，已有的转换规则要适配新 schema。
+解析路由注册和参数定义，输出规范文件。流水线四阶段：录入（扫描 http.HandleFunc/mux.Handle 等模式）→清洗（提取路径、方法、handler 名）→校验（检查参数类型信息）→发布（输出 JSON）。校验不过退回清洗，打印 "validation failed: <handler> missing type for <参数>"。
 
-go build 能过，不依赖第三方库。
+路由变了自动适配已有 spec 的 operationId，diff 输出到 stderr：added/modified/removed 各几条。
+
+命令：`openapigen generate <目录> --format json|yaml --output <文件>`。spec 含 info（title 从 go.mod）、paths（每路由一个 entry）、components/schemas（从 struct tag 提取）。`json:"name"` 映射 schema 属性，`validate:"required"` 映射 required。yaml 用缩进手写不依赖第三方库。
+
+目录不存在退出码 1。无路由 "no route definitions found" 退出码 0。
+
+`go build` 能过，不依赖第三方库。

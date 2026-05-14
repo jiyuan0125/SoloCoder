@@ -1,3 +1,11 @@
-热点数据每次都查库，数据库扛不住。生成内存缓存，TTL 和 LRU 淘汰策略配好，缓存键自动生成。命令行格式：cli import --source csv --target db --filter 'age>18'。
+数据库扛住了，但热点数据每次查库，QPS 上去延迟就飙。加缓存又不想引 Redis——进程内缓存够了。
 
-标准库搞定，go run . 跑起来。
+生成内存缓存层，TTL 过期 + LRU 淘汰。命令：`cachegen generate <目录> --type <实体名> --key <键字段> [--ttl 5m] [--max-size 1000] [--output <文件>]`。比如 `cachegen generate ./model --type User --key ID --ttl 10m --max-size 5000`。
+
+生成代码含 Cache struct（map+双向链表 LRU）、Get(key) (value, bool) 命中刷新 TTL、Set(key, value) 超容量淘汰、Delete/Clear 方法、后台 goroutine 定期清理过期（间隔 TTL/2）。缓存键自动拼接 "Type:KeyValue"。
+
+TTL 支持 s/m/h 后缀。--max-size 0 不限容量。--key 支持逗号分隔组合键。`cachegen stats` 统计已生成缓存，`cachegen benchmark` 跑 1 万次 set+get 打印耗时。
+
+类型不存在 "type not found: <名>" 退出码 1。TTL 格式错退出码 1。
+
+标准库搞定，`go run .` 跑起来。

@@ -1,3 +1,11 @@
-同事写了 JSON5 格式的配置带注释和尾逗号，Go 的标准 JSON 解析器直接报错。Go 做 JSON5 兼容处理：去掉注释和尾逗号，转换成标准 JSON 让标准库能解析。
+前端同事写了个 tsconfig.json5，里面全是注释和尾逗号，Go 标准 JSON 解析器直接炸。后端服务要读这个配置还得先手动清理一遍，费劲。Go 做 JSON5 兼容层——剥离单行注释 //、块注释 /* */、对象和数组末尾多余逗号，输出标准 JSON 让 encoding/json 能直接解析。
 
-CLI 分几个命令组：file convert、file check、file merge，每组下有具体操作。纯标准库实现，go run . 能跑。
+- `json5 convert input.json5 -o output.json` 转换输出标准 JSON
+- `json5 convert input.json5 --pretty` 输出 pretty-print 格式，缩进 2 空格
+- `json5 check input.json5` 只检查是否包含 JSON5 特性，输出 "comments: 5, trailing-commas: 3"，无 JSON5 特性输出 "standard JSON"
+- `json5 strip input.json5 -o clean.json` 只去注释不去尾逗号
+- `json5 diff input.json5 input.json` 对比 JSON5 原文和转换后结果，确认没有丢失内容
+
+字符串内的 // 和 /* 不当注释处理（在引号内的）。尾逗号处理：{ "a": 1, } 末尾逗号去掉，[1, 2, ] 也一样。转换后用标准库 json.Unmarshal 再 json.Marshal 确保输出是合法 JSON。输入文件不存在退出码 1，解析失败退出码 2 报 "parse error at line 5: unterminated string"。
+
+CLI 命令分组：file convert / file check / file merge，每组下有具体操作。纯标准库实现，go run . 能跑。

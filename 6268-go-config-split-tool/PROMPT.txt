@@ -1,3 +1,10 @@
-一个 2000 行的 YAML 配置文件，谁都不敢改了。Go 写配置拆分：按顶层键名拆分成多个文件，拆分后的文件按模块命名——数据库配置、缓存配置、日志配置各一个文件。
+一个 2000 行的 YAML 配置文件，谁都不敢改——改一个地方怕影响别的模块。得拆开，每个模块独立维护。
 
-子命令结构参考 db migrate、db rollback、db status、db seed。go build 能编译通过，不依赖第三方库。
+Go 写配置拆分工具，分三步：
+1. `cfg-split split --input mega.yaml --by top-level` 按顶层键名拆分，生成 `database.yaml`、`cache.yaml`、`logging.yaml` 等文件
+2. `cfg-split split --input mega.yaml --by key-names --keys database,cache,logging --output-dir ./configs/` 指定拆分哪些键到独立文件
+3. `cfg-split join --input-dir ./configs/ --output merged.yaml` 反向合并回来
+
+拆分时保留原文件的注释和格式。生成一个 `manifest.json` 记录拆分映射 `{"source": "mega.yaml", "parts": [{"key": "database", "file": "database.yaml"}, ...]}`，方便后续 join 操作。文件已存在加 `--force` 覆盖，否则报 "file exists: <路径>" 退出码 3。
+
+拆分空键跳过并输出 "skipped empty key: <名字>"。join 时某个 part 文件缺失报 "missing part: <文件名>" 退出码 2。子命令结构参考 `db migrate`、`db rollback`、`db status` 风格。`go build` 能编译通过，不依赖第三方库。

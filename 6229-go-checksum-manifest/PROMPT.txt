@@ -1,3 +1,12 @@
-交付清单里要附带每个文件的哈希值，手动算太慢。Go 生成校验清单：每条包含文件路径、大小、哈希值。增量更新——上次算过的没变就不重算了，只算新变更的文件。
+交付清单里要附带每个文件的哈希值，手动算 sha256sum 太慢——100 个文件一个一个跑，算完人都下班了。Go 生成校验清单，每条包含文件路径、大小、哈希值，而且要支持增量更新：上次算过的没变就不重算，只处理新变更的文件。
 
-命令格式参考 tool action target options，比如 tool scan dir --depth 3。校验完自动更新统计信息，首次跑没有历史统计，要处理好。go build 能编译通过，不依赖第三方库。
+— 命令：`checksum-gen generate <目录> [--algo sha256|md5|sha1] [--manifest manifest.json] [--output text|json]`
+— `--algo` 指定哈希算法，默认 sha256
+— `--manifest` 指定已有的清单文件路径，存在时做增量（对比文件修改时间和大小，未变的不重算），不存在时全量生成
+— 清单文件格式（JSON）：`{"algorithm": "sha256", "generated": "<ISO时间>", "entries": [{"path": "<相对路径>", "size": N, "hash": "<哈希值>"}]}`
+— 文本输出每行：`<哈希值>  <文件大小>  <相对路径>`
+— 退出码：0 成功 / 2 目录不存在 / 3 不支持的算法
+— 文件读取错误时 stderr 输出 `error reading <路径>: <原因>`，跳过该文件继续处理
+— 增量模式下输出统计：`total: N, unchanged: M, updated: K, new: L`
+
+命令格式参考 `tool action target options`，比如 `tool scan dir --depth 3`。校验完自动更新统计信息，首次跑没有历史统计要创建新文件。go build 能编译通过，不依赖第三方库。

@@ -1,3 +1,7 @@
-三个微服务的配置要合成一份，嵌套的配置项直接覆盖就丢数据了。Go CLI 做配置合并：嵌套配置深度合并，数组合并策略可选——要么覆盖要么拼接，按场景来。
+三个微服务的配置要合成一份，嵌套的配置项直接覆盖就丢数据了，数组合并逻辑也不清晰——得有个靠谱的合并工具。
 
-合并完成后自动通知下游系统，如果是本地开发模式没有下游配置就跳过通知。纯标准库实现，go run . 能跑。
+Go CLI 工具，用法：`config-merge merge -f base.yaml -f override1.yaml -f override2.yaml -o merged.yaml`，按文件顺序优先级递增合并。数组合并策略通过 `--array-strategy` 指定：`replace`（默认，后面的覆盖前面的）、`append`（拼接）、`unique`（去重拼接）。
+
+合并规则：标量值后者覆盖前者，对象递归合并，数组按策略处理。冲突字段无法自动合并时输出警告 "conflict at path <路径>: kept value from <文件名>"，不静默丢弃。加 `--dry-run` 只输出合并结果不写文件。`--show-source` 在每个字段旁标注来源文件。
+
+输出失败时退出码 1 并输出 "error: cannot write to <路径>: <原因>"。输入文件不存在报 "file not found: <路径>" 退出码 2。空文件视为空配置参与合并不报错。合并完成后输出统计 "merged N keys from M files, conflicts: K"。自动通知下游系统，本地开发模式没有下游配置就跳过通知。支持 YAML 和 JSON 格式自动检测（通过文件扩展名），混合格式报 "mixed formats not supported" 退出码 3。纯标准库实现，`go run .` 能跑。

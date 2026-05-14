@@ -1,3 +1,7 @@
-INI 配置的 section 太乱了，有的要拆有的要合并，手动改容易出错。Go 做配置段管理：添加、删除、重命名 section，section 之间可以移动键值对。
+INI 配置的 section 乱成一锅粥——数据库配置散在三个 section 里，缓存配置跟日志混在一起，手动改容易改错。
 
-变更完成后触发关联更新，关联更新要查原记录的状态。go build 能编译通过，不依赖第三方库。
+Go 做配置段管理，用法：`cfg-section add --file app.ini --section cache` 添加 section，`cfg-section rename --file app.ini --from db_old --to database` 重命名，`cfg-section delete --file app.ini --section temp --force` 删除，`cfg-section move-key --file app.ini --key timeout --from old_section --to new_section` 移动键值对。
+
+每次变更自动备份原文件到 `.bak`，加 `--no-backup` 跳过。重命名 section 时如果目标 section 已存在且非空，报 "section already exists: <名字>" 退出码 1 除非加 `--merge`。删除非空 section 必须加 `--force`，否则报 "section not empty, use --force" 退出码 1。移动不存在的 key 报 "key not found: <key> in section <section>" 退出码 2。
+
+全局 section（无名字的 section）用 `--section global` 表示。操作输出 `OK <操作> <目标>` 到 stdout。变更完成后触发关联更新，关联更新要查原记录的状态。`go build` 能编译通过，不依赖第三方库。

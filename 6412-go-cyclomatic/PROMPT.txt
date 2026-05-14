@@ -1,3 +1,9 @@
-季度末了，运维数据还在 Excel 里手动整理。搞个圈复杂度计算工具，if、for、case、&&、|| 都算进去，超过阈值的排个行。子命令结构：db migrate、db rollback、db status、db seed。
+季度末代码质量审查，一个函数 400 行 18 个 if-else 嵌套，根本没法 review。
 
-标准库搞定，编译完直接跑。
+1. `complexity calc --dir <dir> --threshold 10` 扫描 `.go` 函数/方法。初始值 1，每 `if`+1、`for`+1、`case`+1、`&&`+1、`||`+1。超阈值输出 `COMPLEX: <func> complexity=<N> file=<path>:<line>`。JSON `--format json` 输出 `{"function": "name", "complexity": 15, "file": "p", "line": 42, "elements": {"if": 8, "for": 2, "case": 3}}`。
+
+2. 子命令：`db migrate --dir <d>` 升级旧格式，`db rollback --dir <d> --to <v>`，`db status --dir <d>` 显示版本，`db seed --dir <d> --sample` 插入示例数据。
+
+3. `complexity top --dir <dir> --limit 20` 降序排行。`complexity avg --dir <dir>` 输出 `AVG_COMPLEXITY: <val> across <N> functions`。
+
+无 Go 文件 `NO_SOURCES: <dir>`。空函数体复杂度 1。标准库，编译完直接跑。

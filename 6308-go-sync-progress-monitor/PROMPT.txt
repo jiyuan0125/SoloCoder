@@ -1,5 +1,5 @@
-上周同步到一半断了，跑了半天不知道进度还剩多少。得加个进度条和速率显示，预计剩余时间也算出来。
-同步完出个统计报告：传了多少文件、跳过多少、失败多少。
-另外还要管数据源和数据转换流程，每个流程绑定一个数据源。
-Go 写，纯标准库，go run . 能跑。
-主逻辑和辅助函数分文件写。
+进度条直接在终端渲染，格式 `[=====>    ] 53% 2650/5000 12.3MB/s ETA: 2m15s`，每秒刷新。命令 `monitor watch --task <dir>` 实时显示，`monitor summary --task <dir>` 输出统计。统计报告：transferred、skipped、failed，JSON 格式 `{"transferred": 2650, "skipped": 200, "failed": 3, "duration_sec": 135}`。
+
+每个任务有状态文件 `.sync-status.json`，字段 `{"task_id": "uuid", "total": 5000, "done": 2650, "failed": ["path1"], "start": "...", "status": "running|completed|failed"}`。空目录输出 `NO_FILES: <dir>` 退出码 0。
+
+数据源管理：`datasource add --name <n> --type local|s3|sftp --path <p>`，`pipeline create --source <n> --transform <rule>` 绑定转换。`go run .` 能跑，纯标准库，拆成 main.go、monitor.go、report.go、datasource.go 四个文件。

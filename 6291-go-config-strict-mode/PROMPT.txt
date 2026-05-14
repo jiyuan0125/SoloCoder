@@ -1,3 +1,8 @@
-配置里多了个拼写错误的键，程序没报错默默用了默认值，排了一下午的 bug。用 Go 上配置严格模式：未定义的键直接报错，值类型严格匹配——字符串 "true" 不等于布尔 true。
+你遇到过这种事吗——配置里写了个 datbase.port（拼错了），程序没报错直接用了默认值 5432，连错了数据库跑了一下午脏数据。Go 上配置严格模式：定义 schema 文件声明合法 key 和类型，加载时严格校验——没定义的 key 报错，类型不匹配报错，字符串 "true" 不等于布尔 true。
 
-记录状态支持草稿→待审→通过→归档，通过后还能撤回重编辑。不用第三方包，go build 通过就行。
+- `strict check --schema schema.yaml --config app.yaml` 校验配置，输出违规项，格式 "line 15: unknown key 'datbase.port' (did you mean 'database.port'?)"，带拼写建议
+- `strict check --schema schema.yaml --config app.yaml --type-strict` 数字字符串互转也不行
+- `strict schema generate --config app.yaml --output schema.yaml` 从现有配置生成 schema，类型从值推断
+- `strict diff --schema schema.yaml --config app.yaml` 列出差异：缺失 key / 多余 key / 类型不匹配
+
+schema 文件格式：每个 key 声明 type（string/int/float/bool）和 required（true/false），支持嵌套。exit code：0 通过，1 失败，2 schema 解析错误。记录状态管理：配置头部注释标记状态 草稿→待审→通过→归档，`strict approve --config app.yaml` 推进状态，`strict revoke` 撤回重编辑。不用第三方包，go build 通过就行。

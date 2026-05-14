@@ -1,3 +1,7 @@
-数据库密码明文写在配置文件里，安全扫描直接标红。Go 做配置加密解密：加密字段用特殊标记区分，使用时自动解密——应用代码不需要改。
+数据库密码明文写在配置里，安全扫描直接标红，CTO 发邮件说一周内必须整改。
 
-模板管理功能也要带上——系统管理模板，用户选模板生成新配置文件。纯标准库实现，go run . 能跑。代码分几个文件组织，别全塞 main.go。
+Go 做配置加密解密工具。加密字段用 `ENC()` 标记区分，比如 `password: ENC(aes256:base64encoded)`，程序加载时自动解密，应用代码不用改。
+
+CLI 用法：`cfg-crypt encrypt --key secretkey123 --field password --value "mydbpass" config.yaml` 加密单个字段，`cfg-crypt encrypt --key secretkey123 --all config.yaml` 批量加密所有匹配 `password`/`secret`/`token`/`key` 字段名的值。`cfg-crypt decrypt --key secretkey123 config.yaml` 输出解密后的完整配置到 stdout。`cfg-crypt rotate --old-key abc --new-key xyz config.yaml` 密钥轮换。
+
+加密方式 AES-256-GCM，密钥通过 `--key` 参数或 `CONFIG_ENCRYPT_KEY` 环境变量传入，密钥长度不足 32 字节报 "key too short: need 32 bytes" 退出码 1。解密失败报 "decrypt failed at field <字段名>: <原因>" 退出码 2，不跳过继续。空配置文件不报错直接输出。模板管理功能也带上——系统预设模板，用户选模板生成新配置。纯标准库实现，`go run .` 能跑。代码分几个文件组织，别全塞 main.go。

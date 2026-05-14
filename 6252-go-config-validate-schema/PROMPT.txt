@@ -1,3 +1,7 @@
-上线三次有两次是配置写错了——字段类型不对、必填的没填、数值超范围。Go 写配置 Schema 验证：Schema 定义在单独文件中，类型检查、必填项检查、值范围检查都走 Schema 约束。
+上线三次有两次是配置写错了——字段类型不对、必填的没填、数值超范围。这种低级错误该用 Schema 验证挡住。
 
-写验证结果的同时要更新索引，索引构建也需要读取已有的结果数据。不用第三方包，go build 通过就行。
+命令行用法：`cfg-validate validate --config app.yaml --schema schema.json`，Schema 定义在单独 JSON 文件中。Schema 结构支持约束：`type`（string/number/integer/boolean/array/object）、`required`（布尔）、`enum`（允许值列表）、`minimum`/`maximum`（数值范围）、`minLength`/`maxLength`（字符串长度）、`pattern`（正则）。
+
+输出格式：每个错误一行 `ERROR <路径> <规则> <详情>`，警告用 `WARN` 前缀。比如 `ERROR /database/port type expected integer, got string` 或 `ERROR /server/host required field missing`。退出码 0 全部通过，1 验证失败，2 Schema 文件语法错误，3 配置文件语法错误。
+
+加 `--strict` 模式把所有 WARN 升级为 ERROR。`--output json` 输出结构化结果 `{"valid": false, "errors": [...], "warnings": [...]}`。写验证结果同时更新索引，索引构建也读取已有结果数据。不用第三方包，`go build` 通过就行。

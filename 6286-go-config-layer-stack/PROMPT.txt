@@ -1,3 +1,11 @@
-SRE 说搞不清配置到底用了哪一层的值——默认层、环境层、运维覆盖层混在一起。Go CLI 做配置分层叠加：层之间覆盖规则明确，最终配置是各层叠加的结果，每层的贡献可追溯。
+SRE 同事说线上超时了，查了半天发现运维覆盖层里把 timeout 改成了 5 秒但没人知道这层存在。Go CLI 做配置分层叠加——default.toml 是默认层，env-production.toml 是环境层，ops-override.toml 是运维覆盖层，三层叠加产生最终配置，每层的贡献可追溯。
 
-嵌套命令设计：project create、project build、project test run、project test coverage。go build 能编译通过，不依赖第三方库。
+`layer resolve --dir config-layers/ --layers default,production,ops --output final.yaml` 执行叠加，叠加规则：同路径的值后层覆盖前层，新增路径直接合并。`layer trace --dir config-layers/ --key server.timeout` 追踪某个 key 的来源，输出 "server.timeout: 30 (default) → 10 (production) → 5 (ops-override)"。`layer diff --layer1 default --layer2 ops-override` 对比两层差异，输出格式 "+ key: value (仅后层有) / - key: value (仅前层有) / ~ key: old → new (都存在但不同)"。
+
+嵌套命令：
+- `project create --name myapp --layers default,staging` 创建项目配置骨架
+- `project build --name myapp` 执行叠加生成最终配置
+- `project test run --name myapp` 校验叠加后配置完整性
+- `project test coverage --name myapp` 报告每层 key 覆盖率
+
+go build 编译通过，不依赖第三方库。

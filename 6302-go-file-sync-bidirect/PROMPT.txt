@@ -1,4 +1,8 @@
-NAS 和本地开发机两边的代码老是对不上号，手动 rsync 每次都怕覆盖错。
-Go 写个双向文件同步：两侧都有修改时标记冲突，冲突文件保留两个版本让人选。
-命令要支持嵌套：project create、project build、project test run、project test coverage。
-纯标准库，go run . 能跑。
+NAS 上的代码和本地对不上——NAS 改了忘同步，本地改了忘推送，手动 rsync 怕覆盖错方向。Go 写双向文件同步——两侧都有修改标记冲突，冲突文件保留两个版本让用户选。
+
+- `sync scan --left /local --right /nas` 扫描差异，输出表格：文件 | 左时间 | 右时间 | 状态（left-newer/right-newer/conflict）
+- `sync sync --left /local --right /nas --strategy newer` 新版本覆盖旧版本
+- `sync sync --left /local --right /nas --strategy skip-conflict` 冲突跳过 "synced:45, conflicts:3"
+- `sync resolve --left /local --right /nas --file src/main.go --choose left` 手动选版
+
+冲突文件保留 file.txt.left 和 file.txt.right 两个版本。大文件同步显示进度，符号链接跳过并警告。命令嵌套：`project create --name myproj`，`project build` 执行同步，`project test run` 校验一致性。纯标准库，go run . 能跑。

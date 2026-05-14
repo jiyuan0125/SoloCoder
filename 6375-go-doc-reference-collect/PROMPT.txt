@@ -1,3 +1,7 @@
-技术方案引用了一堆内部文档，上线前要确认引用来源都还存在。验证引用来源是否存在，输出引用列表。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-go build 能通过，不用第三方包。
+技术方案引用了一堆内部文档，上线前确认引用来源都还在——上次三个引用的 API 文档被删了，新人完全找不到。
+
+1. `ref scan --dir <dir>` 扫描 `.md` 中的引用（`[text](url)` 和 `@see <path>`），`ref verify --dir <dir>` 逐个检查目标是否存在，不存在输出 `MISSING_REF: <source>:<line> -> <target>`。`ref list --dir <dir> --output <file>` 导出 JSON `{"references": [{"source": "doc.md", "line": 15, "target": "api.md", "exists": true}]}`。
+
+2. `cli import --source csv|json --target db|file --filter '<expr>'` 筛选（支持 `field>value`），`cli export --format csv|json --output <path>` 导出。引用自动识别：相对路径、HTTP URL、锚点。外部 URL HEAD 检查超时 3s。
+
+空目录 `NO_DOCS: <dir>`。无引用 `NO_REFS: <file>`。`go build` 能过，不用第三方包。退出码 0=全部有效，1=有失效引用。

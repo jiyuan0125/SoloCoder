@@ -1,3 +1,11 @@
-每个环境都要维护一份完整的 TOML 配置，重复的部分改一处忘改其他处。Go 写 TOML 配置扩展：extend 关键字引用基础配置，只需要写差异部分，覆盖的值要验证类型一致。
+每个环境维护一份完整 TOML 配置的结果就是改了 defaults 里的 timeout 忘了改 staging 里的，最终排查半天。Go 写 TOML 配置扩展工具——在环境配置里用 extend = "base.toml" 声明基础配置来源，只需要写跟基础配置不同的部分，覆盖的值自动校验类型一致性（base 里是整数覆盖成了字符串要报错退出码 1）。
 
-多级命令：config get、config set、config list、config env switch。go build 能编译通过，不依赖第三方库。
+多级命令：
+- `config get --file app.toml --key database.port` 读取单个配置值，输出裸值不带 key
+- `config set --file app.toml --key database.port --value 3307` 设置值，key 不存在时自动创建中间路径
+- `config list --file app.toml` 列出所有 key=value，每行一条，排序输出
+- `config env switch --target production` 切换环境，把当前环境的 extend 指向改为 production base
+
+extend 链最多支持 5 层嵌套，超出报 "extend chain too deep: exceeded 5 levels"。循环引用（A extend B, B extend A）检测到报错退出码 2，输出 "circular extend detected: A → B → A"。合并后的完整配置用 `config get --file staging.toml --resolved` 查看，--resolved 表示展示合并后的最终值而非原始文件内容。
+
+go build 编译通过，不依赖第三方库。代码组织成 extend.go / merge.go / commands.go / main.go。

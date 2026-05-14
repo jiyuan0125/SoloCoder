@@ -1,3 +1,9 @@
-不想装 restic 或者 borg 那种重量级工具。Cron 表达式配置备份调度，备份任务执行日志可查。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-纯标准库，go run . 能跑。
+不想装 restic 或 borg 那种重量级工具，一台小机器定时备份几个目录就够了。
+
+1. 命令 `schedule add --name <task> --cron "0 2 * * *" --source <dir> --dest <dir>` 添加任务，`schedule list` 列出（表格：任务名|cron|源|目标|状态），`schedule remove --name <task>` 删除，`schedule run --name <task>` 立即执行。cron 非法输出 `INVALID_CRON: "<expr>"` 退出码 1。
+
+2. 日志 `schedule logs --name <task> [--limit 20]`，格式 `[2024-01-01 02:00:03] [task] START files=150`，失败输出 `FAILED: <reason>`。源目录不存在输出 `SOURCE_NOT_FOUND: <dir>`。
+
+3. 数据操作：`convert csv json --input <f> --output <f>`，`convert yaml toml`，`validate json --file <p>` 非法输出行号，`diff json --left <f> --right <f>` 输出 `DIFF: <path>`。
+
+纯标准库，`go run .` 能跑。

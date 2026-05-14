@@ -1,3 +1,10 @@
-INI 配置文件的 section 顺序太乱，找起来不方便。Go 做配置段排序：自定义排序规则，只改 section 的顺序不碰内容——数据完整性不受影响。
+看了眼生产环境的 nginx.conf，[upstream] [server] [location] [upstream] [location] 段顺序乱七八糟，找个配置得全文件翻一遍。Go 做配置段排序——自定义排序规则，只调换 section 顺序，section 内部的键值对内容原封不动。
 
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。纯标准库实现，go run . 能跑。
+- `ini-sort sort --file app.ini --rule "database,server,logging,default"` 按指定顺序排列，不在此列表中的段追加到末尾
+- `ini-sort sort --file app.ini --auto` 按段名字母序排列
+- `ini-sort sort --file app.ini --rule "database,server" --unmatched first` 未匹配的段放到前面而不是后面
+- `ini-sort diff --file app.ini --rule "database,server,logging"` 预览排序结果但不写文件，输出 "moving [logging] from line 45 to line 3" 这样的变更说明
+
+排序时保留注释和空行跟原来绑定的段一起移动。没有 section 的全局键值对保持在文件头部不动。输出文件的换行符跟源文件一致（LF 或 CRLF）。
+
+审批流程管理：配置排序操作记录为记录，状态流转 提交→初审→复审→通过。`ini-sort approve --file app.ini --id 5` 通过审批。初审不通过可以 `ini-sort revise --file app.ini --id 5` 修改后重提。纯标准库实现，go run . 能跑。

@@ -1,3 +1,9 @@
-文档从旧站点迁移到新站点，URL 全变了，搜索引擎收录的旧链接全 404。建重定向映射表，检查重定向链是否有效。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-纯标准库实现，go run . 能跑。
+文档从旧站点迁移到新站点，URL 全变了，搜索引擎收录的旧链接全 404——SEO 排名掉了不说，用户也点不进来。
+
+1. 建重定向映射表。命令 `redirect add --from "/old/path" --to "/new/path"` 添加映射，`redirect list` 显示所有映射（表格输出：旧路径 | 新路径 | 状态），`redirect remove --from "/old/path"` 删除。映射文件 `redirects.json` 格式：`[{"from": "/old/path", "to": "/new/path", "code": 301, "added": "2024-01-01"}]`。
+
+2. `redirect check --file <redirects.json>` 检查重定向链有效性：目标路径存在输出 `OK: /old -> /new`，目标不存在输出 `BROKEN: /old -> /new reason=target_not_found`，循环重定向输出 `LOOP: /a -> /b -> /a`，重定向链超过 3 跳输出 `CHAIN_TOO_LONG: /old -> ... -> /final hops=5`。
+
+3. 命令行格式 `cli import --source csv|json --target redirects.json --filter '<expr>'` 批量导入映射，`cli export --format csv|json --output <path>` 导出。filter 支持按路径前缀筛选。
+
+4. 空映射文件输出 `NO_REDIRECTS: <file>`。from 路径重复时输出 `DUPLICATE: /old/path` 退出码 1。纯标准库实现，`go run .` 能跑。

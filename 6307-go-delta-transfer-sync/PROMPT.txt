@@ -1,3 +1,12 @@
-每天同步 50 万个文件，rsync 全量扫描要 20 分钟。改成增量传输：只算文件块差异，传输量能降 90%。
-Go 实现，命令分几个组：file convert、file check、file merge，每组下面有具体操作。
-go build 能编译通过，不依赖第三方库。
+每天同步 50 万个文件，rsync 全量扫描要 20 分钟——这效率根本不能忍。
+
+1. 改成增量传输，核心是只算文件块差异。把文件按固定 4KB 分块，每块算 SHA-256 哈希，只传输哈希不同的块，传输量能降 90%。命令行格式 `delta sync --source <dir> --target <dir> --block-size 4096`，`--block-size` 默认 4096，支持自定义。
+
+2. 命令分几个组，每组下面有具体操作：
+   - `file convert --input <path> --output <path>`：将文件块索引转储为 JSON，格式 `{"file": "path", "blocks": [{"offset": 0, "size": 4096, "hash": "sha256hex"}, ...]}`
+   - `file check --index <path>`：验证索引文件完整性，缺失字段或哈希长度不对输出 `INVALID_INDEX: <path> missing field <field>`
+   - `file merge --base <index> --delta <index> --output <file>`：合并差异块到目标文件
+
+3. 大文件（超过 100MB）自动启用流式处理，不一次性加载到内存。传输中断后下次只传剩余块，进度文件 `.delta-progress.json` 记录已完成的块序号。空目录和空文件跳过，输出 `SKIP: <path> empty`。
+
+4. 退出码：0=成功，1=参数错误，2=IO错误。`go build` 能编译通过，不依赖第三方库。

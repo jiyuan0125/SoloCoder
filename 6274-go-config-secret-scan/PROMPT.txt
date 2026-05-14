@@ -1,3 +1,9 @@
-安全扫描发现配置文件里有明文密码和 API Key，扣了安全分。Go CLI 做配置敏感信息扫描：密码、密钥、Token 等模式匹配检出，标上风险等级——高、中、低。
+安全扫描发现配置文件里有明文密码和 API Key，安全分直接扣到底——整改期限内必须清理干净。
 
-支持多种操作模式，参考 convert csv json、convert yaml toml、validate json、diff json。go build 能编译通过，不依赖第三方库。
+Go CLI 做配置敏感信息扫描，分四步：
+1. `cfg-secret scan --dir ./configs/` 扫描目录下所有配置文件
+2. 检出模式：AWS Key（`AKIA[0-9A-Z]{16}`）、GitHub Token（`ghp_[a-zA-Z0-9]{36}`）、数据库密码字段名（`password`/`passwd`/`pwd`）的值不是占位符、私钥头（`-----BEGIN RSA PRIVATE KEY-----`）、Generic Token（超 32 字符的 base64/hex 字符串跟 password/secret/token 字段名搭配）
+3. 风险等级：高（私钥、云服务 Key）、中（数据库密码明文）、低（疑似 token）
+4. 输出格式 `风险等级 | 文件:行号 | 类型 | 匹配内容（前10字符+...）`，加 `--format json` 输出结构化结果
+
+退出码 0 没有发现，1 有高危发现，2 参数错误。加 `--ignore .secretignore` 支持忽略规则文件（每行一个正则模式，匹配到的行跳过）。加 `--severity high` 只输出指定等级及以上的发现。空文件跳过并输出 "skipped empty: <路径>"。二进制文件跳过并计数输出 "skipped N binary files"。扫描完成后输出汇总 "scanned N files, found M issues (high: X, medium: Y, low: Z)"。支持多种操作模式参考 `validate json` 风格。`go build` 能编译通过，不依赖第三方库。

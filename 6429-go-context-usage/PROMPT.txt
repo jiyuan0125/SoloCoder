@@ -1,6 +1,11 @@
-链路追踪加不上去，因为 context 在好几层函数里没传递。找出 context 不传递的函数链，检查 context 取消逻辑。
+为什么链路追踪加不上去？因为 context.Context 在好几层函数调用里被丢弃了——有些函数签名里根本没 ctx 参数，有些有但没往下传，trace 信息自然就断了。
 
-有分组规则和文件分组，按规则自动分组。
+那这个工具到底要干嘛？找出 Go 代码里所有 context 未传递的函数链路。具体来说：如果一个函数接收 context 参数但调用子函数时没传下去，或者函数内部调用了接受 context 的函数但自己签名里没有 context 参数，都要标出来。
 
-标准库搞定，go build 通过就行。
-代码分几个文件组织，别全写 main.go 里。
+怎么用？`ctxcheck analyze <目录> [--depth N] [--skip vendor,testdata]`。--depth 限制调用链分析深度，默认 5。--skip 跳过指定目录，逗号分隔。还有 `ctxcheck report [--format dot|text]` 输出调用链图，dot 格式可以直接用 graphviz 渲染，text 格式打印缩进的调用树。
+
+分组规则怎么配？在项目根目录放 .ctxcheck.yaml（或用 `ctxcheck config set grouping <规则文件>` 指定），定义哪些包属于同一分组。工具按分组聚合报告，每个分组一个汇总。分组规则改了之后，已分组的项目自动重新分配。
+
+输出到终端时每条问题显示：调用链路径（函数A→函数B→函数C）、缺失位置、建议操作。加 `--json` 输出数组，每条含 chain、missing_at、recommendation。调用链中存在 context 取消但没检查 `ctx.Done()` 或 `ctx.Err()` 的也列为问题。
+
+标准库搞定，`go build` 通过就行。代码分几个文件组织，scanner.go、analyzer.go、reporter.go、main.go 各管各的，别全写 main.go 里。

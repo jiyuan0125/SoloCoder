@@ -1,3 +1,9 @@
-配置文件改了还得等 cron 跑才能同步过去，响应太慢。用 fsnotify 的思路做实时同步：文件变更后立即推送，短时间内的多次变更合并成一次。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。
-go build 过了就行，标准库写的。
+配置文件改了还得等 cron 跑才能同步过去，响应太慢了——上次改完 Nginx 配置等了 5 分钟才生效，期间流量全打到错误的上游。
+
+1. 用 fsnotify 的思路做实时同步。命令 `watch start --source <dir> --target <dir> [--debounce 500ms]`，文件变更后立即推送。短时间内（默认 500ms）的多次变更合并成一次，debounce 时间可配。变更事件记录到 `.watch-log.json`，格式 `{"file": "path", "event": "CREATE|WRITE|RENAME|DELETE", "timestamp": "...", "synced": true}`。
+
+2. 文件处理阶段：待处理（pending）→处理中（syncing）→校验中（verifying）→已完成（done），校验失败回到处理中，最多 3 次。超过重试次数标记 `failed` 并输出 `SYNC_FAILED: <path> retries=3 error=<reason>`。子命令 `watch status` 显示当前监控的文件数和最近 10 条事件，`watch stop` 停止监控。
+
+3. 目录递归监控，新增子目录自动纳入监控范围。符号链接跳过，输出 `SKIP_SYMLINK: <path>`。目标磁盘空间不足时输出 `TARGET_FULL: <dir>` 并暂停同步。
+
+`go build` 过了就行，标准库写的。

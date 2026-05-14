@@ -1,6 +1,9 @@
-每次全量备份太慢了，200G 的数据目录跑一次要 4 小时。改成增量备份，Go 命令行本地跑就行。
-用文件修改时间和大小判断哪些文件变了，只备份变更的部分。
-备份文件按日期组织，方便回溯到任意一天的快照。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-go build 一下能出二进制，第三方库一个不用。
+200G 的数据目录全量备份跑一次 4 小时，一周只能备份一次，中间丢了数据就完了。换成增量备份——第一次全量，之后只备份修改时间和大小变化的文件，备份速度从小时级变分钟级。Go 命令行工具，本地跑不需要服务端。
+
+- `backup full --source /data --dest /backup/20240115` 全量备份，输出 "backed up: 15234 files, size: 2.3GB, time: 45s"
+- `backup incr --source /data --dest /backup/20240115-incr --base /backup/20240115` 增量备份，跟 base 对比，只备份变更文件
+- `backup list --dest /backup` 列出所有备份点，输出表格：序号 | 日期 | 类型(full/incr) | 文件数 | 大小
+- `backup restore --dest /backup --point 20240115 --target /data-restore` 恢复到指定备份点，增量备份自动链式合并
+- `backup verify --dest /backup/20240115` 校验备份完整性，文件缺失报 "missing file: data/img/001.jpg"
+
+判断变更依据：文件修改时间（mtime）+ 文件大小（bytes），两个都一致视为未变更。备份元数据用 JSON 存在备份目录下的 .backup-meta.json，记录文件路径、mtime、size。空目录跳过但计入统计。命令格式 `tool action target options`，校验完成后自动更新统计信息，首次运行没有历史统计则初始化。go build 出二进制，第三方库一个不用。

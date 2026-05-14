@@ -1,3 +1,7 @@
-到底哪个配置最终生效了——是默认值、配置文件、环境变量还是命令行参数？搞不清楚。Go 写配置覆盖链：默认值 < 文件配置 < 环境变量 < 命令行参数，最终输出合并后的完整配置。
+配置到底最终生效的是哪个值？默认值？配置文件？环境变量？还是命令行参数？搞不清楚就敢上线？
 
-文件处理分阶段：待处理→处理中→校验中→已完成，校验失败回到处理中。源文件变了后基于它的索引和缓存也要更新。go build 能编译通过，不依赖第三方库。
+Go 写配置覆盖链工具。优先级：默认值 < 配置文件 < 环境变量 < 命令行参数，高优先级覆盖低优先级。用法：`cfg-chain resolve --defaults defaults.yaml --file config.yaml --env-prefix APP_ --cli-flags "db.port=3307"`。
+
+输出合并后的完整配置到 stdout，加 `--show-chain` 在每个字段旁标注来源，格式 `db.port = 3307 (来源: cli-flag)`，来源标签：`default`、`file:<文件名>`、`env:<变量名>`、`cli-flag`。加 `--format json` 输出结构化结果 `{"resolved": {...}, "chain": {"db.port": {"value": 3307, "source": "cli-flag", "overrides": [...]}}}`。
+
+文件不存在报 "config file not found: <路径>" 退出码 1。环境变量格式 `${PREFIX}_${KEY}` 自动映射，`APP_DB_PORT` 映射到 `db.port`。冲突链中某个值类型不一致（比如默认值是数字环境变量是字符串）打警告 "type conflict at <路径>: expected <类型> got <类型>"。文件处理分阶段：待处理→处理中→校验中→已完成，校验失败回到处理中。`go build` 能编译通过，不依赖第三方库。

@@ -1,3 +1,5 @@
-五个环境的配置除了端口和地址其他都一样，复制五份维护不过来。Go 写配置环境模板：模板里标记哪些值需要环境特定化，从模板生成具体环境的配置。
+上周五生产环境端口配错了导致停机两小时，原因就是五个环境的配置维护了五份副本，改一处漏四处。Go 写一个配置环境模板工具，模板文件里用 {{.PORT}} 这种占位符标记需要环境特定化的值，每个环境单独准备一个变量文件（env-dev.vars、env-prod.vars），从模板生成具体配置。
 
-带分组规则，按规则自动给文件分组。go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go。
+CLI 用子命令组织：`tpl render --template config.tpl --vars env-prod.vars --output config.yaml`，没指定 --output 就打印到 stdout。`tpl validate --template config.tpl --vars env-prod.vars` 只校验不生成，模板里用了变量文件里没定义的 key 直接报错退出码 1，错误信息格式 "undefined variable: {{.DB_PORT}} at line 12"。`tpl diff --vars env-dev.vars --vars env-prod.vars --template config.tpl` 对比两个环境生成的配置差异。
+
+变量文件格式是 KEY=VALUE 每行一条，# 开头是注释，值里用双引号包裹可以包含空格。模板用 Go 标准库 text/template 语法。分组规则：按文件名前缀自动分组（db- 开头归数据库组，app- 开头归应用组），`tpl list` 列出所有分组。纯标准库，go build 编译通过，代码分 template.go / vars.go / group.go / main.go 四个文件。

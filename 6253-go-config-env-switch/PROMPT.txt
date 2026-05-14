@@ -1,3 +1,7 @@
-dev、staging、prod 三套配置手动复制粘贴改来改去，改漏一个就出事故。Go 搞多环境配置切换：当前环境通过参数或环境变量指定，切换时输出合并后的完整配置——不用猜最终生效的是哪个值了。
+dev、staging、prod 三套配置手动复制粘贴改来改去，上次改漏了一个 redis 超时参数， staging 环境直接超时爆了。
 
-切换完自动更新统计信息，首次运行没有历史统计要正常处理。go build 能编译通过，不依赖第三方库。
+用 Go 做多环境配置切换。先定义基础配置 `base.yaml`，再给每个环境写覆盖文件 `dev.yaml`、`staging.yaml`、`prod.yaml`。命令行：`env-switch switch --env staging --base base.yaml --env-dir ./envs/ -o config.final.yaml`。
+
+切换逻辑：先加载 base，再叠加对应环境的覆盖，最后输出合并后的完整配置——不用猜最终生效的是哪个值了。加 `--show-diff` 显示覆盖了哪些字段，格式 `+ key: new_value (was: old_value)`。加 `--validate schema.json` 合并后自动跑 Schema 验证。
+
+当前环境也可以通过环境变量 `APP_ENV` 指定，命令行 `--env` 优先级更高。环境目录下找不到对应文件报 "env file not found: <路径>" 退出码 2。环境名只允许 `[a-z0-9-]+`，非法名字报错退出码 1。切换完更新统计信息到 `.env-switch-stats.json`，首次没有这个文件就创建。`go build` 能编译通过，不依赖第三方库。

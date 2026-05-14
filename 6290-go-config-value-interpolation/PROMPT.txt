@@ -1,3 +1,10 @@
-URL 配置里要拼 host + port，手动写死了换环境就得出错。Go 实现配置值插值：支持环境变量替换和配置内引用，嵌套插值也能解析——${scheme}://${${host_key}}:${port} 这种。
+先说问题——配置里的 URL 写死了 host 和 port，换个环境就得手动改三个地方，漏一个就连接失败。Go 做配置值插值，支持两种引用语法：${ENV_VAR} 引用环境变量，${config.path} 引用同一配置文件内的其他字段。嵌套插值 ${scheme}://${${host_key}}:${port} 这种多层引用也要正确解析——先解析 host_key 拿到实际 key 名，再解析该 key 的值。
 
-转换完成后自动清理临时文件，如果没产生临时文件就正常跳过。纯标准库实现，go run . 能跑。
+解析顺序：先处理配置内引用（避免循环），再处理环境变量引用。循环引用检测到报错退出码 1，格式 "circular reference: a → b → c → a"，列出完整链条。
+
+- `interpolate resolve --file config.yaml --output resolved.yaml` 执行插值输出结果
+- `interpolate resolve --file config.yaml --dry-run` 只输出插值后的值到 stdout，不写文件
+- `interpolate check --file config.yaml` 校验所有插值引用是否可解析，未定义的环境变量列出来 "undefined env: DB_HOST"，退出码 0 表示全部可解析
+- `interpolate explain --file config.yaml --key "server.url"` 展示某个值的插值过程 "server.url = 'http://' + server.host + ':' + server.port → http://localhost:8080"
+
+转换完成后自动清理临时文件，没有临时文件则正常跳过。纯标准库实现，go run . 能跑。

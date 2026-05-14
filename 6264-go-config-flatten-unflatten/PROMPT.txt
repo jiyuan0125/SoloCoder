@@ -1,3 +1,7 @@
-嵌套配置用 grep 搜不到具体某个键，得一层层展开。Go 做配置展平还原：嵌套结构展平成 a.b.c=value 的形式，也支持反向还原回去，方便 grep 搜索。
+嵌套配置用 grep 搜不到某个具体的键，得一层层剥开看——要是能展平成 `a.b.c=value` 的形式就好了，搜起来方便，改完还能还原回去。
 
-带审批流程管理，用户提交审批走已有流程。不用第三方包，go build 通过就行。代码拆文件写。
+Go 做配置展平还原工具。用法：`cfg-flat flatten --input config.yaml --output flat.properties`，展平格式 `a.b.c=value`，分隔符默认 `.` 可通过 `--separator /` 自定义。还原：`cfg-flat unflatten --input flat.properties --output config.yaml`，自动把 `a.b.c=value` 还原为嵌套结构。
+
+展平规则：对象键用分隔符连接，数组用 `[N]` 索引（如 `servers[0].host`），布尔值小写 `true`/`false`，数字保持数字，字符串保持原值。值类型在还原时推断——纯数字还原为 number，`true`/`false` 还原为 boolean，其余为 string。加 `--typed` 输出带类型标注 `a.b.c=string:hello`。
+
+循环引用检测：展平时遇到嵌套超过 50 层报 "max depth at path: <路径>" 停止。空配置展平输出空文件，空文件还原输出空对象 `{}`。带审批流程管理，用户提交审批走已有流程，审批状态：pending→approved/rejected。不用第三方包，`go build` 通过就行。代码拆文件写。
