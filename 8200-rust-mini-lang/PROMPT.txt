@@ -1,0 +1,5 @@
+最近想深入理解编译器原理，帮我用 Rust 写一个迷你编程语言。
+
+语言不需要太复杂，支持这些特性就行：整数和布尔类型、变量声明和赋值、算术运算和比较运算、if-else 条件、while 循环、函数定义和调用、println 输出。实现完整的词法分析器（lexer）、递归下降语法分析器（parser）生成 AST、树遍历解释器（tree-walking interpreter）。
+
+对语法错误和运行时错误要有清晰的报错信息，标注出错位置。用 Rust 实现，cargo build 通过，cargo run 可以执行 .mini 源文件。

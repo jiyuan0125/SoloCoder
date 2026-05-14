@@ -1,0 +1,5 @@
+我有一些分布式追踪系统的 trace 数据需要解析，用 Rust 实现一个 trace 解析器。
+
+解析简单的 JSON 格式 trace 数据：每个 span 有 trace_id、span_id、parent_span_id、operation_name、start_time、duration。构建完整的调用树，计算每个操作的耗时分布。找出耗时最长的 critical path。
+
+输入 trace JSON 文件，输出调用树和耗时统计。cargo test 用几个模拟的 trace 数据验证。不用对接真实的追踪系统，文件解析就行。

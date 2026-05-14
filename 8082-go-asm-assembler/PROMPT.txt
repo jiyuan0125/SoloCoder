@@ -1,0 +1,1 @@
+在学汇编语言，想做一个简单的汇编器练手。Go 实现一个汇编器，支持一个精简的类 x86 指令集（mov add sub mul div push pop call ret jmp je jne cmp），支持寄存器名（rax rbx rcx 等）、立即数、内存寻址、标签定义。两遍扫描：第一遍收集标签地址，第二遍生成机器码字节。输出二进制文件和符号表。go build 通过。

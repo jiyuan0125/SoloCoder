@@ -1,0 +1,3 @@
+用 Go 实现数据库迁移脚本解析器。解析 CREATE TABLE、ALTER TABLE ADD/DROP/MODIFY COLUMN、CREATE INDEX、DROP TABLE 这些 DDL 语句。
+能把迁移脚本解析成操作列表，支持正向迁移和回滚迁移的生成。解析结果输出为 JSON。
+标准库，go build 编译通过。

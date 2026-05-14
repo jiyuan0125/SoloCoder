@@ -1,0 +1,11 @@
+项目里要用 ANTLR 生成的解析器，但想用 Rust。需要做一个工具把 ANTLR 语法文件转成 Rust 代码。
+
+用 Rust 写一个 ANTLR 到 Rust 的绑定生成器：
+- 读取 ANTLR .g4 语法文件
+- 解析 lexer 规则和 parser 规则
+- 生成 Rust 结构体表示 AST 节点
+- 生成 visitor/trait 的骨架代码，方便用户实现 visitor 模式
+- 支持 ANTLR 的 fragment、mode 等 lexer 特性
+- 对不支持的特性给出警告
+
+CLI：antlr-bindgen MyGrammar.g4 --output src/generated/，生成 Rust 代码。cargo build 通过。

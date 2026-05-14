@@ -1,0 +1,3 @@
+用 Go 写一个 SQL 解析器。能解析基本的 SELECT/FROM/WHERE/GROUP BY/ORDER BY/LIMIT 语句，支持 JOIN、子查询、聚合函数 COUNT/SUM/AVG/MAX/MIN。
+把 SQL 文本解析成 AST，可以输出 AST 的字符串表示。遇到语法错误要报告具体位置。
+不用接真实数据库，只做解析，go build 通过。

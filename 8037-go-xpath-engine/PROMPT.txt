@@ -1,0 +1,3 @@
+帮我用 Go 写一个 XPath 查询引擎。支持常用的 XPath 1.0 子集：节点路径(/a/b/c)、轴(child/descendant/parent/attribute)、谓词([1]、[@attr='val'])、函数(text()/contains/starts-with)。
+输入 XML 文档和 XPath 表达式，返回匹配的节点列表。XML 解析用标准库的 encoding/xml。
+go build 能过。

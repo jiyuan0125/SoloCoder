@@ -1,0 +1,5 @@
+给我写个支配树（Dominator Tree）构建算法，Rust 实现，从 CFG 算出每个基本块的直接支配者和支配边界。
+
+用 Lengauer-Tarjan 算法，时间复杂度接近 O(E α(V,E))。能输出每个节点的 idom，以及完整的支配边界集合。顺便把支配树也打印出来，方便调试。
+
+给几个有典型结构的 CFG（if-else、嵌套循环、break/continue）做测试用例，验证支配关系计算正确。cargo test 全绿。

@@ -1,0 +1,1 @@
+做 API 网关需要解析 OpenAPI（Swagger）3.0 的 spec 文件。Go 实现一个 OpenAPI 解析器，能处理 JSON 和 YAML 格式的 spec，解析 paths、components（schemas、responses、parameters）、security 定义。支持 $ref 引用解析（包括外部文件引用）。解析结果能方便地查询某个 path+method 的完整请求参数和响应定义。go build 通过。

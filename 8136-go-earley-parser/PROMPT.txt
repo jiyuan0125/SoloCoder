@@ -1,0 +1,6 @@
+实现 Earley 解析算法，能处理任意上下文无关文法（包括歧义文法）。分三个阶段（Predict、Scan、Complete）填 Earley 图表。
+
+支持歧义输入，输出所有可能的解析树（用共享 Packed Parse Forest 表示，节省内存）。
+命令：earley grammar.txt "input tokens"
+展示每轮迭代的状态集合。
+Go 标准库实现，go build 编译通过。

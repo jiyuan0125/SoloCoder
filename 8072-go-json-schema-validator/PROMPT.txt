@@ -1,0 +1,1 @@
+前后端对接的时候需要验证 JSON 数据是否符合约定的格式。Go 实现一个 JSON Schema 验证器，支持 Draft-07 规范的核心特性：type、properties、required、items（数组元素）、enum、pattern、minLength/maxLength、minimum/maximum、$ref 引用。验证失败要给出 JSON Path 格式的错误位置。不要用第三方 schema 库，自己实现验证逻辑。go build 编译通过。

@@ -1,0 +1,2 @@
+用 Go 实现 Mustache 模板引擎。支持 Mustache 规范的核心标签：{{name}} 变量、{{#section}}...{{/section}} 区块(列表循环和条件)、{{^inverted}}...{{/inverted}} 反向区块、{{{html}}} 不转义输出、{{! 注释}}、{{>partial}} 部分模板。
+模板和数据合并后输出结果。go build 能过，不用第三方库。

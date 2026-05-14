@@ -1,0 +1,5 @@
+写个 PE 文件格式解析器，Rust 实现，能分析 Windows exe 和 dll 的结构。
+
+提取 DOS header、PE header、section table，能显示每个节的名称、虚拟地址、原始大小。顺便把导入表里的 DLL 名字和函数名列出来。支持 PE32+（64位）格式，PE32 能兼容最好。
+
+cargo run -- file.exe 这样用，解析出错时告诉我具体哪一步挂的。

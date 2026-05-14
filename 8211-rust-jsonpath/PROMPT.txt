@@ -1,0 +1,10 @@
+API 返回的 JSON 数据经常很大，只需要提取其中几个字段。需要支持 JSONPath 查询，类似 XPath 之于 XML。
+
+用 Rust 实现 JSONPath 查询引擎：
+- 支持 $ 表示根节点，. 表示子节点，.. 表示递归下降
+- 支持 [*] 数组通配符和 [0:3] 切片语法
+- 支持 [?(@.price < 10)] 过滤表达式
+- 支持多个路径用 | 连接，合并结果
+- 不合法的 JSONPath 要报错说明原因
+
+CLI：jsonpath "$.store.book[*].author" data.json，输出匹配到的值。cargo build 编译通过。

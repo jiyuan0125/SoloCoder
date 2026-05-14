@@ -1,0 +1,6 @@
+写一个带状态的词法分析器框架。Lexer 能在不同状态间切换：普通模式、字符串模式、注释模式、模板模式等。不同状态下 token 规则不同。
+
+比如解析 HTML+JS 混合：遇到 <script> 切到 JS 模式，遇到 </script> 切回 HTML 模式。
+状态切换通过规则触发，用户用 DSL 定义规则。
+用法：lexer-state -rules htmljs.rules input.html
+Go 标准库实现，go build 编译通过。

@@ -1,0 +1,5 @@
+写一个 Go channel 使用模式分析器。
+
+分析 Go 源码中所有 channel 的完整生命周期：创建、传递、发送、接收、关闭。检测这些常见错误：向已关闭的 channel 发送、重复关闭 channel、关闭 nil channel、goroutine 永远阻塞在 channel 操作上。识别 channel 的使用模式（信号、扇入扇出、管道、互斥等），对每种模式检查是否符合最佳实践。
+
+输出 channel 分析报告和问题列表。Go 标准库，go build 通过。

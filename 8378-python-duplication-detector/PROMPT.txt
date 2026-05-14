@@ -1,0 +1,5 @@
+用 Python 写一个代码重复检测器，找出项目中的重复代码片段。
+
+复制粘贴是技术债的重要来源。工具扫描 Python 源码，用 token 序列做比较（忽略变量名差异），找出超过阈值（默认 6 行）的重复代码块。支持精确匹配（完全相同）和模糊匹配（只差变量名或空格）。输出重复代码的位置、行数、相似度，以及涉及哪些文件。
+
+Python 3，ast 和 tokenize 模块。CLI：`python dup_detector.py --min-lines 6 --threshold 0.8 src/`，列出所有重复组，每组包含各副本的文件路径和行号。`python dup_detector.py` 能跑。

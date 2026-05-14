@@ -1,0 +1,5 @@
+写一个 Python 的策略引擎，用声明式规则检查代码是否符合团队规范。
+
+团队有很多编码规范，但人工 review 容易遗漏。做一个可配置的策略引擎：规则用 YAML 定义（条件表达式 + 动作），引擎扫描代码 AST 或文本，对每个规则求值，通过/不通过。内置规则模板：函数命名必须是 snake_case、类名必须是 CamelCase、行宽不超过 120、禁止使用某些模块。用户可以扩展自定义规则。
+
+Python 3 标准库。CLI：`python policy_engine.py --rules policies.yaml src/`，输出每个规则的检查结果和违规项。`python policy_engine.py` 能跑。

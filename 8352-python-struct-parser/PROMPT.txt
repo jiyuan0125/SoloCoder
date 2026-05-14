@@ -1,0 +1,5 @@
+写一个 Python 的二进制结构解析器，类似 C 的 struct.unpack 但更灵活。
+
+场景是解析网络报文和二进制文件，用户用一种简单的 DSL 描述数据结构（比如 `>HH4sII` 表示大端序、两字节、两字节、4字节字符串、两个四字节整数），引擎按照格式串从字节流中提取字段，支持嵌套结构、条件字段（根据前面字段的值决定后续解析方式）和对齐填充。
+
+Python 3 标准库实现。CLI 用法：`python struct_parser.py parse --format ">HH4sII" data.bin`，输出每个字段的名字、类型和值。报文格式解析出错时给出明确的错误位置。`python struct_parser.py` 能直接运行。

@@ -1,0 +1,5 @@
+实现一个函数式风格的解析器组合子库。提供基础组合子：satisfy、char、string、choice、sequence、many、many1、optional、between、sepBy。组合子返回 Parser 对象，可以链式组合。
+
+用这个库写一个示例：解析简单算术表达式，支持四则运算和括号。
+命令：combinator-demo "3 * (1 + 2)"
+库代码和示例都写好，go build 编译通过。Go 标准库。

@@ -1,0 +1,5 @@
+编译器优化需要识别循环结构，帮我用 Rust 写一个循环分析器。
+
+从 CFG 和支配树出发，识别 natural loop：给定一个回边（back edge），求出循环体包含的所有基本块。进一步识别循环嵌套关系，计算每个循环的入口、出口、循环深度。支持 while、do-while、for 风格的循环，以及嵌套和 break/continue 的场景。
+
+输入 CFG 数据结构，输出每个循环的详细信息。cargo test 用几个典型 CFG 验证。

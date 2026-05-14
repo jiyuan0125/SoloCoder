@@ -1,0 +1,5 @@
+用 Python 实现一个 Rego 策略评估引擎，能解析和执行类似 OPA Rego 的策略规则。
+
+Rego 是 Open Policy Agent 的策略语言，用于声明式地定义规则。实现一个简化版的 Rego 引擎：支持包声明、规则定义、条件表达式（等于、不等于、包含、正则匹配）、集合操作（in、intersection）、默认值、组合规则（OR/AND）。输入是 JSON 数据和 Rego 规则文件，输出评估结果（允许/拒绝 + 原因）。
+
+Python 3 标准库，自己写解析器。CLI：`python rego_engine.py eval --policy rules.rego --input data.json`，输出每条规则的评估结果。`python rego_engine.py` 能直接运行。

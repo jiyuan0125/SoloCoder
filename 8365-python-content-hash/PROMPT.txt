@@ -1,0 +1,5 @@
+写一个 Python 的内容寻址存储工具，类似 Git 的 blob 存储机制。
+
+把文件内容用哈希值命名存储，相同内容的文件只存一份。实现内容寻址的核心功能：将文件存入仓库（计算 SHA256，按哈希值存储在 `.objects/` 目录下）、查询某个哈希是否存在、根据哈希取回内容、垃圾回收（清理不被引用的对象）、统计仓库占用空间。
+
+Python 3 标准库。命令行：`python content_hash.py store myfile.txt` 返回哈希；`python content_hash.py get <hash> -o output.txt`；`python content_hash.py gc` 清理；`python content_hash.py stats` 显示统计。`python content_hash.py` 能直接运行。

@@ -1,0 +1,5 @@
+帮我用 Rust 写一个 size 工具，显示 ELF 文件各 section 的大小汇总。
+
+输出 text段、data段、bss段的大小（十进制和十六进制），以及总大小（total）。加 -A 显示每个 section 的详细信息（名称、地址、大小）。支持 ELF 64 位格式。
+
+cargo run -- /bin/ls 或其他二进制文件测试。输出格式参考 GNU size。代码简洁就好，cargo build 通过。

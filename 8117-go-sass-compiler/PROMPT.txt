@@ -1,0 +1,5 @@
+用 Go 写一个 SASS/SCSS 到 CSS 的编译器。支持核心特性：变量（$var）、嵌套规则、& 父选择器引用、@mixin/@include、@extend、基本运算。
+
+用法：sass-compiler style.scss -o style.css
+能处理 @import 引入其他文件。输出格式化的 CSS，支持压缩模式 --compress。
+Go 标准库实现，go build 通过。

@@ -1,0 +1,3 @@
+用 Go 实现 JMESPath 查询引擎。JMESPath 是 AWS 用的 JSON 查询语言，支持投影(projections)、管道(pipe)、多选(multi-select)、函数调用(length/contains/starts_with 等)。
+输入 JSON 和 JMESPath 表达式，输出查询结果。表达式解析错误要有清晰的报错。
+标准库实现，go build 编译通过。

@@ -1,0 +1,1 @@
+老系统里还有不少 Thrift 接口需要维护。Go 写一个 Thrift IDL 解析器，能解析 struct、enum、exception、service、typedef 定义，支持字段修饰符（required/optional）、默认值、注释。解析结果可以用 JSON 输出，方便做后续的代码生成或文档工具。遇到语法错误要标注行号和附近内容。纯标准库，go build 能编。

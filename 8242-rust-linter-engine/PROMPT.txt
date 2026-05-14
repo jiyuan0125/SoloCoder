@@ -1,0 +1,11 @@
+代码审查时很多问题是重复出现的，比如未使用的变量、空的 match arm、危险的 API 调用。想做一个可配置的静态分析工具。
+
+用 Rust 写一个 Linter 引擎：
+- 解析源码，遍历 AST 执行检查规则
+- 内置规则：未使用的变量/导入、冗余 clone、不必要的 mut、dead code
+- 支持自定义规则（用 DSL 或 Rust 插件）
+- 每条警告输出文件名、行号、规则名、说明
+- 支持严重级别：error、warning、info
+- 支持 .lintconfig.toml 配置开关规则
+
+CLI：linter-engine src/ --config .lintconfig.toml，输出所有警告。cargo build 编译通过。

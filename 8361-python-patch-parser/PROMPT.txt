@@ -1,0 +1,5 @@
+写一个 Python 的补丁文件解析器，能解析 unified diff 和 git diff 格式的补丁。
+
+需要从补丁文件中提取结构化信息：哪些文件被修改了、每个文件有哪些改动块（hunk）、每个 hunk 的新旧行号范围、增删改的具体行内容。支持二进制文件标记、文件模式变更、重命名检测。解析结果以结构化 JSON 输出，方便其他工具处理。
+
+纯 Python 3 标准库。用法：`python patch_parser.py changes.patch`，输出 JSON 格式的解析结果。格式错误的补丁文件给出具体出错位置。`python patch_parser.py` 能直接运行。

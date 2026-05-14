@@ -1,0 +1,5 @@
+实现一个 Python 的 LCOM（Lack of Cohesion of Methods）度量工具，检测设计不良的类。
+
+Chidamber-Kemerer 的 LCOM 定义：如果类的方法访问的属性集合两两交集为空，则 LCOM = P - Q（P 是不共享属性的方法对数，Q 是共享属性的方法对数）。如果 Q > P，LCOM = 0。扩展实现 LCOM4（考虑方法的连通图）。解析 Python AST，提取类的属性和方法间的访问关系。
+
+Python 3，ast 模块。用法：`python lcom.py package/`，输出每个类的 LCOM 值、方法-属性访问关系图、建议拆分的大类。`python lcom.py` 能直接运行。

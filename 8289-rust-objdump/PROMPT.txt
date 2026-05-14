@@ -1,0 +1,5 @@
+用 Rust 写一个简化版 objdump，能反汇编 ELF 文件并显示汇编码。
+
+解析 ELF 的 .text section，做线性反汇编（从 section 起始到结束逐条解码）。显示每条指令的地址、机器码字节、汇编助记符。支持 x86_64 的常见指令即可（mov、push、pop、add、sub、call、ret、jmp、cmp、test、je/jne/jl/jg 等）。
+
+cargo run -- -d binary-file 输出反汇编结果。不用做完美的完整反汇编器，常见指令能正确解码就行。

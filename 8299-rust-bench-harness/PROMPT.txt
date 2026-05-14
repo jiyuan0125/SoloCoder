@@ -1,0 +1,5 @@
+我需要一个 Rust 的 benchmark harness，方便对比不同实现的性能。
+
+提供宏来定义 benchmark：bench!("name", || { /* code */ })。自动跑多轮预热 + 计时，统计平均耗时、标准差、最快/最慢时间。支持参数化的 benchmark（比如不同输入大小）。输出格式化的表格，方便在命令行对比。
+
+不用达到 criterion 级别的精度，但要能稳定地测出微秒级差异。cargo run 跑几个示例 benchmark（字符串拼接、排序算法、哈希计算等）展示结果。

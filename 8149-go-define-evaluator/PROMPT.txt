@@ -1,0 +1,6 @@
+实现一个 #define 常量表达式求值器。解析预处理器中的条件表达式（#if、#elif 后面那些），支持：整数运算、宏值替换、defined() 检查、逻辑运算、位运算。
+
+能处理嵌套宏和宏引用其他宏的情况。
+用法：define-eval -D VERSION=3 -D DEBUG=1 -expr "VERSION > 2 && defined(DEBUG)"
+输出求值结果（true/false）。
+Go 标准库实现，go build 通过。

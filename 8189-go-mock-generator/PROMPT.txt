@@ -1,0 +1,5 @@
+写个 Go 的 mock 生成器，类似 mockgen 但更轻量。
+
+工具接收 Go 接口定义（从源码解析），生成实现了该接口的 mock 结构体。生成的 mock 支持：设置期望调用（EXPECT().MethodName()）、设置返回值、设置调用次数约束（Times/AnyTimes）、参数匹配（exact match 或自定义 matcher）、记录所有调用参数供后续断言。
+
+命令行用法：输入接口名和包路径，输出 mock 文件。Go 标准库，go build 通过。

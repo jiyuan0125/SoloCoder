@@ -1,0 +1,11 @@
+有些语言支持类型推导，不用显式标注类型。Hindley-Milner 算法是经典的类型推导方法。
+
+用 Rust 实现 Hindley-Milner 类型推导：
+- 实现合一（unification）算法，处理类型变量
+- 支持基本类型和多态类型（泛型）
+- 支持函数类型推导：从函数体推导参数和返回类型
+- 支持 let 多态（let-polymorphism）
+- 支持 if/else 分支的类型一致性检查
+- 推导失败时报告具体的类型冲突
+
+CLI：type-inference source.ti，输出每个表达式的推导类型。cargo build 编译通过。

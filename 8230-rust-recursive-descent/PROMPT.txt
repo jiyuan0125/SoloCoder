@@ -1,0 +1,11 @@
+LR 解析器太复杂了，递归下降写起来更直观。很多现代语言（Rust、Go、TypeScript）的 parser 都是手写递归下降。
+
+用 Rust 实现递归下降解析器框架：
+- 支持预读（peek）和回溯机制
+- 支持 operator precedence climbing 处理表达式优先级
+- 支持左递归的消除或处理
+- 支持错误恢复（遇到错误跳到下一个同步点继续解析）
+- 内置常见语法结构：表达式、语句、函数声明、类定义
+- 错误信息要友好，标注位置
+
+CLI：recursive-descent parse source.code，输出 AST。cargo build 通过。

@@ -1,0 +1,1 @@
+最近在做基础设施相关的工具，需要解析 HashiCorp Configuration Language (HCL) 格式的配置文件。帮我用 Go 写一个 HCL 解析器，能处理 block、attribute、注释这些基本语法元素，支持嵌套 block，解析后输出结构化的 JSON 方便后续处理。遇到语法错误要给出清晰的行号和错误信息。用 Go 标准库实现，go build 能编译通过就行。

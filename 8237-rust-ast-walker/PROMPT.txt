@@ -1,0 +1,11 @@
+AST 构建好了，接下来要做语义分析、代码生成，都需要遍历 AST。需要一个通用的 AST walker 框架。
+
+用 Rust 实现 AST walker 框架：
+- 提供 visitor 模式：进入/离开每个节点时触发回调
+- 支持深度优先遍历（前序和后序）
+- 支持遍历时修改节点（mutable visitor）
+- 支持提前终止遍历（发现错误就停）
+- 内置常用的遍历模式：收集所有变量声明、统计函数调用
+- 可以链式组合多个 walker
+
+CLI：ast-walker analyze ast.json --walkers unused-vars,dead-code，输出分析结果。cargo build 编译通过。

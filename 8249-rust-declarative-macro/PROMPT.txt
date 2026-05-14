@@ -1,0 +1,11 @@
+macro_rules! 声明宏的语法很特殊，想做一个专门解析和分析声明宏的工具。
+
+用 Rust 实现声明宏解析器：
+- 解析 macro_rules! 的完整语法结构
+- 提取所有匹配臂（arm）的 pattern 和展开模板
+- 解析 metavariable：$name:ident、$name:expr、$name:tt 等
+- 解析重复标记 $(...)* 、$(...)+、$(...),?
+- 检测常见问题：未使用的 metavariable、缺少的重复分隔符
+- 输出结构化的宏定义信息
+
+CLI：declarative-macro parse macros.rs，输出每个宏的结构分析。cargo build 通过。

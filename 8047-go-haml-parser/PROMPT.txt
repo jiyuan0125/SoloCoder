@@ -1,0 +1,3 @@
+用 Go 写个 HAML 模板解析器。HAML 是一种缩进式的 HTML 模板语言，用缩进表示嵌套，%tag 表示标签，.class 和 #id 表示属性，= expr 表示输出。
+解析 HAML 文本，输出对应的 HTML。支持属性定义 {attr: "value"}，Ruby 风格的 hash 写法。
+标准库，go build 编译通过。

@@ -1,0 +1,10 @@
+在学编译原理，想动手做一个基于字节码的虚拟机。把高级语言编译成字节码再执行，理解整个流程。
+
+用 Rust 实现一个字节码虚拟机：
+- 定义一套字节码指令集（LOAD、STORE、ADD、SUB、JMP、CALL、RET 等）
+- 实现字节码编译器，能把简单表达式编译成字节码序列
+- 实现虚拟机执行字节码，维护操作数栈和调用栈
+- 支持函数定义和调用，支持局部变量
+- 可以 dump 字节码查看指令序列
+
+CLI：bytecode-vm run program.bc 或 bytecode-vm compile program.src，编译执行。cargo build 通过。

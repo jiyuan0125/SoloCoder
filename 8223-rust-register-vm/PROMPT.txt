@@ -1,0 +1,11 @@
+栈式虚拟机指令太多，想试试寄存器式设计，指令直接操作寄存器，理论上执行效率更高。
+
+用 Rust 实现一个寄存器式虚拟机：
+- 固定数量的寄存器（R0-R15），指令带寄存器编号
+- 支持 MOV、ADD、SUB、MUL、DIV 等算术指令
+- 支持 LOAD/STORE 访问内存
+- 支持条件比较 CMP 和条件跳转 JZ、JNZ、JMP
+- 支持函数调用 CALL/RET，保存恢复寄存器现场
+- 执行时可以打印寄存器快照
+
+CLI：register-vm run program.rvm，执行并输出结果。cargo build 通过。

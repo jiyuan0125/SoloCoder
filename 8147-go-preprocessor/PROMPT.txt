@@ -1,0 +1,6 @@
+做一个 C 风格的预处理器。处理 #include、#define、#ifdef/#ifndef/#else/#endif、#undef 指令。支持嵌套 include（防止重复包含）、宏展开、条件编译。
+
+用法：preprocessor -I ./include main.c -o processed.c
+输出展开和条件选择后的纯代码。
+不用做得像 gcc -E 那么完整，核心指令覆盖就行。
+Go 标准库实现，go build 编译通过。

@@ -1,0 +1,5 @@
+帮我实现一个 Go benchmark 运行和分析工具。
+
+做性能优化时需要反复跑 benchmark 对比。工具包装 go test -bench，提供这些功能：多次运行取平均值减少噪声、对比两次 benchmark 的结果（自动计算性能变化百分比）、生成 CSV/JSON 格式的结果文件方便绘图、检测结果的统计显著性。
+
+对 benchmark 函数支持设置运行时间、内存分析（-benchmem）开关。命令行工具，Go 标准库，go build 通过。

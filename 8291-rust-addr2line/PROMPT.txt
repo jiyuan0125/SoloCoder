@@ -1,0 +1,5 @@
+崩溃排查时经常需要把 PC 地址转成源码行号，帮我用 Rust 实现一个 addr2line 工具。
+
+读取 ELF 文件中的 DWARF 调试信息，建立地址到源码位置的查找表。输入一个地址，输出对应的函数名、源文件路径和行号。支持 .debug_line 和 .debug_info 段的解析。如果没有调试信息就给出友好提示。
+
+cargo run -- --exe binary 0x401234 这种用法。先用 rustc -g 编译一个小程序生成测试数据。cargo build 通过。

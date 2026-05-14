@@ -1,0 +1,10 @@
+做一个语法分析器生成器。输入 BNF 风格的语法定义，输出能解析该语法的 Go 递归下降 parser 代码。
+
+定义示例：
+expr := term (('+' | '-') term)*
+term := factor (('*' | '/') factor)*
+factor := NUMBER | '(' expr ')'
+
+自动处理左递归检测和报错，生成的代码包含 AST 节点定义。
+用法：parser-gen grammar.txt -o parser.go
+Go 标准库，go build 能编。

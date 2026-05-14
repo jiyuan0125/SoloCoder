@@ -1,0 +1,5 @@
+帮我实现一个 Python 的版本兼容性检查器，检测代码在不同 Python 版本间的兼容问题。
+
+代码在 Python 3.8 能跑但在 3.12 报错？这类问题需要提前发现。解析 Python AST，检查：版本特定的语法（如 3.10 的 match-case、3.9 的字典合并运算符 `|`）、标准库模块的版本可用性（如 `tomllib` 从 3.11 才有）、废弃和移除的功能（如 3.12 移除了 `imp` 模块）。用户指定目标版本范围。
+
+Python 3，ast 模块。用法：`python version_checker.py --min-version 3.8 --max-version 3.12 src/`，输出不兼容的代码位置和原因。`python version_checker.py` 能直接运行。

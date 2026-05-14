@@ -1,0 +1,10 @@
+Rust 生态虽然有 toml crate，但我想自己实现一个 TOML 解析器来学习解析技术。要覆盖 TOML v1.0 规范的主要特性。
+
+用 Rust 从零写一个 TOML 解析器：
+- 支持基本类型：字符串、整数、浮点数、布尔、日期时间
+- 支持数组 [1, 2, 3] 和内联表 { x = 1 }
+- 支持表 [section] 和数组表 [[array_section]]
+- 支持多行字符串和转义字符
+- 解析后输出为 JSON 格式，方便对比验证
+
+CLI：toml-parser config.toml，输出对应的 JSON。cargo build 通过。

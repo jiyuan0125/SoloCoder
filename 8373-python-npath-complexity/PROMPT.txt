@@ -1,0 +1,5 @@
+帮我用 Python 写一个 NPath 复杂度分析器，计算函数的执行路径数量。
+
+NPath 复杂度统计一个函数所有可能的执行路径总数，比圈复杂度更能反映 if-else 链和嵌套循环带来的组合爆炸。规则：if-else 分支路径相乘、循环体路径相乘、顺序语句路径相加。解析 Python AST，递归计算每个函数的路径数。注意处理 try-except 中的多条 except 分支。
+
+Python 3，ast 模块。命令行：`python npath.py codebase/`，输出每个函数的 NPath 值，超过 200 的标记为需要拆分。以科学计数法显示大数值。`python npath.py` 能直接运行。

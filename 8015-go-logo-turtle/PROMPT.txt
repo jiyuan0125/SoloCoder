@@ -1,0 +1,3 @@
+用 Go 做一个 Logo 海龟画图解释器。支持基本画图命令：FORWARD、BACKWARD、LEFT、RIGHT、PENUP、PENDOWN，还有 REPEAT 重复和 TO 定义过程。
+海龟的轨迹用 SVG 输出，这样浏览器就能直接看画出来的图形。坐标系统以画布中心为原点，初始朝上。
+go build 通过，标准库。

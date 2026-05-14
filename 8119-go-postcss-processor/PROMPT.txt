@@ -1,0 +1,6 @@
+实现一个 PostCSS 风格的 CSS 处理器。核心是一个插件系统：解析 CSS 成 AST，然后依次经过各个插件处理，最后输出 CSS。
+
+自带几个内置插件：自动加浏览器前缀（-webkit- 等）、压缩空白、去除空规则、合并相同选择器。
+用法：postcss input.css --plugins autoprefixer,minify -o output.css
+用户可以写自定义插件（注册一个处理函数就行）。
+Go 标准库，go build 通过。

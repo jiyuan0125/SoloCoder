@@ -1,0 +1,5 @@
+做一个 CYK（Cocke-Younger-Kasami）解析器。用动态规划算法判断输入是否属于给定文法，文法必须是 CNF（Chomsky 范式）。
+
+先自动把普通 CFG 转换成 CNF，然后执行 CYK 算法。用三角矩阵展示解析过程。
+用法：cyk-parser grammar.cfg "a b c"
+输出是否接受，以及所有可能的解析路径。Go 标准库，go build 通过。

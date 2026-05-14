@@ -1,0 +1,1 @@
+需要在 Linux 下分析 ELF 二进制文件的格式。Go 实现一个 ELF 解析器，能读取 ELF header、program headers、section headers、symbol table、dynamic section。不用 Go 标准库的 debug/elf 包，自己按 ELF 规范解析二进制。输出文件的架构、入口点、所有段和节的详细信息。命令行传入 ELF 文件路径。go build 编译通过。

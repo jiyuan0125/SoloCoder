@@ -1,0 +1,5 @@
+写一个 Go channel 解析器，分析代码中 channel 的使用模式。
+
+输入 Go 源码，找出所有 channel 的创建（make(chan ...)）、发送（ch <- x）和接收（<-ch / x = <-ch）操作。分析每个 channel 的方向（双向、只发、只收）、缓冲区大小、在哪些 goroutine 之间传递。对没有消费者或没有生产者的 channel 要报警。
+
+输出 channel 拓扑图和潜在问题清单。Go 标准库实现，go build 通过。

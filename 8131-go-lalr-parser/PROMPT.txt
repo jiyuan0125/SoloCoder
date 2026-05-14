@@ -1,0 +1,5 @@
+实现 LALR(1) 解析器构造算法。比 SLR 更精确，用向前看符号传播算法计算每个项目的精确向前看集合。能处理 SLR 解决不了的冲突。
+
+从文法文件构建 LALR(1) 分析表，对输入做解析并生成 AST。展示项目集和分析表。
+用法：lalr-parser grammar.txt tokens.txt
+报告冲突类型（shift-reduce / reduce-reduce）。Go 标准库，go build 通过。

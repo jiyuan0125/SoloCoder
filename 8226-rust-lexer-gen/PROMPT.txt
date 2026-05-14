@@ -1,0 +1,10 @@
+做编译器首先要搞定词法分析。想做一个词法分析器生成器，输入 token 定义规则，自动生成 Lexer 代码。
+
+用 Rust 写一个 Lexer 生成器：
+- 用户用 DSL 定义 token 规则（如 NUMBER: [0-9]+、IDENT: [a-zA-Z_][a-zA-Z0-9_]*）
+- 支持关键字、字符串字面量、注释的规则
+- 处理规则的优先级（如关键字优先于标识符）
+- 生成 Rust 源码的 Lexer，包含 next_token() 接口
+- 生成的代码能独立编译运行
+
+CLI：lexer-gen tokens.ldef --output lexer.rs，生成 Lexer 代码文件。cargo build 通过。

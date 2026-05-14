@@ -1,0 +1,1 @@
+分析日志的时候需要把 URL 拆开来看各个部分。Go 写一个 URL 解析工具，比标准库 net/url 更细致一点：支持解析 scheme、host、port、path segments、query params（多值参数）、fragment、userinfo。还要能检测异常 URL（缺少 scheme、非法字符、端口越界等）。输入一个 URL 字符串，输出各部分的详细信息。go build 能过。

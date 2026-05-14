@@ -1,0 +1,11 @@
+做代码迁移时需要对 AST 做批量改写，比如把所有 for 循环改成 while、重命名函数等。
+
+用 Rust 实现 AST 转换工具：
+- 支持节点替换：匹配特定模式，替换为新节点
+- 支持节点插入和删除（在指定位置增删子节点）
+- 支持重命名（变量、函数、类型名的全局替换）
+- 支持自定义转换规则的 DSL（match pattern -> replace pattern）
+- 转换前后输出 diff 对比
+- 保持转换后的 AST 仍然合法
+
+CLI：ast-transform ast.json --rules rename.rules --diff，显示转换结果。cargo build 通过。

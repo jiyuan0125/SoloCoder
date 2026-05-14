@@ -1,0 +1,5 @@
+写一个 Python 的废弃 API 扫描器，检测项目中使用了已废弃库/函数的代码。
+
+很多库在升级过程中会标记部分 API 为 deprecated，但项目可能还在用。解析 Python 源码，扫描 import 和函数调用，对比内置的废弃 API 知识库（硬编码常见的已废弃函数，如 `collections.Mapping` 应改为 `collections.abc.Mapping`、`urllib.urlopen` 应改为 `urllib.request.urlopen` 等）。输出每个废弃用法的位置和推荐的替代方案。
+
+Python 3，ast 模块。CLI：`python deprecation_scanner.py project/`，列出所有废弃 API 使用，按废弃版本排序。`python deprecation_scanner.py` 能跑。

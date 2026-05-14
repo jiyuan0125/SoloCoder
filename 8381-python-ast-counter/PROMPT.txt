@@ -1,0 +1,5 @@
+写一个 Python 的 AST 节点计数器，分析代码的语法结构复杂度。
+
+通过统计 AST 节点类型和数量来量化代码结构。解析 Python 源码，遍历 AST，统计每种节点类型的出现次数：FunctionDef、ClassDef、Call、If、For、While、BinOp、Compare、Subscript 等。按模块汇总，计算节点密度（节点数/代码行数），密度过高可能意味着代码过于复杂。
+
+Python 3，ast 模块。CLI：`python ast_counter.py module.py`，输出节点类型分布表和总数；`python ast_counter.py src/` 对目录批量分析，找出节点密度最高的文件。`python ast_counter.py` 能直接运行。

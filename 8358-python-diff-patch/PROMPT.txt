@@ -1,0 +1,5 @@
+帮我写一个 Python 的 diff 和 patch 工具，能对比两个文本文件并生成和应用补丁。
+
+类似 diff/patch 命令，但用 Python 实现。核心功能：计算两个文本的行级差异（类似 unified diff 格式），生成补丁文件；根据补丁文件把旧版本更新为新版本。支持上下文行数配置、空白差异忽略选项。patch 时如果目标文件已经被修改过，尝试做模糊匹配（fuzzy patch）。
+
+纯 Python 3，不用 difflib（自己实现 diff 算法，比如 Myers 或 patience diff）。CLI：`python diff_patch.py diff old.txt new.txt > changes.patch`，`python diff_patch.py patch old.txt changes.patch`。`python diff_patch.py` 能跑。

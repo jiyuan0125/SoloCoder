@@ -1,0 +1,3 @@
+写一个 Go 的 Forth 语言解释器。支持整数运算、栈操作（DUP SWAP DROP OVER ROT）、冒号定义新词、IF ELSE THEN 和 DO LOOP 控制结构。
+内存上模拟 Forth 的字典结构来存词定义。从文本文件加载代码执行，也支持交互式逐行输入。
+标准库实现，go build 编译通过。

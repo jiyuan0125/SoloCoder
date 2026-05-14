@@ -1,0 +1,5 @@
+帮我实现一个 ES6+ 到 ES5 的 JavaScript 转译器。能把箭头函数转成 function、let/const 转 var、模板字符串转字符串拼接、解构赋值展开、Promise 用 callback 模拟。
+
+命令：es6-transpile input.js -o output.js
+只处理常见语法，不碰第三方库 API。
+Go 标准库，go build 通过。AST 级别转换，不是正则替换。

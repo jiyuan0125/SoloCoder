@@ -1,0 +1,5 @@
+实现一个 Python 的代码克隆检测器，识别不同类型的代码克隆。
+
+代码克隆分四类：Type-1（完全相同，只差空格注释）、Type-2（结构相同，变量名不同）、Type-3（有少量修改，增删几行）、Type-4（功能相同但实现不同，这个只做简单检测）。对 Python 源码先标准化（统一格式、替换标识符），再用后缀树或 Rabin-Karp 指纹匹配找重复片段。
+
+Python 3 标准库。用法：`python clone_detector.py --type 1,2 --min-tokens 50 src/`，输出克隆对列表，包含类型、位置、相似度。`python clone_detector.py` 能运行。

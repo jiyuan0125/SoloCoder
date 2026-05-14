@@ -1,0 +1,10 @@
+做一个栈式虚拟机，所有操作都通过栈来传递参数和结果。类似 JVM 的简化版本。
+
+用 Rust 实现栈式虚拟机：
+- 基于 operand stack 的设计，PUSH/POP/DUP/SWAP 等栈操作
+- 算术指令在栈顶取操作数，结果压回栈（如 ADD 弹出两个、压入一个）
+- 支持条件跳转和循环（IF、ELSE、ENDIF、WHILE）
+- 支持函数调用，有独立的返回栈和局部变量
+- 输出每一步执行的栈状态（debug 模式）
+
+CLI：stack-vm run program.svm --debug，显示执行过程。cargo build 编译通过。

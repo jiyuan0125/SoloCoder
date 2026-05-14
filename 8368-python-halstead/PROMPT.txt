@@ -1,0 +1,5 @@
+写一个 Python 的 Halstead 复杂度度量计算器，量化代码的词汇复杂度。
+
+Halstead 度量基于操作符和操作数的数量，计算程序长度、程序体积、难度、工作量、预计错误数等指标。解析 Python 源码，区分操作符（+、-、if、while、= 等）和操作数（变量名、常量等），统计各自出现次数，然后套用 Halstead 公式计算全套指标。
+
+Python 3，ast 模块解析。命令行：`python halstead.py module.py`，输出每个函数的 Halstead 各项指标值（N1、N2、n1、n2、Length、Volume、Difficulty、Effort、Bugs estimate）。支持批量分析目录。`python halstead.py` 能跑。

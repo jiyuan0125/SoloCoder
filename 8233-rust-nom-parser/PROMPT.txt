@@ -1,0 +1,11 @@
+nom 是 Rust 里最流行的解析库之一，基于组合子设计。想理解它的工作原理，自己实现核心功能。
+
+用 Rust 实现一个 nom 风格的解析库：
+- 实现 IResult<I, O> 类型，支持 Ok、Err（Error/Incomplete）
+- 提供基础解析器：tag、take、alpha1、digit1、space0
+- 提供组合子：alt、many0、many1、opt、preceded、delimited、separated_list
+- 支持 map、flat_map 结果转换
+- 错误累积：记录所有尝试过的分支
+- 附带一个 CSV 解析器示例
+
+CLI：nom-parser parse input.csv，用自定义组合子解析。cargo build 编译通过。

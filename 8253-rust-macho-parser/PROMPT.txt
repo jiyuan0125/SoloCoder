@@ -1,0 +1,5 @@
+用 Rust 写一个 Mach-O 文件解析器，能看 macOS 可执行文件和动态库的内部结构。
+
+解析 Mach-O 的 header、load commands、symbol table，把段名、段地址、大小这些信息打印出来。支持 64 位格式（MH_MAGIC_64），fat binary 暂时不用管。解析失败要给出具体是哪个字段出的问题。
+
+命令行工具：cargo run -- target-file。用 macOS 上的二进制文件测试（如果没有真文件，自己构造一个最小的 Mach-O 二进制来测也行）。

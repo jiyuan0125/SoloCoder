@@ -1,0 +1,1 @@
+分析 macOS 上的二进制文件需要理解 Mach-O 格式。Go 实现 Mach-O 文件解析器，解析 Mach-O header、load commands（LC_SEGMENT_64、LC_SYMTAB、LC_DYSYMTAB 等）、name string table。不用 debug/macho 包，手动按规范解析二进制字节。输出文件类型、CPU 类型、所有 segment 和 section 信息。go build 通过。

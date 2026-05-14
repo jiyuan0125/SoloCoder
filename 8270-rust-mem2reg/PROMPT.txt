@@ -1,0 +1,5 @@
+帮我实现 mem2reg 优化 pass，把栈上的局部变量（load/store）提升到 SSA 寄存器。
+
+扫描 IR 中的 alloca 指令，分析每个 alloca 的 store 和 load 操作。如果该 alloca 只在同一个基本块内使用且没有 address-taken，直接用值替换。如果跨基本块，在支配边界插入 phi 函数完成提升。不能提升的（被取地址、有复杂控制流）保持原样。
+
+Rust 实现，cargo test 用含多个局部变量赋值的函数做测试。

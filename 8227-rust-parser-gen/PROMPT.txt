@@ -1,0 +1,10 @@
+有了词法分析器还不够，还需要解析器。想做一个解析器生成器，类似 Yacc/Bison，给定语法规则自动生成 parser。
+
+用 Rust 实现解析器生成器：
+- 用户用 BNF 风格定义语法规则（expr := term (+ term)*）
+- 自动计算 FIRST/FOLLOW 集合
+- 生成 LALR(1) 或 LR(1) 解析表的 action/goto 表
+- 冲突检测和报告（shift/reduce、reduce/reduce）
+- 生成可独立使用的 Rust parser 代码
+
+CLI：parser-gen grammar.pg --output parser.rs，生成 Parser 代码。cargo build 编译通过。

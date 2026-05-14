@@ -1,0 +1,5 @@
+我需要一个 Rust 实现的 strip 工具，把 ELF 文件里的调试信息和符号表去掉，减小文件体积。
+
+能删除 .debug_* 段、.symtab 段、.strtab 段。保留 .dynsym 和 .dynstr（动态链接需要的不能删）。删除后要更新 ELF header 里的 section header 数量，文件还能正常执行。
+
+cargo run -- input-binary -o stripped-binary。先拿自己编译的 Rust 或 C 二进制做测试。cargo build 通过。

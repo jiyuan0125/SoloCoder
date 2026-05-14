@@ -1,0 +1,11 @@
+查询计划有了但性能不行，得加个优化器，自动做谓词下推、列裁剪、Join 重排序这些常见的查询优化。
+
+用 Rust 写一个 SQL 查询优化器：
+- 接收逻辑查询计划，输出优化后的计划
+- 实现谓词下推（Push down Filter past Join/Project）
+- 实现列裁剪（只保留用到的列）
+- 实现 Join 消除（不必要的 Join 去掉）
+- 每条优化规则可以单独开关
+- 输出优化前后的计划对比
+
+CLI：sql-optimizer "SELECT ..." --rules pushdown,prune --explain，显示优化前后的执行计划差异。cargo build 通过。

@@ -1,0 +1,5 @@
+写一个 Python 的敏感信息检测器，防止密钥和凭据泄露到代码仓库。
+
+密钥泄露是严重的安全事故。扫描源码文件和配置文件，检测：AWS Access Key、Secret Key 的模式、GitHub Token、数据库连接串中的密码、私钥内容（BEGIN RSA PRIVATE KEY）、JWT Secret、通用的高熵字符串（可能是 Base64 编码的密钥）。用正则模式和熵分析结合，减少误报。支持白名单（标记已知的假阳性）。
+
+Python 3 标准库。CLI：`python secret_detector.py src/`，输出检测到的可疑内容，包含文件路径、行号、类型、内容预览（脱敏显示）。`python secret_detector.py` 能跑。

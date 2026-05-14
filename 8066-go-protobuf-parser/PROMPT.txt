@@ -1,0 +1,1 @@
+需要在程序运行时解析 .proto 文件而不是编译期。Go 实现一个 protobuf 定义文件解析器，能解析 syntax、package、message、enum、service 定义，支持字段类型（scalar、repeated、map、oneof）、字段编号、选项注解。解析结果输出为结构化的 Go 对象，方便后续做代码生成或文档生成。解析错误精确定位到行号。go build 能编译。

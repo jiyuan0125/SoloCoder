@@ -1,0 +1,1 @@
+处理 Kafka 消息的时候需要解析 Avro schema。Go 实现一个 Apache Avro schema 解析器，能解析 .avsc 文件中的 record、enum、array、map、union、fixed 类型定义。支持嵌套类型引用和命名空间。解析完输出 Go 结构体定义，字段类型正确映射（string→string, long→int64, bytes→[]byte 等）。go build 通过。

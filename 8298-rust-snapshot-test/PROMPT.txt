@@ -1,0 +1,5 @@
+写一个 snapshot testing 库，Rust 实现，方便对比函数输出和期望值。
+
+第一次运行时自动把输出保存为 snapshot 文件（放在 __snapshots__/ 目录下）。后续运行如果输出和 snapshot 不同就报错，显示 diff。支持 review 模式：交互式确认是否更新 snapshot。支持多行文本和 JSON 格式的 snapshot，JSON 要格式化后再比较。
+
+提供宏 snapshot!("test_name", output) 简化使用。cargo test 验证库的基本功能。不依赖外部 snapshot 库。

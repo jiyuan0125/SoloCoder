@@ -1,0 +1,5 @@
+帮我用 Rust 写一个 ar 格式的静态库（archive）打包工具。
+
+能把多个目标文件（.o）打包成 .a 文件，也能列出 .a 文件里的内容。支持 GNU ar 的格式（magic "!\n"，60 字节 header）。能处理长文件名（使用 /ARFILENAMES/ 扩展）。提取时要能还原原始文件。
+
+命令行：cargo run -- cr libfoo.a a.o b.o c.o（创建），cargo run -- t libfoo.a（列出），cargo run -- x libfoo.a（提取）。cargo build 通过。

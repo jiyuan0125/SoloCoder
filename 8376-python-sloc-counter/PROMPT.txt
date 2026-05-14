@@ -1,0 +1,5 @@
+帮我写一个 Python 的代码行数统计器（SLOC Counter），准确统计源代码规模。
+
+不像 `wc -l` 那样简单粗暴地数行，要区分物理行和逻辑行。统计维度：总行数、代码行（SLOC）、注释行（单行和块注释）、空行。支持 Python、Java、C、Go、JavaScript 几种语言的注释规则。按文件、目录、语言三个维度汇总，输出表格和占比饼图数据。
+
+Python 3 标准库。CLI：`python sloc.py src/`，按语言分组显示每种语言的代码/注释/空行统计和百分比。`python sloc.py` 能跑。

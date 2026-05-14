@@ -1,0 +1,5 @@
+写一个 Python 的开源许可证检查工具，分析项目依赖的许可证兼容性。
+
+引入的开源组件的许可证可能与项目自身许可证冲突。扫描 requirements.txt、setup.py、pyproject.toml 中的依赖列表，查询每个包的许可证（从 PyPI API 或本地缓存的许可证数据库获取）。根据许可证兼容性矩阵（GPL 和专有软件不兼容等），报告冲突和风险。
+
+Python 3 标准库（urllib 请求 PyPI）。CLI：`python license_checker.py requirements.txt`，输出每个依赖的许可证类型、兼容性状态（兼容/注意/冲突）。`python license_checker.py` 能跑。

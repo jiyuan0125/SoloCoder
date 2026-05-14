@@ -1,0 +1,11 @@
+Rust 后端服务需要 HTML 模板引擎，Handlebars 语法比较直观，想自己实现一个。
+
+用 Rust 实现 Handlebars 模板引擎：
+- 支持 {{variable}} 和 {{{raw}}} 输出
+- 支持 {{#if}} {{else}} {{/if}} 和 {{#each}} {{/each}}
+- 支持 {{#with context}} 临时切换上下文
+- 支持 {{helper arg1 arg2}} 自定义 helper 注册
+- 支持 {{#block name}} {{/block}} 和 {{> partial}} 模板继承
+- 内置 helper：eq、ne、gt、lt、and、or
+
+CLI：handlebars render template.hbs data.json，输出 HTML。cargo build 编译通过。

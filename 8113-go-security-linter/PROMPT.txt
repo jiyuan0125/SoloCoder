@@ -1,0 +1,5 @@
+我需要一个 Go 安全审计工具。扫描源码找常见安全问题：SQL 注入风险（字符串拼接 SQL）、硬编码密钥/密码、不安全的 random（用 math/rand 而非 crypto/rand）、文件路径拼接没做清洗、HTTP 请求没设超时。
+
+按 OWASP 分类，每个发现给严重级别和修复建议。
+命令：sec-linter ./src
+纯 Go 标准库，go build 能编译。

@@ -1,0 +1,5 @@
+用 Python 实现一个可维护性指数（Maintainability Index）计算工具。
+
+微软的可维护性指数综合了 Halstead 体积、圈复杂度和代码行数三个维度，公式是 `MI = 171 - 5.2 * ln(HV) - 0.23 * CC - 16.2 * ln(LOC)`，范围 0-100。对 Python 源文件计算这个指数，按模块和函数级别输出。额外给出评级：20 以下高可维护、20-40 中等、40 以上需要关注。
+
+Python 3 标准库。CLI：`python mi.py project/`，输出每个文件的 MI 值和评级，最后给整个项目的平均分。`python mi.py` 能直接运行。

@@ -1,0 +1,5 @@
+项目拆成了多个模块，每个模块打包都生成自己的 source map，我需要把它们合并成一个完整的映射。
+
+用 Rust 实现多个 Source Map v3 文件的合并，处理重叠区间、索引偏移，最终输出一个统一的 source map。合并时要保留所有 sources 和 names 的映射关系不丢失。
+
+cargo run -- map1.json map2.json map3.json -o merged.json。输入用几段真实的或手写的 source map JSON，验证合并后的 mapping 还能正确还原。cargo build 通过。

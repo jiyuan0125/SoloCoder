@@ -1,0 +1,5 @@
+写个类似 GNU objcopy 的工具，用 Rust 实现，能对二进制文件做各种变换。
+
+支持的功能：删除指定 section（--remove-section）、只保留指定 section（--only-section）、设置 section 的 flags、添加新的 section、修改输出格式（ELF → binary flat）。先把基本的 section 操作做扎实，格式转换能做 ELF 到 raw binary 就行。
+
+cargo run -- --remove-section .comment input.o output.o 这种用法。cargo build 通过。

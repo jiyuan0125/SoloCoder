@@ -1,0 +1,10 @@
+想做一个轻量级的脚本语言，用来嵌入到 Rust 应用里做插件扩展。语法风格类似 Lua，简单易学。
+
+用 Rust 写一个脚本语言解释器，功能包括：
+- 支持 number、string、bool、nil 四种基本类型
+- 支持函数定义和递归调用
+- 支持 table（类似字典）数据结构
+- 支持循环（while/for）和条件分支
+- 解析或运行出错时报告具体行号和原因
+
+运行方式：script-lang example.script，读文件执行。cargo build 通过。

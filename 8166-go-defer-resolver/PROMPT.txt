@@ -1,0 +1,5 @@
+defer 语句在 Go 里有些坑，我想写个工具自动检测 defer 的常见问题。
+
+解析 Go 源码中的所有 defer 语句，分析以下几点：defer 在循环中使用的性能问题（defer 不及时释放资源）、defer 闭包捕获变量的值语义问题（参数是立即求值还是延迟求值）、defer 和 recover 的配合是否正确。还要统计 defer 语句的嵌套深度，过深的 defer 链给出警告。
+
+输出 defer 问题报告。Go 标准库，go build 能编。

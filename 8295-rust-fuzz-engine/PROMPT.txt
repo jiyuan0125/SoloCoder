@@ -1,0 +1,5 @@
+用 Rust 写一个轻量的 fuzzing 引擎，能对命令行程序或纯函数做模糊测试。
+
+核心功能：基于覆盖率引导的变异策略（位翻转、字节插入删除、算术变异），追踪程序执行路径（用插桩或简单信号），优先探索新路径。检测 crash（段错误、超时、断言失败），记录触发 crash 的输入。
+
+命令行：cargo run -- --target ./test_program --input-dir seeds/ --output-dir crashes/ --max-time 60。先用一个有已知 bug 的小程序做演示。

@@ -1,0 +1,5 @@
+实现一个 Python 的反模式检测器，识别代码中常见的反模式写法。
+
+反模式是看似合理但实际有害的编码习惯。检测以下常见反模式：裸 except（`except:` 吞掉所有异常）、可变默认参数（`def f(x=[])`）、在循环中用 `+` 拼接字符串、用 `is` 比较整数/字符串、`import *` 污染名字空间、不必要的 lambda（`map(lambda x: f(x), lst)` 应该用列表推导）、在 `__init__` 外定义实例属性。
+
+Python 3，ast 模块。CLI：`python anti_pattern.py src/`，输出每个反模式的实例位置和解释。`python anti_pattern.py` 能直接跑。

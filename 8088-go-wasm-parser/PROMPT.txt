@@ -1,0 +1,1 @@
+WebAssembly 越来越火了，想自己解析一下 .wasm 文件的格式。Go 实现一个 WASM 二进制解析器，按照 WASM 规范解析各 section：type、function、table、memory、global、export、import、code、data。输出每个 section 的内容概要，特别是函数签名、导出名称、内存布局。解析不了的 section 用 raw bytes 展示。go build 通过。

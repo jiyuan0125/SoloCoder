@@ -1,0 +1,5 @@
+帮我用 Rust 实现指令选择，把 IR 指令映射到目标机器指令。
+
+用简单的 tree pattern matching 方式：定义一组从 IR pattern 到目标指令的规则（比如 IR 的 add 对应 x86 的 add，mul+add 可以合并成 lea）。对 IR 做自底向上的 pattern 匹配，选择代价最小的指令序列。
+
+先定义一套抽象的目标指令描述（不一定要真的 x86 编码），重点在匹配算法。cargo test 验证几个典型 IR 片段的选择结果。

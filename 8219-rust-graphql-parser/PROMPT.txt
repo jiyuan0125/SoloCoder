@@ -1,0 +1,11 @@
+GraphQL 的查询语法和 Schema 定义语言（SDL）都有专门的解析需求。需要把 GraphQL 查询字符串解析成 AST，方便后续验证和执行。
+
+用 Rust 实现 GraphQL 解析器：
+- 解析 Query、Mutation、Subscription 操作
+- 解析字段选择集、参数、别名、指令（@include、@skip）
+- 解析变量定义 $var: Type! 和默认值
+- 解析 Schema SDL：type、input、enum、interface、union
+- 支持 Fragment 定义和引用
+- 语法错误报告具体位置
+
+CLI：graphql-parser query.graphql，输出格式化的 AST JSON。cargo build 通过。

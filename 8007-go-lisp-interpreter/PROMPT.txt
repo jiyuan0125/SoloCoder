@@ -1,0 +1,3 @@
+用 Go 写个 Lisp 解释器吧。支持基本的 S-expression 语法，能处理整数、浮点数、字符串、布尔值、列表。
+内置函数包括算术运算、car/cdr/cons、list 操作，还得能定义 lambda 和递归函数。支持 let 绑定和 if 条件。
+从文件或 stdin 读取代码，解析执行输出结果。go build 能过。

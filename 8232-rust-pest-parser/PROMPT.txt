@@ -1,0 +1,11 @@
+Pest 是 Rust 生态里很有名的解析器库，用的是 PEG 文法。想深入理解它的原理，自己实现一个简化版。
+
+用 Rust 实现一个 PEG 解析器（类似 Pest）：
+- 支持 PEG 语法规则：sequence、choice（/）、optional（?）、repeat（* +）
+- 支持 &expr（正向断言）和 !expr（负向断言）
+- 支持 ..range 和 ASCII/Unicode 字符类
+- 输入 .pest 风格的语法定义文件
+- 自动从 PEG 规则生成 Rust 解析器
+- 附带一个 JSON 解析器作为示例
+
+CLI：pest-parser grammar.pest input.txt，解析输出 AST。cargo build 通过。

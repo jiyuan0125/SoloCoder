@@ -1,0 +1,5 @@
+帮我写一个 Python 的 SBOM（Software Bill of Materials）生成器，为项目生成物料清单。
+
+安全合规要求提供 SBOM。扫描 Python 项目的所有依赖（解析 requirements.txt、setup.py、pyproject.toml），生成标准格式的 SBOM。支持 SPDX 和 CycloneDX 两种输出格式。每个组件记录：包名、版本、许可证、下载 URL、哈希值、依赖关系。生成的 SBOM 可以导入其他安全管理工具。
+
+Python 3 标准库。CLI：`python sbom.py --format spdx --output sbom.json`，在当前项目目录下生成 SBOM 文件。`python sbom.py --format cyclonedx --output sbom.xml`。`python sbom.py` 能跑。

@@ -1,0 +1,5 @@
+用 Python 实现一个 wire format 编解码引擎，能处理常见的二进制序列化格式。
+
+背景是物联网和嵌入式场景中，设备之间用紧凑的二进制格式通信。支持变长整数（varint）、zigzag 编码、定长整数、浮点数、长度前缀字符串、TLV（Type-Length-Value）结构。用户定义消息 schema（JSON 格式），引擎根据 schema 编码 Python 字典为字节流，或解码字节流回 Python 对象。
+
+纯 Python 3 实现。CLI：`python wire_format.py encode --schema msg.json --data '{"id":1,"name":"test"}'` 输出十六进制字节；`python wire_format.py decode --schema msg.json hex_bytes` 输出 JSON。编解码都要有错误报告。`python wire_format.py` 能跑。

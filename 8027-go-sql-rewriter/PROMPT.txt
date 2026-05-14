@@ -1,0 +1,2 @@
+用 Go 做 SQL 改写工具。能对 SQL AST 做几种常见改写：把 SELECT * 展开成具体列名（需要传 schema 信息）、消除无意义的恒真条件(1=1)、简化嵌套 EXISTS/NOT EXISTS、谓词下推。
+改写前后都输出 SQL 文本，让用户能对比。命令行工具，go build 能过。

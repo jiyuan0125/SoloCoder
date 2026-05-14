@@ -1,0 +1,5 @@
+帮我用 Python 实现 rsync 算法的核心逻辑，实现高效的远程文件同步。
+
+rsync 的精髓是：发送方和接收方通过滚动校验和（rolling checksum）和强校验（MD4/SHA256）匹配相同数据块，只传输不匹配的部分。实现完整的流程：接收方计算文件块的弱校验和强校验发给发送方，发送方扫描本地文件找到匹配块，生成差异数据。支持可配置的块大小。
+
+Python 3 标准库。命令行：`python rsync.py signature receiver_file sig.json`、`python rsync.py delta sig.json sender_file delta.bin`、`python rsync.py patch receiver_file delta.bin output`。`python rsync.py` 能运行。

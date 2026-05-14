@@ -1,0 +1,5 @@
+帮我写一个 Python 的代码 Token 计数器，统计源码的 token 粒度信息。
+
+LOC 统计太粗糙，token 计数更能准确反映代码量。用 Python 的 tokenize 模块解析源码，统计各种 token 类型的数量：关键字、标识符、运算符、数字、字符串、注释、换行等。区分代码 token 和注释 token，计算有效代码 token 占比。支持单文件和目录扫描。
+
+Python 3 标准库。CLI：`python token_counter.py file.py`，输出 token 类型分布表；`python token_counter.py src/ --top 10` 输出 token 数最多的前 10 个文件。`python token_counter.py` 能直接跑。

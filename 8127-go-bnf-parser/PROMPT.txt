@@ -1,0 +1,5 @@
+做一个 BNF 解析器，支持标准 BNF 和一些常见变体。把 BNF 规则解析成内部表示，支持语法规则的可视化打印和基本验证。
+
+特性：检测直接/间接左递归、计算 NULLABLE 集、提取左公因子。文法可以来自文件或命令行。
+命令：bnf-parser grammar.bnf --check-left-recursion
+Go 标准库，go build 通过。

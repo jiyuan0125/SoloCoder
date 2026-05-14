@@ -1,0 +1,5 @@
+我手上有一些带调试信息的二进制文件，想用 Rust 解析里面的 DWARF 格式调试数据。
+
+能从 .debug_info 段读出编译单元、函数定义、变量位置这些信息。先支持 DWARF v4，基本的 DIE 解析和属性读取能跑通。不要求完整覆盖所有 tag，但常见的 DW_TAG_subprogram、DW_TAG_variable 要能处理。
+
+cargo build 能编译，附带测试用的 .debug_info 数据（可以手构造二进制字节序列）。

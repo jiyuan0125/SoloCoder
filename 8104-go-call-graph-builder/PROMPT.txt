@@ -1,0 +1,5 @@
+我想做一个 Go 函数调用图生成器。解析源代码，找出函数之间的调用关系，生成可视化的调用图。输出格式支持文本树和 dot（Graphviz）两种。
+
+命令：callgraph -format text|dot -pkg ./mypkg
+文本格式缩进展示层级，dot 格式直接能喂给 graphviz 渲染。
+只依赖 Go 标准库，go build 能编译。

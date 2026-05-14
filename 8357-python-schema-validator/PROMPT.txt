@@ -1,0 +1,5 @@
+实现一个 Python 的 JSON Schema 验证器，能根据 schema 定义校验数据是否符合规范。
+
+做 API 开发时经常需要校验请求体的数据格式。支持 JSON Schema 的核心关键字：type、required、properties、items、minLength、maxLength、minimum、maximum、pattern、enum、allOf、anyOf、oneOf。验证失败时给出具体的错误路径和原因（比如 `$.users[2].email: expected string, got null`）。
+
+Python 3 标准库。CLI：`python validator.py --schema user.schema.json --data request.json`，输出验证通过或失败详情。`python validator.py` 能直接运行。

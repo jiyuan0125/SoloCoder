@@ -1,0 +1,5 @@
+帮我写一个 Python 的内聚度度量工具，计算类的方法内聚程度。
+
+LCOM（Lack of Cohesion of Methods）衡量一个类的方法是否在使用相同的属性。LCOM 值越高说明类的职责越分散。实现 LCOM1 到 LCOM4 四种算法：从最基础的（方法访问的属性交集为空的对数）到 Henderson-Sellers 版本。解析 Python 类定义，分析每个方法访问了哪些实例属性（self.xxx），计算 LCOM 值。
+
+Python 3，ast 模块。用法：`python cohesion.py mymodule.py`，输出每个类的 LCOM1-4 值、方法数、属性数、访问矩阵。`python cohesion.py` 能跑。

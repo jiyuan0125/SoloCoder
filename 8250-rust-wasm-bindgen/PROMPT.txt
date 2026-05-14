@@ -1,0 +1,11 @@
+想把 Rust 函数编译到 WebAssembly 跑在浏览器里，需要做 Rust 到 Wasm 的绑定生成。
+
+用 Rust 写一个 Wasm 绑定生成器：
+- 解析 Rust 源码中的 pub 函数和结构体
+- 自动生成 JavaScript/TypeScript 绑定代码
+- 处理类型映射：Rust 的 i32 -> JS number、String -> string
+- 支持 #wasm_bindgen 风格的属性标注
+- 生成 .d.ts 类型声明文件
+- 支持导出函数和导入 JS 函数双向绑定
+
+CLI：wasm-bindgen src/lib.rs --out-dir pkg/，生成 JS 绑定和类型声明。cargo build 编译通过。

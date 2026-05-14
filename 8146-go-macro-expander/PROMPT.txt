@@ -1,0 +1,8 @@
+实现一个宏展开处理器。定义一个简单的宏系统，支持：对象宏（文本替换）、函数宏（带参数）、条件宏（#ifdef/#endif）、嵌套展开。
+
+输入带宏的文本文件，输出展开后的结果。检测循环展开并报错。
+宏定义格式：
+#define MAX(a,b) ((a)>(b)?(a):(b))
+#define VERSION 3
+用法：macro-expander defs.h input.txt
+Go 标准库，go build 通过。

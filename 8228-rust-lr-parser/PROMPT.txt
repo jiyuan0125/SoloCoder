@@ -1,0 +1,11 @@
+在学 LR 解析算法，想自己实现一个完整的 LR 解析器，包括构建解析表、处理冲突等细节。
+
+用 Rust 实现一个 LR 解析器：
+- 输入文法规则（LR(1) items），自动构建 LR 状态机
+- 构建 action 表和 goto 表
+- 解析输入 token 序列，构建 AST（规约时创建节点）
+- 处理 shift/reduce 冲突：默认 shift 并给出警告
+- 支持 operator precedence 解决表达式优先级
+- 输出解析过程的状态转换序列
+
+CLI：lr-parser --grammar grammar.lr --input tokens.txt，输出 AST。cargo build 通过。

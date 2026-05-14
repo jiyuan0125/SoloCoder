@@ -1,0 +1,3 @@
+写个 Go 版的 Liquid 模板引擎（Shopify 用的那个）。支持 {{ variable }} 输出、{% if %} / {% for %} 控制流、{% assign %} 变量赋值、过滤器和 capture 标签。
+内置常用过滤器：upcase、downcase、strip、join、first、last、size。输出内容要正确 HTML 转义。
+go build 通过，标准库实现。

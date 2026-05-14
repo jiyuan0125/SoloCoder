@@ -1,0 +1,11 @@
+LR(1) 状态太多了，LALR(1) 通过合并相似状态来缩小解析表，是 Yacc 用经典算法。
+
+用 Rust 实现 LALR(1) 解析器：
+- 从文法规则构造 LR(1) 项集族
+- 实现状态合并算法（同心集合并）
+- 构建压缩后的 LALR(1) 解析表
+- 检测并报告冲突（shift/reduce 和 reduce/reduce）
+- 解析输入并构建语法树
+- 显示解析表大小对比 LR(1) 和 LALR(1)
+
+CLI：lalr-parser grammar.txt input.txt，解析并输出结果。cargo build 编译通过。

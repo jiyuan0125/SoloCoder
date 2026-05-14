@@ -1,0 +1,5 @@
+写一个 Python 的序列化/反序列化引擎，支持多种格式之间的互转。
+
+工作中经常要在 JSON、YAML、TOML、INI、CSV 这些格式之间转换配置文件。做一个统一的引擎，能读取任意一种格式，转换成另一种格式输出。核心是内部用 Python 字典作为中间表示，每种格式一个 codec：json_codec、yaml_codec、toml_codec 等。处理嵌套结构、列表、特殊类型（日期时间、null）。
+
+Python 3，只用标准库（json、csv 模块直接用，yaml/toml 如果没有就优雅降级）。命令行：`python serde.py --from json --to toml config.json`，输出转换后的内容。格式不兼容时（比如 TOML 不支持 null）给出明确提示。`python serde.py` 能运行。

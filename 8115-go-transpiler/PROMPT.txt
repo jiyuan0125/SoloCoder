@@ -1,0 +1,6 @@
+做一个简易的源码到源码转换器框架。输入一种语言的代码，输出另一种语言。先实现一个示例：把简化的 Pascal 代码转成 Go 代码。
+
+需要支持：变量声明转换、for/while 循环映射、if-else 结构映射、函数定义转换。
+用法：transpiler -from pascal -to go input.pas
+输出转换后的 Go 源码。转换不了的地方加 TODO 注释。
+Go 标准库实现，go build 能编。

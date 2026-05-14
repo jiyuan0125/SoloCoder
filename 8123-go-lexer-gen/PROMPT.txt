@@ -1,0 +1,10 @@
+帮我实现一个词法分析器生成器。输入一个 token 定义文件（正则表达式描述每种 token），输出 Go 源码的 lexer 实现。
+
+定义文件格式：
+TOKEN IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
+TOKEN NUMBER [0-9]+
+SKIP WHITESPACE [ \t\n]+
+
+支持正则的基本操作：字符类、量词、分组、选择。
+生成的 Go 代码能直接 go build。
+Go 标准库，go build 通过。

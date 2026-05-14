@@ -1,0 +1,10 @@
+微服务之间用 protobuf 通信，有时需要调试和检查 .proto 文件定义是否正确，也想离线验证序列化数据。
+
+用 Rust 写一个 Protobuf 解析器：
+- 解析 .proto 文件中的 syntax、package、message、enum 定义
+- 支持 repeated、optional、map 字段修饰符
+- 支持嵌套 message 和 oneof 类型
+- 解析后输出消息的结构化描述（字段名、类型、编号）
+- 能检测出字段编号重复、类型引用不存在等常见错误
+
+CLI：protobuf-parser api.proto，输出所有 message 和 enum 的结构。cargo build 编译通过。

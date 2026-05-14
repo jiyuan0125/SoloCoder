@@ -1,0 +1,5 @@
+帮我写个工具分析 Go 代码里的 goroutine 使用情况。
+
+扫描 Go 源码，找到所有 go 关键字启动的 goroutine 调用。分析每个 goroutine：它是怎么启动的（匿名函数还是具名函数）、捕获了哪些闭包变量、有没有传参、生命周期如何管理（是否通过 context 或 done channel 控制）。对没有退出机制的 goroutine 给出警告。
+
+输出 goroutine 清单和风险评级。Go 标准库，go build 编译通过。

@@ -1,0 +1,6 @@
+写一个递归下降解析器生成库。不用分析表，直接用递归函数调用来解析。输入 EBNF 语法定义，生成手写风格的递归下降 Go 代码。
+
+支持：可选（if peek）、重复（for loop）、选择（if-else chain）、预判（lookahead）。
+生成的代码可读性好，像人手写的 parser 一样。
+命令：rd-gen grammar.ebnf -o parser.go
+Go 标准库实现，go build 能编。

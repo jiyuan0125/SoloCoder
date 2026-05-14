@@ -1,0 +1,1 @@
+REST API 文档里经常用 URI 模板，比如 /users/{userId}/posts/{postId}。Go 实现 URI 模板处理器，支持 RFC 6570 里最常用的几种操作：简单变量替换 {var}、路径风格 {/var}、查询参数 {?var}、矩阵风格 {;var}。能做模板展开（传入变量值生成实际 URI），也能做反向匹配（给定实际 URI 提取变量值）。go build 编译通过。

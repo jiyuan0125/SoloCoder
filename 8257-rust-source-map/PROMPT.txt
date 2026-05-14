@@ -1,0 +1,5 @@
+前端打包之后代码都被压缩了，出 bug 时根本看不懂调用栈。用 Rust 写一个 source map 解析器，能还原压缩代码到原始源码的映射。
+
+解析 Source Map v3 格式的 JSON，支持 VLQ 编码的 mapping 数据解码。给定生成的行号和列号，能查到原始文件名、行号、列号。处理多个 source map 文件时性能不能太差。
+
+cargo run -- sourcemap.json 1:50 这种用法，输出对应的原始位置。测试数据可以用 webpack 或 terser 生成的真实 source map。

@@ -1,0 +1,3 @@
+用 Go 构建一个 Markdown AST 库。定义清晰的 AST 节点类型：Document、Heading、Paragraph、Text、Emphasis、Strong、Code、Link、Image、List、ListItem、CodeBlock 等。
+提供 AST 的构建、遍历、修改接口。节点要记录行列位置信息，方便做源码映射。
+go build 编译通过，标准库。

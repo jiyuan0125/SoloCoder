@@ -1,0 +1,11 @@
+后端要对接各种三方 API，需要校验 OpenAPI/Swagger 文档的正确性，手动检查太容易遗漏。
+
+用 Rust 写一个 OpenAPI 文档解析器：
+- 解析 OpenAPI 3.0 的 JSON/YAML 格式文档
+- 提取 paths、schemas、parameters、responses 信息
+- 校验 $ref 引用是否都能正确解析
+- 检查 path 参数和 schema 定义的类型一致性
+- 输出结构化的 API 摘要列表（路径、方法、描述）
+- 发现问题要报告具体位置
+
+CLI：openapi-parser spec.yaml --validate，输出解析结果和校验错误。cargo build 通过。

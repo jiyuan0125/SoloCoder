@@ -1,0 +1,10 @@
+在做一个数据分析平台，需要把用户输入的 SQL 查询解析成结构化数据，方便后续优化和执行。不想依赖外部库，自己写一个。
+
+用 Rust 写一个 SQL 解析器：
+- 支持 SELECT / INSERT / UPDATE / DELETE 四种基本语句
+- 支持 WHERE、ORDER BY、GROUP BY、HAVING、LIMIT 子句
+- 支持 JOIN（INNER/LEFT/RIGHT）和子查询
+- 支持 UNION 和别名 AS
+- 解析失败报告具体是哪个 token 附近出错
+
+CLI：sql-parser "SELECT name, age FROM users WHERE age > 18 ORDER BY age"，输出 AST 的 JSON 表示。cargo build 编译通过。

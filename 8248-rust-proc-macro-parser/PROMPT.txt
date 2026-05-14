@@ -1,0 +1,11 @@
+过程宏（proc macro）是 Rust 里强大的编译时代码生成机制。想做一个工具来解析和理解过程宏的输入输出。
+
+用 Rust 写一个过程宏解析器：
+- 解析 proc_macro::TokenStream 的结构
+- 解析 derive 宏的输入（结构体定义 + 属性）
+- 解析 attribute 宏的参数和标注的 item
+- 把 TokenStream 还原为可读的 Rust 代码
+- 支持简单的 derive 宏模拟（如自动生成 Debug impl）
+- 展示宏展开的输入→输出对应关系
+
+CLI：proc-macro-parser source.rs --expand Debug，展示宏展开过程。cargo build 编译通过。

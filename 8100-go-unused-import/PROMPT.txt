@@ -1,0 +1,1 @@
+每次 code review 都要提醒删掉没用的 import，太烦了。Go 写一个未使用 import 检测工具，比 goimports 更精确一点：扫描 Go 源文件，检查每个 import 的包在文件中是否有实际使用（包括直接使用和间接使用比如结构体 tag 里的 json:"field"）。对于有别名导入和点导入（. import）的情况也要正确处理。输出需要删除的 import 列表。用 Go 标准库的 ast 包。go build 通过。

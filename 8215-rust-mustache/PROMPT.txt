@@ -1,0 +1,11 @@
+有个前端项目用了 Mustache 模板，后端想用 Rust 来做服务端渲染。需要实现 Mustache 的核心规范。
+
+用 Rust 实现一个 Mustache 模板引擎：
+- 支持 {{name}} 无转义和 {{{name}}} 原始输出
+- 支持 {{#section}} ... {{/section}} 区块渲染
+- 支持 {{^inverted}} 反向区块
+- 支持 {{.}} 迭代当前项（列表内）
+- 支持 {{>partial}} 局部模板
+- 兼容 Mustache spec 的基本测试用例
+
+CLI：mustache template.mustache --data data.json，输出渲染结果。cargo build 通过。

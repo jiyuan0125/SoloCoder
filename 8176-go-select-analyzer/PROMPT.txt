@@ -1,0 +1,5 @@
+帮我写个 Go select 语句分析工具。
+
+分析 Go 源码中所有 select 语句的结构和行为。检测这些情况：select 里空的 case（永远阻塞）、只有一个 case 没有 default（等价于普通 channel 操作）、nil channel case（被永久跳过）、随机选择的公平性问题。还要检查 select 在 for 循环中的使用模式，看有没有超时控制的缺失。
+
+输出每个 select 的分支分析和风险提示。Go 标准库，go build 编译过。

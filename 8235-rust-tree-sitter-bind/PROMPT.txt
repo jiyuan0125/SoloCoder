@@ -1,0 +1,11 @@
+Tree-sitter 是 Atom/Neovim 用的增量解析库。想了解它怎么在 Rust 里绑定使用的。
+
+用 Rust 做 Tree-sitter 绑定封装：
+- 封装 tree-sitter 的 C API 到安全的 Rust 接口
+- 支持加载编译好的 .so/.dll 语法库
+- 实现增量解析：修改文本后只重新解析变更部分
+- 提供 CST（具体语法树）遍历 API：遍历所有节点、按类型过滤
+- 支持 query 功能：用 S-expression 语法查询语法树节点
+- 输出 CST 的缩进树形结构
+
+CLI：tree-sitter-bind parse file.js --lang javascript，输出语法树。cargo build 编译通过。

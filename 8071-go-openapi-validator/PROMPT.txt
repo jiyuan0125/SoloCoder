@@ -1,0 +1,1 @@
+拿到一个 OpenAPI spec 文件后，想自动检查里面有没有自相矛盾或者不合规的地方。Go 写一个 OpenAPI 验证器：检查 path 参数和 query 参数有没有重复定义、response 是否每个 status code 都有 schema、$ref 引用的目标是否存在、deprecated 的定义有没有被其他地方引用、命名是否符合规范（camelCase 等）。输出完整的校验报告。go build 通过。

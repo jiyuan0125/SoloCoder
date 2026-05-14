@@ -1,0 +1,10 @@
+最近在做一个内部工具平台，需要让用户用简单的 DSL 来定义自动化规则。比如 "when cpu > 80% then notify('ops-channel')" 这种。
+
+用 Rust 实现一个 DSL 引擎，支持：
+- 变量绑定和赋值（let x = 10）
+- 条件判断 if/else
+- 基本算术和比较运算
+- 内置函数调用（print、notify 等）
+- 遇到语法或运行错误要给出清晰的行列号报错
+
+CLI 用法：dsl-engine run rules.dsl，解析并执行 DSL 脚本，输出结果。cargo build 能编译通过。

@@ -1,0 +1,5 @@
+用 Python 写一个圈复杂度（Cyclomatic Complexity）计算工具，分析 Python 源代码的控制流复杂度。
+
+代码审查时需要量化复杂度， McCabe 圈复杂度是最常用的指标。解析 Python 源码的 AST，统计 if、elif、for、while、and、or、except、with、assert、列表推导式中的条件等分支点数量，加 1 得到圈复杂度。按函数/方法粒度计算，输出每个函数的复杂度和总体统计。
+
+Python 3，用 ast 模块解析。CLI：`python cyclomatic.py src/`，输出函数名、文件名、复杂度值，按复杂度降序排列。复杂度超过 10 的标记为高风险。`python cyclomatic.py` 能直接跑。

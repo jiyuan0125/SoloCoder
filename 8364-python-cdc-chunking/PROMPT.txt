@@ -1,0 +1,5 @@
+实现一个 Python 的内容定义分块（Content-Defined Chunking）工具，用于去重备份场景。
+
+固定大小分块的问题是插入一个字节后面全乱。CDC 用滚动哈希找内容边界，相同内容总是切成相同的块。实现 Gear 和 Rabin 两种哈希方法，支持配置目标块大小、最小/最大块大小。对输入文件分块后输出每块的偏移、长度、SHA256 哈希。两个相似的文件应该有大量相同的块。
+
+Python 3 标准库。CLI：`python cdc.py chunk --algo gear --target 4096 largefile.iso`，输出块列表。`python cdc.py dedup file1 file2` 统计两个文件的重复块比例。`python cdc.py` 能跑。

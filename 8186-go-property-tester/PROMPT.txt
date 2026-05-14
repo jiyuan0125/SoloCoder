@@ -1,0 +1,5 @@
+帮我写一个 Go 属性测试（property-based testing）框架。
+
+不用太复杂，实现一个简化版 QuickCheck。用户定义属性（以函数形式），框架自动生成随机测试输入。支持这些类型的自动生成：int、string、bool、slice、map、自定义 struct（通过反射）。实现 shrinking 功能——当发现反例后自动缩小输入范围，找到最小反例。
+
+命令行运行，输出测试结果和最小反例。Go 标准库，go build 编译过。

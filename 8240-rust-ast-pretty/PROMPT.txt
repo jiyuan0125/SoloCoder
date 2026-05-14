@@ -1,0 +1,11 @@
+AST 结构有了，但打印出来一团乱。需要一个 pretty printer 把 AST 格式化成人类可读的代码文本。
+
+用 Rust 实现 AST pretty printer：
+- 实现 Wadler 风格的 document algebra（text、line、nest、group）
+- 处理缩进、换行、对齐的自动决策
+- 支持行宽限制，超过自动折行
+- 支持多种语言输出风格（花括号换行/不换行）
+- AST 到 document 的转换层
+- 输出格式化后的代码文本
+
+CLI：ast-pretty ast.json --width 80 --style knr，输出格式化代码。cargo build 通过。

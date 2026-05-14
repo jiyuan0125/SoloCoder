@@ -1,0 +1,3 @@
+实现一个 Go 的文本模板引擎，类似 text/template 但自己从零写。支持 {{.Field}} 变量替换、{{if}}/{{else}}/{{end}} 条件、{{range}} 循环、管道操作 func1 | func2。
+模板编译阶段要检查语法正确性。支持模板嵌套 {{template "name"}}，支持自定义函数注册。
+go build 编译通过，纯标准库。

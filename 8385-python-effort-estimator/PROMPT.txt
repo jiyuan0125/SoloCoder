@@ -1,0 +1,5 @@
+写一个 Python 的开发工作量估算工具，基于代码度量预测开发时间。
+
+不是拍脑袋估时间——用历史代码数据来推算。收集每个模块的代码行数、复杂度、变更历史，建立简单的估算模型：新功能如果涉及 N 行代码、圈复杂度 M，参考历史数据中类似规模的功能花了多少时间。支持用户校准（输入实际耗时来调整模型）。输出乐观/正常/悲观三个估算值。
+
+Python 3 标准库。CLI：`python estimator.py --module new_feature --loc 500 --complexity 15`，输出估算的开发工时（人天）。`python estimator.py --calibrate history.csv` 用历史数据校准模型。`python estimator.py` 能跑。

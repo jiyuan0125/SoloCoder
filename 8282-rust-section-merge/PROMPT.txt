@@ -1,0 +1,5 @@
+链接的时候多个目标文件的同名 section 要合并，用 Rust 实现这个逻辑。
+
+支持合并 .text、.data、.bss、.rodata 这些常见 section。对齐规则要正确处理——每个输入 section 按其 alignment 要求对齐后追加。.bss section 不占文件空间但要占虚拟地址空间。合并后更新所有符号的地址。
+
+输入多个目标文件的 section 信息，输出合并后的布局和更新后的符号表。cargo test 用几个有小 section 的目标文件验证。

@@ -1,0 +1,5 @@
+帮我实现一个 Python 的协议解析器，能解析常见的网络协议报文。
+
+主要针对 TCP/IP 协议栈中的几层：Ethernet 帧、IPv4 头、TCP 头、UDP 头。输入是原始的字节流（比如从 pcap 抓包得到的），工具逐层剥离头部，提取关键字段（源/目的 MAC、IP、端口、标志位、序列号等），以树状结构展示协议层次。支持处理 IP 分片和 TCP 选项字段。
+
+Python 3 标准库。用法：`python proto_parser.py capture.bin`，输出每一层的字段解析结果。遇到无法识别的协议类型给出警告而不是崩溃。`python proto_parser.py` 能直接运行。

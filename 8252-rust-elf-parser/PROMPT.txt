@@ -1,0 +1,5 @@
+我需要解析 ELF 文件格式的工具，用 Rust 实现。手写二进制解析，不要用 elf 这个 crate。
+
+能读取 ELF header、Program headers、Section headers，打印出文件类型、架构、入口地址这些基本信息。支持 64 位 ELF 就行，32 位可以不管。碰到格式不对的文件要有合理的错误处理。
+
+cargo run -- input-elf-file 这种用法，拿 /bin/ls 或者其他系统二进制做测试。cargo build 要能过。

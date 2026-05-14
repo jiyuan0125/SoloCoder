@@ -1,0 +1,5 @@
+实现一个 Python 的认知复杂度（Cognitive Complexity）计算器，度量代码被人理解的难易程度。
+
+SonarSource 的认知复杂度不同于圈复杂度——它更关注人类阅读代码时的心理负担。规则：嵌套结构加基础分+嵌套层级奖励（if 嵌套 if 额外加 1 分），连续的 else if 只加 1 分不累计嵌套，逻辑运算符每个加 1 分。递归调用加分。用 Python ast 模块遍历语法树，按函数计算。
+
+Python 3 标准库。用法：`python cognitive.py source.py`，输出每个函数的认知复杂度值，超过 15 的标记为需要简化。`python cognitive.py` 能跑起来。

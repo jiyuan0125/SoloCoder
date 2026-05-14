@@ -1,0 +1,6 @@
+我需要一个 Go 错误处理检查工具。扫描代码找常见的错误处理问题：忽略返回值（_ = someFunc()）、错误未检查直接用、error 嵌套丢失上下文、panic 在库代码里等。
+
+用法：error-linter ./pkg/...
+按严重程度分类输出：error/warning/info 三级。
+每个问题带文件路径、行号和修复建议。
+纯 Go 标准库，go build 编译通过。

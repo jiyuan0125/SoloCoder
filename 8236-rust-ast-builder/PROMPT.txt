@@ -1,0 +1,11 @@
+手写 AST 数据结构太繁琐了，需要一个 AST Builder，给定语言规范自动生成 AST 的 Rust 类型定义。
+
+用 Rust 实现一个 AST Builder 工具：
+- 输入语言描述文件（定义有哪些节点类型和子节点）
+- 自动生成 Rust enum 和 struct 定义
+- 支持 Option、Vec、Box 包装（表示可选、列表、递归）
+- 自动 derive Debug、Clone、PartialEq
+- 可选生成 visitor trait 和 accept 方法
+- 生成的代码可以直接编译
+
+CLI：ast-builder lang-spec.yaml --output ast.rs，生成 AST 类型文件。cargo build 通过。

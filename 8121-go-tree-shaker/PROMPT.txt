@@ -1,0 +1,5 @@
+做一个 JS Tree Shaking 工具。分析 ES module 代码（import/export），构建依赖图，标记哪些 export 实际被用到了，把没用的 export 和只被死代码引用的函数删掉。
+
+用法：tree-shaker entry.js -o output.js
+基于 AST 分析，不是正则。能处理重导出（export { x } from './y'）。
+Go 标准库，go build 通过。

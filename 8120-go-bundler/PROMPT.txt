@@ -1,0 +1,5 @@
+帮我做一个简单的 JS 模块打包器。支持 CommonJS 的 require/module.exports 语法，从入口文件开始递归解析依赖，把所有模块打包成一个文件。每个模块包在一个函数里，用模块 ID 映射实现 require。
+
+命令：bundler entry.js -o bundle.js
+处理循环依赖（返回已加载的部分），支持 -watch 模式监听文件变化重新打包。
+Go 标准库，go build 能编。

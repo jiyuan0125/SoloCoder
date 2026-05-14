@@ -1,0 +1,6 @@
+写一个更完整的解析器组合子框架。除了基础组合子，还支持：label（错误消息）、try（回溯）、chainl1（左结合运算符）、chainr1（右结合运算符）、notFollowedBy、eof。
+
+带完善的错误报告，显示期望的 token 和实际遇到的内容。
+内置一个 JSON parser 示例和一个简单表达式 parser。
+命令行可以运行示例：pcomb -demo json input.json
+Go 标准库，go build 通过。

@@ -1,0 +1,5 @@
+写一个性能分析数据处理工具，Rust 实现，解析 profiling 数据并生成报告。
+
+支持读取简单的采样数据（程序计数器采样的列表），按函数聚合统计每个函数的采样次数和占比。输出热点函数排行，标注占总时间的百分比。支持调用图（caller-callee）的统计。
+
+输入格式用简单的文本：每行一个地址。cargo run -- profile-data.txt --binary /path/to/binary 输出报告。需要配合 addr2line 的逻辑把地址转成函数名。

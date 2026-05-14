@@ -1,0 +1,10 @@
+手头项目配置文件越来越多，JSON 太啰嗦，TOML 表达力不够。打算做一个自己的配置语言，支持变量引用和简单的条件逻辑。
+
+用 Rust 实现一个配置语言解析器：
+- 支持 key = value 键值对，嵌套用缩进或大括号
+- 支持变量引用 ${db.host}，能解析嵌套路径
+- 支持 include "other.cfg" 引入其他配置文件
+- 支持 if-env("PRODUCTION") { ... } 这样的条件块
+- 解析失败给出准确的错误位置
+
+CLI：config-lang parse app.cfg，输出合并后的配置 JSON。cargo build 能过。

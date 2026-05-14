@@ -1,0 +1,5 @@
+写个工具分析 Go 代码中 context.Context 的传播情况。
+
+扫描 Go 源码，追踪 context.Context 从入口（HTTP handler、main 等）到各个函数调用的传播链。检测这些常见问题：context 没有传递给下游调用、创建了新的 background context 忽略了父 context、context 的 value 被滥用来传业务数据而非请求级别的元数据、超时 context 设置不合理。
+
+输出 context 传播树和问题清单。Go 标准库实现，go build 通过。

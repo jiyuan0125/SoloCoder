@@ -1,0 +1,6 @@
+实现一个 Token Stream 库，给解析器提供统一的 token 读取接口。支持 peek（看下一个但不消费）、next（消费一个）、putback（回退一个）、bookmark/rollback（标记位置和回滚到标记）。
+
+还能叠加过滤器：跳过空白、跳过注释、合并相邻字符串字面量等。
+示例：用这个库读 Go 源码的 token 流。
+命令：tokenstream demo.go
+Go 标准库，go build 通过。

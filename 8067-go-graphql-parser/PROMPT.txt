@@ -1,0 +1,1 @@
+做一个 GraphQL 相关的工具，第一步得先把 GraphQL 查询语句解析成 AST。Go 实现，能解析 GraphQL 的 query、mutation、subscription 操作，支持字段选择、片段（Fragment）、变量定义、指令（@include @skip）、内联片段。解析后的 AST 要能方便地遍历和修改。遇到语法错误给出行号和上下文。纯 Go 标准库，go build 通过。

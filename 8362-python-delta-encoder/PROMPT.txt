@@ -1,0 +1,5 @@
+用 Python 实现一个增量编码引擎，对比两个二进制文件生成差量数据。
+
+软件更新场景下，只传输变化的部分能节省大量带宽。实现两种增量编码方式：字节级差异（记录插入、删除、替换操作）和块级差异（用滚动哈希找相同块，只传输变化的块）。生成的 delta 文件体积要远小于原始文件。同时实现反向操作——用旧文件和 delta 还原出新文件。
+
+Python 3 标准库。CLI：`python delta.py encode old.bin new.bin -o delta.bin` 和 `python delta.py decode old.bin delta.bin -o restored.bin`。还原后的文件要和原始文件完全一致。`python delta.py` 能跑。

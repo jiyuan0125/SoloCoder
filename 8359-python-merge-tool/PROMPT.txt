@@ -1,0 +1,5 @@
+用 Python 写一个三路合并工具（three-way merge），处理文本文件的合并冲突。
+
+Git 合并时如果两个分支修改了同一个文件，需要三路合并：以共同祖先为基准，把两个分支的改动合到一起。实现行级的三方对比，检测冲突区域（两边修改了同一段的不同内容），非冲突部分自动合并。输出合并结果，冲突位置用标记块标识。
+
+Python 3 标准库。命令行：`python merge_tool.py --base base.txt --ours ours.txt --theirs theirs.txt -o merged.txt`。没有冲突时返回 0，有冲突返回 1 并在输出中标注。`python merge_tool.py` 能运行。

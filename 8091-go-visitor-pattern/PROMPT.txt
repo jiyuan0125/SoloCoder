@@ -1,0 +1,1 @@
+做编译器前端的时候需要在 AST 上做各种分析和转换，visitor 模式最合适。Go 实现一个通用的 AST visitor 框架：定义 Visitor 接口（Enter/Exit 节点时回调），支持 pre-order 和 post-order 遍历，可以在遍历时修改或替换节点。附带一个示例：解析简单的算术表达式生成 AST，然后用 visitor 做常量折叠、变量收集、表达式简化。go build 通过。

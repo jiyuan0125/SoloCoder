@@ -1,0 +1,2 @@
+Go 实现一个 SQL 语法验证器。检查 SQL 语句是否符合语法规范：关键字顺序对不对、括号匹不匹配、GROUP BY 里的列有没有在 SELECT 中出现、HAVING 有没有跟 GROUP BY 一起用。
+验证结果输出具体哪些地方有问题。支持 SELECT/INSERT/UPDATE/DELETE。go build 能编译。

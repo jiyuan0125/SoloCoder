@@ -1,0 +1,1 @@
+需要一个灵活的时间段解析器，除了 Go 自带的 time.ParseDuration 之外还想支持更自然的写法。Go 实现，能解析 "1h30m"、"2天3小时"、"3d 5h 30m"、"P1DT2H3M"（ISO 8601 duration 格式）等各种时间段格式，统一转换成秒或者 time.Duration。解析不了的格式要报错说支持哪些格式。命令行工具，go build 编过。

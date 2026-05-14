@@ -1,0 +1,6 @@
+写一个注释剥离工具。能智能地去除源代码中的注释，但保留字符串字面量里的注释文本（不被误删）。支持多种语言：Go（// 和 /* */）、Python（# 和三引号）、C、Java。
+
+还能做注释提取：把所有注释单独提取出来，标注来源行号。
+用法：comment-stripper -lang go -strip input.go
+或：comment-stripper -lang go -extract input.go
+Go 标准库实现，go build 能编。

@@ -1,0 +1,5 @@
+用 Rust 实现 SCCP（Sparse Conditional Constant Propagation）算法，比普通常量传播更强的优化 pass。
+
+用格论框架：每个 SSA 值对应一个格元素（top/undefined, 常量值, bottom/非常量）。同时做常量传播和不可达代码消除——如果条件分支的判断值被推导为常量，标记不可达边。迭代到不动点为止。
+
+能处理循环中的归纳变量推导（比如 i 从 0 递增到 N）。cargo test 用含条件分支和循环的 IR 验证。

@@ -1,0 +1,12 @@
+团队代码风格不统一，想做一个 Rust 代码自动格式化工具，类似 rustfmt 但支持自定义规则。
+
+用 Rust 实现代码格式化器：
+- 解析 Rust 源码得到 AST/Token 流
+- 按规则重新排版：缩进、空格、换行、对齐
+- 处理 import 排序和分组
+- 处理长行自动折行（函数参数、match arm 等）
+- 支持配置文件 .formatter.toml 自定义风格
+- 不改变代码语义，只改排版
+- 对格式化前后的文本做 diff 检查
+
+CLI：code-formatter src/main.rs --check（检查）或 --write（原地修改）。cargo build 通过。

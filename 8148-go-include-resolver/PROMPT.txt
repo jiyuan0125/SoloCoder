@@ -1,0 +1,6 @@
+写一个 #include 文件解析器。分析 C/C++ 源文件中的 #include 指令，递归解析所有引用的头文件，构建 include 依赖树。
+
+检测：循环 include、重复 include（缺 include guard）、缺失的头文件。
+输出依赖图（文本树形），支持 -dot 格式。
+用法：include-resolver -I /usr/include -I ./src main.c
+Go 标准库，go build 能编。

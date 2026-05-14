@@ -1,0 +1,5 @@
+写一个 Python 的代码坏味道检测器，自动识别常见的代码设计问题。
+
+参考 Fowler 的《重构》中定义的坏味道，实现以下检测：Long Method（过长方法）、Large Class（过大类）、Long Parameter List（过长参数列表）、Feature Envy（方法调用外部对象多于内部）、Data Clumps（多组参数总是一起出现）、Shotgun Surgery（一个改动涉及太多文件）。每种坏味道给出位置和建议。
+
+Python 3，ast 模块解析。用法：`python smell_detector.py project/`，输出每种坏味道的实例列表，包含文件、行号、描述和建议操作。`python smell_detector.py` 能运行。

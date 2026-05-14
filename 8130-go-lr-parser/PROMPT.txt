@@ -1,0 +1,5 @@
+帮我实现一个 LR(0)/SLR(1) 解析器。从文法自动生成 LR 项目集、构建 DFA、构造分析表（ACTION 和 GOTO）。用 SLR 简化方法解决移进-归约冲突。
+
+对输入 token 序列做移进-归约解析，输出每一步的栈状态和动作。
+命令：lr-parser grammar.txt "id + id * id"
+遇到冲突要报告出来。纯 Go 标准库，go build 编译通过。

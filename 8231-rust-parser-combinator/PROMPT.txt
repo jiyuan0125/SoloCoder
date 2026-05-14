@@ -1,0 +1,11 @@
+解析器组合子是函数式语言里很优雅的解析方式，用小解析器组合出大解析器。想在 Rust 里实现这个模式。
+
+用 Rust 写一个解析器组合子库：
+- 提供基础组合子：char、string、regex、any
+- 提供组合操作：seq（顺序）、alt（选择）、many（零或多）、many1（一或多）、optional
+- 支持 map 转换解析结果，支持 flatMap 做上下文相关解析
+- 支持 left recursion 处理（用 lazy/fix）
+- 解析失败返回带有位置信息的错误
+- 附带一个示例：用它解析简单的算术表达式
+
+CLI：parser-combinator parse "3 * (4 + 5)"，输出解析结果。cargo build 编译通过。

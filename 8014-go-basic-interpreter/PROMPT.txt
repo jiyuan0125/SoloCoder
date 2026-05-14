@@ -1,0 +1,3 @@
+写个 BASIC 语言解释器，Go 实现。支持行号、LET 赋值、PRINT、IF THEN、GOTO、FOR NEXT 循环、GOSUB RETURN、INPUT 和 END。
+支持整数和字符串类型，内置一些数学函数如 ABS、INT、RND。从文本文件加载 BASIC 程序执行，语法错误要报告行号。
+标准库，go build 能编译就行。

@@ -1,0 +1,5 @@
+用 Python 实现一个依赖审计工具，检查项目依赖的安全和健康状态。
+
+依赖管理不只是安装包——还要关注依赖的质量。分析 requirements.txt 或 pyproject.toml 中的直接和间接依赖，检查：是否有过时的版本（查询 PyPI 最新版本）、是否有已知安全漏洞（内置常见 CVE 列表）、依赖树中是否有冲突版本、是否有废弃的包（作者不再维护）。输出审计报告。
+
+Python 3，urllib 请求 PyPI API。命令行：`python dep_auditor.py requirements.txt`，输出每个依赖的状态（版本、最新版、漏洞数、是否废弃），以及整体审计评分。`python dep_auditor.py` 能直接运行。

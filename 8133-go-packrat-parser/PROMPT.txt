@@ -1,0 +1,6 @@
+帮我做一个 Packrat 解析器，实现线性时间复杂度的 PEG 解析。用记忆化缓存避免回溯导致的指数爆炸。每个位置最多解析一次。
+
+输入 PEG 文法，对输入文本做解析。和普通回溯 PEG 对比展示性能差异。
+用法：packrat grammar.peg input.txt
+支持左递归（通过 seed growing 算法）。
+Go 标准库，go build 通过。

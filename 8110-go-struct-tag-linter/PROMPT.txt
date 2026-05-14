@@ -1,0 +1,5 @@
+写一个 Go struct tag 检查和格式化工具。验证 json/db/validate 等常见 tag 格式正确性，检查 tag 里 key 重复、驼峰命名不符合规范、缺少 omitempty 建议这些。
+
+还能自动格式化：把 tag 按固定顺序排列（json 在前，db 在后），统一 key 的大小写风格。
+命令：tag-linter -fix ./model/
+Go 标准库实现，go build 通过。

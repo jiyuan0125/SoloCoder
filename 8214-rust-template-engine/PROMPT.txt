@@ -1,0 +1,11 @@
+做代码生成工具时需要模板引擎，Go 有 text/template，Rust 这边想自己写一个轻量的。
+
+用 Rust 写一个通用模板引擎：
+- 支持 {{ variable }} 变量替换
+- 支持 {% if condition %} ... {% else %} ... {% endif %} 条件渲染
+- 支持 {% for item in list %} ... {% endfor %} 循环
+- 支持 {{ expr | filter }} 管道过滤器（upper、lower、trim、default）
+- 支持 {% include "partial.html" %} 文件包含
+- 模板语法错误时提示行号
+
+CLI：template-engine render template.html --data data.json，输出渲染结果。cargo build 通过。

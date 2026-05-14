@@ -1,0 +1,11 @@
+Jinja2 风格的模板引擎在 Python 生态很好用，想在 Rust 里也做一个类似的，取名叫 Tera-mini。
+
+用 Rust 实现 Tera 风格的模板引擎：
+- 支持 {{ variable }} 和 {{ value | filter }} 过滤器链
+- 支持 {% extends "base.html" %} 和 {% block content %} 模板继承
+- 支持 {% for item in items %} 循环，带 loop.index、loop.first 等变量
+- 支持 {% if %} {% elif %} {% else %} {% endif %}
+- 内置过滤器：length、join、sort、reverse、truncate
+- 支持从目录批量加载模板文件
+
+CLI：tera-engine render --template-dir templates/ --data data.json --template index.html，输出结果。cargo build 通过。

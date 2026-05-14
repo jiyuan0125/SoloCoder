@@ -1,0 +1,5 @@
+写个 Rust 版 readelf，详细展示 ELF 文件的结构信息。
+
+支持 -h（ELF header）、-l（program headers）、-S（section headers）、-s（symbol table）、-r（relocations）这些选项。每个选项都要把对应结构体的字段完整打印出来，格式参考 GNU readelf。支持 ELF 64 位。
+
+cargo run -- -hS /bin/ls 这样组合选项也行。不用支持所有 readelf 选项，这几个核心的做好就行。

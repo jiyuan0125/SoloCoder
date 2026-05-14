@@ -1,0 +1,5 @@
+写一个 Python 的注释率分析工具，评估代码文档覆盖程度。
+
+统计源码中注释占总代码的比例是衡量文档完善度的基本方法。但不仅统计行数——还要分析注释的质量：文档字符串覆盖了多少函数/类？TODO/FIXME/HACK 标记有多少？过时的注释（代码改了但注释没更新）能否检测到？按模块输出注释率排名，标记文档薄弱的模块。
+
+Python 3，ast 模块解析。命令行：`python comment_ratio.py myproject/`，输出每个目录的注释率、docstring 覆盖率、TODO 统计。`python comment_ratio.py` 能直接运行。
