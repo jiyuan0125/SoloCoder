@@ -1,4 +1,4 @@
-Docker 里跑测试环境要隔离，shell 脚本处理太容易出错。根据配置文件自动搞定。
+本地跑测试全绿，CI 里跑就挂——环境不一样，GLIBC 版本不同、时区不同、临时目录路径不同。本地复现不了 CI 的问题等于白搭。用 Docker 容器跑测试，镜像、挂载、环境变量、超时、产物收集全在一个 JSON 配置文件里定义，一条命令跑完出结果。
 
 `run -config testenv.json` 执行测试。配置：`{"image":"golang:1.21","mount":"./project:/workspace","command":"go test ./...","env":{"GOOS":"linux"},"timeout":"10m","artifacts":[{"from":"/workspace/coverage.out","to":"./artifacts/coverage.out"}]}`。流程：pull 镜像→创建容器挂载→执行 command→收集 artifacts→移除容器→输出摘要。
 

@@ -1,4 +1,4 @@
-上轮测试因为残留数据全白跑了，环境没隔离。给每个测试包创建独立沙箱。
+上周 debug 了两小时才发现是上个测试用例残留的临时文件干扰了当前用例——/tmp 下全是上轮写的脏数据，数据库里也有。八个测试包串行跑没事，一并行就互相踩。给每个测试包建独立工作目录，fixtures 各自复制一份，彻底隔离开。
 
 `isolate -dir ./project -fixtures ./testdata -workdir /tmp/test-iso` 扫描 `_test.go` 所在目录，每个创建独立子目录。复制 fixtures 到各子目录。生成 `isolated_test_helper.go` 提供 `GetWorkDir(t *testing.T) string`。
 

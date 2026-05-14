@@ -1,4 +1,4 @@
-property-based testing 手写太累，随机值策略和属性检查每个 struct 都要编。自动生成不香吗？
+那个支付模块有 12 个 struct，手写 property-based test 的随机值生成器和 round-trip 检查，每个 struct 都要编一套，写到第四个就不想写了。从 Go struct 定义文件里直接提取字段类型，自动生成随机值构造器、序列化 round-trip、零值安全检查这些 property test，省下大量重复劳动。
 
 `generate -file models.go -out property_test.go` 解析 struct 定义自动生成。每个导出 struct 生成：
 - `random{StructName}(rng *rand.Rand)` 随机值生成器——int 用 `rng.Intn()`，string 随机字母，bool 随机，float64 `rng.Float64()`，slice 随机长度

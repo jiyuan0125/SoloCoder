@@ -1,4 +1,4 @@
-gRPC 调试全靠写一次性客户端代码，.proto 文件还要先编译。通用客户端直接用 JSON 发请求。
+每次排查 gRPC 接口问题都得新建一个 Go 文件、写 client 代码、编译、运行——验证一个字段改了之后返回值对不对，这么简单的事要折腾十分钟。有没有那种直接传 JSON 就能调 gRPC 方法的通用客户端？服务端开了 reflection 的话应该能做到。
 
 `call -endpoint localhost:50051 -service UserService -method GetUser -request '{"id":"123"}'` 通过 server reflection 发送一元调用，输出响应 JSON 到 stdout。
 

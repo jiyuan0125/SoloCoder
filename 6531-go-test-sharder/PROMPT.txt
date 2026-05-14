@@ -1,4 +1,4 @@
-CI 并行跑测试要手动分片，分不均匀有的 2 分钟有的 20 分钟，pipeline 总等最慢的那个。根据历史数据自动算好分片。
+pipeline 跑了 40 分钟，其中 35 分钟在等一个分片——其他 7 个 CI 节点 5 分钟就跑完了，剩余 30 分钟纯等待。问题出在手写分片脚本时按包数量均分，完全不考虑耗时差异。把历史跑测数据喂进来，用贪心算法自动平衡各分片总耗时。
 
 `shard -history timing.json -n 4 -out shards.json` 读历史耗时切分片。`timing.json` 格式：`{"packages":[{"name":"pkg/handler","duration_ms":12000},{"name":"pkg/utils","duration_ms":3000}]}`。贪心算法：按耗时降序排列，依次放入当前总耗时最小的分片。输出 `shards.json`：`{"shards":[{"id":1,"packages":["pkg/handler","pkg/config"],"estimated_ms":15000}]}`。同时 stdout 摘要：`Shard 1: 2 packages, est. 15.0s | Shard 2: 3 packages, est. 8.0s | Max spread: 7.0s`。
 
