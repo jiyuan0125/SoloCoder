@@ -7,3 +7,4 @@
 操作：Add(x)、Remove(x)、MayContain(x) → bool。额外功能：两个 Counting Bloom 的并集（取每个位置的 max）和交集（取 min）。
 
 写个 main：模拟分布式缓存场景——节点 A 和节点 B 各维护一个 Counting Bloom，同步时通过并集操作合并。插入元素后删除再查询验证。go build 通过。
+对外暴露的接口做参数校验，内部函数可以用 assert 防御编程。

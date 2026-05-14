@@ -1,7 +1,7 @@
-RocksDB 写入 100 万条数据只用了 2 秒，秘诀之一就是 Memtable——数据先写到内存里的有序跳表，攒够了再一次性刷到磁盘。跳表这东西插入 O(log n) 不用旋转平衡，代码比红黑树短一半。Go 写一个。
+RocksDB 写入 100 万条数据只用了 2 秒，秘诀之一就是 Memtable——数据先写到内存里的有序跳表，攒够了再一次性刷到磁盘。跳表插入 O(log n) 不用旋转平衡，代码比红黑树短一半，并发友好。Go 写一个完整的 Memtable。
 
-核心是跳表。节点高度按概率 1/4 随机生成（最大 12 层），这样查找和插入平均都是 O(log n)。每个 entry 存 key + value + sequence number + type（PUT 或 DELETE），用 seq num 实现快照读——读操作只看到 seq ≤ 某个时刻的数据，写入不阻塞读。
+核心是跳表实现。节点高度按概率 1/4 随机生成最大 12 层，查找和插入平均 O(log n)。每个 entry 存储 key + value + sequence number + type（PUT 或 DELETE），用 seq num 实现快照读——读操作只看到 sequence number 不超过某个时刻的数据，写入不阻塞读取。
 
-接口方面：Put/Get/Delete/Scan 四个操作，Scan 要支持范围查询（startKey, endKey）返回迭代器。并发安全用读写锁或细粒度锁都行。关键有个容量监控——Memtable 写入数据量达到 4MB（可配）就标记为 immutable，不再接受新写，等后台刷盘。
+对外接口四个：Put(key, value) 写入、Get(key) 查询返回最新的有效值、Delete(key) 写入墓碑记录、Scan(startKey, endKey) 范围查询返回迭代器按 key 有序遍历。并发安全用读写锁保护。关键机制是容量监控——Memtable 写入数据量达到 4MB（可通过命令行参数配置）就标记为 immutable 不再接受新写入，等待后台刷盘任务处理。此时自动创建新的活跃 Memtable 接管后续写入。
 
 先不做 WAL，纯内存结构。go build 通过。

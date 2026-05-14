@@ -1,5 +1,7 @@
-用 Go 实现 Raft 的快照机制。背景是日志不能无限增长，当日志积累到一定程度时，需要把当前状态机状态拍一个快照，然后截断之前的日志。
+日志不能无限增长，跑久了几个 GB 的日志文件谁也受不了。Raft 的解决方案是定期把状态机的当前状态拍一个快照，然后截断快照之前的日志，只保留快照之后的。
 
-具体要求：状态机快照的生成和恢复、日志截断后 lastIncludedIndex 和 lastIncludedTerm 的维护、快照数据的序列化（用 JSON 或 gob 都行）。InstallSnapshot RPC 要能正常工作，让落后太多的 follower 通过快照赶上而不是逐条复制日志。
+快照机制要处理几件事。首先是快照的生成：把状态机的完整状态序列化（用 JSON 或 gob 都行），记录当前 lastIncludedIndex 和 lastIncludedTerm。然后截断日志：lastIncludedIndex 之前的日志条目全部删掉，日志的 index 空间从 lastIncludedIndex+1 开始。如果 follower 远远落后于 leader，leader 的 nextIndex 已经指向被截断的位置了，这时候就得用 InstallSnapshot RPC 把整个快照发给 follower，让它直接从快照恢复状态再继续追后续日志。快照触发时机可以按日志条目数量设一个阈值，比如超过 1000 条就自动触发。
 
-写个 demo 展示日志增长到阈值后自动触发快照，快照后日志被正确截断。go build 能通过。
+写个 demo 展示完整的生命周期：持续写入日志，达到阈值后自动生成快照并截断日志，打印截断前后的日志长度。然后模拟一个落后的 follower 通过 InstallSnapshot 接收快照恢复状态，再继续接收后续日志。验证最终状态机状态正确。
+
+Go 实现，go build 能通过。

@@ -1,3 +1,8 @@
-帮写个视频截图工具。想自动从视频里提取好看的画面当封面。
-按固定间隔从视频中截取帧，或者检测场景变化时自动截图。支持指定输出图片格式、尺寸、质量。也能只截取指定时间点的帧。
-Python 3 + ffmpeg。python screenshot.py video.mp4 --every 30 -o screenshots/，或 python screenshot.py video.mp4 --at 00:05:22 -o cover.jpg --size 1920x1080
+帮写个视频截图工具。想自动从视频里提取好看的画面当封面图或者做视频内容的快速浏览。手动逐帧找经常错过最佳画面需要一个智能截图方案。
+
+两种截图模式。定时截图按固定时间间隔 --every 从视频中截取帧比如每 30 秒截一张适合快速浏览整个视频内容生成预览集合。场景截图 --scene 检测画面有显著变化的时刻自动截图避免截到过渡帧或静态帧只保留有代表性的关键画面。也支持指定精确时间点 --at 截取单帧用于封面选取。
+
+输出图片格式 JPEG 或 PNG 可选、图片尺寸可缩放比如 1920x1080、JPEG 质量参数 --quality 可调控制文件大小和画质的平衡。截图文件名自动包含时间戳信息方便排序和定位到原始视频时间。
+
+Python 3 用 ffmpeg 的 fps 滤镜定时截取和 scene 检测。python screenshot.py video.mp4 --every 30 -o screenshots/，或 python screenshot.py video.mp4 --at 00:05:22 -o cover.jpg --size 1920x1080
+写好单元测试，覆盖正常流程和边界情况。测试数据要包含各种典型场景。

@@ -1,1 +1,7 @@
-G-Counter 只能加不能减，我需要一个 PN-Counter，既能增也能减。思路是内部维护两个 G-Counter，一个计增量一个计减量。Go 实现，increment、decrement、value、merge 都要支持。模拟 3 个节点各自操作然后合并，验证结果一致。go build 编译通过。
+G-Counter 只能加不能减，很多场景不够用——比如库存数量有增有减，在线用户数有人上有人下。PN-Counter（Positive-Negative Counter）在 G-Counter 基础上加了个减法的能力。
+
+思路很巧妙：PN-Counter 内部维护两个 G-Counter——一个叫 P（Positive）记录所有增量操作，一个叫 N（Negative）记录所有减量操作。Increment() 操作增加 P 中自己节点的计数，Decrement() 操作增加 N 中自己节点的计数（注意减量也是增加 N 计数器）。Value() 返回 P 的总值减去 N 的总值。Merge(other) 分别合并 P 和 N 两个 G-Counter——对每个节点 ID 各自取 max。因为底层是两个 G-Counter 组合，所以继承了 G-Counter 的所有性质：合并幂等、交换律、结合律。最终一致——不管以什么顺序在节点间传播更新，所有节点最终收敛到同一个值。
+
+模拟测试：3 个节点。节点 A 做 increment 3 次（P_A=3）、decrement 1 次（N_A=1）；节点 B 做 increment 5 次（P_B=5）；节点 C 做 decrement 2 次（N_C=2）。各节点状态传播合并后，最终所有人看到的值都是 (3+5+0) - (1+0+2) = 5。不管合并顺序，结果不变。
+
+Go 实现，increment、decrement、value、merge 都要支持，go build 编译通过。

@@ -1,3 +1,7 @@
-PLS 播放列表解析器。Winamp 时代的 PLS 文件现在还有些在用。
-解析 PLS 格式播放列表（[playlist] 段落，File1、Title1、Length1 等字段）。提取所有音轨的文件路径、标题和时长。支持任意数量的条目。输出到终端或导出 JSON/CSV。
-Python 3 纯标准库。python pls_parser.py radio.pls show，或 python pls_parser.py stations.pls --json -o stations.json
+前阵子翻出一个老电台的播放列表文件，Winamp 时代的 PLS 格式，居然现在还有些流媒体电台在用。想把里面的曲目信息提取出来归档，发现没有趁手的命令行工具，索性自己写一个。
+
+PLS 文件其实结构不复杂——一个 [playlist] 段落，里面用 File1、Title1、Length1 这样的键值对排列每个音轨。但坑在于：条目数量不固定，有些文件缺 Title 或 Length 字段，有的编号还不连续（比如有 File1、File3 却没 File2），解析的时候得把这些情况都兜住。
+
+这个工具要做的就是把 PLS 文件里所有音轨信息完整提取出来：文件路径（本地路径或 HTTP 流地址）、标题、时长（秒数）。解析结果支持直接打印到终端，也能导出 JSON 或 CSV。命令行参数参考这种形式：python pls_parser.py radio.pls show，或者 python pls_parser.py stations.pls --json -o stations.json。遇到编码问题要尝试 latin-1 和 utf-8 两种方式读取，毕竟老文件什么编码都有。
+
+Python 3 纯标准库，不依赖第三方包。用 configparser 或者直接正则/字符串解析都行，怎么稳怎么来。

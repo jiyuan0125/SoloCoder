@@ -4,3 +4,5 @@
 
 struct 字段排列分析——计算每个 struct 的实际内存占用（包括对齐填充 padding），建议最优字段顺序（把大的字段放前面可以减少 padding）。比如 struct{a bool; b int64; c bool} 占 24 字节，但 struct{b int64; a bool; c bool} 只占 16 字节。slice 容量预估——检测可能的内存浪费场景，比如大量小 slice 各自持有底层数组。大对象分配标记——超过 1KB 的 struct 或数组，标注为"大对象"。频繁分配路径——循环内的 new/make/&T{} 调用，建议移到循环外或使用 sync.Pool。
 输出每个类型的内存布局报告（字段名、偏移、大小、padding）和优化建议。Go 标准库，go build 通过。
+配置项尽量通过环境变量或命令行参数传入，不要硬编码路径和端口。
+错误处理别偷懒，每一步都可能失败。

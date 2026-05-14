@@ -1,10 +1,11 @@
-服务启动时需要初始化一堆东西：连数据库、建缓存、加载配置。想用一个 worker pool 并行处理这些初始化任务，加快启动速度。
+服务启动时要初始化十几个组件——连数据库、建缓存、加载配置、预热 JIT……串行跑完要 30 秒，用户等不了。用 worker pool 并行处理这些初始化任务，4 个 worker 跑完只要 8 秒。
 
-要做：
-- 创建固定数量的 worker goroutine，从任务通道里取任务执行
-- 支持 Submit 提交任务、获取执行结果（通过 Future 或回调）
-- 任务可以返回结果或错误，调用方可以等待结果
-- pool 支持动态调整 worker 数量（扩容缩容）
-- 优雅关闭：等待所有已提交任务完成后退出
+Go 实现通用的 worker pool。创建时指定 worker 数量，启动 N 个 goroutine 各自从任务通道取任务执行。Submit(task) 提交任务到通道，返回 Future 对象。Future 可以阻塞等待结果（Get）、带超时等待（GetWithTimeout）或者注册完成回调（OnComplete）。任务函数的签名是 func() (interface{}, error)，可以返回任意结果或错误。
 
-Go 写，go build 通过。提交 20 个模拟初始化任务到 4 个 worker 的 pool，展示并行执行和结果收集。
+动态调整 worker 数量：Resize(n) 把 worker 数量从当前值调整到 n。增加 worker 时直接启动新 goroutine；减少时通过信号通知多余的 worker 退出（等它完成当前任务后自然退出，不强制杀）。
+
+优雅关闭流程：Close() 停止接受新任务，等通道里的已有任务全部被 worker 取走并执行完成，然后所有 worker 退出。CloseWithTimeout(duration) 加一个超时，超时后丢弃未执行的任务强制退出。关闭后的 Submit 调用返回错误。
+
+统计接口：ActiveWorkers() 当前忙碌的 worker 数、IdleWorkers() 空闲的 worker 数、SubmittedTasks() 累计提交的任务数、CompletedTasks() 累计完成的任务数。这些数据暴露给监控。
+
+go build 通过。提交 20 个模拟初始化任务（每个耗时 0.1-0.5 秒随机）到 4 个 worker 的 pool，展示并行执行时间远小于串行，收集所有结果验证无丢失。

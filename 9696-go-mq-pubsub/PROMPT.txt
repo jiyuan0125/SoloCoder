@@ -1,1 +1,9 @@
-帮我实现一个简单的发布订阅消息系统。发布者往 topic 发消息，所有订阅了该 topic 的订阅者都收到一份。Go 实现，支持 create-topic、subscribe、unsubscribe、publish 四个操作。消息投递方式用 channel 模拟，订阅者消费不过来时背压处理。go build 编译通过。
+微服务之间解耦就靠消息了，最基础的模式就是发布订阅：发布者往 topic 发消息，所有订阅了这个 topic 的消费者都收到一份。但说起来简单，实现的时候背压处理是个麻烦事——消费者消费不过来怎么办？
+
+Go 实现一个发布订阅系统，支持四个操作：CreateTopic(name) 创建 topic、Subscribe(topic, handler) 订阅并指定消息处理函数、Unsubscribe(topic, subID) 取消订阅、Publish(topic, message) 发布消息。消息格式是 JSON，包含 topic 名称、消息体、时间戳和唯一消息 ID。每个 topic 维护一个订阅者列表，发布时遍历列表逐个投递。
+
+背压处理策略要可配置——订阅者注册时选择。阻塞等待模式：消费者来不及处理就阻塞发送者（适合背压传导场景）。丢弃模式：缓冲区满了就丢弃最旧的消息，打印丢弃日志（适合实时监控这种丢几条无所谓的场景）。缓冲模式：每个订阅者有一个独立的有界 channel（比如 1024 条），channel 满了根据策略决定是阻塞还是丢弃。
+
+取消订阅时要先从订阅者列表移除，再关闭该订阅者的 channel，防止 Publish 时向已关闭的 channel 写入导致 panic。如果订阅者的 handler 函数 panic 了，要 recover 住并记录错误日志，不能因为一个消费者的 bug 影响其他消费者和发布者。
+
+go build 编译通过，演示：1 个发布者发 10 条消息，3 个订阅者各自收到完整的 10 条。

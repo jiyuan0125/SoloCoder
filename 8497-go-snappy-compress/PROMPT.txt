@@ -1,7 +1,5 @@
-gRPC 序列化 1MB 的 protobuf 消息要 50ms？换成 Snappy 只需 2ms——Google 专门为高速场景设计的压缩算法，速度比 zlib 快 10 倍，压缩率差一些但对 RPC 来说够用。RocksDB 内部存数据也用它。Go 写一个简化版。
+gRPC 序列化 1MB 的 protobuf 消息要 50ms？换成 Snappy 只需 2ms——Google 专门为高速场景设计的压缩算法，速度比 zlib 快 10 倍压缩率差一些但对 RPC 通信来说完全够用。RocksDB 内部存储数据也用它做块压缩。Go 写一个简化版的 Snappy 压缩和解压缩。
 
-两种模式交替输出：Literal（不压缩的字节直接输出，tag byte 高 2 bit = 00）和 Copy（引用前面出现过的数据块，tag byte 高 2 bit = 01/10/11）。匹配查找用 4 字节粒度的哈希表定位候选位置，找最长匹配。匹配最小长度 4 字节，offset 最大 65535。
+两种模式交替输出：Literal 不压缩的字节直接输出 tag byte 高 2 bit 为 00 后面跟长度和原始数据，Copy 引用前面出现过的数据块 tag byte 高 2 bit 为 01/10/11 三种长度编码方式分别对应不同的 offset 和 length 范围。匹配查找用 4 字节粒度的哈希表定位候选位置，然后在候选位置附近线性扫描找最长匹配。匹配最小长度 4 字节，offset 最大 65535 字节。
 
-解码器解析 tag byte，literal 直接复制，copy 从已解码缓冲区回拷。不需要实现完整格式规范，核心的 literal + copy 模式就能工作。
-
-go build 通过。
+解码器解析 tag byte 判断类型，literal 直接复制到输出缓冲区，copy 从已解码缓冲区按 offset 和 length 回拷数据。完整的 Snappy 格式规范中的流式 framing 部分可以不做，核心的 literal 加 copy 模式就能正确工作。Go 标准库，go build 通过。

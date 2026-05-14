@@ -6,3 +6,5 @@
 
 支持左递归——通过 seed growing 算法处理直接和间接左递归。初始时递归规则的缓存设为 fail，然后迭代增长直到固定点。
 用法：packrat grammar.peg input.txt。Go 标准库，go build 通过。
+CLI 入口做好参数校验，参数不对时打印帮助信息并退出。
+做好输入校验，非法输入给出有意义的错误信息。

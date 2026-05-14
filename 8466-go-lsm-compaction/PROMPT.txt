@@ -5,3 +5,4 @@ Size-Tiered 适合写密集场景（Cassandra 用这个）：同层文件数达�
 每层放大倍数（fanout）和文件数阈值都能配。Compaction 期间用 snapshot 隔离不影响新写入。合并时遇到 tombstone，如果确认底层没有同 key 的数据就可以放心丢掉，否则得留着防止旧数据"复活"。
 
 测试用模拟的 SSTable 元数据（key range、size、level），不需要真实文件 I/O。go build 通过。
+输入不合法时（比如空值、格式错误）给出明确的错误提示，不要直接 panic 或者返回空结果。

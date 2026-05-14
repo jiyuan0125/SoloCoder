@@ -4,3 +4,5 @@
 
 根据依赖关系自动分组——有依赖的放同一个组串行执行，没依赖的可以并行。输出并行执行计划——"Group 1 (serial): TestA, TestB, TestC (shared global state). Group 2 (parallel): TestD, TestE, TestF. Group 3 (parallel): TestG, TestH."
 支持设置最大并行度（--max-parallel 8）。然后按计划执行测试，收集结果。命令行工具，Go 标准库，go build 编译过。
+资源用完及时释放——文件句柄、网络连接这些不能泄漏。
+代码结构清晰，一个函数只干一件事。

@@ -4,7 +4,7 @@
 
 虚拟节点的实现：为了让数据分布更均匀，每个物理节点在环上映射多个虚拟节点（比如 100 个）。虚拟节点的哈希值 = hash(物理节点 ID + 虚拟节点编号)。BTreeMap 中存的是虚拟节点 → 物理节点的映射。查找时定位到虚拟节点，再返回对应的物理节点。
 
-需要实现的功能：add_node(id) 添加节点（生成虚拟节点并插入环）、remove_node(id) 移除节点（删除所有虚拟节点）、get_node(key) → NodeId 查找 key 对应的节点、get_nodes(key, n) → Vec<NodeId> 查找 key 的前 n 个冗余节点（用于副本放置）。
+要做的功能：add_node(id) 添加节点（生成虚拟节点并插入环）、remove_node(id) 移除节点（删除所有虚拟节点）、get_node(key) → NodeId 查找 key 对应的节点、get_nodes(key, n) → Vec<NodeId> 查找 key 的前 n 个冗余节点（用于副本放置）。
 
 数据分布的统计：插入 10 个节点，放入 10000 个 key，统计每个物理节点的 key 数量和标准差。对比使用/不使用虚拟节点的分布均匀度。
 

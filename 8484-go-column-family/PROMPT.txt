@@ -5,3 +5,4 @@ CreateCF(name, options) 创建新 CF，DropCF(name) 删除，ListCF() 返回所�
 共享 WAL 是关键设计：写操作把 CF ID + key + value 记录到同一个 WAL 文件（批量组提交提高吞吐），恢复时按 CF ID 分发记录到各自的 Memtable。FlushAll 所有 CF 刷盘，CloseAll 优雅关闭（先刷 WAL 再释放资源）。CF ID 用 uint32 自增，名称到 ID 的映射并发安全。
 
 go build 通过。
+别忘了处理各种边界情况：空列表、单元素、全相同元素这些容易忽略的场景。

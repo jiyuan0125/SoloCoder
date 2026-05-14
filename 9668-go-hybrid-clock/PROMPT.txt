@@ -1,1 +1,7 @@
-物理时钟不可靠，向量时钟又太重。我想用 Hybrid Logical Clock，结合物理时钟的 NTP 时间和逻辑计数器，既有物理时间的可读性又有逻辑时钟的因果一致性。Go 实现，now/increment/send/receive 四个操作，时间戳能排序。go build 编译通过。
+纯物理时钟不可靠（NTP 漂移、闰秒），纯逻辑时钟（Lamport、向量时钟）又没有物理时间的可读性——你说事件发生在 counter=42，那是几点几分？Hybrid Logical Clock（HLC）把两者结合起来：用物理时间作为主体保证可读性，用逻辑计数器处理同一物理时间内的多个事件和时钟回拨。
+
+HLC 的时间戳结构是 {physicalTime, counter, nodeID}。physicalTime 取本地 NTP 时间，counter 是一个逻辑计数器。Now()：读取本地物理时间 pt，如果 pt > 上次的 physicalTime，counter 归零，更新 physicalTime 为 pt；如果 pt ≤ 上次的 physicalTime，counter++，physicalTime 不变。Send()（发送事件）：先调 Now() 更新，然后返回当前时间戳。Receive(remoteTS)（接收事件）：收到远程时间戳后，取 max(本地物理时间, 远程物理时间, 上次 physicalTime) 作为新的 physicalTime。如果最大值等于远程物理时间，counter = max(本地 counter, 远程 counter) + 1；否则按本地逻辑处理。时间戳可以排序——先比 physicalTime，相同比 counter，再相同比 nodeID。这样既有物理时间的语义，又有逻辑时钟的因果一致性。
+
+写个测试：模拟 3 个节点各自独立调 Now() 若干次，然后互相发消息触发 Receive。打印每次操作后的 HLC 时间戳，验证时间戳严格递增且能排序。故意模拟一次时钟回拨（物理时间突然变小），验证 counter 补偿后时间戳仍然递增。
+
+Go 实现，go build 编译通过。

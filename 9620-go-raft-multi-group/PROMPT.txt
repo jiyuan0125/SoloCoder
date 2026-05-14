@@ -1,5 +1,7 @@
-帮我用 Go 实现一个支持多 Raft 组的框架。单个 Raft 组只能串行处理请求，多组可以并行，比如 TiKV 那样的 multi-raft 架构。
+单个 Raft 组所有请求都要串行处理，吞吐量上不去。Multi-raft 架构把数据按 key range 分成多个 Raft 组，每组有自己的 leader 和日志，互不干扰，可以并行处理请求。TiKV 和 CockroachDB 就是这么干的。
 
-每个 Raft 组管理自己独立的日志和状态机，组之间互不干扰。需要一个 RegionRouter 来根据 key 的范围把请求路由到对应的 Raft 组。支持动态分裂（split）：当一个组的负载太大时可以一分为二。
+每个 Raft 组管理一段 key range 的数据和独立的日志、状态机。需要一个 RegionRouter 组件来路由请求：客户端发请求时带上 key，Router 根据路由表判断这个 key 属于哪个 Raft 组，把请求转发给对应组的 leader 处理。路由表记录每个组的 key range 范围。支持动态分裂（split）：监控每个组的负载（比如日志大小或请求量），当某个组的负载超过阈值时一分为二，两个新组各负责原 key range 的一半。分裂后要更新路由表并通知所有节点。
 
-写个 demo：启动 3 个 Raft 组，分别管理 key range [a-f)、[f-m)、[m-z)，客户端发请求能看到被正确路由，触发一次 split 能看到组重新划分。go build 编译通过。
+写个 demo 演示完整流程：启动 3 个 Raft 组，key range 分别是 [a-f)、[f-m)、[m-z)。客户端发 put apple 1、put hello 2、put world 3，Router 分别路由到组 1、组 2、组 3。然后对组 2（[f-m)）触发 split，分裂成 [f-j) 和 [j-m) 两个组，路由表更新后新请求能正确路由到分裂后的组。打印每个阶段路由表的内容和各组的日志。
+
+Go 实现，go build 编译通过。

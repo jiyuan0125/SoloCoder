@@ -7,3 +7,5 @@
 - 支持输出为 unified diff 格式
 - 处理大文件时性能不能太差
 CLI：ast-diff old.ast new.ast，输出差异报告。cargo build 编译通过。
+提供 --verbose 选项输出详细过程信息，方便调试。
+重要操作加上日志，排查问题不用抓瞎。

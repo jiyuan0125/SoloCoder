@@ -1,3 +1,9 @@
-拍了好几段视频想拼成一个完整的。写个视频拼接工具。
-把多个视频文件按顺序拼接成一个。需要处理不同视频分辨率/编码格式不一致的情况（先统一转码再拼接，或者直接拼接相同格式的）。支持列出拼接顺序的文件列表。
-Python 3，ffmpeg concat demuxer 或 filter。python concat.py clip1.mp4 clip2.mp4 clip3.mp4 -o merged.mp4，或 python concat.py --list filelist.txt -o merged.mp4
+拍了好几段视频想拼成一个完整的。手机拍摄经常因为暂停分成多段需要后期合并。视频拼接看似简单但不同段的分辨率、编码格式、帧率不一致会导致拼接失败或播放异常不能简单拼接。
+
+把多个视频文件按顺序拼接成一个完整视频。先检测所有输入视频的分辨率、编码格式、帧率等参数如果不一致先统一转码到相同参数再拼接保证输出文件在所有播放器上都能流畅播放。如果所有输入参数已经完全一致则直接用 concat demuxer 拼接不重新编码速度最快保持原始画质。
+
+支持两种输入方式：命令行直接列出多个文件路径，或者用 --list 指定一个文本文件每行一个视频路径方便管理大量片段。
+
+Python 3 用 ffmpeg concat demuxer 或 filter_complex 实现拼接逻辑。python concat.py clip1.mp4 clip2.mp4 clip3.mp4 -o merged.mp4，或 python concat.py --list filelist.txt -o merged.mp4
+处理异常情况时给出有意义的提示信息，不要直接 panic 或忽略错误。
+配置参数通过命令行参数或配置文件传入，不要在代码里硬编码。支持合理的默认值。

@@ -1,5 +1,7 @@
-帮我用 Go 实现 Raft 的 ReadIndex 读优化。直接读本地状态机可能读到旧数据（因为可能发生了 leader 切换），ReadIndex 让读操作也能保证线性一致性。
+Raft 集群里客户端想读最新数据，直接读 leader 的本地状态机行不行？不行，因为这个 leader 可能已经被网络分区隔离了，实际上集群已经选出了新 leader 并提交了新数据，但老 leader 不知道。所以读操作也要保证线性一致性。
 
-流程是这样的：leader 收到读请求时先记录当前 commitIndex 作为 readIndex，然后向集群多数节点发一轮心跳确认自己还是合法 leader，确认后等状态机应用到 readIndex 再返回结果。这样读操作不用写日志也能保证一致性。
+ReadIndex 的流程是这样的：leader 收到读请求时，先记下当前的 commitIndex 作为 readIndex。然后向集群多数节点发一轮心跳（空的 AppendEntries），确认自己仍然是合法的 leader——如果心跳失败说明自己可能已经不是 leader 了，返回错误。心跳确认成功后，等状态机的 lastApplied 追上 readIndex（确保状态机已经应用了截止到 readIndex 的所有日志），再从状态机读数据返回给客户端。这样读操作不用走 Raft 日志也能保证一致性，比每个读请求都写一条日志高效得多。
 
-写个 demo：客户端连续发读请求，中间触发一次 leader 切换，读结果始终是最新已提交的值。go build 通过。
+写个 demo 验证：启动 3 节点集群，客户端连续发 10 个读请求，每次打印 readIndex 和状态机实际值。中间触发一次 leader 切换（杀掉当前 leader），客户端切换到新 leader 继续读。验证切换前后读到的数据都是线性一致的——不会出现读到比之前更旧的值的情况。
+
+Go 实现，go build 通过。

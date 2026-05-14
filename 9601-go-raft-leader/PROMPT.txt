@@ -1,5 +1,7 @@
-帮我用 Go 实现一个 Raft 领导者选举模块。场景是这样的：几个节点组成一个集群，需要选出唯一一个 leader 来协调工作。
+几个节点组成一个集群需要选出一个 leader 来协调工作，Raft 协议的选举机制就是干这个的。不是靠外部指定，而是节点们自己投票选出唯一一个 leader。
 
-需要支持随机超时触发选举、候选人拉票流程、term 递增和过时 term 拒绝这几个关键机制。节点之间通过模拟的网络层互相通信，不用真实的 TCP 连接，用 channel 或者回调模拟就行。
+选举的核心流程：节点启动时都是 follower，每个 follower 维护一个随机的 election timeout（比如 150-300ms），超时没收到 leader 心跳就转成 candidate。candidate 把自己的 term 加 1，给自己投一票，然后向其他节点发 RequestVote RPC 拉票。拿到多数票就变成 leader。如果多个 candidate 同时拉票导致没人拿到多数（split vote），就等随机超时后重新选，随机化确保不会反复平票。过时 term 的请求一律拒绝——term 用来区分选举轮次，保证同一 term 不会选出两个 leader。
 
-写一个可以直接跑的 demo，启动 5 个节点，能看到其中一个成为 leader，然后 leader 挂掉后新的节点被选出来。go build 能编译通过，运行输出选举过程日志。
+节点之间不用真的 TCP 连接，用 channel 或者回调模拟网络层就行，重点在协议逻辑的正确性。写一个 demo 启动 5 个节点，能看到其中一个成为 leader 并打印 term 和得票信息。然后模拟 leader 挂掉，剩下的节点自动选出新 leader。
+
+Go 标准库实现，go build 能编译通过，运行时输出选举过程的完整日志。

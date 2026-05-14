@@ -7,3 +7,5 @@
 输出格式：终端彩色文本 + 可选的 HTML 报告。HTML 报告里每行源码有背景色，点击能看到执行次数。
 
 先支持 Rust 代码的覆盖率分析。cargo run -- source.rs -- test-command "cargo test"。cargo build 通过。
+关键数据结构加注释说明字段的含义，方便后续维护。
+注意资源释放，文件和网络连接用完必须关。

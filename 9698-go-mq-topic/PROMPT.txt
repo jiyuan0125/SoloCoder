@@ -1,1 +1,11 @@
-消息队列需要 topic 管理功能——创建 topic、查看 topic 列表、删除 topic、查看 topic 的消息积压量。Go 实现，topic 底层可以有多个分区（partition），消息在分区间按 key hash 分配。提供 CLI 子命令操作 topic。go build 编译通过。
+消息队列里的 topic 不是创建就完事了——运维要看哪些 topic 活跃、消息积压了多少、哪些该清理。topic 管理是消息队列运维的基础能力。
+
+Go 实现 topic 管理功能。CreateTopic(name, partitionCount) 创建 topic 并指定分区数。每个 topic 底层有多个 partition，消息在分区间按 key 的哈希值分配——相同 key 的消息总是进入同一个分区，保证分区内的顺序性。ListTopics() 返回所有 topic 及其基本信息（分区数、总消息数、创建时间）。DeleteTopic(name) 删除 topic 及其所有分区数据，删除前要确认没有活跃的消费者连接。
+
+消息积压量是关键指标——GetBacklog(topic) 返回每个分区的未消费消息数（总消息数 - 已提交 offset）。如果积压超过阈值（比如 10000 条），打印警告。TopicStats(topic) 返回更详细的统计：每秒生产消息数、每秒消费消息数、平均消息大小、最老未消费消息的时间戳。
+
+分区管理：AddPartition(topic) 给 topic 新增一个分区，新增分区不影响已有分区的数据分配。减少分区不支持（太复杂也不安全），只能增加。消息的 key 路由逻辑是 hash(key) % partitionCount，分区数变化后相同 key 可能路由到不同分区——要记录分区数变化的历史，查询历史消息时用创建时的分区数。
+
+提供 CLI 子命令操作 topic：topic create、topic list、topic delete、topic stats、topic backlog。用标准库的 flag 包解析命令参数。
+
+go build 通过。

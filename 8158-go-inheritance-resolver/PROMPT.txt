@@ -6,3 +6,5 @@ Go 没有传统继承，但有结构体嵌入（embedding）来模拟类似效�
 
 如果出现菱形嵌入（同一个类型通过不同路径嵌入两次），要检测出来并报告——"struct D embeds *A via both B and C, method M is ambiguous"。
 Go 标准库实现，go build 通过。
+性能敏感的地方避免不必要的内存分配和拷贝。
+输出要有结构，别一股脑全打印出来，分个类排个序。

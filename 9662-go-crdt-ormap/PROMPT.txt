@@ -1,1 +1,7 @@
-需要一个 CRDT 的 OR-Map（observed-remove map）。key-value 映射，支持 add key、remove key、update value，删除后再添加同名的 key 不会复生旧值。Go 实现，每个 key 对应一个 OR-Set 或者 LWW-Register 来处理 value 的冲突。go build 编译通过。
+需要一个 key-value 映射结构的 CRDT，能支持添加 key、删除 key、更新 value，而且删除后重新添加同名的 key 不会把旧值复活。OR-Map（Observed-Remove Map）就是干这个的。
+
+OR-Map 的每个 key 内部对应一个 CRDT 来处理 value 的冲突——可以用 OR-Set 或者 LWW-Register。Add(key) 操作：给 key 生成一个唯一标记（类似 OR-Set 的做法），在 map 中创建这个 key 的条目。Remove(key) 操作：删除该 key 的所有已知标记（observed-remove 语义），确保删除不会影响后续的同名添加。Update(key, value) 操作：更新 key 对应的 value，冲突解决交给该 key 的 CRDT（比如用 LWW 取时间戳最大的）。Merge(other) 时对每个 key 分别合并：如果两边都有同一个 key，合并它们的标记集合和 value；如果只有一边有，直接加入。删除后再添加同一个 key 会产生新的标记，和之前删除的标记无关，所以旧值不会复活。
+
+写个测试：节点 A 添加 key "user:1" 并设置 value={name: "Alice"}。节点 B 删除 key "user:1"。然后节点 A 再添加 key "user:1" 并设置 value={name: "Bob"}。Merge 后 "user:1" 存在且 value 是 {name: "Bob"}——旧值不会因为删除操作而复活。
+
+Go 实现，go build 编译通过。

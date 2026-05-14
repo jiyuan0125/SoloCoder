@@ -4,3 +4,5 @@
 
 生成可视化的调用图。输出格式支持两种：文本树——从入口函数（main 或指定函数）开始，缩进展示调用层级，递归调用用 @ 标记。dot 格式——Graphviz DOT 语言，每个函数一个节点，调用关系画有向边。dot 文件可以直接喂给 graphviz 渲染成 SVG 或 PNG。
 命令：callgraph -format text|dot -pkg ./mypkg -entry main。文本格式直观看层级关系，dot 格式生成图片给老板看。只依赖 Go 标准库，go build 能编译。
+别忘了处理各种边界情况：空列表、单元素、全相同元素这些容易忽略的场景。
+关键函数加上错误处理，别让 panic 打断流程。

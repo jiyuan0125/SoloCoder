@@ -1,7 +1,7 @@
-"Level 2 有哪些文件 key range 覆盖了 user:500 到 user:600？"每次 compaction 和读取都要问这个问题。Level Manager 就是回答这些问题的——跟踪每层有哪些 SSTable 文件、key 怎么分布、文件怎么在层间移动。Go 实现。
+"Level 2 有哪些文件的 key range 覆盖了 user:500 到 user:600？" 每次 compaction 和读取都要回答这个问题。Level Manager 就是管理这些层级信息的——跟踪每层有哪些 SSTable 文件、key 怎么分布、文件怎么在层间移动。Go 实现。
 
-维护 L0 到 Ln 的层级结构。Flush 输出加到 L0，compaction 输出加到目标层。PickFiles(level, start, end) 查某层中和指定 key range 有重叠的文件。Compaction 后从源层删参与文件、往目标层加输出文件，这步得原子操作。
+维护 L0 到 Ln 的完整层级结构。Flush 输出加到 L0 顶部，compaction 输出加到目标层。PickFiles(level, startKey, endKey) 查找指定层中和给定 key range 有重叠的所有文件，这是最频繁的查询操作。Compaction 完成后从源层删除参与文件、往目标层添加输出文件，这步操作必须原子化——要么全部成功要么全部回滚。
 
-L0 的文件 key range 可以重叠（因为每次 flush 独立生成），L1+ 的文件按 key range 有序且不重叠。L1+ 的重叠检测要高效——按 smallestKey 排序后二分查找。统计每层文件数和总大小。
+L0 的文件 key range 可以重叠，因为每次 flush 独立生成一个新文件。L1 及以上的文件按 key range 有序且不重叠。L1 及以上的重叠检测要高效——按 smallestKey 排序后用二分查找定位候选范围。统计每层的文件数和总大小，提供 LevelStats() 接口返回摘要。
 
 go build 通过。

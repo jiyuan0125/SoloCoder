@@ -1,3 +1,9 @@
-经常需要截取视频的某一段。写个视频裁剪工具吧。
-按时间范围截取视频片段，支持指定开始时间和结束时间（格式 HH:MM:SS 或者秒数）。也支持只保留音频轨道或者只保留视频轨道。截取过程不做重新编码，直接拷贝流，速度快。
-Python 3，用 ffmpeg。python trim.py input.mp4 --start 00:01:30 --end 00:03:45 -o clip.mp4，也可以 python trim.py input.mp4 --start 90 --duration 60 -o clip.mp4
+经常需要截取视频的某一段——比如从一堂 90 分钟的网课里截取讲某个知识点的 5 分钟片段，或者从长视频里切出精彩片段分享。需要一个快速精确的视频裁剪工具。
+
+按时间范围截取视频片段支持三种指定方式：指定开始时间和结束时间格式 HH:MM:SS。指定开始时间和持续时长 --duration 格式秒数。只指定开始时间截取到视频结尾。也支持只保留音频轨道 --audio-only 或只保留视频轨道 --video-only。
+
+截取过程默认不做重新编码直接拷贝流 stream copy 速度快几秒钟就能完成不损失画质。只在需要精确到帧的裁剪时才重新编码。
+
+Python 3 用 ffmpeg 的 -ss 和 -to 参数实现。python trim.py input.mp4 --start 00:01:30 --end 00:03:45 -o clip.mp4，也可以 python trim.py input.mp4 --start 90 --duration 60 -o clip.mp4
+性能上注意避免不必要的内存分配和拷贝。关键路径上的操作要高效。
+日志和调试信息要分级输出，方便排查问题。生产环境下只输出必要的信息。

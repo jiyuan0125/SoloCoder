@@ -4,7 +4,7 @@
 
 因果关系的判断规则：A happen-before B 当且仅当对所有节点 i，A[i] <= B[i]，且至少存在一个节点 j 使得 A[j] < B[j]。A concurrent B 当且仅当 A 不 happen-before B 且 B 不 happen-before A。A identical B 当且仅当所有节点的 counter 相等。
 
-需要实现的比较函数，返回一个 enum：enum Ordering { Before, After, Concurrent, Equal }。这个函数是向量时钟最核心的部分。
+要做的比较函数，返回一个 enum：enum Ordering { Before, After, Concurrent, Equal }。这个函数是向量时钟最核心的部分。
 
 应用场景的模拟：3 个节点协作编辑文档。节点 A 的向量时钟 [1,0,0]，B 的是 [1,2,0]，C 的是 [0,0,1]。比较发现 B after A（B 看到了 A 的编辑），但 C 和 A、C 和 B 都是 concurrent（C 没看到 A 和 B 的编辑）。当 C 的编辑和 A 的冲突时，需要额外的冲突解决策略（比如 LWW 或用户介入）。
 

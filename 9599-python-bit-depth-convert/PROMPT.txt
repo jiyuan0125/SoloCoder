@@ -1,3 +1,7 @@
-音频位深转换工具。24-bit 的音频想转成 16-bit 给老的播放器用，或者反过来提升精度。
-在不同采样位深之间转换音频：8-bit ↔ 16-bit ↔ 24-bit ↔ 32-bit。转换时要正确处理量化和抖动（dithering），避免截断噪声。支持有符号整数和无符号整数格式，也支持浮点 PCM（32-bit float）。
-Python 3 + numpy 或 struct。python bitdepth.py input.wav --to 16 --dither triangular -o output.wav，输入输出都是 WAV 格式。
+有一批 24-bit 的 WAV 音频要转成 16-bit 给老的硬件播放器用，还有反过来的场景——想把 16-bit 的录音升到 24-bit 做后期处理，提升精度。
+
+位深转换看起来简单——把整数值做缩放就行——但有个关键问题：直接截断低位会引入量化噪声，专业的做法是加 dither（抖动噪声）把量化误差变成听起来更舒服的白噪声。至少要支持 triangular dither（三角概率密度），有精力的话也可以加 rectangular 和 noise-shaped 选项。转换范围覆盖 8-bit、16-bit、24-bit、32-bit 整数，以及 32-bit 浮点 PCM。从低位深往高位深转不用 dither，高位深往低位深转才需要。8-bit 无符号和 16-bit 以上有符号的编码差异也要处理好。
+
+命令行：python bitdepth.py input.wav --to 16 --dither triangular -o output.wav。不指定 --dither 就做直接截断（兼容快速场景）。输入输出都是 WAV 格式，采样率和声道数保持不变。转换完打印原始位深和目标位深的确认信息。
+
+Python 3，用 numpy 做数值运算会更方便，没有的话就用 struct 模块逐 sample 处理。

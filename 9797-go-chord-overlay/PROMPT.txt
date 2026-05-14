@@ -4,6 +4,6 @@ Chord 是最经典的分布式哈希表（DHT）算法之一。它把所有节�
 
 Finger Table 的结构：每个节点维护 m 个表项，第 i 项指向 successor(node_id + 2^i) 的节点。查找 key 时从最高位开始，如果 finger[i] 比自己离 key 更近，就跳到 finger[i] 继续找。每跳至少翻倍当前进度，所以 O(log N) 跳就能到达。
 
-需要实现的功能：创建环并添加节点（更新所有受影响节点的 finger table）、查找 key 的负责节点、添加和移除节点（重新分配 key）。模拟 16 个节点，插入 100 个 key，打印几次查找的路径："lookup key=x hash=142 → node-5 hash=50 → node-11 hash=130 → node-13 hash=142 ✓ (2 hops)"。
+要做的功能：创建环并添加节点（更新所有受影响节点的 finger table）、查找 key 的负责节点、添加和移除节点（重新分配 key）。模拟 16 个节点，插入 100 个 key，打印几次查找的路径："lookup key=x hash=142 → node-5 hash=50 → node-11 hash=130 → node-13 hash=142 ✓ (2 hops)"。
 
 Go 标准库实现，go build 编译通过。

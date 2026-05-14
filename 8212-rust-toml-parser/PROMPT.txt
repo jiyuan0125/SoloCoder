@@ -8,3 +8,4 @@ Rust 社区对这类工具有很大需求。
 - 支持多行字符串和转义字符
 - 解析后输出为 JSON 格式，方便对比验证
 CLI：toml-parser config.toml，输出对应的 JSON。cargo build 通过。
+接口设计遵循最小惊讶原则——行为和函数名保持一致。

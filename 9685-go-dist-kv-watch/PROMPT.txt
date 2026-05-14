@@ -1,1 +1,9 @@
-客户端需要监听某个 key 的变化，一旦 value 被修改就收到通知。帮我实现 watch 机制——客户端注册 watch key，服务端在 key 变更时推送新值。Go 实现，模拟长连接场景，支持取消 watch。多个客户端可以 watch 同一个 key。go build 通过。
+配置中心有个很常见的场景：客户端需要感知某个配置 key 的变化，一旦值被改了就要立刻生效，不能等轮询。轮询太浪费了，延迟也不好控制。watch 机制就是干这个的——客户端注册对某个 key 的关注，服务端在 key 被修改时主动推送新值。
+
+先创建 watch，客户端调用 Watch(key) 注册监听，返回一个事件 channel。然后服务端收到对该 key 的 Put 或 Delete 请求后，除了正常写入存储，还要遍历该 key 的 watcher 列表，向每个 watcher 的 channel 发送变更事件。事件内容包含变更类型（put 或 delete）、新值、变更时间戳和触发变更的客户端 ID。
+
+多个客户端可以同时 watch 同一个 key，各自收到独立的事件推送。反过来，一个客户端也可以 watch 多个 key——这时候要支持 WatchPrefix(prefix)，监听某个前缀下所有 key 的变更。watch 不需要了可以取消，调用 Unwatch(key, watcherID) 取消注册，服务端从 watcher 列表中移除，channel 关闭。如果客户端断开连接（channel 被关闭），服务端也要自动清理对应的 watcher，防止内存泄漏。
+
+用 Go 实现，模拟长连接场景。watcher 的 channel 要带缓冲（比如 256 个事件），如果客户端消费太慢导致缓冲满了，可以采取丢弃最旧事件或者断开该 watcher 的策略——这个行为要可配置。
+
+go build 通过，写个 demo：3 个客户端同时 watch 同一个 key，另一个客户端修改该 key 3 次，验证所有 watcher 都收到了 3 个事件。

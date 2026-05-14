@@ -3,3 +3,5 @@
 
 实现方式可以选 NFA 或回溯。提供两个核心接口：is_match(pattern, text) 返回 bool，find(pattern, text) 返回所有匹配的位置和捕获组内容。
 对无效的正则模式给出清晰的错误提示——"error: unmatched '(' at position 5"。CLI：regex-engine "pattern" "input_string"，输出匹配结果。cargo build 通过。
+数据量增长后性能不能退化太厉害，注意算法复杂度。
+参数合法性检查放函数入口处。

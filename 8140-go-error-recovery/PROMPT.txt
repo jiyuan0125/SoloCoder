@@ -6,3 +6,4 @@
 
 输出所有发现的错误（不只是第一个），每个错误带位置和建议修复。用法集成到 parser 中：parser.SetRecovery(panicMode, syncTokens={";", "}", ")"})。
 Go 标准库实现，go build 能编。
+提供 --verbose 选项输出详细过程信息，方便调试。

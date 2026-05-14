@@ -1,7 +1,7 @@
-一个 4KB 的 data block 里有几千个 key，磁盘读一次要 0.1ms。如果 99% 的查询都 miss，那 99% 的磁盘读取全是浪费。Bloom filter 块就是干这个的——用几 KB 的位图快速判断 key 大概率不在 block 里，直接跳过读取。可能误报但不漏报。Go 实现。
+一个 4KB 的 data block 里有几千个 key，磁盘读一次要 0.1ms。如果 99% 的查询都 miss，那 99% 的磁盘读取全是浪费。Bloom filter 块就是干这个的——用几 KB 的位图快速判断 key 大概率不在 block 里，直接跳过昂贵的磁盘读取。可能误报但不漏报。Go 实现。
 
-每个 data block 对应独立的一段 bitset。构建 SSTable 时收集每个 block 的 key 集合，按 1% 误报率配置位数组大小（m = -n×ln(p)/(ln2)^2），哈希函数个数 k = m/n × ln2。查询时先定位到对应 block 的 bloom 段，检查所有哈希位——全命中才去读磁盘，任何一个 miss 直接跳过。
+每个 data block 对应独立的一段 bitset。构建 SSTable 时收集每个 block 的全部 key 集合，按 1% 的目标误报率配置位数组大小（m = -n×ln(p)/(ln2)^2），哈希函数个数 k = m/n × ln2 向上取整。查询时先根据 key 定位到对应 block 的 bloom filter 段，检查所有 k 个哈希位是否全部命中——全命中才去读磁盘，任何一个 bit 为 0 直接跳过。
 
-哈希函数用 double hashing 模拟：hashes[i] = h1 + i×h2。序列化格式是段数 + 每段偏移 + bitset 数据，反序列化后常驻内存。
+哈希函数用 double hashing 模拟多个哈希：hashes[i] = h1 + i×h2，h1 和 h2 用两个不同的基础哈希函数计算。序列化格式是段数量 + 每段偏移量 + bitset 原始数据，反序列化后常驻内存用于快速查询。
 
 go build 通过。

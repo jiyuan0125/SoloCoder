@@ -1,1 +1,11 @@
-topic 的高吞吐靠分区实现——一个 topic 拆成多个 partition，每个 partition 独立有序，整体并行写入。Go 实现分区管理：创建指定分区数的 topic、按 key hash 选择分区、分区内的 offset 管理（commit offset、seek offset）。模拟多分区并发写入和消费。go build 编译通过。
+单分区 topic 吞吐量上不去——生产者只能串行写入，消费者也只能一个一个处理。分区是水平扩展的关键：一个 topic 拆成多个 partition，每个 partition 独立写入和消费，整体吞吐量成倍提升。
+
+Go 实现分区管理。创建 topic 时指定分区数 N，topic 内部创建 N 个独立的 partition 对象。每个 partition 维护自己的消息数组（或文件）、写入 offset（下一条消息的位置）和已提交 offset（消费者确认的位置）。Producer 发消息时指定 key，用 hash(key) % N 计算目标分区，消息追加到该分区尾部。
+
+Consumer 分配到某个分区后，从 committedOffset+1 的位置开始顺序消费。消费确认后更新 committedOffset。支持 Seek(partitionID, targetOffset) 跳转到指定位置消费——比如跳过一段损坏的消息，或者回到某个时间点重新消费。CommitOffset(partitionID, offset) 手动提交消费位置，也有自动提交模式（每 5 秒自动提交当前 offset）。
+
+模拟多分区并发写入：启动 3 个 goroutine 同时向同一个 topic 的不同分区写入消息（通过不同 key 路由到不同分区），验证并发写入不会破坏分区内消息的顺序性。消费端启动 3 个消费者各负责一个分区，并发消费各自分区的消息，验证分区内严格有序但分区间可以并行。
+
+分区内的 offset 是连续递增的 int64，不能有空洞。如果写入失败，offset 不应该递增——用 CAS 或互斥锁保证 offset 分配和消息写入的原子性。
+
+go build 编译通过。

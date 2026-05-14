@@ -2,7 +2,7 @@
 
 核心数据结构就是一个 map[string]string，加上三个操作命令：Put(key, value)、Get(key)、Delete(key)。每个操作封装成一个 Command 结构体（包含操作类型、key、value），序列化为 JSON 字节流传给状态机的 Apply 方法。
 
-需要实现的功能点：
+具体要做这些：
 1. 命令执行：Apply 接收 Command，根据类型执行对应的 map 操作，Put 写入、Get 读取并返回值、Delete 删除
 2. 日志记录：每次 Apply 前把命令追加到操作日志里，带递增的 index
 3. 快照保存：把整个 map 序列化成 JSON 保存，记录当前的 lastApplied

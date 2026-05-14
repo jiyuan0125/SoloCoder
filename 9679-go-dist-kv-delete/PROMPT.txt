@@ -1,1 +1,7 @@
-帮我实现分布式 KV 的 Delete 操作。逻辑删除为主——写一个 tombstone 标记，读的时候看到 tombstone 就返回 not found。tombstone 保留一段时间后在 compaction 时清理。Go 实现，delete 后 get 返回空，模拟多副本删除的一致性。go build 编译通过。
+分布式 KV 的 Delete 操作看起来简单——删一个 key 而已——但在多副本环境下有不少坑。直接物理删除不行，因为其他副本可能还没同步到删除操作，下次同步的时候又把数据"复活"了。得用逻辑删除（tombstone）。
+
+Delete 流程和 Put 类似：客户端发 delete key 请求，协调节点把 tombstone 标记写入 quorum 个副本。Tombstone 就是一条特殊的记录——key 存在但 value 是"已删除"标记，附带删除时间戳。Get 操作看到 tombstone 就返回 not found，对外表现为 key 已经不存在了。但 tombstone 本身要保留一段时间（比如 7 天），防止还没同步到 tombstone 的副本在反熵时把旧数据恢复回来。过了保留期后，在 compaction 的时候把 tombstone 和对应的旧数据一起清除掉，释放空间。多副本删除的一致性：所有副本最终都要看到 tombstone，通过反熵或者读修复来传播。删除后再写入同一个 key 也没问题——新写入的版本号比 tombstone 大，正常覆盖。
+
+模拟测试：3 节点集群，写入 key=val 后所有副本都有数据。然后执行 delete key，写入 tombstone 到 quorum 个副本。Get 返回 not found。模拟一个还没收到 tombstone 的落后副本，通过反熵同步后也看到 tombstone，Get 也返回 not found。等待 tombstone GC 后，存储中彻底清除该 key 的所有痕迹。
+
+Go 实现，go build 编译通过。

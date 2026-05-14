@@ -1,7 +1,5 @@
-Protocol Buffers 里一个 uint64 最少 1 字节最多 10 字节——怎么做到的？Varint 编码。每个字节的最高位是 continuation flag：1 表示后面还有数据，0 表示结束。低 7 位拼起来就是实际值，小端序。小数字只占 1 字节，省空间。Go 自己实现一套，不依赖 encoding/binary。
+Protocol Buffers 里一个 uint64 最少 1 字节最多 10 字节——怎么做到的？Varint 编码。每个字节的最高位是 continuation flag：1 表示后面还有数据字节，0 表示这是最后一个字节。低 7 位按小端序拼起来就是实际的数值。小数字只占 1 字节省空间效果非常明显。Go 自己实现一套完整的 varint 编解码，不依赖 encoding/binary 标准库。
 
-编码 uint64 → 变长字节流，解码反过来。signed int 用 ZigZag 编码映射到无符号（0→0, -1→1, 1→2, -2→3...）再 varint。流式接口支持 io.Reader/io.Writer。SizeVarint(v) 计算编码后长度方便预分配缓冲区。
+编码 uint64 转变长字节流：循环取低 7 位，如果还有剩余数据就设最高位为 1 继续处理下一字节，否则最高位为 0 结束。解码反过来逐字节读取拼出完整数值。signed int 用 ZigZag 编码先映射到无符号 0→0、-1→1、1→2、-2→3 以此类推再 varint 编码。流式接口支持 io.Reader 和 io.Writer 适配网络协议场景。SizeVarint(v) 函数计算编码后的字节长度方便调用方预分配缓冲区。
 
-超过 10 字节的 varint 非法，EOF 中途截断也是错误，都要检测和返回。
-
-go build 通过。
+错误处理要严格：超过 10 字节的 varint 是非法格式必须检测并返回错误。io.EOF 在 varint 编码中途截断也是错误，不能返回不完整的数据假装成功。Go 标准库，go build 通过。

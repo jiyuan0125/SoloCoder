@@ -6,3 +6,5 @@
 
 支持设置阈值参数（--threshold 60），低于阈值就返回非零退出码——方便 CI 集成（覆盖率不达标就阻止合并）。输出格式支持终端表格和 JSON 两种。
 命令行工具：coverage-analyzer cover.out --threshold 60 --by func。Go 标准库，go build 通过。
+统计信息以表格或结构化形式输出，一眼就能看出关键指标。
+加几个断言检查不变量，出问题时能早点暴露。

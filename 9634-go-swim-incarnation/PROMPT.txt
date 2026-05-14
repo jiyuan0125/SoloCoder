@@ -1,5 +1,7 @@
-用 Go 实现 SWIM 的 incarnation 号机制。这东西类似于 Lamport 时钟，用来区分一个节点的不同"状态版本"，解决消息乱序的问题。
+分布式系统里消息乱序是家常便饭。节点 A 发出的 alive 消息可能比节点 B 发出的 suspect 消息晚到——接收方不能简单地"后到为准"，得有一套规则来判定哪个版本更新。SWIM 用 incarnation 号来解决这个问题，类似于 Lamport 时钟的思路。
 
-规则：每个节点有一个 incarnation 号，初始为 0。节点被怀疑故障时可以主动递增 incarnation 来"自证清白"（refutation）。其他节点收到关于某节点的状态更新时，只接受 incarnation 更大的版本，丢弃旧版本。incarnation 严格递增，不会回退。
+规则是这样的：每个节点维护一个单调递增的 incarnation 号，初始为 0。正常情况下 incarnation 不变。当节点发现自己被别人怀疑故障时（收到了关于自己的 suspect 消息），立即把 incarnation 递增 1 并广播一个 alive 消息，附带新的 incarnation——这就是"自证清白"（refutation）。其他节点收到关于某节点的状态更新时，比较消息里的 incarnation 和本地记录的 incarnation：如果消息的 incarnation 更大，接受更新；如果更小，丢弃这条消息；如果相等，按优先级处理（suspect > alive，或者 dead > suspect > alive）。incarnation 严格递增不会回退，所以不存在"降级"的情况。
 
-模拟场景：节点 A 被怀疑故障，但它其实活着，通过递增 incarnation 发送 alive 消息来澄清。即使澄清消息比怀疑消息晚到，也能正确覆盖。go build 通过。
+模拟场景展示 incarnation 的工作方式：节点 A 正常运行（incarnation=0），节点 B 因为网络抖动误判 A 为 suspect。A 收到 suspect 消息后 incarnation 递增到 1 并广播 alive。即使 B 的 suspect 消息先到某些节点、A 的 alive 消息后到，接收方也能正确处理——因为 A 的 alive 消息 incarnation 更大。
+
+Go 实现，go build 通过。

@@ -1,7 +1,5 @@
-增量备份要在凌晨 3 点跑，但数据库 24 小时都在写入——备份读到一半新数据插进来了怎么办？Snapshot 让读操作固定看到某个历史时刻的一致性视图，后续写入对它不可见。Memtable 和 SSTable 的 entry 都带 sequence number，读取时只看 seq ≤ snapshot 的数据就行。Go 实现。
+增量备份要在凌晨 3 点跑，但数据库 24 小时都在写入——备份读到一半新数据插进来了怎么办？Snapshot 让读操作固定看到某个历史时刻的一致性数据视图，后续写入对它完全不可见。Memtable 和 SSTable 的每个 entry 都带 sequence number，读取时只看 seq 不超过 snapshot 值的数据就行。Go 实现。
 
-创建 Snapshot 时记录全局 sequence number，返回 handle。Get/Scan 都支持绑定 snapshot seq。释放后 Unref，compaction 才能清理被 snapshot 保护着的旧版本数据。多个 snapshot 可以共存，SnapshotList 追踪所有活跃 snapshot 的最小 seq num，compaction 用这个值判断哪些旧版本能安全删除。
+创建 Snapshot 时记录当前全局 sequence number 作为快照点，返回一个 handle 给调用方持用。Get 和 Scan 操作都支持绑定 snapshot seq，只返回 sequence number 不超过快照点的数据版本。用完后必须调用 Unref 释放 handle，compaction 才能清理被 snapshot 保护着的旧版本数据。多个 snapshot 可以同时共存，SnapshotList 追踪所有活跃 snapshot 的最小 seq num，compaction 用这个最小值判断哪些旧版本能安全删除而不影响任何正在进行中的读取。
 
-也支持 snapshot 上的迭代器，行为和普通迭代器一致。
-
-go build 通过。
+也支持在 snapshot 上创建迭代器，遍历行为和普通迭代器一致但数据视图固定在快照时刻。go build 通过。

@@ -1,4 +1,9 @@
-写个视频转码工具。手里有各种格式的视频想统一转成 MP4 H.264。
-用 Python 调 ffmpeg 做视频转码封装，支持常见格式互转（MP4、AVI、MKV、MOV → MP4）。可以指定输出编码、分辨率、码率、帧率参数。支持批量处理目录下所有视频文件。
-转码过程要显示进度。Python 3 实现，subprocess 调 ffmpeg。
-python transcode.py input.avi -o output.mp4 --codec h264 --resolution 1080p --bitrate 4M
+手里有各种格式的视频想统一转成 MP4 H.264 方便在网页和移动端播放。视频转码是个常见需求但 ffmpeg 命令行参数太复杂每次都要查文档，需要一个封装好的工具。
+
+用 Python 调 ffmpeg 做视频转码封装。支持常见格式互转：MP4、AVI、MKV、MOV、WebM 等输入统一输出 MP4。可以指定输出视频编码 H.264 或 H.265、分辨率 720p 1080p 4K、码率按质量或按目标文件大小、帧率 24/25/30/60。
+
+支持批量处理目录下所有视频文件自动跳过已经是目标格式的文件。转码过程要显示进度条——解析 ffmpeg 的 stderr 输出获取当前帧数和总帧数计算百分比。
+
+Python 3 实现用 subprocess 调 ffmpeg 命令行。python transcode.py input.avi -o output.mp4 --codec h264 --resolution 1080p --bitrate 4M
+大文件或边界情况要考虑周全：空输入、超大输入、格式异常都要能正确处理。
+配置参数通过命令行参数或配置文件传入，不要在代码里硬编码。支持合理的默认值。

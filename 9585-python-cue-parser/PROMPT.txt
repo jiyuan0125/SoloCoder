@@ -1,3 +1,9 @@
-CUE 文件解析器。整轨抓的 CD 都带 CUE 文件，想提取里面的曲目信息。
-解析 CUE sheet 文件，提取专辑信息（表演者、专辑名）和每首歌的信息（曲名、起始时间、索引）。把时间格式 MM:SS:FF（分:秒:帧）转换成秒数。也支持输出为 JSON 格式方便其他程序使用。
-Python 3 纯标准库。python cue_parser.py album.cue show，输出每首歌的序号、标题、起始时间。或 python cue_parser.py album.cue --json -o tracks.json
+CUE 文件解析器。整轨抓的 CD 都带 CUE 文件记录了每首歌的起始时间和曲目信息想提取出来做歌曲管理或者配合切分工具使用。
+
+解析 CUE sheet 文件提取专辑级别的信息——表演者 PERFORMER、专辑标题 TITLE、以及每首歌的详细信息——曲名 TITLE、表演者 PERFORMER、起始时间 INDEX 01、文件名 FILE。把 CUE 中的时间格式 MM:SS:FF 分秒帧 转换成秒数方便程序使用其中帧数默认按 75 帧/秒 CD 标准计算。
+
+也支持输出为 JSON 格式 --json 方便其他程序集成处理。结构化的 JSON 包含专辑信息和曲目列表每条曲目有序号、标题、起始秒数。
+
+Python 3 纯标准库实现不需要第三方解析库。python cue_parser.py album.cue show 输出格式化的曲目列表，或 python cue_parser.py album.cue --json -o tracks.json
+大文件或边界情况要考虑周全：空输入、超大输入、格式异常都要能正确处理。
+对工具的输入输出格式要有明确的定义和文档说明。代码注释要清晰，方便后续维护和功能扩展。

@@ -6,4 +6,4 @@ pcap 格式的解析：先读 24 字节的文件全局头——magic number 确�
 
 pcapng 格式的基本支持：识别 Section Header Block 和 Interface Description Block，解析 Enhanced Packet Block 提取数据包。
 
-过滤功能：实现简化版的 BPF 风格过滤。支持按协议类型（tcp、udp、icmp）、端口号、源/目的 IP 地址过滤。不需要实现完整的 BPF 虚拟机，用简单的条件判断组合就行。输出包摘要信息：包编号、时间戳、长度、识别出的协议类型。CLI 工具，Go 标准库实现，go build 通过。
+过滤功能：实现简化版的 BPF 风格过滤。支持按协议类型（tcp、udp、icmp）、端口号、源/目的 IP 地址过滤。不要做完整的 BPF 虚拟机，用简单的条件判断组合就行。输出包摘要信息：包编号、时间戳、长度、识别出的协议类型。CLI 工具，Go 标准库实现，go build 通过。

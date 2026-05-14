@@ -1,3 +1,9 @@
-音频声道处理工具。有些文件是立体声有些是单声道，需要互相转换。
-支持立体声转单声道（左右混合或只取一个声道），单声道转立体声（复制到两个声道）。也支持提取单独的左声道或右声道，以及调换左右声道。处理 WAV 和 MP3 格式。
-Python 3 + ffmpeg。python channel.py stereo.wav --mono -o mono.wav，或 python channel.py mono.wav --stereo -o stereo.wav，或 python channel.py audio.wav --swap -o swapped.wav
+音频声道处理工具。有些文件是立体声有些是单声道需要互相转换。还有的时候只想提取左声道的音频或者调换左右声道。
+
+支持立体声转单声道 --mono 两种方式可选：左右混合取平均值默认方式，或只取左声道 --left / 右声道 --right。单声道转立体声 --stereo 把单声道数据复制到两个声道。也支持提取单独的左声道或右声道保存为独立的单声道文件，以及调换左右声道 --swap。
+
+支持 WAV 和 MP3 格式输入输出保持原始采样率和位深不变。如果输入是单声道而操作要求立体声自动先转立体声再处理。
+
+Python 3 用 ffmpeg 的音频滤镜实现声道操作。python channel.py stereo.wav --mono -o mono.wav，或 python channel.py mono.wav --stereo -o stereo.wav，或 python channel.py audio.wav --swap -o swapped.wav
+保持代码结构清晰，核心逻辑和辅助工具函数分开组织。做好基本的错误处理。
+如果涉及并发操作，注意共享数据的同步问题。尽量使用语言标准库提供的并发原语。

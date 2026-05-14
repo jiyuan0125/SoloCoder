@@ -1,3 +1,7 @@
-单声道立体声互转工具。有些音频处理需要固定声道数。
-支持把单声道音频复制成双声道立体声（左右声道相同），也支持把立体声混合成单声道（取平均值，或只取左/右声道）。多声道（5.1 之类）也能降混成立体声或单声道。输入输出支持 WAV 和 FLAC。
-Python 3 + ffmpeg 或用 wave 模块直接处理 PCM。python mono_stereo.py input.wav --to-stereo -o stereo.wav，或 python mono_stereo.py stereo.wav --to-mono --method avg -o mono.wav
+音频处理有个常见需求就是统一声道数——有些素材是单声道，有些是立体声，有些甚至是 5.1 多声道，混在一起处理的时候必须先转换成统一的格式。
+
+这个工具要覆盖三种场景：单声道转立体声（把单声道信号复制到左右两个声道）、立体声转单声道（有三种策略——取左右平均值、只取左声道、只取右声道）、多声道降混到立体声或单声道（5.1 的话按标准权重把中置、左右、低音混合）。转换时要注意位深不变、采样率不变，只动声道维度。输入输出都支持 WAV 格式，FLAC 的话通过 ffmpeg 管道处理也行。
+
+命令行用法灵活一点：python mono_stereo.py input.wav --to-stereo -o stereo.wav 把单声道转成双声道；python mono_stereo.py stereo.wav --to-mono --method avg -o mono.wav 把立体声混合成单声道。--method 参数控制降混策略（avg/left/right），默认取平均值避免音量损失。输入文件本身就是目标声道数的情况直接复制输出就行，不用做无意义的转换。
+
+Python 3 + wave 模块直接处理 PCM，或者用 subprocess 调 ffmpeg 做更复杂的格式转换。

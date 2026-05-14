@@ -1,5 +1,7 @@
-我想用 Go 写一个 Raft 日志复制模块。就是 leader 把客户端的操作日志同步到所有 follower 上，保证各节点日志一致。
+Raft 里 leader 把客户端的操作日志同步到所有 follower 上，保证各节点日志一模一样。这是 Raft 一致性的基础——如果各节点日志不一致，后面的状态机就没法正确执行。
 
-核心要做的事情：日志条目的追加和存储、leader 向 follower 复制日志并处理一致性检查（比如 nextIndex 回退）、follower 对冲突日志的截断处理。日志条目至少要包含 index、term、command 三个字段。
+日志条目至少要包含三个字段：index（日志位置，从 1 开始递增）、term（这条日志被创建时的任期）、command（客户端提交的操作内容，可以是任意数据）。leader 追加日志后通过 AppendEntries RPC 复制给 follower，RPC 中携带 prevLogIndex 和 prevLogTerm 做一致性检查。如果 follower 在 prevLogIndex 位置的 term 对不上，说明日志不一致，follower 拒绝这次追加。leader 收到拒绝后把 nextIndex 回退一位重试，直到找到一致的位置再批量发送后续日志。follower 遇到冲突日志要截断自己本地多余的条目，用 leader 发来的覆盖。
 
-提供一个简单的测试场景：一个 leader 和两个 follower，leader 收到几条命令后复制给 follower，能打印出各节点最终日志内容是否一致。go build 编译通过。
+跑一个测试场景：一个 leader 和两个 follower，leader 收到 5 条命令后逐一复制给 follower，中间模拟一次网络中断导致某个 follower 漏了几条，恢复后 leader 通过 nextIndex 回退机制追上。最终三个节点打印出各自的日志内容，验证 index、term、command 完全一致。
+
+Go 实现，go build 编译通过。

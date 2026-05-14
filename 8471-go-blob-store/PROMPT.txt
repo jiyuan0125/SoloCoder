@@ -1,7 +1,7 @@
-图片服务存了 500 万张图，其中 20% 是重复上传的。用 SHA256 做 content-addressable key 天然去重——相同内容只存一份，省了 1TB 空间。本地文件系统分桶存，单机部署够用，Go 写一个。
+图片服务存了 500 万张图，其中 20% 是用户重复上传的。用 SHA256 做 content-addressable key 天然去重——相同内容的文件只存一份，光这一项就省了 1TB 空间。本地文件系统分桶存储，单机部署完全够用，Go 写一个。
 
-Put(blob io.Reader) 算 SHA256 作为 ID，相同内容引用计数 +1 不重复存。Get(id) 返回 io.ReadCloser 流式读取，几百 MB 的视频文件不会一次性撑爆内存。Delete(id) 引用计数减 1，到 0 才真正删文件。List 支持按前缀和创建时间筛选，分页返回。
+Put(blob io.Reader) 接收数据流边读边算 SHA256 作为文件 ID，内容相同则引用计数加一不重复写磁盘。Get(id string) 返回 io.ReadCloser 流式读取，几百 MB 的视频文件不会一次性撑爆内存。Delete(id string) 引用计数减一，归零才真正删除物理文件。List 支持按 hash 前缀和创建时间范围筛选，分页返回结果列表。
 
-分桶策略：hash 前两位分 256 个子目录（00/到 ff/），避免单个目录下文件太多影响文件系统性能。元数据（引用计数、大小、创建时间）单独存 JSON 文件。Put/Get/Delete 加锁保证并发安全，流式读写用 io.Copy + bufio。
+分桶策略用 hash 前两位字符分成 256 个子目录 00/ 到 ff/，避免单目录下文件数过多影响文件系统 ls 的性能。元数据包括引用计数、文件大小、创建时间存独立的 JSON 文件与数据文件同目录。Put/Get/Delete 操作加读写锁保证并发安全，大文件用 io.Copy 加 bufio 做 32KB 缓冲流式处理不占内存。
 
 go build 通过。

@@ -1,5 +1,7 @@
-用 Go 搭一个完整的 Raft 集群管理框架。把选举、日志复制、快照这些组件串起来，做成一个可以真正跑起来的多节点集群。
+之前做了选举、日志复制、快照这些 Raft 子模块，现在得把它们串起来做成一个可以真正跑起来的完整集群。不是各自为战的 demo 了，而是一个能处理真实请求的多节点系统。
 
-需要包含：节点的启动和初始化、节点间 RPC 通信（用 HTTP 或 gRPC 都行，别太复杂就行）、集群状态监控（能查看每个节点的角色、日志长度、commit index 等）。三个核心 RPC（RequestVote、AppendEntries、InstallSnapshot）都要实现。
+节点启动时要初始化状态（从磁盘加载持久化数据或从零开始）、启动选举定时器、注册 RPC handler。节点间通信用 HTTP 做 RPC 最简单——每个节点监听一个端口，暴露 RequestVote、AppendEntries、InstallSnapshot 三个 RPC 端点。请求和响应用 JSON 编码。集群需要一个状态监控接口：提供一个 HTTP 端点（比如 /status），返回每个节点的当前角色（leader/follower/candidate）、当前 term、日志长度、commit index、最后 applied 的 index 等信息，方便排查问题。
 
-写一个启动脚本或 main 函数，一键拉起 3-5 个节点的集群，能看到选举和日志复制的完整流程。go build 通过。
+三个核心 RPC 的完整流程都要跑通：RequestVote 处理选举拉票（检查 term 和日志是否足够新）、AppendEntries 处理心跳和日志复制（包含一致性检查和冲突截断）、InstallSnapshot 处理快照传输（follower 通过快照追赶）。写一个 main 函数或启动脚本，一键拉起 3-5 个节点的集群，自动完成选举，然后通过命令行或 HTTP 接口提交写操作，能看到选举和日志复制的完整流程输出。
+
+Go 标准库 net/http 做 RPC，go build 通过。

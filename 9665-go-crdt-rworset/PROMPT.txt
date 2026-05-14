@@ -1,1 +1,7 @@
-和 AWORSet 相反，我还需要一个 RWORSet（Remove-Wins OR-Set）。同一个元素并发 add 和 remove 时 remove 胜出。适合做黑名单这种场景——删了就别再加回来。Go 实现，接口和 AWORSet 一样，但语义相反。go build 能过。
+AWORSet 是添加优先——同一个元素并发 add 和 remove 时 add 胜。但有些场景需要相反的语义：remove 应该优先。比如黑名单系统——一个 IP 被加入黑名单后，即使有并发的添加操作（比如自动白名单机制），也应该保持删除状态。RWORSet（Remove-Wins OR-Set）就是 remove 优先的变体。
+
+实现逻辑和 AWORSet 类似，但冲突解决策略反过来。每个元素的添加和删除都带唯一标记。Merge 时如果发现同一个元素有并发的 add 和 remove 操作，remove 胜出——删除标记覆盖添加标记。只有当所有删除标记都被后续的新 add 覆盖后，元素才会重新出现在集合中。接口和 AWORSet 完全一样：Add(element)、Remove(element)、Contains(element)、Merge(other)。区别只在内部的冲突解决方向。
+
+写个对比测试来验证两种语义的区别。同样的操作序列：节点 A 添加 x，传播给 B。节点 B 删除 x。节点 C 并发添加 x。Merge 时，AWORSet 的结果是 x 存在（add wins），RWORSet 的结果是 x 不存在（remove wins）。打印两种 Set 在相同操作序列下的最终状态对比。然后再测一个黑名单场景：IP 192.168.1.1 被加入黑名单（remove from allowed set），即使有并发的自动添加，最终仍保持封禁状态。
+
+Go 实现，接口和 AWORSet 一样但语义相反，go build 能过。

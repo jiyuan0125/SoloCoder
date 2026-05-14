@@ -1,3 +1,8 @@
-音频响度分析。播客和音乐发行平台对响度有严格要求（比如 -14 LUFS），需要一个检测工具。
-分析音频文件的平均响度（LUFS）、峰值电平（dBTP）、响度范围（LRA）。输出数值报告，并判断是否符合常见平台的响度标准（Spotify -14 LUFS、YouTube -14 LUFS、Apple Music -16 LUFS 等）。
-Python 3，用 ffmpeg 的 loudness 滤镜或 pyloudnorm。python loudness.py podcast.wav，输出类似：Integrated: -15.3 LUFS, Peak: -1.2 dBTP, LRA: 8.5 LU
+音频响度分析。播客和音乐发行平台对响度有严格要求——Spotify 要求 -14 LUFS、YouTube 也是 -14、Apple Music -16。响度不达标会被平台自动调整音质变差或者被拒绝上传。需要一个检测工具在上传前先自查。
+
+分析音频文件的三项关键指标：Integrated Loudness 整体平均响度 LUFS 值、True Peak 峰值电平 dBTP 不能超过 -1、Loudness Range 响度范围 LRA 反映动态范围大小。输出数值报告并自动判断是否符合常见平台的响度标准给出 pass 或 fail 结果。
+
+如果不符合标准给出调整建议比如需要降低 2.3 LUFS。Python 3 用 ffmpeg 的 loudness 滤镜或 pyloudnorm 库计算。
+
+python loudness.py podcast.wav，输出类似：Integrated: -15.3 LUFS, Peak: -1.2 dBTP, LRA: 8.5 LU, Spotify: PASS, YouTube: PASS, Apple: FAIL
+性能上注意避免不必要的内存分配和拷贝。关键路径上的操作要高效。

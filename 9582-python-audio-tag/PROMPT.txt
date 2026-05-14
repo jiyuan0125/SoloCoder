@@ -1,3 +1,8 @@
-音频标签（metadata）读写工具。音乐文件的标题、艺术家、专辑信息有时候是乱码或缺失的。
-读取和修改音频文件的元数据标签。支持 ID3v1/v2（MP3）、Vorbis Comment（OGG/FLAC）、iTunes tags（M4A）。能查看所有标签字段，也能批量设置标题、艺术家、专辑、年份、封面图。
-Python 3，可以用 mutagen 库。python audiotag.py song.mp3 show，或 python audiotag.py song.mp3 set --title "歌名" --artist "歌手" --album "专辑" --cover cover.jpg
+音频标签 metadata 读写工具。音乐文件的标题、艺术家、专辑信息有时候是乱码或缺失的文件名也乱七八糟整理音乐库太痛苦。需要一个能批量查看和修改音频元数据的工具。
+
+读取和修改音频文件的元数据标签。支持三种常见标签格式：ID3v1 和 ID3v2 用于 MP3 文件、Vorbis Comment 用于 OGG 和 FLAC 文件、iTunes tags 用于 M4A 文件。能查看所有标签字段 --show 模式，也能批量设置 --set 模式：标题 --title、艺术家 --artist、专辑 --album、年份 --year、封面图 --cover。
+
+封面图支持嵌入 JPEG 和 PNG 格式的图片到音频文件中。批量模式从目录扫描所有音频文件统一修改特定字段。
+
+Python 3 可以用 mutagen 库处理各种格式的标签。python audiotag.py song.mp3 show，或 python audiotag.py song.mp3 set --title "歌名" --artist "歌手" --album "专辑" --cover cover.jpg
+性能上注意避免不必要的内存分配和拷贝。关键路径上的操作要高效。

@@ -1,5 +1,7 @@
-用 Go 写一个 Gossip 可疑机制。节点是不是挂了不能凭一个节点说了算，得有怀疑和确认的过程，防止网络抖动导致误判。
+节点是不是真的挂了，不能凭一个节点说 ping 不通就下结论——万一是网络抖动呢？得有怀疑和确认的渐进过程，从 suspect 到 confirmed dead，中间给被怀疑的节点留一个自证清白的窗口。
 
-实现 suspect 到 dead 的渐进确认：一个节点 ping 不通另一个节点就标记为 suspect，suspect 信息通过 gossip 传播。如果收到来自 suspect 节点的心跳（它还活着），就清除 suspect 状态。如果多个节点在超时时间内都报告该节点 suspect，就确认 dead。suspect 超时时间要随集群规模动态调整。
+suspect 到 dead 的确认机制：一个节点 A 探测 B 不通，先把 B 标记为 suspect，同时通过 gossip 消息把 suspect 信息传播出去。如果 B 其实还活着，B 收到关于自己的 suspect 消息后会立即广播一个 alive 反驳（refutation），附带一个递增的 incarnation 号。其他节点收到反驳后如果 incarnation 比本地记录的新，就取消 suspect 状态恢复为 alive。如果 suspect 超时窗口内没有人替 B 辩解（没有收到反驳），而且有多个节点都报告 B 是 suspect，就确认 B 为 dead。超时窗口要随集群规模动态调整——集群越大窗口越长，因为 suspect 消息传播到所有节点需要更多时间，公式可以参考 suspicion_timeout = base_timeout × log10(cluster_size)。
 
-跑个场景：某节点网络间歇性丢包，能看到它被 suspect 然后恢复，最终网络完全断开后被确认 dead。go build 编译通过。
+跑个场景模拟完整流程：某节点网络间歇性丢包（60% 丢包率），能看到它被标记为 suspect 后又通过反驳恢复为 alive，反复几次。最终网络完全断开后，suspect 窗口超过阈值，被确认 dead。打印每一步的状态变化和时间戳。
+
+Go 实现，go build 编译通过。

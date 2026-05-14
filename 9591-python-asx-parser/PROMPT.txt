@@ -1,3 +1,7 @@
-ASX 播放列表解析器。Windows Media Player 的 ASX 格式也需要支持。
-解析 ASX（Advanced Stream Redirector）XML 格式的播放列表。提取每个 entry 的 title、author、ref href（媒体路径）、copyright 等信息。ASX 有多种版本和写法，要尽量兼容。输出到终端或导出 JSON。
-Python 3 标准库 xml.etree.ElementTree。python asx_parser.py playlist.asx show，或 python asx_parser.py playlist.asx --json -o tracks.json
+帮同事处理一批 Windows Media Player 时代的播放列表，ASX 格式的。这东西看起来是 XML 但又不完全遵守 XML 规范——有些文件没声明 encoding，有些用 self-closing 标签写得乱七八糟。
+
+ASX（Advanced Stream Redirector）里面每个 entry 节点代表一个音轨，要提取的信息包括 title、author、ref href（实际的媒体文件路径）、copyright 等。ref 节点的 href 是最重要的字段，它指向真正的音频或视频地址，可以是本地路径也可以是 mms:// 或 http:// 的流地址。ASX 还有个坑是版本差异——ASX 3.0 和早期版本的写法不太一样，有些属性大写有些小写，解析时要统一处理。
+
+这个工具要把每个 entry 下的所有元数据提取干净，输出支持终端展示和 JSON 导出。命令行：python asx_parser.py playlist.asx show，或 python asx_parser.py playlist.asx --json -o tracks.json。遇到解析失败的 XML 要尝试先做一轮清理（修整未闭合标签、统一大小写）再重新解析。
+
+Python 3 标准库 xml.etree.ElementTree。如果 ElementTree 对某些格式不规范的文件报错，可以先用正则做预处理再喂给解析器。

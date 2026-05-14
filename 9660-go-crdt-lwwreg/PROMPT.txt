@@ -1,1 +1,7 @@
-写一个 Last-Writer-Wins Register，CRDT 里最简单的冲突解决策略——同名 key 并发写入时，时间戳大的赢。Go 实现，set、get、merge 操作，注意处理时钟偏移的情况，可以加一个节点 ID 作为 tiebreaker。go build 通过。
+Last-Writer-Wins Register 是 CRDT 里最简单也最常用的冲突解决策略。多个节点同时对同一个 key 写入不同的值，最终只保留一个——谁的写入时间戳更大就保留谁的。简单粗暴但有效，绝大多数场景够用了。
+
+实现方式：LWW-Register 存储三个字段——value（当前值）、timestamp（最后写入的时间戳）、nodeID（最后写入的节点 ID）。Set(value, timestamp) 操作：如果新时间戳比当前的大，就更新 value 和 timestamp；如果时间戳相等，用 nodeID 作为 tiebreaker（节点 ID 比较小的赢，保证确定性）。Get() 返回当前 value。Merge(other) 也是比较时间戳，保留较大时间戳对应的值。时间戳用什么？物理时钟（NTP 同步的 time.Now().UnixNano()）最简单，但有时钟偏移的风险；也可以用逻辑时钟（ Lamport 时间戳）更严谨。这里先用物理时钟，加上 nodeID tiebreaker 就行。
+
+测试场景：节点 A 在 t=100 时写入 value=foo，节点 B 在 t=200 时写入 value=bar。两节点 merge 后，因为 B 的时间戳更大，最终 value=bar。如果时间戳相同，nodeID 小的赢。再测一个并发写入的场景：A 和 B 同时写入不同值（相同时间戳），验证 tiebreaker 的确定性。
+
+Go 实现，go build 通过。

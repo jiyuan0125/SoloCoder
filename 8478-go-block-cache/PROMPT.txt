@@ -1,7 +1,7 @@
-LSM-Tree 的读路径有个致命弱点——同一个热点 key 可能触发几十次磁盘读取（每层 SSTable 都要查一遍）。Block Cache 把读过的 data block 缓存在内存里，下次命中直接返回，不用再走磁盘。RocksDB 靠这个把读延迟从 10ms 降到 0.1ms。Go 实现。
+LSM-Tree 的读路径有个致命弱点——同一个热点 key 可能触发几十次磁盘读取，因为每层 SSTable 都要查一遍。Block Cache 把读过的 data block 缓存在内存里，下次命中直接返回不用走磁盘。RocksDB 靠这个把读延迟从 10ms 降到 0.1ms。Go 实现。
 
-LRU 策略，key 是 fileID + blockOffset 组合的 128-bit hash。限制最大内存占用（按字节数不是条目数），超限驱逐最久未访问的条目。高并发场景下用分片锁——16 到 64 个 shard 各自一把锁，分片函数 key % shardCount，每个 shard 内部双向链表 + map 做标准 LRU。
+LRU 驱逐策略，cache key 是 fileID 加 blockOffset 组合的 128-bit hash 值。限制最大内存占用按字节数计算而不是条目数，超限时驱逐最久未访问的条目释放空间。高并发场景下用分片锁优化——32 个 shard 各自一把独立的互斥锁，分片函数 key % shardCount，每个 shard 内部用双向链表加 hash map 实现标准 LRU 逻辑，锁竞争分散到多个 shard。
 
-统计命中率（hit/miss/eviction），提供 Stats() 接口。条目放入时记录字节大小，维护总占用近似值。
+统计命中率用原子计数器记录 hit、miss、eviction 三项指标，提供 Stats() 接口返回实时统计数据。条目插入时记录其字节大小，维护总占用近似值用于容量判断。测试验证：同一 block 连续读取第二次应命中 cache，LRU 驱逐顺序正确最老的先淘汰。
 
 go build 通过。

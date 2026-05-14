@@ -1,7 +1,6 @@
-解压比压缩简单得多——不用搜索匹配，只需解析 bit 流然后复制。遇到 literal 直接输出，遇到 (distance, length) 引用就从已解压缓冲区的 offset 位置复制 length 字节。有个坑：length 可能大于 distance（比如 distance=1 length=10 就是把前一个字符重复 10 次），得逐字节循环复制。Go 写解压器。
+解压比压缩简单得多——不用搜索匹配，只需解析 bit 流然后复制数据。遇到 literal 直接输出字符，遇到距离加长度引用就从已解压缓冲区的 offset 位置复制 length 字节到输出。有个经典坑：length 可能大于 distance，比如 distance=1 length=10 就是把前一个字符重复 10 次，这种情况必须逐字节循环复制不能用 memcpy 否则会读到未初始化的数据。Go 写解压器。
 
-解析 bit 流：标志位区分 literal 和 match reference。distance 和 length 的变长编码参考 deflate 格式规范——固定范围的值用固定 bit 数，超出范围用额外 bit。
+解析 bit 流：标志位区分 literal 和 match reference 两种记录类型。distance 和 length 的变长编码参考 deflate 格式规范——固定范围的值用固定 bit 数编码，超出基础范围的值追加额外 bit 位扩展表示更大的值。
 
-流式解码：输入 io.Reader 逐块读，输出 io.Writer 逐块写，不需要一次全部加载到内存。注意边界检查防止引用越界（distance 不能超过已解压数据长度）。可选 checksum 校验解压结果。
-
-go build 通过。
+流式解码：输入 io.Reader 逐块读取，输出 io.Writer 逐块写出，不需要把全部数据一次性加载到内存里。注意边界检查防止引用越界——distance 不能超过已解压数据的总长度，否则应该返回错误。可选加 checksum 校验解压结果的完整性。Go 标准库，go build 通过。
+命令行参数解析用标准库就行，不需要第三方包。确保在主流操作系统上能编译运行。

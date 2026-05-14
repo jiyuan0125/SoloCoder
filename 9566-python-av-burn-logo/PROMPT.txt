@@ -1,3 +1,9 @@
-需要给视频加水印 logo。帮我写个工具把图片 logo 叠加到视频上。
-读取一个 PNG logo 文件（带透明通道），叠加到视频的指定位置（左上、右上、左下、右下、居中，或者自定义坐标）。支持调节 logo 的透明度和缩放比例。输出新视频文件。
-Python 3，用 ffmpeg 滤镜实现。python burn_logo.py video.mp4 --logo watermark.png --position bottom-right --opacity 0.5 --scale 0.2 -o output.mp4
+需要给视频加水印 logo 防止被盗用或标明版权。把带透明通道的 PNG logo 叠加到视频每一帧的指定位置上。
+
+读取一个 PNG logo 文件带 Alpha 透明通道，叠加到视频的指定位置：左上、右上、左下、右下、居中五种预设位置，或者通过 --x 和 --y 自定义像素坐标。支持调节 logo 的透明度 --opacity 从 0 完全透明到 1 完全不透明，以及缩放比例 --scale 比如 0.2 表示缩小到原尺寸的 20% 避免遮挡太多画面内容。
+
+输出新视频文件保持原始视频的编码格式和画质参数。如果 logo 图片比视频分辨率还大自动缩放到合理尺寸。
+
+Python 3 用 ffmpeg 的 overlay 滤镜实现视频合成。python burn_logo.py video.mp4 --logo watermark.png --position bottom-right --opacity 0.5 --scale 0.2 -o output.mp4
+输出结果要格式清晰可读，方便人工检查和后续处理。错误信息要包含具体上下文。
+如果涉及并发操作，注意共享数据的同步问题。尽量使用语言标准库提供的并发原语。

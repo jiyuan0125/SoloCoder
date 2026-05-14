@@ -1,5 +1,7 @@
-用 Go 写一个 Raft 心跳机制。leader 需要定期向 follower 发心跳来维持自己的权威，follower 一段时间收不到心跳就开始选举。
+Raft 里 leader 的权威全靠心跳维持——leader 定期向所有 follower 发空的 AppendEntries RPC（不带日志条目的那种），follower 收到心跳就知道 leader 还活着，安安静静当 follower。一旦心跳断了，follower 就会认为 leader 挂了，开始发起选举。
 
-实现要点：leader 定时发送空的 AppendEntries 作为心跳、follower 维护一个 election timeout 计时器、心跳间隔要小于 election timeout（一般是 1:10 的比例）。如果 follower 在 election timeout 内收到了有效心跳就重置计时器，否则转为 candidate 发起选举。
+心跳间隔和选举超时的比例很关键。一般心跳间隔 50ms，election timeout 设在 150-300ms 随机（大概是心跳间隔的 3-6 倍）。follower 每次收到有效心跳就重置自己的 election timer。如果 election timer 到期还没收到心跳，说明 leader 可能挂了，转为 candidate 把 term 加 1 开始拉票。心跳里要带上 leader 的 term，follower 如果发现自己的 term 比 leader 小就更新上去。leader 每个心跳间隔向所有 follower 并发发送 AppendEntries，不需要等上一个返回再发下一个。RPC 超时要远小于 election timeout，否则 follower 会误判。
 
-跑起来能看到 leader 持续发心跳，leader 停止后 follower 在超时后开始选举。go build 编译通过。
+跑起来能看到这样的过程：正常时 leader 每 50ms 发一轮心跳，所有 follower 稳定地重置 timer。然后模拟 leader 停止发送心跳（比如杀掉 leader 进程），follower 在 election timeout 后陆续转为 candidate，最终选出一个新 leader。新 leader 上位后心跳恢复。打印每个关键事件的时间戳。
+
+Go 实现，go build 编译通过。

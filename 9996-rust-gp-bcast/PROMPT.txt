@@ -5,3 +5,4 @@ Gossip 协议（也叫 epidemic protocol）像病毒传播一样在集群中扩�
 Rust 实现，cargo build 通过，展示一条消息从 1 个节点扩散到 100 个节点的过程。
 
 Genuine Predicate broadcast 根据消息谓词选择性地广播——只有谓词匹配的节点才接收。大规模系统中可以大幅减少消息量。
+重启后状态能恢复——可以通过文件持久化或者日志回放实现。

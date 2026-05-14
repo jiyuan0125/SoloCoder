@@ -1,5 +1,7 @@
-用 Go 做一个 Gossip 协议的传输层。和 Raft 一样，Gossip 也需要一个可插拔的网络层，方便在不同环境里使用。
+Gossip 协议的网络层也得抽象出来，不能和具体的传输方式耦合。测试的时候用内存通道模拟节点通信，生产环境用 UDP 做真实传输。Gossip 天然适合 UDP——丢一两个包不影响正确性，反正下一轮 gossip 会补上。
 
-设计一个 GossipTransport 接口：支持 SendPing/SendPong、SendGossip（传播成员和用户数据）、SendSuspect/SendDead 这些消息类型。提供两种实现：基于 UDP 的（Gossip 通常用 UDP 因为不怕丢包）和基于 channel 的内存传输（用于测试）。要处理消息的编解码和分片（UDP 有大小限制）。
+设计 GossipTransport 接口，支持几种消息类型：SendPing/SendPong（健康探测）、SendGossip（传播成员信息和用户自定义数据）、SendSuspect/SendDead（故障检测状态传播）。每种消息类型都有对应的 handler 注册接口。提供两个实现：基于 UDP 的真实网络传输和基于 Go channel 的内存传输。UDP 实现要注意消息大小限制——单个 UDP 包不能超过 64KB，大消息得做分片（切成多个 UDP 包发送，接收端重组）。消息编解码用自定义的二进制格式或者简单的 JSON 都行。channel 实现更简单，直接把消息塞到目标节点的接收 channel 里，零延迟，适合单元测试。
 
-用 channel transport 写个单元测试模拟 10 节点 gossip，再用 UDP transport 跑一个真实的跨进程 demo。go build 通过。
+写两个测试场景。第一个用 channel transport 模拟 10 节点 gossip 成员传播。第二个用 UDP transport 启动 3 个独立进程，每个进程监听不同端口，能看到真实的跨进程消息传递和成员扩散。对比两种传输方式的输出应该一致。
+
+Go 标准库 net 包做 UDP，go build 通过。

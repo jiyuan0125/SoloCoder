@@ -6,3 +6,4 @@
 - 支持函数定义和调用，支持局部变量
 - 可以 dump 字节码查看指令序列
 CLI：bytecode-vm run program.bc 或 bytecode-vm compile program.src，编译执行。cargo build 通过。
+注意处理空输入、超长输入等边界情况，函数遇到异常输入应该返回有意义的错误而不是静默失败。

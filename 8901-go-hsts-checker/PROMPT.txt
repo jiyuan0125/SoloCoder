@@ -5,3 +5,5 @@
 输出按合规/不合规分类显示。合规标准：max-age >= 31536000（一年），有 includeSubDomains，有 preload。max-age 小于一年的标记为不合规并建议调整。缺少 HSTS 头的域名标记为不合规并给出添加建议（给出完整的 header 值示例）。
 
 支持从文件批量读取域名列表。输出支持文本和 JSON 格式。Go 标准库 net/http，go build 能编译通过就行。
+单元测试覆盖正常路径和异常路径，go test / cargo test 能全部通过。
+加几个断言检查不变量，出问题时能早点暴露。

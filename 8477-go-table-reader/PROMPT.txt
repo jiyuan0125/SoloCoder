@@ -1,7 +1,5 @@
-Builder 把 SSTable 写到磁盘了，Reader 负责读回来。打开文件先读尾部 48 字节的 footer，拿到 index block 和 meta index block 的位置，后续所有查找都从 footer 出发。Go 实现。
+Builder 把 SSTable 写到磁盘了，Reader 负责把数据高效地读回来。打开文件先读尾部 48 字节的 footer，从中拿到 index block 和 meta index block 的位置偏移，后续所有查找都从 footer 出发。Go 实现 SSTable Reader。
 
-Get(key) 的查找路径：index block 二分定位 data block → 读入 data block → block 内二分找 key → 返回 value。Bloom filter 先过一遍——miss 的 key 直接跳过磁盘读取。NewIterator(start, end) 提供范围迭代器，正向遍历（Seek → Next → Valid），跨 block 自动加载。
+Get(key) 的完整查找路径：先在 index block 里二分查找定位到目标 data block → 读入该 data block → block 内部再二分找到精确的 key → 返回对应的 value。Bloom filter 作为前置过滤先检查一遍，miss 的 key 直接跳过整个磁盘读取过程。NewIterator(startKey, endKey) 提供范围迭代器，正向遍历支持 Seek 定位 → Next 前进 → Valid 判断有效性，跨 block 时自动加载下一个 block。
 
-读过的 data block 可以缓存在 LRU 里避免重复 I/O。文件句柄打开后保持 fd，关闭时释放。文件 I/O 用 os.File + bufio.Reader，mmap 可选。
-
-go build 通过。
+热点 data block 可以缓存在 LRU cache 里避免重复磁盘 I/O。文件句柄打开后保持 fd 复用，关闭 Reader 时统一释放。文件 I/O 用 os.File 加 bufio.Reader 做缓冲，mmap 方式可选。go build 通过。

@@ -8,3 +8,4 @@
 - 支持 if/else 分支的类型一致性检查
 - 推导失败时报告具体的类型冲突
 CLI：type-inference source.ti，输出每个表达式的推导类型。cargo build 编译通过。
+考虑到并发安全的场景，多线程同时操作时不会出现数据竞争。

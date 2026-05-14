@@ -1,5 +1,9 @@
-用 Go 做一个 Raft 的传输层抽象。不同的网络环境可能用不同的通信方式，所以得把 RPC 通信抽象出来，方便切换实现。
+Raft 节点之间的 RPC 通信不能写死成一种方式——测试的时候用内存通道就行，生产环境得用真实网络。所以传输层得抽象出来，做到可插拔。
 
-设计一个 Transport 接口：支持 SendRequestVote、SendAppendEntries、SendInstallSnapshot 三种 RPC，以及注册对应的 handler。提供两个实现：一个基于 HTTP 的用于真实网络环境，一个基于 channel 的用于单元测试。支持节点地址解析和连接管理。
+设计一个 Transport 接口，至少包含三个方法：SendRequestVote、SendAppendEntries、SendInstallSnapshot，分别对应 Raft 的三种 RPC。同时要能注册每种 RPC 的 handler（也就是收到请求后的回调函数）。接口还要支持节点地址解析——给一个 node ID 能找到它的网络地址。提供两个实现：一个是基于 channel 的内存传输，所有节点在同一个进程里，通过 Go channel 直接传递消息，延迟几乎为零，用于单元测试；另一个是基于 HTTP 的网络传输，用标准库 net/http 做 client 和 server，请求和响应用 JSON 编码，用于真实的多进程部署。
 
-写个测试用 channel transport 模拟 3 节点通信，再用 HTTP transport 跑同样的逻辑。go build 编译通过。
+连接管理也要考虑：HTTP 实现里对每个目标节点维护一个连接池或者至少复用 http.Client，不要每次 RPC 都新建连接。超时设置要合理，心跳 RPC 的超时要比 election timeout 短得多。
+
+写两个测试：先用 channel transport 模拟 3 节点通信跑一轮选举和日志复制，再用 HTTP transport 在不同端口启动 3 个进程跑同样的逻辑。go build 编译通过。
+
+Go 标准库 net/http，go build 通过。

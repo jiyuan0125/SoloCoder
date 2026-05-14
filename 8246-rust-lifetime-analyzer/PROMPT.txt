@@ -7,3 +7,5 @@ Rust 生命周期标注有时候很难理解——'a: 'b 到底表示谁比谁�
 - 可视化输出生命周期的包含关系图
 - 对省略的生命周期做自动推断
 CLI：lifetime-analyzer function.rs，输出生命周期关系分析。cargo build 编译通过。
+单元测试覆盖正常路径和异常路径，go test / cargo test 能全部通过。
+错误码要有层次，业务错误和系统错误分开。

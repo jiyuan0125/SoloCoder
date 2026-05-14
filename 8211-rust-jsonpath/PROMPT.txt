@@ -7,3 +7,4 @@
 - 支持多个路径用 | 连接，合并结果
 - 不合法的 JSONPath 要报错说明原因
 CLI：jsonpath "$.store.book[*].author" data.json，输出匹配到的值。cargo build 编译通过。
+日志分级输出（DEBUG/INFO/WARN/ERROR），生产环境设为 INFO 级别。

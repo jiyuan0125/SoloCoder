@@ -1,7 +1,7 @@
-Compaction 的核心操作就是归并——把 5 个有 key 重叠的 SSTable 合并成 1 个有序的新文件。这跟归并排序一个道理，只不过数据源是磁盘上的多个有序流，还要处理版本覆盖和墓碑标记。Go 实现 K 路归并迭代器。
+Compaction 的核心操作就是归并——把 5 个 key range 有重叠的 SSTable 合并成 1 个有序的新文件。跟归并排序一个道理，只不过数据源是磁盘上的多个有序流，还得处理版本覆盖和墓碑标记。Go 实现 K 路归并迭代器。
 
-用最小堆（container/heap）驱动：每个输入迭代器当前指向的 key 入堆，每次弹出最小的那个就是全局下一个 key。同一个 key 出现多次时只返回 sequence number 最大的版本（最新的写入）。Tombstone 标记的 key 不输出给上层调用者，但归并写入新 SSTable 时得保留——因为下层可能还有同 key 的旧数据，墓碑提前丢了旧数据就"复活"了。
+用 container/heap 的最小堆驱动：每个输入迭代器当前指向的 key 入堆，弹出最小的就是全局下一个 key。同一个 key 在多个输入流中出现时只返回 sequence number 最大的版本即最新写入。Tombstone 墓碑标记的 key 不输出给上层调用者，但归并写入新 SSTable 时必须保留——因为下层可能还有同 key 的旧数据，墓碑提前丢掉旧数据就"复活"了，这是 LSM-Tree 里最常见的正确性 bug。
 
-支持范围迭代：指定 startKey 和 endKey 做边界裁剪，只归并这个区间内的数据。整体时间复杂度 O(n log k)，k 是输入迭代器数量。
+支持范围迭代：指定 startKey 和 endKey 做边界裁剪，只归并这个区间内的数据减少不必要的 I/O 和计算。整体时间复杂度 O(n log k)，k 是输入迭代器数量，内存占用 O(k)。
 
-子迭代器接口统一：Seek/Next/Key/Value/Valid。go build 通过。
+子迭代器接口统一：Seek(key) 定位到指定 key、Next() 前进到下一个、Key() 和 Value() 取当前值、Valid() 判断迭代器是否还有效。支持多个迭代器独立工作互不影响。Go 标准库，go build 通过。

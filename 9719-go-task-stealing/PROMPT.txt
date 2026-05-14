@@ -1,10 +1,9 @@
-多线程任务调度中，有些 worker 很闲有些很忙，想实现 work stealing 让空闲的 worker 从繁忙的 worker 那里偷任务过来执行。
+4 个 worker 分配任务，结果 worker-1 手里 100 个任务忙不过来，worker-2 和 worker-3 各只有 5 个闲得发慌。work stealing 就是让闲的去忙的那里偷任务——负载自然就均衡了，不需要中心调度器。
 
-核心功能：
-- 每个 worker 维护自己的本地双端队列（deque），新任务从尾部入队
-- 自己从头部取任务执行，其他 worker 从尾部偷（steal）任务
-- 偷任务时要加锁，保证并发安全
-- 当本地队列为空时，主动去其他 worker 那里偷
-- 统计每个 worker 的任务执行数和偷取数，验证负载均衡效果
+Go 实现 work stealing 调度器。每个 worker 维护一个本地双端队列（deque）。新提交的任务默认分配到随机 worker 的 deque 尾部（也可以由调用者指定 worker）。worker 自己取任务从 deque 头部 pop——这是 LIFO 的，好处是刚提交的任务数据可能还在 CPU cache 里，执行更快。当本地 deque 为空时，worker 去随机挑一个其他 worker，从它的 deque 尾部偷（steal）一个任务过来——这是 FIFO 的，偷的是最老的任务。
 
-Go 实现，go build 通过。创建 4 个 worker、提交 100 个不均匀分布的任务，展示 stealing 后各 worker 负载趋于均衡。
+偷任务时的并发安全：deque 的头部操作（自己取）和尾部操作（别人偷）可以并行——用细粒度锁或者无锁 deque 实现。简单起见可以用 sync.Mutex 保护 deque，头部和尾部操作各自加锁。偷任务失败（对方 deque 也空了）就换下一个 worker 试，都空了就短暂自旋然后 sleep 一小段时间再试。
+
+统计每个 worker 的任务执行数、偷取数和被偷数。理想情况下负载均衡后各 worker 执行的任务数差距不超过 20%。如果某个 worker 偷取特别频繁说明初始分配不均衡。
+
+go build 通过。创建 4 个 worker，提交 100 个任务但故意 60% 都分配给 worker-0，跑完后观察 stealing 后各 worker 负载趋于均衡，打印每个 worker 的执行数和偷取数。

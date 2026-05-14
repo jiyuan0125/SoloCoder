@@ -1,1 +1,7 @@
-向量时钟合并时只增不减，内存会越来越大。帮我实现 Dotted Version Vector，在原有基础上加一个 dot（单个事件标记），可以淘汰已经合并的旧版本，控制向量长度。Go 实现，increment/fork/merge/descends 四个操作。go build 通过。
+向量时钟有个实际问题：合并时只增不减，向量会越来越大。100 个节点的系统，每个向量时钟就得带 100 个分量。节点频繁加入离开的话，向量更是膨胀得厉害。Dotted Version Vector（DVV）在向量时钟基础上引入 dot（单个事件标记），允许淘汰已经被合并的旧版本，控制向量长度。
+
+DVV 的结构由两部分组成。一个 dot：{nodeID, counter}——表示最近一次事件，是最精确的单个标记。一个 version vector（版本向量）：记录从其他节点收到的已知版本。Increment（本地事件）：dot 的 counter 自增，产生新的 dot。Fork（分支）：基于当前状态创建一个新分支，携带当前版本向量。Merge（合并）：比较双方的 dot 和版本向量。如果一方的 dot 被另一方的版本向量"包含"（descends），就用包含方的状态。如果双方并发，保留两个版本（类似 MV-Register 的多值）。Descends（因果判断）：判断一个版本是否是另一个的后继——dot 的 counter 大于对方版本向量中对应节点的值。
+
+测试：节点 A 做 3 次 increment，节点 B 做 2 次。A 发消息给 C，B 也发消息给 C。C merge 两边状态后，验证版本向量包含了 A 和 B 的信息，但旧版本的分量可以被安全淘汰（因为已经被 dot 包含了）。打印每次操作后的 dot 和版本向量。
+
+Go 实现，go build 通过。

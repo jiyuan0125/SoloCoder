@@ -9,3 +9,5 @@ Rust 的性能优势在这里很明显。
 - 解析输入并构建语法树
 - 显示解析表大小对比 LR(1) 和 LALR(1)
 CLI：lalr-parser grammar.txt input.txt，解析并输出结果。cargo build 编译通过。
+CLI 入口做好参数校验，参数不对时打印帮助信息并退出。
+对外接口保持简洁，内部实现细节不暴露。

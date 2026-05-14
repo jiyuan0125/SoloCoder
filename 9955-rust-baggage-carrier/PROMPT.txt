@@ -1,7 +1,7 @@
-追踪上下文里除了 trace_id，还想把用户 ID、实验分组这些业务信息一路传下去。W3C 定义了 baggage 规范，就是做这件事的——随请求一路传播的自定义键值对。用 Rust 实现 baggage 的序列化、反序列化和转义处理。
+分布式追踪里除了 trace_id 和 span_id，还想把用户 ID、实验分组、租户 ID 这些业务信息一路传下去。W3C 定义了 baggage 规范——随请求传播的自定义键值对，沿途所有服务都能看到。用法简单但细节不少：特殊字符转义、大小限制、嵌套传播。
 
-Baggage 就是在分布式追踪里随请求一路传递的自定义键值对，比如用户 ID、实验分组这些业务信息。实现一个 BaggageCarrier：支持添加、获取、删除 baggage 项；能把 baggage 序列化成字符串放到 HTTP header（类似 W3C baggage header 格式，逗号分隔，key=value）；能从 header 字符串反序列化回来；处理特殊字符的转义和 URL 编码；设置最大条目数限制防止滥用。
+用 Rust 实现 BaggageCarrier。核心功能：添加 baggage 项 set(key, value)、获取 get(key)、删除 remove(key)、获取全部 items()。序列化成 HTTP header 字符串——遵循 W3C baggage 格式，逗号分隔的 key=value 对（比如 "user_id=123,tenant=acme,exp_group=A"）。反序列化从 header 字符串解析回 baggage——处理空格、引号、转义字符。
 
-纯 Rust，cargo build 通过，带个 demo 展示序列化和反序列化。
+特殊字符处理：value 里的逗号、等号、反斜杠用百分号编码。空 key 或空 value 跳过不报错。最大条目数 64 个、最大总字节 8KB，超出拒绝添加。多来源合并时相同 key 取最后出现的值。
 
-Baggage 沿调用链传播用户自定义键值对——比如 tenant_id，沿途所有服务都能看到。用于日志关联和权限检查。
+纯 Rust，cargo build 通过。写个 demo：创建 baggage 设置 5 个键值对（含特殊字符），序列化再反序列化验证值一致。

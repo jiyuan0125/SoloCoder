@@ -5,3 +5,4 @@ DeleteRange(startKey, endKey) 写入范围墓碑，走正常写入路径（WAL �
 Compaction 时范围墓碑可以清理底层文件中的已删 key，相邻或重叠的范围墓碑合并为一条更大的。范围墓碑本身带 sequence number，支持 snapshot 隔离。存储用区间树或排序列表，查询时二分定位。
 
 go build 通过。
+CLI 入口做好参数校验，参数不对时打印帮助信息并退出。

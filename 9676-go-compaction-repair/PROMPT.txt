@@ -1,1 +1,7 @@
-SSTable 层的数据会有过期和删除标记堆积，compaction 时需要顺便修复不一致。帮我用 Go 实现 compaction 过程中的修复逻辑——合并多个 SSTable 时，对比同一 key 在不同副本的版本，取最新值写入新文件。模拟数据即可，不用真的写磁盘。go build 通过。
+LSM-Tree 存储引擎在运行过程中会产生大量 SSTable 文件，同一个 key 在不同层级的 SSTable 里可能有多个版本（更新）和删除标记（tombstone）。Compaction 合并 SSTable 时，正好可以顺便修复副本间的不一致——既做了空间回收，又做了数据修复。
+
+实现 compaction 过程中的修复逻辑。输入是多个需要合并的 SSTable（模拟数据即可，不用真的写磁盘文件）。合并算法：按 key 顺序遍历所有 SSTable，对同一个 key 的多个版本进行合并——如果不同副本的值不同，比较版本号（或时间戳）取最新值作为合并结果。Tombstone 处理：如果最新版本是删除标记（tombstone），保留标记（但可以设置一个 GC 阈值——如果 tombstone 已经存在超过 N 天且在所有副本都是 tombstone，就可以彻底清除）。过期数据清理：超过 TTL 的数据直接丢弃不写入新的 SSTable。输出是合并后的新 SSTable，同一个 key 只保留一个最新版本。
+
+模拟数据：3 个 SSTable，每个里面有部分重叠的 key。SSTable-1 有 {x:v1, y:v2}，SSTable-2 有 {x:v3, z:v4}（x 有更新），SSTable-3 有 {y:tombstone, w:v5}（y 被删除）。compaction 合并后新 SSTable 包含 {x:v3, w:v5}——x 取最新版本，y 因为 tombstone 被清除，z 正常保留。
+
+Go 实现，模拟数据结构不用真的写磁盘，go build 通过。

@@ -3,7 +3,7 @@
 
 场景是这样的：有一个协调者和若干个参与者。客户端发起一个事务请求，协调者先向所有参与者发送prepare请求，每个参与者返回ready或abort。如果所有参与者都ready了，协调者发送commit；如果有任何一个abort，协调者发送rollback。每个参与者维护自己的本地数据存储（内存中的map就够了），prepare阶段要做数据校验（比如检查账户余额够不够扣），commit阶段才真正执行数据变更，rollback要把prepare阶段做的预保留数据释放掉。
 
-核心库定义TransactionCoordinator接口和TransactionParticipant接口。协调者负责事务生命周期管理：Begin创建新事务，Prepare向所有参与者发送prepare，Commit或Rollback做最终决定。参与者需要实现Prepare(txID string, changes []Operation) error和Commit(txID string) error以及Rollback(txID string) error。Operation定义了操作类型（Create、Update、Delete）和目标数据。协调者要维护事务日志，记录每个事务的状态（pending、prepared、committed、aborted、rolledback），以便在协调者崩溃恢复时能查询未完成的事务。
+核心库定义TransactionCoordinator接口和TransactionParticipant接口。协调者负责事务生命周期管理：Begin创建新事务，Prepare向所有参与者发送prepare，Commit或Rollback做最终决定。参与者要做Prepare(txID string, changes []Operation) error和Commit(txID string) error以及Rollback(txID string) error。Operation定义了操作类型（Create、Update、Delete）和目标数据。协调者要维护事务日志，记录每个事务的状态（pending、prepared、committed、aborted、rolledback），以便在协调者崩溃恢复时能查询未完成的事务。
 
 超时机制很关键：协调者给每个阶段设置超时时间。prepare超时后自动abort整个事务。已经处于prepared状态但迟迟没收到commit/rollback的参与者，也要有超时自动回滚的能力（可以用一个后台goroutine定期检查）。
 

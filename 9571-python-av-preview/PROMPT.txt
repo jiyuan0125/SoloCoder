@@ -1,3 +1,8 @@
-视频预览图生成器。想在网页上放个视频缩略图，鼠标悬停就能预览效果那种。
-从视频中均匀采样若干帧，生成一张雪碧图（sprite sheet），同时生成一个 WebVTT 文件记录每帧的时间戳和坐标。也支持只输出几张关键帧截图。采样帧数可配置。
-Python 3 + ffmpeg。python preview.py video.mp4 -o sprites.jpg --frames 100 --width 160 --columns 10，同时输出 sprites.vtt
+视频预览图生成器。想在网页上做视频缩略图预览效果——鼠标悬停时显示对应时间点的画面就像视频网站的那种交互体验。需要同时生成雪碧图和对应的 WebVTT 时间戳文件配合 HTML5 播放器使用。
+
+从视频中均匀采样若干帧默认 100 帧可通过 --frames 参数调整，生成一张雪碧图 sprite sheet 所有帧按网格排列。同时生成一个 WebVTT 文件记录每帧的时间戳和在雪碧图中的坐标位置方便网页播放器用 CSS background-position 定位显示对应帧。也支持只输出几张关键帧截图 --keyframes 模式用于静态预览不需要交互。
+
+采样帧数、每帧缩放宽度默认 160px、雪碧图每行列数默认 10 都可配置。雪碧图用 JPEG 格式输出文件体积小适合 Web 加载。
+
+Python 3 用 ffmpeg 提取帧。python preview.py video.mp4 -o sprites.jpg --frames 100 --width 160 --columns 10，同时输出 sprites.vtt
+大文件或边界情况要考虑周全：空输入、超大输入、格式异常都要能正确处理。

@@ -1,1 +1,7 @@
-需要一个范围扫描操作，给定起始 key 和数量限制，返回连续的一批 key-value 对。类似 LSM-Tree 的 seek + next 语义。Go 实现，底层用 sorted map 或者 skip list，支持正向和反向扫描。go build 通过。
+KV 存储除了按 key 查单个值，还需要范围扫描——给定起始 key 和数量限制，返回连续的一批 key-value 对。这在很多场景下都用到：分页查询、按时间范围取日志、前缀枚举等。类似 LSM-Tree 的 seek + next 语义。
+
+实现一个有序 KV 存储的扫描操作。底层数据结构用 sorted map（Go 里可以用红黑树或者基于 slice 的有序结构）或者 skip list——数据按 key 排序存储。Scan(startKey, limit) 操作：从 startKey 开始（包括 startKey 如果存在），按 key 顺序返回最多 limit 个 key-value 对。如果没有足够的 key 就返回实际找到的数量。支持正向扫描（从小到大）和反向扫描（从大到小，用 endKey 反向取 limit 条）。Scan 语义类似于 LSM-Tree 的 seek（定位到 startKey）+ next（逐个往后读）——不是全量加载再过滤，而是从有序结构中高效范围读取。
+
+测试场景：插入 100 条有序 key（key-001 到 key-100），执行 Scan("key-020", 10) 返回 key-020 到 key-029 共 10 条。Scan("key-095", 10) 返回 key-095 到 key-100 共 6 条（剩余不足 limit）。反向 Scan("key-050", 10, reverse=true) 返回 key-050 到 key-041 共 10 条。打印每次 scan 的结果和耗时。
+
+Go 实现，底层用 skip list 或者 sort + binary search，go build 通过。

@@ -1,5 +1,7 @@
-用 Go 实现 Raft 快照的网络传输模块。当 follower 远远落后于 leader 时，leader 需要把整个快照通过网络发给 follower，快照可能很大，得分块传。
+当 follower 远远落后于 leader 时——比如 follower 掉线了很久刚恢复——leader 的 nextIndex 可能已经指向一个被快照截断了的位置，没法用 AppendEntries 逐条发送日志了。这时候得用 InstallSnapshot RPC 把整个快照通过网络发给 follower。
 
-实现 InstallSnapshot RPC：leader 把快照数据分块（比如每块 1MB），逐块发送给 follower。follower 收到完整的快照后替换本地日志前缀部分。要支持传输中断后从断点续传，以及快照数据的校验（比如用 checksum 验证完整性）。
+快照可能很大（几 MB 到几百 MB），一次发完不现实也不健壮。做法是分块发送：leader 把快照数据按固定大小切割（比如每块 1MB），每块带一个 offset 标明在完整快照中的位置，通过多次 InstallSnapshot RPC 逐块发给 follower。follower 收到所有块后拼接成完整快照，校验完整性（用 checksum 或者整体 hash），然后替换本地日志前缀，恢复状态机。传输中断的话，follower 记住已接收的 offset，下次从断点续传而不是从头开始。重复的块（网络重传导致）要能正确去重。
 
-写个 demo：生成一个 5MB 的模拟快照数据，leader 分块发送给 follower，follower 接收完整后验证并应用。go build 通过。
+写个 demo 展示完整流程：生成一个 5MB 的模拟快照数据（可以是随机字节加上元数据头），leader 把它分块发给 follower，打印每块的发送进度。follower 接收完后校验 hash 并应用。中间模拟一次传输中断，恢复后续传成功。最终验证 follower 的状态机状态和 leader 一致。
+
+Go 标准库实现，go build 通过。

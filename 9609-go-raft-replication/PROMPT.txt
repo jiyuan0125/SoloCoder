@@ -1,5 +1,7 @@
-用 Go 实现 Raft 的日志复制机制，重点关注 leader 如何高效地把日志同步到多数节点并提交。
+Raft 的日志复制说起来简单——leader 发日志给 follower，多数确认就提交——但真正要处理好的场景不少，尤其是网络分区和节点故障同时发生的时候。
 
-要处理的场景：正常情况下 leader 顺序复制日志、网络分区恢复后 follower 日志落后时的追赶、部分节点宕机但 majority 存活时的继续提交。复制要支持批量发送多条日志提高效率。commit index 的推进要基于多数节点的匹配情况。
+正常情况下 leader 顺序地把日志条目通过 AppendEntries RPC 发给所有 follower，每个 follower 的 nextIndex 追踪 leader 下一次该从哪里开始发。follower 确认后 leader 更新对应的 matchIndex，然后根据所有 follower 的 matchIndex 计算哪些日志已经被多数节点确认，推进 commitIndex。这里有个重要的安全约束：只有当前 term 的日志被复制到多数节点才能提交，之前 term 的日志即使被多数持有也不能单方面提交（要等到当前 term 有日志提交时顺带一起提交）。批量发送要支持：一次 AppendEntries 可以带多条日志，不用逐条发送，效率高很多。
 
-跑一个模拟：5 节点集群，leader 发送 100 条日志，中途挂掉 2 个 follower，剩下的 3 个节点依然能正常提交。go build 通过。
+跑一个模拟场景：5 节点集群，leader 连续发送 100 条日志。中途模拟 2 个 follower 宕机（不再响应 RPC），剩下的 3 个节点（刚好是多数）继续正常接收和确认日志，commitIndex 正常推进。然后让 2 个宕机节点恢复，leader 通过 nextIndex 回退机制帮它们追上。最终所有 5 个节点日志完全一致。
+
+Go 实现，go build 通过。

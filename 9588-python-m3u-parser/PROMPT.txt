@@ -1,3 +1,9 @@
-M3U 播放列表解析器。手里有好多 M3U 文件想提取里面的歌单。
-解析 M3U 和 M3U8（Extended M3U）格式文件。提取 EXTINF 标签中的信息（时长、艺术家、标题）和实际的文件路径。支持相对路径和绝对路径，支持 URL 类型的条目。能把解析结果导出为 CSV 或 JSON。
-Python 3 纯标准库。python m3u_parser.py playlist.m3u show，或 python m3u_parser.py playlist.m3u --export csv -o songs.csv
+M3U 播放列表解析器。手里有好多 M3U 文件想提取里面的歌单信息做分析或迁移到其他播放器。M3U 格式简单但 EXTINF 扩展信息容易被忽略。
+
+解析 M3U 和 M3U8 Extended M3U 格式文件。提取 EXTINF 标签中的信息——时长逗号前面是秒数、艺术家和标题逗号后面的格式是 Artist - Title 以及实际的文件路径或 URL。支持相对路径自动转换为绝对路径基于 M3U 文件所在目录解析、支持 URL 类型的条目网络流媒体。能把解析结果导出为 CSV 或 JSON 格式方便导入其他工具或数据库。
+
+处理 M3U 文件中的 BOM 头和不同编码避免中文路径乱码。空行和注释行自动跳过不影响解析结果。
+
+Python 3 纯标准库实现。python m3u_parser.py playlist.m3u show 显示格式化的曲目列表，或 python m3u_parser.py playlist.m3u --export csv -o songs.csv
+保持代码结构清晰，核心逻辑和辅助工具函数分开组织。做好基本的错误处理。
+日志和调试信息要分级输出，方便排查问题。生产环境下只输出必要的信息。

@@ -1,1 +1,9 @@
-分布式锁有个经典问题：客户端拿到锁后 GC 卡住，锁过期被别人拿到，等 GC 恢复后两个客户端同时操作。我需要 fencing token 机制——每次锁分配递增的 token，存储层只接受 token 比上一次大的请求。Go 实现锁服务和 fencing token 的生成、校验。go build 通过。
+分布式锁有个绕不开的经典问题：客户端 A 拿到锁后 GC 停顿，锁过期被 B 拿到。A 恢复后继续操作——两个客户端同时往存储里写数据。解决办法就是 fencing token，Chubby 论文里提出的概念。每次锁分配时递增一个全局 token，存储层只接受 token 比上一次大的请求。
+
+Go 实现完整的 fencing token 方案。锁服务维护一个全局递增的 monotonic counter（int64），每次有客户端成功获取锁，counter 加 1 并把新值作为 fencing token 返回给客户端。客户端拿到 token 后在所有写请求中附带这个 token。存储层收到写请求后，取出该 key 上次写入的 token 值做比较——新 token 更大才执行写入并更新记录的 token 值，否则拒绝（返回 stale token 错误）。
+
+token 的递增必须原子化，不能出现两个客户端拿到相同 token 的情况。存储层的 token 检查也要原子——检查和更新之间不能有间隙。这两个操作都要用锁或者 CAS 保护。token 值要持久化，锁服务重启后从存储中恢复最后的 token 值继续递增，不能从 0 开始（否则重启前发的 token 全变成"过期"的了）。
+
+还要提供一个 TokenHistory(key) 接口，返回某个 key 的 token 变更记录（哪个客户端、什么时间、token 值），方便排查问题。
+
+go build 通过，模拟这个场景：A 拿到锁（token=5）后假死，锁过期 B 拿到锁（token=6）并写入数据。A 醒来后尝试写入——存储层拒绝 token=5 的请求。

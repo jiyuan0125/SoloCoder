@@ -5,3 +5,6 @@
 同时检查 CSP 里的 frame-ancestors 指令作为补充——frame-ancestors 是 X-Frame-Options 的现代替代方案，如果两个都存在浏览器优先使用 frame-ancestors。
 
 输出报告：每个 URL 的 X-Frame-Options 值和 frame-ancestors 值，以及整体安全评估。Go 标准 标准库，go build 编译通过即可。
+写几个典型场景的测试用例，包括正常流程和边界条件。
+核心逻辑和 IO 分离，方便测试。
+资源泄漏是大忌——打开的文件、建立的连接都必须在 finally 里关掉。

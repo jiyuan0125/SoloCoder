@@ -2,6 +2,6 @@
 
 用 Go 实现一个简化版的 YARA 规则匹配引擎。支持 YARA 规则的核心语法结构：rule 关键字和规则名称、meta 段里写 description、author 这些元数据、strings 段里定义三种字符串类型——文本字符串（用双引号包裹）、十六进制字符串（用大括号包裹）、正则表达式（用斜杠包裹）、condition 段写匹配条件。
 
-condition 支持基本的布尔表达式：and、or、not 运算符，any of $s（strings 段里定义的任意一个标识符匹配就行），all of $s（所有标识符都必须匹配），以及直接的标识符引用如 $s1。不需要实现 YARA 的完整功能，不用支持 loops、for 循环、模块调用这些高级特性。
+condition 支持基本的布尔表达式：and、or、not 运算符，any of $s（strings 段里定义的任意一个标识符匹配就行），all of $s（所有标识符都必须匹配），以及直接的标识符引用如 $s1。不要做 YARA 的完整功能，不用支持 loops、for 循环、模块调用这些高级特性。
 
 扫描目标可以是单个文件或整个目录。匹配结果输出规则名称、匹配的字符串标识符、在文件中的偏移位置。meta 段的 description 也会一并输出，方便理解规则含义。Go 标准库的 regexp 包做正则匹配，go build 通过。

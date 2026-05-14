@@ -1,5 +1,7 @@
-用 Go 实现一个 Raft 选举安全性的保证模块。Raft 的核心就是任何时刻最多一个 leader，选举机制得保证这一点。
+Raft 能保证任何时刻最多一个 leader，靠的就是选举安全性的几个约束。这些约束看着简单，但要在各种边界条件下都保证正确其实不容易。
 
-重点要处理：选举限制（日志不够新的候选人不能赢）、split vote 的处理（随机超时避免反复平票）、旧 leader 宕机后新选举的过渡期处理。节点状态要在 follower、candidate、leader 之间正确切换，状态机转换要严谨。
+选举限制的核心是"日志不够新的候选人不能赢"。具体来说，RequestVote RPC 里有两个字段 lastLogTerm 和 lastLogIndex，投票者会比较自己的日志和候选人的日志：如果候选人的 lastLogTerm 更小，或者 lastLogTerm 相同但 lastLogIndex 更小，就拒绝投票。这保证了被选出来的 leader 一定拥有所有已提交的日志。Split vote 的处理靠随机超时——如果多个 candidate 同时拉票导致没人拿到多数，每个 candidate 的超时时间是随机的（比如 150-300ms 随机），先超时的那个率先发起下一轮选举，打破了平票僵局。旧 leader 宕机后的过渡期，follower 会在 election timeout 后转为 candidate，term 递增触发新一轮选举。
 
-模拟一个比较极端的场景：5 节点集群，频繁网络抖动导致多次重新选举，但始终只有一个 leader。go build 能跑。
+模拟一个比较极端的场景来验证安全性：5 节点集群，运行过程中随机制造网络分区和恢复，连续触发 10 次重新选举。每次选举结束后验证只有一个 leader 存在，而且 leader 的 term 严格递增。打印每次选举的 term、当选者、得票情况。
+
+Go 实现，go build 能跑。

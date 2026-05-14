@@ -12,3 +12,5 @@
 - 提供 debug 接口：可视化版本演变图
 
 Rust 标准库，cargo build 通过。
+日志分级输出（DEBUG/INFO/WARN/ERROR），生产环境设为 INFO 级别。
+超时和取消要支持，长时间阻塞的操作要能打断。

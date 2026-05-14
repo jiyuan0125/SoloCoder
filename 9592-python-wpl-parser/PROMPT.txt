@@ -1,3 +1,7 @@
-WPL 播放列表解析器。Windows Media Player 默认保存为 WPL 格式。
-解析 WPL（Windows Media Player Playlist）SMIL 格式的播放列表。提取 body → seq → media 节点中的 src、tid、title 等属性。也要读取 head 中的 meta 信息（比如 totalDuration）。输出 JSON 或 CSV。
-Python 3 标准库 xml.etree.ElementTree。python wpl_parser.py playlist.wpl show，或 python wpl_parser.py playlist.wpl --csv -o songs.csv
+Windows Media Player 默认保存播放列表用的 WPL 格式，底层是 SMIL 的 XML 变体。手里有一堆 .wpl 文件想把歌单迁移到别的平台，得先解析出来。
+
+WPL 文件结构分两部分：head 里放 meta 信息（totalDuration、itemCount 之类），body 里的 seq 节点下挂着一堆 media 标签，每个 media 的 src 属性就是音频文件路径。有的 WPL 还会在 media 上加 tid 或 customTitle 属性。解析器要把 head 中的 meta 和 body 中的 media 列表都读出来。
+
+先做基本解析：遍历 body → seq → media 节点，提取 src、tid、title 等属性，同时读 head 里的 meta 信息汇总。输出支持 JSON 和 CSV 两种格式。命令行：python wpl_parser.py playlist.wpl show，或 python wpl_parser.py playlist.wpl --csv -o songs.csv。src 路径可能是相对路径，要能基于 WPL 文件所在目录转成绝对路径。
+
+Python 3 标准库 xml.etree.ElementTree 处理 XML 解析。WPL 的 XML 声明有时带 BOM，用 utf-8-sig 读取可以自动处理。

@@ -1,7 +1,5 @@
-Compaction 选错文件的后果很严重——选了太多文件合并时间太长阻塞写入，选太少空间回收不及时读延迟飙升。LevelDB 的 picker 比较保守，RocksDB 加了优先级和调度。Go 写一个，核心逻辑不难。
+Compaction 选错文件后果很严重——选太多文件合并时间太长会阻塞写入，选太少空间回收不及时读延迟飙升。LevelDB 的 picker 比较保守，RocksDB 加了优先级和调度策略。Go 写一个 compaction 选择器，核心逻辑其实不难。
 
-维护每层的 SSTable 文件列表和总大小。触发条件：L0 看文件数量（超过 4 个就触发），L1+ 看总字节数（超过层容量上限就触发）。选择策略：L0 的文件 key range 有重叠必须全选，L1+ 只选和上层输出有 key range 重叠的文件。输出任务描述包含参与文件列表、目标层、预估输出大小和 key range。
+维护每层的 SSTable 文件列表和总大小统计。触发条件分两种情况：L0 看文件数量，超过 4 个就触发 compaction；L1 及以上看总字节数，超过该层容量上限就触发。选择策略：L0 的文件 key range 有重叠所以必须全部选中参与合并，L1 及以上只选择和上层输出有 key range 重叠的文件。输出的任务描述要包含参与文件列表、目标层、预估输出大小和合并后的 key range。
 
-还要支持手动触发（指定层或 key range），以及避免重复触发——正在 compaction 的文件标记为进行中不参与新任务。文件用结构体模拟（id, level, size, smallestKey, largestKey）。
-
-go build 通过。
+还要支持手动触发：指定层数或者指定 key range 强制启动 compaction。避免重复触发也很关键——正在 compaction 的文件标记为进行中状态不参与新任务的选取，防止同一个文件被两个 compaction 任务同时处理。文件用结构体模拟包含 id、level、size、smallestKey、largestKey 这些字段。go build 通过。

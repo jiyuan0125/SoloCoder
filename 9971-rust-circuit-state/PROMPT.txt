@@ -5,3 +5,4 @@
 Rust 写，cargo build 能过，演示一次完整的 Closed→Open→Half-Open→Closed 循环。
 
 熔断器状态管理需要精确——Closed 状态下持续统计失败率，达到阈值时切换到 Open。状态转换必须原子，防止并发导致误判。
+写几个典型场景的测试用例，包括正常流程和边界条件。
