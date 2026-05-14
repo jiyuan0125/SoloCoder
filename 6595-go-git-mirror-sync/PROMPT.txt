@@ -1,6 +1,17 @@
-源码仓库和内部镜像要同步，不能全量推——太大。从源仓库拉取所有引用推送到目标，支持定时同步和增量同步。
+源码仓库同步到内部镜像，全量 clone 要下 5GB 不现实。增量同步才行，还得定时跑。
 
-镜像同步 Git 仓库。从源仓库拉取所有引用，推送到目标仓库。支持定时同步和增量同步。
-文件可能很大，超过内存要能处理。
+命令行：`mirror-sync -source https://github.com/org/repo.git -target /local/mirror.git`。`-refs "refs/heads/*,refs/tags/*"` 指定同步的引用范围，默认全部。`-interval 300` 每 300 秒循环同步（不指定则同步一次退出）。`-incremental` 增量模式只传输新增对象。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+执行逻辑：
+1. 如果 target 路径不存在，执行 `git clone --bare --mirror <source> <target>` 初始化
+2. 后续同步执行 `git remote update` 或手动 fetch 所有 refs
+3. 增量模式下记录上次同步的 commit hash，只 fetch 新的对象
+4. 每次同步后打印 "synced %d refs, %d objects, took %s"
+
+定时模式：按 `-interval` 秒数循环，每次同步后打印 "next sync in %ds"。`Ctrl+C` 优雅退出，打印 "stopped after %d syncs"。
+
+source URL 无效或不可达时退出码 1 打印 "source unreachable: %s"。target 磁盘空间不足时退出码 1 打印 "disk full, sync aborted"。网络中断时重试 3 次，间隔 10 秒，全部失败退出码 1。
+
+大文件处理：不把整个仓库加载到内存，用 git 命令流式传输。
+
+纯 Go 标准库，编译后单二进制。`go build -o mirror-sync .`。

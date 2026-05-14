@@ -1,5 +1,7 @@
-新项目 hooks 每次手动配，commit-msg lint 和 pre-push test 写了又写。做个 hooks 管理工具，安装/卸载/列出，内置常用 hook 模板，配置存在项目根目录。
+上个项目 oncall 半夜被叫起来，有人 push 带了调试代码和 failing test。要是有 hooks 管理工具，新项目初始化时一条命令搞定 commit-msg lint 和 pre-push test，就不用每次手动写了。
 
-管理 Git hooks。支持安装、卸载、列出 hooks。内置常用 hook 模板（commit-msg lint、pre-push test）。hooks 配置存在项目根目录。
+`hooks-manager` 管理生命周期。`install` 扫描 `.githooks/` 目录，把每个 hook 脚本软链接到 `.git/hooks/`（备份已有同名 hook 为 `.bak`）。`uninstall` 恢复备份删除软链接。`list` 显示已安装 hooks 状态表格：hook 名、是否已安装、来源路径、文件大小。`init` 在 `.githooks/` 生成内置模板——commit-msg 检查 Conventional Commits、pre-push 运行 `go test ./...`、pre-commit 检查 `gofmt -l`。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`.githooks/` 不存在时 `install` 提示 `error: .githooks/ not found, run "init" first` 退出码 1。不在 git 仓库提示 `error: not a git repository` 退出码 1。hook 脚本不可执行时警告 `warning: {hook} is not executable`。
+
+Go 标准库实现，`go build` 编译通过。

@@ -1,5 +1,11 @@
-commit message 写错 scope 上线受阻，CI 检查没拦住。自定义规则链——类型检查、scope 白名单、body 必填、引用 issue 编号，规则用 YAML 配置。
+commit message 的 scope 写错了，CI 竟然没拦住。angular 规范大家都说遵守，没人真检查。
 
-高级 commit message 校验。支持自定义规则链：类型检查、scope 白名单、body 必填、引用 issue 编号。规则用 YAML 配置。
+命令行：`msg-validator -msg "feat(api): add endpoint"` 校验单条消息。`-file .git/COMMIT_EDITMSG` 从文件读取。`-config rules.yaml` 指定规则文件，不指定用内建默认。
 
-用 Go 标准库写，go run . 或 go build 都行。
+YAML 配置格式：`types: [feat, fix, docs, style, refactor, test, chore]`、`scopes: [api, ui, core, db, infra]`、`require_scope: true`、`require_body: false`、`require_issue_ref: true`、`max_subject_length: 72`。
+
+校验按顺序执行：subject 必须匹配 `{type}({scope}): {description}`；type 不在白名单报 "invalid type: %s"；require_scope 时缺少报 "scope is required"；scope 不在白名单报 "invalid scope: %s"；require_issue_ref 时必须含 `#数字`；超长报 "subject too long: %d > %d"。
+
+通过打印 "OK" 退出码 0。失败逐行打印 `[ERROR] xxx` 退出码 1。配置解析失败退出码 1。
+
+Go 标准库，`go build -o msg-validator .`。

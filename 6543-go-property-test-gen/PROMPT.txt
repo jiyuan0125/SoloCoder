@@ -1,5 +1,11 @@
-property-based testing 手写太累，随机值策略和属性检查函数每个 struct 都要编。从 Go struct 定义直接生成——序列化 round-trip、零值不影响逻辑这些基本属性自动输出骨架。
+property-based testing 手写太累，随机值策略和属性检查每个 struct 都要编。自动生成不香吗？
 
-从 Go struct 定义生成 property-based test 骨架。根据字段类型生成随机值策略和基本属性（如序列化 round-trip、零值不影响逻辑）。
+`generate -file models.go -out property_test.go` 解析 struct 定义自动生成。每个导出 struct 生成：
+- `random{StructName}(rng *rand.Rand)` 随机值生成器——int 用 `rng.Intn()`，string 随机字母，bool 随机，float64 `rng.Float64()`，slice 随机长度
+- `Test{StructName}_SerializationRoundTrip` JSON marshal→unmarshal→DeepEqual
+- `Test{StructName}_ZeroValueSafety` 零值不 panic
+- `Test{StructName}_DeterministicHash` 相同内容相同哈希
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`-count 100` 随机迭代次数，默认 100。`-strategy simple|exhaustive` exhaustive 包含边界值（int 最大最小、空字符串、nil slice）。生成文件要 `go test` 直接运行。无 struct 输出 `no struct definitions found` 退出码 0。文件不存在 `error: file not found` 退出码 1。
+
+Go 标准库实现。go build 能编译通过。

@@ -1,6 +1,14 @@
-开源项目的健康度评估需要看 commit 频率、PR 合并时间、issue 响应时间、贡献者数量趋势，这些指标要从 git log 里解析出来。
+凭什么说这个项目"还活着"？commit 频率在下降、PR 两个月没人合，这些从 git log 里都能算出来。
 
-计算仓库健康指标：commit 频率、PR 合并时间、issue 响应时间、贡献者数量趋势。从 git log 解析。
-输入可能包含乱码和特殊字符。
+命令行：`repo-metrics -path /path/to/repo -since 2024-01-01 -format table`。`-format` 可选 `table`（默认）或 `json`。
 
-Go 实现，只用标准库，交叉编译友好。
+从 git log 解析指标：
+- commit 频率：按周统计，输出最近 12 周，最后一行 "trend: increasing/stable/declining"（近 4 周均值 vs 前 8 周均值）
+- 贡献者数量：去重 author email，按 commit 数降序前 10 名
+- 代码变更量：总 insertions/deletions，按文件扩展名分组
+
+table 模式用 `|` 分隔列。json 模式输出 `{"period": "...", "total_commits": 234, "contributors": 12, "weekly_commits": [...], "file_changes": {...}}`。
+
+不是 git 仓库时退出码 1 打印 "not a git repository"。日期格式无效退出码 1 打印 "invalid date: %s"。git log 含特殊字符不崩溃，跳过打印 warning。
+
+Go 纯标准库，`go build -o repo-metrics .`。

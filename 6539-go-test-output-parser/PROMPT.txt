@@ -1,6 +1,11 @@
-多语言项目的测试报告格式不统一，Go test 输出一种格式，pytest 输出一种，JUnit XML 又是一种。全部解析后统一成 JSON，用例名、状态、耗时、错误信息提取出来出汇总报告。
+多语言项目的测试报告格式不统一——Go test、pytest、JUnit XML 各一种。全解析统一成 JSON。
 
-解析多种测试框架的输出（Go test、pytest、JUnit XML），统一为 JSON 格式。提取用例名、状态、耗时、错误信息。输出汇总报告。
-输入文件可能是空的或者只有 header 行。
+`parse -format gotest|pytest|junit|auto -file output.txt` 解析测试输出。统一输出 JSON：`{"framework":"","test_suites":[{"name":"","tests":[{"name":"","status":"pass|fail|skip","duration_ms":0,"error_message":""}]}],"summary":{"total":0,"passed":0,"failed":0,"skipped":0,"duration_ms":0}}`。
+
+`report -files a.log,b.txt,c.xml -out summary.html` 解析多文件生成 HTML 汇总。顶部通过/失败/跳过彩色计数，按文件分组，失败用例红色背景可展开查看错误信息。
+
+`diff -base baseline.json -current current.json` 对比两次结果，输出新增失败、已修复、持续失败的用例。
+
+空文件输出 `warning: empty input, no results` 退出码 0。无法识别格式输出 `error: unrecognized format` 退出码 1。
 
 用 Go 标准库写，go run . 或 go build 都行。

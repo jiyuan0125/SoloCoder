@@ -1,5 +1,3 @@
-15 个微服务有依赖关系，手动按顺序编译经常搞反。客户等着要，先搞个工具从配置文件读项目列表和依赖关系，并行构建无依赖项，输出每个项目的构建结果。
+15 个微服务有依赖关系，手动按顺序编译经常搞反顺序导致前一个的输出还没就绪后一个就编译失败了。先搞个工具读依赖配置然后按拓扑排序并行构建。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-
-用 Go 标准库写，go run . 或 go build 都行。
+从 YAML 配置读取项目列表和依赖：`projects: - name: user-service path: ./services/user depends: [] - name: order-service path: ./services/order depends: [user-service] - name: gateway path: ./services/gateway depends: [user-service, order-service]`。命令行 `buildchain --config projects.yaml --parallel 4 --command "go build -o bin/app ./..."`。构建流程：第一步拓扑排序确定构建层级，同一层级的无依赖项目并行构建，并发数由 `--parallel` 控制（默认 CPU 核数）。第二步逐层执行构建命令，每个项目在自己的 `path` 目录下执行。第三步输出每个项目的构建结果：`项目名 | 状态(SUCCESS/FAIL/SKIP) | 耗时`。某项目构建失败时，依赖它的后续项目全部 SKIP 并标注原因 `skipped: dependency <name> failed`。全部成功退出码 0，有失败退出码 1。`--dry-run` 只输出构建计划（拓扑层级和并行分组）不实际执行。配置文件循环依赖时输出 `circular dependency detected` 退出码 2。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，`go run .` 或 `go build` 都行。

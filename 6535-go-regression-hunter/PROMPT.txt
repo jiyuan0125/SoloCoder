@@ -1,6 +1,9 @@
-git bisect 虽好但要手动一步步试 good/bad，50 个 commit 要跑 6 轮。自动 checkout、运行测试、判断通过/失败，直接告诉你哪个 commit 引入的问题。
+git bisect 要手动一步步试 good/bad，50 个 commit 跑 6 轮。自动搞定，直接告诉你哪个 commit 引入的问题。
 
-用二分法在 Git 提交历史中找到引入测试失败的具体提交。自动 checkout、运行测试、判断通过/失败。输出引入问题的 commit 信息。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`hunt -good v1.0.0 -bad HEAD -test "go test ./..." -dir ./project` 二分查找。算法：`git rev-list --ancestry-path` 获取列表，取中点 checkout 运行 test，退出码 0 标 good 否则 bad，缩小到剩一个 commit。
 
-Go 标准库，命令行参数用 flag 包解析。
+过程输出到 stderr：`[1/6] testing abc1234... FAIL`。结果到 stdout：`INTRODUCED_BY: abc1234 | Author: Zhang San | Date: 2024-01-15 | Message: refactor config`。
+
+`-max-steps 20` 防无限循环。`-build "go build ./..."` 编译失败标记 skip。`-timeout 5m` 超时标 bad。无提交输出 `error: no commits between {good} and {bad}` 退出码 1。全 bad 输出 `all commits fail, cannot bisect` 退出码 2。
+
+至少 3 个 Go 源文件：main.go、bisect.go、types.go。Go 标准库，flag 包解析。

@@ -1,5 +1,13 @@
-想给几个关键 commit 打标记方便后续查找，但 git notes 会推送到远程。本地标记——添加、列出、按标签搜索 commit，标签信息存在 .git/annotations/ 下。
+给关键 commit 打标记方便以后查找，git notes 会推到远程影响别人。本地标记方案更合适。
 
-给 commit 打标签（类似 note 但存在本地）。支持添加、列出、按标签搜索 commit。标签信息存在 .git/annotations/ 下。
+命令行子命令用 os.Args[1] 区分：
+- `annotate add <hash> -tag "security-fix" -note "patched CVE-2024-1234"` → 存入 `.git/annotations/<hash>.json`
+- `annotate list` → 表格输出 `HASH | TAGS | NOTE | DATE`
+- `annotate search -tag "security-fix"` → 按标签搜索输出匹配列表
+- `annotate remove <hash>` → 删除指定 commit 标签
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+存储格式 `.git/annotations/<short-hash>.json`：`{"hash":"abc123","tags":["security-fix"],"note":"patched CVE","timestamp":"2024-06-01T10:00:00Z"}`。
+
+add 时 commit 不存在退出码 1 打印 "commit not found: %s"。search 无匹配退出码 0 打印 "no matches found"。remove 无标签退出码 1 打印 "no annotations for: %s"。`-tag` 可逗号分隔指定多个。`.git/annotations/` 不存在时自动创建。成功退出码 0。
+
+纯 Go 标准库，`go build -o annotate .`。

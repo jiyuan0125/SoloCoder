@@ -1,5 +1,9 @@
-上轮测试因为残留数据全白跑了，测试之间互不隔离。给每个测试包创建独立的临时目录和数据库，运行前复制 fixtures 进去，跑完清理干净。
+上轮测试因为残留数据全白跑了，环境没隔离。给每个测试包创建独立沙箱。
 
-为每个 Go 测试包创建独立的临时目录和数据库。运行前复制 fixtures 到临时目录，运行后清理。保证测试之间互不影响。
+`isolate -dir ./project -fixtures ./testdata -workdir /tmp/test-iso` 扫描 `_test.go` 所在目录，每个创建独立子目录。复制 fixtures 到各子目录。生成 `isolated_test_helper.go` 提供 `GetWorkDir(t *testing.T) string`。
+
+`run -dir ./project -workdir /tmp/test-iso -- go test ./...` 隔离环境执行测试。设 `TEST_WORKDIR` 和 `TEST_ISOLATED=1` 环境变量。`-cleanup` 默认 true 执行后清理，false 保留调试。`status -workdir /tmp/test-iso` 列出环境：`PACKAGE | WORKDIR | STATUS`。
+
+fixtures 不存在时 `warning: no fixtures dir`。无测试文件输出 `no test packages found` 退出码 0。清理时锁定目录输出 `warning: {dir} still locked, skipping`。
 
 用 Go 标准库写，go run . 或 go build 都行。

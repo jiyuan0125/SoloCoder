@@ -1,5 +1,5 @@
-JSON schema 生成随机测试数据这种事，手写太费劲了。字段类型、嵌套结构、引用关系，每换一个接口就得重写一套 mock 数据。干脆写个工具，丢给它 schema 就能出数。
+手写 mock JSON 数据写到怀疑人生——每换一个接口就得重编一套，嵌套结构、引用关系、字段类型一个都不能错。丢给工具一个 schema 定义，批量出数据。
 
-字段类型包括字符串、数字、布尔、日期、枚举、引用其他字段。数量和 schema 从命令行参数或 JSON 文件读取。输出到 stdout 或文件。嵌套对象和数组都要支持。
+`mockjson generate --schema schema.json --count 50 --output out.json` 是主命令。schema 用 JSON 描述，支持的字段类型：`string`（随机生成，可选 `min`/`max` 长度和 `pattern` 正则）、`integer`（可选 `min`/`max` 范围）、`number`（浮点，同上）、`boolean`、`date`（ISO 8601 格式，`format` 可选 `date` 或 `datetime`）、`enum`（`values` 数组随机选一个）、`ref`（引用同 schema 内另一个字段名，值保持一致）。`array` 类型用 `items` 描述元素 schema、`count` 控制长度；`object` 用 `properties` 嵌套。不传 `--output` 则输出到 stdout。`--count` 默认 10，传 0 或负数时输出 "error: count must be positive" 并 exit 1。schema 文件不存在输出 "schema file not found: <path>" exit 2。schema 格式错误（比如不认识的 type）输出具体字段名和错误原因 exit 3。输出每行一个 JSON 对象（JSONL 格式），也支持 `--format json` 输出 JSON 数组。`--seed 42` 固定随机种子，保证可复现。数量和 schema 也可以通过 JSON 文件传入。
 
-Go 实现，只用标准库，交叉编译友好。
+Go 实现，只用标准库，`go build` 交叉编译友好，单二进制直接跑。

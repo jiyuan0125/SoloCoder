@@ -1,5 +1,12 @@
-安全审计要求检查 Git 凭证和敏感信息。.gitconfig 里可能存了明文 token，credential helpers 配置不当，远程 URL 里带密钥。扫描一遍输出风险报告。
+上周安全审计发现有人把 GitHub token 明文写进了 .gitconfig 的 remote URL 里。不扫一遍不知道还有没有。
 
-审计 Git 配置中的凭证和敏感信息。检查 .gitconfig、credential helpers、远程 URL 中的 token。输出风险报告。
+命令行：`credential-audit -path /path/to/repo` 扫描仓库和全局配置。`-global` 只检查 `~/.gitconfig`。`-output report.json` 输出 JSON，默认 text。
 
-用 Go 标准库写，go run . 或 go build 都行。
+检查项：
+- 远程 URL 泄露：正则匹配 `https?://[^@]+@` 或含 `token=`/`key=`/`secret=` 的 URL，匹配到输出 "LEAK: remote '%s' contains credentials"
+- credential helper：未设置输出 "WARN: no credential.helper configured"；值为 `store` 输出 "RISK: credential.helper=store stores plaintext"
+- .gitconfig 敏感字段：扫描 `[user]` 段 token、`[github]` 段 oauth token
+
+text 模式按行输出 `[LEAK|RISK|WARN|OK] xxx`。json 模式：`{"findings": [{"severity":"leak","rule":"cred_in_url","message":"...","file":".git/config","line":5}]}`。
+
+退出码：0 = 无泄露，1 = 有 leak。路径不存在退出码 1。Go 标准库，`go build -o credential-audit .`。

@@ -1,5 +1,15 @@
-仓库只要 src 目录，但 sparse-checkout 配置记不住语法。添加/移除目录、列出当前配置，比原生命令好用就行。
+仓库 2GB，实际只需要 src 目录——sparse-checkout 能搞定但语法记不住，每次都要查文档。
 
-管理 Git sparse-checkout 配置。支持添加/移除目录、列出当前配置。比原生命令更易用。
+命令行子命令通过 os.Args[1] 区分：
+- `sparse-checkout-cli add src/ pkg/utils/` → 向 sparse-checkout 配置添加目录，执行 `git sparse-checkout set` 或追加到已有配置
+- `sparse-checkout-cli remove tests/` → 从配置中移除指定目录
+- `sparse-checkout-cli list` → 列出当前 sparse-checkout 包含的目录，每行一个路径
+- `sparse-checkout-cli status` → 显示当前模式和已 checkout 的目录数，输出 "mode: sparse, directories: 3/10"
 
-用 Go 标准库写，go run . 或 go build 都行。
+先 `git sparse-checkout init --cone` 初始化（如果尚未初始化）。add 操作后自动执行 `git checkout` 刷新工作目录。remove 操作后目录内容从磁盘删除。
+
+`-json` 标志使 list 输出为 JSON 数组 `["src/", "pkg/utils/"]`。
+
+不是 git 仓库时退出码 1 打印 "not a git repository"。目录路径不存在于仓库中时退出码 1 打印 "path not in repo: %s"。成功退出码 0。
+
+Go 标准库，`go run .` 或 `go build` 均可。

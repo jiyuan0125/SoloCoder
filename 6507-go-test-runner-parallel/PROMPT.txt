@@ -1,6 +1,5 @@
-CI 跑测试的时候 80% 的时间都卡在串行执行上，明明有 8 核 CPU 却只用了一个。按包分组并行跑，自动检测核心数分配并行度，超时的测试标出来。
+先看现状：CI 跑测试 80% 时间卡在串行上，8 核 CPU 只用了一个核，纯浪费。改造思路很直接——按包分组，每个包一组 goroutine 并行跑 `go test`，自动检测 CPU 核心数来分配并行度，超时的测试立刻标出来不让整个流水线卡死。
 
-并行运行 Go 测试，按包分组。自动检测 CPU 核心数，分配并行度。收集各包的测试输出和耗时，汇总输出通过/失败/跳过统计，超时的测试自动标记。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+第一步 `ptrun run --dir ./... --timeout 120s --parallel 0`，`--dir` 指定要测试的根目录（递归找所有 `_test.go` 所在的包），`--timeout` 是单个包的超时时间，`--parallel` 为 0 时自动用 `runtime.NumCPU()` 做并行度。第二步收集每个包的 `go test` 输出，解析出 PASS/FAIL/SKIP 的测试函数名和耗时。第三步汇总输出表格：PACKAGE | PASS | FAIL | SKIP | TIME | STATUS。STATUS 为 OK（全部通过）、FAILED（有失败）、TIMEOUT（超时）。末尾输出 TOTAL 行汇总。超时的包在 TIME 列标 `[TIMEOUT]`。`--json` 输出 JSON 格式，结构为 `{"packages":[{"name":"...","passed":5,"failed":1,"skipped":0,"duration":"2.3s","status":"FAILED"}],"total_duration":"12s"}`。任何包编译失败不阻塞其他包，但最终 exit code 为 1。全部通过 exit 0，有失败或超时 exit 1。代码拆成至少 3 个 Go 源文件：main.go（入口和 CLI）、runner.go（核心并行执行逻辑）、model.go（数据结构）。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+纯 Go 标准库，编译后单二进制直接跑。

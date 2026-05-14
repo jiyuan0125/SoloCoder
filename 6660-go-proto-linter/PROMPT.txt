@@ -1,3 +1,3 @@
-protobuf 文件命名规范没人遵守，code review 也看不出 snake_case 有没有写对。Python lint 工具太慢，Go 重写：验证命名风格、注释完整性、字段编号连续性、保留字段。
+protobuf 命名规范没人遵守——camelCase 写字段名、message 不用 PascalCase、field_number 跳着用。code review 看不出 snake_case 对不对，得自动检查。Python lint 跑一遍 5 秒，Go 秒出。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+扫描 `.proto` 目录，检查四类问题。命令行 `protolint check --path ./proto/ --recursive`。(1) 命名风格：message/service/rpc 必须 PascalCase，field 必须 snake_case，enum 值必须 UPPER_SNAKE_CASE。不符合输出 `NAMING: <file>:<line> <element> '<name>' should be <style>`；(2) 注释：每个 message 和 service 必须有前行 `//` 注释，缺失输出 `COMMENT: <file>:<line> message '<name>' has no comment`；(3) 字段编号：同 message 内 field_number 连续递增不跳号，跳号输出 `FIELD_NUMBER: <file>:<line> message '<name>' skipped: <n1>, <n2>`；(4) reserved 编号不能被复用。`--recursive` 递归扫描。输出每行一条问题，汇总 `N issues found`。零问题退出码 0，有问题退出码 1。纯 Go 标准库，编译后单二进制直接跑。

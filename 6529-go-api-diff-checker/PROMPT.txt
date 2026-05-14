@@ -1,6 +1,11 @@
-API 兼容性出了两次事故了，升级依赖包的时候没注意到导出接口变了。对比两个版本的 Go 包导出 API，类型定义、函数签名、接口变化都列出来，不兼容的标红。
+API 兼容性出了两次事故了，升级依赖包的时候没注意到导出接口变了。上次 `UserInfo` 结构体加了个必填字段，下游直接 panic。对比两个版本的 Go 包导出 API，不兼容的变更要一眼看出来。
 
-对比两个版本的 Go 包的导出 API，检测 breaking change。分析类型定义、函数签名、接口变化。输出变更报告，标记不兼容的修改。
-输入文件可能是空的或者只有 header 行。
+两个子命令。`diff -old v1.0.0 -new v1.1.0 -pkg ./mypkg` 对比两个 git tag/commit 之间的包 API 变化。`check -baseline v1.0.0 -pkg ./mypkg` 检查当前代码相对 baseline 有没有 breaking change。
+
+检测范围包括——类型定义（增删字段、改变类型、改标签）、函数签名（增删参数、改返回值、改接收者）、接口（增删方法）、导出常量/变量（值变化或删除）。
+
+变更分级为三个级别：`BREAKING`（删导出符号、改函数签名、删结构体字段）、`WARNING`（新增可选字段、新增接口方法）、`SAFE`（新增导出符号、新增函数、新增类型）。输出格式：每行 `LEVEL | TYPE | SYMBOL | CHANGE_DESC`，如 `BREAKING | func | UserService.Create | removed parameter (ctx context.Context)`。
+
+`-json` flag 输出完整 JSON 报告。`-allowlist allow.txt` 可以忽略指定符号的 breaking（白名单每行一个符号）。空包或没有导出符号时输出 `no exported symbols found` 退出码 0。有 BREAKING 变更时退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。

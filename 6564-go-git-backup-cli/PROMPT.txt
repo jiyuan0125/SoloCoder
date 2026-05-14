@@ -1,5 +1,7 @@
-备份策略要求增量同步，不能每次全量拉。支持增量备份只拉取新对象，多仓库批量备份从配置文件读取列表。
+备份策略出了问题——上次磁盘故障后恢复了半天，发现增量备份脚本里 rsync 参数写错了，拉的全量。更糟的是十几个仓库的备份全靠 cron 脚本，没人知道哪个是增量哪个是全量。
 
-备份 Git 仓库到本地目录。支持增量备份（只拉取新对象）。支持多仓库批量备份，从配置文件读取仓库列表。
+写一个专门的 Git 仓库备份工具 `git-backup`。子命令 `git-backup backup -config repos.yaml -target /backup/dir`。repos.yaml 格式：每个条目包含 `name`（仓库名）、`url`（远程地址，支持 https 和 ssh）、`branch`（可选，默认全部分支）。首次备份执行 `git clone --mirror` 到目标目录的 `{name}.git`。后续执行 `git remote update`（对 mirror clone）做增量拉取，只传输新对象。
 
-用 Go 标准库写，go run . 或 go build 都行。
+`git-backup list -config repos.yaml` 显示所有配置的仓库及备份状态（已备份/未备份/上次备份时间/仓库大小）。`git-backup verify -config repos.yaml` 检查每个备份仓库完整性（`git fsck`），损坏时 stderr 输出 `corrupt: {name} — {error}`。`git-backup restore -name project-a -target ./restored` 从备份恢复到指定目录。配置文件不存在时报错 `error: config file not found: xxx` 退出码 1。远程仓库不可达时跳过并输出 `warning: {name} unreachable, skipping`。
+
+用 Go 标准库写，`go run .` 或 `go build` 都行。

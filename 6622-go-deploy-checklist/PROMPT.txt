@@ -1,5 +1,3 @@
-部署清单每次都是复制上次的 Word 文档改改，漏过检查项。Go 根据项目类型和变更内容自动生成检查项，支持自定义模板。
+每次上线部署都得翻出上次的 Word 文档改改当检查清单用，遗漏检查项导致回滚的事发生过三次。不同类型的项目检查项还不一样——Go 服务要查二进制版本号，前端项目要查 CDN 缓存刷新，手动维护太容易漏。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-
-用 Go 标准库写，go run . 或 go build 都行。
+解决思路是让工具根据项目特征自动生成检查清单，不再依赖人肉复制。命令行 `deploy-check generate --project-type go-service --template ./templates/`，`--project-type` 可选值：`go-service`、`web-frontend`、`database-migration`，分别对应不同的检查项集合。也支持 `--diff` 参数：`deploy-check generate --diff HEAD~5..HEAD` 分析 git diff 输出，如果变更包含 SQL 文件自动追加数据库迁移检查项，变更包含 Dockerfile 追加镜像构建检查项。输出为 Markdown 格式的检查清单，每个检查项有复选框 `- [ ]`、标题、说明文字。检查项分三个阶段：`## 部署前`、`## 部署中`、`## 部署后`。自定义模板用 YAML 文件定义，格式为 `stages: - name: 部署前 items: - title: 检查版本号 description: 确认构建版本号与发布单一致`。模板文件不存在时使用内置默认模板并输出 warning 到 stderr。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，`go run .` 或 `go build` 都行。

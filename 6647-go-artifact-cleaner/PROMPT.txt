@@ -1,5 +1,3 @@
-构建产物堆积了几百个版本占了 2T 磁盘，shell 脚本清理逻辑太脆弱改了三次还在出 bug。Go 重写：按保留天数和保留数量策略删除旧版本，支持 dry-run 先看看会删什么。
+构建产物堆积了几百个版本占了 2T 磁盘，之前用 shell 脚本清理，逻辑脆弱改了三次还在出 bug，有一次误删了最新版本差点影响发布。Go 重写要稳得多。
 
-支持多个终端同时操作同一个数据目录。
-
-纯 Go 标准库，编译后单二进制可以直接跑。
+工具按两种策略清理旧版本构建产物：按天数（删除超过 N 天的）和按数量（每个项目只保留最近 N 个版本）。命令行 `artclean --dir /data/artifacts --strategy age --keep-days 30 --dry-run` 或 `artclean --dir /data/artifacts --strategy count --keep-count 10 --dry-run`。目录结构约定：`<dir>/<project>/<version>/` 为产物目录，工具按修改时间判断版本新旧。`--strategy age` 删除修改时间超过 `--keep-days` 天的目录，`--strategy count` 每个项目只保留最新 `--keep-count` 个目录，其余删除。`--exclude` 参数排除特定项目，支持逗号分隔多个。`--dry-run` 列出将被删除的目录路径和总大小，不实际删除。输出格式：`[DRY-RUN] DELETE <path> (<size>)` 或实际执行时 `[DELETE] <path> (<size>)`。最后汇总 `deleted N dirs, freed X MB`。目录不存在退出码 1。`--strategy` 和对应的 `--keep-*` 参数缺失时报错退出码 2。纯 Go 标准库，编译后单二进制可以直接跑。

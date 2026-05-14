@@ -1,5 +1,5 @@
-QA 同学问能不能帮忙管一下那七八套测试环境配置，每套的数据库连接、缓存地址、特性开关都不一样，切来切去容易搞混。配置统一存 ~/.testenvs.json 里。
+QA 管着七八套测试环境，每套的数据库连接串、Redis 地址、特性开关都不一样，切来切去全靠脑子记，搞混了就是一轮误报。统一存到一个文件里，切换、复制、删除都用命令搞定。
 
-管理多套测试环境配置。每套环境有独立的数据库连接、缓存地址、特性开关等。支持创建、切换、复制、删除环境。配置存在 ~/.testenvs.json 里。
+`envprov init` 在 `~/.testenvs.json` 创建配置，结构：`{"current":"dev","envs":{"dev":{"db_host":"localhost","db_port":5432,"redis_url":"localhost:6379","features":["flag_a"]}}}`。`envprov create --name staging --set db_host=10.0.1.5 --set redis_url=10.0.1.5:6379`，字段可任意扩展。`envprov switch staging`，输出 "switched to staging"。`envprov copy --from dev --to staging2`，深拷贝配置。`envprov delete staging`，当前环境不能删，输出 "cannot delete current environment: staging" exit 1。`envprov list` 表格输出 NAME | DB_HOST | REDIS_URL | CURRENT。`envprov show` JSON 输出当前环境完整配置。环境名已存在输出 "environment already exists: <name>" exit 2。配置文件损坏输出 "config file corrupted: ~/.testenvs.json" exit 3。操作前 flock 加锁 `~/.testenvs.json.lock`。
 
-用 Go 标准库写，go run . 或 go build 都行。
+Go 标准库，`go run .` 或 `go build` 都行。

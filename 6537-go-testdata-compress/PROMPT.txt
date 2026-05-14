@@ -1,5 +1,9 @@
-测试数据目录已经 2GB 了，每次 clone 仓库都要拉这些。按项目分组压缩，增量打包只打变更的文件，每个文件记 checksum 校验完整性。
+测试数据目录 2GB 了，每次 clone 都拉这些。压缩打包、增量更新、校验完整性。
 
-压缩和解压测试数据目录。按项目分组，支持增量压缩（只打包变更的文件）。记录每个文件的 checksum 用于校验完整性。
+`pack -dir ./testdata -group-by project -out ./testdata.tar.gz` 按顶层子目录分组，每个生成一个 tar.gz。`-incremental -checkpoint .checkpoint` 只打包 SHA-256 变化的文件，首次全量。输出 `packed: {new} new, {modified} modified, {unchanged} unchanged`。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`unpack -archive ./testdata.tar.gz -dir ./testdata -verify` 解压并校验。比对 manifest.json（嵌入 tar.gz 内）中 SHA-256，不匹配输出 `CHECKSUM MISMATCH: {file} expected {hash} got {hash}` 退出码 2。
+
+`manifest -dir ./testdata` 生成 manifest.json：`{"files":[{"path":"","size":0,"sha256":"","modified":""}]}`。流式计算哈希不全部加载到内存。大文件输出 `packing large file: {name} ({size}MB)...`。
+
+Go 标准库实现。go build 编译通过。退出码 0 成功、1 参数错误、2 校验失败。

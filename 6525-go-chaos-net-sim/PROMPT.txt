@@ -1,5 +1,13 @@
-混沌工程要求定期做故障演练，总不能真拔网线。通过 iptables/tc 规则注入延迟、丢包、带宽限制，按端口和目标 IP 过滤，add/delay/loss/remove 几个命令搞定。
+混沌工程要求定期做故障演练，总不能真拔网线。上次线上抖了 10 分钟，事后发现是超时没配好。通过 iptables/tc 规则注入延迟、丢包、带宽限制，按端口和目标 IP 过滤。
 
-模拟网络故障的 CLI 工具。通过设置 iptables/tc 规则注入延迟、丢包、带宽限制。支持按端口、目标 IP 过滤。命令格式：add/delay/loss/remove。
+CLI 工具，子命令和参数如下：
+1. `add --target-ip 10.0.0.1 --port 8080` 创建故障注入规则，生成唯一 rule-id 输出到 stdout
+2. `delay --rule-id xxx --ms 200 --jitter 50` 给规则加延迟，jitter 可选，默认 0
+3. `loss --rule-id xxx --percent 10` 给规则加丢包率，范围 0-100
+4. `bandwidth --rule-id xxx --rate 1mbps` 限制带宽，支持 kbps/mbps/gbps 单位
+5. `remove --rule-id xxx` 删除规则，恢复网络
+6. `list` 列出所有活跃规则，输出表格：RULE_ID | TARGET_IP | PORT | DELAY_MS | LOSS_% | BW | CREATED
 
-用 Go 标准库写，go run . 或 go build 都行。
+规则持久化到 `/tmp/chaos-net-rules.json`，重启后 `list` 能恢复状态。`add` 不带 `--target-ip` 时应用到本机所有出站流量。`remove` 不存在的 rule-id 时输出 `error: rule {id} not found` 到 stderr 并退出码 1。所有命令成功退出码 0。需要 root 权限时检测并提示 `run as root or with sudo`。
+
+用 Go 标准库写，go run . 或 go build 都行。实际执行系统命令调用 `tc` 和 `iptables`，不做内核级操作。

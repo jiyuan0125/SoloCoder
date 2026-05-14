@@ -1,5 +1,9 @@
-benchmark 数据需要持久化追踪，光看一次结果看不出趋势。每次记录到 SQLite 数据库，按函数名查历史趋势，输出表格或 CSV。
+benchmark 数据需要持久化追踪，光看一次看不出趋势。优化有没有效，对比才知道。
 
-追踪 Go benchmark 性能趋势。每次记录 benchmark 结果到 SQLite 数据库。支持按函数名查询历史趋势，输出表格或 CSV。
+`record -bench bench.out -db benchmarks.db` 解析 `go test -bench` 输出，提取函数名、N次/秒、单次耗时、内存分配。写 SQLite 表 `benchmarks`：`id INTEGER PRIMARY KEY`、`func_name TEXT`、`ns_per_op REAL`、`allocs_per_op INTEGER`、`recorded_at DATETIME`。
 
-Go 标准库，命令行参数用 flag 包解析。
+`trend -func BenchmarkHandler -db benchmarks.db -last 10` 输出表格：`DATE | NS/OP | ALLOCS/OP | DELTA%`。`-csv` 输出 CSV。`compare -base abc123 -current def456` 对比两次：delta > 5% 标 `↑ REGRESSION`，< -5% 标 `↓ IMPROVED`。
+
+`report -db benchmarks.db -out report.html` 生成含内联 SVG 折线图的 HTML 报告。数据库不存在自动创建。bench 文件为空输出 `no benchmark results found` 退出码 0。
+
+Go 标准库，flag 包解析。

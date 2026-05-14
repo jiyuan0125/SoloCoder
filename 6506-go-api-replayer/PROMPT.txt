@@ -1,5 +1,5 @@
-接口文档说好固定返回格式的，结果上游改了三次。干脆把真实请求响应录下来，测试的时候直接回放，method/path/headers/body 做 key 匹配。
+上游接口改了三次，测试跟着挂了三次——文档说的返回格式跟实际根本对不上。干脆把真实请求响应录下来存文件，测试的时候直接回放，再也不怕上游变卦。
 
-录制 HTTP 请求/响应对到文件，后续可以回放。录制时把请求的 method/path/headers/body 作为 key 匹配。回放时根据请求匹配已录制的响应并返回，支持模糊匹配模式。
+两个核心命令——`replay record --port 9090 --target http://real-api:8080 --output recordings.jsonl`，启动一个代理服务器监听 `--port`，把所有经过的请求转发到 `--target`，同时把请求（method、path、headers、body）和对应的响应（status、headers、body）以 JSONL 格式追加写入 `--output` 文件。每行一个 JSON 对象，字段：`{request:{method,path,headers,body},response:{status,headers,body},timestamp}`。`replay serve --port 9091 --input recordings.jsonl --mode exact` 启动 mock 服务器，收到请求后匹配已录制的响应。`--mode exact` 要求 method+path+headers+body 完全一致；`--mode fuzzy` 只匹配 method+path，忽略 headers 和 body。匹配到多个响应时按录制时间倒序取最新的。匹配不到返回 404，body 为 `{"error":"no matching recording for POST /api/users"}`。`--latency 100ms` 给每个回放响应加固定延迟模拟网络。输入文件为空输出 "no recordings found in <file>" exit 1。端口被占用输出 "port 9091 already in use" exit 2。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+纯 Go 标准库，编译后单二进制直接跑。

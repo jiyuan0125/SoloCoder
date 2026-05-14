@@ -1,6 +1,16 @@
-一个 commit 改了三个功能，review 的人头都大了。指定文件分组，每个组拆成一个独立 commit，保留原始 message 的相关部分。
+一个 commit 混了三个功能的改动，review 的人看得头大。拆分一下各归各的多好。
 
-把一个 commit 拆分成多个。用户指定文件分组，每个组生成一个 commit。保持原始 commit message 的相关部分。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+命令行：`split-commit -hash abc123 -groups "main.go,utils.go;config.go;tests/"` 按 `;` 分组，每组用逗号分隔文件路径。每组文件生成一个独立 commit。`-dry-run` 只显示拆分计划不执行。
 
-用 Go 标准库写，go run . 或 go build 都行。
+执行逻辑：
+1. `git show <hash>` 提取该 commit 的所有文件变更
+2. 按 `-groups` 分组，每组收集对应的 diff hunks
+3. 依次 `git checkout <hash>^`，然后逐组 `git apply` 并 commit
+4. 原 commit message 拆分到各组：第一组保留原始 message，后续组用原始 message 加序号后缀如 `[2/3]`
+5. 未被任何组包含的文件归入最后一组并打印 "WARN: %d files not in any group, added to final commit"
+
+输出：`[DRY-RUN] group 1: main.go, utils.go → "feat: add auth (original)"`（dry-run 模式）。实际执行时打印 "split into %d commits: %s, %s, %s"。
+
+commit hash 不存在时退出码 1 打印 "commit not found: %s"。分组中包含不存在的文件路径时退出码 1 打印 "file not in commit: %s"。成功退出码 0。
+
+项目至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库，`go run .` 或 `go build` 均可。

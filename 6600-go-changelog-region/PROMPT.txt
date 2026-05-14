@@ -1,5 +1,3 @@
-changelog 已经 3000 行了，每次发版只要指定版本的变更内容。按版本号范围提取，输出纯文本或 Markdown。
+changelog 文件已经 3000 多行了，每次发版只需要摘出指定版本段的变更说明，手动翻太耗时间。更头疼的是有人用 `## v1.2.0` 有人用 `## [1.2.0]`，格式不统一，脚本经常匹配不到。
 
-从 changelog 中提取指定版本的变更内容。支持按版本号范围提取。输出纯文本或 Markdown。
-
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+写个 Go 工具从 changelog 文件按版本号范围提取内容。命令行用法：`chgrep --file CHANGELOG.md --from v1.2.0 --to v1.3.0 --format markdown`，支持三种输出格式：`markdown`（默认，保留原文标记）、`plain`（纯文本去掉所有 Markdown 标记符号）、`json`（输出 `{"from":"v1.2.0","to":"v1.3.0","entries":[{"version":"v1.2.0","content":"..."}]}` 的结构化 JSON 数组）。版本号匹配要兼容 `v1.2.0`、`1.2.0`、`[1.2.0]` 三种写法，大小写不敏感。`--from` 必填，`--to` 可选，省略时提取到文件末尾。如果 `--from` 指定的版本不存在，输出错误信息 `version not found: vX.Y.Z` 到 stderr 并退出码 2。`--to` 指定的版本不存在时报同样的错误。输出内容包含版本号到下一个版本号之间的所有行，不包含下一个版本号本身。文件不存在或不可读时输出 `error: cannot read file <path>` 到 stderr 退出码 1。changelog 里的空行保留。JSON 输出时每条 entry 的 content 字段保留原始换行。纯 Go 标准库实现，`go build` 能编译通过。

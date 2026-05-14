@@ -1,5 +1,7 @@
-十几个 submodule 版本各不相同，手动一个个 git submodule update 太蠢了。批量更新，递归、指定版本、检查新版本，输出每个 submodule 的当前版本和最新版本。
+十几个 submodule，版本参差不齐，每次更新都要手动 `git submodule update --init --recursive`，哪个落后了哪个有新版本了全靠肉眼看 `.gitmodules` 对比远程 tag。上个季度安全审计发现有 submodule 还停留在两年前的版本，漏洞都修了三轮了。
 
-批量更新 Git submodule。支持递归更新、指定版本、检查是否有新版本。输出每个 submodule 的当前版本和最新版本。
+`submodule-up` 批量管理 submodule 版本。用法 `submodule-up -repo ./project`。先读取 `.gitmodules` 获取所有 submodule 路径和远程 URL，然后对每个执行 `git submodule status` 获取当前 commit，再 `git ls-remote --tags {url}` 获取远程最新 tag。输出表格：submodule 路径、当前 commit（前 8 位）、当前 tag（如果能匹配到）、最新 tag、是否落后、落后版本数。
+
+`-update` 模式自动将每个 submodule 更新到最新 tag（执行 `git submodule update --remote {path}` 然后 `cd {path} && git checkout {latest-tag}`）。`-recursive` 同时更新嵌套 submodule。`-only "auth,cache"` 只更新指定 submodule（逗号分隔，支持路径部分匹配）。某个 submodule 远程不可达时跳过并在 stderr 输出 `warning: {path} remote unreachable`。没有 submodule 时输出 `No submodules found`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

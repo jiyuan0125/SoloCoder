@@ -1,5 +1,11 @@
-分支保护规则 JSON 配置手写容易出错，GitHub 和 GitLab 格式还不一样。根据团队约定生成保护规则 JSON，支持自定义规则模板。
+GitHub 和 GitLab 的分支保护规则格式完全不一样，团队约定又跟两者不同。手写 JSON 写一次错一次。
 
-生成分支保护规则配置。根据团队约定生成 GitHub/GitLab 格式的保护规则 JSON。支持自定义规则模板。
+命令行：`branch-protection -platform github -branch main -config rules.json`。`-platform` 可选 `github`/`gitlab`。`-output protection.json` 输出到文件，默认 stdout。
 
-Go 实现，只用标准库，交叉编译友好。
+输入团队约定 JSON：`{"branch":"main","require_pr":true,"required_reviewers":2,"dismiss_stale_reviews":true,"require_status_checks":["ci/test","ci/lint"],"allow_force_push":false}`。
+
+输出按平台转换——GitHub：`{"required_pull_request_reviews":{"required_approving_review_count":2},"required_status_checks":{"contexts":["ci/test"]},"allow_force_pushes":false}`。GitLab：`{"push_access_level":0,"merge_access_level":30,"approval_rules":[{"approvals_required":2}]}`。
+
+配置文件不存在或 JSON 无效退出码 1 打印 "invalid config: %s"。platform 不支持退出码 1 打印 "unsupported platform: %s"。成功退出码 0。
+
+Go 纯标准库，`go build -o branch-protection .`。

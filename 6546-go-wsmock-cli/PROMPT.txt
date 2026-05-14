@@ -1,5 +1,9 @@
-WebSocket mock 手写消息序列太折腾了，每次联调都得临时拼。用 JSON 配置文件定义消息序列——收到 X 后延迟 200ms 发 Y，按顺序或条件触发。
+WebSocket mock 手写消息序列太折腾了，每次联调临时拼。用 JSON 配置文件定义消息序列。
 
-WebSocket mock 工具。定义消息序列，按顺序或条件发送给客户端。支持延迟、条件判断（收到X后发Y）。配置用 JSON 文件定义。
+`serve -config mock.json -port 8080` 启动 mock 服务。配置：`{"responses":[{"match":{"type":"subscribe","pattern":"order.*"},"reply":{"type":"snapshot","data":"..."},"delay_ms":200}],"default_reply":{"type":"error","data":"unknown"}}`。收到消息解析 JSON，按 `match.type`（支持 glob）匹配，延迟 `delay_ms` 后发送 reply。`match` 为空则连接后立即发送。
+
+`-record -out recording.jsonl` 记录收发消息，每行 `{"direction":"in|out","timestamp":"","message":""}`。`-max-clients 10` 超出关最旧连接。
+
+配置格式错误输出 `error: invalid config at line {n}: {msg}` 退出码 1。端口占用输出 `error: port {n} already in use` 退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。

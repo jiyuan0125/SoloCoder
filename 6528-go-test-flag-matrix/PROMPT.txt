@@ -1,6 +1,9 @@
-有些测试加 -race 就挂，有些加了 -tags 才能编译通过。需要把各种 flag 组合（-race, -tags, -cover）穷举一遍，自动跑完所有组合看哪些会出问题。
+有些测试加 -race 就挂，有些加了 -tags 才能编译通过，到底是哪个 flag 的问题？
 
-用不同 flag 组合运行同一个 Go 测试，检测 flag 敏感问题。用户定义 flag 矩阵（如 -race, -tags, -cover），工具自动组合并运行。
-输入文件可能是空的或者只有 header 行。
+工具接收 JSON 配置文件 `matrix.json` 定义 flag 矩阵：`{"flags":[{"name":"race","values":["true","false"]},{"name":"tags","values":["linux","darwin",""]}],"test_cmd":"go test ./...","timeout":"5m"}`。自动生成所有组合（笛卡尔积），逐个执行 `go test` 加对应 flag，记录通过/失败和耗时。
+
+输出表格：`COMBO_ID | FLAGS | PASSED | FAILED | DURATION | EXIT_CODE`。同时写 JSON 到 `-out result.json`：`{"combinations":[{"id":1,"flags":{"race":"true"},"passed":42,"failed":3,"duration":"12.3s","exit_code":1}]}`。
+
+空配置输出 `error: no flags defined` 退出码 1。超时 kill 子进程记 `TIMEOUT`。编译失败记 EXIT_CODE 标注 `(compile failed)`。超过 `-max-time 30m` 停止，输出 `stopped: {done}/{total} combos, max time exceeded`。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,3 +1,5 @@
-性能基线没有数据，优化了也说不出快了多少。生成不同输入大小的 benchmark case，内存分配统计也带上。多级命令：config get、config set、config list、config env switch。
+性能优化完说不清到底快了多少——没有基线数据，PR review 的时候只能拍脑袋。这个工具干一件事：针对不同输入规模自动生成 Go benchmark case，跑完后把 ns/op、内存分配次数、堆分配字节数都统计出来，方便前后对比。
 
-go build 能过，不依赖第三方库。
+CLI 叫 `benchgen`，用法 `benchgen generate --func MySort --sizes 100,1000,10000 --output bench_test.go`。`--func` 指定被测函数名，`--sizes` 逗号分隔的输入规模列表，`--output` 输出文件路径，默认 stdout。生成的 benchmark 函数命名格式 `BenchmarkMySort_100`、`BenchmarkMySort_1000`，每个 case 里构造对应大小的输入然后调用目标函数。加上 `-alloc` flag 则额外生成 `b.ReportAllocs()` 调用统计内存分配。`benchgen run --count 5 --timeout 30s` 自动执行生成的 benchmark，`--count` 控制每个 case 运行次数，`--timeout` 是整体超时。run 完成后输出 JSON 汇总，格式为 `[{"func":"BenchmarkMySort_100","ns_per_op":1234,"allocs_per_op":3,"bytes_per_op":256}]`，exit 0 成功，超时 exit 2，编译失败 exit 1 输出 "compilation failed: <error>"。多级命令：`config get <key>`、`config set <key> <value>`、`config list` 查看/设置默认配置，`config env switch --name staging` 切换配置环境。
+
+go build 能过，纯标准库，不依赖第三方。

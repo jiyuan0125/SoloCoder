@@ -1,5 +1,17 @@
-reflog 条目积了几千条，仓库越来越大。删除指定日期之前的 reflog 条目减瘦身，先 dry-run 看看会删多少。
+reflog 几千条了，仓库越来越胖，清理一下能省不少空间。但删错了恢复不了，得先 dry-run 看看。
 
-清理 git reflog 中的过期引用。删除指定日期之前的 reflog 条目，减少仓库大小。支持 dry-run。
+命令行：`reflog-cleaner -before 2024-01-01` 删除 2024 年 1 月 1 日之前的所有 reflog 条目。`-dry-run` 只显示将被删除的条目数量和日期范围，不实际删除，输出 "would remove %d entries (2023-01-15 to 2023-12-28)"。
 
-用 Go 标准库写，go run . 或 go build 都行。
+执行流程：
+1. 读取 `.git/logs/HEAD` 文件，逐行解析 reflog 条目
+2. 解析每行的 timestamp，格式匹配 git reflog 的日期格式
+3. 筛选早于 `-before` 日期的条目
+4. dry-run 模式只统计不修改
+5. 实际执行时重写 `.git/logs/HEAD`，只保留新条目
+6. 可选执行 `git gc` 进一步回收空间（`-gc` 标志）
+
+清理后打印 "removed %d reflog entries, kept %d"。随后执行 `git reflog expire --expire=now --all && git gc --prune=now`（如果加了 `-gc`）。
+
+`-before` 日期格式必须为 `YYYY-MM-DD`，格式错误退出码 1 打印 "invalid date: %s, expected YYYY-MM-DD"。不是 git 仓库时退出码 1。dry-run 退出码 0。执行后退出码 0。
+
+Go 标准库，`go run .` 或 `go build` 均可。

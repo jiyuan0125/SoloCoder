@@ -1,6 +1,5 @@
-Jest 的 snapshot testing 用着很舒服，Go 这边没找到轻量的替代品。把命令行输出存为快照，下次跑的时候自动 diff，不一致就报出来。init/check/update/list 四个子命令搞定。
+Jest 那个 snapshot testing 用着是真的爽，Go 这边找了一圈没找到轻量的。干脆自己造一个——把命令行输出存成快照文件，下次跑自动 diff，不一致就报出来让你审。init/check/update/list 四个子命令搞定全流程，跟 Jest 体验差不多。
 
-快照测试工具，把命令行输出保存为快照文件，下次运行时对比差异。支持子命令：init（创建快照）、check（对比）、update（覆盖更新）、list（列出所有快照）。
-文件可能很大，超过内存要能处理。
+你可能会问具体怎么用？`snap init --dir ./snapshots` 在指定目录下创建 `.snapshots/` 目录存放快照文件，每个快照以 `<testname>.snap` 命名。`snap check --dir ./snapshots` 遍历所有快照，对每个 `.snap` 文件重新运行对应的命令（命令存在快照文件的注释头里），把新输出和旧快照 diff。不一致时输出 diff 内容到 stderr，标记 `[MISMATCH] <testname>`，最后统计 "X passed, Y failed, Z new"。`snap update --dir ./snapshots --name login_test` 用新输出覆盖指定快照，不传 `--name` 则更新所有 mismatch 的。`snap list --dir ./snapshots` 列出快照名、大小、最后更新时间。大文件处理：超过 10MB 的快照不加载到内存，用流式逐行 diff，避免 OOM。快照文件不存在（check 时）标记 `[NEW]`。所有子命令成功 exit 0，有 mismatch exit 1，目录不存在 exit 2 输出 "snapshot directory not found"。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+Go 标准库实现，`go build` 能编译通过。

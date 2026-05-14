@@ -1,5 +1,7 @@
-每次发版手写 changelog，翻了半天 commit 记录还漏了重要变更。根据 Git tags 和 commits 自动生成，按版本分组，提取 feat/fix/breaking 类型的 commit，输出 Markdown。
+每次发版手写 changelog 真的烦，翻了半天 commit 记录还漏了重要变更。能不能自动从 tag 和 commit 里提取？
 
-根据 Git tags 和 commits 自动生成 changelog。按版本分组，提取 feat/fix/breaking 类型的 commit。输出 Markdown 格式。
+工具名 `changelog-gen`，用法 `changelog-gen -repo ./project -from v1.0.0 -to v2.0.0`，不指定范围则处理全部 tag。解析 semver tag 之间的 commit 列表，按 Conventional Commits 的 type 分组——`feat` 归入「新增」、`fix` 归入「修复」、`feat!` 和带 `BREAKING CHANGE:` 的归入「破坏性变更」、`docs/perf/refactor/test` 归入「其他改进」。scope 作为子分组。输出 Markdown，每个版本一段 `## v1.2.0 (2024-01-15)`，下面按类型列 bullet。
 
-Go 标准库，命令行参数用 flag 包解析。
+没有 tag 的仓库怎么办？支持 `-from-commit abc123 -to-commit def456` 模式跳过 tag 直接用 commit 范围，输出标题用 commit 前 8 位哈希。commit message 不是 Conventional Commits 格式的归入「其他」。`-output changelog.md` 写文件，不指定则 stdout。`-template tpl.md` 支持自定义 Markdown 模板，占位符 `{{.Version}}` `{{.Date}}` `{{.Sections}}`。
+
+Go 标准库，命令行参数用 flag 包解析。tag 解析按 semver 排序，非 semver 格式的 tag 忽略并在 stderr 输出警告。

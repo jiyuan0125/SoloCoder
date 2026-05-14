@@ -1,5 +1,11 @@
-gRPC 调试全靠写一次性客户端代码，.proto 文件还要先编译。通用客户端用 JSON 定义请求，通过 server reflection 自动获取服务定义，一元调用、服务端流、客户端流都能测。
+gRPC 调试全靠写一次性客户端代码，.proto 文件还要先编译。通用客户端直接用 JSON 发请求。
 
-通用 gRPC 测试客户端。不依赖 .proto 文件，用 JSON 定义请求，通过 server reflection 获取服务定义。支持一元调用、服务端流、客户端流。
+`call -endpoint localhost:50051 -service UserService -method GetUser -request '{"id":"123"}'` 通过 server reflection 发送一元调用，输出响应 JSON 到 stdout。
 
-用 Go 标准库写，go run . 或 go build 都行。
+`stream-server -endpoint localhost:50051 -service LogService -method StreamLogs -request '{"level":"error"}' -timeout 10s` 接收服务端流，每条消息一行 JSON。`stream-client` 从 JSONL 文件逐行读取发送客户端流。`stream-bidi` 双向流。
+
+`list -endpoint localhost:50051` 列出服务和方法：`SERVICE | METHOD | TYPE`，TYPE 为 `unary|server_stream|client_stream|bidi_stream`。
+
+`-metadata 'authorization:Bearer token123'` 传递 metadata。连接失败输出 `error: failed to connect to {endpoint}: {reason}` 退出码 1。reflection 不可用输出 `error: server reflection not supported` 退出码 2。请求 JSON 格式错误输出具体解析错误。
+
+用 Go 标准库 + `google.golang.org/grpc` 实现。go build 能编译通过。

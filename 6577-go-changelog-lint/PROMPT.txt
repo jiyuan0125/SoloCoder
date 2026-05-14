@@ -1,5 +1,13 @@
-changelog 版本号居然倒退了，日期格式也不统一，review 没看出来。验证版本号递增、日期格式、条目分类，支持 Keep a Changelog 格式。
+1. 先说命令行接口。`changelog-lint -file CHANGELOG.md` 是基本用法，检查指定文件。`-format` 标志控制输出格式，可选 `text`（默认）或 `json`。`-strict` 模式下所有 warning 当 error 处理。
 
-检查 changelog 文件格式。验证版本号递增、日期格式、条目分类。支持 Keep a Changelog 格式。
+2. 检查规则按顺序执行：
+   - 版本号格式必须是语义化版本（`X.Y.Z`），每个新条目版本号必须大于前一个，违反时输出 "version regression: %s < %s"
+   - 日期格式检查，`-date-format` 标志指定期望格式，默认 `YYYY-MM-DD`，不匹配输出 "invalid date format: %s, expected: %s"
+   - 条目分类只能是 `Added`、`Changed`、`Deprecated`、`Removed`、`Fixed`、`Security` 六种，其他值报错 "unknown category: %s"
+   - 文件第一个非注释行必须是标题 `# Changelog`
 
-Go 标准库，命令行参数用 flag 包解析。
+3. 输出格式：text 模式按行打印 `[ERROR] xxx` 或 `[WARN] xxx`；json 模式输出 `{"errors": [{"line": 5, "rule": "version_reg", "message": "..."}], "warnings": [...]}`。退出码：0 = 通过，1 = 有 error，`-strict` 下 warning 也返回 1。
+
+4. 空文件或文件不存在时退出码 1 打印 "changelog file not found: %s"。
+
+Go 标准库，flag 包解析。`go build -o changelog-lint .`。

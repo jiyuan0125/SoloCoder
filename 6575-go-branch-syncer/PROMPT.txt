@@ -1,5 +1,18 @@
-那个 Python 同步脚本同步分支到多个远程仓库，10 个远程要跑 10 分钟。从配置文件读远程列表逐个 push，支持 dry-run 模式和强制推送确认。
+十个远程仓库逐个 push，那个 Python 脚本跑了十分钟还不知道哪个成功了。得重新搞一个。
 
-同步分支到多个远程仓库。从配置文件读取远程列表，逐个 push。支持 dry-run 模式和强制推送确认。
+从配置文件读取远程列表，逐个执行 `git push`。配置文件格式为 JSON，示例：
+```json
+{
+  "remotes": [
+    {"name": "origin", "url": "https://github.com/org/repo.git"},
+    {"name": "mirror", "url": "https://gitlab.com/org/repo.git"}
+  ],
+  "branch": "main",
+  "force": false
+}
+```
+命令行：`branch-syncer -config sync.json` 基本用法。`-dry-run` 模式只打印将要执行的 push 命令不实际执行，输出格式 `dry-run: git push origin main`。`-force` 覆盖配置文件中的 force 字段。每个远程推送后打印结果行：`origin: OK` 或 `mirror: FAILED (exit code 128): remote rejected`。全部成功退出码 0，任一失败退出码 1 并打印汇总 "failed: 1/2 remotes"。
 
-Go 实现，只用标准库，交叉编译友好。
+配置文件不存在或 JSON 解析失败时退出码 1，打印 "invalid config: %s"。本地分支不存在时退出码 1，打印 "branch not found: %s"。
+
+Go 实现，纯标准库，交叉编译友好。`go build -o branch-syncer .`。

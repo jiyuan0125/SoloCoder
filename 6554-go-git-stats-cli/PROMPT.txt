@@ -1,6 +1,7 @@
-git shortlog -sn 只给总数，看不出谁在哪个时段活跃。按作者统计 commit 数、代码行变更量、活跃时段，指定时间范围过滤，输出表格。
+上周做绩效统计，产品经理问"这几个模块最近谁改得最多"，我翻 git log 翻了半小时。`git shortlog -sn` 只给总数，看不出谁在哪个时段活跃、改了多少行代码。
 
-统计 Git 仓库的贡献数据。按作者统计 commit 数、代码行变更量、活跃时段。支持指定时间范围和作者过滤。输出表格。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+这个工具叫 `git-stats`，用法 `git-stats -repo ./project -since 2024-01-01 -until 2024-06-30`。按作者统计 commit 数量、代码行增删量（通过 `git log --numstat` 解析）、活跃时段分布（按小时 0-23 和按星期统计）。`-author "张三"` 过滤指定作者，支持部分匹配。`-path "src/"` 只统计指定路径下的变更。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+输出一张表格，列：作者、commits、insertions、deletions、net（insertions-deletions）、活跃时段（出现 commit 最多的 3 个小时段）。再加一个时段热力图，用 ASCII 字符密度表示每周每天的提交频率。`-format json` 输出 JSON，结构 `{"authors":[{"name","commits","insertions","deletions","net","active_hours":[9,10,14]}],"hourly_heatmap":{"Mon":{"09":12,"10":8,...},...}}`。作者名为空（git config 未设置）时显示 `<unknown>`。
+
+项目拆成至少 3 个 Go 源文件：主入口 main.go、核心逻辑 stats.go、数据模型 types.go。Go 标准库实现，`go build` 编译通过。

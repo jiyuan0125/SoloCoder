@@ -1,5 +1,7 @@
-Docker 里跑测试环境要隔离，shell 脚本处理镜像拉取、代码挂载、结果收集太容易出错。根据配置文件自动拉取镜像、挂载代码目录、执行测试命令、收集结果，多语言环境都支持。
+Docker 里跑测试环境要隔离，shell 脚本处理太容易出错。根据配置文件自动搞定。
 
-在 Docker 容器中运行测试。根据配置文件拉取镜像、挂载代码、执行测试命令、收集结果。支持多种语言环境。
+`run -config testenv.json` 执行测试。配置：`{"image":"golang:1.21","mount":"./project:/workspace","command":"go test ./...","env":{"GOOS":"linux"},"timeout":"10m","artifacts":[{"from":"/workspace/coverage.out","to":"./artifacts/coverage.out"}]}`。流程：pull 镜像→创建容器挂载→执行 command→收集 artifacts→移除容器→输出摘要。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`-dry-run` 只输出将执行的 docker 命令。`-cleanup` 删除容器和临时卷。超时 kill 容器输出 `TIMEOUT: killed after {timeout}`。容器退出码非零透传。docker 不可用输出 `error: docker not found in PATH` 退出码 1。配置字段缺失输出具体缺哪个。artifacts 源不存在输出 `warning: artifact {path} not found in container`。
+
+Go 标准库实现。go build 能编译通过。

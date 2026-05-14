@@ -1,5 +1,11 @@
-测试跑了 47 次，3 次失败但不确定是真 bug 还是 flaky。分析测试输出找出"有时通过有时失败"的那些用例，自动重跑失败次数最多的，确认是否真的不稳定。
+测试跑了 47 次，3 次失败但不确定是真 bug 还是 flaky。自动分析自动重跑。
 
-分析 Go 测试输出，找出 flaky 测试（有时通过有时失败的）。自动重新运行失败次数最多的测试，确认是否真的 flaky。
+`analyze -log test-output.log` 解析 `go test -v`/`-json` 输出，统计 pass/fail 次数。输出：`TEST | TOTAL | PASS | FAIL | FLAKY_SCORE`，FLAKY_SCORE > 0.1 标 `⚠ FLAKY`。
+
+`rerun -test TestXxx -count 10 -dir ./project` 重跑指定测试，实时输出：`[1/10] PASS (120ms)` 或 `[3/10] FAIL: panic: nil pointer`。汇总：`TestXxx: 8/10 passed (80%), verdict: FLAKY`。
+
+`rerun-all -threshold 0.1 -count 5` 对所有 FLAKY 测试执行 rerun。`-json` 输出：`{"tests":[{"name":"","runs":[{"iteration":1,"passed":true,"duration_ms":120}],"flaky_score":0.2,"verdict":"FLAKY"}]}`。verdict 逻辑：全通过 `STABLE`，全失败 `BROKEN`，混合 `FLAKY`。
+
+空输入输出 `no test results found` 退出码 0。`-count` 默认 3 最大 100。
 
 用 Go 标准库写，go run . 或 go build 都行。

@@ -1,6 +1,13 @@
-格式化 commit 把 blame 全污染了，看不出原始作者。管理 .git-blame-ignore-revs 文件，添加/移除要忽略的 commit hash，自动用这个文件跑 blame。
+那一次全局格式化把 blame 全污染了，现在谁都不知道这行原始代码谁写的。.git-blame-ignore-revs 能解决，但管理这个文件全靠手工。
 
-管理 .git-blame-ignore-revs 文件。添加/移除要忽略的 commit hash（如格式化 commit）。自动运行 git blame 使用此文件。
-输入可能包含乱码和特殊字符。
+命令行子命令用 os.Args[1] 区分：
+- `blame-ignore add abc123 def456` → 追加 commit hash 到 `.git-blame-ignore-revs` 文件，每行一个 hash。自动配置 `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+- `blame-ignore remove abc123` → 从文件中删除指定 hash
+- `blame-ignore list` → 列出所有已忽略的 hash，每行 `hash subject (date, author)`
+- `blame-ignore blame -file main.go` → 执行 `git blame` 并自动使用忽略文件，输出格式与原生 blame 一致
 
-Go 标准库，命令行参数用 flag 包解析。
+add 时 hash 无效（不是 40 位十六进制）退出码 1 打印 "invalid hash: %s"。hash 已在文件中跳过并打印 "SKIP: %s already ignored"。remove 时 hash 不在文件中打印 "hash not found: %s" 退出码 1。
+
+blame 子命令对文件的每一行输出 `hash (author date) code`。输入含乱码或特殊字符时不崩溃。`.git-blame-ignore-revs` 不存在时 list 和 remove 报错退出码 1，add 时自动创建。
+
+Go 标准库，flag 包解析。`go build -o blame-ignore .`。

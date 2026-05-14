@@ -1,5 +1,14 @@
-测试里 sleep(5) 等待、硬编码端口、测试间共享全局状态——这些反模式 code review 不一定看得出来。自定义 lint 规则扫描测试文件，把没有断言、sleep 等待、硬编码端口、共享状态全揪出来。
+测试里 `time.Sleep(5*time.Second)` 等待、硬编码 `localhost:8080`、测试间共享全局变量——这些反模式 review 不一定看得出。先扫描，再分类，最后出报告。
 
-自定义 Go 测试 lint 规则。检查测试文件中的常见反模式：没有断言、sleep 等待、硬编码端口、测试间共享状态。输出问题列表。
+`lint -dir ./project -rules all` 扫描 `_test.go` 文件。内置规则：
+1. `no-assert`：测试函数无 `t.Error`/`t.Fatal`/`assert`/`require` 调用
+2. `sleep-wait`：包含 `time.Sleep`
+3. `hardcoded-port`：字符串含 `localhost:\d+` 或 `127.0.0.1:\d+`
+4. `shared-state`：测试函数外可变全局变量且测试中有赋值
+5. `test-helper-naming`：辅助函数签名含 `t *testing.T` 但未调 `t.Helper()`
 
-Go 标准库，命令行参数用 flag 包解析。
+输出：`RULE | FILE:LINE | DESCRIPTION`，如 `sleep-wait | handler_test.go:42 | time.Sleep(5*time.Second) found, use channel or mock timer`。
+
+`-rules no-assert,sleep-wait` 只启用指定规则。`-exclude vendor/` 排除目录。`-json` 输出 JSON 数组。退出码 0 无问题、1 参数错误、2 有 lint 问题。
+
+Go 标准库，flag 包解析。

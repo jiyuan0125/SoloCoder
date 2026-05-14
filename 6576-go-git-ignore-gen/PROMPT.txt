@@ -1,6 +1,15 @@
-.gitignore 少配一行，node_modules 就被提交上去了。扫描项目目录识别框架和工具链，自动推荐忽略规则，追加到已有文件里。
+少配了一行 .gitignore，node_modules 整个被提交上去了——这不是第一次了。手动维护太容易遗漏，应该自动识别项目类型。
 
-根据项目类型和已有文件自动生成 .gitignore。扫描项目目录，识别框架和工具链，推荐忽略规则。支持追加到已有文件。
-并行扫描多个文件或目录。
+命令行：`gitignore-gen -path ./myproject` 扫描项目目录。`-append` 标志将结果追加到已有 .gitignore 而非覆盖。`-output .gitignore` 指定输出文件路径，默认就是当前目录的 `.gitignore`。
 
-Go 实现，只用标准库，交叉编译友好。
+扫描逻辑——检测以下文件/目录来判断项目类型，对应生成忽略规则：
+- `go.mod` → 忽略 `bin/`、`*.exe`
+- `package.json` → 忽略 `node_modules/`、`dist/`
+- `Cargo.toml` → 忽略 `target/`
+- `pom.xml` 或 `build.gradle` → 忽略 `target/`、`*.class`、`.gradle/`
+- `requirements.txt` 或 `setup.py` → 忽略 `__pycache__/`、`*.pyc`、`.venv/`
+- `.env` 文件存在 → 追加 `.env` 到忽略列表
+
+输出格式：每行一条忽略规则，带注释说明来源，如 `# detected: go.mod\nbin/\n*.exe`。追加模式下不重复已有规则。项目目录不存在时退出码 1 打印 "directory not found: %s"。未检测到任何已知框架时打印 "no known project type detected" 并退出码 0 生成通用忽略规则（`*.swp`、`.DS_Store`、`*.tmp`）。
+
+Go 标准库实现，并行扫描文件。`go build -o gitignore-gen .`。

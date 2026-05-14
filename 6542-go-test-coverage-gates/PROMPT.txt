@@ -1,5 +1,9 @@
-覆盖率从 85% 降到 72% 没人发现，上线后出了两个低级 bug。解析 coverage profile，设全局阈值和按包阈值，不达标的具体包标出来，白名单可配。
+覆盖率从 85% 降到 72% 没人发现，上线出了两个低级 bug。先配阈值再跑检查。
 
-检查 Go 项目的覆盖率是否达标。支持全局阈值和按包阈值。解析 coverage profile，不达标时输出具体包的覆盖率。可配置白名单。
+`init -out gates.json` 生成配置模板：`{"global_threshold":80.0,"packages":{"pkg/handler":90.0},"allowlist":["pkg/generated"]}`。
 
-Go 标准库，命令行参数用 flag 包解析。
+`check -profile coverage.out -config gates.json` 逐包检查。输出：`pkg/handler: 92.3% ✓ (threshold: 90%)` 或 `pkg/models: 68.1% ✗ (threshold: 80%, gap: -11.9%)`。汇总：`RESULT: 14/16 packages passed | Overall: 78.5% (threshold: 80%) | STATUS: FAIL`。全局阈值按行数加权平均。allowlist 跳过输出 `SKIPPED (allowlist)`。
+
+`-diff baseline.json` 对比上次：`pkg/handler: 92.3% → 88.1% ↓4.2%`。`-json` 输出结构化报告。退出码：0 达标、1 参数错误、2 不达标。profile 为空输出 `error: empty coverage profile` 退出码 1。
+
+Go 标准库，flag 包解析。

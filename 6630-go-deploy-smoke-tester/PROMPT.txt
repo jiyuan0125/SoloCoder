@@ -1,5 +1,3 @@
-部署完全靠手动点几个页面验证，漏过好几次。别人有个自动冒烟测试挺好用，自己也搞一个：从配置文件读测试 URL 和预期状态码，逐个检查，输出通过/失败报告。
+有人问你部署完怎么验证——手动点几个页面？上次漏了一个支付接口的验证，用户反馈才发现。别人团队搞了个自动冒烟测试工具，部署后自动跑一遍核心接口检查，我们也得搞一个。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-
-Go 实现，只用标准库，交叉编译友好。
+从配置文件定义测试用例，YAML 格式：`tests: - name: 首页可用 url: https://app.example.com method: GET expected_status: 200 timeout: 5s - name: 登录接口 url: https://app.example.com/api/login method: POST headers: Content-Type: application/json body: '{"user":"test","pass":"test"}' expected_status: 200`。命令行 `smoke --config smoke-tests.yaml --base-url https://staging.example.com`，`--base-url` 会覆盖配置文件中的 URL 前缀。逐个执行测试用例，每个用例超时由 `timeout` 控制，默认 10 秒。结果输出表格：`用例名 | 状态码 | 耗时 | 结果(PASS/FAIL)`。最后汇总 `X/Y passed`。全部通过退出码 0，任意失败退出码 1。配置文件格式错误输出具体行号和原因，退出码 2。`--output json` 切换输出为 `{"total":5,"passed":4,"failed":1,"results":[...]}`。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，交叉编译友好。

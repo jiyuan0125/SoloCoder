@@ -1,6 +1,7 @@
-git stash 只给编号不给名字，stash@{0} stash@{1} 分不清谁是谁。增强版支持命名 stash、按名称检索、批量操作，还能看每个 stash 涉及哪些文件。
+先 `stash save`，再 `stash list` 管理，最后按需 apply/pop。问题是 git stash 只给编号 stash@{0} stash@{1}，十几个堆在一起分不清谁是谁。
 
-增强的 Git stash 管理。支持命名 stash、按名称检索、批量应用/删除。显示每个 stash 的摘要（涉及哪些文件）。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`stash-mgr` 给 stash 加名字和元信息。`save -name "login-wip" -msg "正在做登录"` 执行 `git stash push` 并在 `.git/stash-names.json` 记录 `{index,name,msg,date,files,branch}`。`list` 输出增强表格：编号、名称、日期、文件数、分支、message 前 50 字。`apply -name login-wip` 按名称查找执行 `git stash apply stash@{N}`。`drop -name login-wip` 按名称删除。`show -name login-wip` 显示 `git stash show --stat` 输出。
 
-Go 标准库，命令行参数用 flag 包解析。
+名称重复报错 `error: stash name "xxx" already exists` 退出码 1。不存在报错 `error: stash "xxx" not found` 退出码 1。stash-names.json 与实际不一致时自动重建索引。没有 stash 时 `list` 输出 `No stashes found`。
+
+项目拆成至少 3 个 Go 源文件：main.go、stash.go、types.go。Go 标准库，flag 包解析。

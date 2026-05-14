@@ -1,6 +1,7 @@
-rebase 手动改 todo 出错了，把 pick 写成了 edit，整个 rebase 链乱了。解析和修改 git rebase 的 todo 列表，支持重排序、合并 commit、修改操作类型，输入输出都是 rebase todo 格式。
+rebase todo 手动改，把 pick 写成了 eit 整条链崩掉。更常见的是想 squash 连续三个 commit 结果顺序搞错。这些操作可以工具化——解析 todo 列表、批量修改、验证格式、写回去。
 
-解析和修改 git rebase 的 todo 列表。支持重排序、合并 commit、修改操作类型。输入输出都是 rebase todo 格式。
-输入可能包含乱码和特殊字符。
+`rebase-todo -input .git/rebase-merge/git-rebase-todo` 或从 stdin 读。解析每行 `{action} {hash} {subject}`，合法 action 为 pick/p/edit/e/squash/s/fixup/f/reword/r/drop/d/exec/x/break/b。子命令 `squash -n 3` 把前 N 个合并（第一个 pick 其余 squash）。`reorder -from 2 -to 5` 移动行位置。`drop -hash abc1234` 按哈希删除。`rename -hash abc1234 -action fixup` 修改 action。
+
+输出到 stdout（`> .git/rebase-merge/git-rebase-todo` 重定向）或 `-output file` 写文件。`-validate` 只检查格式，不合法输出 `LINE {n}: invalid action "{xxx}"` 退出码 1。空输入输出空文件。特殊字符行原样保留并在 stderr 警告。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

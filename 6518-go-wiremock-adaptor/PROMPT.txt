@@ -1,5 +1,5 @@
-WireMock 是 Java 生态的，Go 项目里用不上它那一套 stub 定义。但 JSON 格式的 stub 规则写得挺好的，能不能直接读进来转成 Go http.Handler mock 代码？请求匹配、响应模板、优先级都要保留。
+WireMock 的 Java 生态确实好用，但 Go 项目里引不进来。不过它的 JSON stub 规则定义格式写得挺好的——能不能直接读进来转成 Go 的 http.Handler mock 代码？请求匹配规则、响应模板、优先级排序，全都保留。
 
-把 WireMock stub 定义转换为 Go http.Handler mock 代码。读取 JSON 格式的 stub 定义，输出 Go 源码。支持请求匹配、响应模板、优先级。
+为什么需要这个？因为我们团队有大量 WireMock 的 stub JSON 积累，不想重写成 Go 代码。`wmadapt convert --stubs ./stubs/ --output mock_handlers.go --package handlers`，读取目录下所有 `*.json` 的 WireMock stub 文件。每个 stub 的 JSON 结构：`{"request":{"method":"GET","url":"/api/users","queryParameters":{}},"response":{"status":200,"body":"...","headers":{}},"priority":1}`。生成的 Go 代码是一个 `http.Handler`，内部用 `mux.HandleFunc` 注册路由，按 priority 排序匹配规则——priority 数字越小越优先。url 支持 `{pathParam}` 模板变量，匹配时提取到 map 传给响应模板。响应模板支持 `{{request.path.id}}` 和 `{{randomInt}}` 占位符。匹配不到任何规则时返回 404 + `{"error":"no stub matched"}`。stub 文件 JSON 格式非法输出 "invalid stub JSON: <filename>: <error>" exit 1。输出目录不存在自动创建。`--validate-only` 只校验 stub 格式不生成代码。priority 缺失默认为 100。
 
 Go 实现，只用标准库，交叉编译友好。

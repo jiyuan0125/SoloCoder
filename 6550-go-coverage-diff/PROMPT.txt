@@ -1,5 +1,7 @@
-上个版本覆盖率偷偷降了 3%，没人注意到。对比两个 commit 的测试覆盖率差异，自动检出代码、跑测试、收集覆盖率，输出增减和新增未覆盖代码。
+覆盖率悄悄从 87% 掉到 84%，上线两周才发现。问题不是没跑测试，而是没人对比前后覆盖率。等到出 bug 才回头查，早不知道是哪次提交搞的。
 
-对比两个 commit 的测试覆盖率差异。检出代码、运行测试、收集覆盖率、对比。输出覆盖率增减和新增未覆盖代码。
+这个问题得靠工具来解决。`coverage-diff` 对比两个 commit 之间的测试覆盖率变化，用法 `coverage-diff -base abc123 -head def456 -repo ./project`。工具自动 checkout 两个版本，分别执行 `go test -coverprofile=coverage.out ./...`，解析 coverprofile 文件，然后做 diff。输出分三部分：一是总体覆盖率变化（如 `total: 87.2% → 84.1% (-3.1%)`），二是新增但未覆盖的代码行（文件名 + 行号列表），三是覆盖率下降最多的文件 Top 10（表格输出，列：文件路径、旧覆盖率、新覆盖率、变化值）。
+
+如果指定 commit 不存在，输出 `error: commit xxx not found` 并退出码 1。仓库有未提交更改时提示 `error: uncommitted changes, please stash or commit first`。go test 本身失败时把测试输出透传到 stderr，退出码 2。支持 `-format json` 输出 JSON 格式结果，字段包括 `{"base_commit","head_commit","base_total","head_total","diff","uncovered_files":[{"path","lines"}],"top_changes":[{"file","before","after","delta"}]}`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

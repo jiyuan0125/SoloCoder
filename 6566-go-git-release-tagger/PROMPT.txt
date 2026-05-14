@@ -1,5 +1,7 @@
-semver 的计算逻辑总有人搞错，feat 该升 minor 还是 major 争论半天。根据 commit 类型自动算——feat=minor, fix=patch, breaking=major，也支持自定义规则。
+semver 的版本号计算说简单也简单，但到了发版那刻总有人搞不清——上次是 1.2.3，这次有个 feat 该升 minor 还是有人非说 patch 就行？争论半天最后手动打 tag 还打错了。
 
-自动创建版本 tag。根据 commit 类型（feat=minor, fix=patch, breaking=major）自动计算下一个版本号。支持 semver 和自定义规则。
+`release-tag` 自动根据 commit 历史计算下一个版本号并打 tag。用法 `release-tag -repo ./project -prefix v`。流程：找最新 semver tag（支持 `v` 前缀和无前缀），取该 tag 到 HEAD 之间的所有 commit message，按 Conventional Commits type 判断——只出现 `fix:` → patch +1，出现至少一个 `feat:` → minor +1 patch 归零，出现 `feat!:` 或 `BREAKING CHANGE:` → major +1 minor 归零 patch 归零。多个规则同时满足时取最高级别。
+
+`-dry-run` 只输出计算结果不执行 `git tag`：`next version: v1.3.0 (bumped minor, found: 2 feat, 5 fix)`。`-rules custom.json` 支持自定义映射（`{"feat":"minor","fix":"patch","perf":"patch","chore":"skip"}`，type 映射为 skip 时忽略）。`-annotate` 创建 annotated tag 带自动生成的 tag message（包含版本号、日期、commit 统计）。没有已有 tag 时默认从 `v0.1.0` 开始，用 `-initial v1.0.0` 指定。不是 git 仓库时报错退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。

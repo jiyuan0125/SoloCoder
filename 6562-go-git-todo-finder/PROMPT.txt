@@ -1,6 +1,7 @@
-代码里 TODO 积了 400 多个，哪些该做哪些过时了完全不清楚。扫描代码中的 TODO/FIXME/HACK 注释，按文件、作者、日期汇总，按标签过滤输出 Markdown 列表。
+第一步扫描——`todo-finder -path ./src` 递归遍历指定目录下所有文本文件（跳过 `.git/` `vendor/` `node_modules/`），用正则匹配 `TODO` `FIXME` `HACK` `XXX` `OPTIMIZE` 注释（支持 `//` 和 `/*` 风格，也支持 Python `#`）。第二步解析——提取注释内容、所在文件路径、行号、作者（通过 `git blame -L n,n file` 获取该行最后修改者）、日期。
 
-扫描代码中的 TODO/FIXME/HACK 注释。按文件、作者、日期汇总。支持按标签过滤和输出 Markdown 列表。
-扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
+汇总输出 Markdown 列表，按标签分组：`## TODO (234)\n- [src/auth.go:42] zhangsan (2024-01-15): 处理 token 过期刷新\n...`。`-tag TODO` 按标签过滤只显示指定类型。`-author zhangsan` 只显示指定作者的。`-since 2024-01-01` 过滤日期范围。`-output todos.md` 写文件。`-format json` 输出 JSON 数组，每个元素 `{"tag","file","line","author","date","content"}`。
+
+空结果时输出 `No TODO/FIXME comments found` 并生成空的摘要文件。扫描过程中遇到二进制文件自动跳过，不报错。作者信息获取失败时（如新文件未 commit）显示 `<uncommitted>`。
 
 Go 标准库，命令行参数用 flag 包解析。

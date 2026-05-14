@@ -1,5 +1,21 @@
-ASCII 分支图比 GUI 直观——在终端里按时间线显示分支和合并点，一眼看出哪个分支从哪里分出来的。支持 ASCII 和 dot 格式输出。
+终端里画分支图比开 GUI 看代码还快——谁从哪分出去的、在哪合并的，ASCII 画出来一目了然。
 
-生成 Git commit 图的文本可视化。按时间线显示分支和合并点。支持 ASCII 和 dot 格式输出。
+命令行：`commit-graph -max-count 50` 显示最近 50 个 commit 的分支图。`-format ascii`（默认）或 `-format dot` 输出 Graphviz dot 格式。`-branch main` 只显示指定分支的祖先链。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+ASCII 模式输出示例：
+```
+* a1b2c3d (HEAD -> main) fix: timeout issue
+|\
+| * e4f5g6h (feature/auth) add login page
+* | i7j8k9l update README
+|/
+* m0n1o2p initial commit
+```
+
+实现要点：从 `git log --all --parents --format="%H %P %s %D"` 解析每个 commit 的父节点，多个父节点即为合并点，一个父节点且被多个子节点引用即为分支点。用 `|`、`*`、`\`、`/` 字符绘制连线。
+
+dot 模式输出标准 Graphviz：`digraph { "a1b2c3d" -> "i7j8k9l"; ... }`，节点标签包含 commit message 首行。
+
+不是 git 仓库时退出码 1 打印 "not a git repository"。仓库没有任何 commit 时退出码 1 打印 "empty repository, no commits found"。成功退出码 0。
+
+纯 Go 标准库，编译后单二进制。`go build -o commit-graph .`。

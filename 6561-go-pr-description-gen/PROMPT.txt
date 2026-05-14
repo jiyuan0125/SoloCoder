@@ -1,5 +1,7 @@
-PR 描述写了"fix bug"三个字就交了，review 的人一头雾水。根据分支的 commit 记录和 diff 自动提取关键变更，按类型分类，输出 Markdown 格式的 PR 描述。
+PR 描述就三个字 "fix bug"，review 的人打开 PR 一脸懵。分支上有哪些 commit、改了哪些文件、diff 涉及什么逻辑，工具汇总一下就是靠谱的 PR 描述。
 
-根据分支的 commit 记录和 diff 自动生成 PR 描述。提取关键变更，按类型分类。输出 Markdown 格式。
+`pr-gen -base main -head feature/login` 分析两个分支间所有 commit 和 diff。按 Conventional Commits type 分组（feat/fix/docs/refactor/...），统计 diff 里每个文件的增删行数。新增文件标 `NEW`，删除标 `DELETED`，超过 500 行变更标 `⚠ LARGE CHANGE`。
+
+输出 Markdown 格式：`## Summary\n{从 feat/fix commit 提取的一句话总结}\n\n## Changes\n### New Features\n- feat: add user login (abc1234)\n### Bug Fixes\n- fix: resolve timeout (def5678)\n\n## Files Changed\n| File | +/- | Status |\n|------|-----|--------|\n| src/auth.go | +120 -30 | MODIFIED |\n| src/login.go | +85 -0 | NEW |\n\n## Test Plan\n- {从 commit 中提取 test 相关变更建议}`。`-output pr.md` 写文件，否则 stdout。base 分支不存在报错 `error: branch xxx not found` 退出码 1。两个分支无差异输出 `No changes between branches`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

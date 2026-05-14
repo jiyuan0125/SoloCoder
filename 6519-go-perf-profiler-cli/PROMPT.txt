@@ -1,5 +1,5 @@
-pprof 文件对比全靠肉眼，两个 profile 放在一起看不出哪个函数慢了多少。按函数级别对比 CPU 和内存差异，文本报告一目了然，想要火焰图也能输出 folded stack 格式。
+上次性能优化完想对比 pprof 文件，打开两个 profile 看了半天看不出哪个函数慢了多少——纯靠肉眼看数值差异太低效了。按函数级别对比 CPU 和内存差异，差异大的排前面，文本报告一目了然，想画火焰图也能输出 folded stack 格式。
 
-对比两份 Go pprof profile 文件，输出函数级别的 CPU/内存差异。支持文本报告和火焰图数据（folded stack format）。按差异大小排序。
+CLI 命令 `profcmp`，`profcmp diff --before cpu1.prof --after cpu2.prof --type cpu --top 20`。因为纯标准库不包含 pprof 解析库，所以输入源改为 `go tool pprof -text` 的输出文本（通过 stdin 或文件传入），解析出每个函数的 flat/cum 时间和百分比。对比两份结果，计算每个函数的差值和百分比变化，按差值降序排列输出表格：FUNCTION | BEFORE(FLAT) | AFTER(FLAT) | DELTA | DELTA%。`--type cpu|mem` 区分对比类型，mem 模式解析 `go tool pprof -text --inuse_space` 的输出。`--top 20` 只显示前 N 个差异最大的函数。`--format folded` 输出 folded stack 格式（`funcA;funcB <samples>`），可以直接喂给 flamegraph.pl 画图。`--format json` 输出 `[{"function":"main.foo","before_flat":"120ms","after_flat":"250ms","delta":"+130ms","delta_pct":"+108%"}]`。输入文件为空或格式异常输出 "invalid pprof text input at line <N>" exit 1。文件不存在 exit 2。
 
-用 Go 标准库写，go run . 或 go build 都行。
+Go 标准库，`go run .` 或 `go build` 都行。

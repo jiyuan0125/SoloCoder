@@ -1,3 +1,5 @@
-依赖关系手动装配，初始化顺序搞错就 panic。构造函数自动连接，生命周期管理也带上。支持嵌套命令：project create、project build、project test run、project test coverage。
+上周线上发版出了事故——有个服务的初始化顺序搞反了，database 还没 Ready，repository 就先跑起来了，直接 panic 全挂。手写依赖装配太容易出这种事。干脆写个工具，扫描 Go 源码里的构造函数，自动推导依赖图，按拓扑排序生成容器初始化代码，生命周期管理也一并带上。
 
-标准库搞定，go run . 跑起来。
+命令行入口是 `di-gen`，子命令 `scan ./...` 扫描目录下所有 .go 文件，提取带 `New` 前缀的函数作为构造函数，输出依赖关系到 stdout（JSON 格式，字段包括 name、params、returns）。`generate --output container.go --pkg main` 生成容器代码，输出的 .go 能直接 `go build` 通过。遇到循环依赖时打印 "circular dependency detected: A→B→C→A" 并以 exit code 1 退出，exit code 0 表示成功。每个生成的组件带 `Init()` 和 `Close()` 方法，Close 按 Init 的逆序调用。支持嵌套命令：`project create --name myapp` 创建项目骨架，`project build` 执行构建，`project test run -v` 运行全部测试，`project test coverage --threshold 80` 检查覆盖率不达标则 exit 1。如果 .go 文件解析失败，输出 "parse error in <filename>: <detail>" 并 exit 2。所有配置也可以通过 JSON 文件传入，`--config` 指定路径。
+
+标准库搞定，`go run .` 跑起来，不依赖任何第三方代码生成框架。

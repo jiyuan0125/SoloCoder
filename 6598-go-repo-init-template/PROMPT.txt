@@ -1,5 +1,11 @@
-新建仓库每次都忘了加 CI 配置、.gitignore、LICENSE。从模板初始化新仓库，模板包含这些文件，变量替换——项目名、描述、许可证类型。
+每次建新仓库都忘加 .gitignore 和 CI 配置，第三周才想起 LICENSE 没写。该有个模板一键搞定。
 
-从模板初始化新仓库。模板包含 LICENSE、README、CI 配置、.gitignore 等。支持变量替换（项目名、描述、许可证类型）。
+命令行：`repo-init -name myproject -desc "A cool tool" -license MIT -template basic`。`-output ./myproject` 指定目录默认用项目名。`-template` 可选 `basic`（默认，全部文件）或 `minimal`（仅 README 和 .gitignore）。
 
-Go 实现，只用标准库，交叉编译友好。
+basic 模板文件：`README.md` 含 `# {{PROJECT_NAME}}` 和描述；`LICENSE` 按 `-license` 选 MIT/Apache-2.0/GPL-3.0；`.gitignore` 按 `-language`（默认 go）生成；`.github/workflows/ci.yml` 含 checkout+build+test；`Makefile` 含 build/test/clean。
+
+变量替换：所有文件中 `{{PROJECT_NAME}}`、`{{DESCRIPTION}}`、`{{YEAR}}`、`{{AUTHOR}}` 替换为实际值。
+
+目录已存在且非空退出码 1 打印 "directory not empty: %s, use -force"。license 不支持退出码 1 打印 "unsupported license: %s, allowed: MIT, Apache-2.0, GPL-3.0"。成功退出码 0 打印 "initialized %s with %d files"。
+
+Go 纯标准库，`go build -o repo-init .`。

@@ -1,3 +1,3 @@
-上次上线因为 YAML 里镜像 tag 用了 latest，跑了一晚上才发现是旧版本。排查半天。Go 工具检查 apiVersion 是否过时、资源限制是否设了、镜像 tag 是不是 latest，有问题直接列出来。
+上次上线因为 YAML 里镜像 tag 用了 latest，跑了一晚上才发现跑的是旧版本，排查花了半天。之后还有人 resources.limits 没设导致节点 OOM。K8s manifest 里的坑不少，需要在提交前自动检查。
 
-Go 实现，只用标准库，交叉编译友好。
+工具扫描指定目录或单个 YAML 文件里的 K8s 资源定义，检查三类问题。命令行 `k8slint check --path ./deploy/ --strict`，`--strict` 模式下 warning 也算失败（退出码 1），否则只有 error 才返回非零。检查项：（1）镜像 tag 为 `latest` 或空值时报 error `image tag is latest or empty: <image>`；（2）`resources.limits.cpu` 或 `resources.limits.memory` 未设置时报 warning `missing resource limit: cpu/memory`；（3）`apiVersion` 为已废弃值（如 `extensions/v1beta1` 对于 Deployment）时报 warning `deprecated apiVersion: <value> for <kind>`。支持多文档 YAML（`---` 分隔），每个文档独立检查。输出格式为每行一条：`[ERROR/WARNING] <file>:<doc_index> <message>`，最后汇总 `N errors, M warnings`。无任何文件匹配时报错退出码 2。纯 Go 标准库实现，交叉编译友好。

@@ -1,5 +1,8 @@
-交付物要求 zip 格式带版本号文件，还要排除 .git 目录和 CI 配置。git archive 功能太弱，增强版支持排除指定文件/目录、添加版本信息文件、重命名根目录，输出 zip 或 tar.gz。
+上周交付物被退回来了——zip 里混进了 .git 目录和 CI 配置文件，版本号也没地方看。git archive 原生命令能做的事太少，排除规则写起来费劲。所以做一个增强版。
 
-增强的 git archive。支持导出时排除指定文件/目录、添加版本信息文件、重命名根目录。输出 zip 或 tar.gz。
+命令行用法：`git-archive-plus -o output.zip -exclude ".git,ci/,*.log" -version-file VERSION -rename myproject-v2.1 -format zip`
+也支持 `-format tar.gz` 输出。`-version-file` 指定一个文件路径，导出时会在压缩包根目录自动生成 `VERSION` 文件，内容为当前 git tag 或 commit hash。`-rename` 改变压缩包内的根目录名，比如 `myproject-v2.1/` 下面才是代码。`-exclude` 接逗号分隔的 glob 模式列表，同时默认排除 `.git/` 目录。
 
-Go 标准库，命令行参数用 flag 包解析。
+错误处理：目标文件已存在且没加 `-force` 标志时报错退出码 1 并打印 "output file already exists: %s, use -force to overwrite"；当前目录不是 git 仓库时退出码 1 打印 "not a git repository"；`-format` 值不是 zip 或 tar.gz 时退出码 1 打印 "unsupported format: %s"。成功时退出码 0，打印 "archived %d files to %s"。
+
+Go 标准库实现，flag 包解析参数。`go build -o git-archive-plus .` 编译。

@@ -1,5 +1,7 @@
-团队规范要求 Conventional Commits 格式，但每次都有人提交 "fix bug" "update" 这种 message。正则规则、行长度限制、Conventional Commits 格式检查，从 stdin 或文件读取 commit message，输出违规项。
+`commit-lint` 做一件事——检查 commit message 是不是符合 Conventional Commits 规范，不符合就告诉你哪里有问题。
 
-检查 Git commit message 格式。支持正则规则、行长度限制、Conventional Commits 格式。从 stdin 或文件读取 commit message，输出是否合规和具体违规项。
+用法分两种：从 stdin 管道读 `echo "fix: resolve null pointer" | commit-lint`，或者从文件读 `commit-lint -file msg.txt`。检查规则默认开启 Conventional Commits 格式（正则 `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,100}`），subject 行不超过 100 字符，body 每行不超过 200 字符，空行分隔 subject 和 body。支持自定义规则文件 `-rules custom.json`，里面可以覆盖正则、行长度上限、允许的 type 列表。
 
-用 Go 标准库写，go run . 或 go build 都行。
+输出格式：通过时 stdout 输出 `OK` 退出码 0；不通过时逐行列出违规项，每项格式 `LINE {n}: {rule} — {具体原因}`（如 `LINE 1: format — must match type(scope): subject`），退出码 1。空输入（空文件或空 stdin）输出 `error: empty commit message` 退出码 2。输入有但只有空白字符同理。
+
+用 Go 标准库写，`go run .` 或 `go build` 都行，退出码 0 通过 1 违规 2 输入错误。

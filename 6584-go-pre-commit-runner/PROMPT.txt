@@ -1,5 +1,17 @@
-pre-commit hook 只能在 commit 时触发，想提前跑一遍看看有没有问题。本地运行 hooks 但不实际 commit，选择运行哪些，输出详细结果。
+为什么要等到 commit 才发现问题？pre-commit hook 的检查提前跑一遍不就行了，通不过就别浪费时间去写 commit message。
 
-本地运行 pre-commit hooks 而不实际 commit。支持选择运行哪些 hooks，输出详细结果。用于提交前检查。
+命令行：`pre-runner -hooks .git/hooks` 指定 hooks 目录，默认 `.git/hooks`。`-hook pre-commit` 只运行指定的 hook 文件，不加此标志则运行目录下所有非 sample 文件。`-verbose` 输出每个 hook 的 stdout 和 stderr 内容。
 
-Go 标准库，命令行参数用 flag 包解析。
+执行逻辑：遍历 hooks 目录，跳过以 `.sample` 结尾的文件。对每个 hook 文件执行 `exec()` 并捕获输出。逐个打印结果：
+```
+[PASS] pre-commit (exit: 0, 1.2s)
+  stdout: checking go fmt... ok
+[FAIL] check-large-files (exit: 1, 0.3s)
+  stderr: file data.bin exceeds 10MB limit
+```
+
+汇总行：`3/5 hooks passed, 2 failed`。全部通过退出码 0，任一失败退出码 1。
+
+hooks 目录不存在时退出码 1 打印 "hooks directory not found: %s"。没有可执行的 hook 文件时退出码 0 打印 "no hooks found"。hook 执行超时（默认 30 秒，`-timeout` 可调）时打印 `[TIMEOUT] %s (%ds)` 并视为失败。
+
+Go 标准库，flag 包解析参数。`go build -o pre-runner .`。

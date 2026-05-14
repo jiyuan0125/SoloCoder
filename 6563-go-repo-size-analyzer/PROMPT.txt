@@ -1,5 +1,7 @@
-仓库 clone 下来源码 1.2GB，不知道是哪个文件吃空间。找出历史中最大的文件（含已删除的），按文件类型统计占用，按扩展名过滤。
+仓库 clone 下来 1.2GB，光 `.git` 目录就占了 800MB，到底什么文件吃掉了这么多空间？有人说可能是之前误提交的大二进制，但已经删除了，本地看不到。
 
-分析 Git 仓库大小。找出最大的文件（按历史大小，含已删除的）。按文件类型统计占用。支持按扩展名过滤。
+这个问题 `repo-size` 来回答。`repo-size -repo ./project` 分析仓库历史中所有 blob 的大小。通过 `git rev-list --objects --all` 配合 `git cat-file -s` 获取每个 blob 的字节数，按文件路径聚合并去重（同路径不同版本只计最大版本）。输出两部分：一是按大小排序的文件 Top 20（表格：文件路径、最大版本大小、历史版本数），二是按扩展名汇总（`.go` `.js` `.png` 各占多少，表格列：扩展名、文件数、总大小、占比）。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`-ext ".log,.tmp"` 按扩展名过滤只显示指定类型。`-threshold 1MB` 只显示超过阈值的文件。`-deleted-only` 只统计已在当前 HEAD 中不存在但历史中存在过的文件。`-format json` 输出 JSON `{"files":[{"path","max_size","versions","still_exists"}],"extensions":[{"ext","count","total_size","percentage"}],"total_repo_size":12345}`。不在 git 仓库内时报错退出码 1。
+
+Go 标准库实现，`go build` 编译通过。

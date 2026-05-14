@@ -1,5 +1,7 @@
-新来的同事分支名不规范，"fix-bug" "wip" "test" 看不出是什么功能。根据任务描述自动生成分支名——feature/JIRA-123-add-login 这种格式，自定义模板和前缀。
+新来的同事分支名永远是 "fix-bug" "wip" "test"，code review 的时候看 branch list 根本分不清谁是谁的什么功能。手动讲规范讲了三遍，不如写个工具一键生成合规名称。
 
-根据任务描述自动生成分支名。输入任务描述文本，输出符合规范的分支名（如 feature/JIRA-123-add-login）。支持自定义模板和前缀。
+`branch-namer` 接受任务描述文本，输出标准化的分支名。用法 `echo "添加用户登录功能 JIRA-1234" | branch-namer` 或 `branch-namer -text "修复支付超时bug"`。默认规则：从文本提取 JIRA/issue 编号（匹配 `[A-Z]+-\d+`），提取英文关键词翻译或取中文拼音首字母，组装成 `{type}/{ticket}-{desc}` 格式，如 `feature/JIRA-1234-add-user-login`。type 自动判断——文本含"修复/fix/bug"→fix，含"添加/新增/add/feature"→feature，含"文档/doc"→docs，默认 feature。
 
-用 Go 标准库写，go run . 或 go build 都行。
+自定义模板 `-template "{type}/{ticket}-{desc}"` 支持占位符 `{type}` `{ticket}` `{desc}` `{date}` `{author}`。`-config .branch-namer.yaml` 读配置文件设置永久规则。没有提取到 ticket 编号时 desc 必须非空，否则输出 `error: cannot generate branch name, provide ticket or description` 退出码 1。分支名含空格或中文自动转 kebab-case。输出到 stdout，可直接 `$(branch-namer ...)` 嵌入 git checkout -b。
+
+用 Go 标准库写，`go run .` 或 `go build` 都行。

@@ -1,5 +1,7 @@
-git add -p 用着顺手但没法定制。想做一个纯 CLI 的交互式 hunk 选择器——逐个显示 diff hunk，y/n 选择暂存，部分 commit 一气呵成。
+痛点很简单——`git add -p` 用着顺手但没法定制，想加个"查看完整文件上下文"的选项都没有，更别说批量操作了。
 
-交互式选择 hunks 进行部分 commit。逐个显示 diff hunk，用户选择 y/n 暂存。类似 git add -p 但纯 CLI 实现。
+做一个纯 CLI 的交互式 hunk 选择器 `diff-select`。跑 `diff-select` 后先调用 `git diff -U3` 拿到所有 hunks，逐个展示，每个 hunk 前后各带 3 行上下文。终端显示时用 ANSI 颜色区分——新增行绿色（`+`）、删除行红色（`-`）、上下文行默认色。底部提示 `[y]暂存 [n]跳过 [s]拆分 [e]编辑 [v]查看完整文件 [q]退出 [?]帮助`——y 暂存、n 跳过、s 按内部 `@@` 边界拆成小块重新选择、e 打开 $EDITOR 编辑 hunk 内容、v 显示该 hunk 所在完整文件内容（用 less 分页）、q 立即结束。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+全部选完后自动执行 `git apply --cached` 暂存选中 hunks。`-patch-file output.patch` 导出为 patch 文件不直接暂存。`-staged` 模式操作 `git diff --cached` 而非工作区 diff。hunk 无法再拆时提示 `cannot split further` 继续原样展示。终端不是 TTY 时自动退化为非交互模式读 stdin 预选结果（每行 y/n/q）。
+
+纯 Go 标准库，编译后单二进制可以直接跑，退出码 0 成功 1 错误。

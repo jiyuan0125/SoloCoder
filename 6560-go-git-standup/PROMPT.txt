@@ -1,5 +1,9 @@
-每日站会不知道说什么，翻了半天 git log 才想起昨天做了什么。查询昨天到今天的 commit 记录，按项目汇总，自动生成做了什么、正在做什么、遇到什么问题。
+每天早上站会前 5 分钟，我打开三个项目的 git log 往回翻，想拼出昨天到底做了什么——但经常漏掉，站会上支支吾吾说不清楚。
 
-生成每日 standup 报告。查询昨天到今天的 commit 记录，按项目汇总。输出做了什么、正在做什么、遇到什么问题。
+两个问题要解决：一是跨项目汇总昨天的 commit 记录，二是自动把这些记录组织成 standup 报告格式。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`standup-gen` 用法 `standup-gen -repos "project-a,project-b,project-c" -since yesterday`。扫描每个仓库指定时间范围内的 commit（默认 `since yesterday`，也支持 `-since 2d` `-since 2024-01-15`），按仓库分组输出。输出模板三段：`## Done\n- [repo-a] feat: add login (abc1234)\n- [repo-b] fix: timeout issue (def5678)\n## In Progress\n` 自动从分支名含 WIP/draft 或 commit message 含 WIP 提取。`## Blockers\n` 从 commit message 中提取 `#block` 标记的内容。
+
+没有 commit 时输出 `## Done\n(no commits in this period)`。`-author "zhangsan"` 只统计指定作者的 commit。`-output standup.md` 写文件，否则 stdout。`-format slack` 输出 Slack 格式（去掉 Markdown 标记用纯文本缩进）。不在 git 仓库内的路径跳过并在 stderr 输出 `skipping non-git path: xxx`。
+
+Go 标准库实现，`go build` 编译通过。

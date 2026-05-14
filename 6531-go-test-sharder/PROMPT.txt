@@ -1,5 +1,7 @@
-CI 并行跑测试要手动分片，分不均匀有的分片跑 2 分钟有的跑 20 分钟。根据历史测试耗时数据计算，把包列表切成 N 个分片，每个分片总耗时大致相等。
+CI 并行跑测试要手动分片，分不均匀有的 2 分钟有的 20 分钟，pipeline 总等最慢的那个。根据历史数据自动算好分片。
 
-把 Go 测试包列表切分成 N 个分片，每个分片总耗时大致相同。根据历史测试耗时数据计算。输出每个分片的包列表，用于 CI 并行执行。
+`shard -history timing.json -n 4 -out shards.json` 读历史耗时切分片。`timing.json` 格式：`{"packages":[{"name":"pkg/handler","duration_ms":12000},{"name":"pkg/utils","duration_ms":3000}]}`。贪心算法：按耗时降序排列，依次放入当前总耗时最小的分片。输出 `shards.json`：`{"shards":[{"id":1,"packages":["pkg/handler","pkg/config"],"estimated_ms":15000}]}`。同时 stdout 摘要：`Shard 1: 2 packages, est. 15.0s | Shard 2: 3 packages, est. 8.0s | Max spread: 7.0s`。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`-format text` 每行一个包名，用于 `go test $(cat shard1.txt)`。`-format json` 输出上述 JSON。没有历史数据时按包数均分，输出 `warning: no timing data, using equal distribution`。包少于分片数时空分片不输出。`-n` 默认 2 最大 50。
+
+纯 Go 标准库，编译后单二进制直接跑。flag 包解析参数。

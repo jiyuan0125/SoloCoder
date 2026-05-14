@@ -1,6 +1,5 @@
-test2json 的输出是给人看的吗？一堆 JSON 行看不出哪个测试跑了多久。按包和函数分组，把开始/结束时间、耗时、状态画成时间线，输出 JSON 格式方便可视化。
+`go test -json` 的输出谁看得懂？几百行 JSON 堆在终端上，哪个测试跑了多久根本看不出来。按包和函数分组，把开始/结束时间、耗时、状态整理成时间线，输出结构化 JSON 给可视化工具用。
 
-解析 Go test2json 输出，生成测试执行时间线。按包和函数分组，显示开始/结束时间、耗时、状态。输出 JSON 时间线数据。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`testtimeline parse --input test2json.out --output timeline.json`。输入是 `go test -json ./...` 的原始输出，每行一个 JSON。`Action:start` 记录开始时间，`Action:pass/fail/skip` 记录结束和状态，`Action:output` 收集日志。输出结构：`{"packages":[{"name":"github.com/my/pkg","tests":[{"name":"TestFoo","start":"...","end":"...","duration":"2s","status":"pass","output":["line1"]}],"total_duration":"15s"}]}`。`testtimeline summary --input timeline.json` 输出 PACKAGE | TESTS | PASSED | FAILED | DURATION 表格，按 duration 降序。`testtimeline slow --input timeline.json --top 10` 列出最慢的 10 个测试。空输入输出 "no test events found" exit 1。非法 JSON 跳过该行输出 "[WARN] invalid event at line <N>"。代码拆成至少 3 个 Go 源文件：main.go、parser.go、timeline.go。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+Go 标准库，`go build` 能编译通过。

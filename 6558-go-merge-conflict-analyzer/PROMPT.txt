@@ -1,5 +1,7 @@
-merge conflict 一多就头疼，不知道是谁改了什么导致的。解析冲突文件，识别涉及哪些功能模块、哪些作者的修改，输出冲突摘要报告。
+merge conflict 一多就头疼，50 个文件冲突，不知道是谁改了什么导致的，也看不出哪个模块受影响最严重。能不能有个工具告诉我冲突全貌？
 
-分析 merge conflict 的原因和影响范围。解析冲突文件，识别涉及哪些功能模块、哪些作者的修改。输出冲突摘要报告。
+`conflict-analyze` 做这件事。用法 `conflict-analyze -repo ./project` 或直接对冲突文件 `conflict-analyze -file conflict.txt`。扫描工作目录中所有包含 `<<<<<<<` `=======` `>>>>>>>` 标记的文件，解析每个冲突块的双方内容。对冲突双方的代码行分别执行 `git blame` 找到各自作者，然后汇总出：哪些文件有冲突（列表+数量），每个冲突涉及哪些作者（双方各是谁），按文件路径推断功能模块（用目录名作模块归类），冲突复杂度评级（A=仅一方修改/B=双方修改不同区域/C=双方修改同一区域）。
+
+输出摘要报告到 stdout，结构是 `=== Conflict Summary ===\nTotal: N conflicts in M files\n\nBy Author:\n  Alice vs Bob: 12 conflicts\n  ...\n\nBy Module:\n  auth/: 8 conflicts\n  ...\n\nComplexity: A=20 B=15 C=3`。`-output report.md` 写 Markdown 文件，`-format json` 输出 JSON。没有冲突时输出 `No conflicts found` 退出码 0。
 
 Go 标准库，命令行参数用 flag 包解析。

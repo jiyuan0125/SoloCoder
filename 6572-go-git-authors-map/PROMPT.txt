@@ -1,5 +1,7 @@
-git log 里同一个人出现三个名字——工作邮箱、个人邮箱、GPG 签名用的邮箱，统计贡献数据的时候算成三个人。分析仓库中同一作者的多个邮箱，建议合并映射，自动生成 .mailmap。
+第一步扫描——`authors-map scan -repo ./project` 遍历 `git log --format='%aN <%aE>'` 获取所有作者名+邮箱组合。第二步分析——把邮箱的域名部分提取出来做分组依据，同时用作者名的相似度（去除空格和大小写后完全相同视为同一人）建议合并。第三步输出——生成 `.mailmap` 文件，格式 `Proper Name <proper@email.com> Other Name <other@email.com>`。
 
-管理 .mailmap 文件。分析仓库中同一作者的多个邮箱，建议合并映射。自动生成或更新 .mailmap。
+子命令 `authors-map scan` 输出发现的所有作者变体，表格列：规范名、变体名、邮箱、commit 数。`authors-map suggest` 输出建议合并的映射列表，每个建议包含 `{规范名, 规范邮箱, 变体列表}`。`authors-map generate -output .mailmap` 直接生成 .mailmap 文件。`authors-map apply` 读取已有的 .mailmap 验证格式正确性（每行 `Name <email> [Name <email>]`），格式错误行输出 `warning: invalid line {n}: {content}`。
 
-用 Go 标准库写，go run . 或 go build 都行。
+只有一个邮箱一个名字的作者不出现在建议列表中。`-min-commits 5` 过滤掉 commit 数低于阈值的变体（减少噪音）。已有 .mailmap 时 `generate` 追加新映射不覆盖已有条目。不在 git 仓库报错退出码 1。
+
+用 Go 标准库写，`go run .` 或 `go build` 都行。

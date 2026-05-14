@@ -1,5 +1,7 @@
-code review checklist 全靠记忆，涉及数据库迁移的忘了检查索引，涉及并发代码的忘了检查锁。根据 diff 自动分析变更文件类型和内容，推荐检查项。
+code review checklist 靠记忆，数据库迁移忘了检查索引，并发代码忘了检查锁，API 变更忘了检查向后兼容。每次 review 漏一两项目，线上出事才想起来 checklist 上有这条。
 
-根据 diff 自动生成 code review 检查清单。分析变更文件类型和内容，推荐检查项（如涉及数据库迁移需检查索引）。
+`review-checklist -diff changes.patch` 或 `-base main -head feature-branch` 从 git 获取 diff，自动生成检查清单。规则引擎按文件类型和内容匹配——`*.sql` 或含 `ALTER TABLE`/`CREATE TABLE` → 推荐「检查索引」「检查迁移可回滚」；测试文件少于变更文件 20% → 「补充单元测试」；含 `goroutine`/`go func`/`sync.Mutex`/`channel` → 「检查竞态条件」「确认有 proper cleanup」；`Dockerfile`/`docker-compose` → 「检查镜像版本固定」「检查 exposed ports」。
+
+输出 Markdown：`## Code Review Checklist\n- [ ] 检查数据库索引 (triggered by: schema.sql)\n- [ ] 确认并发安全 (triggered by: worker.go)\n...`。`-config rules.yaml` 自定义规则（匹配条件+推荐检查项+触发说明）。`-output checklist.md` 写文件，否则 stdout。空 diff 输出 `No changes to review`。
 
 Go 实现，只用标准库，交叉编译友好。

@@ -1,5 +1,3 @@
-连续 8 个 "fix typo" commit，合并成一个多干净。分析连续的小修改 commit 建议合并，输出 squash 计划。
+上周代码审查看到一个 PR 里有连续 8 个 "fix typo" 和 "wip" commit，reviewer 直接拒了。团队约定小修小补的 commit 应该 squash 掉再提 PR，但每次手动数哪些该合太麻烦。
 
-计算应该 squash 的 commit 组。分析连续的小修改 commit（如 fix typo、wip），建议合并。输出 squash 计划。
-
-Go 实现，只用标准库，交叉编译友好。
+写个 Go 命令行工具分析 git log 里的连续小修改 commit，输出建议的 squash 方案。子命令 `squash-calc --repo PATH --max-count 50 --pattern "fix typo,wip,lint,fmt"`，其中 pattern 支持逗号分隔的多条匹配规则，对 commit message 做大小写不敏感的前缀匹配。连续匹配到的 commit 归为一组，输出 squash 计划到 stdout，格式为 JSON 数组，每组包含字段：{"group_id":1,"commits":[{"hash":"abc1234","message":"fix typo"}],"suggested_message":"fix: 多处拼写修正"}。suggested_message 取该组第一条 commit 的 message 前缀作为合并描述。如果某个 commit 同时是 merge commit（即有多个 parent），该 commit 不参与 squash 分组，单独列出。`--dry-run` 模式只输出计划不执行任何 git 操作。空仓库或 commit 数为零时输出空数组 `[]` 并退出码 0。找不到匹配 pattern 的 commit 时，输出提示信息到 stderr 并退出码 1。纯 Go 标准库实现，`go build` 编译通过，交叉编译友好。

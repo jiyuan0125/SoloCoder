@@ -1,6 +1,9 @@
-联调的时候后端接口还没就绪，前端只能干等。做个 HTTP 代理把真实请求响应录下来，按域名和路径存文件，敏感 header 过滤掉，后面拿录制数据直接创建 mock。
+联调的时候后端接口还没就绪，前端只能干等。上周产品演示就是因为这个卡了半天。做个 HTTP 代理把真实请求响应录下来，后面直接用录制数据创建 mock，不用再等人。
 
-作为 HTTP 代理录制真实请求/响应到文件，然后可以用录制的数据创建 mock。录制文件按域名和路径组织。支持过滤敏感 header。
-支持多个终端同时操作同一个数据目录。
+命令行两个子命令：`record` 和 `mock`。`record -port 9090 -outdir ./recordings` 启动代理，监听指定端口转发请求同时录制。录制文件按 `{outdir}/{域名}/{路径}/{timestamp}.json` 组织，每个 JSON 包含 `method`、`url`、`request_headers`、`request_body`、`status_code`、`response_headers`、`response_body`、`recorded_at` 字段。敏感 header（Authorization、Cookie、X-Api-Key）值替换为 `[REDACTED]`，key 保留。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`mock -port 8080 -dir ./recordings` 启动 mock 服务，从目录加载录制数据，按请求的 method+path 匹配返回最近的录制响应。找不到匹配时返回 404，body 为 `{"error":"no matching recording","method":"GET","path":"/api/xxx"}`。
+
+多个终端可以同时往同一个 outdir 写录制文件，文件名带时间戳不冲突。程序启动时对 outdir 加文件锁（flock），防止并发的 mock 服务读半写数据。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。退出码 0 正常，1 参数错误，2 端口被占用。

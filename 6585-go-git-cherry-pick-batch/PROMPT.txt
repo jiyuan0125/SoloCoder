@@ -1,5 +1,15 @@
-cherry-pick 五个 commit 手动来，中间第三个冲突了卡住，后面两个也停了。批量从一个分支选多个 commit 应用到另一个，简单冲突自动解决，已应用过的跳过。
+cherry-pick 到第三个 commit 冲突了，后面两个也被堵住，整个过程白费。批量操作得能处理这种级联失败。
 
-批量 cherry-pick commits。从一个分支选择多个 commit 应用到另一个分支。支持自动解决简单冲突、跳过已应用的 commit。
+命令行：`cherry-pick-batch -commits abc123,def456,ghi789 -branch feature/target` 将指定 commit 应用到目标分支。`-from feature/source` 配合 `-count 5` 自动取最近 N 个 commit 而不需要手动列 hash。`-continue` 在冲突解决后继续剩余的 pick。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+处理逻辑逐个执行：
+- 每个 commit 先 `git cherry-pick <hash>`
+- 已在目标分支的 commit（patch-id 相同）跳过，打印 "SKIP: %s already applied"
+- 冲突时：简单冲突（单侧修改）自动解决，打印 "AUTO-RESOLVED: %s"；复杂冲突暂停，打印 "CONFLICT: %s, resolve and run with -continue"，同时写入 `.cherry-pick-batch.state` 文件保存剩余 commit 列表
+- `-continue` 读取状态文件，从上次中断处继续
+
+全部完成输出 "cherry-picked: %d, skipped: %d, conflicts: %d"。退出码：0 = 全部完成，1 = 有冲突需手动处理，2 = 参数错误。
+
+state 文件格式（JSON）：`{"pending": ["hash1", "hash2"], "branch": "feature/target"}`。
+
+纯 Go 标准库，编译后单二进制。`go build -o cherry-pick-batch .`。

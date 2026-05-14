@@ -1,5 +1,3 @@
-线上跑的二进制不知道是什么时候编译的、用的哪个 commit。Go 工具生成构建元数据 JSON 文件，包含 Git commit hash、构建时间、Go 版本、构建者，可以 embed 到二进制里运行时查。
+线上跑的二进制是谁编译的、什么时候、基于哪个 commit，出了问题完全不知道。需要构建时自动生成元数据文件，再通过 `go:embed` 嵌入到二进制里，运行时用 `/version` 接口查得到。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-
-Go 实现，只用标准库，交叉编译友好。
+命令行 `buildmeta generate --output metadata.json`，自动采集以下字段写入 JSON：`git_commit`（执行 `git rev-parse HEAD` 获取完整 hash）、`git_branch`（`git rev-parse --abbrev-ref HEAD`）、`build_time`（RFC3339 格式时间戳如 `2024-01-15T10:30:00+08:00`）、`go_version`（`go version` 输出解析出版本号如 `go1.21.5`）、`builder`（`$USER` 环境变量，未设置时为 `unknown`）。不在 git 仓库中时 `git_commit` 设为 `unknown`，不报错。`--custom key=value` 支持追加自定义键值对。`buildmeta verify metadata.json` 子命令校验文件是否包含所有必需字段，缺字段时列出 `missing field: <name>` 并退出码 1。另外 `buildmeta print metadata.json` 美化输出所有字段。输出的 JSON 缩进 2 空格，字段按字母排序。目录下有 `embed.go` 时自动追加 `//go:embed metadata.json` 的提示到 stderr。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，交叉编译友好。

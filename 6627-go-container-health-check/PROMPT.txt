@@ -1,5 +1,3 @@
-Python 写的容器健康检查脚本跑一次要 30 秒，40 个容器就要 20 分钟。Go 重写后按容器名过滤，检查 CPU/内存/重启次数，支持自定义阈值。
+先用 Python 写的容器健康检查脚本扫一遍要 30 秒，40 个容器跑完接近 20 分钟，每次排查问题都等到不耐烦。Go 重写后把耗时降到秒级。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-
-用 Go 标准库写，go run . 或 go build 都行。
+工具通过执行 `docker inspect` 和 `docker stats --no-stream` 获取容器数据，命令行 `chealth --filter "web-*" --cpu-warn 80 --cpu-crit 95 --mem-warn 80 --mem-crit 95 --restart-limit 5`。按容器名过滤支持 glob 模式匹配。检查维度三个：CPU 使用率、内存使用率、重启次数。超过 `--*-warn` 输出 `[WARN]`，超过 `--*-crit` 输出 `[CRIT]`，都在阈值内输出 `[OK]`。输出格式为表格：`容器名 | 状态 | CPU% | 内存% | 重启次数`，按状态严重程度排序（CRIT 优先）。最终汇总 `N OK, M WARN, K CRIT`。任意容器 CRIT 时退出码 2，有 WARN 无 CRIT 退出码 1，全部 OK 退出码 0。`docker` 命令不存在或 Docker daemon 不可达时输出错误并退出码 3。`--json` 标志切换输出为 JSON 数组，每个元素包含 name、status、cpu_percent、mem_percent、restart_count 字段。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，`go run .` 或 `go build` 都行。

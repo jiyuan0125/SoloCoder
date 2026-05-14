@@ -1,6 +1,5 @@
-项目里 200 多个测试文件，改一个底层函数不知道会影响哪些测试。通过 import 链和共享 package 分析依赖关系，找出哪些测试组可以独立并行跑。
+先搞清楚需求：项目里 200 多个测试文件，改一个底层 util 函数，不知道会影响哪些测试——想并行跑都不知道哪些能同时跑、哪些有依赖冲突。通过分析 import 链和共享 package，找出依赖图，自动把独立测试组标出来。
 
-分析 Go 测试文件之间的依赖关系（通过 import 和共享 package），输出依赖图。支持检测循环依赖、找出独立可并行运行的测试组。
-需要用到 bufio.Scanner 等标准库功能。
+操作流程：1. `depgraph scan --dir ./...`，递归扫描所有 `_test.go` 文件，用 `bufio.Scanner` 逐行解析 `import` 语句，构建测试文件到被测包的映射表。2. `depgraph analyze --dir ./...`，通过共享的 import package 建立测试文件间的依赖关系——两个测试文件如果 import 了同一个非标准库 package 就有依赖边。3. `depgraph groups --dir ./... --max-group-size 20`，用并查集或连通分量算法找出独立的测试组（没有共享依赖的组可以并行执行），每组不超过 `--max-group-size` 个文件，超出则拆分。4. `depgraph cycles --dir ./...`，检测循环依赖并输出 "circular dependency: A→B→C→A"。输出格式：`--format text` 输出 DOT 格式的依赖图（可直接用 graphviz 渲染），`--format json` 输出 `{"groups":[["pkg/a","pkg/b"],["pkg/c"]],"cycles":[]}`。目录下没有测试文件输出 "no test files found in <dir>" exit 1。import 解析失败输出 "parse error in <file>: line <N>" exit 2。
 
-Go 实现，只用标准库，交叉编译友好。
+Go 实现，只用标准库，`go build` 交叉编译友好。

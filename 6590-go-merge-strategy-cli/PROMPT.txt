@@ -1,5 +1,14 @@
-.gitattributes 的 merge 配置不好记，每次都要查文档。管理指定文件路径的 merge strategy，支持导入导出配置。
+怎么配 .gitattributes 让某类文件永远用 ours 策略合并？每次查文档查半天。
 
-为指定文件路径设置 Git merge strategy。管理 .gitattributes 中的 merge 属性。支持导入导出配置。
+命令行子命令用 os.Args[1] 区分：
+- `merge-strategy set "package-lock.json" -strategy ours` → .gitattributes 中添加 `package-lock.json merge=ours`，已存在则更新
+- `merge-strategy remove "package-lock.json"` → 删除对应行
+- `merge-strategy list` → 表格输出 `PATH | STRATEGY`
+- `merge-strategy export -o strategies.json` → 导出 JSON `[{"path":"...","strategy":"ours"}]`
+- `merge-strategy import -f strategies.json` → 从 JSON 导入，追加或覆盖
 
-Go 标准库，命令行参数用 flag 包解析。
+`.gitattributes` 不存在时自动创建。已有其他属性（diff、linguist-language）只改 merge 部分。
+
+策略值只允许 ours/theirs/union/custom，非法值退出码 1 打印 "unknown strategy: %s, allowed: ours, theirs, union, custom"。import JSON 失败退出码 1 打印 "invalid import file: %s"。成功退出码 0。
+
+Go 标准库，flag 包解析。`go build -o merge-strategy .`。

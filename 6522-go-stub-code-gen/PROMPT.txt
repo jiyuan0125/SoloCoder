@@ -1,6 +1,5 @@
-Go 的 interface mock 代码，手写一遍返回零值太无聊了。从 .go 文件解析 interface 定义，每个方法返回零值或配置的固定值，输出到 stdout。
+Go 的 interface mock 代码手写一遍，每个方法返回零值，十几个接口写下来纯体力活。从 .go 文件里解析 interface 定义，自动生成零值 stub，特殊类型还能配置固定返回值。
 
-根据 Go interface 定义生成 stub 实现。每个方法返回零值或配置的固定值。支持从 .go 文件解析 interface，输出到 stdout。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`stubgen parse --file repository.go`，读取 .go 文件找到所有 `type Xxx interface{}`，输出接口名和方法签名。`stubgen generate --file repository.go --interface UserRepository --output stub.go --package stubs --config stubs.json`。config 格式：`{"GetUser":{"returns":["nil","errors.New('not found')"]},"ListUsers":{"returns":["[]User{}","nil"]}}`，未配置的方法按零值规则：int→0、string→""、bool→false、error→nil、slice/pointer/interface→`nil`。生成 `<Interface>Stub` struct 实现所有方法。.go 编译失败输出 "compilation failed: <error>" exit 1。interface 不存在输出 "interface not found: <name>" exit 2。`--interface Repo,Service` 逗号分隔多接口。不传 `--output` 则 stdout。代码拆成至少 3 个 Go 源文件：main.go、parser.go、generator.go。
 
-用 Go 标准库写，go run . 或 go build 都行。
+Go 标准库，`go run .` 或 `go build` 都行。

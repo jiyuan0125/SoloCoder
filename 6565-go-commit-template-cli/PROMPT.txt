@@ -1,5 +1,7 @@
-commit message 模板每个人都不一样，有的人不写 scope 有的人不写 body。管理模板，创建/列出/应用，模板支持变量替换——日期、分支名、JIRA 编号自动提取。
+commit message 质量参差不齐不是态度问题——有人不写 scope，有人不写 body，有人格式都不对。模板能解决大部分问题，但每次手动拼也很烦。
 
-管理 commit message 模板。支持创建、列出、应用模板。模板支持变量替换（如日期、分支名、JIRA 编号自动提取）。
+`tpl new -name feature` 创建模板，存到 `~/.commit-templates/{name}.tpl`，内容是带变量占位符的文本如 `{{.Type}}({{.Scope}}): {{.Subject}}\n\n{{.Body}}`。`tpl list` 显示所有模板，表格列：模板名、type、scope、创建时间。`tpl apply -name feature -scope auth -subject "add JWT validation"` 渲染模板到 stdout，`{{.Date}}` 填当前日期（`2006-01-02` 格式），`{{.Branch}}` 从当前 git 分支提取，`{{.JIRA}}` 从分支名提取 JIRA 编号（匹配 `[A-Z]+-\d+`），`{{.Author}}` 从 git config user.name 获取。`tpl apply -name feature | git commit -F -` 直接提交。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+模板不存在时 `error: template "xxx" not found` 退出码 1。变量无法解析时保留原占位符不报错。`tpl delete -name old` 删除指定模板。
+
+Go 标准库实现，`go build` 编译通过。

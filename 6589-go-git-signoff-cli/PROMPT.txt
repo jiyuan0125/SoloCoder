@@ -1,5 +1,11 @@
-开源贡献要求 Signed-off-by 行，手动加容易忘。批量给指定范围的 commit 自动补上，用户名和邮箱从 git config 读取。
+开源项目要求每个 commit 都有 Signed-off-by 行，DCO 检查不过 PR 直接被拒。手动加忘一次就白提交了。
 
-给 commit 添加 Signed-off-by 行。支持批量处理指定范围的 commit。自动填充用户名和邮箱。
+命令行：`signoff-cli -range HEAD~5..HEAD` 给最近 5 个 commit 批量追加 Signed-off-by。`-all` 标志处理所有分支的 commit。`-name "Alice"` 和 `-email "alice@dev.com"` 手动指定签名信息，不指定时从 `git config user.name` 和 `git config user.email` 自动读取。
 
-Go 标准库，命令行参数用 flag 包解析。
+处理逻辑：对每个 commit 执行 `git commit --amend -s`（或等价的 filter-branch 操作）。如果 commit message 末尾已有 `Signed-off-by: Name <email>` 且信息一致，跳过并打印 "SKIP: %s already signed"。追加后打印 "SIGNED: %s"。
+
+读取 git config 失败且未手动指定时退出码 1 打印 "git user.name/email not configured"。commit range 格式无效时退出码 1 打印 "invalid range: %s"。成功退出码 0 打印 "signed %d commits, skipped %d"。
+
+不要修改非 HEAD 分支的历史，除非加了 `-force` 标志。未加 `-force` 时操作非当前分支的 commit 退出码 1 打印 "refusing to rewrite history on non-HEAD branch, use -force"。
+
+Go 标准库，flag 包解析。`go build -o signoff-cli .`。

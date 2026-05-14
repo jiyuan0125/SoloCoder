@@ -1,5 +1,5 @@
-QA 的测试用例写在 Excel 里，转成 CSV 后还得手动翻译成 Go test 代码。列名对应 struct 字段名，类型自动推断，空值和默认值处理好，生成的代码直接带 test 函数。
+QA 的测试用例写在 Excel 里，导出 CSV 后还得手动翻译成 Go test 代码——列名对 struct 字段，类型要推断，空值和默认值要处理，一堆体力活。写个工具读 CSV 直接吐 Go test 代码，省掉这个翻译环节。
 
-从 CSV 文件加载测试用例数据，转换为 Go test struct 代码。CSV 列名对应 struct 字段名，自动推断类型。支持默认值、空值处理。生成的代码包含 test 函数。
+`csv2test convert --input cases.csv --output user_test.go --struct User --package user --func TestUserCases`。CSV 第一行是列名，直接映射到 Go struct 字段名（自动驼峰化：`user_name` → `UserName`，`age` → `Age`）。类型推断规则：全是数字→`int`；包含小数点→`float64`；`true`/`false`→`bool`；其余→`string`。空单元格用 Go 零值填充（int→0、string→""、bool→false），也可以通过 `--defaults defaults.json` 指定，格式 `{"age":18,"role":"guest"}`。生成的代码包含完整 `func TestUserCases(t *testing.T)` 函数，内部用 `[]struct{...}` 的 test table，每行 CSV 一个条目，body 里 `t.Run("case_<N>", ...)` 遍历执行，body 留 `// TODO: implement assertion` 占位。CSV 包含 BOM 头自动跳过前 3 字节。空文件或无数据行输出 "no data rows in CSV" exit 1。CSV 列名有重复输出 "duplicate column: <name>" exit 2。输出 .go 文件必须能 `go build` 通过。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+纯 Go 标准库，编译后单二进制直接跑。

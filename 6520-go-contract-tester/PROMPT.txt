@@ -1,6 +1,5 @@
-契约测试框架要钱，Pact 那一套在 Go 里跑起来太重。自己定义接口契约（请求格式和响应格式），对运行中的服务发起请求验证响应是否合规，JSON Schema 校验就够了。
+Pact 在 Go 里跑起来配置一堆，光搭环境就半天。契约束到本质就是定义请求格式和响应格式，对着运行中的服务发请求，看响应是否符合约定。JSON Schema 校验足够用了。
 
-API 契约测试工具。定义接口契约（请求格式和响应格式），然后对运行中的服务发起请求验证响应是否符合契约。支持 JSON Schema 校验。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`contract test --contract api.json --base-url http://localhost:8080 --timeout 10s`。契约格式：`{"name":"get_user","request":{"method":"GET","path":"/api/users/{id}"},"response":{"status":200,"schema":{"type":"object","properties":{"id":{"type":"integer"},"name":{"type":"string"}},"required":["id","name"]}}}`。path 里 `{id}` 用 `--vars id=1` 传入。JSON Schema 校验只支持核心类型：string/integer/number/boolean/array/object/required/enum/minimum/maximum/pattern。校验失败输出 "[FAIL] get_user: $.name expected string, got null"。全部通过 "[PASS] get_user"。汇总 "3 passed, 2 failed"。契约 JSON 格式错误 exit 1。服务不可达输出 "connection refused: <url>" exit 2。校验失败 exit 1。代码拆成至少 3 个 Go 源文件：main.go、contract.go、schema.go。
 
-用 Go 标准库写，go run . 或 go build 都行。
+Go 标准库，`go run .` 或 `go build` 都行。

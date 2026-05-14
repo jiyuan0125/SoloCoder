@@ -1,5 +1,7 @@
-改了一行 import 结果 30 个测试全挂了，花了半小时才定位到是哪个文件改的。需要监控源码变更，自动分析 import 链，输出"改了哪个文件→影响哪些测试"的映射关系。
+改了一行 import 结果 30 个测试全挂了，花了半小时才定位到是哪个文件改的。工具来解决这个问题——监控源码变更，自动分析 import 依赖链。
 
-监控 Go 源码变更，自动运行受影响的测试。通过解析 import 链确定哪些测试依赖变更的文件。输出变更文件到测试的映射关系。
+两个子命令。`watch -dir ./project -interval 2s` 持续监控目录变更，检测到 .go 文件修改后解析其 import 声明，递归构建依赖图，输出影响报告到 stdout：`FILE_CHANGED: pkg/utils/helpers.go | AFFECTED_TESTS: TestA, TestB, TestSuite/Case3 | IMPORT_DEPTH: 2`。`impact -file pkg/utils/helpers.go -dir ./project` 单次查询某个文件变更影响哪些测试包。
 
-Go 实现，只用标准库，交叉编译友好。
+依赖图构建方式：遍历项目所有 `_test.go` 文件，解析 import 语句建立"测试包→依赖包"映射。`impact` 输出 JSON 格式到 `-json` flag 指定的文件，结构为 `{"changed_file":"","affected_packages":[""],"affected_test_functions":[""],"depth":0}`。`watch` 模式下用 `fsnotify` 思路（polling 实现）检测文件变更，每次变更后增量更新依赖图而不是全量重建。第一次运行全量扫描，输出 `scanning N packages... done`。空项目或没有 `_test.go` 时输出 `no test files found` 退出码 0。
+
+Go 实现，只用标准库，交叉编译友好。flag 包解析参数，退出码 0 成功、1 参数错误。

@@ -1,5 +1,9 @@
-release notes 每次手动整理，对比前一个 tag 的差异提取 feat/fix/breaking 变更，输出 Markdown。周末前必须搞完。
+release notes 每次手动整理太浪费时间——对比前一个 tag 差异，按 feat/fix/breaking 归类。
 
-为指定 tag 生成 release notes。对比前一个 tag 的差异，提取 feat/fix/breaking 变更。输出 Markdown。
+命令行：`tag-release-notes -tag v2.1.0` 自动找上一个 tag 对比。`-prev v2.0.0` 手动指定。`-output release.md` 指定输出文件默认 stdout。`-format markdown`（默认）或 `-format json`。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+从 `git log v2.0.0..v2.1.0` 解析 commit message 按前缀分类：`feat:` → Features 段，`fix:` → Bug Fixes 段，`break:` 或 `BREAKING CHANGE:` → Breaking Changes 段，无前缀归 Other 段。
+
+Markdown 输出：`## v2.1.0 (2024-06-01)` 下按段列 bullet。json 输出：`{"tag":"v2.1.0","date":"2024-06-01","features":[...],"fixes":[...],"breaking":[...],"other":[...]}`。
+
+tag 不存在退出码 1 打印 "tag not found: %s"。无上一个 tag 时以第一个 commit 为起点。纯 Go 标准库，`go build -o tag-release-notes .`。

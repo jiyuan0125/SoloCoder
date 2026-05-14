@@ -1,6 +1,12 @@
-简单冲突不值得开会讨论——比如只有一侧有修改的，自动解决就行。复杂冲突再提示用户，输出解决结果。
+合代码碰到冲突就要开会？那些只有一侧改了的简单冲突，机器自己解决不好吗？
 
-半自动解决 Git merge conflict。对简单冲突（如只有一侧有修改）自动解决，复杂冲突提示用户。输出解决结果。
-需要用到 regexp.Regexp 等标准库功能。
+这个工具解析冲突文件中的 `<<<<<<<` / `=======` / `>>>>>>>` 标记块。处理策略如下：
+- 一侧有修改、另一侧为空（纯删除）→ 自动采用有内容的一侧
+- 两侧内容完全相同 → 自动采用任一侧（无冲突）
+- 两侧都有不同内容 → 标记为需要手动处理，保留冲突标记，输出时打印 "CONFLICT in %s: line %d-%d, manual resolution required"
 
-用 Go 标准库写，go run . 或 go build 都行。
+命令行：`conflict-resolver -path conflicted_dir/` 处理目录下所有含冲突标记的文件。`-strategy auto`（默认）只自动解决简单冲突。`-dry-run` 打印将要执行的操作但不修改文件，输出格式 `[AUTO] %s: resolve %d conflicts, %d need manual`。
+
+解决完自动替换原文件。统计输出到 stdout：`resolved: %d auto, %d manual, %d files processed`。退出码：0 = 全部自动解决，1 = 有未解决冲突，2 = 路径不存在。
+
+要求用 regexp.Regexp 解析冲突标记块。统计输出到 stdout：`resolved: %d auto, %d manual, %d files processed`。退出码：0 = 全部自动解决，1 = 有未解决冲突，2 = 路径不存在。要求用 regexp.Regexp 解析冲突标记块。Go 标准库，`go run .` 或 `go build` 均可。
