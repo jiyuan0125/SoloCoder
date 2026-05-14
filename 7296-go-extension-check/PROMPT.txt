@@ -1,4 +1,4 @@
-那个开源证书工具的自定义规则做得太死板，扩展字段加不上去。Go 从零写，证书续签流程、自动续签定时检查、续签通知。
+每个月 15 号要跑一轮证书续签检查，之前是写 cron 任务调 OpenSSL 命令拼凑的，换机器就挂。Go 从零写，证书续签流程、自动续签定时检查、续签通知。
 
 续签：`extchk renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365`。保留原 SAN 和扩展，新序列号。指纹对比。
 

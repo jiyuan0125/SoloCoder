@@ -1,4 +1,4 @@
-密钥格式转换需求很简单：PKCS12/PKCS8 互转、PEM/DER 编码转换、统一输出标准格式。Go CLI 工具。
+CDN 厂商要求证书必须 DER 格式上传，但我们内部全是 PEM，每次手动转又慢又容易出错。Go CLI 工具，PKCS12/PKCS8 互转、PEM/DER 编码转换、统一输出标准格式。
 
 PKCS12 操作：`cert-io from-p12 --input client.p12 --password "xxx" --output-dir ./out/` 提取 PEM。`cert-io to-p12 --cert client.pem --key client.key --ca chain.pem --output client.p12 --password "xxx"` 打包。
 

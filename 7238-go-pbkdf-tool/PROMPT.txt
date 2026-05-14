@@ -1,4 +1,4 @@
-AES-CTR 流式加密、stdin/stdout 管道、进度显示——刚好适合练手 Go 密码学编程。
+日志归档脚本每天打包 50GB 的 Nginx access log 发到对象存储，加密是刚需——OpenSSL 的 CTR 模式命令太晦涩，参数稍微写错加密结果就不一样，排查起来是噩梦。Go 写个 AES-CTR 流式加密工具，stdin/stdout 管道、进度显示，脚本里一行命令搞定。
 
 AES-256-CTR 流式加密：`pbkdf enc --key-file aes.key --input plaintext --output ciphertext`。密钥文件 32 字节二进制。加密时随机生成 16 字节 IV，放在密文最前面。CTR 模式不需要 padding，天然流式。管道形式：`cat data | pbkdf enc --key-file key.bin > data.enc`。
 

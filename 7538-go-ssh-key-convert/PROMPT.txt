@@ -1,4 +1,4 @@
-SSH 密钥格式也挺混乱的——OpenSSH 格式、PEM 格式、PuTTY 的 PPK 格式，互相转换没有统一工具。`ssh-keygen` 只支持部分转换，PPK 格式根本不管。管道模式在这类工具里特别重要：`cat key.pem | ssh-tool convert --to openssh`。
+开发用的 SSH 密钥，PuTTY 的 PPK 格式、OpenSSH 格式、PEM 格式三足鼎立——Windows 开发者用 PuTTYgen 生成 PPK，Linux 服务器要 OpenSSH 格式，CI 流水线要 PEM。`ssh-keygen` 只管一部分转换，PPK 格式根本不管。
 
 写个 `ssh-tool`，子命令 `convert`、`info`、`fingerprint`。`ssh-tool convert` 做 OpenSSH↔PEM 的互转（`--from openssh --to pem` 或反过来）。`ssh-tool info` 显示密钥类型（ed25519/rsa/ecdsa）、密钥长度、公钥指纹、注释。`ssh-tool fingerprint` 计算密钥指纹，支持 MD5 和 SHA256 两种哈希（`--hash` 参数）。
 

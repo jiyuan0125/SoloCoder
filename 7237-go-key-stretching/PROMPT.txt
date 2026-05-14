@@ -1,4 +1,4 @@
-PBKDF2 工具隔壁组做好了，密钥分片和密码哈希顺势也补上。Go 写，密钥分片（Shamir Secret Sharing）、门限恢复、分片验证、密码哈希（bcrypt/scrypt）。
+根密钥丢了就能让整个加密体系瘫痪，安全团队上周做的灾难演练结论就是这句话。Go 工具，密钥分片（Shamir Secret Sharing）、门限恢复、分片验证、密码哈希（bcrypt/scrypt）——把密钥拆散了存，丢了其中几份也不怕。
 
 Shamir 密钥分片：`kstretch split --input master.key --threshold 3 --shares 5`。GF(256) 上构造随机多项式，常数项是原始密钥的每个字节。生成 5 份分片，每份一个 JSON 文件 `share_N.json`。随机系数用 `crypto/rand` 生成。
 

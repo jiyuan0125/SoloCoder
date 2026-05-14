@@ -1,4 +1,4 @@
-CA 初始化和证书签发，Go 命令行。根证书 + 中间证书一起初始化，签发流程、CRL 管理都做进去。
+五十多个微服务每个都要独立证书，手动签发根本跟不上发布节奏。Go 命令行，根证书 + 中间证书一起初始化，签发流程、CRL 管理都做进去。
 
 CA 初始化：`escrow init-ca --org "MyOrg" --country "CN" --root-years 20 --inter-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间证书 RSA-2048，CA:TRUE pathlen:0。
 

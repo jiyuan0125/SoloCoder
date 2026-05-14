@@ -1,4 +1,4 @@
-Java 的 `.properties` 文件到处都是——Spring Boot、Logback、老系统配置。之前用 Bash 脚本批量处理这些文件，速度慢得让人抓狂，遇到 Unicode 转义更是没法搞。用 Go 重写，第一件事就是并发。
+两百多个 Spring Boot 微服务，每个至少三四个 `.properties` 文件，上周安全审计要求把所有密码字段改成加密存储。Bash 脚本处理 Unicode 转义（`\uXXXX`）根本搞不定，跑了一晚上才处理完一半——得用 Go 重写，第一件事就是上并发。
 
 工具叫 `props-tool`，子命令 `get`、`set`、`list`、`convert`。1. `props-tool get app.name` 读取指定键的值。2. `props-tool set app.name=myservice` 设置值，文件不存在就创建。3. `props-tool list` 列出所有键值对。4. `props-tool convert` 把 `.properties` 转成 `.json` 或 `.yaml`，反向也行。
 

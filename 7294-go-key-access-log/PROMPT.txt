@@ -1,4 +1,4 @@
-合规审查上周出了新规，所有密钥格式必须统一为 PKCS8，两周内整改。Go 写密钥格式转换工具，PKCS12/PKCS8、PEM/DER、密钥格式标准化。
+Java 服务和 Go 服务用的密钥格式不统一，跨语言调用经常报 key format error。做个密钥格式转换工具，PKCS12/PKCS8、PEM/DER、密钥格式标准化。Go CLI。
 
 PKCS12：`keylog from-p12 --input client.p12 --password "xxx" --output-dir ./out/`。`keylog to-p12 --cert c.pem --key k.pem --ca ca.pem --output client.p12`。
 

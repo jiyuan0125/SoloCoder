@@ -1,4 +1,4 @@
-Base58 在区块链和短链接系统里用得很多——去掉了 Base64 里的 0/O、1/I/l 这些容易混淆的字符。但现有的在线工具要么不支持自定义字母表，要么没法批量处理。达到一定数量的转换失败就要自动告警。
+短链接服务的 ID 编码用的 Base58，上周有个开发误用了 Flickr 字母表而不是 Bitcoin 的，导致一批短链解析不出来。不同字母表之间转换没有现成工具——在线的也只支持一种，自定义字母表更别想了。
 
 写个 `base58-tool`，子命令 `encode` 和 `decode`。默认用 Bitcoin 的字母表（`123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz`），通过 `--alphabet` 参数可以换成 Flickr、Ripple 等变体的字母表。输入从文件或 stdin 读，输出到 stdout 或文件。
 

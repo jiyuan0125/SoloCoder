@@ -1,4 +1,4 @@
-之前手动在 JSON/YAML/TOML 之间互转格式，每次都找在线工具，速度慢还怕泄露数据。Go 重写一个离线格式转换工具。
+每次收到客户发来的 YAML 配置文件都得手动转成 JSON 才能导入系统，在线转换工具又不让传敏感数据。Go 写一个离线的格式互转工具。
 
 JSON/YAML/TOML 格式互转——支持三种格式之间的任意转换：JSON→YAML、YAML→TOML、TOML→JSON 等所有组合。输入格式自动检测（JSON 检测 {}[]开头，YAML 检测缩进+冒号，TOML 检测 [section] 格式）。输出格式通过 -format 参数指定。
 

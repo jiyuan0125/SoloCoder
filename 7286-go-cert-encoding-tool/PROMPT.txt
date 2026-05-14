@@ -1,4 +1,4 @@
-上周五线上证书过期 3 天才发现，服务挂了整整一上午。Go 写证书续签工具，续签流程、自动续签定时检查、续签通知。
+证书过期自动告警配了大半年没搞定，先搞个续签工具托底。Go 写，续签流程、自动续签定时检查、续签通知。
 
 续签：`certenc renew --cert expiring.pem --key server.key --ca-cert ca.pem --ca-key ca.key --days 365`。保留原 SAN 和扩展，新序列号。指纹对比输出。
 

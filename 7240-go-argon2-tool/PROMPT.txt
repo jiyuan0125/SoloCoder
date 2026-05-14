@@ -1,11 +1,11 @@
-V2 月底上线，密码哈希这块先做出来。Go 命令行，bcrypt/scrypt、密码强度检查、哈希验证。
+V2 的用户模块月底要提测，密码存储这块还是空的——V1 用的 MD5，这次必须升级到 bcrypt/scrypt。Go 命令行工具，密码哈希、密码强度检查、哈希验证，先把这个搞定。
 
 密码哈希：`argon hash --password "xxx" --algo bcrypt --cost 12`。bcrypt cost 4-31（超出报错）。scrypt N=32768 r=8 p=1。标准模块字符串输出。
 
-强度检查：最少 8 字符、top-1000 弱密码字典、不允许纯数字/字母/符号、连续重复不超过 3 个。`strength --password "xxx"` 输出 `{score, warnings, pass}`，score ≥3 通过。
+密码强度检查不是可选项——合规明确要求注册和改密时要校验。最少 8 字符、top-1000 弱密码字典、不允许纯数字/字母/符号、连续重复不超过 3 个。`strength --password "xxx"` 输出 `{score, warnings, pass}`，score ≥3 通过。
 
 验证：`verify --password "xxx" --hash "$2b$12$..."` 自动检测算法前缀。
 
-密钥状态 generated→active→rotating→archived→destroyed。轮换指提高 cost 重新哈希：`rotate --hash "$2b$10$..." --new-cost 14`。输入文件编码 UTF-8/GBK 自动检测。
+还有个实际问题：V1 的 MD5 密码需要迁移。密钥状态 generated→active→rotating→archived→destroyed 是给密钥生命周期用的，这里轮换指的是提高 cost 重新哈希：`rotate --hash "$2b$10$..." --new-cost 14`。输入文件编码 UTF-8/GBK 自动检测。
 
 `go build` 能过，命令行工具能正常运行。

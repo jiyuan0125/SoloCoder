@@ -1,4 +1,4 @@
-HTML 实体编码在网页爬虫和模板引擎里天天碰到——`&amp;` `&lt;` `&gt;` `&quot;` `&#x4e2d;` 这些，有时候还有命名的实体比如 `&mdash;` `&nbsp;`。处理流程比看起来复杂：实体可以嵌套（`&amp;amp;`），数值引用可以是十进制也可以是十六进制，还有 CP1252 兼容的坑。
+爬虫抓下来的商品描述，HTML 实体编码五花八门——`&amp;` `&lt;` `&gt;` `&quot;` `&#x4e2d;`，有些还嵌套着 `&amp;amp;` 这种多层编码，数值引用十进制十六进制都有，还有 CP1252 兼容的坑。上周入库了一批数据，实体解码不完整导致搜索匹配不到带特殊字符的商品名。
 
 管道模式是必须的——`curl -s example.com | html-entity-tool decode | ...` 这种用法要流畅。工具叫 `html-entity-tool`，两个子命令：`decode`（HTML 实体转 UTF-8 文本）和 `encode`（UTF-8 文本转 HTML 实体）。encode 时通过 `--mode` 选择编码哪些字符：`minimal`（只编码 `&` `<` `>` `"`）、`attributes`（加上单引号）、`all-non-ascii`（所有非 ASCII 字符都变成 `&#xXXXX;`）。
 

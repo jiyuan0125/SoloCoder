@@ -1,4 +1,4 @@
-XML 这格式虽然古老，但 SOAP 接口、Spring 配置文件、SVG 图形里到处都是。线上出过几次问题——有人手改 XML 忘了关标签，或者属性值里混了特殊字符没转义，整个解析就崩了。
+上个月线上故障，SOAP 接口返回了格式错误的 XML——有人手改配置忘了关标签，属性值里的 `&` 也没转义，整个解析直接崩了。这种低级错误靠 code review 挡不住，得有工具自动化检查。SOAP 接口、Spring 配置、SVG 图形，XML 格式虽然古老但到处都是。
 
 写个 `xml-tool`，三个子命令处理不同的操作。`xml-tool check` 做格式检查，读入 XML 文件，验证标签闭合、属性值引号、嵌套层级、CDATA 区域是否正确。碰到错误报行号和位置，不直接 panic。`xml-tool convert` 做格式转换——XML 和 JSON 互转、XML 和 YAML 互转。转换规则：XML 元素变 JSON 对象的键，属性用 `@attr` 前缀，文本内容用 `#text` 键，这些规则通过 `--mapping` 参数可以自定义。`xml-tool validate` 用 `encoding/xml` 把转换后的输出再解析一遍，确保格式合法。
 

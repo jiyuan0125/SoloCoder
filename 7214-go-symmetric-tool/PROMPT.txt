@@ -1,4 +1,4 @@
-信封加密 + 密钥轮换 + 加密元数据管理，业务侧昨天提的需求。Go CLI 加密工具。
+业务那边昨天甩过来一个需求：每天要给三家合作方传加密配置文件，密钥按季度轮换，轮换之后老配置还得能解。Go CLI 加密工具，信封加密、密钥轮换、加密元数据管理。
 
 信封加密：注册 RSA 公钥后加密时自动用公钥加密 AES 会话密钥。`sym-tool add-key --name prod-key --pubkey pub.pem`，`sym-tool encrypt --key prod-key --input config.yaml`。输出 `.enc` 格式：4B 头长度 + JSON 头（algo/key_id/nonce/created_at）+ 加密会话密钥 + 密文 + GCM tag。解密 `sym-tool unseal --privkey priv.pem --input config.yaml.enc`。
 

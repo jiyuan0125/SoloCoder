@@ -1,4 +1,4 @@
-Go 标准库的 crypto/rsa 刚好能用上，做一个 Token 生命周期管理工具。Go 命令行实现。
+三个环境（dev/staging/prod）的 Token 管理方式各不相同——dev 用内存缓存，staging 用 Redis，prod 靠运维手动。统一成一套 Go 工具，内省、吊销、刷新轮换全覆盖。
 
 Token 内省（RFC 7662）发 token 到授权服务器查状态，返回 active、scope、client_id、username、exp、sub。Token 不存在或已过期 active 为 false。内省结果本地缓存，缓存 TTL 不超过 token 剩余有效期的 1/4，确保不会缓存已过期的状态。
 

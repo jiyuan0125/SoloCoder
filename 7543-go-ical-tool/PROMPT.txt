@@ -1,4 +1,4 @@
-日历系统之间互导数据全靠 iCalendar（.ics 文件）——会议邀请、日程安排、任务提醒都走这个格式。上周从 Google Calendar 导出一批日程导入 Outlook，有几个 .ics 文件的 RRULE 解析出错，重复事件全乱了。得有个工具能检查和转换 .ics 文件。从文件或 stdin 读输入，输出到文件或 stdout。
+上周从 Google Calendar 导出 300 多个日程到 Outlook，十几个 `.ics` 文件的 RRULE 解析出错，重复事件全乱了——每周一变成每天，月度循环变成年度。日历系统之间互导数据全靠 iCalendar 格式，但不同平台的实现差异很大。从文件或 stdin 读输入，输出到文件或 stdout。
 
 子命令 `parse`、`generate`、`filter`。`ical-tool parse` 读 .ics 文件，解析出 VCALENDAR 里的 VEVENT、VTODO、VJOURNAL 等组件，输出 JSON。每个组件的字段（DTSTART、DTEND、SUMMARY、DESCRIPTION、LOCATION、ATTENDEE、RRULE）独立解析，日期时间统一转成 RFC 3339 格式。`ical-tool generate` 从 JSON 输入生成 .ics 文件。`ical-tool filter` 按条件过滤事件——`--from` 和 `--to` 指定日期范围，`--summary-regex` 按标题过滤。
 

@@ -1,4 +1,4 @@
-Go 标准库 `crypto` 包完全够用，不需要第三方依赖。流式加密 + 管道处理工具，AES-256-CTR 流式加密、stdin/stdout 管道、进度显示。
+数据仓库每天凌晨把日志归档加密后传到冷存储，用 Shell 脚本拼 OpenSSL 命令拼了半年，参数经常写错。Go 标准库 `crypto` 包完全够用，不需要第三方依赖——流式加密 + 管道处理工具，AES-256-CTR 流式加密、stdin/stdout 管道、进度显示。
 
 AES-256-CTR 流式加密：随机 16 字节 IV 放密文前面，后面是密文流。CTR 不需要 padding。`hashcmp encrypt --key-file aes.key --input plaintext --output ciphertext` 或管道 `tar czf - /data | hashcmp encrypt --key-file aes.key > backup.enc`。
 

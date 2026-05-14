@@ -1,4 +1,4 @@
-INI 配置文件在老项目里还大量存在，解析流程不复杂但容易踩坑——多行值、注释、BOM 头、Section 嵌套这些边界情况。大文件的性能也要考虑，几个 MB 的配置文件用 `bufio` 逐行读取而不是 `ioutil.ReadAll`。
+那个跑了十年的遗留系统，配置文件全是 INI 格式——多行值、注释、BOM 头、Section 嵌套，什么花活都有。上周改了个配置项，BOM 头多出来的三个字节把 key 名搞乱了，解析出来全是空值。解析流程不复杂但踩坑点特别多。
 
 写个 `ini-tool`，支持管道模式。三个子命令：`ini-tool get` 读取指定 section 和 key 的值，`ini-tool set` 设置值，`ini-tool diff` 比较两个 INI 文件的差异（哪些 section 新增了、哪些 key 改了值、哪些被删除了）。
 

@@ -1,4 +1,4 @@
-帮个忙——HMAC 签名验证、多算法哈希、流式签名、文件完整性校验，Go 命令行工具。签名的活儿比较急。
+上周排查一起数据篡改事故，两天才定位到是传输环节被中间人改了——HMAC 校验那环早就断了，没人发现。Go 命令行工具，HMAC 签名验证、多算法哈希、流式签名、文件完整性校验，赶紧补上。
 
 HMAC 签名：`fic sign --key-file secret.key --algo sha256 --input data.bin`。算法支持 SHA-256/384/512，默认 SHA-256。密钥文件自动检测二进制/hex 格式。验证用 `hmac.Equal` 恒定时间比较。结果 JSON：`{match, algo, file}`。
 

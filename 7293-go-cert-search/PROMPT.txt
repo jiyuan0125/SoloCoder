@@ -1,4 +1,4 @@
-线上证书管理工具是三年前的 Bash 脚本，1000 多行没人敢改。Go 重写，CA 初始化、证书签发、CRL 管理。
+三家供应商的证书混在一起管理，格式五花八门——有 PEM 有 PFX 还有 DER，手动查哪个证书对应哪个服务全靠记。Go 重写一个，CA 初始化、证书签发、CRL 管理。
 
 CA 初始化：`certsearch init-ca --org "MyOrg" --country "CN" --root-years 20 --inter-years 10 --output-dir ./pki/`。根证书 RSA-4096，中间 RSA-2048。
 

@@ -1,4 +1,4 @@
-Base85（也叫 Ascii85）在 PostScript 和 PDF 文件里出现，Git 的二进制补丁也用这个编码。虽然不像 Base64 那么主流，但碰到 PostScript 文件需要解码的时候没有工具就很头疼。
+PDF 文件里的 ASCII85 编码流——就是 `<~...~>` 包裹的那种——在线解码工具几乎找不到。上周要从一个损坏的 PostScript 文件里提取嵌入的图片数据，卡在 Base85 解码上。Git 的二进制补丁也用这个编码，得有个趁手的工具。
 
 用 Go 写个 `base85-tool`，两级命令结构：根命令 `base85-tool`，子命令 `encode` 和 `decode`。从文件或 stdin 读输入，输出到文件或 stdout。`--variant` 参数选择变体：`ascii85`（Adobe/PostScript 风格，`<~...~>` 包裹）、`z85`（ZeroMQ 风格）、`rfc1924`（RFC 1924 风格）。默认 ascii85。
 

@@ -1,4 +1,4 @@
-邮件系统里的 Quoted-Printable 编码——用 Go 标准库的 `mime/quotedprintable` 处理就好。但同事的需求不只是简单的编解码，他有一堆 `.eml` 文件需要批量修复 QP 编码问题，特别是目录嵌套很深的那种。
+同事有一大堆 `.eml` 文件，嵌套在七八层目录里，Quoted-Printable 编码出了问题——有些行超过 76 字符没做软换行，有些 `=XX` 格式写错了，收件人看到的是乱码。Go 标准库的 `mime/quotedprintable` 能编解码，但批量修复得自己搞。
 
 工具叫 `qp-tool`，子命令 `encode` 和 `decode`。`qp-tool encode` 读输入文本，按 RFC 2045 规则编码——每行不超过 76 字符，软换行用 `=\r\n`，非 ASCII 字节用 `=XX`。`qp-tool decode` 反过来。编码时 `--max-line-len` 可调，默认 76。
 

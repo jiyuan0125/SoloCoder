@@ -1,4 +1,4 @@
-`archive/zip` 和 `crypto/aes` 的 API 刚好能满足需求，不用拉第三方包。流式加密工具，AES-CTR 流式加密、stdin/stdout 管道、进度显示。
+CI 流水线里的加密步骤每次都超时——shell 脚本先把整个 artifact 压到临时文件再调 OpenSSL，500MB 的包要等两分钟。Go 标准库 `archive/zip` 和 `crypto/aes` 完全能做流式处理，不用第三方包。AES-CTR 流式加密、stdin/stdout 管道、进度显示。
 
 AES-256-CTR 流式加密：`ed25519 enc --key-file aes.key --input data.tar --output data.tar.enc`。16 字节随机 IV 放在密文前面。CTR 不需要 padding。管道：`cat data | ed25519 enc --key-file key.bin > data.enc`。
 

@@ -1,4 +1,4 @@
-搭内部 PKI，Go CLI 工具。PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
+内部网隔离环境没法用 Let's Encrypt，自建 CA 是唯一选择。Go CLI 工具，PKCS12/PKCS8 格式转换、PEM/DER 编码转换、密钥格式标准化。
 
 PKCS12：`ca-setup to-p12 --cert client.pem --key client.key --ca-chain chain.pem --output client.p12 --password "changeit"`。反方向 `from-p12 --input client.p12 --password "changeit" --output-dir ./extracted/` 提取 PEM 证书和密钥。
 

@@ -1,4 +1,4 @@
-X.509 证书在 DER 和 PEM 格式之间转换——这活儿用 `openssl x509 -inform DER -outform PEM` 能做，但批量处理几百个证书文件的时候，写循环太累。而且有时候还需要调整证书链的顺序，PEM 文件里有多个证书时得按顺序排列。
+几百个 TLS 证书要续期，CA 给的是 DER 格式，Nginx 要 PEM，中间还有个证书链顺序的问题——PEM 文件里多个证书得按链式顺序排，根在最后。写 bash 循环处理到一半发现 `openssl x509` 不支持批量，改一个还行，几百个太折腾了。
 
 `x509-tool`，子命令 `convert`、`info`、`chain`。`x509-tool convert` 做 DER↔PEM 互转。`--from der --to pem` 或反过来。批量模式 `--batch` 指定目录，`.der` 文件转成 `.pem`，`.pem` 转成 `.der`（如果内容是纯 DER 编码的 PEM）。每个文件独立处理。
 

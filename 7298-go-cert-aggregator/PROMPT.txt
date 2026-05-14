@@ -1,4 +1,4 @@
-`crypto/tls` 和 `crypto/x509` 的 API 熟悉了，TLS 配置生成和密码套件检查刚好可以练手。TLS 配置文件生成、密码套件合规检查、协议版本建议。
+等保测评要求 TLS 配置必须符合 intermediate 以上标准，我们几十个服务的配置参差不齐。Go 写一个 TLS 配置生成和检查工具，密码套件合规检查、协议版本建议。
 
 TLS 配置文件生成：`cagg gen --cert server.pem --key server.key --min-version 1.2 --output tls.json`。根据证书的密钥类型自动推荐密码套件——RSA 证书推荐 ECDHE-RSA-AES256-GCM-SHA384 优先，ECDSA 证书推荐 ECDHE-ECDSA-AES256-GCM-SHA384 优先。输出 JSON 包含 `cert_file`、`key_file`、`min_version`、`cipher_suites`（有序列表）、`curve_preferences`（P-256、P-384）。
 

@@ -1,4 +1,4 @@
-HMAC 签名验证、多算法哈希、流式签名，还要把消息格式兼容性考虑进去——v1 纯 hex 和 v2 JSON 两种格式都得支持。Go 命令行工具。
+签名服务从 v1 升到 v2 的过程中出了事故：老格式是纯 hex 字符串，新格式是 JSON，两边混用了一周才发现验证逻辑没兼容。Go 命令行工具，HMAC 签名验证、多算法哈希、流式签名，格式兼容性是第一优先级——v1 纯 hex 和 v2 JSON 两种都得支持。
 
 HMAC 签名和验证：`pemparse sign --key-file hmac.key --algo sha256 --input data.bin`。密钥文件支持二进制和 hex 格式（自动检测）。算法支持 SHA-256、SHA-384、SHA-512，默认 SHA-256。签名输出纯十六进制到 stdout。验证 `pemparse verify --key-file hmac.key --algo sha256 --input data.bin --expected <hmac_hex>`，用 `hmac.Equal` 恒定时间比较。
 

@@ -1,4 +1,4 @@
-调研了一圈 Go 标准库里和文本处理相关的包，vCard（电子名片）格式的解析生成虽然结构简单但字段很多——N、FN、TEL、EMAIL、ADR、ORG、PHOTO 等等，还有版本的差异（vCard 2.1 vs 3.0 vs 4.0）。写个工具把这些能力整合起来。
+CRM 系统导入联系人，客户给了一堆 `.vcf` 文件——vCard 2.1、3.0、4.0 版本混着来，有的字段编码还不对。导入完发现有 30% 的联系人重复了，因为同一个客户有多张名片。vCard 格式虽然结构简单但字段很多——N、FN、TEL、EMAIL、ADR、ORG、PHOTO 等等，版本差异也不小。得有个工具能解析、合并、去重。
 
 工具叫 `vcard-tool`，子命令 `parse`、`generate`、`merge`。1. `vcard-tool parse` 读 `.vcf` 文件，解析出所有 vCard 条目，输出 JSON 格式。每个字段按类型分类——字符串字段直接输出、URI 字段（PHOTO、LOGO）输出原始值、结构化字段（N、ADR）拆成子字段。2. `vcard-tool generate` 从 JSON 输入生成 vCard 文件。3. `vcard-tool merge` 合并多个 vCard 文件，同名联系人的字段取最新值。
 

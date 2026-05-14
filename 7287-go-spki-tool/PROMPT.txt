@@ -1,4 +1,4 @@
-几百个证书逐个手动检查字段，漏了两个过期证书导致线上故障。Go 写证书链验证工具，链构建和验证、签名/有效期/用途检查、信任锚管理、CRL 管理。
+生产环境有 200+ 证书，上次安全审计发现 17 张快要过期都没人知道。Go 写证书链验证工具，链构建和验证、签名/有效期/用途检查、信任锚管理、CRL 管理。
 
 链构建：`spki build-chain --cert leaf.pem --intermediate-dir ./inters/ --output chain.pem`。按 Issuer + AKI 匹配。缺失时报错。
 

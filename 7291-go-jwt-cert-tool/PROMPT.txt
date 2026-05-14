@@ -1,4 +1,4 @@
-证书生成和格式转换排在本迭代第一位，X.509 证书生成、CSR 处理、证书链验证、PKCS12/PKCS8 转换。Go CLI。
+新入职的同事问证书怎么签发，给了他 OpenSSL 命令他看了半天说没看懂。做个 Go CLI 把流程封装起来：X.509 证书生成、CSR 处理、证书链验证、PKCS12/PKCS8 转换。
 
 证书生成：`jwtcert gen-self --cn "dev.local" --san "DNS:dev.local,IP:127.0.0.1" --days 365`。CA 签发：`jwtcert ca-sign --ca-cert ca.pem --ca-key ca.key --csr req.csr --days 90`。
 

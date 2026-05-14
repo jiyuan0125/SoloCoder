@@ -1,4 +1,4 @@
-去年买的证书管理工具续费报价涨了 80%，直接不续了。Go 自建证书信息解析工具，主题/颁发者/扩展/指纹、SAN 提取、密钥用途检查、TLS 配置文件生成。
+想看一下证书的 SAN 列表和密钥用途，`openssl x509 -text` 输出一堆东西眼睛都花了。Go 自建一个解析工具，主题/颁发者/扩展/指纹、SAN 提取、密钥用途检查、TLS 配置文件生成。
 
 证书信息解析：`deployer parse --cert server.pem` 输出所有证书字段。Subject 和 Issuer 按 CN、OU、O、C 字段展开显示。扩展字段逐一列出：Basic Constraints、Key Usage、Extended Key Usage、SAN、AKI、SKI。同时输出 SHA-1 和 SHA-256 指纹。
 

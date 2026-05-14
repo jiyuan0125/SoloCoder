@@ -1,4 +1,4 @@
-密钥生命周期管理排在今年技术规划的第一位，密钥轮换是核心功能。Go CLI 工具，密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
+数据库加密密钥用了两年没换过，上次安全审计扣了分。Go CLI 工具，密钥轮换流程、旧密钥安全归档、无缝切换、证书过期检查和预警。
 
 密钥轮换：`klc rotate --key-id db-encryption --output-dir ./keys/`。生成新的 AES-256 密钥版本并标记为 active，旧版本自动降级为 archived。密钥库存 `~/.klc/keys.json`，每条记录包含 `key_id`、`version`（自增整数）、`status`（active/archived/destroyed）、`created_at`、`archived_at`。同一个 key_id 只有一个 active 版本。
 

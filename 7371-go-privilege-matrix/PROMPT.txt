@@ -1,4 +1,4 @@
-最近在做 JWT 迁移，发现没有趁手工具能同时解码 Token 和检查 RBAC 权限。Go 写一个 JWT 解码验证工具，把 RBAC 也集成进去。
+审计发现有人拿着过期的 JWT 在调接口——服务端没做 Token 过期检查。趁修这个 bug，把 RBAC 权限验证也一起做了。Go 写一个 JWT 解码验证工具，RBAC 集成进去。
 
 JWT 解码解析三段式结构，Base64URL 解码展示完整 header 和 claims。标准 claims 都识别：iss、sub、aud、exp、nbf、iat、jti。过期检查精确到秒，允许 ±30 秒时钟偏移容忍。签名算法检查覆盖 HS/RS/ES 三个系列，检测 alg: none 攻击。密钥从文件或环境变量读取。
 

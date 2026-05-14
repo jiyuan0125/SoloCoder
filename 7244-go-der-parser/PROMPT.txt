@@ -1,4 +1,4 @@
-信封加密、密钥轮换、加密元数据管理——业务那边昨天提了三个功能需求，要在一个 Go CLI 加密工具里搞定。
+昨天线上出了密钥泄露事故——不是被黑，是运维把密钥文件和配置文件放在同一目录下，打包发布的时候一起打出去了。紧急整改：信封加密、密钥轮换、加密元数据管理，Go CLI 加密工具，一个工具搞定。
 
 信封加密：RSA-2048 公钥加密 AES 会话密钥，会话密钥加密数据。`derparse seal --pubkey pub.pem --input sensitive.yaml`。输出文件格式：4 字节头长度（大端）+ JSON 元数据头（algo、key_id、nonce、created_at）+ 加密会话密钥（256B）+ 密文 + GCM tag。反密封：`derparse unseal --privkey priv.pem --input sensitive.yaml.enc`。
 

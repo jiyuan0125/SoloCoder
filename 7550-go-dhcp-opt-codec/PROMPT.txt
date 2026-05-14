@@ -1,4 +1,4 @@
-DHCP 协议里的选项字段（Option）有上百种类型，每种类型的编解码格式不一样——有的是单字节、有的是 IP 地址列表、有的是字符串、有的是嵌套的 TLV 结构。管道模式对网络调试特别有用——`tcpdump -xx | dhcp-tool decode`。
+网络排查 DHCP 分配问题，`tcpdump` 抓到的报文里 Option 字段一堆十六进制，肉眼根本看不出哪个是租期、哪个是 DNS 服务器、哪个是子网掩码。每种 Option 的编解码格式还不一样——单字节、IP 列表、字符串、嵌套 TLV，不翻 RFC 根本解不出来。
 
 写个 `dhcp-tool`，子命令 `decode` 和 `encode`。`dhcp-tool decode` 读 DHCP 报文的原始字节（从文件或 stdin），解析 Message Type、Transaction ID、各个 Option 字段。每个 Option 输出编号、名称（人类可读的）、长度和解析后的值。常见的 Option 直接解码展示（比如 Option 53 是 DHCP 消息类型、Option 51 是租期秒数、Option 54 是服务器 IP），不认识的 Option 输出原始十六进制。
 

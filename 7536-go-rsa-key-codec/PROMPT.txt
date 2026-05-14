@@ -1,4 +1,4 @@
-RSA 密钥格式转换是运维和 DevOps 的常见任务——PKCS#1 和 PKCS#8 之间互转、PEM 和 DER 之间互转、公钥从私钥提取。每次都得翻 OpenSSL 的 man page，参数记不住。最近在做密钥管理系统迁移，需要批量处理几百个密钥文件。
+密钥管理系统迁移，PKCS#1 和 PKCS#8 两种格式混着用——老的 Java 服务只认 PKCS#8，Go 微服务生成的是 PKCS#1。批量处理几百个密钥文件的时候，每次都得翻 OpenSSL 的 man page，参数怎么都记不住。
 
 `rsa-tool` 支持多种输入输出格式。子命令：`convert`（格式转换）、`pubkey`（从私钥提取公钥）、`info`（显示密钥参数）。`rsa-tool convert --from pem-pkcs1 --to pem-pkcs8 --input key.pem --output key8.pem` 这种命令格式。支持的格式组合：PEM-PKCS#1、PEM-PKCS#8、DER-PKCS#1、DER-PKCS#8，公钥还有 X.509/SPKI 格式。
 

@@ -1,4 +1,4 @@
-运维团队的证书吊销检查还在手动做，效率太低。Go 命令行，CRL 管理、OCSP 检查、吊销原因记录。
+上周有个被吊销的证书还在生产环境用了两天才被发现，运维总监直接发了火。Go 命令行，CRL 管理、OCSP 检查、吊销原因记录。
 
 CRL：`distr crl-init --ca-cert ca.pem --ca-key ca.key --output ca.crl.pem`。吊销：`distr crl-revoke --serial 0xABCDEF --reason keyCompromise`。Next Update 7 天。查询：`distr crl-check --serial 0xABCDEF --crl ca.crl.pem`。
 

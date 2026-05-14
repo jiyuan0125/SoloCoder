@@ -1,4 +1,4 @@
-季度末合规检查要出证书资产报告，解析工具还没做。Go 命令行，证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查。
+安全扫描器报了 12 个证书告警，但没法快速定位是哪些服务的、证书里带了哪些 SAN、密钥用途对不对。Go 命令行，证书信息解析（主题/颁发者/扩展/指纹）、SAN 提取和显示、密钥用途检查。
 
 证书信息解析：`trustmgr parse --cert server.pem` 输出所有字段到 JSON。Subject 和 Issuer 按 CN、OU、O、C 字段拆开。扩展字段逐一列出：Basic Constraints（CA 标志和 pathlen）、Key Usage（bitmask 展开为可读名称）、Extended Key Usage（serverAuth/clientAuth 等）、Subject Alternative Name、Authority Key Identifier、Subject Key Identifier。指纹同时输出 SHA-1 和 SHA-256。
 

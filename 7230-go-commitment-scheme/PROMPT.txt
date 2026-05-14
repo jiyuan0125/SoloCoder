@@ -1,4 +1,4 @@
-去中心化应用需要一个承诺方案（Commitment Scheme）工具。Go 写命令行工具，密码哈希、密码强度检查、哈希验证，加上承诺方案的实现。
+链上投票系统有个核心需求：投票者先提交承诺哈希，开票阶段再揭示原始投票，中间任何人都不可能改票。承诺方案（Commitment Scheme）就是这个场景的密码学基础。Go 写命令行工具，承诺方案实现，加上密码哈希和强度检查。
 
 承诺方案的工作方式：Alice 想向 Bob 承诺一个值但不透露内容。`commit create --value "secret_message" --output commitment.json`，生成随机 nonce（16 字节），计算 commitment = SHA256(nonce + value)，输出 JSON：`{"commitment": "hex...", "nonce": "hex...", "created_at": "..."}`。之后 Alice 公开 commitment 给 Bob。
 

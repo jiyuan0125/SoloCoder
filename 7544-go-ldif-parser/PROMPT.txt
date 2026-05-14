@@ -1,4 +1,4 @@
-LDAP 数据导出通常是 LDIF 格式，之前用 Python 脚本解析，单线程跑一个大 LDIF 文件要好几秒，几千个文件批量处理更慢。用 Go 重写，第一件事就是并发。命令用两级结构：根命令 `ldif-tool`，下面挂子命令。
+AD 域迁移，导出了 20 万条 LDAP 数据的 LDIF 文件，Python 脚本单线程解析跑了快一分钟——续行处理、Base64 属性值、URL 引用，每个边界情况都拖慢速度。几千个这样的文件批量处理的话，得换 Go 重写，第一件事上并发。
 
 `ldif-tool parse` 读 LDIF 文件，解析每个条目的 DN、objectClass、属性键值对，输出 JSON。支持 LDIF 的续行（换行后空格开头表示续行）、Base64 编码的属性值、URL 引用的属性值。`ldif-tool diff` 比较两个 LDIF 文件，输出哪些条目是新增的、哪些修改了属性、哪些被删除了。`ldif-tool filter` 按 `--objectclass` 或 `--attr` 过滤条目。
 

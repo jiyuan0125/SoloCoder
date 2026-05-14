@@ -1,4 +1,4 @@
-`crypto/tls` 和 `crypto/x509` 刚好能用，写个 TLS 配置检查工具。TLS 配置生成、密码套件合规检查、协议版本建议。
+上个月被扫出 3 个服务还在用 TLS 1.0，排查发现配置文件是两年前拷贝的。Go 写 TLS 配置生成和检查工具，密码套件合规检查、协议版本建议。
 
 TLS 配置生成：`policy gen --cert server.pem --key server.key --min-version 1.2 --output tls.json`。根据证书类型推荐密码套件。输出包含 cipher_suites、curve_preferences、min_version。
 
