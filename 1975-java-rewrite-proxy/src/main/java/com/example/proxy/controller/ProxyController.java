@@ -38,9 +38,11 @@ public class ProxyController {
 
     @RequestMapping("/**")
     public ResponseEntity<byte[]> proxy(HttpServletRequest request) throws IOException, URISyntaxException {
-        String originalPath = buildOriginalPath(request);
+        String path = request.getRequestURI();
+        String queryString = request.getQueryString();
+        String originalPath = buildOriginalPath(path, queryString);
 
-        Optional<RewriteRuleService.RewriteResult> rewriteResult = ruleService.matchAndRewrite(originalPath);
+        Optional<RewriteRuleService.RewriteResult> rewriteResult = ruleService.matchAndRewrite(path, queryString);
 
         String targetPath;
         if (rewriteResult.isPresent()) {
@@ -53,9 +55,7 @@ public class ProxyController {
         return forwardRequest(request, targetPath);
     }
 
-    private String buildOriginalPath(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        String queryString = request.getQueryString();
+    private String buildOriginalPath(String path, String queryString) {
         if (queryString != null && !queryString.isEmpty()) {
             return path + "?" + queryString;
         }

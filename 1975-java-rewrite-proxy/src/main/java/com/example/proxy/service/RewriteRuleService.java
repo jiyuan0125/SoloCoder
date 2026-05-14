@@ -49,14 +49,30 @@ public class RewriteRuleService {
         return rules.remove(id) != null;
     }
 
-    public Optional<RewriteResult> matchAndRewrite(String pathWithQuery) {
+    public Optional<RewriteResult> matchAndRewrite(String path, String queryString) {
+        String pathWithQuery = queryString != null && !queryString.isEmpty() ? path + "?" + queryString : path;
+
         for (RewriteRule rule : getAllRules()) {
-            Pattern pattern = Pattern.compile(rule.getPattern());
+            String patternStr = rule.getPattern();
+            Pattern pattern = Pattern.compile(patternStr);
+
             java.util.regex.Matcher matcher = pattern.matcher(pathWithQuery);
             if (matcher.matches()) {
                 rule.incrementMatchCount();
                 String rewritten = matcher.replaceAll(rule.getReplacement());
                 return Optional.of(new RewriteResult(rule.getId(), rewritten));
+            }
+
+            if (!patternStr.contains("?")) {
+                java.util.regex.Matcher pathMatcher = pattern.matcher(path);
+                if (pathMatcher.matches()) {
+                    rule.incrementMatchCount();
+                    String rewritten = pathMatcher.replaceAll(rule.getReplacement());
+                    if (queryString != null && !queryString.isEmpty()) {
+                        rewritten = rewritten.contains("?") ? rewritten + "&" + queryString : rewritten + "?" + queryString;
+                    }
+                    return Optional.of(new RewriteResult(rule.getId(), rewritten));
+                }
             }
         }
         return Optional.empty();

@@ -106,7 +106,7 @@ func UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	pathParts := strings.Split(r.URL.Path, "/")
-	if len(pathParts) < 5 {
+	if len(pathParts) < 6 {
 		WriteError(w, http.StatusBadRequest, "Invalid URL path")
 		return
 	}
@@ -117,7 +117,7 @@ func UpdateOrderStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newStatus := models.OrderStatus(pathParts[4])
+	newStatus := models.OrderStatus(pathParts[5])
 
 	err = service.UpdateOrderStatus(orderID, newStatus)
 	if err != nil {

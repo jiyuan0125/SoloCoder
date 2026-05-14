@@ -203,7 +203,7 @@ func (s *Store) ListVotings() ([]model.Voting, error) {
 	for rows.Next() {
 		var v model.Voting
 		var status string
-		if err := rows.Scan(&v.ID, &v.Topic, &v.Deadline, &v.CreatedAt, &status, &v.Participation, &v.YesVotes, &v.TotalVotes); err != nil {
+		if err := rows.Scan(&v.ID, &v.Topic, &v.Deadline, &status, &v.Participation, &v.YesVotes, &v.TotalVotes, &v.CreatedAt); err != nil {
 			return nil, err
 		}
 		v.Status = model.VotingStatus(status)
@@ -236,6 +236,12 @@ func (s *Store) ListExpiredActiveVotings() ([]model.Voting, error) {
 func (s *Store) UpdateVotingResult(id int64, status model.VotingStatus, participation float64, yesVotes int64, totalVotes int64) error {
 	_, err := s.db.Exec(`UPDATE votings SET status = ?, participation = ?, yes_votes = ?, total_votes = ? WHERE id = ?`,
 		status, participation, yesVotes, totalVotes, id)
+	return err
+}
+
+func (s *Store) UpdateVotingStats(id int64, participation float64, yesVotes int64, totalVotes int64) error {
+	_, err := s.db.Exec(`UPDATE votings SET participation = ?, yes_votes = ?, total_votes = ? WHERE id = ?`,
+		participation, yesVotes, totalVotes, id)
 	return err
 }
 

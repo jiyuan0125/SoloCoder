@@ -109,10 +109,12 @@ public class RecordingService {
         while (descendingIterator.hasNext()) {
             String id = descendingIterator.next();
             RecordedExchange record = recordsById.get(id);
-            if (record != null &&
-                    record.getMethod().equalsIgnoreCase(method) &&
-                    record.getPath().equals(path)) {
-                return Optional.of(record);
+            if (record != null) {
+                boolean methodMatch = method == null || record.getMethod().equalsIgnoreCase(method);
+                boolean pathMatch = path == null || record.getPath().equals(path);
+                if (methodMatch && pathMatch) {
+                    return Optional.of(record);
+                }
             }
         }
         return Optional.empty();

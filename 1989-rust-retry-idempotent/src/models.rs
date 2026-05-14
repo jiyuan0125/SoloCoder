@@ -84,7 +84,7 @@ pub struct TaskDetail {
     pub response_body: Option<serde_json::Value>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub task_id: Uuid,
     pub idempotency_key: String,

@@ -100,7 +100,7 @@ func main() {
 	})
 
 	server := &http.Server{
-		Addr:    ":8301",
+		Addr:    ":8080",
 		Handler: mux,
 	}
 
@@ -115,7 +115,7 @@ func main() {
 	}()
 
 	go func() {
-		log.Printf("server starting on :8301")
+		log.Printf("server starting on :8080")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server error: %v", err)
 		}

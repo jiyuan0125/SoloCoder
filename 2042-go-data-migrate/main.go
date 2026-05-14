@@ -651,6 +651,31 @@ func listTasks(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, taskList)
 }
 
+func getLastSuccessfulProgress(configID string) (*MigrationProgress, error) {
+	var progressJSON sql.NullString
+	err := db.QueryRow(`SELECT progress_json FROM tasks 
+		WHERE config_id = ? AND status = ? 
+		ORDER BY created_at DESC LIMIT 1`, configID, StatusCompleted).Scan(&progressJSON)
+	
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	
+	if !progressJSON.Valid {
+		return nil, nil
+	}
+	
+	var progress MigrationProgress
+	if err := json.Unmarshal([]byte(progressJSON.String), &progress); err != nil {
+		return nil, err
+	}
+	
+	return &progress, nil
+}
+
 func createTask(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		ConfigID string `json:"config_id"`
@@ -686,6 +711,12 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	lastProgress, err := getLastSuccessfulProgress(req.ConfigID)
+	if err != nil {
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
 	taskID := generateID()
 	task := &MigrationTask{
 		ID:       taskID,
@@ -698,6 +729,11 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 			RecordsFailed:   0,
 			TotalRecords:    0,
 		},
+	}
+
+	if lastProgress != nil {
+		task.Progress.LastTimestamp = lastProgress.LastTimestamp
+		task.Progress.LastPrimaryKey = lastProgress.LastPrimaryKey
 	}
 
 	progressJSON, _ := json.Marshal(task.Progress)
@@ -713,7 +749,8 @@ func createTask(w http.ResponseWriter, r *http.Request) {
 	configs[req.ConfigID] = &config
 	tasks[taskID] = task
 
-	go executeMigration(taskID, &config, false)
+	isIncremental := lastProgress != nil && lastProgress.LastTimestamp != ""
+	go executeMigration(taskID, &config, isIncremental)
 
 	writeJSON(w, http.StatusCreated, task)
 }
@@ -929,10 +966,20 @@ func saveProgress(task *MigrationTask) {
 	defer globalMutex.Unlock()
 
 	progressJSON, _ := json.Marshal(task.Progress)
-	_, err := db.Exec(
-		"UPDATE tasks SET status = ?, progress_json = ? WHERE id = ?",
-		task.Status, string(progressJSON), task.ID,
-	)
+	
+	var err error
+	if task.ErrorMessage != "" {
+		_, err = db.Exec(
+			"UPDATE tasks SET status = ?, progress_json = ?, error_message = ? WHERE id = ?",
+			task.Status, string(progressJSON), task.ErrorMessage, task.ID,
+		)
+	} else {
+		_, err = db.Exec(
+			"UPDATE tasks SET status = ?, progress_json = ? WHERE id = ?",
+			task.Status, string(progressJSON), task.ID,
+		)
+	}
+	
 	if err != nil {
 		log.Printf("Failed to save progress: %v", err)
 	}
@@ -1038,6 +1085,19 @@ func executeMigration(taskID string, config *MigrationConfig, isResume bool) {
 	saveProgress(task)
 }
 
+func checkPauseOrStop(task *MigrationTask) (shouldPause, shouldStop bool) {
+	task.mutex.Lock()
+	defer task.mutex.Unlock()
+	if task.stopRequested {
+		return false, true
+	}
+	if task.pauseRequested {
+		task.pauseRequested = false
+		return true, false
+	}
+	return false, false
+}
+
 func migrateTable(task *MigrationTask, sourceConn, targetConn *sql.DB, 
 	tableMapping *TableMapping, isResume bool) error {
 
@@ -1099,17 +1159,13 @@ func migrateTable(task *MigrationTask, sourceConn, targetConn *sql.DB,
 	}
 
 	for {
-		task.mutex.Lock()
-		if task.stopRequested {
-			task.mutex.Unlock()
+		shouldPause, shouldStop := checkPauseOrStop(task)
+		if shouldStop {
 			return nil
 		}
-		if task.pauseRequested {
-			task.pauseRequested = false
-			task.mutex.Unlock()
+		if shouldPause {
 			return fmt.Errorf("paused")
 		}
-		task.mutex.Unlock()
 
 		rows, newLastPK, newLastTimestamp, err := fetchBatch(sourceConn, tableMapping, 
 			sourceFields, lastPK, lastTimestamp)
@@ -1122,6 +1178,14 @@ func migrateTable(task *MigrationTask, sourceConn, targetConn *sql.DB,
 		}
 
 		for _, row := range rows {
+			shouldPause, shouldStop := checkPauseOrStop(task)
+			if shouldStop {
+				return nil
+			}
+			if shouldPause {
+				return fmt.Errorf("paused")
+			}
+
 			recordKey := fmt.Sprintf("%v", row[tableMapping.PrimaryKey])
 			
 			err := insertRecord(targetConn, tableMapping, targetFields, row)

@@ -244,8 +244,10 @@ public class ProxyService {
         Enumeration<String> headerNames = request.getHeaderNames();
         while (headerNames.hasMoreElements()) {
             String headerName = headerNames.nextElement();
-            if (!HOP_BY_HOP_HEADERS.contains(headerName.toLowerCase()) && 
-                !"host".equalsIgnoreCase(headerName)) {
+            String lowerHeaderName = headerName.toLowerCase();
+            if (!HOP_BY_HOP_HEADERS.contains(lowerHeaderName) && 
+                !"host".equalsIgnoreCase(headerName) &&
+                !"content-length".equalsIgnoreCase(lowerHeaderName)) {
                 String headerValue = request.getHeader(headerName);
                 targetRequest.setHeader(headerName, headerValue);
             }

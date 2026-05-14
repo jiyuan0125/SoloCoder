@@ -317,6 +317,81 @@ func GetWeeklyHours(empID int64, weekStart, weekEnd time.Time) (float64, error) 
 	return totalHours, nil
 }
 
+func GetWeeklyHoursExcluding(empID int64, weekStart, weekEnd time.Time, excludeShiftID int64) (float64, error) {
+	var totalHours float64
+	err := database.DB.QueryRow(`
+		SELECT COALESCE(SUM(scheduled_hours), 0) FROM shift_masters
+		WHERE employee_id = ? AND shift_date >= ? AND shift_date <= ? AND id != ?
+	`, empID, weekStart.Format("2006-01-02"), weekEnd.Format("2006-01-02"), excludeShiftID).Scan(&totalHours)
+	if err != nil {
+		return 0, err
+	}
+	return totalHours, nil
+}
+
+func GetShiftByEmployeeAndDateExcluding(empID int64, date time.Time, excludeShiftID int64) (*models.ShiftMaster, error) {
+	var shift models.ShiftMaster
+	var shiftDateStr, startTimeStr, endTimeStr, createdAtStr, updatedAtStr string
+	var isHolidayInt int
+
+	err := database.DB.QueryRow(`
+		SELECT id, employee_id, shift_date, start_time, end_time, position, status,
+		       scheduled_hours, actual_hours, is_holiday, created_at, updated_at
+		FROM shift_masters WHERE employee_id = ? AND shift_date = ? AND id != ?
+	`, empID, date.Format("2006-01-02"), excludeShiftID).Scan(
+		&shift.ID, &shift.EmployeeID, &shiftDateStr, &startTimeStr, &endTimeStr,
+		&shift.Position, &shift.Status, &shift.ScheduledHours, &shift.ActualHours,
+		&isHolidayInt, &createdAtStr, &updatedAtStr,
+	)
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	shift.ShiftDate, _ = time.Parse("2006-01-02", shiftDateStr)
+	shift.StartTime, _ = time.Parse("15:04", startTimeStr)
+	shift.EndTime, _ = time.Parse("15:04", endTimeStr)
+	shift.IsHoliday = isHolidayInt == 1
+	shift.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAtStr)
+	shift.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAtStr)
+
+	return &shift, nil
+}
+
+func GetLastShiftBeforeExcluding(empID int64, date time.Time, excludeShiftID int64) (*models.ShiftMaster, error) {
+	var shift models.ShiftMaster
+	var shiftDateStr, startTimeStr, endTimeStr, createdAtStr, updatedAtStr string
+	var isHolidayInt int
+
+	err := database.DB.QueryRow(`
+		SELECT id, employee_id, shift_date, start_time, end_time, position, status,
+		       scheduled_hours, actual_hours, is_holiday, created_at, updated_at
+		FROM shift_masters WHERE employee_id = ? AND shift_date < ? AND id != ?
+		ORDER BY shift_date DESC, end_time DESC LIMIT 1
+	`, empID, date.Format("2006-01-02"), excludeShiftID).Scan(
+		&shift.ID, &shift.EmployeeID, &shiftDateStr, &startTimeStr, &endTimeStr,
+		&shift.Position, &shift.Status, &shift.ScheduledHours, &shift.ActualHours,
+		&isHolidayInt, &createdAtStr, &updatedAtStr,
+	)
+	if err == sql.ErrNoRows {
+		return nil, sql.ErrNoRows
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	shift.ShiftDate, _ = time.Parse("2006-01-02", shiftDateStr)
+	shift.StartTime, _ = time.Parse("15:04", startTimeStr)
+	shift.EndTime, _ = time.Parse("15:04", endTimeStr)
+	shift.IsHoliday = isHolidayInt == 1
+	shift.CreatedAt, _ = time.Parse("2006-01-02 15:04:05", createdAtStr)
+	shift.UpdatedAt, _ = time.Parse("2006-01-02 15:04:05", updatedAtStr)
+
+	return &shift, nil
+}
+
 func UpdateShiftStatus(shiftID int64, newStatus models.ShiftStatus, operatorID int64, note string) error {
 	shift, err := GetShiftByID(shiftID)
 	if err != nil {
@@ -530,8 +605,8 @@ func GetMonthlyStats(year, month int) ([]models.MonthlyStats, error) {
 			e.name,
 			d.id,
 			d.name,
-			COALESCE(SUM(sm.scheduled_hours), 0),
-			COALESCE(SUM(sm.actual_hours), 0)
+			COALESCE(SUM(CASE WHEN sm.is_holiday = 1 THEN sm.scheduled_hours * 2 ELSE sm.scheduled_hours END), 0),
+			COALESCE(SUM(CASE WHEN sm.is_holiday = 1 THEN sm.actual_hours * 2 ELSE sm.actual_hours END), 0)
 		FROM employees e
 		JOIN departments d ON e.department_id = d.id
 		LEFT JOIN shift_masters sm ON e.id = sm.employee_id 
@@ -567,8 +642,8 @@ func GetDepartmentMonthlyStats(deptID, year, month int) ([]models.MonthlyStats, 
 			e.name,
 			d.id,
 			d.name,
-			COALESCE(SUM(sm.scheduled_hours), 0),
-			COALESCE(SUM(sm.actual_hours), 0)
+			COALESCE(SUM(CASE WHEN sm.is_holiday = 1 THEN sm.scheduled_hours * 2 ELSE sm.scheduled_hours END), 0),
+			COALESCE(SUM(CASE WHEN sm.is_holiday = 1 THEN sm.actual_hours * 2 ELSE sm.actual_hours END), 0)
 		FROM employees e
 		JOIN departments d ON e.department_id = d.id
 		LEFT JOIN shift_masters sm ON e.id = sm.employee_id 

@@ -129,7 +129,13 @@ class DedupEngine:
     async def get_or_execute(self, dedup_key: str, business_type: str, execute_func):
         window = await self._rule_manager.get_window(business_type)
         if window is None:
-            return await execute_func(), False
+            result = await execute_func()
+            return CachedResponse(
+                status=result["status"],
+                body=result["body"],
+                headers=result.get("headers", {}),
+                created_at=time.time()
+            ), False
         
         now = time.time()
         

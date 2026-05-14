@@ -44,10 +44,16 @@ func (s *Server) executeInsert(sql string, values ...interface{}) error {
 
 func (s *Server) generateCreateTableSQL(tableName string, headers []string, types []ColumnType) string {
 	var columns []string
+	hasId := false
+	
 	for i, header := range headers {
 		colName := sanitizeColumnName(header)
 		if colName == "" {
 			colName = fmt.Sprintf("col_%d", i+1)
+		}
+		
+		if strings.ToLower(colName) == "id" {
+			hasId = true
 		}
 		
 		var colType string
@@ -63,7 +69,9 @@ func (s *Server) generateCreateTableSQL(tableName string, headers []string, type
 		columns = append(columns, fmt.Sprintf("%s %s", colName, colType))
 	}
 	
-	columns = append([]string{"id INTEGER PRIMARY KEY AUTOINCREMENT"}, columns...)
+	if !hasId {
+		columns = append([]string{"id INTEGER PRIMARY KEY AUTOINCREMENT"}, columns...)
+	}
 	
 	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (%s)", tableName, strings.Join(columns, ", "))
 }

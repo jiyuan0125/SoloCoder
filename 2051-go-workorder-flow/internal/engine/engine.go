@@ -29,6 +29,8 @@ var (
 	ErrNotCurrentHandler        = errors.New("only current handler can perform this operation")
 	ErrInvalidHandler           = errors.New("invalid handler")
 	ErrEscalatedCannotOperate   = errors.New("cannot operate on escalated work order")
+	ErrNotSubmitter             = errors.New("only submitter can perform this operation")
+	ErrCommentRequired          = errors.New("comment is required for this operation")
 )
 
 type CreateWorkOrderRequest struct {
@@ -380,6 +382,219 @@ func (e *FlowEngine) AddCommunication(ctx context.Context, workOrderID int64, se
 	}
 
 	return e.db.AddCommunicationRecord(ctx, record)
+}
+
+func (e *FlowEngine) SubmitForReview(ctx context.Context, workOrderID int64, operatorID int64) (*models.WorkOrder, error) {
+	wo, err := e.db.GetWorkOrderByID(ctx, workOrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if wo.WorkOrderStatus == models.WorkOrderStatusClosed {
+		return nil, ErrWorkOrderClosed
+	}
+
+	if wo.ProcessStatus != models.ProcessStatusSubmitted && wo.ProcessStatus != models.ProcessStatusRejected {
+		return nil, fmt.Errorf("%w: can only submit from 待提交 or 退回修改, current status is %s", ErrInvalidStateTransition, wo.ProcessStatus)
+	}
+
+	oldProcessStatus := wo.ProcessStatus
+	wo.ProcessStatus = models.ProcessStatusReviewing
+
+	if err := e.db.UpdateWorkOrder(ctx, wo); err != nil {
+		return nil, err
+	}
+
+	history := &models.HistoryRecord{
+		WorkOrderID:        wo.ID,
+		OperationType:      "提交审核",
+		OperatorID:         operatorID,
+		OldProcessStatus:   oldProcessStatus,
+		NewProcessStatus:   wo.ProcessStatus,
+		OldWorkOrderStatus: wo.WorkOrderStatus,
+		NewWorkOrderStatus: wo.WorkOrderStatus,
+	}
+
+	if err := e.db.AddHistoryRecord(ctx, history); err != nil {
+		return nil, err
+	}
+
+	return wo, nil
+}
+
+func (e *FlowEngine) ApproveWorkOrder(ctx context.Context, workOrderID int64, operatorID int64, comment string) (*models.WorkOrder, error) {
+	wo, err := e.db.GetWorkOrderByID(ctx, workOrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if wo.WorkOrderStatus == models.WorkOrderStatusClosed {
+		return nil, ErrWorkOrderClosed
+	}
+
+	if wo.ProcessStatus != models.ProcessStatusReviewing {
+		return nil, fmt.Errorf("%w: can only approve from 审核中, current status is %s", ErrInvalidStateTransition, wo.ProcessStatus)
+	}
+
+	oldProcessStatus := wo.ProcessStatus
+	wo.ProcessStatus = models.ProcessStatusApproved
+
+	if err := e.db.UpdateWorkOrder(ctx, wo); err != nil {
+		return nil, err
+	}
+
+	history := &models.HistoryRecord{
+		WorkOrderID:        wo.ID,
+		OperationType:      "审核通过",
+		OperatorID:         operatorID,
+		OldProcessStatus:   oldProcessStatus,
+		NewProcessStatus:   wo.ProcessStatus,
+		OldWorkOrderStatus: wo.WorkOrderStatus,
+		NewWorkOrderStatus: wo.WorkOrderStatus,
+		Comment:            comment,
+	}
+
+	if err := e.db.AddHistoryRecord(ctx, history); err != nil {
+		return nil, err
+	}
+
+	return wo, nil
+}
+
+func (e *FlowEngine) RejectWorkOrder(ctx context.Context, workOrderID int64, operatorID int64, reason string) (*models.WorkOrder, error) {
+	if reason == "" {
+		return nil, ErrReasonRequired
+	}
+
+	wo, err := e.db.GetWorkOrderByID(ctx, workOrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if wo.WorkOrderStatus == models.WorkOrderStatusClosed {
+		return nil, ErrWorkOrderClosed
+	}
+
+	if wo.ProcessStatus != models.ProcessStatusReviewing {
+		return nil, fmt.Errorf("%w: can only reject from 审核中, current status is %s", ErrInvalidStateTransition, wo.ProcessStatus)
+	}
+
+	oldProcessStatus := wo.ProcessStatus
+	wo.ProcessStatus = models.ProcessStatusRejected
+
+	if err := e.db.UpdateWorkOrder(ctx, wo); err != nil {
+		return nil, err
+	}
+
+	history := &models.HistoryRecord{
+		WorkOrderID:        wo.ID,
+		OperationType:      "审核拒绝",
+		OperatorID:         operatorID,
+		OldProcessStatus:   oldProcessStatus,
+		NewProcessStatus:   wo.ProcessStatus,
+		OldWorkOrderStatus: wo.WorkOrderStatus,
+		NewWorkOrderStatus: wo.WorkOrderStatus,
+		Reason:             reason,
+	}
+
+	if err := e.db.AddHistoryRecord(ctx, history); err != nil {
+		return nil, err
+	}
+
+	return wo, nil
+}
+
+func (e *FlowEngine) StartExecution(ctx context.Context, workOrderID int64, operatorID int64) (*models.WorkOrder, error) {
+	wo, err := e.db.GetWorkOrderByID(ctx, workOrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if wo.WorkOrderStatus == models.WorkOrderStatusClosed {
+		return nil, ErrWorkOrderClosed
+	}
+
+	if wo.ProcessStatus != models.ProcessStatusApproved {
+		return nil, fmt.Errorf("%w: can only start execution from 已通过, current status is %s", ErrInvalidStateTransition, wo.ProcessStatus)
+	}
+
+	if wo.CurrentHandlerID == nil || *wo.CurrentHandlerID != operatorID {
+		return nil, ErrNotCurrentHandler
+	}
+
+	if wo.Escalated && wo.CurrentHandlerID != nil && *wo.CurrentHandlerID == operatorID {
+		return nil, ErrEscalatedCannotOperate
+	}
+
+	oldProcessStatus := wo.ProcessStatus
+	wo.ProcessStatus = models.ProcessStatusExecuting
+
+	if err := e.db.UpdateWorkOrder(ctx, wo); err != nil {
+		return nil, err
+	}
+
+	history := &models.HistoryRecord{
+		WorkOrderID:        wo.ID,
+		OperationType:      "开始执行",
+		OperatorID:         operatorID,
+		OldProcessStatus:   oldProcessStatus,
+		NewProcessStatus:   wo.ProcessStatus,
+		OldWorkOrderStatus: wo.WorkOrderStatus,
+		NewWorkOrderStatus: wo.WorkOrderStatus,
+	}
+
+	if err := e.db.AddHistoryRecord(ctx, history); err != nil {
+		return nil, err
+	}
+
+	return wo, nil
+}
+
+func (e *FlowEngine) CompleteExecution(ctx context.Context, workOrderID int64, operatorID int64, comment string) (*models.WorkOrder, error) {
+	wo, err := e.db.GetWorkOrderByID(ctx, workOrderID)
+	if err != nil {
+		return nil, err
+	}
+
+	if wo.WorkOrderStatus == models.WorkOrderStatusClosed {
+		return nil, ErrWorkOrderClosed
+	}
+
+	if wo.ProcessStatus != models.ProcessStatusExecuting {
+		return nil, fmt.Errorf("%w: can only complete from 执行中, current status is %s", ErrInvalidStateTransition, wo.ProcessStatus)
+	}
+
+	if wo.CurrentHandlerID == nil || *wo.CurrentHandlerID != operatorID {
+		return nil, ErrNotCurrentHandler
+	}
+
+	if wo.Escalated && wo.CurrentHandlerID != nil && *wo.CurrentHandlerID == operatorID {
+		return nil, ErrEscalatedCannotOperate
+	}
+
+	oldProcessStatus := wo.ProcessStatus
+	wo.ProcessStatus = models.ProcessStatusCompleted
+
+	if err := e.db.UpdateWorkOrder(ctx, wo); err != nil {
+		return nil, err
+	}
+
+	history := &models.HistoryRecord{
+		WorkOrderID:        wo.ID,
+		OperationType:      "执行完成",
+		OperatorID:         operatorID,
+		OldProcessStatus:   oldProcessStatus,
+		NewProcessStatus:   wo.ProcessStatus,
+		OldWorkOrderStatus: wo.WorkOrderStatus,
+		NewWorkOrderStatus: wo.WorkOrderStatus,
+		Comment:            comment,
+	}
+
+	if err := e.db.AddHistoryRecord(ctx, history); err != nil {
+		return nil, err
+	}
+
+	return wo, nil
 }
 
 func (e *FlowEngine) ProcessOverdueWorkOrders(ctx context.Context) error {

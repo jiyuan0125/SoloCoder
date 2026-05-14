@@ -111,9 +111,9 @@ func (cm *ConfigManager) Reload() (*ConfigChange, error) {
 }
 
 func (cm *ConfigManager) forceReload(notify bool) (*ConfigChange, error) {
-	data, err := os.ReadFile(cm.configPath)
+	data, err := waitForFileStable(cm.configPath)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read config file: %w", err)
+		return nil, err
 	}
 
 	hash := computeHash(data)
@@ -181,6 +181,40 @@ func (cm *ConfigManager) notifyAll(change *ConfigChange) {
 			fmt.Printf("WARNING: notifier channel full, skipping notification\n")
 		}
 	}
+}
+
+func waitForFileStable(path string) ([]byte, error) {
+	const (
+		maxAttempts = 3
+		waitTime    = 500 * time.Millisecond
+	)
+
+	var lastSize int64
+	var data []byte
+
+	for i := 0; i < maxAttempts; i++ {
+		info, err := os.Stat(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to stat config file: %w", err)
+		}
+
+		currentSize := info.Size()
+
+		readData, err := os.ReadFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read config file: %w", err)
+		}
+
+		if i > 0 && currentSize == lastSize && len(readData) == int(currentSize) {
+			return readData, nil
+		}
+
+		lastSize = currentSize
+		data = readData
+		time.Sleep(waitTime)
+	}
+
+	return data, nil
 }
 
 func computeHash(data []byte) string {

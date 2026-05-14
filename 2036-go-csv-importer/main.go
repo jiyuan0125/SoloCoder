@@ -464,6 +464,7 @@ func (s *Server) processImport(task *ImportTask, data []byte, delimiter rune) {
 	rowNum := 1
 	sampleRows := make([][]string, 0, 50)
 	rowsToProcess := make([][]string, 0, 50)
+	rowNums := make([]int, 0, 50)
 	
 	for len(sampleRows) < 50 {
 		record, err := reader.Read()
@@ -480,6 +481,7 @@ func (s *Server) processImport(task *ImportTask, data []byte, delimiter rune) {
 		}
 		sampleRows = append(sampleRows, cleaned)
 		rowsToProcess = append(rowsToProcess, cleaned)
+		rowNums = append(rowNums, rowNum)
 	}
 	
 	columnTypes := make([]ColumnType, numCols)
@@ -504,9 +506,8 @@ func (s *Server) processImport(task *ImportTask, data []byte, delimiter rune) {
 	
 	insertSQL := s.generateInsertSQL(tableName, headers)
 	
-	for _, record := range rowsToProcess {
-		rowNum--
-		processRow(task, record, rowNum, numCols, columnTypes, insertSQL, s)
+	for i, record := range rowsToProcess {
+		processRow(task, record, rowNums[i], numCols, columnTypes, insertSQL, s)
 	}
 	
 	for {
@@ -636,7 +637,7 @@ func handleHealth(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	port := ":8800"
+	port := ":8080"
 	server, err := NewServer("./data.db")
 	if err != nil {
 		fmt.Printf("Failed to create server: %v\n", err)

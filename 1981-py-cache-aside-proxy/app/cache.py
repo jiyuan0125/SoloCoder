@@ -8,10 +8,11 @@ from app.config import config
 
 
 class CacheEntry:
-    def __init__(self, value: Any, status_code: int, ttl: int):
+    def __init__(self, value: Any, status_code: int, ttl: int, path: str = ""):
         self.value = value
         self.status_code = status_code
         self.ttl = ttl
+        self.path = path
         self.expiry_time = time.time() + ttl
         self.access_time = time.time()
 
@@ -56,12 +57,12 @@ class NamespaceCache:
             return entry
         return None
     
-    async def set(self, key: str, value: Any, status_code: int, ttl: int):
+    async def set(self, key: str, value: Any, status_code: int, ttl: int, path: str = ""):
         ns_config = config.get_namespace_config(self.namespace)
         
         self._remove_expired()
         
-        self._data[key] = CacheEntry(value=value, status_code=status_code, ttl=ttl)
+        self._data[key] = CacheEntry(value=value, status_code=status_code, ttl=ttl, path=path)
         self._order[key] = time.time()
         self._order.move_to_end(key)
         
@@ -74,7 +75,10 @@ class NamespaceCache:
             del self._order[key]
     
     async def invalidate_by_prefix(self, prefix: str):
-        keys_to_delete = [key for key in self._data.keys() if key.startswith(prefix)]
+        keys_to_delete = []
+        for key, entry in self._data.items():
+            if entry.path.startswith(prefix):
+                keys_to_delete.append(key)
         for key in keys_to_delete:
             await self.delete(key)
     
@@ -121,12 +125,12 @@ class CacheManager:
         ns = self._get_namespace(namespace)
         return await ns.get(key)
     
-    async def set(self, namespace: str, key: str, value: Any, status_code: int, ttl: Optional[int] = None):
+    async def set(self, namespace: str, key: str, value: Any, status_code: int, ttl: Optional[int] = None, path: str = ""):
         if ttl is None:
             ttl = config.get_namespace_config(namespace).ttl
         
         ns = self._get_namespace(namespace)
-        await ns.set(key, value, status_code, ttl)
+        await ns.set(key, value, status_code, ttl, path)
     
     async def delete(self, namespace: str, key: str):
         if namespace in self._namespaces:

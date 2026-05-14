@@ -174,16 +174,16 @@ func (s *Service) processTierUpgrade(activityID string, basePrice int64, oldTier
 	}
 	oldPrice := s.calculatePrice(basePrice, oldTierIndex, tiers)
 	newPrice := s.calculatePrice(basePrice, newTierIndex, tiers)
+	refundPerPerson := oldPrice - newPrice
+	if refundPerPerson <= 0 {
+		return nil
+	}
 	newTier := tiers[newTierIndex]
 	for _, order := range orders {
 		if order.Status != "paid" {
 			continue
 		}
-		refundAmount := order.PaidPrice - newPrice
-		if refundAmount <= 0 {
-			continue
-		}
-		if err := s.refundToBalance(order.UserID, refundAmount); err != nil {
+		if err := s.refundToBalance(order.UserID, refundPerPerson); err != nil {
 			return err
 		}
 		record := models.RefundRecord{
@@ -191,7 +191,7 @@ func (s *Service) processTierUpgrade(activityID string, basePrice int64, oldTier
 			UserID:     order.UserID,
 			ActivityID: activityID,
 			OrderID:    order.OrderID,
-			Amount:     refundAmount,
+			Amount:     refundPerPerson,
 			Reason:     fmt.Sprintf("阶梯升级至%d人%0.0f折", newTier.MinPeople, newTier.Discount*10),
 			CreatedAt:  time.Now(),
 		}
@@ -199,7 +199,6 @@ func (s *Service) processTierUpgrade(activityID string, basePrice int64, oldTier
 			return err
 		}
 	}
-	_ = oldPrice
 	return nil
 }
 

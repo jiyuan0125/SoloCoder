@@ -20,11 +20,6 @@ import (
 )
 
 func ExecuteExport(task *models.ExportTask) {
-	database.DB.Model(task).Updates(map[string]interface{}{
-		"status":   config.TaskStatusProcessing,
-		"progress": 0,
-	})
-
 	fields := strings.Split(task.Fields, ",")
 
 	fileName := generateFileName(task)
@@ -38,20 +33,12 @@ func ExecuteExport(task *models.ExportTask) {
 	}
 
 	if err != nil {
-		database.DB.Model(task).Updates(map[string]interface{}{
-			"status":        config.TaskStatusFailed,
-			"error_message": err.Error(),
-		})
+		UpdateTaskStatusDB(task.ID, config.TaskStatusFailed, 0, "", "", err.Error())
 		log.Printf("Export task %d failed: %v", task.ID, err)
 		return
 	}
 
-	database.DB.Model(task).Updates(map[string]interface{}{
-		"status":   config.TaskStatusCompleted,
-		"progress": 100,
-		"file_path": filePath,
-		"file_name": fileName,
-	})
+	UpdateTaskStatusDB(task.ID, config.TaskStatusCompleted, 100, filePath, fileName, "")
 
 	log.Printf("Export task %d completed: %s", task.ID, fileName)
 	notifyUser(task)
@@ -91,6 +78,7 @@ func exportCSV(task *models.ExportTask, fields []string, filePath string) error 
 
 	total, _ := database.CountRows(task.TableName, task.Filter)
 	var processed int64 = 0
+	lastReportedProgress := -1
 
 	columns, _ := rows.Columns()
 	values := make([]interface{}, len(columns))
@@ -121,7 +109,10 @@ func exportCSV(task *models.ExportTask, fields []string, filePath string) error 
 			if progress > 100 {
 				progress = 100
 			}
-			database.DB.Model(task).Update("progress", progress)
+			if progress != lastReportedProgress {
+				UpdateProgress(task.ID, progress)
+				lastReportedProgress = progress
+			}
 		}
 	}
 
@@ -151,6 +142,7 @@ func exportExcel(task *models.ExportTask, fields []string, filePath string) erro
 	total, _ := database.CountRows(task.TableName, task.Filter)
 	var processed int64 = 0
 	rowNum := 2
+	lastReportedProgress := -1
 
 	columns, _ := rows.Columns()
 	values := make([]interface{}, len(columns))
@@ -182,7 +174,10 @@ func exportExcel(task *models.ExportTask, fields []string, filePath string) erro
 			if progress > 100 {
 				progress = 100
 			}
-			database.DB.Model(task).Update("progress", progress)
+			if progress != lastReportedProgress {
+				UpdateProgress(task.ID, progress)
+				lastReportedProgress = progress
+			}
 		}
 	}
 

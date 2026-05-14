@@ -1,5 +1,6 @@
 package com.example.proxy.filter;
 
+import com.example.proxy.config.ProxyProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -17,8 +18,14 @@ import java.util.regex.Pattern;
 public class SecurityFilter implements Filter {
     
     private static final Pattern PATH_TRAVERSAL_PATTERN = Pattern.compile("\\.\\.");
-    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[<>\"'%;()&+]");
+    private static final Pattern SPECIAL_CHAR_PATTERN = Pattern.compile("[<>\"'%;()+]");
     private static final Pattern NULL_BYTE_PATTERN = Pattern.compile("%00|\\x00");
+    
+    private final String managementPath;
+    
+    public SecurityFilter(ProxyProperties properties) {
+        this.managementPath = properties.getManagement().getBasePath();
+    }
     
     @Override
     public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) 
@@ -28,6 +35,12 @@ public class SecurityFilter implements Filter {
         HttpServletResponse httpResponse = (HttpServletResponse) response;
         
         String requestUri = httpRequest.getRequestURI();
+        
+        if (requestUri != null && requestUri.startsWith(managementPath)) {
+            chain.doFilter(request, response);
+            return;
+        }
+        
         String queryString = httpRequest.getQueryString();
         
         if (!isPathSafe(requestUri)) {

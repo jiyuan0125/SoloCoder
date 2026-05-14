@@ -176,6 +176,11 @@ func UpdateAlertStatus(alertID int64, status models.AlertStatus) error {
 		return errors.New("alert not found")
 	}
 
+	err = models.ValidateAlertStatusTransition(alert.Status, status)
+	if err != nil {
+		return err
+	}
+
 	alert.Status = status
 	return database.UpdateAlert(alert)
 }

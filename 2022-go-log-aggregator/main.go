@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	port    = ":8501"
+	port    = ":8080"
 	dbPath  = "./logs.db"
 )
 

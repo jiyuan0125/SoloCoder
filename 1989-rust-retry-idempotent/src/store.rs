@@ -20,6 +20,21 @@ impl TaskStore {
         Self::default()
     }
 
+    pub fn restore_from_persisted(&self, tasks: Vec<Task>) {
+        for task in tasks {
+            let task_id = task.task_id;
+            let idempotency_key = task.idempotency_key.clone();
+            let is_terminal = task.is_terminal();
+            
+            self.tasks.insert(task_id, task);
+            self.idempotency_map.insert(idempotency_key, task_id);
+            
+            if !is_terminal {
+                self.pending_queue.lock().push_back(task_id);
+            }
+        }
+    }
+
     pub fn insert(&self, task: Task) -> Uuid {
         let task_id = task.task_id;
         let idempotency_key = task.idempotency_key.clone();

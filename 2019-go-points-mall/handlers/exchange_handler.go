@@ -56,16 +56,6 @@ func StartExchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hasRedeemed, err := repository.CheckDailyRedemption(req.UserID, req.ProductID)
-	if err != nil {
-		RespondError(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-	if hasRedeemed {
-		RespondError(w, http.StatusTooManyRequests, "今日已兑换")
-		return
-	}
-
 	tx, err := db.DB.Begin()
 	if err != nil {
 		RespondError(w, http.StatusInternalServerError, err.Error())
@@ -173,6 +163,16 @@ func ConfirmExchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	hasRedeemed, err := repository.CheckDailyRedemption(exchange.UserID, exchange.ProductID)
+	if err != nil {
+		RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	if hasRedeemed {
+		RespondError(w, http.StatusTooManyRequests, "今日已兑换")
+		return
+	}
+
 	tx, err := db.DB.Begin()
 	if err != nil {
 		RespondError(w, http.StatusInternalServerError, err.Error())
@@ -207,7 +207,10 @@ func ConfirmExchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = repository.AddDailyRedemption(exchange.UserID, exchange.ProductID)
+	_, err = tx.Exec(
+		"INSERT OR IGNORE INTO daily_redemptions (user_id, product_id, redemption_date) VALUES (?, ?, DATE('now'))",
+		exchange.UserID, exchange.ProductID,
+	)
 	if err != nil {
 		RespondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -256,10 +259,11 @@ func generateRedemptionCodeTx(tx *sql.Tx, exchangeID int, productID int, userID 
 
 func generateCode() string {
 	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	r := time.Now().UnixNano()
 	var sb strings.Builder
 	for i := 0; i < 16; i++ {
-		sb.WriteByte(charset[time.Now().UnixNano()%int64(len(charset))])
-		time.Sleep(1 * time.Nanosecond)
+		sb.WriteByte(charset[r%int64(len(charset))])
+		r = r>>7 ^ r<<57
 	}
 	return sb.String()
 }
@@ -290,12 +294,6 @@ func CancelExchange(w http.ResponseWriter, r *http.Request) {
 
 	if exchange.Status != models.StatusPendingPay {
 		RespondError(w, http.StatusBadRequest, "当前状态不允许取消")
-		return
-	}
-
-	product, err := repository.GetProductByID(exchange.ProductID)
-	if err != nil {
-		RespondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -333,7 +331,14 @@ func CancelExchange(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if product != nil && product.IsOnline {
+	var isOnline int
+	err = tx.QueryRow("SELECT is_online FROM products WHERE id = ?", exchange.ProductID).Scan(&isOnline)
+	if err != nil && err != sql.ErrNoRows {
+		RespondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if isOnline == 1 {
 		_, err = tx.Exec(
 			"UPDATE products SET stock = stock + 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?",
 			exchange.ProductID,

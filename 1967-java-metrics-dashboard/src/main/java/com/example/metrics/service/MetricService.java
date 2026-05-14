@@ -34,6 +34,9 @@ public class MetricService {
     }
 
     public void recordMetric(MetricPoint point) {
+        if (!storage.isRegistered(point.getMetricName())) {
+            storage.registerMetric(new MetricRegistration(point.getMetricName(), null));
+        }
         storage.storeMetric(point);
     }
 
@@ -145,5 +148,9 @@ public class MetricService {
 
     public boolean isRegistered(String name) {
         return storage.isRegistered(name);
+    }
+
+    public boolean exists(String name) {
+        return storage.isRegistered(name) || storage.hasData(name);
     }
 }

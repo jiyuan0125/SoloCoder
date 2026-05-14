@@ -12,22 +12,44 @@ import (
 	"data-export/models"
 )
 
+type runningTask struct {
+	task     *models.ExportTask
+	progress int
+	status   string
+}
+
 var (
-	taskMutex   sync.Mutex
-	userTasks   = make(map[string]struct{})
-	workerQueue = make(chan *models.ExportTask, 10)
+	taskMutex       sync.RWMutex
+	userTasks       = make(map[string]struct{})
+	runningTasksMap = make(map[uint]*runningTask)
+	workerQueue     = make(chan *models.ExportTask, 100)
 )
 
 func InitManager() {
 	go worker()
 	go cleanupOldFiles()
+	go periodicDBFlush()
 }
 
 func worker() {
 	for task := range workerQueue {
+		taskMutex.Lock()
+		runningTasksMap[task.ID] = &runningTask{
+			task:     task,
+			progress: 0,
+			status:   config.TaskStatusProcessing,
+		}
+		taskMutex.Unlock()
+
+		database.DB.Model(task).Updates(map[string]interface{}{
+			"status":   config.TaskStatusProcessing,
+			"progress": 0,
+		})
+
 		ExecuteExport(task)
 
 		taskMutex.Lock()
+		delete(runningTasksMap, task.ID)
 		delete(userTasks, task.UserID)
 		taskMutex.Unlock()
 	}
@@ -38,15 +60,6 @@ func SubmitTask(req models.ExportRequest) (*models.ExportTask, error) {
 	defer taskMutex.Unlock()
 
 	if _, exists := userTasks[req.UserID]; exists {
-		return nil, &DuplicateTaskError{}
-	}
-
-	var runningTasks int64
-	database.DB.Model(&models.ExportTask{}).
-		Where("user_id = ? AND status IN ?", req.UserID, []string{config.TaskStatusPending, config.TaskStatusProcessing}).
-		Count(&runningTasks)
-
-	if runningTasks > 0 {
 		return nil, &DuplicateTaskError{}
 	}
 
@@ -70,7 +83,45 @@ func SubmitTask(req models.ExportRequest) (*models.ExportTask, error) {
 	return task, nil
 }
 
+func UpdateProgress(taskID uint, progress int) {
+	taskMutex.Lock()
+	if rt, exists := runningTasksMap[taskID]; exists {
+		rt.progress = progress
+	}
+	taskMutex.Unlock()
+}
+
+func UpdateTaskStatusDB(taskID uint, status string, progress int, filePath, fileName, errMsg string) {
+	updates := map[string]interface{}{
+		"status":   status,
+		"progress": progress,
+	}
+	if filePath != "" {
+		updates["file_path"] = filePath
+	}
+	if fileName != "" {
+		updates["file_name"] = fileName
+	}
+	if errMsg != "" {
+		updates["error_message"] = errMsg
+	}
+
+	database.DB.Model(&models.ExportTask{}).Where("id = ?", taskID).Updates(updates)
+}
+
 func GetTaskProgress(taskID uint) (*models.ProgressResponse, error) {
+	taskMutex.RLock()
+	if rt, exists := runningTasksMap[taskID]; exists {
+		resp := &models.ProgressResponse{
+			ID:       taskID,
+			Status:   rt.status,
+			Progress: rt.progress,
+		}
+		taskMutex.RUnlock()
+		return resp, nil
+	}
+	taskMutex.RUnlock()
+
 	var task models.ExportTask
 	if err := database.DB.First(&task, taskID).Error; err != nil {
 		return nil, err
@@ -97,6 +148,26 @@ func GetTaskFile(taskID uint) (*models.ExportTask, error) {
 	return &task, nil
 }
 
+func periodicDBFlush() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		taskMutex.RLock()
+		snapshots := make(map[uint]int)
+		for id, rt := range runningTasksMap {
+			snapshots[id] = rt.progress
+		}
+		taskMutex.RUnlock()
+
+		for id, progress := range snapshots {
+			database.DB.Model(&models.ExportTask{}).
+				Where("id = ? AND status = ?", id, config.TaskStatusProcessing).
+				Update("progress", progress)
+		}
+	}
+}
+
 func cleanupOldFiles() {
 	ticker := time.NewTicker(1 * time.Hour)
 	defer ticker.Stop()
@@ -105,7 +176,7 @@ func cleanupOldFiles() {
 		cutoff := time.Now().AddDate(0, 0, -config.FileRetentionDays)
 
 		var oldTasks []models.ExportTask
-		database.DB.Where("created_at < ? AND file_path IS NOT NULL", cutoff).Find(&oldTasks)
+		database.DB.Where("created_at < ? AND file_path IS NOT NULL AND file_path != ''", cutoff).Find(&oldTasks)
 
 		for _, task := range oldTasks {
 			if task.FilePath != "" {

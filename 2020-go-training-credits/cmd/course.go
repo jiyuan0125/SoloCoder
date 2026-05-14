@@ -17,11 +17,12 @@ var courseCmd = &cobra.Command{
 }
 
 var (
-	courseID        string
-	courseName      string
-	courseCredits   int
-	courseType      string
-	courseValidDays int
+	courseID             string
+	courseName           string
+	courseCredits        int
+	courseType           string
+	addCourseValidDays   int
+	updateCourseValidDays int
 )
 
 var addCourseCmd = &cobra.Command{
@@ -47,7 +48,7 @@ var addCourseCmd = &cobra.Command{
 			id = uuid.New().String()[:8]
 		}
 
-		validUntil := time.Now().AddDate(0, 0, courseValidDays)
+		validUntil := time.Now().AddDate(0, 0, addCourseValidDays)
 
 		course := &models.Course{
 			ID:         id,
@@ -130,8 +131,8 @@ var updateCourseCmd = &cobra.Command{
 			}
 			existing.Type = models.CourseType(courseType)
 		}
-		if courseValidDays > 0 {
-			existing.ValidUntil = time.Now().AddDate(0, 0, courseValidDays)
+		if updateCourseValidDays > 0 {
+			existing.ValidUntil = time.Now().AddDate(0, 0, updateCourseValidDays)
 		}
 		existing.UpdatedAt = time.Now()
 
@@ -168,7 +169,7 @@ func init() {
 	addCourseCmd.Flags().StringVar(&courseName, "name", "", "课程名称")
 	addCourseCmd.Flags().IntVar(&courseCredits, "credits", 0, "学分数（必须大于 0）")
 	addCourseCmd.Flags().StringVar(&courseType, "type", "elective", "课程类型：required 必修，elective 选修")
-	addCourseCmd.Flags().IntVar(&courseValidDays, "valid-days", 365, "有效期天数")
+	addCourseCmd.Flags().IntVar(&addCourseValidDays, "valid-days", 365, "有效期天数")
 
 	addCourseCmd.MarkFlagRequired("name")
 	addCourseCmd.MarkFlagRequired("credits")
@@ -180,7 +181,7 @@ func init() {
 	updateCourseCmd.Flags().StringVar(&courseName, "name", "", "课程名称")
 	updateCourseCmd.Flags().IntVar(&courseCredits, "credits", 0, "学分数（必须大于 0）")
 	updateCourseCmd.Flags().StringVar(&courseType, "type", "", "课程类型：required 必修，elective 选修")
-	updateCourseCmd.Flags().IntVar(&courseValidDays, "valid-days", 0, "有效期天数")
+	updateCourseCmd.Flags().IntVar(&updateCourseValidDays, "valid-days", 0, "有效期天数")
 	updateCourseCmd.MarkFlagRequired("id")
 
 	deleteCourseCmd.Flags().StringVar(&courseID, "id", "", "课程 ID")

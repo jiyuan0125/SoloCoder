@@ -1,7 +1,7 @@
 package config
 
 const (
-	ServerPort         = "8803"
+	ServerPort         = "8080"
 	DatabasePath       = "./data/image_batch.db"
 	UploadDir          = "./uploads"
 	OutputDir          = "./outputs"

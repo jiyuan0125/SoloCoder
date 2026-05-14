@@ -122,7 +122,8 @@ class ProxyService:
                     key=cache_key,
                     value=content,
                     status_code=status_code,
-                    ttl=ttl
+                    ttl=ttl,
+                    path=path
                 )
             
             return content, status_code, response_headers
@@ -208,7 +209,8 @@ class ProxyService:
                     key=cache_key,
                     value=content,
                     status_code=status_code,
-                    ttl=ttl
+                    ttl=ttl,
+                    path=path
                 )
             
             response_headers["X-Cache"] = "MISS (Timeout during breakdown protection)"
@@ -246,7 +248,8 @@ class ProxyService:
                     key=cache_key,
                     value=content,
                     status_code=status_code,
-                    ttl=ttl
+                    ttl=ttl,
+                    path=path
                 )
             
             response_headers["X-Write-Strategy"] = "write_through"

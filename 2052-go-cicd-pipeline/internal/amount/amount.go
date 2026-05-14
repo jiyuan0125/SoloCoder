@@ -40,14 +40,12 @@ func (m *Manager) AdjustTotalAmount(pipelineID string, newTotal float64) error {
 
 	var completedTotal float64
 	var oldIncompleteTotal float64
-	var incompletePhases []*types.Phase
 
 	for i := range pipeline.Phases {
 		if completedPhaseTypes[pipeline.Phases[i].Type] {
 			completedTotal += pipeline.Phases[i].PlannedAmount
 		} else {
 			oldIncompleteTotal += pipeline.Phases[i].PlannedAmount
-			incompletePhases = append(incompletePhases, &pipeline.Phases[i])
 		}
 	}
 
@@ -56,16 +54,26 @@ func (m *Manager) AdjustTotalAmount(pipelineID string, newTotal float64) error {
 		remainingAmount = 0
 	}
 
-	if len(incompletePhases) > 0 {
-		if oldIncompleteTotal > 0 {
-			ratio := remainingAmount / oldIncompleteTotal
-			for _, phase := range incompletePhases {
-				phase.PlannedAmount *= ratio
+	if oldIncompleteTotal > 0 && remainingAmount > 0 {
+		ratio := remainingAmount / oldIncompleteTotal
+		for i := range pipeline.Phases {
+			if !completedPhaseTypes[pipeline.Phases[i].Type] {
+				pipeline.Phases[i].PlannedAmount *= ratio
 			}
-		} else {
-			equalShare := remainingAmount / float64(len(incompletePhases))
-			for _, phase := range incompletePhases {
-				phase.PlannedAmount = equalShare
+		}
+	} else if remainingAmount > 0 {
+		var incompleteCount int
+		for i := range pipeline.Phases {
+			if !completedPhaseTypes[pipeline.Phases[i].Type] {
+				incompleteCount++
+			}
+		}
+		if incompleteCount > 0 {
+			equalShare := remainingAmount / float64(incompleteCount)
+			for i := range pipeline.Phases {
+				if !completedPhaseTypes[pipeline.Phases[i].Type] {
+					pipeline.Phases[i].PlannedAmount = equalShare
+				}
 			}
 		}
 	}

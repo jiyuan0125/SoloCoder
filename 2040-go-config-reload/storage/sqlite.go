@@ -24,6 +24,13 @@ type ConfigHistory struct {
 	Success     bool
 }
 
+type nullableFields struct {
+	serviceName sql.NullString
+	oldHash     sql.NullString
+	configData  sql.NullString
+	message     sql.NullString
+}
+
 type Storage struct {
 	mu sync.Mutex
 	db *sql.DB
@@ -166,21 +173,34 @@ func (s *Storage) GetRecentHistory(limit int) ([]ConfigHistory, error) {
 	for rows.Next() {
 		var rec ConfigHistory
 		var successInt int
+		var nf nullableFields
 		err := rows.Scan(
 			&rec.ID,
 			&rec.Timestamp,
 			&rec.Hash,
-			&rec.OldHash,
+			&nf.oldHash,
 			&rec.ChangeType,
-			&rec.ServiceName,
-			&rec.ConfigData,
-			&rec.Message,
+			&nf.serviceName,
+			&nf.configData,
+			&nf.message,
 			&successInt,
 		)
 		if err != nil {
 			return nil, err
 		}
 		rec.Success = successInt == 1
+		if nf.oldHash.Valid {
+			rec.OldHash = nf.oldHash.String
+		}
+		if nf.serviceName.Valid {
+			rec.ServiceName = nf.serviceName.String
+		}
+		if nf.configData.Valid {
+			rec.ConfigData = nf.configData.String
+		}
+		if nf.message.Valid {
+			rec.Message = nf.message.String
+		}
 		records = append(records, rec)
 	}
 	return records, nil

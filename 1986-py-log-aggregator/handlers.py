@@ -1,12 +1,12 @@
 import json
 import time
 from aiohttp import web
-from log_aggregator import LogEntry, LEVEL_MAP, DEFAULT_TOP_N, MAX_TOP_N, BATCH_SIZE_LIMIT
+from log_aggregator import LogEntry, LEVEL_MAP, DEFAULT_TOP_N, MAX_TOP_N, BATCH_SIZE_LIMIT, parse_timestamp as parse_ts
 
 
 def parse_timestamp(ts_str: str) -> float:
     try:
-        return float(ts_str)
+        return parse_ts(ts_str)
     except ValueError:
         raise web.HTTPBadRequest(reason=f"Invalid timestamp: {ts_str}")
 

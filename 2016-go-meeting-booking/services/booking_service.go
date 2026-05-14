@@ -142,6 +142,7 @@ func createRecurringBookings(req *CreateBookingRequest, room *models.Room, start
 	if err != nil {
 		return nil, errors.New("invalid recurring end date")
 	}
+	endDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
 
 	currentDate := startTime
 	weekday := currentDate.Weekday()

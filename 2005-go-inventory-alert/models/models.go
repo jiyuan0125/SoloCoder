@@ -62,6 +62,28 @@ func ValidateAlertStatus(status AlertStatus) error {
 	}
 }
 
+func ValidateAlertStatusTransition(currentStatus, newStatus AlertStatus) error {
+	validTransitions := map[AlertStatus][]AlertStatus{
+		AlertStatusPending:    {AlertStatusProcessing},
+		AlertStatusProcessing: {AlertStatusAwaiting},
+		AlertStatusAwaiting:   {AlertStatusClosed},
+		AlertStatusClosed:     {},
+	}
+
+	validNextStatuses, exists := validTransitions[currentStatus]
+	if !exists {
+		return errors.New("invalid current status")
+	}
+
+	for _, validNext := range validNextStatuses {
+		if validNext == newStatus {
+			return nil
+		}
+	}
+
+	return errors.New("invalid status transition")
+}
+
 func CalculateAlertLevel(currentStock, safetyStock int) AlertLevel {
 	if currentStock < 5 {
 		return AlertLevelRed

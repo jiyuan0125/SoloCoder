@@ -121,13 +121,39 @@ func ListDocuments() ([]*models.Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+
+	type docBasic struct {
+		ID        int
+		Title     string
+		Body      string
+		CreatedAt string
+		UpdatedAt string
+	}
+
+	basicDocs := []*docBasic{}
+	for rows.Next() {
+		d := &docBasic{}
+		if err := rows.Scan(&d.ID, &d.Title, &d.Body, &d.CreatedAt, &d.UpdatedAt); err != nil {
+			rows.Close()
+			return nil, err
+		}
+		basicDocs = append(basicDocs, d)
+	}
+
+	if err := rows.Err(); err != nil {
+		rows.Close()
+		return nil, err
+	}
+	rows.Close()
 
 	docs := []*models.Document{}
-	for rows.Next() {
-		doc := &models.Document{}
-		if err := rows.Scan(&doc.ID, &doc.Title, &doc.Body, &doc.CreatedAt, &doc.UpdatedAt); err != nil {
-			return nil, err
+	for _, d := range basicDocs {
+		doc := &models.Document{
+			ID:        d.ID,
+			Title:     d.Title,
+			Body:      d.Body,
+			CreatedAt: d.CreatedAt,
+			UpdatedAt: d.UpdatedAt,
 		}
 
 		customFields, err := getCustomFields(doc.ID)
@@ -137,10 +163,6 @@ func ListDocuments() ([]*models.Document, error) {
 		doc.CustomFields = customFields
 
 		docs = append(docs, doc)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
 	}
 
 	return docs, nil

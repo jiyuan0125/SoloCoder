@@ -218,7 +218,7 @@ func (b *Bulkhead) ShouldBreak() bool {
 	return false
 }
 
-func (b *Bulkhead) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (b *Bulkhead) ServeHTTP(w http.ResponseWriter, r *http.Request, targetPath string) {
 	state := b.GetState()
 	
 	if state == StateBreaking {
@@ -248,9 +248,8 @@ func (b *Bulkhead) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	
 	rw := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 	
-	modifiedPath := "/" + b.Name + r.URL.Path
 	originalPath := r.URL.Path
-	r.URL.Path = modifiedPath
+	r.URL.Path = targetPath
 	
 	b.proxy.ServeHTTP(rw, r)
 	
@@ -440,13 +439,18 @@ func updateConfig(c *gin.Context) {
 
 func proxyHandler(c *gin.Context) {
 	name := c.Param("name")
+	path := c.Param("path")
 	b, ok := manager.Get(name)
 	if !ok {
 		c.JSON(http.StatusNotFound, gin.H{"error": "bulkhead not found"})
 		return
 	}
 	
-	b.ServeHTTP(c.Writer, c.Request)
+	if path == "" {
+		path = "/"
+	}
+	
+	b.ServeHTTP(c.Writer, c.Request, path)
 }
 
 func getPort() string {

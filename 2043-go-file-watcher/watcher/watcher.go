@@ -121,6 +121,12 @@ func (m *WatcherManager) handleEvent(event fsnotify.Event) {
 		return
 	}
 
+	if eventType == "create" && matchedWatcher.Recursive {
+		if info, err := os.Stat(event.Name); err == nil && info.IsDir() {
+			m.watchNewDirectoryRecursively(event.Name)
+		}
+	}
+
 	eventInfo := EventInfo{
 		WatchID:   matchedWatcher.ID,
 		Path:      event.Name,
@@ -316,6 +322,29 @@ func (m *WatcherManager) walkAndWatch(dw *DirectoryWatcher) {
 		if info.IsDir() && path != dw.Path {
 			if err := m.watcher.Add(path); err != nil {
 				log.Printf("Warning: failed to add watch for %s: %v", path, err)
+			}
+		}
+
+		return nil
+	})
+}
+
+func (m *WatcherManager) watchNewDirectoryRecursively(root string) {
+	filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			if os.IsPermission(err) {
+				log.Printf("Warning: permission denied for %s, skipping", path)
+				return filepath.SkipDir
+			}
+			log.Printf("Warning: error walking %s: %v", path, err)
+			return nil
+		}
+
+		if info.IsDir() {
+			if err := m.watcher.Add(path); err != nil {
+				log.Printf("Warning: failed to add watch for %s: %v", path, err)
+			} else {
+				log.Printf("Added watch for newly created directory: %s", path)
 			}
 		}
 

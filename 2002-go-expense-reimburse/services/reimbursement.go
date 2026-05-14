@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"time"
 
 	"expense-reimburse/database"
@@ -24,36 +25,58 @@ func CentToYuan(amountCent int64) float64 {
 	return float64(amountCent) / 100.0
 }
 
-func DetermineApprover(amountCent int64) models.ApprovalRole {
+func BuildApprovalChain(amountCent int64) []models.ApprovalRole {
 	amountYuan := CentToYuan(amountCent)
-	switch {
-	case amountYuan < 500:
-		return models.RoleManager
-	case amountYuan >= 500 && amountYuan < 5000:
-		return models.RoleDepartment
-	default:
-		return models.RoleCFO
+	var chain []models.ApprovalRole
+
+	chain = append(chain, models.RoleManager)
+
+	if amountYuan >= 500 {
+		chain = append(chain, models.RoleDepartment)
 	}
+
+	if amountYuan >= 5000 {
+		chain = append(chain, models.RoleCFO)
+	}
+
+	return chain
 }
 
-func GetNextApprover(currentApprover models.ApprovalRole, amountCent int64) (models.ApprovalRole, bool) {
-	amountYuan := CentToYuan(amountCent)
-
-	switch currentApprover {
-	case models.RoleManager:
-		if amountYuan >= 500 {
-			return models.RoleDepartment, true
-		}
-		return "", false
-	case models.RoleDepartment:
-		if amountYuan >= 5000 {
-			return models.RoleCFO, true
-		}
-		return "", false
-	case models.RoleCFO:
-		return "", false
+func ApprovalChainToString(chain []models.ApprovalRole) string {
+	strs := make([]string, len(chain))
+	for i, role := range chain {
+		strs[i] = string(role)
 	}
-	return "", false
+	return strings.Join(strs, ",")
+}
+
+func StringToApprovalChain(s string) []models.ApprovalRole {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	chain := make([]models.ApprovalRole, 0, len(parts))
+	for _, part := range parts {
+		chain = append(chain, models.ApprovalRole(part))
+	}
+	return chain
+}
+
+func CalculateStageAmounts(amountCent int64, stageCount int) []int64 {
+	if stageCount == 0 {
+		return nil
+	}
+	baseAmount := amountCent / int64(stageCount)
+	remainder := amountCent % int64(stageCount)
+
+	amounts := make([]int64, stageCount)
+	for i := 0; i < stageCount; i++ {
+		amounts[i] = baseAmount
+		if i == stageCount-1 {
+			amounts[i] += remainder
+		}
+	}
+	return amounts
 }
 
 func CheckDuplicate(employeeID string, occurredDate time.Time, amountCent int64, expenseType models.ExpenseType, excludeID int64) (*models.Reimbursement, error) {
@@ -61,7 +84,7 @@ func CheckDuplicate(employeeID string, occurredDate time.Time, amountCent int64,
 
 	query := `
 		SELECT id, employee_id, amount_cent, expense_type, occurred_date, description,
-		       status, current_approver, modify_count, created_at, updated_at
+		       status, current_approval_step, approval_chain, modify_count, created_at, updated_at
 		FROM reimbursements
 		WHERE employee_id = ? 
 		  AND occurred_date = ? 
@@ -110,14 +133,15 @@ func SubmitReimbursement(req *models.SubmitRequest) (*models.Reimbursement, erro
 		return nil, fmt.Errorf("409:已有报销单号 #%d", dup.ID)
 	}
 
-	currentApprover := DetermineApprover(amountCent)
+	approvalChain := BuildApprovalChain(amountCent)
+	chainStr := ApprovalChainToString(approvalChain)
 	now := time.Now()
 
 	query := `
 		INSERT INTO reimbursements 
 		(employee_id, amount_cent, expense_type, occurred_date, description, 
-		 status, current_approver, modify_count, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		 status, current_approval_step, approval_chain, modify_count, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 	`
 
 	result, err := database.DB.Exec(query,
@@ -127,7 +151,8 @@ func SubmitReimbursement(req *models.SubmitRequest) (*models.Reimbursement, erro
 		database.FormatDate(occurredDate),
 		req.Description,
 		models.StatusPending,
-		currentApprover,
+		0,
+		chainStr,
 		0,
 		database.FormatTime(now),
 		database.FormatTime(now),
@@ -141,7 +166,19 @@ func SubmitReimbursement(req *models.SubmitRequest) (*models.Reimbursement, erro
 		return nil, err
 	}
 
-	if err = addStatusHistory(id, "", models.StatusPending, "system", fmt.Sprintf("提交成功，当前审批人: %s", currentApprover)); err != nil {
+	stageAmounts := CalculateStageAmounts(amountCent, len(approvalChain))
+	for i, role := range approvalChain {
+		_, err = database.DB.Exec(
+			`INSERT INTO stages (reimbursement_id, approval_role, amount_cent, approval_step) VALUES (?, ?, ?, ?)`,
+			id, string(role), stageAmounts[i], i,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	note := fmt.Sprintf("提交成功，审批链: %s，当前审批: %s", chainStr, approvalChain[0])
+	if err = addStatusHistory(id, "", models.StatusPending, "system", note); err != nil {
 		return nil, err
 	}
 
@@ -176,21 +213,38 @@ func UpdateReimbursement(req *models.UpdateRequest) (*models.Reimbursement, erro
 		return nil, fmt.Errorf("409:已有报销单号 #%d", dup.ID)
 	}
 
-	newApprover := DetermineApprover(newAmountCent)
+	newApprovalChain := BuildApprovalChain(newAmountCent)
+	newChainStr := ApprovalChainToString(newApprovalChain)
 	now := time.Now()
 
 	query := `
 		UPDATE reimbursements 
-		SET amount_cent = ?, current_approver = ?, modify_count = ?, status = ?, updated_at = ?
+		SET amount_cent = ?, approval_chain = ?, current_approval_step = ?, modify_count = ?, status = ?, updated_at = ?
 		WHERE id = ?
 	`
 
-	_, err = database.DB.Exec(query, newAmountCent, newApprover, rm.ModifyCount+1, models.StatusPending, database.FormatTime(now), rm.ID)
+	_, err = database.DB.Exec(query, newAmountCent, newChainStr, 0, rm.ModifyCount+1, models.StatusPending, database.FormatTime(now), rm.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	note := fmt.Sprintf("修改金额: %.2f元 -> %.2f元", CentToYuan(oldAmountCent), CentToYuan(newAmountCent))
+	_, err = database.DB.Exec(`DELETE FROM stages WHERE reimbursement_id = ?`, rm.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	stageAmounts := CalculateStageAmounts(newAmountCent, len(newApprovalChain))
+	for i, role := range newApprovalChain {
+		_, err = database.DB.Exec(
+			`INSERT INTO stages (reimbursement_id, approval_role, amount_cent, approval_step) VALUES (?, ?, ?, ?)`,
+			rm.ID, string(role), stageAmounts[i], i,
+		)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	note := fmt.Sprintf("修改金额: %.2f元 -> %.2f元，新审批链: %s", CentToYuan(oldAmountCent), CentToYuan(newAmountCent), newChainStr)
 	if err = addStatusHistory(rm.ID, models.StatusRejected, models.StatusPending, req.EmployeeID, note); err != nil {
 		return nil, err
 	}
@@ -212,29 +266,40 @@ func ApproveReimbursement(id int64, req *models.ApprovalRequest) (*models.Reimbu
 		return nil, fmt.Errorf("只有待审批状态可以操作")
 	}
 
-	if req.ApproverRole != string(rm.CurrentApprover) {
-		return nil, fmt.Errorf("无权审批该报销单")
+	if len(rm.ApprovalChain) == 0 {
+		return nil, fmt.Errorf("审批链为空")
+	}
+
+	currentStep := rm.CurrentApprovalStep
+	if currentStep >= len(rm.ApprovalChain) {
+		return nil, fmt.Errorf("审批已完成")
+	}
+
+	currentApprover := rm.ApprovalChain[currentStep]
+	if req.ApproverRole != string(currentApprover) {
+		return nil, fmt.Errorf("当前审批人为 %s，无权审批", currentApprover)
 	}
 
 	now := time.Now()
-	currentRole := rm.CurrentApprover
 
 	if req.Action == "approve" {
-		nextApprover, hasNext := GetNextApprover(currentRole, rm.AmountCent)
+		nextStep := currentStep + 1
+		hasNext := nextStep < len(rm.ApprovalChain)
 
 		var newStatus models.ReimbursementStatus
 		var note string
 
 		if hasNext {
 			newStatus = models.StatusPending
-			note = fmt.Sprintf("%s审批通过，流转至 %s", currentRole, nextApprover)
+			nextApprover := rm.ApprovalChain[nextStep]
+			note = fmt.Sprintf("%s审批通过，流转至 %s", currentApprover, nextApprover)
 		} else {
 			newStatus = models.StatusCompleted
-			note = fmt.Sprintf("%s审批通过，流程完成", currentRole)
+			note = fmt.Sprintf("%s审批通过，流程完成", currentApprover)
 		}
 
-		query := `UPDATE reimbursements SET status = ?, current_approver = ?, updated_at = ? WHERE id = ?`
-		_, err = database.DB.Exec(query, newStatus, nextApprover, database.FormatTime(now), rm.ID)
+		query := `UPDATE reimbursements SET status = ?, current_approval_step = ?, updated_at = ? WHERE id = ?`
+		_, err = database.DB.Exec(query, newStatus, nextStep, database.FormatTime(now), rm.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -250,7 +315,7 @@ func ApproveReimbursement(id int64, req *models.ApprovalRequest) (*models.Reimbu
 			return nil, err
 		}
 
-		note := fmt.Sprintf("%s驳回", currentRole)
+		note := fmt.Sprintf("%s驳回", currentApprover)
 		if req.Note != "" {
 			note += ": " + req.Note
 		}
@@ -266,7 +331,7 @@ func ApproveReimbursement(id int64, req *models.ApprovalRequest) (*models.Reimbu
 func GetReimbursementByID(id int64) (*models.Reimbursement, error) {
 	query := `
 		SELECT id, employee_id, amount_cent, expense_type, occurred_date, description,
-		       status, current_approver, modify_count, created_at, updated_at
+		       status, current_approval_step, approval_chain, modify_count, created_at, updated_at
 		FROM reimbursements
 		WHERE id = ?
 	`
@@ -284,7 +349,49 @@ func GetReimbursementByID(id int64) (*models.Reimbursement, error) {
 		addStatusHistory(rm.ID, models.StatusPending, models.StatusExpired, "system", "超过30天未审批，自动过期")
 	}
 
+	stages, err := GetStagesByReimbursementID(id)
+	if err != nil {
+		return nil, err
+	}
+	rm.Stages = stages
+
 	return rm, nil
+}
+
+func GetStagesByReimbursementID(reimbursementID int64) ([]*models.Stage, error) {
+	query := `
+		SELECT id, reimbursement_id, approval_role, amount_cent, approval_step
+		FROM stages
+		WHERE reimbursement_id = ?
+		ORDER BY approval_step ASC
+	`
+
+	rows, err := database.DB.Query(query, reimbursementID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var stages []*models.Stage
+	for rows.Next() {
+		var s models.StageDB
+		err := rows.Scan(&s.ID, &s.ReimbursementID, &s.ApprovalRole, &s.AmountCent, &s.ApprovalStep)
+		if err != nil {
+			return nil, err
+		}
+
+		stage := &models.Stage{
+			ID:              s.ID,
+			ReimbursementID: s.ReimbursementID,
+			ApprovalRole:     models.ApprovalRole(s.ApprovalRole),
+			AmountCent:     s.AmountCent,
+			AmountYuan:   CentToYuan(s.AmountCent),
+			ApprovalStep: s.ApprovalStep,
+		}
+		stages = append(stages, stage)
+	}
+
+	return stages, rows.Err()
 }
 
 func GetReimbursements(employeeID string) ([]*models.Reimbursement, error) {
@@ -294,7 +401,7 @@ func GetReimbursements(employeeID string) ([]*models.Reimbursement, error) {
 	if employeeID != "" {
 		query = `
 			SELECT id, employee_id, amount_cent, expense_type, occurred_date, description,
-			       status, current_approver, modify_count, created_at, updated_at
+			       status, current_approval_step, approval_chain, modify_count, created_at, updated_at
 			FROM reimbursements
 			WHERE employee_id = ?
 			ORDER BY created_at DESC
@@ -303,7 +410,7 @@ func GetReimbursements(employeeID string) ([]*models.Reimbursement, error) {
 	} else {
 		query = `
 			SELECT id, employee_id, amount_cent, expense_type, occurred_date, description,
-			       status, current_approver, modify_count, created_at, updated_at
+			       status, current_approval_step, approval_chain, modify_count, created_at, updated_at
 			FROM reimbursements
 			ORDER BY created_at DESC
 		`
@@ -328,6 +435,12 @@ func GetReimbursements(employeeID string) ([]*models.Reimbursement, error) {
 			database.DB.Exec(updateQuery, models.StatusExpired, database.FormatTime(now), rm.ID)
 			addStatusHistory(rm.ID, models.StatusPending, models.StatusExpired, "system", "超过30天未审批，自动过期")
 		}
+
+		stages, err := GetStagesByReimbursementID(rm.ID)
+		if err != nil {
+			return nil, err
+		}
+		rm.Stages = stages
 
 		list = append(list, rm)
 	}
@@ -398,7 +511,7 @@ type rowScanner interface {
 
 func scanReimbursement(scanner rowScanner) (*models.Reimbursement, error) {
 	rm := &models.Reimbursement{}
-	var occurredDate, createdAt, updatedAt string
+	var occurredDate, createdAt, updatedAt, approvalChainStr string
 
 	err := scanner.Scan(
 		&rm.ID,
@@ -408,7 +521,8 @@ func scanReimbursement(scanner rowScanner) (*models.Reimbursement, error) {
 		&occurredDate,
 		&rm.Description,
 		&rm.Status,
-		&rm.CurrentApprover,
+		&rm.CurrentApprovalStep,
+		&approvalChainStr,
 		&rm.ModifyCount,
 		&createdAt,
 		&updatedAt,
@@ -421,6 +535,7 @@ func scanReimbursement(scanner rowScanner) (*models.Reimbursement, error) {
 	rm.OccurredDate, _ = database.ParseDate(occurredDate)
 	rm.CreatedAt, _ = database.ParseTime(createdAt)
 	rm.UpdatedAt, _ = database.ParseTime(updatedAt)
+	rm.ApprovalChain = StringToApprovalChain(approvalChainStr)
 
 	return rm, nil
 }

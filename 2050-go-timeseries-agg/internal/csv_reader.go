@@ -2,6 +2,7 @@ package internal
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/csv"
 	"fmt"
 	"io"
@@ -14,10 +15,8 @@ import (
 type CSVReader struct {
 	reader      *csv.Reader
 	file        *os.File
-	scanner     *bufio.Scanner
 	timezone    *time.Location
 	header      []string
-	headerLine  int
 	currentLine int
 }
 
@@ -38,11 +37,8 @@ func NewCSVReader(filename string) (*CSVReader, error) {
 		return nil, fmt.Errorf("无法打开文件: %s, 错误: %v", filename, err)
 	}
 
-	scanner := bufio.NewScanner(file)
-
 	cr := &CSVReader{
 		file:        file,
-		scanner:     scanner,
 		currentLine: 0,
 	}
 
@@ -50,33 +46,60 @@ func NewCSVReader(filename string) (*CSVReader, error) {
 }
 
 func (cr *CSVReader) ReadHeader() ([]string, error) {
-	var lines []string
-	for i := 0; i < 3; i++ {
-		if !cr.scanner.Scan() {
-			break
-		}
-		line := cr.scanner.Text()
-		cr.currentLine++
-		lines = append(lines, line)
+	data, err := io.ReadAll(cr.file)
+	if err != nil {
+		return nil, fmt.Errorf("读取文件失败: %v", err)
 	}
 
-	if err := cr.scanner.Err(); err != nil {
-		return nil, fmt.Errorf("读取文件头失败: %v", err)
-	}
+	scanner := bufio.NewScanner(bytes.NewReader(data))
 
 	var tzName string
-	var headerStart int
+	var headerLineNum int = -1
+	var headerContent string
+	var afterHeaderStart int = -1
+	var lineStartPositions []int
 
-	for i, line := range lines {
-		if strings.HasPrefix(strings.TrimSpace(line), "timezone=") {
-			parts := strings.SplitN(line, "=", 2)
+	pos := 0
+	lineNum := 0
+
+	for scanner.Scan() {
+		line := scanner.Text()
+		lineNum++
+		lineStartPositions = append(lineStartPositions, pos)
+
+		lineLen := len(scanner.Bytes()) + 1
+		pos += lineLen
+
+		trimmed := strings.TrimSpace(line)
+
+		if strings.HasPrefix(trimmed, "timezone=") {
+			parts := strings.SplitN(trimmed, "=", 2)
 			if len(parts) == 2 {
 				tzName = strings.TrimSpace(parts[1])
 			}
-		} else if strings.Contains(line, ",") && !strings.HasPrefix(strings.TrimSpace(line), "#") {
-			headerStart = i
+			continue
+		}
+
+		if strings.HasPrefix(trimmed, "#") {
+			continue
+		}
+
+		if strings.Contains(line, ",") {
+			headerLineNum = lineNum
+			headerContent = line
+			if lineNum < len(lineStartPositions) {
+				afterHeaderStart = lineStartPositions[lineNum]
+			}
 			break
 		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("扫描文件头失败: %v", err)
+	}
+
+	if headerLineNum < 0 {
+		return nil, fmt.Errorf("未找到 CSV 表头")
 	}
 
 	if tzName == "" {
@@ -85,45 +108,26 @@ func (cr *CSVReader) ReadHeader() ([]string, error) {
 
 	loc, err := time.LoadLocation(tzName)
 	if err != nil {
-		return nil, fmt.Errorf("解析时区失败，行号: %d, 原因: %s", cr.currentLine-len(lines)+1, err.Error())
+		return nil, fmt.Errorf("解析时区失败，行号: %d, 原因: %s", headerLineNum, err.Error())
 	}
 	cr.timezone = loc
 
-	if headerStart >= len(lines) {
-		return nil, fmt.Errorf("未找到 CSV 表头")
-	}
-
-	header := strings.Split(lines[headerStart], ",")
+	header := strings.Split(headerContent, ",")
 	for i, h := range header {
 		header[i] = strings.TrimSpace(h)
 	}
 	cr.header = header
-	cr.headerLine = cr.currentLine - len(lines) + headerStart + 1
 
-	remaining := strings.Join(lines[headerStart+1:], "\n")
-
-	file, err := os.Open(cr.file.Name())
-	if err != nil {
-		return nil, fmt.Errorf("重新打开文件失败: %v", err)
-	}
-	cr.file.Close()
-	cr.file = file
-
-	reader := bufio.NewReader(file)
-	for i := 0; i < cr.headerLine; i++ {
-		_, _, err := reader.ReadLine()
-		if err != nil {
-			break
-		}
-	}
-
-	if remaining != "" {
-		cr.reader = csv.NewReader(io.MultiReader(strings.NewReader(remaining+"\n"), reader))
+	var remainingData []byte
+	if afterHeaderStart >= 0 && afterHeaderStart < len(data) {
+		remainingData = data[afterHeaderStart:]
 	} else {
-		cr.reader = csv.NewReader(reader)
+		remainingData = []byte{}
 	}
+
+	cr.reader = csv.NewReader(bytes.NewReader(remainingData))
 	cr.reader.FieldsPerRecord = -1
-	cr.currentLine = cr.headerLine
+	cr.currentLine = headerLineNum
 
 	return header, nil
 }

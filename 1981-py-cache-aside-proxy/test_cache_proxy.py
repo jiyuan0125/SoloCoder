@@ -4,8 +4,8 @@ import httpx
 import time
 import json
 
-PROXY_URL = "http://127.0.0.1:8000"
-BACKEND_URL = "http://127.0.0.1:8081"
+PROXY_URL = "http://127.0.0.1:9900"
+BACKEND_URL = "http://127.0.0.1:9901"
 
 
 async def test_basic_cache():
@@ -44,19 +44,28 @@ async def test_query_params_cache():
 async def test_write_strategy_invalidation():
     print("\n=== 测试 3: 失效模式写策略 ===")
     async with httpx.AsyncClient() as client:
-        r1 = await client.get(f"{PROXY_URL}/api/users/1")
-        print(f"  GET /api/users/1 第1次 - X-Cache: {r1.headers.get('X-Cache')}")
+        r1 = await client.get(f"{PROXY_URL}/api/users")
+        print(f"  GET /api/users 第1次 - X-Cache: {r1.headers.get('X-Cache')}")
+        assert r1.headers.get('X-Cache') == 'MISS'
         
-        r2 = await client.post(
+        r2 = await client.get(f"{PROXY_URL}/api/users")
+        print(f"  GET /api/users 第2次 - X-Cache: {r2.headers.get('X-Cache')}")
+        assert r2.headers.get('X-Cache') == 'HIT'
+        count_before = r2.json()['request_count']
+        
+        r3 = await client.post(
             f"{PROXY_URL}/api/users",
             json={"name": "New User"},
             headers={"Content-Type": "application/json"}
         )
-        print(f"  POST /api/users - X-Write-Strategy: {r2.headers.get('X-Write-Strategy')}")
-        assert r2.headers.get('X-Write-Strategy') == 'invalidation'
+        print(f"  POST /api/users - X-Write-Strategy: {r3.headers.get('X-Write-Strategy')}")
+        assert r3.headers.get('X-Write-Strategy') == 'invalidation'
         
-        r3 = await client.get(f"{PROXY_URL}/api/users")
-        print(f"  POST后 GET /api/users - X-Cache: {r3.headers.get('X-Cache')}")
+        r4 = await client.get(f"{PROXY_URL}/api/users")
+        print(f"  POST后 GET /api/users - X-Cache: {r4.headers.get('X-Cache')}")
+        assert r4.headers.get('X-Cache') == 'MISS', "写操作后缓存应该失效，应该是 MISS"
+        count_after = r4.json()['request_count']
+        assert count_after > count_before, "写操作后重新请求后端，request_count 应该增加"
         
         print("  ✓ 失效模式写策略测试通过")
 
@@ -106,8 +115,19 @@ async def main():
     print("开始测试 FastAPI 旁路缓存代理...")
     print("=" * 60)
     
+    async with httpx.AsyncClient() as client:
+        await client.post(f"{PROXY_URL}/_admin/cache/clear")
+        await client.post(f"{PROXY_URL}/_admin/stats/reset")
+        print("已清除缓存和统计")
+    
     await test_basic_cache()
     await test_query_params_cache()
+    
+    async with httpx.AsyncClient() as client:
+        await client.post(f"{PROXY_URL}/_admin/cache/clear")
+        await client.post(f"{PROXY_URL}/_admin/stats/reset")
+        print("测试写策略前已清除缓存")
+    
     await test_write_strategy_invalidation()
     await test_admin_endpoints()
     await test_concurrent_breakdown_protection()

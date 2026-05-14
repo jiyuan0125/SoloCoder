@@ -208,20 +208,24 @@ func splitBySeparator(str string, sep string) []string {
 		return []string{}
 	}
 
-	var parts []string
-	current := ""
-	sepLen := len(sep)
+	runes := []rune(str)
+	sepRunes := []rune(sep)
+	sepLen := len(sepRunes)
 
-	for i := 0; i < len(str); i++ {
-		if i+sepLen <= len(str) && str[i:i+sepLen] == sep {
-			parts = append(parts, current)
-			current = ""
-			i += sepLen - 1
+	var parts []string
+	var current []rune
+
+	for i := 0; i < len(runes); {
+		if i+sepLen <= len(runes) && string(runes[i:i+sepLen]) == sep {
+			parts = append(parts, string(current))
+			current = nil
+			i += sepLen
 		} else {
-			current += string(str[i])
+			current = append(current, runes[i])
+			i++
 		}
 	}
-	parts = append(parts, current)
+	parts = append(parts, string(current))
 
 	return parts
 }

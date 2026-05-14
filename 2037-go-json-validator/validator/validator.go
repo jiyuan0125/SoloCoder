@@ -67,10 +67,10 @@ func (sv *StreamValidator) ValidateStream(reader io.Reader) (*ValidationResult, 
 
 	if !result.Valid() {
 		for _, err := range result.Errors() {
-			field := convertPointerToDotNotation(err.Field())
+			field, message := formatErrorFieldAndMessage(err)
 			validationResult.Errors = append(validationResult.Errors, ValidationError{
 				Field:   field,
-				Message: formatErrorMessage(err),
+				Message: message,
 			})
 		}
 	}
@@ -88,17 +88,76 @@ func parseJSONError(err error) error {
 	return fmt.Errorf("JSON 解析错误: %v", err)
 }
 
-func convertPointerToDotNotation(pointer string) string {
-	if pointer == "" {
-		return "(root)"
-	}
-	if !strings.HasPrefix(pointer, "/") {
-		return pointer
+func formatErrorFieldAndMessage(err gojsonschema.ResultError) (string, string) {
+	field := err.Field()
+	msg := err.Description()
+	details := err.Details()
+
+	if strings.Contains(msg, "required") {
+		missingField, _ := details["property"].(string)
+		baseField := formatFieldPath(field)
+		fullField := missingField
+		if baseField != "" && baseField != "(root)" {
+			fullField = baseField + "." + missingField
+		}
+		return fullField, fmt.Sprintf("缺少必填字段: %s", missingField)
 	}
 
+	formattedField := formatFieldPath(field)
+
+	if strings.Contains(msg, "email") {
+		return formattedField, "不是合法邮箱格式"
+	}
+	if strings.Contains(msg, "pattern") {
+		return formattedField, "格式不正确"
+	}
+	if strings.Contains(msg, "type") {
+		return formattedField, fmt.Sprintf("类型错误，期望 %v", details["expected"])
+	}
+	if strings.Contains(msg, "minimum") {
+		return formattedField, fmt.Sprintf("值小于最小值 %v", details["minimum"])
+	}
+	if strings.Contains(msg, "maximum") {
+		return formattedField, fmt.Sprintf("值大于最大值 %v", details["maximum"])
+	}
+
+	return formattedField, msg
+}
+
+func formatFieldPath(field string) string {
+	if field == "" {
+		return "(root)"
+	}
+
+	if strings.HasPrefix(field, "/") {
+		return convertPointerToDotNotation(field)
+	}
+
+	return convertDotNotationWithArray(field)
+}
+
+func convertDotNotationWithArray(path string) string {
+	parts := strings.Split(path, ".")
+	var result strings.Builder
+
+	for i, part := range parts {
+		if isArrayIndex(part) {
+			result.WriteString(fmt.Sprintf("[%s]", part))
+		} else {
+			if i > 0 && result.Len() > 0 {
+				result.WriteString(".")
+			}
+			result.WriteString(part)
+		}
+	}
+
+	return result.String()
+}
+
+func convertPointerToDotNotation(pointer string) string {
 	parts := strings.Split(pointer[1:], "/")
 	var result strings.Builder
-	
+
 	for i, part := range parts {
 		part = unescapePointerPart(part)
 		if isArrayIndex(part) {
@@ -110,7 +169,7 @@ func convertPointerToDotNotation(pointer string) string {
 			result.WriteString(part)
 		}
 	}
-	
+
 	return result.String()
 }
 
@@ -123,29 +182,6 @@ func unescapePointerPart(part string) string {
 func isArrayIndex(s string) bool {
 	_, err := strconv.Atoi(s)
 	return err == nil
-}
-
-func formatErrorMessage(err gojsonschema.ResultError) string {
-	msg := err.Description()
-	if strings.Contains(msg, "email") {
-		return "不是合法邮箱格式"
-	}
-	if strings.Contains(msg, "pattern") {
-		return "格式不正确"
-	}
-	if strings.Contains(msg, "required") {
-		return "缺少必填字段"
-	}
-	if strings.Contains(msg, "type") {
-		return fmt.Sprintf("类型错误，期望 %s", err.Details()["expected"])
-	}
-	if strings.Contains(msg, "minimum") {
-		return fmt.Sprintf("值小于最小值 %v", err.Details()["minimum"])
-	}
-	if strings.Contains(msg, "maximum") {
-		return fmt.Sprintf("值大于最大值 %v", err.Details()["maximum"])
-	}
-	return msg
 }
 
 func ValidateJSONBytes(schemaJSON []byte, dataJSON []byte) (*ValidationResult, error) {

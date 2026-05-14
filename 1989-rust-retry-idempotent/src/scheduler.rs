@@ -9,23 +9,31 @@ use tracing::{info, warn, error};
 
 use crate::models::TaskStatus;
 use crate::store::TaskStore;
+use crate::persistence::PersistenceManager;
 
 const DEFAULT_CONCURRENCY: usize = 100;
 const CLEANUP_INTERVAL_SECS: u64 = 60;
 const TASK_TTL_HOURS: i64 = 1;
+const PERSISTENCE_INTERVAL_SECS: u64 = 5;
 
 pub struct Scheduler {
     store: TaskStore,
     concurrency_limit: usize,
     client: Client,
+    persistence: Option<Arc<PersistenceManager>>,
 }
 
 impl Scheduler {
-    pub fn new(store: TaskStore, concurrency_limit: Option<usize>) -> Self {
+    pub fn new(
+        store: TaskStore,
+        concurrency_limit: Option<usize>,
+        persistence: Option<Arc<PersistenceManager>>,
+    ) -> Self {
         Self {
             store,
             concurrency_limit: concurrency_limit.unwrap_or(DEFAULT_CONCURRENCY),
             client: Client::new(),
+            persistence,
         }
     }
 
@@ -42,6 +50,11 @@ impl Scheduler {
         let scheduler_self = self.clone();
         tokio::spawn(async move {
             scheduler_self.run_cleanup_loop().await;
+        });
+
+        let scheduler_self = self.clone();
+        tokio::spawn(async move {
+            scheduler_self.run_persistence_loop().await;
         });
 
         let scheduler_self = self.clone();
@@ -64,6 +77,19 @@ impl Scheduler {
             let removed = self.store.cleanup_expired(cutoff);
             if removed > 0 {
                 info!("Cleaned up {} expired tasks", removed);
+            }
+        }
+    }
+
+    async fn run_persistence_loop(&self) {
+        loop {
+            sleep(Duration::from_secs(PERSISTENCE_INTERVAL_SECS)).await;
+            
+            if let Some(persistence) = &self.persistence {
+                let tasks = self.store.all_tasks();
+                if let Err(e) = persistence.save(&tasks) {
+                    error!("Failed to persist tasks: {}", e);
+                }
             }
         }
     }

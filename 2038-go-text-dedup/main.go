@@ -47,10 +47,10 @@ type DeduplicationResponse struct {
 }
 
 type QueryResponse struct {
-	JobID  string               `json:"job_id"`
-	Status string               `json:"status"`
-	Result []DeduplicatedText   `json:"result,omitempty"`
-	Error  string               `json:"error,omitempty"`
+	JobID  string             `json:"job_id"`
+	Status string             `json:"status"`
+	Result []DeduplicatedText `json:"result"`
+	Error  string             `json:"error,omitempty"`
 }
 
 func main() {
@@ -71,7 +71,7 @@ func main() {
 	http.HandleFunc("/result/", handleResult)
 
 	log.Println("Server starting on port 8080")
-	log.Fatal(http.ListenAndServe(":8802", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
 
 func initDB() error {

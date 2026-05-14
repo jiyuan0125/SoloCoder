@@ -31,6 +31,10 @@ public class MetricStorage {
         return registrations.containsKey(name);
     }
 
+    public boolean hasData(String name) {
+        return data.containsKey(name) && !data.get(name).isEmpty();
+    }
+
     public MetricRegistration getRegistration(String name) {
         return registrations.get(name);
     }

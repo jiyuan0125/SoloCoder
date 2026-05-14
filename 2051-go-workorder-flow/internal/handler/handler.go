@@ -435,6 +435,247 @@ func (h *Handler) EscalateWorkOrder(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, wo)
 }
 
+type processRequest struct {
+	OperatorID int64  `json:"operator_id"`
+	Comment    string `json:"comment,omitempty"`
+	Reason     string `json:"reason,omitempty"`
+}
+
+func (h *Handler) SubmitForReview(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")
+	idStr = strings.TrimSuffix(idStr, "/submit-for-review")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid work order id")
+		return
+	}
+
+	var req processRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.OperatorID == 0 {
+		writeError(w, http.StatusBadRequest, "operator_id is required")
+		return
+	}
+
+	wo, err := h.flowEngine.SubmitForReview(ctx, id, req.OperatorID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "work order not found")
+			return
+		}
+		if errors.Is(err, engine.ErrWorkOrderClosed) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrInvalidStateTransition) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, wo)
+}
+
+func (h *Handler) ApproveWorkOrder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")
+	idStr = strings.TrimSuffix(idStr, "/approve")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid work order id")
+		return
+	}
+
+	var req processRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.OperatorID == 0 {
+		writeError(w, http.StatusBadRequest, "operator_id is required")
+		return
+	}
+
+	wo, err := h.flowEngine.ApproveWorkOrder(ctx, id, req.OperatorID, req.Comment)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "work order not found")
+			return
+		}
+		if errors.Is(err, engine.ErrWorkOrderClosed) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrInvalidStateTransition) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, wo)
+}
+
+func (h *Handler) RejectWorkOrder(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")
+	idStr = strings.TrimSuffix(idStr, "/reject")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid work order id")
+		return
+	}
+
+	var req processRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.OperatorID == 0 {
+		writeError(w, http.StatusBadRequest, "operator_id is required")
+		return
+	}
+
+	if req.Reason == "" {
+		writeError(w, http.StatusBadRequest, "reason is required")
+		return
+	}
+
+	wo, err := h.flowEngine.RejectWorkOrder(ctx, id, req.OperatorID, req.Reason)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "work order not found")
+			return
+		}
+		if errors.Is(err, engine.ErrWorkOrderClosed) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrReasonRequired) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrInvalidStateTransition) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, wo)
+}
+
+func (h *Handler) StartExecution(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")
+	idStr = strings.TrimSuffix(idStr, "/start-execution")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid work order id")
+		return
+	}
+
+	var req processRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.OperatorID == 0 {
+		writeError(w, http.StatusBadRequest, "operator_id is required")
+		return
+	}
+
+	wo, err := h.flowEngine.StartExecution(ctx, id, req.OperatorID)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "work order not found")
+			return
+		}
+		if errors.Is(err, engine.ErrWorkOrderClosed) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrInvalidStateTransition) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrNotCurrentHandler) {
+			writeError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrEscalatedCannotOperate) {
+			writeError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, wo)
+}
+
+func (h *Handler) CompleteExecution(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")
+	idStr = strings.TrimSuffix(idStr, "/complete-execution")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		writeError(w, http.StatusBadRequest, "invalid work order id")
+		return
+	}
+
+	var req processRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeError(w, http.StatusBadRequest, "invalid request body")
+		return
+	}
+
+	if req.OperatorID == 0 {
+		writeError(w, http.StatusBadRequest, "operator_id is required")
+		return
+	}
+
+	wo, err := h.flowEngine.CompleteExecution(ctx, id, req.OperatorID, req.Comment)
+	if err != nil {
+		if errors.Is(err, database.ErrNotFound) {
+			writeError(w, http.StatusNotFound, "work order not found")
+			return
+		}
+		if errors.Is(err, engine.ErrWorkOrderClosed) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrInvalidStateTransition) {
+			writeError(w, http.StatusBadRequest, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrNotCurrentHandler) {
+			writeError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		if errors.Is(err, engine.ErrEscalatedCannotOperate) {
+			writeError(w, http.StatusForbidden, err.Error())
+			return
+		}
+		writeError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, wo)
+}
+
 func (h *Handler) GetWorkOrderHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	idStr := strings.TrimPrefix(r.URL.Path, "/workorders/")

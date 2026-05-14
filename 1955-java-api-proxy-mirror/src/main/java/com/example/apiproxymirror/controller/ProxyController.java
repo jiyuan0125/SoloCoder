@@ -7,6 +7,8 @@ import com.example.apiproxymirror.model.RecordedExchange;
 import com.example.apiproxymirror.service.RecordingService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Builder;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.http.*;
@@ -30,6 +32,20 @@ public class ProxyController {
 
     private static final String X_RECORDED_HEADER = "X-Recorded";
 
+    @Data
+    @Builder
+    private static class ForwardResult {
+        private ResponseEntity<String> response;
+        private HttpHeaders requestHeaders;
+    }
+
+    @Data
+    @Builder
+    private static class ErrorResult {
+        private HttpStatusCodeException exception;
+        private HttpHeaders requestHeaders;
+    }
+
     @RequestMapping("/**")
     @SneakyThrows
     public void proxy(HttpServletRequest request, HttpServletResponse response) {
@@ -45,17 +61,21 @@ public class ProxyController {
         boolean shouldRecord = recordingService.shouldRecord(path);
 
         try {
-            ResponseEntity<String> backendResponse = forwardRequest(cachedRequest, shouldRecord);
-            copyResponse(backendResponse, cachedResponse);
+            ForwardResult result = forwardRequest(cachedRequest, shouldRecord);
+            copyResponse(result.getResponse(), cachedResponse);
 
             if (shouldRecord) {
-                recordExchange(cachedRequest, cachedResponse, backendResponse);
+                recordExchange(cachedRequest, cachedResponse, result);
             }
         } catch (HttpStatusCodeException e) {
-            handleException(e, cachedResponse);
+            ErrorResult errorResult = ErrorResult.builder()
+                    .exception(e)
+                    .requestHeaders(extractHeadersWithRecordedFlag(cachedRequest, shouldRecord))
+                    .build();
+            handleException(errorResult, cachedResponse);
 
             if (shouldRecord) {
-                recordExchange(cachedRequest, cachedResponse, e);
+                recordExchange(cachedRequest, cachedResponse, errorResult);
             }
         }
     }
@@ -67,21 +87,30 @@ public class ProxyController {
                 path.equals("/replay");
     }
 
-    private ResponseEntity<String> forwardRequest(CachedBodyHttpServletRequest request, boolean addRecordedHeader) {
-        String targetUrl = buildTargetUrl(request);
-        HttpMethod method = HttpMethod.valueOf(request.getMethod());
+    private HttpHeaders extractHeadersWithRecordedFlag(CachedBodyHttpServletRequest request, boolean addRecordedHeader) {
         HttpHeaders headers = extractHeaders(request);
-
         if (addRecordedHeader) {
             headers.set(X_RECORDED_HEADER, "true");
         }
+        return headers;
+    }
+
+    private ForwardResult forwardRequest(CachedBodyHttpServletRequest request, boolean addRecordedHeader) {
+        String targetUrl = buildTargetUrl(request);
+        HttpMethod method = HttpMethod.valueOf(request.getMethod());
+        HttpHeaders headers = extractHeadersWithRecordedFlag(request, addRecordedHeader);
 
         String body = request.getCachedBodyAsString();
         HttpEntity<String> requestEntity = body.isEmpty()
                 ? new HttpEntity<>(headers)
                 : new HttpEntity<>(body, headers);
 
-        return restTemplate.exchange(targetUrl, method, requestEntity, String.class);
+        ResponseEntity<String> response = restTemplate.exchange(targetUrl, method, requestEntity, String.class);
+
+        return ForwardResult.builder()
+                .response(response)
+                .requestHeaders(headers)
+                .build();
     }
 
     private String buildTargetUrl(HttpServletRequest request) {
@@ -121,7 +150,8 @@ public class ProxyController {
         }
     }
 
-    private void handleException(HttpStatusCodeException e, CachedBodyHttpServletResponse response) throws IOException {
+    private void handleException(ErrorResult errorResult, CachedBodyHttpServletResponse response) throws IOException {
+        HttpStatusCodeException e = errorResult.getException();
         response.setStatus(e.getStatusCode().value());
 
         e.getResponseHeaders().forEach((name, values) -> {
@@ -139,18 +169,18 @@ public class ProxyController {
 
     private void recordExchange(CachedBodyHttpServletRequest request,
                                 CachedBodyHttpServletResponse response,
-                                ResponseEntity<String> backendResponse) {
-        Map<String, String> requestHeaders = convertToMap(extractHeaders(request));
-        Map<String, String> responseHeaders = convertToMap(backendResponse.getHeaders());
+                                ForwardResult result) {
+        Map<String, String> requestHeaders = convertToMap(result.getRequestHeaders());
+        Map<String, String> responseHeaders = convertToMap(result.getResponse().getHeaders());
 
         RecordedExchange exchange = RecordedExchange.builder()
                 .method(request.getMethod())
                 .path(request.getRequestURI())
                 .requestHeaders(requestHeaders)
                 .requestBody(request.getCachedBodyAsString())
-                .responseStatus(backendResponse.getStatusCode().value())
+                .responseStatus(result.getResponse().getStatusCode().value())
                 .responseHeaders(responseHeaders)
-                .responseBody(backendResponse.getBody())
+                .responseBody(result.getResponse().getBody())
                 .build();
 
         recordingService.record(exchange);
@@ -158,8 +188,9 @@ public class ProxyController {
 
     private void recordExchange(CachedBodyHttpServletRequest request,
                                 CachedBodyHttpServletResponse response,
-                                HttpStatusCodeException e) {
-        Map<String, String> requestHeaders = convertToMap(extractHeaders(request));
+                                ErrorResult errorResult) {
+        HttpStatusCodeException e = errorResult.getException();
+        Map<String, String> requestHeaders = convertToMap(errorResult.getRequestHeaders());
         Map<String, String> responseHeaders = e.getResponseHeaders() != null
                 ? convertToMap(e.getResponseHeaders())
                 : new HashMap<>();

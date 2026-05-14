@@ -45,10 +45,22 @@ func createTables() error {
 		occurred_date TEXT NOT NULL,
 		description TEXT,
 		status TEXT NOT NULL DEFAULT 'pending',
-		current_approver TEXT NOT NULL,
+		current_approval_step INTEGER NOT NULL DEFAULT 0,
+		approval_chain TEXT NOT NULL,
 		modify_count INTEGER NOT NULL DEFAULT 0,
 		created_at TEXT NOT NULL,
 		updated_at TEXT NOT NULL
+	);
+	`
+
+	createStagesTable := `
+	CREATE TABLE IF NOT EXISTS stages (
+		id INTEGER PRIMARY KEY AUTOINCREMENT,
+		reimbursement_id INTEGER NOT NULL,
+		approval_role TEXT NOT NULL,
+		amount_cent INTEGER NOT NULL,
+		approval_step INTEGER NOT NULL,
+		FOREIGN KEY(reimbursement_id) REFERENCES reimbursements(id)
 	);
 	`
 
@@ -69,9 +81,14 @@ func createTables() error {
 	CREATE INDEX IF NOT EXISTS idx_employee_expense ON reimbursements(employee_id, occurred_date, amount_cent, expense_type);
 	CREATE INDEX IF NOT EXISTS idx_status ON reimbursements(status);
 	CREATE INDEX IF NOT EXISTS idx_created_at ON reimbursements(created_at);
+	CREATE INDEX IF NOT EXISTS idx_stages_reimbursement ON stages(reimbursement_id);
 	`
 
 	if _, err := DB.Exec(createReimbursementTable); err != nil {
+		return err
+	}
+
+	if _, err := DB.Exec(createStagesTable); err != nil {
 		return err
 	}
 

@@ -5,7 +5,7 @@ use std::net::IpAddr;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tokio::sync::RwLock;
-use tracing::info;
+use tracing::{debug, info};
 
 #[derive(Debug)]
 pub struct AppState {
@@ -27,7 +27,10 @@ impl AppState {
         let mut cidrs = Vec::new();
         for cidr_str in &config.cidrs {
             match cidr_str.parse::<IpNet>() {
-                Ok(cidr) => cidrs.push(cidr),
+                Ok(cidr) => {
+                    info!("Parsed CIDR {} for zone {}", cidr, name);
+                    cidrs.push(cidr);
+                }
                 Err(e) => return Err(format!("Invalid CIDR '{}': {}", cidr_str, e)),
             }
         }
@@ -55,19 +58,29 @@ impl AppState {
         let mut zones = self.zones.write().await;
         zones.insert(name.clone(), zone);
 
-        info!("Zone '{}' added with {} backends", name, config.backends.len());
+        info!(
+            "Zone '{}' added with {} CIDRs and {} backends",
+            name,
+            config.cidrs.len(),
+            config.backends.len()
+        );
         Ok(())
     }
 
     pub async fn find_zone_for_ip(&self, ip: IpAddr) -> Option<Arc<ZoneState>> {
         let zones = self.zones.read().await;
 
-        for zone in zones.values() {
+        info!("Searching {} zones for IP: {}", zones.len(), ip);
+
+        for (zone_name, zone) in zones.iter() {
+            debug!("Checking zone {} with CIDRs: {:?}", zone_name, zone.cidrs);
             if zone.contains_ip(ip) {
+                info!("IP {} matched zone {}", ip, zone_name);
                 return Some(zone.clone());
             }
         }
 
+        info!("No zone matched IP: {}", ip);
         None
     }
 

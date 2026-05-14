@@ -306,9 +306,9 @@ func calculateStatus(punchTime time.Time, punchType string) string {
 			return "absent_half"
 		}
 	} else {
-		if totalMinutes >= 18*60 {
+		if totalMinutes >= 17*60+30 {
 			return "normal"
-		} else if totalMinutes >= 17*60+30 {
+		} else if totalMinutes >= 17*60 {
 			return "early_minor"
 		} else if totalMinutes >= 16*60 {
 			return "early"

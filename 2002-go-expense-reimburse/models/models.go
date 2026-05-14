@@ -30,18 +30,37 @@ const (
 )
 
 type Reimbursement struct {
-	ID              int64                  `json:"id"`
-	EmployeeID      string                 `json:"employee_id"`
-	AmountCent      int64                  `json:"amount_cent"`
-	AmountYuan      float64                `json:"amount_yuan"`
-	ExpenseType     ExpenseType            `json:"expense_type"`
-	OccurredDate    time.Time              `json:"occurred_date"`
-	Description     string                 `json:"description"`
-	Status          ReimbursementStatus    `json:"status"`
-	CurrentApprover ApprovalRole           `json:"current_approver"`
-	ModifyCount     int                    `json:"modify_count"`
-	CreatedAt       time.Time              `json:"created_at"`
-	UpdatedAt       time.Time              `json:"updated_at"`
+	ID                  int64               `json:"id"`
+	EmployeeID          string              `json:"employee_id"`
+	AmountCent          int64               `json:"amount_cent"`
+	AmountYuan          float64             `json:"amount_yuan"`
+	ExpenseType         ExpenseType         `json:"expense_type"`
+	OccurredDate        time.Time           `json:"occurred_date"`
+	Description         string              `json:"description"`
+	Status              ReimbursementStatus `json:"status"`
+	CurrentApprovalStep int                 `json:"current_approval_step"`
+	ApprovalChain       []ApprovalRole      `json:"approval_chain"`
+	ModifyCount         int                 `json:"modify_count"`
+	CreatedAt           time.Time           `json:"created_at"`
+	UpdatedAt           time.Time           `json:"updated_at"`
+	Stages              []*Stage            `json:"stages,omitempty"`
+}
+
+type Stage struct {
+	ID               int64        `json:"id"`
+	ReimbursementID  int64        `json:"reimbursement_id"`
+	ApprovalRole     ApprovalRole `json:"approval_role"`
+	AmountCent       int64        `json:"amount_cent"`
+	AmountYuan       float64      `json:"amount_yuan"`
+	ApprovalStep     int          `json:"approval_step"`
+}
+
+type StageDB struct {
+	ID              int64
+	ReimbursementID int64
+	ApprovalRole    string
+	AmountCent      int64
+	ApprovalStep    int
 }
 
 type StatusHistory struct {

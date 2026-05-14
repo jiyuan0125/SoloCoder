@@ -17,7 +17,8 @@ const defaultRetentionDays = 30
 
 func Init(dbPath string) error {
 	var err error
-	DB, err = sql.Open("sqlite3", dbPath)
+	dsn := dbPath + "?_loc=auto"
+	DB, err = sql.Open("sqlite3", dsn)
 	if err != nil {
 		return fmt.Errorf("failed to open database: %w", err)
 	}
@@ -106,6 +107,22 @@ func InsertLog(entry *model.LogEntry) error {
 	return err
 }
 
+func parseSQLiteTime(s string) (time.Time, error) {
+	layouts := []string{
+		"2006-01-02 15:04:05-07:00",
+		"2006-01-02 15:04:05",
+		"2006-01-02T15:04:05Z",
+		"2006-01-02T15:04:05-07:00",
+		time.RFC3339,
+	}
+	for _, layout := range layouts {
+		if t, err := time.Parse(layout, s); err == nil {
+			return t, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("unable to parse time: %s", s)
+}
+
 func QueryLogs(params *model.LogQueryParams) ([]model.AggregatedLogEntry, error) {
 	baseQuery := `
 		SELECT 
@@ -166,8 +183,17 @@ func QueryLogs(params *model.LogQueryParams) ([]model.AggregatedLogEntry, error)
 
 	results := []model.AggregatedLogEntry{}
 	for rows.Next() {
+		var firstSeenStr, lastSeenStr string
 		var entry model.AggregatedLogEntry
-		err := rows.Scan(&entry.FirstSeen, &entry.LastSeen, &entry.Level, &entry.Service, &entry.Message, &entry.Count)
+		err := rows.Scan(&firstSeenStr, &lastSeenStr, &entry.Level, &entry.Service, &entry.Message, &entry.Count)
+		if err != nil {
+			return nil, err
+		}
+		entry.FirstSeen, err = parseSQLiteTime(firstSeenStr)
+		if err != nil {
+			return nil, err
+		}
+		entry.LastSeen, err = parseSQLiteTime(lastSeenStr)
 		if err != nil {
 			return nil, err
 		}

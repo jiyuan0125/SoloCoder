@@ -1,6 +1,8 @@
 package converter
 
 import (
+	"bufio"
+	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
@@ -15,8 +17,8 @@ type ConversionResult struct {
 	Data           []byte
 	ProcessedCount int
 	SkippedCount   int
-	TotalCount      int
-	Errors          []string
+	TotalCount     int
+	Errors         []string
 }
 
 var SupportedFormats = map[string][]string{
@@ -25,6 +27,9 @@ var SupportedFormats = map[string][]string{
 	"yaml":     {"json"},
 	"markdown": {"html"},
 }
+
+const maxSkipAttempts = 100
+const maxErrorCount = 1000
 
 func IsSupported(source, target string) bool {
 	targets, ok := SupportedFormats[source]
@@ -64,11 +69,13 @@ func CSVToJSON(data []byte) (*ConversionResult, error) {
 	reader := csv.NewReader(strings.NewReader(string(data)))
 	reader.LazyQuotes = true
 	reader.FieldsPerRecord = -1
+	reader.ReuseRecord = false
 
 	var records []map[string]interface{}
 	var headers []string
 	var processed, skipped, total int
 	var errors []string
+	errorCount := 0
 
 	rowNum := 0
 	for {
@@ -81,7 +88,14 @@ func CSVToJSON(data []byte) (*ConversionResult, error) {
 
 		if err != nil {
 			skipped++
-			errors = append(errors, fmt.Sprintf("第%d行: 解析错误: %v", rowNum, err))
+			errorCount++
+			if errorCount <= maxErrorCount {
+				errors = append(errors, fmt.Sprintf("第%d行: 解析错误: %v", rowNum, err))
+			}
+			if errorCount > maxSkipAttempts {
+				errors = append(errors, fmt.Sprintf("已达到最大跳过次数(%d)，停止解析", maxSkipAttempts))
+				break
+			}
 			continue
 		}
 
@@ -98,11 +112,24 @@ func CSVToJSON(data []byte) (*ConversionResult, error) {
 		record, err := parseCSVRow(headers, row)
 		if err != nil {
 			skipped++
-			errors = append(errors, fmt.Sprintf("第%d行: %v", rowNum, err))
+			errorCount++
+			if errorCount <= maxErrorCount {
+				errors = append(errors, fmt.Sprintf("第%d行: %v", rowNum, err))
+			}
 			continue
 		}
 		records = append(records, record)
 		processed++
+	}
+
+	if len(records) == 0 && len(errors) > 0 {
+		return &ConversionResult{
+			Data:           []byte("[]"),
+			ProcessedCount: processed,
+			SkippedCount:   skipped,
+			TotalCount:     total,
+			Errors:         errors,
+		}, nil
 	}
 
 	result, err := json.MarshalIndent(records, "", "  ")
@@ -113,15 +140,15 @@ func CSVToJSON(data []byte) (*ConversionResult, error) {
 	return &ConversionResult{
 		Data:           result,
 		ProcessedCount: processed,
-		SkippedCount:  skipped,
-		TotalCount:    total,
+		SkippedCount:   skipped,
+		TotalCount:     total,
 		Errors:         errors,
 	}, nil
 }
 
 func parseCSVRow(headers, row []string) (map[string]interface{}, error) {
 	record := make(map[string]interface{})
-	
+
 	if len(row) < len(headers) {
 		for i := range row {
 			if i >= len(headers) {
@@ -134,7 +161,7 @@ func parseCSVRow(headers, row []string) (map[string]interface{}, error) {
 			setNestedValue(record, header, parseValue(row[i]))
 		}
 	}
-	
+
 	return record, nil
 }
 
@@ -143,22 +170,22 @@ func parseValue(v string) interface{} {
 	if v == "" {
 		return nil
 	}
-	
+
 	if v == "true" {
 		return true
 	}
 	if v == "false" {
 		return false
 	}
-	
+
 	if i, err := strconv.ParseInt(v, 10, 64); err == nil {
 		return i
 	}
-	
+
 	if f, err := strconv.ParseFloat(v, 64); err == nil {
 		return f
 	}
-	
+
 	return v
 }
 
@@ -168,7 +195,7 @@ func setNestedValue(m map[string]interface{}, key string, value interface{}) {
 		m[key] = value
 		return
 	}
-	
+
 	current := m
 	for i, part := range parts {
 		if i == len(parts)-1 {
@@ -188,61 +215,177 @@ func setNestedValue(m map[string]interface{}, key string, value interface{}) {
 
 func JSONToCSV(data []byte) (*ConversionResult, error) {
 	var records []map[string]interface{}
-	
-	decoder := json.NewDecoder(strings.NewReader(string(data)))
 	var processed, skipped, total int
 	var errors []string
-	rowNum := 0
-	
-	for decoder.More() {
-		var value interface{}
-		err := decoder.Decode(&value)
-		if err == io.EOF {
-			break
-		}
-		total++
-		rowNum++
-		
-		if err != nil {
-			skipped++
-			errors = append(errors, fmt.Sprintf("第%d个JSON对象: 解析错误: %v", rowNum, err))
-			continue
-		}
-		
-		switch v := value.(type) {
-		case map[string]interface{}:
-			records = append(records, v)
-			processed++
+	errorCount := 0
+
+	var firstValue interface{}
+	if err := json.Unmarshal(data, &firstValue); err == nil {
+		switch v := firstValue.(type) {
 		case []interface{}:
-			for _, item := range v {
+			for i, item := range v {
 				total++
 				if record, ok := item.(map[string]interface{}); ok {
 					records = append(records, record)
 					processed++
 				} else {
 					skipped++
-					errors = append(errors, fmt.Sprintf("第%d个数组项: 不是有效的对象", total))
+					errorCount++
+					if errorCount <= maxErrorCount {
+						errors = append(errors, fmt.Sprintf("第%d个数组项: 不是有效的对象", i+1))
+					}
 				}
 			}
+		case map[string]interface{}:
+			records = append(records, v)
+			processed++
+			total++
 		default:
-			skipped++
-			errors = append(errors, fmt.Sprintf("第%d个JSON项: 不是有效的对象或数组", rowNum))
+			return nil, fmt.Errorf("JSON数据不是有效的对象或对象数组")
+		}
+	} else {
+		scanner := bufio.NewScanner(strings.NewReader(string(data)))
+		scanner.Buffer(make([]byte, 1024*1024), 1024*1024*100)
+		buf := bytes.Buffer{}
+		braceCount := 0
+		bracketCount := 0
+		inString := false
+		rowNum := 0
+		consecutiveErrors := 0
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			rowNum++
+
+			for i := 0; i < len(line); i++ {
+				c := line[i]
+
+				if c == '"' && (i == 0 || line[i-1] != '\\') {
+					inString = !inString
+					continue
+				}
+
+				if inString {
+					continue
+				}
+
+				switch c {
+				case '{':
+					braceCount++
+				case '}':
+					braceCount--
+					if braceCount < 0 {
+						braceCount = 0
+					}
+				case '[':
+					bracketCount++
+				case ']':
+					bracketCount--
+					if bracketCount < 0 {
+						bracketCount = 0
+					}
+				}
+			}
+
+			buf.WriteString(line)
+			buf.WriteByte('\n')
+
+			if braceCount == 0 && bracketCount == 0 && strings.TrimSpace(buf.String()) != "" {
+				total++
+				jsonStr := strings.TrimSpace(buf.String())
+
+				var value interface{}
+				err := json.Unmarshal([]byte(jsonStr), &value)
+				if err != nil {
+					skipped++
+					errorCount++
+					consecutiveErrors++
+					if errorCount <= maxErrorCount {
+						errors = append(errors, fmt.Sprintf("第%d行附近: JSON解析错误: %v", rowNum, err))
+					}
+					if consecutiveErrors > maxSkipAttempts {
+						errors = append(errors, fmt.Sprintf("连续错误超过%d次，停止解析", maxSkipAttempts))
+						break
+					}
+					buf.Reset()
+					continue
+				}
+
+				consecutiveErrors = 0
+
+				switch v := value.(type) {
+				case map[string]interface{}:
+					records = append(records, v)
+					processed++
+				case []interface{}:
+					for _, item := range v {
+						total++
+						if record, ok := item.(map[string]interface{}); ok {
+							records = append(records, record)
+							processed++
+						} else {
+							skipped++
+							errorCount++
+							if errorCount <= maxErrorCount {
+								errors = append(errors, fmt.Sprintf("数组项: 不是有效的对象"))
+							}
+						}
+					}
+				default:
+					skipped++
+					errorCount++
+					if errorCount <= maxErrorCount {
+						errors = append(errors, fmt.Sprintf("第%d行附近: 不是有效的对象", rowNum))
+					}
+				}
+				buf.Reset()
+			}
+
+			if errorCount > maxErrorCount*2 {
+				break
+			}
+		}
+
+		if buf.Len() > 0 {
+			total++
+			jsonStr := strings.TrimSpace(buf.String())
+			var value interface{}
+			if err := json.Unmarshal([]byte(jsonStr), &value); err == nil {
+				if record, ok := value.(map[string]interface{}); ok {
+					records = append(records, record)
+					processed++
+				}
+			} else {
+				skipped++
+				if errorCount <= maxErrorCount {
+					errors = append(errors, fmt.Sprintf("末尾数据: JSON解析错误: %v", err))
+				}
+			}
 		}
 	}
-	
+
 	if len(records) == 0 {
+		if len(errors) > 0 {
+			return &ConversionResult{
+				Data:           []byte(""),
+				ProcessedCount: processed,
+				SkippedCount:   skipped,
+				TotalCount:     total,
+				Errors:         errors,
+			}, nil
+		}
 		return nil, fmt.Errorf("没有可转换的数据")
 	}
-	
+
 	headers := collectHeaders(records)
-	
+
 	var builder strings.Builder
 	writer := csv.NewWriter(&builder)
-	
+
 	if err := writer.Write(headers); err != nil {
 		return nil, fmt.Errorf("写入CSV头部失败: %v", err)
 	}
-	
+
 	for _, record := range records {
 		row := make([]string, len(headers))
 		for i, header := range headers {
@@ -250,18 +393,20 @@ func JSONToCSV(data []byte) (*ConversionResult, error) {
 		}
 		if err := writer.Write(row); err != nil {
 			skipped++
-			errors = append(errors, fmt.Sprintf("写入记录失败: %v", err))
+			if errorCount <= maxErrorCount {
+				errors = append(errors, fmt.Sprintf("写入记录失败: %v", err))
+			}
 			continue
 		}
 	}
-	
+
 	writer.Flush()
-	
+
 	return &ConversionResult{
 		Data:           []byte(builder.String()),
 		ProcessedCount: processed,
-		SkippedCount:  skipped,
-		TotalCount:    total,
+		SkippedCount:   skipped,
+		TotalCount:     total,
 		Errors:         errors,
 	}, nil
 }
@@ -269,11 +414,11 @@ func JSONToCSV(data []byte) (*ConversionResult, error) {
 func collectHeaders(records []map[string]interface{}) []string {
 	headerSet := make(map[string]bool)
 	var headers []string
-	
+
 	for _, record := range records {
 		collectKeys("", record, headerSet, &headers)
 	}
-	
+
 	return headers
 }
 
@@ -305,7 +450,7 @@ func isNestedMap(v interface{}) bool {
 func getNestedValue(record map[string]interface{}, key string) string {
 	parts := strings.Split(key, ".")
 	current := record
-	
+
 	for i, part := range parts {
 		if i == len(parts)-1 {
 			return formatValue(current[part])
@@ -330,41 +475,117 @@ func JSONToYAML(data []byte) (*ConversionResult, error) {
 	var value interface{}
 	var processed, skipped, total int
 	var errors []string
-	
-	decoder := json.NewDecoder(strings.NewReader(string(data)))
-	rowNum := 0
-	
-	for {
-		err := decoder.Decode(&value)
-		if err == io.EOF {
-			break
-		}
-		total++
-		rowNum++
-		
-		if err != nil {
-			skipped++
-			errors = append(errors, fmt.Sprintf("第%d个JSON对象: 解析错误: %v", rowNum, err))
-			continue
-		}
+	errorCount := 0
+
+	var firstValue interface{}
+	if err := json.Unmarshal(data, &firstValue); err == nil {
+		value = firstValue
 		processed++
-		break
+		total++
+	} else {
+		scanner := bufio.NewScanner(strings.NewReader(string(data)))
+		scanner.Buffer(make([]byte, 1024*1024), 1024*1024*100)
+		buf := bytes.Buffer{}
+		braceCount := 0
+		bracketCount := 0
+		inString := false
+		rowNum := 0
+		consecutiveErrors := 0
+
+		for scanner.Scan() {
+			line := scanner.Text()
+			rowNum++
+
+			for i := 0; i < len(line); i++ {
+				c := line[i]
+
+				if c == '"' && (i == 0 || line[i-1] != '\\') {
+					inString = !inString
+					continue
+				}
+
+				if inString {
+					continue
+				}
+
+				switch c {
+				case '{':
+					braceCount++
+				case '}':
+					braceCount--
+					if braceCount < 0 {
+						braceCount = 0
+					}
+				case '[':
+					bracketCount++
+				case ']':
+					bracketCount--
+					if bracketCount < 0 {
+						bracketCount = 0
+					}
+				}
+			}
+
+			buf.WriteString(line)
+			buf.WriteByte('\n')
+
+			if braceCount == 0 && bracketCount == 0 && strings.TrimSpace(buf.String()) != "" {
+				total++
+				jsonStr := strings.TrimSpace(buf.String())
+
+				var v interface{}
+				err := json.Unmarshal([]byte(jsonStr), &v)
+				if err != nil {
+					skipped++
+					errorCount++
+					consecutiveErrors++
+					if errorCount <= maxErrorCount {
+						errors = append(errors, fmt.Sprintf("第%d行附近: JSON解析错误: %v", rowNum, err))
+					}
+					if consecutiveErrors > maxSkipAttempts {
+						errors = append(errors, fmt.Sprintf("连续错误超过%d次，停止解析", maxSkipAttempts))
+						break
+					}
+					buf.Reset()
+					continue
+				}
+
+				consecutiveErrors = 0
+				value = v
+				processed++
+				buf.Reset()
+				break
+			}
+
+			if errorCount > maxErrorCount*2 {
+				break
+			}
+		}
 	}
-	
+
 	if value == nil {
+		if len(errors) > 0 {
+			return &ConversionResult{
+				Data:           []byte(""),
+				ProcessedCount: processed,
+				SkippedCount:   skipped,
+				TotalCount:     total,
+				Errors:         errors,
+			}, nil
+		}
 		return nil, fmt.Errorf("没有可转换的数据")
 	}
-	
+
 	result, err := yaml.Marshal(value)
 	if err != nil {
 		return nil, fmt.Errorf("YAML序列化失败: %v", err)
 	}
-	
+
 	return &ConversionResult{
 		Data:           result,
 		ProcessedCount: processed,
-		SkippedCount:  skipped,
-		TotalCount:    total,
+		SkippedCount:   skipped,
+		TotalCount:     total,
 		Errors:         errors,
 	}, nil
 }
@@ -373,43 +594,75 @@ func YAMLToJSON(data []byte) (*ConversionResult, error) {
 	var value interface{}
 	var processed, skipped, total int
 	var errors []string
-	
+	errorCount := 0
+
 	decoder := yaml.NewDecoder(strings.NewReader(string(data)))
-	rowNum := 0
-	
-	for {
+	consecutiveErrors := 0
+	maxAttempts := 1000
+	attempts := 0
+
+	for attempts < maxAttempts {
+		attempts++
+
 		err := decoder.Decode(&value)
 		if err == io.EOF {
 			break
 		}
+
 		total++
-		rowNum++
-		
+
 		if err != nil {
 			skipped++
-			errors = append(errors, fmt.Sprintf("第%d个YAML文档: 解析错误: %v", rowNum, err))
+			errorCount++
+			consecutiveErrors++
+			if errorCount <= maxErrorCount {
+				errors = append(errors, fmt.Sprintf("YAML解析错误: %v", err))
+			}
+			if consecutiveErrors > maxSkipAttempts {
+				errors = append(errors, fmt.Sprintf("连续错误超过%d次，停止解析", maxSkipAttempts))
+				break
+			}
+
+			lines := strings.SplitN(string(data), "\n", 2)
+			if len(lines) > 1 {
+				data = []byte(lines[1])
+				decoder = yaml.NewDecoder(strings.NewReader(string(data)))
+			} else {
+				break
+			}
 			continue
 		}
+
+		consecutiveErrors = 0
 		processed++
 		break
 	}
-	
+
 	if value == nil {
+		if len(errors) > 0 {
+			return &ConversionResult{
+				Data:           []byte(""),
+				ProcessedCount: processed,
+				SkippedCount:   skipped,
+				TotalCount:     total,
+				Errors:         errors,
+			}, nil
+		}
 		return nil, fmt.Errorf("没有可转换的数据")
 	}
-	
+
 	value = convertYAMLMapToJSONMap(value)
-	
+
 	result, err := json.MarshalIndent(value, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("JSON序列化失败: %v", err)
 	}
-	
+
 	return &ConversionResult{
 		Data:           result,
 		ProcessedCount: processed,
-		SkippedCount:  skipped,
-		TotalCount:    total,
+		SkippedCount:   skipped,
+		TotalCount:     total,
 		Errors:         errors,
 	}, nil
 }
@@ -442,20 +695,20 @@ func MarkdownToHTML(data []byte) (*ConversionResult, error) {
 	var html strings.Builder
 	var processed, skipped, total int
 	var errors []string
-	
+
 	html.WriteString("<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\">\n</head>\n<body>\n")
-	
+
 	lines := strings.Split(content, "\n")
 	total = len(lines)
-	
+
 	var inList bool
 	var listType string
 	var inCode bool
-	
+
 	for _, line := range lines {
 		processed++
 		originalLine := line
-		
+
 		if strings.HasPrefix(line, "```") {
 			if inCode {
 				html.WriteString("</code></pre>\n")
@@ -466,20 +719,20 @@ func MarkdownToHTML(data []byte) (*ConversionResult, error) {
 			}
 			continue
 		}
-		
+
 		if inCode {
 			html.WriteString(escapeHTML(line))
 			html.WriteString("\n")
 			continue
 		}
-		
+
 		if inList && !strings.HasPrefix(line, "- ") && !strings.HasPrefix(line, "* ") && !strings.HasPrefix(line, "1. ") && !strings.HasPrefix(line, "  ") && !strings.HasPrefix(line, "\t") {
 			html.WriteString("</")
 			html.WriteString(listType)
 			html.WriteString(">\n")
 			inList = false
 		}
-		
+
 		switch {
 		case strings.HasPrefix(line, "# "):
 			html.WriteString("<h1>")
@@ -527,42 +780,42 @@ func MarkdownToHTML(data []byte) (*ConversionResult, error) {
 			html.WriteString("</p>\n")
 		}
 	}
-	
+
 	if inList {
 		html.WriteString("</")
 		html.WriteString(listType)
 		html.WriteString(">\n")
 	}
-	
+
 	html.WriteString("</body>\n</html>")
-	
+
 	return &ConversionResult{
 		Data:           []byte(html.String()),
 		ProcessedCount: processed,
-		SkippedCount:  skipped,
-		TotalCount:    total,
+		SkippedCount:   skipped,
+		TotalCount:     total,
 		Errors:         errors,
 	}, nil
 }
 
 func convertInlineMarkdown(text string) string {
 	text = escapeHTML(text)
-	
+
 	for strings.Contains(text, "**") {
 		text = strings.Replace(text, "**", "<strong>", 1)
 		text = strings.Replace(text, "**", "</strong>", 1)
 	}
-	
+
 	for strings.Contains(text, "*") {
 		text = strings.Replace(text, "*", "<em>", 1)
 		text = strings.Replace(text, "*", "</em>", 1)
 	}
-	
+
 	for strings.Contains(text, "`") {
 		text = strings.Replace(text, "`", "<code>", 1)
 		text = strings.Replace(text, "`", "</code>", 1)
 	}
-	
+
 	return text
 }
 

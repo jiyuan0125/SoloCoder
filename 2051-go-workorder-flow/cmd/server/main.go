@@ -79,6 +79,51 @@ func main() {
 			return
 		}
 
+		if strings.HasSuffix(path, "/submit-for-review") {
+			if r.Method == http.MethodPost {
+				h.SubmitForReview(w, r)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		if strings.HasSuffix(path, "/approve") {
+			if r.Method == http.MethodPost {
+				h.ApproveWorkOrder(w, r)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		if strings.HasSuffix(path, "/reject") {
+			if r.Method == http.MethodPost {
+				h.RejectWorkOrder(w, r)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		if strings.HasSuffix(path, "/start-execution") {
+			if r.Method == http.MethodPost {
+				h.StartExecution(w, r)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
+		if strings.HasSuffix(path, "/complete-execution") {
+			if r.Method == http.MethodPost {
+				h.CompleteExecution(w, r)
+			} else {
+				http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+
 		if strings.HasSuffix(path, "/claim") {
 			if r.Method == http.MethodPost {
 				h.ClaimWorkOrder(w, r)

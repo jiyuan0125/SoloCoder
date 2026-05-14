@@ -1,7 +1,7 @@
 services:
   - name: web-service
-    host: 127.0.0.1
-    port: 8082
+    host: localhost
+    port: 8083
     enabled: true
     timeout: 30
     maxRetries: 3

@@ -334,8 +334,6 @@ func getLastScheduleInSeries(courseID int64, seriesID string) (*models.Schedule,
 
 func checkClassroomConflict(classroom string, startTime time.Time, durationHours int, excludeScheduleID int64) (*ConflictDetail, error) {
 	endTime := startTime.Add(time.Duration(durationHours) * time.Hour)
-	bufferStart := startTime.Add(-15 * time.Minute)
-	bufferEnd := endTime.Add(15 * time.Minute)
 
 	rows, err := database.DB.Query(`
 		SELECT c.name, s.start_time, s.duration_hours
@@ -360,10 +358,8 @@ func checkClassroomConflict(classroom string, startTime time.Time, durationHours
 			return nil, err
 		}
 		sEnd := sStart.Add(time.Duration(durHours) * time.Hour)
-		sBufStart := sStart.Add(-15 * time.Minute)
-		sBufEnd := sEnd.Add(15 * time.Minute)
 
-		if bufferStart.Before(sBufEnd) && bufferEnd.After(sBufStart) {
+		if startTime.Before(sEnd.Add(15*time.Minute)) && endTime.Add(15*time.Minute).After(sStart) {
 			return &ConflictDetail{
 				CourseName: name,
 				StartTime:  sStart,

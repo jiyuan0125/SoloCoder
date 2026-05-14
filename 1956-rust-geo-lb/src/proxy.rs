@@ -5,7 +5,7 @@ use axum::response::{IntoResponse, Response};
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::Instant;
-use tracing::{error, info, warn};
+use tracing::{debug, error, info, warn};
 
 pub async fn proxy_request(
     state: Arc<AppState>,
@@ -14,6 +14,8 @@ pub async fn proxy_request(
 ) -> Response {
     let start = Instant::now();
     let client_ip = get_client_ip(&request);
+
+    info!("Received request from IP: {:?}", client_ip);
 
     let (method, uri, headers, body) = (
         request.method().clone(),
@@ -92,8 +94,20 @@ async fn select_target(
     client_ip: Option<std::net::IpAddr>,
 ) -> Option<(Arc<crate::models::ZoneState>, String)> {
     let preferred_zone = match client_ip {
-        Some(ip) => state.find_zone_for_ip(ip).await,
-        None => None,
+        Some(ip) => {
+            info!("Looking up zone for IP: {}", ip);
+            let found = state.find_zone_for_ip(ip).await;
+            if let Some(ref z) = found {
+                info!("Found matching zone: {} for IP: {}", z.name, ip);
+            } else {
+                warn!("No zone found for IP: {}", ip);
+            }
+            found
+        }
+        None => {
+            warn!("Client IP not available, cannot perform geo-routing");
+            None
+        }
     };
 
     let preferred_zone_name = preferred_zone
@@ -106,6 +120,10 @@ async fn select_target(
             let healthy_backends = zone.get_healthy_backends();
             if !healthy_backends.is_empty() {
                 let index = state.get_next_backend_index(healthy_backends.len());
+                info!(
+                    "Using preferred zone {} with backend {}",
+                    zone.name, healthy_backends[index].address
+                );
                 return Some((zone.clone(), healthy_backends[index].address.clone()));
             }
         } else {
@@ -114,6 +132,12 @@ async fn select_target(
     }
 
     let fallback_zones = state.get_next_available_zones(&preferred_zone_name).await;
+
+    info!(
+        "Available fallback zones ({} total): {:?}",
+        fallback_zones.len(),
+        fallback_zones.iter().map(|z| z.name.as_str()).collect::<Vec<_>>()
+    );
 
     for fallback_zone in fallback_zones {
         if fallback_zone.name == preferred_zone_name {
@@ -163,9 +187,15 @@ async fn update_stats(state: &Arc<AppState>, zone_name: &str, latency_ms: u64) {
 }
 
 fn get_client_ip(request: &Request) -> Option<std::net::IpAddr> {
+    debug!("Checking request extensions for ConnectInfo");
+
     if let Some(connect_info) = request.extensions().get::<ConnectInfo<SocketAddr>>() {
-        return Some(connect_info.ip());
+        let ip = connect_info.ip();
+        info!("Extracted client IP from ConnectInfo: {}", ip);
+        return Some(ip);
     }
+
+    debug!("ConnectInfo not found in request extensions");
 
     None
 }

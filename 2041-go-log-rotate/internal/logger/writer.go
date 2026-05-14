@@ -174,7 +174,7 @@ func (lw *LogWriter) doRotate() {
 		return
 	}
 
-	archiveName := fmt.Sprintf("app-%s.log", time.Now().Format("2006-01-02-150405"))
+	archiveName := fmt.Sprintf("app-%s.log", time.Now().Format("2006-01-02"))
 	archivePath := filepath.Join(lw.logDir, archiveName)
 
 	lw.mu.Lock()

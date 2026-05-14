@@ -56,20 +56,20 @@ public class MetricController {
             @RequestParam(required = false) Long endTime,
             @RequestParam(required = false) String granularity) {
 
-        if (!metricService.isRegistered(name)) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Metric not found");
-            error.put("name", name);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+        if (metricService.exists(name)) {
+            List<AggregatedData> data = metricService.queryMetrics(name, startTime, endTime, granularity);
+            return ResponseEntity.ok(data);
         }
 
-        List<AggregatedData> data = metricService.queryMetrics(name, startTime, endTime, granularity);
-        return ResponseEntity.ok(data);
+        Map<String, Object> error = new HashMap<>();
+        error.put("error", "Metric not found");
+        error.put("name", name);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
 
     @GetMapping("/{name}/anomalies")
     public ResponseEntity<?> getAnomalies(@PathVariable String name) {
-        if (!metricService.isRegistered(name)) {
+        if (!metricService.exists(name)) {
             Map<String, Object> error = new HashMap<>();
             error.put("error", "Metric not found");
             error.put("name", name);

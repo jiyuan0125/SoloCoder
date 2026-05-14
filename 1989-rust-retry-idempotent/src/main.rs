@@ -2,11 +2,13 @@ use std::sync::Arc;
 
 use axum::{routing::{get, post}, Router};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
+use tracing::{info, error};
 
 mod models;
 mod store;
 mod scheduler;
 mod handlers;
+mod persistence;
 
 use handlers::AppState;
 
@@ -20,8 +22,27 @@ async fn main() {
         .with(tracing_subscriber::fmt::layer())
         .init();
 
+    let persistence_manager = Arc::new(persistence::PersistenceManager::new(None));
+    
     let store = store::TaskStore::new();
-    let scheduler = Arc::new(scheduler::Scheduler::new(store.clone(), Some(100)));
+    
+    match persistence_manager.load() {
+        Ok(tasks) => {
+            if !tasks.is_empty() {
+                info!("Restoring {} persisted tasks", tasks.len());
+                store.restore_from_persisted(tasks);
+            }
+        }
+        Err(e) => {
+            error!("Failed to load persisted tasks: {}", e);
+        }
+    }
+
+    let scheduler = Arc::new(scheduler::Scheduler::new(
+        store.clone(),
+        Some(100),
+        Some(persistence_manager.clone()),
+    ));
 
     scheduler.clone().run().await;
 

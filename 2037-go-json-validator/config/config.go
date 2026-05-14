@@ -1,7 +1,7 @@
 package config
 
 const (
-	Port               = "8801"
+	Port               = "8080"
 	MaxMemoryUsage     = 512 * 1024 * 1024
 	MaxNestingDepth    = 200
 	DBPath             = "./validator.db"

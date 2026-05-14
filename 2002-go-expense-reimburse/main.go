@@ -27,8 +27,8 @@ func main() {
 		api.GET("/reimbursements/:id/history", handlers.GetStatusHistory)
 	}
 
-	log.Println("Server starting on :8101...")
-	if err := r.Run(":8101"); err != nil {
+	log.Println("Server starting on :8080...")
+	if err := r.Run(":8080"); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

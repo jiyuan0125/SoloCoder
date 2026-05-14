@@ -416,83 +416,52 @@ func calculateFee(entryTime, exitTime time.Time, vehicleType VehicleType, hasFre
 	}
 
 	duration := exitTime.Sub(entryTime)
-	minutes := int64(duration.Minutes())
+	totalMinutes := int64(duration.Minutes())
 
-	if hasFreePeriod && minutes <= freeMinutes {
+	if hasFreePeriod && totalMinutes <= freeMinutes {
 		return 0
 	}
 
-	effectiveMinutes := minutes
+	chargeableMinutes := totalMinutes
 	if hasFreePeriod {
-		effectiveMinutes = minutes - freeMinutes
+		chargeableMinutes = totalMinutes - freeMinutes
 	}
 
-	if effectiveMinutes <= 0 {
+	if chargeableMinutes <= 0 {
 		return 0
 	}
 
-	hours := (effectiveMinutes + 59) / 60
+	full24HourPeriods := chargeableMinutes / (24 * 60)
+	remainingMinutes := chargeableMinutes % (24 * 60)
 
-	var totalFee int64 = 0
-	remainingHours := hours
+	totalFee := full24HourPeriods * dailyCap
 
-	currentDay := time.Date(entryTime.Year(), entryTime.Month(), entryTime.Day(), dayStartHour, dayStartMinute, 0, 0, entryTime.Location())
-	endDay := time.Date(exitTime.Year(), exitTime.Month(), exitTime.Day(), dayStartHour, dayStartMinute, 0, 0, exitTime.Location())
-
-	for remainingHours > 0 {
-		dayEnd := currentDay.Add(24 * time.Hour)
-		if currentDay.Equal(endDay) {
-			dayFee := int64(min(remainingHours*ratePerHour, dailyCap))
-			totalFee += dayFee
-			remainingHours = 0
-		} else {
-			entryTimeOnDay := max(entryTime, currentDay)
-			remainingMinutesInDay := int64(dayEnd.Sub(entryTimeOnDay).Minutes())
-			hoursInDay := (remainingMinutesInDay + 59) / 60
-			if hoursInDay > remainingHours {
-				hoursInDay = remainingHours
-			}
-			dayFee := int64(min(hoursInDay*ratePerHour, dailyCap))
-			totalFee += dayFee
-			remainingHours -= hoursInDay
-			currentDay = currentDay.Add(24 * time.Hour)
-		}
+	if remainingMinutes > 0 {
+		remainingHours := (remainingMinutes + 59) / 60
+		totalFee += min(remainingHours*ratePerHour, dailyCap)
 	}
 
 	if vehicleType == MemberVehicle {
-		totalDays := int64(endDay.Sub(currentDay).Hours()/24) + 1
-		if endDay.After(currentDay) {
-			totalDays = int64(endDay.Sub(entryTime).Hours()/24) + 1
-		}
-		if totalDays < 1 {
-			totalDays = 1
-		}
-
-		cappedDays := hours / 8
-		if hours%8 > 0 {
-			cappedDays++
-		}
-		if cappedDays < 1 {
-			cappedDays = 1
-		}
-
-		regularFee := hours * ratePerHour
-
-		if regularFee > dailyCap*cappedDays {
-			capAmount := dailyCap * cappedDays
-			nonCapAmount := regularFee - (dailyCap * (cappedDays - 1))
-			discountedCap := dailyCap * (cappedDays - 1)
-			discountedNonCap := int64(float64(nonCapAmount) * memberDiscount)
-			totalFee = discountedCap + discountedNonCap
-			if totalFee > capAmount {
-				totalFee = capAmount
-			}
-		} else {
-			totalFee = int64(float64(regularFee) * memberDiscount)
-		}
+		totalFee = applyMemberDiscount(totalFee, full24HourPeriods, remainingMinutes, hasFreePeriod)
 	}
 
 	return totalFee
+}
+
+func applyMemberDiscount(totalFee int64, full24HourPeriods, remainingMinutes int64, hasFreePeriod bool) int64 {
+	fullPeriodsFee := full24HourPeriods * dailyCap
+
+	var remainingFee int64 = 0
+	if remainingMinutes > 0 {
+		remainingHours := (remainingMinutes + 59) / 60
+		remainingFee = min(remainingHours*ratePerHour, dailyCap)
+	}
+
+	if remainingFee < dailyCap {
+		remainingFee = int64(float64(remainingFee) * memberDiscount)
+	}
+
+	return fullPeriodsFee + remainingFee
 }
 
 func min(a, b int64) int64 {
@@ -732,7 +701,7 @@ func vehicleDetailHandler(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "无效的请求路径")
 		return
 	}
-	plateNumber := parts[3]
+	plateNumber := parts[2]
 
 	var vehicle Vehicle
 	var createdAtStr string
@@ -863,15 +832,29 @@ func listApprovals(w http.ResponseWriter, r *http.Request) {
 	approvals := make([]Approval, 0)
 	for rows.Next() {
 		var approval Approval
+		var description, firstReviewer, secondReviewer, approver sql.NullString
 		var applicantTime, firstReviewTime, secondReviewTime, approvalTime, completeTime, createdAtStr sql.NullString
 
-		err := rows.Scan(&approval.ID, &approval.Title, &approval.Description, &approval.Status,
+		err := rows.Scan(&approval.ID, &approval.Title, &description, &approval.Status,
 			&approval.ResourceType, &approval.ResourceID, &approval.Applicant,
-			&approval.FirstReviewer, &approval.SecondReviewer, &approval.Approver,
+			&firstReviewer, &secondReviewer, &approver,
 			&applicantTime, &firstReviewTime, &secondReviewTime, &approvalTime, &completeTime, &createdAtStr)
 		if err != nil {
-			respondError(w, http.StatusInternalServerError, "服务器错误")
+			respondError(w, http.StatusInternalServerError, err.Error())
 			return
+		}
+
+		if description.Valid {
+			approval.Description = description.String
+		}
+		if firstReviewer.Valid {
+			approval.FirstReviewer = firstReviewer.String
+		}
+		if secondReviewer.Valid {
+			approval.SecondReviewer = secondReviewer.String
+		}
+		if approver.Valid {
+			approval.Approver = approver.String
 		}
 
 		approval.ApplicantTime = parseNullableTime(applicantTime)
@@ -918,7 +901,7 @@ func approvalDetailHandler(w http.ResponseWriter, r *http.Request) {
 		respondError(w, http.StatusBadRequest, "无效的请求路径")
 		return
 	}
-	idStr := parts[3]
+	idStr := parts[2]
 	id, err := strconv.ParseInt(idStr, 10, 64)
 	if err != nil {
 		respondError(w, http.StatusBadRequest, "无效的审批ID")
@@ -926,22 +909,36 @@ func approvalDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var approval Approval
+	var description, firstReviewer, secondReviewer, approver sql.NullString
 	var applicantTime, firstReviewTime, secondReviewTime, approvalTime, completeTime, createdAtStr sql.NullString
 
 	err = db.QueryRow(`SELECT id, title, description, status, resource_type, resource_id, applicant, 
 		first_reviewer, second_reviewer, approver, applicant_time, first_review_time, 
 		second_review_time, approval_time, complete_time, created_at FROM approvals WHERE id = ?`, id).
-		Scan(&approval.ID, &approval.Title, &approval.Description, &approval.Status,
+		Scan(&approval.ID, &approval.Title, &description, &approval.Status,
 			&approval.ResourceType, &approval.ResourceID, &approval.Applicant,
-			&approval.FirstReviewer, &approval.SecondReviewer, &approval.Approver,
+			&firstReviewer, &secondReviewer, &approver,
 			&applicantTime, &firstReviewTime, &secondReviewTime, &approvalTime, &completeTime, &createdAtStr)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			respondError(w, http.StatusNotFound, "审批不存在")
 			return
 		}
-		respondError(w, http.StatusInternalServerError, "服务器错误")
+		respondError(w, http.StatusInternalServerError, err.Error())
 		return
+	}
+
+	if description.Valid {
+		approval.Description = description.String
+	}
+	if firstReviewer.Valid {
+		approval.FirstReviewer = firstReviewer.String
+	}
+	if secondReviewer.Valid {
+		approval.SecondReviewer = secondReviewer.String
+	}
+	if approver.Valid {
+		approval.Approver = approver.String
 	}
 
 	approval.ApplicantTime = parseNullableTime(applicantTime)

@@ -17,7 +17,7 @@ import (
 )
 
 const (
-	port           = "8804"
+	port           = "8080"
 	configFilePath = "config.yaml"
 	dbFilePath     = "config_history.db"
 	reloadInterval = 10 * time.Second

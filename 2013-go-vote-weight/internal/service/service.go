@@ -142,6 +142,22 @@ func (s *Service) Delegate(votingID int64, delegatorID int64, trusteeID int64) (
 	return p, nil
 }
 
+func (s *Service) calculateStats(votingID int64) (float64, int64, int64, error) {
+	totalPower, err := s.store.GetTotalVotingPower()
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	yesVotes, totalVotes, err := s.store.CalculateVoteStats(votingID)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+	var participation float64
+	if totalPower > 0 {
+		participation = float64(totalVotes) / float64(totalPower)
+	}
+	return participation, yesVotes, totalVotes, nil
+}
+
 func (s *Service) Vote(votingID int64, ownerID int64, choice model.VoteChoice) (*model.Vote, error) {
 	v, err := s.GetVoting(votingID)
 	if err != nil {
@@ -199,6 +215,11 @@ func (s *Service) Vote(votingID int64, ownerID int64, choice model.VoteChoice) (
 		return nil, err
 	}
 
+	participation, yesVotes, totalVotes, err := s.calculateStats(votingID)
+	if err == nil {
+		_ = s.store.UpdateVotingStats(votingID, participation, yesVotes, totalVotes)
+	}
+
 	_ = s.store.CreateAuditLog(votingID, model.ActionTypeVote, &ownerID, fmt.Sprintf("业主 %d 投票 %s, 权重 %d", ownerID, choice, vote.VoteWeight))
 	return vote, nil
 }
@@ -213,19 +234,9 @@ func (s *Service) CloseVoting(votingID int64) error {
 		return nil
 	}
 
-	totalPower, err := s.store.GetTotalVotingPower()
+	participation, yesVotes, totalVotes, err := s.calculateStats(votingID)
 	if err != nil {
 		return err
-	}
-
-	yesVotes, totalVotes, err := s.store.CalculateVoteStats(votingID)
-	if err != nil {
-		return err
-	}
-
-	var participation float64
-	if totalPower > 0 {
-		participation = float64(totalVotes) / float64(totalPower)
 	}
 
 	var status model.VotingStatus

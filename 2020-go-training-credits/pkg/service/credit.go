@@ -29,6 +29,13 @@ func (s *CreditService) CalculateProgress(employeeID string, year int) (*models.
 		return nil, err
 	}
 
+	s.ensureCarryOverProcessed(employeeID, year)
+
+	employee, err = s.store.GetEmployee(employeeID)
+	if err != nil {
+		return nil, err
+	}
+
 	records := s.store.GetCreditRecordsByEmployeeAndYear(employeeID, year)
 	courses := s.store.ListCourses()
 
@@ -220,8 +227,28 @@ func (s *CreditService) ProcessYearEndCarryOver(employeeID string, year int) err
 	if employee.CarryOverCredits == nil {
 		employee.CarryOverCredits = make(map[int]int)
 	}
+
 	employee.CarryOverCredits[year+1] = carryOver
 	employee.UpdatedAt = time.Now()
 
 	return s.store.UpdateEmployee(employee)
+}
+
+func (s *CreditService) ensureCarryOverProcessed(employeeID string, targetYear int) {
+	for year := targetYear - 1; year >= 2020; year-- {
+		employee, err := s.store.GetEmployee(employeeID)
+		if err != nil {
+			break
+		}
+
+		if employee.CarryOverCredits == nil {
+			employee.CarryOverCredits = make(map[int]int)
+		}
+
+		if _, exists := employee.CarryOverCredits[year+1]; exists {
+			continue
+		}
+
+		_ = s.ProcessYearEndCarryOver(employeeID, year)
+	}
 }

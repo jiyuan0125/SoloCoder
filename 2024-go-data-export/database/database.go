@@ -1,11 +1,13 @@
 package database
 
 import (
-	"data-export/config"
-	"data-export/models"
+	"database/sql"
 	"log"
 	"os"
 	"time"
+
+	"data-export/config"
+	"data-export/models"
 
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
@@ -17,17 +19,45 @@ var DB *gorm.DB
 func Init() {
 	os.MkdirAll(config.ExportDir, 0755)
 
+	dsn := config.DBPath + "?_journal=WAL&_busy_timeout=5000&_fk=1"
+
 	var err error
-	DB, err = gorm.Open(sqlite.Open(config.DBPath), &gorm.Config{
-		Logger: logger.Default.LogMode(logger.Info),
+	DB, err = gorm.Open(sqlite.Open(dsn), &gorm.Config{
+		Logger: logger.Default.LogMode(logger.Warn),
 	})
 	if err != nil {
 		log.Fatal("Failed to connect database:", err)
 	}
 
+	sqlDB, err := DB.DB()
+	if err != nil {
+		log.Fatal("Failed to get sql.DB:", err)
+	}
+
+	sqlDB.SetMaxOpenConns(20)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(time.Hour)
+
+	if err := enableWAL(sqlDB); err != nil {
+		log.Printf("Warning: failed to enable WAL: %v", err)
+	}
+
 	DB.AutoMigrate(&models.ExportTask{})
 
 	createSampleTables()
+}
+
+func enableWAL(sqlDB *sql.DB) error {
+	_, err := sqlDB.Exec("PRAGMA journal_mode=WAL;")
+	if err != nil {
+		return err
+	}
+	_, err = sqlDB.Exec("PRAGMA synchronous=NORMAL;")
+	if err != nil {
+		return err
+	}
+	_, err = sqlDB.Exec("PRAGMA busy_timeout=5000;")
+	return err
 }
 
 func createSampleTables() {

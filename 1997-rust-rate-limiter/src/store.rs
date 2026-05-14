@@ -265,11 +265,22 @@ impl RateLimiterEngine {
         result
     }
 
+    fn is_internal_path(path: &str) -> bool {
+        path.starts_with("/api/rules") 
+            || path.starts_with("/api/stats") 
+            || path.starts_with("/api/throttled")
+            || path == "/health"
+    }
+
     pub fn check_request(
         &self,
         path: &str,
         ip: Option<IpAddr>,
     ) -> RateLimitCheckResult {
+        if Self::is_internal_path(path) {
+            return RateLimitCheckResult::default();
+        }
+
         let now = Instant::now();
         let rules = self.match_rules(path);
 
@@ -329,12 +340,6 @@ impl RateLimiterEngine {
                 retry_after: max_retry_after,
             }
         } else {
-            if let Some(client_ip) = ip {
-                for rule in &rules {
-                    self.stats_store
-                        .record_ip_throttled(client_ip, &rule.path_pattern, false, 0, 0);
-                }
-            }
             RateLimitCheckResult::default()
         }
     }

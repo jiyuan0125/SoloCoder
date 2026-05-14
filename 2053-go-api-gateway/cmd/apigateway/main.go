@@ -32,12 +32,11 @@ func main() {
 
 	api.RegisterRoutes(mux)
 
-	gatewayHandler := gateway.NewGateway()
-	mux.Handle("/", gatewayHandler)
+	gatewayHandler := gateway.NewGateway(mux)
 
 	server := &http.Server{
-		Addr:         ":9102",
-		Handler:      mux,
+		Addr:         ":8080",
+		Handler:      gatewayHandler,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
@@ -47,7 +46,7 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Println("API Gateway starting on port 9102...")
+		log.Println("API Gateway starting on port 8080...")
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("server error: %v", err)
 		}

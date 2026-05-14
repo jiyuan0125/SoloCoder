@@ -1,7 +1,8 @@
 import threading
 from collections import deque, defaultdict
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional, List, Dict, Any, Tuple
+from typing import Optional, List, Dict, Any, Tuple, Union
 
 
 class LogLevel(Enum):
@@ -25,17 +26,44 @@ DEFAULT_TOP_N = 20
 MAX_TOP_N = 100
 
 
+def parse_timestamp(ts: Union[float, int, str]) -> float:
+    if isinstance(ts, (int, float)):
+        return float(ts)
+    if isinstance(ts, str):
+        try:
+            return float(ts)
+        except ValueError:
+            pass
+        for fmt in [
+            "%Y-%m-%dT%H:%M:%SZ",
+            "%Y-%m-%dT%H:%M:%S.%fZ",
+            "%Y-%m-%dT%H:%M:%S+00:00",
+            "%Y-%m-%dT%H:%M:%S.%f+00:00",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%d %H:%M:%S.%f",
+        ]:
+            try:
+                dt = datetime.strptime(ts, fmt)
+                if dt.tzinfo is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt.timestamp()
+            except ValueError:
+                continue
+        raise ValueError(f"Unsupported timestamp format: {ts}")
+    raise ValueError(f"Unsupported timestamp type: {type(ts)}")
+
+
 class LogEntry:
     def __init__(
         self,
-        timestamp: float,
+        timestamp: Union[float, int, str],
         service_name: str,
         level: str,
         message: str,
         tags: Optional[Dict[str, Any]] = None,
         trace_id: Optional[str] = None,
     ):
-        self.timestamp = timestamp
+        self.timestamp = parse_timestamp(timestamp)
         self.service_name = service_name
         self.level = level.upper()
         self.message = message

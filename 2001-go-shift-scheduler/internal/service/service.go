@@ -34,8 +34,16 @@ func getWeekRange(date time.Time) (time.Time, time.Time) {
 	return weekStart, weekEnd
 }
 
-func ValidateShiftCreation(empID int64, shiftDate, startTime, endTime time.Time) error {
-	existing, err := repository.GetShiftByEmployeeAndDate(empID, shiftDate)
+func validateShiftCreationImpl(empID int64, shiftDate, startTime, endTime time.Time, excludeShiftID int64) error {
+	var existing *models.ShiftMaster
+	var err error
+	
+	if excludeShiftID > 0 {
+		existing, err = repository.GetShiftByEmployeeAndDateExcluding(empID, shiftDate, excludeShiftID)
+	} else {
+		existing, err = repository.GetShiftByEmployeeAndDate(empID, shiftDate)
+	}
+	
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -44,7 +52,13 @@ func ValidateShiftCreation(empID int64, shiftDate, startTime, endTime time.Time)
 			existing.StartTime.Format("15:04"), existing.EndTime.Format("15:04"))}
 	}
 
-	lastShift, err := repository.GetLastShiftBefore(empID, shiftDate)
+	var lastShift *models.ShiftMaster
+	if excludeShiftID > 0 {
+		lastShift, err = repository.GetLastShiftBeforeExcluding(empID, shiftDate, excludeShiftID)
+	} else {
+		lastShift, err = repository.GetLastShiftBefore(empID, shiftDate)
+	}
+	
 	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
@@ -67,7 +81,13 @@ func ValidateShiftCreation(empID int64, shiftDate, startTime, endTime time.Time)
 	}
 
 	weekStart, weekEnd := getWeekRange(shiftDate)
-	weeklyHours, err := repository.GetWeeklyHours(empID, weekStart, weekEnd)
+	var weeklyHours float64
+	if excludeShiftID > 0 {
+		weeklyHours, err = repository.GetWeeklyHoursExcluding(empID, weekStart, weekEnd, excludeShiftID)
+	} else {
+		weeklyHours, err = repository.GetWeeklyHours(empID, weekStart, weekEnd)
+	}
+	
 	if err != nil {
 		return err
 	}
@@ -83,6 +103,10 @@ func ValidateShiftCreation(empID int64, shiftDate, startTime, endTime time.Time)
 	}
 
 	return nil
+}
+
+func ValidateShiftCreation(empID int64, shiftDate, startTime, endTime time.Time) error {
+	return validateShiftCreationImpl(empID, shiftDate, startTime, endTime, 0)
 }
 
 func CreateShift(empID int64, shiftDate, startTime, endTime time.Time, position string) (*models.ShiftMaster, error) {
@@ -136,6 +160,8 @@ func AdvanceStatus(shiftID int64, operatorID int64, note string) error {
 	switch shift.Status {
 	case models.StatusDraft:
 		nextStatus = models.StatusReviewing
+	case models.StatusRejected:
+		nextStatus = models.StatusReviewing
 	case models.StatusReviewing:
 		nextStatus = models.StatusApproved
 	case models.StatusApproved:
@@ -181,11 +207,11 @@ func RequestSwap(requesterShiftID, responderShiftID int64) (*models.SwapRequest,
 		return nil, &ValidationError{Code: 400, Message: "只有已通过状态的班次可以申请调班"}
 	}
 
-	if err := ValidateShiftCreation(respShift.EmployeeID, reqShift.ShiftDate, reqShift.StartTime, reqShift.EndTime); err != nil {
+	if err := validateShiftCreationImpl(respShift.EmployeeID, reqShift.ShiftDate, reqShift.StartTime, reqShift.EndTime, responderShiftID); err != nil {
 		return nil, &ValidationError{Code: 400, Message: fmt.Sprintf("调班后接收方(%d)不满足约束：%s", respShift.EmployeeID, err.Error())}
 	}
 
-	if err := ValidateShiftCreation(reqShift.EmployeeID, respShift.ShiftDate, respShift.StartTime, respShift.EndTime); err != nil {
+	if err := validateShiftCreationImpl(reqShift.EmployeeID, respShift.ShiftDate, respShift.StartTime, respShift.EndTime, requesterShiftID); err != nil {
 		return nil, &ValidationError{Code: 400, Message: fmt.Sprintf("调班后发起方(%d)不满足约束：%s", reqShift.EmployeeID, err.Error())}
 	}
 

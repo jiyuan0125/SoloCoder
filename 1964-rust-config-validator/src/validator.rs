@@ -304,4 +304,61 @@ mod tests {
         let result = validate(&json!("HELLO"), &schema, "test");
         assert!(!result.valid);
     }
+
+    #[test]
+    fn test_schema_deserialization_with_aliases() {
+        let json_schema = json!({
+            "type": "number",
+            "min": 1.0,
+            "max": 300.0
+        });
+        
+        let schema: Schema = serde_json::from_value(json_schema).unwrap();
+        assert_eq!(schema.config_type, ConfigType::Number);
+        assert_eq!(schema.minimum, Some(1.0));
+        assert_eq!(schema.maximum, Some(300.0));
+        
+        let result = validate(&json!(500.0), &schema, "test");
+        assert!(!result.valid);
+        assert_eq!(result.errors[0].expected, "<=300");
+        
+        let result = validate(&json!(150.0), &schema, "test");
+        assert!(result.valid);
+    }
+
+    #[test]
+    fn test_schema_deserialization_minlength_alias() {
+        let json_schema = json!({
+            "type": "string",
+            "minLength": 3,
+            "maxLength": 10
+        });
+        
+        let schema: Schema = serde_json::from_value(json_schema).unwrap();
+        assert_eq!(schema.min_length, Some(3));
+        assert_eq!(schema.max_length, Some(10));
+        
+        let result = validate(&json!("ab"), &schema, "test");
+        assert!(!result.valid);
+        
+        let result = validate(&json!("hello"), &schema, "test");
+        assert!(result.valid);
+    }
+
+    #[test]
+    fn test_schema_deserialization_enum_alias() {
+        let json_schema = json!({
+            "type": "string",
+            "enum": ["a", "b", "c"]
+        });
+        
+        let schema: Schema = serde_json::from_value(json_schema).unwrap();
+        assert!(schema.enum_values.is_some());
+        
+        let result = validate(&json!("a"), &schema, "test");
+        assert!(result.valid);
+        
+        let result = validate(&json!("d"), &schema, "test");
+        assert!(!result.valid);
+    }
 }

@@ -17,13 +17,18 @@ pub struct Schema {
     #[serde(rename = "type")]
     pub config_type: ConfigType,
     pub required: Option<bool>,
+    #[serde(alias = "min")]
     pub minimum: Option<f64>,
+    #[serde(alias = "max")]
     pub maximum: Option<f64>,
+    #[serde(alias = "minLength")]
     pub min_length: Option<usize>,
+    #[serde(alias = "maxLength")]
     pub max_length: Option<usize>,
     pub pattern: Option<String>,
     pub items: Option<Box<Schema>>,
     pub properties: Option<std::collections::HashMap<String, Schema>>,
+    #[serde(alias = "enum")]
     pub enum_values: Option<Vec<serde_json::Value>>,
 }
 

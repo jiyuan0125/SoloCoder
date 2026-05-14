@@ -86,4 +86,6 @@ async def delete_user(user_id: int):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("test_backend:app", host="127.0.0.1", port=8081)
+    import os
+    port = int(os.environ.get("BACKEND_PORT", 8081))
+    uvicorn.run("test_backend:app", host="127.0.0.1", port=port)

@@ -90,6 +90,13 @@ func (s *ImageService) ProcessImage(inputPath string, ops []models.ImageOperatio
 }
 
 func (s *ImageService) processStaticImage(file *os.File, ops []models.ImageOperation, inputPath string, outputDir string) (string, error) {
+	inputFormat := utils.GetImageFormat(inputPath)
+
+	exifData, err := utils.ExtractExifData(file, inputFormat)
+	if err != nil {
+		return "", err
+	}
+
 	img, _, err := utils.DecodeImageFromFile(file)
 	if err != nil {
 		return "", err
@@ -97,7 +104,7 @@ func (s *ImageService) processStaticImage(file *os.File, ops []models.ImageOpera
 
 	runtime.GC()
 
-	outputFormat := utils.GetImageFormat(inputPath)
+	outputFormat := inputFormat
 
 	for _, op := range ops {
 		switch op.Type {
@@ -136,6 +143,10 @@ func (s *ImageService) processStaticImage(file *os.File, ops []models.ImageOpera
 
 	img = nil
 	runtime.GC()
+
+	if exifData != nil && len(exifData.RawData) > 0 {
+		utils.EmbedExifIntoImage(outputPath, exifData, outputFormat)
+	}
 
 	return outputPath, nil
 }

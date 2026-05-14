@@ -35,14 +35,18 @@ public class ReplayController {
 
     @GetMapping("/latest")
     public ResponseEntity<?> replayLatest(
-            @RequestParam(required = true) String method,
-            @RequestParam(required = true) String path) {
+            @RequestParam(required = false) String method,
+            @RequestParam(required = false) String path) {
         Optional<RecordedExchange> recordOpt = recordingService.getLatest(method, path);
         if (recordOpt.isEmpty()) {
             Map<String, String> error = new HashMap<>();
             error.put("error", "No matching record found");
-            error.put("method", method);
-            error.put("path", path);
+            if (method != null) {
+                error.put("method", method);
+            }
+            if (path != null) {
+                error.put("path", path);
+            }
             return ResponseEntity.status(404).body(error);
         }
 
