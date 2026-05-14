@@ -1,5 +1,9 @@
-移动端 App 在弱网下的表现要测，真实网络条件不可控。写个工具给指定连接加上可配的延迟和抖动，模拟慢网络环境，看应用在延迟 500ms 抖动 200ms 的条件下还能不能用。
+上次发版前没测弱网，结果用户在地铁上 App 直接白屏。运维组被怼了一顿之后说必须搞个弱网模拟工具出来。
 
-文件可能很大，超过内存要能处理。
+启动方式：`./simulator -listen :8080 -target localhost:3000 -latency 500ms -jitter 200ms`。工具监听本地端口，把流量透明转发到目标服务，中间注入延迟和抖动。`-jitter` 在 `-latency` 基础上随机加减，范围 `[latency-jitter, latency+jitter]`。还支持 `-packet-loss 0.05` 模拟丢包（5% 的包直接丢弃不转发）和 `-bandwidth 100kbps` 限速。
 
-Go 实现，只用标准库，交叉编译友好。
+连接管理：每个入站连接创建独立的延迟队列，连接数用 `-max-conn 1000` 限制。超过限制拒绝新连接，打印 "max connections reached"。活跃连接数实时显示。配置可以写 JSON 文件用 `-config sim.json` 加载，命令行参数优先级更高。
+
+大文件传输场景下内存不能爆，用流式读写逐块转发而不是缓冲全量数据，块大小 32KB。Ctrl+C 优雅关闭，等待活跃连接结束或 5 秒超时强制退出。
+
+`-log access.log` 记录每个连接的源地址、目标地址、实际注入延迟和是否丢包。启动时打印 "simulator ready: latency=<X>, jitter=<Y>, loss=<Z>"。Go 标准库，交叉编译友好。

@@ -1,3 +1,5 @@
-之前用 Python 做子进程 PTY 分配，性能不行，并发一高就卡。Go 重写一个：为子进程分配 PTY，支持交互式命令的输入输出。终端输出得完整捕获，包括 ANSI 转义序列，不然颜色信息和光标定位全丢了。
+之前用 Python 做子进程 PTY 分配，性能不行，并发一高就卡。为什么非得用 Python？Go 直接 syscall 调用更高效。重写一个：为子进程分配 PTY，支持交互式命令的输入输出。终端输出得完整捕获，包括 ANSI 转义序列，不然颜色信息和光标定位全丢了。
+
+CLI：`ptyrun -command "bash" -log session.log` 启动子进程并分配 PTY，交互式输入输出透传到当前终端。-log 将完整终端输出（含 ANSI 序列）写入日志文件。`ptyrun -command "mysql -u root" -input commands.txt` 从文件读取输入行，逐行发送到子进程 stdin，模拟交互。输出格式保持原始终端编码，不做任何过滤。子进程退出后 ptyrun 输出 "session ended: exit_code={n}, duration={ms}ms" 并以相同退出码退出。`ptyrun -command "top" -capture output.raw -timeout 10` 运行 10 秒后发 SIGTERM 终止，捕获的输出写入 output.raw（包含 ANSI 序列的原始字节）。并发运行多个 PTY 会话：`ptyrun -batch sessions.json`，sessions.json 是数组，每项有 command 和 log 字段，每个会话独立 PTY，汇总输出 "sessions: {n}, completed: {c}, failed: {f}"。PTY 分配失败（如 /dev/ptmx 不可用）输出 "pty allocation failed" 退出码 1。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

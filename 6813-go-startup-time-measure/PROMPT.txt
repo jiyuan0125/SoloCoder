@@ -1,4 +1,11 @@
-systemd-analyze 只给个总时间，各服务启动耗时看不到。分析 systemd/launchd 日志，计算各服务启动耗时，输出启动时间线。有可能一次导入上万条数据。
-文件状态有 新增、处理中、已完成、归档。处理完后可以归档。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
+systemd-analyze 只给个总启动时间，想知道的是每个服务到底启动了多久、哪个服务拖了后腿、能不能并行优化。
 
-Go 标准库，命令行参数用 flag 包解析。
+`startime analyze` 解析 systemd 日志计算各服务启动耗时。输出时间线图表（ASCII 横条），每个服务一行：服务名 | 开始时间 | 耗时 | 横条长度正比于耗时。`--sort time` 按耗时排序（默认），`--sort name` 按名称排序。
+
+`startime analyze --top 10` 只看最慢的 10 个服务。`startime analyze --threshold 5s` 标出启动超过 5 秒的服务为红色 SLOW。`--output timeline.json` 保存 JSON：`[{"service":"nginx","started_at":"...","duration_ms":340,"status":"ok"},...]`。
+
+`startime compare baseline.json current.json` 对比两次启动，输出哪些服务变慢了、哪些变快了。`startime boot-history --count 5` 显示最近 5 次启动的总耗时和趋势。
+
+有可能一次导入上万条数据。文件状态有新增、处理中、已完成、归档，处理完后可以归档。命令行参数支持 `tool verb resource --filter key=value` 格式。
+
+解析 journalctl 或 /var/log/syslog。Go 标准库，命令行参数用 flag 包解析。

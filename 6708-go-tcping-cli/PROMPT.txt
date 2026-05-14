@@ -1,3 +1,9 @@
-机房搬迁后有一批服务器的端口通不通心里没底，icmp ping 不够用，得用 TCP 连接来测。写个 TCP ping 工具，指定端口测试可达性和延迟，支持持续 ping 模式跑一段时间看稳定性，输出连通率和延迟统计。
+机房搬迁后有一批服务器的端口通不通心里没底，icmp ping 不够用——有些机器禁了 ICMP 但端口还活着，得用 TCP 连接来测才靠谱。
 
-Go 实现，只用标准库，交叉编译友好。
+`tcping --host 10.0.1.100 --port 8080 --count 50 --interval 1s --timeout 3s --json`。用 TCP dial 测可达性和延迟，`--count` 控制 ping 次数（默认无限，Ctrl+C 停止），`--timeout` 是单次 TCP 连接超时。
+
+持续 ping 模式下实时输出每条结果：`seq=1 host=10.0.1.100 port=8080 status=open rtt=2.3ms` 或 `seq=2 host=10.0.1.100 port=8080 status=closed rtt=timeout`。结束后汇总：总次数、成功次数、连通率（百分比，保留一位小数）、RTT 的 min/max/avg。`--json` 模式输出结构化数据：`{ "host": "10.0.1.100", "port": 8080, "results": [...], "summary": { "total": 50, "success": 48, "loss_rate": 4.0, "rtt": { "min_ms": 1.1, "max_ms": 5.3, "avg_ms": 2.4 } } }`。
+
+`tcping --file targets.txt --count 10` 批量模式，targets.txt 每行一个 `host:port`，并发测试所有目标，最后每个目标各出一份统计。`--workers` 控制并发数（默认 10）。
+
+host 或 port 参数缺失退出码 1，stderr 打 "error: --host and --port are required"。targets.txt 里有格式错误的行跳过并在 stderr 打 "skipping invalid line {N}: {content}"。Go 实现，只用标准库，交叉编译友好。

@@ -1,5 +1,11 @@
-API schema 改了字段类型没记录，前端对接时一脸懵。上周排查花了半天。Go 工具记录每次 schema 变更，生成迁移指南，检测向后不兼容的修改。
+API schema 上周偷偷改了字段类型没记录，前端对接时一脸懵，排查花了半天。这次不能再栽跟头了。
 
-扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
+1. 命令行：`schema-evolver diff --old v1.json --new v2.json`，对比两份 JSON schema（OpenAPI 3.0 的 schema 对象），输出所有差异。差异类型分三种——added（新增字段）、removed（删除字段）、changed（类型或约束变化），每条记录包含 JSON 路径（如 `$.properties.user.properties.age`）、旧值、新值。
+
+2. `schema-evolver check-compat --old v1.json --new v2.json` 专门检测向后不兼容的修改：删除了必填字段、把可选字段变成必填、缩小了数值范围、改了枚举值（删了选项）、把 string 改成了 integer 这类破坏性变更。不兼容的修改输出时用 ⚠ 标记，退出码 1；完全兼容退出码 0。
+
+3. `schema-evolver migrate --old v1.json --new v2.json -o guide.md` 生成一份 Markdown 迁移指南，列出每个 breaking change 以及建议的迁移步骤。guide.md 里用表格呈现：字段路径、变更类型、旧定义、新定义、迁移建议。
+
+4. 扫描完成后自动生成摘要文件 `schema-summary.json`，包含字段总数、新增/删除/变更计数、compatibility（compatible/breaking）。输入文件不存在或 JSON 解析失败，stderr 打错误信息退出码 1。两份 schema 完全一样时 stdout 打 "no changes detected" 退出码 0。
 
 Go 实现，只用标准库，交叉编译友好。

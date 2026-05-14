@@ -1,4 +1,9 @@
-日志增长趋势不预测，磁盘满了才知道。上周日志把磁盘写满了，整个服务挂了半小时。基于历史数据预测未来磁盘占用，输出预测曲线和耗尽时间。
-后台多个 goroutine 同时写结果文件。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+磁盘满了才发现日志增长超预期——上周直接导致服务挂了半小时。基于历史数据预测日志增长趋势，提前知道磁盘什么时候耗尽。
 
-Go 标准库，命令行参数用 flag 包解析。
+`tool forecast --history /var/log/app/ --days 7 --horizon 14` 用过去 7 天数据预测未来 14 天磁盘占用。输出三行关键数据：预测曲线（JSON 数组每天一个点）、预计耗尽日期 `disk_full_date`、当前日均增长率 `daily_growth_mb`。`--method linear|exponential` 选预测算法，默认 linear。`tool compare --history-dir /var/log/app/ --methods linear,exponential` 对比两种方法的 RMSE。拟合误差大于 20% 时 stderr 警告。
+
+后台多 goroutine 并行读取不同日期文件计算体积。任务状态 pending→running→completed，running 失败可重试。项目维度管理：`tool project create --name monitoring`，任务归属项目。
+
+历史数据不足 3 天报 "insufficient history data, need at least 3 days" 退出码 2。日志目录空退出码 1。
+
+Go 标准库，flag 包解析参数。

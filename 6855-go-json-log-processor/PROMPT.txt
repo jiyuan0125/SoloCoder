@@ -1,4 +1,9 @@
-JSON 日志字段提取用 jq 太慢了，百万行日志跑十几分钟。处理 JSON 格式的日志，支持 JSONPath 查询、字段提取、嵌套展开，输出过滤或转换后的 JSON。
-并行扫描多个文件或目录。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。解析完日志后自动触发告警检查。没有错误日志的时候不检查。
+百万行 JSON 日志要用 jq 提取字段？等它跑完咖啡都凉了。直接写个专用工具，JSONPath 查询、字段提取、嵌套展开一步到位。
 
-Go 标准库，命令行参数用 flag 包解析。
+子命令：`jlog query --input app.json --path '$.level'` 提取单字段，每行输出一个值。`jlog query --input app.json --path '$.request.duration' --filter '$.level=ERROR'` 带条件的查询，只提取 ERROR 日志的响应时间。`jlog flatten --input nested.json` 展开嵌套 JSON，把 {"user":{"name":"tom","age":20}} 变成 user.name=tom, user.age=20，输出平面 JSON。`jlog extract --input app.json --fields timestamp,level,message,request.duration` 只保留指定字段，丢弃其余。
+
+并行扫描多个文件或目录——--input 支持 glob 模式（--input "logs/*.json"），自动并行读取，worker 数默认 min(GOMAXPROCS, 文件数)。任务经历 pending→running→completed 几个阶段，running 阶段失败可以重试（自动重试 1 次），completed 之后可以重新发起（--force 重新处理）。解析完日志后自动触发告警检查——如果提取结果中 ERROR 占比超过 50%，输出 WARNING 到 stderr。没有错误日志的时候不检查——跳过告警检查。
+
+JSONPath 实现范围：支持 $.field、$.nested.field、$.array[0]、$.array[*] 四种写法，不支持过滤器表达式和递归下降。非 JSON 行跳过并在 stderr 输出行号。查询结果为空的字段输出 null。--output-format table/json/csv 三选一，默认 json。
+
+Go 标准库，命令行参数用 flag 包解析。大文件逐行处理，内存占用不超过 100MB。

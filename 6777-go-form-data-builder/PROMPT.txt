@@ -1,5 +1,11 @@
-要上传的表单里有文件和普通字段混在一起，手拼 multipart body 容易漏 boundary。写个工具从文件和命令行参数读字段，生成完整的 multipart/form-data 请求体，输出到文件或者 stdout。
+问题很明确：要上传文件+表单字段混合的 multipart 请求，手拼 boundary 太容易出错了。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+用法：`./formbuilder -field "name=test" -field "email=user@example.com" -file "avatar=@./photo.jpg" -url https://api.example.com/upload`。`-field` 添加普通字段（key=value），`-file` 添加文件字段（name=@filepath）。boundary 自动生成，格式 `----FormBoundary` + 16 位随机 hex。
 
-用 Go 标准库写，go run . 或 go build 都行。
+输出模式：`-o request.bin` 写入文件，默认 stdout 输出。`-print-headers` 同时打印 Content-Type 头（含 boundary）和 Content-Length。`-dry-run` 只打印请求结构不输出 body。
+
+文件不存在打印 "file not found: <path>" 并 exit 1。空字段值允许（`-field "notes="` 发空字符串）。大文件用流式读取，内存占用不超过 64KB 的缓冲区。
+
+也支持从配置文件：`-config form.yaml`，结构 `fields: [{name: "...", value: "..."}], files: [{name: "...", path: "..."}]`。
+
+项目拆至少 3 个源文件：main.go、builder.go、model.go。Go 标准库。

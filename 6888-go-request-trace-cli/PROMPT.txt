@@ -1,4 +1,11 @@
-请求链路追踪要从分散的日志里拼，手动对时间戳太痛苦。解析请求 ID、开始时间、结束时间、状态码，输出请求时间线。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
+一个请求从网关进来经过三个服务出去，时间戳散落在各处，手动对太痛苦了。得有工具自动拼请求时间线。
+
+CLI：`req-trace trace --input gateway.log,svc1.log,svc2.log --request-id req-12345 --output timeline.json`。`--request-id` 指定要追踪的请求 ID。`--input` 支持多个文件用逗号分隔。从每个文件中提取包含该 request-id 的日志条目，解析开始时间、结束时间、状态码，按时间排序输出时间线。
+
+输出 `timeline.json`：`{"request_id": "req-12345", "spans": [{"service": "gateway", "start": "2026-05-14T10:00:00.000Z", "end": "2026-05-14T10:00:00.050Z", "duration_ms": 50, "status": 200}, {"service": "svc1", "start": "...", "end": "...", "duration_ms": 30, "status": 200}]}`。总耗时 = 最后一个 span 的 end - 第一个 span 的 start。
+
+项目拆成至少 3 个 Go 源文件：`main.go`、`tracer.go`、`models.go`。扫描时锁住结果集，但发现重复项需要回查做去重校验——用 `sync.RWMutex`，写时排他，读时共享。
+
+配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。请求 ID 不存在时输出空 spans 数组，stderr 打印 `request not found: <id>`。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

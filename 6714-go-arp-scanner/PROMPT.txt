@@ -1,5 +1,9 @@
-办公网的设备越来越多，网络那边要登记所有设备的 IP 和 MAC。写个 ARP 扫描器往局域网发 ARP 请求，收集响应，把 IP-MAC 对照表输出。需要 root 权限。
+办公网的设备越来越多，网络那边要登记所有设备的 IP 和 MAC，手工一台台查太不现实。写个 ARP 扫描器自动收集。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`arp-scan --interface eth0 --subnet 192.168.1.0/24 --timeout 2s --format json`。往指定子网的所有 IP 发 ARP 请求，收集响应，构造 IP-MAC 对照表。`--interface` 指定网卡，`--subnet` 指定扫描范围（CIDR 格式），`--timeout` 是单次 ARP 等待超时。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+输出 JSON：`{ "interface": "eth0", "subnet": "192.168.1.0/24", "scan_time": "2024-01-01T00:00:00Z", "hosts": [{ "ip": "192.168.1.1", "mac": "aa:bb:cc:dd:ee:ff", "vendor": "Unknown", "response_time_ms": 1.2 }, ...], "summary": { "total_scanned": 254, "responded": 48 } }`。MAC 地址格式统一小写冒号分隔。vendor 字段可选，如果实现了 OUI 查询就填，没有就留空字符串。
+
+table 格式输出三列：IP/MAC/RESPONSE_TIME，用 tabwriter 对齐。
+
+子网参数必须是合法 CIDR，不合法退出码 1，stderr 打 "invalid subnet: {input}"。interface 不存在退出码 1，stderr 打 "interface not found: {name}"。需要 root 权限，非 root 运行退出码 1，stderr 打 "error: root privileges required for raw socket"。子网太大（超过 /16）拒绝执行，stderr 打 "subnet too large, max /16"。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，编译后单二进制可以直接跑。

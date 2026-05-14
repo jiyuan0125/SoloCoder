@@ -1,4 +1,9 @@
-下周要做容量规划汇报，老板问磁盘什么时候会满、内存什么时候不够。基于历史使用数据（从文件读取），预测资源耗尽时间，输出预测报告。
+下周要做容量规划汇报，老板问磁盘什么时候会满、内存什么时候不够——手动算太费劲。基于历史使用数据（从文件读取），预测资源耗尽时间，输出预测报告。能不能让它自动算出答案？
+
+输入 CSV 文件：`date,cpu_pct,mem_used_gb,disk_used_gb`，至少需要 7 天数据。`capplan predict -data usage.csv -resource disk -threshold 90 -output report.json`。-resource 支持 cpu/mem/disk。-threshold 是预测到多少百分比算耗尽。
+
+输出 JSON：`{"resource":"disk","current_pct":72,"trend":"increasing","exhaust_date":"2024-03-15","days_remaining":45,"confidence":0.85,"model":"linear_regression","data_points":90}`。表格模式显示趋势图（ASCII bar）。数据不足 7 天报 `"error: need at least 7 data points"` exit 1。阈值为 0 或负数报 `"error: invalid threshold"` exit 2。趋势为 flat 时 exhaust_date 输出 `"never"`。
+
 需要用到 json.Decoder 等标准库功能。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
 
 Go 标准库，命令行参数用 flag 包解析。

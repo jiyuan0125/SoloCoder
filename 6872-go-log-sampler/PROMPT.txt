@@ -1,4 +1,11 @@
-一天 100GB 日志存不起了，采样后保留 10% 就行。按指定比例采样日志，支持按级别分层采样（ERROR 100%、INFO 10%）。
-需要用到 bytes.Buffer 等标准库功能。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。源文件修改后，之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。
+日志存储成本这个月又涨了，一天 100GB 磁盘快写满了。运维组长说采样保留 10% 就行，但 ERROR 级别的不能丢。得按级别分层采样，重要日志全保留，不重要的按比例砍。
+
+命令行这样用：`log-sampler sample --input huge.log --output sampled.log --ratio 0.1 --strategy stratified`。`--ratio` 是整体采样比例，`--strategy` 支持两种：`uniform`（统一采样）和 `stratified`（分层采样）。分层采样通过 `--level-ratio` 配置各级别比例，格式为 `ERROR=1.0,WARN=0.5,INFO=0.1,DEBUG=0.01`。默认分层规则就是 ERROR 全保留，其他按 10%。
+
+采样算法用哈希：对每行的 `(timestamp, level, message)` 拼接后取 CRC32，值落在 `[0, ratio*MaxUint32)` 范围内的保留。这样同一行日志多次采样结果一致，可复现。需要用到 bytes.Buffer 做行缓冲。
+
+任务经历 `pending → running → completed` 几个阶段。running 失败可以重试。completed 后可以重新发起。源文件修改后（MD5 校验不通过），之前生成的缓存失效。正在使用的缓存继续用完。
+
+处理完成后自动写入 `sample-stats.json`，包含 `total_lines`、`sampled_lines`、`ratio_actual`（实际采样率）、`per_level` 各级别的采样统计。如果输入文件为空，不生成输出文件，退出码 0。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

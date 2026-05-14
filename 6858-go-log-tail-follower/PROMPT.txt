@@ -1,4 +1,9 @@
-同时跟踪 20 个日志文件，开 20 个终端窗口不现实。增强版 tail -f，同时跟踪多个文件，支持颜色标记不同级别，支持暂停/恢复和关键字高亮。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+开了 20 个终端 tail -f 不同服务的日志，切窗口切到眼花。要是能在一个界面里同时看所有文件，ERROR 自动标红就好了。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`logtail follow --files "app1.log,app2.log,app3.log"` 同时跟踪多个文件，每行输出前缀 [文件名] 标识来源。颜色方案：ERROR/FATAL 红色背景，WARN 黄色，INFO 绿色，DEBUG 灰色，通过 --color-scheme dark/light 选择。`logtail follow --files "app*.log" --highlight "timeout|refused"` 关键字高亮，匹配部分加粗显示。`logtail follow --files app.log --pause-key p --resume-key r` 按 p 暂停输出（后台继续读文件但不显示），按 r 恢复。`logtail follow --files app.log --level ERROR` 只显示指定级别的行。
+
+项目拆成至少 3 个 Go 源文件：main.go、follower.go（文件跟踪和输出）、model.go（配置和日志条目结构）。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验——多文件跟踪时每个文件独立 goroutine，共享输出互斥锁。处理完成后自动把统计结果写入 .logtail-stats 文件——退出时写入，包含每个文件的跟踪行数和过滤丢弃行数。如果这次没有匹配到任何记录就跳过——过滤模式下无匹配时不输出空行。
+
+文件轮转处理：跟踪的文件被 rename 后（inotify 或定期 stat 检查），自动打开新文件继续跟踪。--from-start 从文件开头开始读，默认从文件末尾。--max-buffer 10000 限制缓冲行数，超过后丢弃最旧行并输出 "buffer overflow: N lines dropped"。终端宽度自适应，超长行截断并显示 ...。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。Ctrl+C 正常退出并输出统计摘要。

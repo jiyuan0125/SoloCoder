@@ -1,4 +1,11 @@
-检测系统性能相比上周有没有退化，不能每次都凭感觉。对比当前性能指标与基线，识别退化的维度，输出退化报告。
+检测系统性能相比上周有没有退化，不能每次都凭感觉说"好像变慢了"。对比当前性能指标与基线数据，识别退化的维度，输出退化报告。
+
+基线 baseline.json：`{"metrics":{"cpu_idle_pct":85,"mem_available_gb":16,"disk_io_await_ms":5,"load_1min":2.5}}`。当前数据从 /proc 实时采集。
+
+`degdetect baseline -output baseline.json` 生成基线。`degdetect compare -baseline baseline.json -threshold 20` 对比当前，threshold 是退化百分比阈值。输出 JSON：`{"degraded":true,"changes":[{"metric":"disk_io_await_ms","baseline":5,"current":8,"change_pct":60,"status":"degraded"},{"metric":"cpu_idle_pct","baseline":85,"current":82,"status":"normal"}]}`。change_pct 超过 threshold 标记 degraded。
+
+无退化 exit 0，有退化 exit 1。基线文件不存在报 `"error: baseline file not found"` exit 2。
+
 日志文件可能存在各种编码。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。需要维护数据源和查询配置。查询配置引用数据源。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

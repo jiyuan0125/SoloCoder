@@ -1,4 +1,9 @@
-5 台机器每天产生 2GB 日志，想看哪个 URL 被访问最多、哪个 IP 请求最频繁。按字段（如 IP、URL、状态码）分组计数，支持多级聚合和时间窗口，输出排序的统计结果。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+5 台机器每天 2GB 日志，产品经理问哪个接口最慢、哪个 IP 最活跃、哪些接口 5xx 多。光靠 grep | sort | uniq -c 拼不出来这种多维统计。
+
+子命令：`logagg aggregate --input access.log --group-by ip --top 20` 按字段分组计数，输出 top N。--group-by 支持多级：--group-by ip,url --top 10 输出每个 IP 下访问最多的 10 个 URL。`logagg timeseries --input access.log --field status --interval 1m` 按时间窗口聚合，每分钟的各状态码计数，输出 CSV 格式：timestamp,200,301,404,500。`logagg summary --input access.log` 一键输出全维度统计：总请求数、唯一 IP 数、唯一 URL 数、状态码分布、平均响应时间、P50/P95/P99 响应时间、请求量 top 10 URL、错误率 top 10 URL。
+
+项目拆成至少 3 个 Go 源文件：main.go、aggregator.go（聚合逻辑）、model.go（数据结构和统计结果）。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录——--input-dir 递归扫描时记录已访问的 inode 避免符号链接循环。子命令结构：`logagg aggregate`、`logagg timeseries`、`logagg summary`。
+
+聚合字段自动检测：如果输入是 JSON 格式，字段名直接取 JSON key；如果是 Nginx combined 格式，预定义 ip/time/request/status/bytes/referer/ua。--filter "status>=500" 在聚合前先过滤。大文件用 bufio.Scanner 逐行处理，不用 ReadAll。结果输出支持 --json 和 --csv 两种格式，默认表格。空文件输出 "no data" 到 stderr，exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。

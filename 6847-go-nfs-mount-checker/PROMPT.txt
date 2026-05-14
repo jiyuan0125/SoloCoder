@@ -1,4 +1,9 @@
-NFS 挂载点 stale 但 df 还在显示旧数据，写入失败才发现。测试读写速度、检测 stale handle、检查挂载选项，输出状态报告。
-处理流程分好几步，上一步的输出是下一步的输入。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。管理分组和组内成员。成员操作基于分组进行。
+NFS 挂载点 stale 的时候最坑了——df 还显示旧数据，等你写入才发现全挂了。运维团队上周就因为这事丢了两小时数据。到底怎样才能提前发现 NFS 出了问题？
+
+子命令设计：`nfscheck status` 扫描 /proc/mounts 中所有 NFS/NFS4 挂载点，对每个挂载点做三项检测——stat 访问（检查 stale handle）、读取 1KB 测试文件（检查读速度）、写入 1KB 临时文件再删除（检查写速度）。输出表格：MountPoint/Type/Stale/ReadMS/WriteMS/Status，Status 列为 OK/SLOW/STALE/ERROR。`nfscheck test --path /data/nfs --size 4096 --count 5` 对指定挂载点做详细读写测试，分别写 5 次 4KB 块，输出平均/最小/最大延迟。`nfscheck options --path /data/nfs` 显示挂载选项，解析 rw/ro/hard/soft/noac 等关键参数并给出建议（比如 soft 挂载建议改为 hard）。
+
+处理流程分好几步，上一步的输出是下一步的输入——先扫挂载列表，再逐个检测，最后汇总。数据导入后自动更新关联的索引文件——检测结果缓存到 /tmp/nfscheck-cache.json，下次对比用。新导入的数据可能还没建立关联——新增挂载点首次检测标记为 NEW。管理分组和组内成员——支持按服务器分组管理挂载点配置。
+
+stale handle 检测方法：stat() 返回 ESTALE 即为 stale。读写速度阈值：读超过 100ms 标记 SLOW，写超过 200ms 标记 SLOW。超时设 5 秒，超时标记 ERROR。输出支持 --json 格式。遇到无权限的挂载点跳过并标注 PERMISSION_DENIED。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

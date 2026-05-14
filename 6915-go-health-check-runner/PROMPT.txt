@@ -1,3 +1,9 @@
-之前用 Python 写的健康检查脚本，要检查的服务一多就跑不动了，经常检查本身超时。换成 Go 重写，从配置文件读取检查项，周期性执行。失败的要有告警输出，最好还能自动触发修复脚本（比如重启服务）。检查结果记录清楚，哪次检查、哪个项目、什么结果。
+先写好配置定义检查项，再启动工具周期性跑。之前用 Python 写的健康检查脚本服务多了就撑不住——换成 Go 重写。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+配置 YAML checks 列表每项：name、type（http/tcp/dns/command）、target、interval（默认 30s）、timeout（默认 5s）、threshold（连续失败几次告警，默认 3）、on_failure（失败时执行的修复脚本）。`checker start --config health.yaml` 启动。
+
+http 型发 GET 匹配 expected_status（默认 200）和可选 expected_body。tcp 型连 target:port。command 型执行命令 exit 0 为健康。连续失败达 threshold 时 stderr 输出 `ALERT: {name} unhealthy ({fail_count} failures)` 写入 alerts.log。恢复时输出 `RECOVERED: {name}`。on_failure 脚本达 threshold 执行一次，本身 30 秒超时。
+
+`checker status` 输出 ASCII 表格（Check/Status/LastCheck/FailCount）。`checker history --name http-api --last 50` 查记录。`checker run --once` 跑一轮退出。timeout 未完成标 failed。配置 target 格式错报 "invalid target" 退出码 1。
+
+纯 Go 标准库，编译后单二进制直接跑。

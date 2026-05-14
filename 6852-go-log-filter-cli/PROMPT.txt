@@ -1,4 +1,9 @@
-ERROR 日志混在百万行 INFO 里找不到，grep 太慢还容易漏。按时间范围、级别、关键字、正则表达式过滤，支持多文件输入和管道，输出过滤后的日志行。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
+线上报了个 P0，ERROR 日志淹没在两百万行 INFO 里，grep 跑了三分钟还没结果。得有个能按多种条件快速过滤的工具。
+
+命令：`logfilter filter --input app.log --level ERROR` 按级别过滤。`logfilter filter --input app.log --from "2024-01-15T10:00:00" --to "2024-01-15T11:00:00"` 按时间范围。`logfilter filter --input app.log --keyword "OutOfMemory"` 按关键字。`logfilter filter --input app.log --regex "connection refused.*timeout"` 按正则。以上条件可以组合，比如 --level ERROR --keyword panic --from "2024-01-15T00:00:00"。多文件输入用 --input a.log --input b.log 或 --input-dir /var/log/app/。管道模式：cat huge.log | logfilter filter --level ERROR。支持 --context 3 显示匹配行的前后 3 行。
+
+项目拆成至少 3 个 Go 源文件：main.go、filter.go（过滤逻辑）、model.go（数据结构）。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验——跨文件去重，相同 timestamp+message 的行只保留一条，通过 --dedup 开启。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理——过滤规则变更后重新扫描。已经确认的数据不动——--append 模式下已有的输出行不重新写入。
+
+输出格式：默认纯文本带颜色（ERROR 红色，WARN 黄色，INFO 绿色，其他白色），--no-color 禁用颜色。--json 每行一个 JSON 对象，包含 timestamp、level、message、source_file、line_number。--count-only 只输出匹配数量。匹配 0 行时 exit 0，文件不存在 exit 1，正则语法错误 exit 2。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,5 +1,7 @@
-Accept header 传 application/xml 但返回了 JSON，内容协商有 bug 不好测。Go 工具发送不同 Accept header，验证响应格式是否正确，支持 JSON/XML/Protobuf。
+Accept header 传 application/xml 但返回了 JSON，内容协商有 bug 不好测——上次因为这个问题前端手机端解析崩溃了。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`content-check --url http://localhost:8080/api/users --accept "application/json" --accept "application/xml"`。对每个 Accept 值分别发请求，检查响应 Content-Type 是否匹配。匹配规则遵循 HTTP 语义——Accept: application/json 期望 Content-Type: application/json，允许带 charset 参数。`--accept` 可多次使用，`--proto` 开关额外测 Protobuf。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+输出 JSON：`[{ "accept": "application/json", "response_content_type": "application/json", "match": true, "status_code": 200 }, { "accept": "application/xml", "response_content_type": "application/json", "match": false, "error": "content-type mismatch: expected application/xml, got application/json" }]`。
+
+`--header "Authorization:Bearer xxx"` 追加请求头。URL 传不对退出码 1，stderr 打 "invalid url: {url}"。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库实现，不依赖第三方包。go build 能编译通过。

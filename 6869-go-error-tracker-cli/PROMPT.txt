@@ -1,4 +1,9 @@
-同一个错误报了几千次，噪音太大，看不出到底有几个不同的错误。提取 ERROR 级别日志，按错误类型分组，显示首次/末次出现时间、堆栈信息，输出错误报告。
-用 Go 标准库的 text/template 包。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
+从一堆重复报错里找有几种不同的错误？直接数不现实。这个工具把 ERROR 级别日志按错误类型分组，每组显示首次出现时间、末次出现时间、出现次数、堆栈摘要，最后输出一份错误报告。
 
-Go 实现，只用标准库，交叉编译友好。
+子命令 `scan`：`error-tracker scan --input app.log --output report.txt --top 20`。`--top` 限制输出分组数量，默认 10。分组逻辑：取每条 ERROR 日志的 message 去掉数字和 UUID 后做相似度匹配，相似度 ≥ 0.8 的归为一组。报告格式用 Go 标准库的 text/template，模板默认内嵌，也可以 `--template custom.tmpl` 自定义。每个分组输出包含 `group_id`（自增整数）、`fingerprint`（去数字后的模式串）、`count`、`first_seen`、`last_seen`、`sample_stacktrace`（取第一条的堆栈）。
+
+文件处理状态有四种：新增、处理中、已完成、归档。扫描开始时文件状态从新增变为处理中，正常结束变为已完成，异常退出回退到新增。处理完后可以归档：`error-tracker archive --input app.log --state-dir .state`，把已处理文件移动到 `.state/archive/` 目录。
+
+扫描完成后自动生成 `summary.json`，包含 `total_errors`、`unique_groups`、`time_range`。某些配置下（比如日志里没有 ERROR 行）没有输出内容，此时 `summary.json` 里 `total_errors` 为 0，报告文件不生成。
+
+Go 实现，只用标准库，交叉编译友好。退出码 0 成功，1 处理错误，2 参数无效。

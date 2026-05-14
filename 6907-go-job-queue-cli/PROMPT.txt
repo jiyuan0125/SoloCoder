@@ -1,3 +1,9 @@
-数据团队每天要跑上百个清洗任务，现在是人工排队等着跑，效率太低了。搞个简单的任务队列，提交进去 worker 自动取出来执行。优先级要有，数据组长的任务插队先跑。失败的任务自动重试，超时也得兜住。队列状态落盘，重启不丢任务。
+数据团队每天上百个清洗任务，人工排队效率太低。上周高优先级报表任务排在低优后面等了三小时。搞个任务队列让 worker 自动取任务，优先级高的先跑。
+
+CLI：`queue submit --command "python clean.py" --priority 5 --timeout 600` 提交返回 task_id。`queue worker --concurrency 4 --poll-interval 2s` 启动 worker。`queue status` 显示 waiting/running/completed/failed 各多少。
+
+任务模型：id（自增）、command、priority（1-10 越大越优）、status（pending/running/completed/failed/timeout）、submitted_at、started_at、finished_at、retry_count、max_retries（默认 3）、timeout_secs。存储在本地 queue.json。调度按 priority 降序同优 FIFO。失败自动重试 retry_count < max_retries 时重新入队。超时 SIGKILL 标 timeout。
+
+持久化：每次状态变更刷写文件，重启 worker 后 running 恢复为 pending 重新执行。文件损坏报 "corrupted queue file" 退出码 1。`queue log --task 42` 查执行记录含 stdout/stderr 最后 500 字符。`queue clear --status completed` 清理。
 
 Go 实现，只用标准库，交叉编译友好。

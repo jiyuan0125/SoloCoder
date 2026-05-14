@@ -1,3 +1,7 @@
-帮朋友的创业公司写个生成 systemd service unit 文件的工具。他那边 30 多台服务器，每次部署新服务都要手动写 .service 文件，经常写错字段。从命令行参数读配置，直接生成标准 .service 文件，环境变量、依赖关系、重启策略都能指定。
+朋友创业公司 30 多台服务器，每次部署手写 .service 文件经常写错字段导致服务起不来。从命令行参数读配置直接生成标准 systemd unit 文件。
 
-Go 标准库，命令行参数用 flag 包解析。
+`unitgen generate --name my-app --exec "/usr/local/bin/my-app" --type service`。输出到 stdout 或 `--output` 指定路径。生成内容：[Unit] 的 Description、After（`--after network.target`）、Wants；[Service] 的 ExecStart、ExecReload（默认 `/bin/kill -HUP $MAINPID`）、Restart（`--restart on-failure`，可选 no/always/on-failure）、RestartSec、User、Group、WorkingDirectory；[Install] 的 WantedBy（默认 multi-user.target）。环境变量 `--env KEY=VALUE` 多次指定，`--env-file` 生成 EnvironmentFile。
+
+`unitgen validate --file my-app.service` 校验：缺 ExecStart 报 "missing required field"，Restart 非法报 "invalid Restart value"。缺 --name 报 "flag --name is required" 退出码 1。文件已存在未传 --force 报 "file already exists" 退出码 1。name 含空格报 "invalid unit name" 退出码 2。
+
+Go 标准库，flag 包解析参数。

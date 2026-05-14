@@ -1,4 +1,9 @@
-日志里 IP 地址要加上归属地信息，安全团队要求。给日志条目添加额外信息：主机名、IP 归属地、服务名，支持从外部数据源查询补充信息。
-输入可能包含乱码和特殊字符。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。需要维护数据源和查询配置。查询配置引用数据源。
+日志里光秃秃一个 IP，出了安全事件还得手动查归属地，安全团队天天催。得给日志条目自动加上主机名、IP 归属地、服务名这些补充信息。
+
+CLI 用法：`log-enricher enrich --input access.log --output enriched.json --lookup geoip.csv`。`--lookup` 指定外部数据源文件，CSV 格式，列为 `ip_prefix,country,city,isp`。每条日志解析后查数据源匹配 IP 前缀，命中就附加 `enriched` 字段到输出。输出格式是 JSONL（每行一个 JSON 对象），字段至少包含 `timestamp`、`level`、`message`、`enriched.hostname`、`enriched.geo_country`、`enriched.geo_city`、`enriched.service_name`。
+
+输入可能包含乱码和特殊字符，遇到无法解析的行跳过并在 stderr 打印 `line <N>: parse error, skipped`，不中断整体处理。数据源文件用 `--lookup-config config.json` 管理，配置文件里声明多个数据源的名字、类型、路径。查询配置引用数据源的名字，一个查询可以关联多个源。
+
+数据导入后自动更新 `lookup-index.json` 索引文件。新导入的数据还没建立关联时，enriched 字段输出 null，不报错。查询配置引用了不存在的数据源名时，启动报错退出码 2，提示 `data source not found: <name>`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

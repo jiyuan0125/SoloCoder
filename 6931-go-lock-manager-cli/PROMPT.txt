@@ -1,3 +1,5 @@
-之前用 shell 脚本做的分布式锁太不靠谱了——锁文件残留、超时不释放、多实例同时跑。Go 重写一个，基于文件的锁机制，支持获取、释放、续期三个操作。超时自动释放是关键，不然一个实例挂了锁永远不释放，其他实例全部卡死。
+先说场景：之前用 shell 脚本做的分布式锁太不靠谱了——锁文件残留、超时不释放、多实例同时跑。生产环境出了两次重复执行的事故后，决定用 Go 重写。基于文件的锁机制，支持获取、释放、续期三个操作。超时自动释放是关键，不然一个实例挂了锁永远不释放，其他实例全部卡死。
+
+CLI 三个子命令：`lockmgr acquire -lock /tmp/task.lock -ttl 300` 获取锁，-ttl 是超时秒数，锁文件写入 JSON {"holder":"{hostname}-{pid}","acquired_at":1705312000,"expires_at":1705312300}。获取成功输出 "acquired: {lock_path}" 退出码 0，锁已被占用输出 "locked by {holder}, expires in {n}s" 退出码 1。`lockmgr release -lock /tmp/task.lock -holder {id}` 释放锁，holder 必须匹配才能释放（防止误删别人的锁），不匹配输出 "not owner, current: {holder}" 退出码 1。`lockmgr renew -lock /tmp/task.lock -holder {id} -ttl 300` 续期，更新 expires_at。锁超时后自动失效——其他 acquire 请求检查 expires_at 已过期则覆盖获取。所有锁文件存在 /tmp 目录（可通过 -dir 参数自定义），文件权限 0644。`lockmgr list -dir /tmp` 列出当前活跃锁，输出 "{lock_name}\tholder={h}\tttl={n}s"。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

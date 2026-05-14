@@ -1,3 +1,9 @@
-要测两台机器之间的实际带宽，iperf 每次都要两边各起一个进程太麻烦。写个工具把 client 和 server 打包在一起，一台跑 server 模式，另一台跑 client 模式，TCP 和 UDP 都得支持，直接出带宽数据。
+两台机器之间到底能跑多少带宽？iperf 每次都要两边各起一个进程太麻烦了。写个工具把 client 和 server 打包在一起，一个二进制搞定。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+用法分两端。服务端：`bw-test server --port 5201 --proto tcp` 启动监听。客户端：`bw-test client --host 10.0.0.1 --port 5201 --proto tcp --duration 10s --json`。`--proto` 支持 tcp 和 udp，tcp 模式下尽量打满连接，udp 模式下用 `--bandwidth` 参数指定目标带宽（默认 100Mbps，格式如 `10Mbps`、`1Gbps`）。
+
+测试时长由 `--duration` 控制（默认 10s），结束后客户端输出结果。JSON 输出：`{ "protocol": "tcp", "duration_s": 10, "bytes_sent": 1250000000, "bytes_received": 1249500000, "throughput_mbps": 1000.3, "jitter_ms": 0.5, "lost_packets": 0, "total_packets": 10000, "loss_rate": 0.0 }`。TCP 模式 jitter/loss 固定为 0，UDP 模式才测这些。吞吐量单位 Mbps（兆比特每秒，1 byte = 8 bits）。
+
+实时打印每秒的瞬时速率，格式 `[1s] sent 120MB, throughput 960.0 Mbps`。测试过程中 Ctrl+C 提前结束也要输出已完成部分的结果，不要丢数据。
+
+端口被占用退出码 1，stderr 打 "listen failed: {error}"。客户端连不上服务端退出码 1，stderr 打 "connect failed: {error}"。host 或子命令参数不对退出码 1。Go 标准库实现，不依赖第三方包。go build 能编译通过。

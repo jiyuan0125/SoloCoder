@@ -1,4 +1,9 @@
-要统计用户来源地域分布，看海外用户到底有多少。解析 IP 地址，统计各国家/城市的访问量，输出分布报告。
-工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+上周产品问海外用户到底有多少，我拿着日志愣是答不上来。日志里全是 IP 地址，得解析出来统计地域分布才行。这个工具解析日志中的 IP 地址，按国家和城市统计访问量，输出分布报告。
+
+命令行：`geo-analyzer analyze --input access.log --geo-db GeoLite2-City.csv --output report.json`。`--geo-db` 指定 GeoIP 数据库文件（CSV 格式，列为 `network,country_name,city_name`）。从每行日志中提取第一个 IP 格式的字段（匹配 `\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}`），在 GeoIP 数据库中做最长前缀匹配。输出 `report.json` 结构：`{"countries": [{"name": "China", "code": "CN", "count": 12345, "percentage": 67.8}], "cities": [{"name": "Shanghai", "country": "CN", "count": 5000}]}`。
+
+也支持文本报告模式：`--format text` 输出 ASCII 表格，列为 `Country | City | Count | Percentage`，按 count 降序排列。`--top 20` 只显示前 N 个。
+
+工具遍历目录时会加锁防止并发冲突，遇到嵌套子目录需要重新扫描根目录。处理完成后自动写入 `geo-summary.json`。如果没有匹配到任何 IP 记录就跳过，不生成空报告。GeoIP 数据库文件不存在时退出码 2，提示 `geo database not found: <path>`。
 
 用 Go 标准库写，go run .或 go build 都行。

@@ -1,4 +1,9 @@
-运维同事需要一个轻量的 I/O 统计工具，跑在生产机器上不能占太多资源。读写速度、IOPS、延迟、队列深度，支持按设备和分区过滤，时间序列数据要能输出。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+运维同事抱怨现有 I/O 监控工具要么太重要么太粗糙。iostat 输出一堆数字看不过来，Prometheus 拉一套监控栈就为了看个 I/O 太夸张。跑在生产机器上不能占太多资源，要什么？读写速度、IOPS、延迟、队列深度，按设备和分区过滤，时间序列数据能输出就行。
 
-Go 标准库，命令行参数用 flag 包解析。
+`iostat collect --interval 1s` 持续采集。`iostat collect --device sda,sdb` 只看指定设备。`iostat collect --partition sda1` 按分区过滤。采集指标：每秒读字节数、每秒写字节数、读 IOPS、写 IOPS、平均 IO 延迟（ms）、队列深度。
+
+`iostat report --input iolog.jsonl` 读取历史数据生成报告。报告内容：时间范围内平均读写速率、峰值速率及发生时间、最大延迟、99 分位延迟。`--output report.txt` 写文件，`--output report.json` JSON 格式。
+
+数据格式 JSON Lines：`{"ts":"...","device":"sda","read_bps":1048576,"write_bps":524288,"read_iops":120,"write_iops":80,"await_ms":2.3,"queue_depth":1}`。项目拆成至少 3 个 Go 源文件。文件状态有新增、处理中、已完成、归档。工具在遍历目录时会加锁防止并发。
+
+读取 /proc/diskstats。Go 标准库，命令行参数用 flag 包解析。

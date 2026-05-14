@@ -1,4 +1,11 @@
-把 CSV 日志转成 JSON 格式，有些老系统导出的日志只有 CSV。读取 CSV 格式的日志，转换为 JSON 或自定义文本格式，支持列名映射和类型转换。文件可能很大，超过内存要能处理。
-处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+先把老系统导出的 CSV 日志读进来，然后转成 JSON 或者自定义文本格式，字段映射好就能用了。有些老系统只导出 CSV，新的日志平台只认 JSON，中间差个转换器。
 
-用 Go 标准库写，go run .或 go build 都行。
+第一步解析 CSV：`csv-converter convert --input legacy.csv --output result.json --format json --delimiter "," --header true`。`--header` 指定第一行是否为列名，默认 true。`--delimiter` 设置分隔符，默认逗号。`--encoding utf-8` 指定输入编码，也支持 `gbk`。
+
+第二步映射和转换：`--column-map '{"old_name": "new_name"}'` 做列名映射。`--type-map '{"count": "int", "price": "float", "active": "bool"}'` 做类型转换。输出 JSON 时每行一个对象，字段名用映射后的名字。输出自定义文本时用 `--template` 指定 Go 模板。
+
+子命令结构：`csv-converter namespace resource action`，比如 `csv-converter csv log convert`。处理完成后自动写入 `convert-stats.json`，包含 `total_rows`、`converted_rows`、`skipped_rows`（类型转换失败的行）、`output_size_bytes`。如果匹配不到任何记录就跳过。
+
+文件可能很大超过内存，所以用流式处理：每次只读一行、转换一行、写一行，不在内存里缓存整个文件。遇到格式错误的行（字段数不对、类型转换失败）跳过并在 stderr 打印 `row <N>: <reason>, skipped`。
+
+用 Go 标准库写，go run .或 go build 都行。退出码 0 成功，1 处理错误，2 参数无效。

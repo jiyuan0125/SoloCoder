@@ -1,5 +1,9 @@
-浏览器导出的 cookies.txt 是 Netscape 格式，想快速查某个域名的 cookie 或者清理过期的。写个工具解析这个格式，按域名查询、过滤、删除，输出表格方便看。
+先有个 Netscape 格式的 cookies.txt 文件（浏览器插件导出的那种），然后用这个工具解析它。命令行跑起来是这样的：
 
-用 Go 标准库的 encoding/binary 包。
+`cookiejar load cookies.txt` 默认加载文件并显示所有 cookie。`cookiejar load cookies.txt --domain example.com` 只看某个域名的。`cookiejar load cookies.txt --filter-expired` 过滤掉过期的条目。`cookiejar load cookies.txt --delete-expired --output cleaned.txt` 删除过期的写回新文件。
 
-用 Go 标准库写，go run . 或 go build 都行。
+Netscape 格式每行是 `domain\tinclude_subdomains\tpath\tsecure\texpiry\tname\tvalue`，用 tab 分隔。解析时跳过以 # 开头的注释行和空行。过期判断拿当前时间和 expiry 字段比。
+
+输出用表格格式：域名 | 名称 | 值 | 路径 | 过期时间 | 是否过期。`--json` 开关则输出 JSON 数组，每个元素包含 domain、name、value、path、expiry、secure、isExpired 字段。加载文件失败退出码 1，成功退出码 0。文件为空打印"无 cookie 记录"。
+
+用 Go 标准库的 encoding/binary 包。用 Go 标准库写，go run . 或 go build 都行。

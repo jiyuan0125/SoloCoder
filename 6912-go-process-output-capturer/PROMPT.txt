@@ -1,3 +1,13 @@
-排查问题的时候最烦的就是看不到子进程输出了什么，出了错也不知道是 stdout 还是 stderr。写个小工具捕获子进程的标准输出和标准错误，实时显示的同时保存到文件。颜色区分两种流，行号和时间戳都得加上，事后翻日志方便定位。
+排查问题时最烦看不到子进程到底输出了什么，出了错也分不清是 stdout 还是 stderr。这种情况遇到了太多次——写个小工具把子进程的两路输出分别捕获，实时显示的同时落盘保存。
+
+用法：`capture run --command "./build.sh" --stdout out.log --stderr err.log --combined all.log`。实时终端里 stdout 用默认颜色，stderr 用红色区分。每行前面加行号和时间戳，格式 `[0001] 14:30:05.123 | content`。`--combined` 把两路合并到一个文件，合并时加标记 `[OUT]` 或 `[ERR]`。
+
+输出文件管理：`--max-size 50MB` 单文件上限，超过自动轮转，生成 out.log.1、out.log.2。`--max-files 10` 最多保留的轮转文件数，超出删最旧的。`--truncate` 启动时清空已有日志文件，默认追加。
+
+行号和时间戳：行号每路独立计数，互不影响。时间戳精确到毫秒。`--no-color` 禁用终端颜色输出。`--prefix "[build]"` 每行前加自定义前缀。
+
+退出行为：子进程退出后 capture 跟着退出，退出码透传。子进程被 SIGKILL 时 capture 退出码 137。`--timeout 300s` 超时后杀子进程，stderr 打印 "command timed out after 300s"，退出码 124。
+
+Ctrl+C 转发给子进程，等子进程退了再关闭日志文件。磁盘写满时 stderr 打印 "disk write error: {reason}" 但不杀子进程，继续在终端显示输出。
 
 用 Go 标准库写，go run . 或 go build 都行。

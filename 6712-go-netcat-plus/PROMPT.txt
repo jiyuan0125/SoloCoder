@@ -1,5 +1,9 @@
-线上排障经常需要在两台机器之间传文件或者临时起一个端口监听看数据，系统的 netcat 又不一定装了。用 Go 写个增强版的，端口监听、数据转发、文件传输、HTTP 模式都支持，编译出来扔上去就能用。
+线上排障经常需要在两台机器之间传文件或者临时起一个端口监听看数据，系统的 netcat 又不一定装了——你永远不知道运维那边的最小化安装缺了什么包。
 
-后台多个 goroutine 同时写结果文件。
+`ncp listen --port 8080 --mode tcp` 启动监听，把收到的数据输出到 stdout。`ncp listen --port 8080 --mode http` 则启动一个简易 HTTP 服务器，把收到的请求 method/path/header/body 全部打印出来，临时调试 API 回调特别好用。`--output capture.bin` 把原始数据同时写文件。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`ncp connect --host 10.0.0.1 --port 9090` 连接远端，stdin 输入直接转发，收到的数据输出 stdout，交互模式跟传统 nc 一样。`ncp transfer send --file data.tar.gz --host 10.0.0.1 --port 9090` 发送文件，对端 `ncp transfer receive --port 9090 --output data.tar.gz` 接收。传输过程显示进度（已传输字节/总字节/速率）。发送完成后自动断开，接收端收到 EOF 后校验文件大小是否匹配，不匹配 stderr 打 "warning: size mismatch, expected {N} bytes, received {M}"。
+
+`ncp forward --listen :8080 --target 10.0.0.2:80` 端口转发模式，数据双向透传，日志记录每个连接的来源 IP、时间、字节数。后台多个 goroutine 同时写结果文件要用 mutex 保护，不能出现日志交错。
+
+端口被占用退出码 1。子命令不传或传错退出码 1，打印 usage。纯 Go 标准库，编译后单二进制可以直接跑。

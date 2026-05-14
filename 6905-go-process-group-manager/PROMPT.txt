@@ -1,3 +1,7 @@
-跑一批数据分析脚本，得按依赖顺序启动——先拉数据库，再跑 ETL，最后生成报表。手动一个个起太容易出错。写个进程组管理的命令行工具，配置好依赖关系和启动顺序，一条命令把整组进程拉起来。停的时候反过来，也要能一次性全停。每个进程的状态都得实时输出。
+先启动数据库，再跑 ETL，最后生成报表——步骤有严格先后顺序。手动启动容易搞错，步骤多了更容易忘。写个进程组管理工具，配置文件定义好依赖关系，一条命令把整组拉起来。
+
+配置 YAML 描述进程组，每个进程有 name、command、depends_on（依赖哪些进程先启动完成）、health_check（支持 `type: tcp`+port 和 `type: http`+url，超时 timeout: 30s）。`pgroup start --config group.yaml` 按拓扑排序启动，无依赖的并行拉起，depends_on 全就绪后才启动下一个。`pgroup stop --config group.yaml --reverse` 反序停止。`pgroup stop --all` 一次性全停。`pgroup status` 实时输出 ASCII 表格（Process/Status/PID/Uptime），状态有 pending/starting/healthy/unhealthy/stopped。
+
+启动失败时 stderr 输出 "process {name} failed to start: {reason}"，依赖它的后续进程标 blocked 不启动。配置文件里存在循环依赖时 stderr 报 "circular dependency detected"，退出码 2。配置文件不存在报 "config file not found: {path}" 退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。

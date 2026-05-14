@@ -1,4 +1,11 @@
-日志格式五花八门，Nginx 一种、Java 一种、还有自定义的。通用日志解析器，支持多种格式（Apache/Nginx/JSON/自定义），提取时间、级别、消息等字段，输出结构化 JSON。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。工具管理配置模板和配置实例。实例基于模板生成。
+Nginx 日志一种格式、Java logback 又一种、还有自己打的纯文本日志，光写正则就写了一下午。能不能有个工具自动识别格式，解析完直接出 JSON？
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+子命令：`logparse parse --input access.log --format auto` 自动检测格式（优先尝试 Nginx combined → Apache combined → JSON line → syslog），解析后每行输出一个 JSON 对象，字段包括 timestamp、level（无则填 info）、message、source（文件名）。`logparse parse --input app.log --format custom --pattern '(?P<time>\d{4}-\d{2}-\d{2}) \[(?P<level>\w+)\] (?P<msg>.*)'` 自定义正则，命名捕获组作为字段名。`logparse stats --input parsed.json` 统计解析成功率、各级别占比、时间范围。
+
+支持 --output file.json 写入文件，默认 stdout。--batch-size 1000 控制缓冲，大文件逐批处理不撑内存。解析失败的单行保留原始文本放到 _raw 字段，_parse_error 字段标记原因。
+
+去重的时候要考虑 5 分钟窗口，同一窗口内相同 key 只处理第一次——stats 模式下 5 分钟内相同 level+message 模式只计一次。处理完成后自动把统计结果写入 summary.json。如果这次没有匹配到任何记录就跳过——输出空数组 []，不报错。工具管理配置模板和配置实例——常用解析规则保存为模板（--save-template nginx），下次直接 --template nginx 调用。实例基于模板生成。
+
+Nginx combined 解析字段：remote_addr、time_local、request、status、body_bytes_sent、http_referer、http_user_agent。Java logback 解析字段：timestamp、level、logger、thread、message。JSON 格式直接透传。
+
+纯 Go 标准库，编译后单二进制可以直接跑。go build -o logparse。

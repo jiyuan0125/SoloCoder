@@ -1,3 +1,9 @@
-微服务拆完才发现服务发现没人做，调用全靠配置文件里写死 IP。先搞个服务注册表出来，服务起来的时候自己注册，挂了就注销。心跳检测必须要有，不然注册了一堆已经死掉的服务实例。查询接口也加上，按服务名查可用的实例列表就行。数据存在本地文件就够用，不用上 etcd。
+微服务拆完没人做服务发现——调用全靠配置文件写死 IP，扩容就改十几个配置。先搞个服务注册表应急。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+注册和发现：`registry register --name user-service --addr 10.0.1.5:8080 --ttl 30` 注册，每 30 秒续约。`registry deregister --name user-service --addr 10.0.1.5:8080` 注销。`registry discover --name user-service` 返回所有健康实例。
+
+数据模型：Service 含 name、addr、status（healthy/unhealthy/leaving）、registered_at、last_heartbeat。存储在本地 registry.json，结构 `{ "services": { "name": [...] } }`。文件不存在自动创建，目录不可写报 "cannot write registry file" 退出码 1。
+
+心跳：每 ttl/2 秒扫描，last_heartbeat 超 ttl*2 标 unhealthy，超 ttl*5 删除。`registry health --name user-service` 查健康详情。`registry list` 列出所有服务。`registry dump --output backup.json` 导出。并发写用文件锁保护。同名同地址注册不报错只更新 last_heartbeat。
+
+Go 标准库实现，go build 编译通过，无第三方依赖。

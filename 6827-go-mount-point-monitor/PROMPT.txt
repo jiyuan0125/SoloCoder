@@ -1,4 +1,9 @@
-NFS 挂载点时不时就 stale 了，导致写入失败业务报错。检测挂载点是否可访问、磁盘空间是否充足，NFS 等网络挂载要做特殊检查。
+NFS 挂载点时不时就 stale 了，导致写入失败业务报错，线上事故查了三小时才定位到 NFS。检测挂载点是否可访问、磁盘空间是否充足，NFS 等网络挂载要做特殊检查。
+
+`mntmon check -path /data -warn 80 -crit 95` 检查单个挂载点。-warn/-crit 是使用率百分比阈值。`mntmon check-all` 扫描 /proc/mounts 里所有条目。`mntmon watch -interval 30s` 持续监控。check 输出 JSON：`{"mount_point":"/data","device":"10.0.1.1:/export","fs_type":"nfs","total_gb":500,"used_gb":420,"use_pct":84,"inode_total":1000000,"inode_used":600000,"inode_pct":60,"status":"warn","stale":false}`。
+
+NFS 类型额外做 stat 触发检测，超时 3 秒标记 stale=true。stale 挂载状态码=2，warn=1，crit=2，ok=0。/proc/mounts 不可读报 `"error: cannot read /proc/mounts"` exit 1。
+
 日志文件可能存在各种编码。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

@@ -1,5 +1,11 @@
-没有装 GraphiQL 或者 Postman 的环境里要调 GraphQL 接口。写个命令行客户端，支持 query、mutation、变量和 fragment，返回格式化的 JSON。
+服务器上没装 GraphiQL，Postman 也没法装，但有个 GraphQL 接口得马上调——这种场景不少见吧。
 
-处理流程分好几步，上一步的输出是下一步的输入。
+用法：`./gqlcli -endpoint http://localhost:8080/graphql -query '{ users { id name email } }'`。query 从命令行直接传，或 `-file query.graphql` 从文件读。变量用 `-var 'id=123'` 或 `-vars-file vars.json`（JSON 格式 `{"id":123,"name":"test"}`）。mutation 同理：`-query 'mutation { createUser(name:"test") { id } }'`。
 
-Go 标准库，命令行参数用 flag 包解析。
+输出 pretty-printed JSON 到 stdout，结构化缩进 2 空格。`-o result.json` 同时写入文件。响应里有 errors 数组时，打印 "GraphQL errors:" 后逐条列出 message 和 path，exit 1。HTTP 错误（非 200）打印 "request failed: HTTP <code>"。
+
+`-header "Authorization: Bearer xxx"` 添加自定义头，多个 `-header` 叠加。超时 `-timeout 30s`，默认 10 秒。endpoint 不可达打印 "endpoint unreachable: <error>"。
+
+fragment 支持：query 字符串里写 `fragment userFields on User { id name }`，工具原样发送到服务端。
+
+Go 标准库，flag 包。

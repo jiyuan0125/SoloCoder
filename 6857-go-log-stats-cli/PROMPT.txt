@@ -1,4 +1,9 @@
-日志突然暴增把磁盘写满了，谁干的不知道。计算每分钟的日志量、错误率、平均响应时间，支持时间序列输出。
-输入可能包含乱码和特殊字符。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+磁盘突然满了，查了半天是某个服务一小时打了 20GB 日志。如果早点知道日志量异常就好了。能不能每分钟统计日志的量、错误率、平均响应时间？
 
-用 Go 标准库写，go run .或 go build 都行。
+`logstats stats --input access.log --interval 1m` 每分钟输出一行统计：时间窗口、总行数、总字节数、ERROR 行数、错误率（%）、平均响应时间（ms）。输出格式默认 CSV：timestamp,lines,bytes,errors,error_rate,avg_latency_ms。`logstats top --input access.log --group-by url --metric latency --top 10` 输出平均响应时间最慢的 10 个 URL，表格格式：URL/Count/Avg/P50/P95/P99。`logstats anomaly --input access.log --window 10m --stddev 3` 检测异常窗口——最近 10 分钟的行数或错误率偏离均值超过 3 个标准差时标记为 ANOMALY。
+
+输入可能包含乱码和特殊字符——逐行读取时遇到无法解码的行用 hex 替换非法字节，不跳过。处理流程是 初始化→扫描→处理→完成，扫描完了才能处理——先读完整个文件建索引再统计。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录——--input-dir 模式记录已处理文件的 dev+inode 防重复。
+
+响应时间提取：Nginx 格式从 request_time 字段取，JSON 格式从 latency/duration 字段取，纯文本格式用正则匹配 (\d+)ms。无法提取响应时间的行不计入延迟统计。空文件输出 "no data to analyze" 到 stderr，exit 0。实时模式：--follow 跟踪文件末尾，持续输出统计。
+
+用 Go 标准库写，go run . 或 go build 都行。支持 --json 输出。

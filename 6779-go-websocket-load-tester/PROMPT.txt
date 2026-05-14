@@ -1,5 +1,11 @@
-WebSocket 服务上线前要压测看看能撑多少连接。写个工具同时建立大量 WebSocket 连接，按设定频率发消息，测吞吐量和消息延迟。
+WebSocket 服务上线前压测，得知道能撑多少连接、消息延迟多少——总不能等到线上炸了才知道。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+用法：`./wsload -url ws://localhost:8080/ws -connections 1000 -message-rate 10 -duration 60s`。`-connections` 同时建立的 WebSocket 连接数，`-message-rate` 每个连接每秒发消息数。消息内容用 `-message "hello"` 或 `-message-file payload.json` 指定。
 
-用 Go 标准库写，go run . 或 go build 都行。
+实时统计并每秒刷新：活跃连接数、已发送消息数、已接收消息数、平均延迟（从发送到收到 echo 的时间）、错误数。`-message` 默认发固定字符串，服务端需要 echo 回来才能测延迟。
+
+测试结束输出汇总报告：峰值连接数、总消息数、成功率、P50/P95/P99 延迟、错误分类（connect_failed、write_error、read_timeout、unexpected_close）。用 `-o report.json` 输出 JSON 格式。
+
+连接建立失败打印 "connection <n> failed: <error>"，失败数超过 50% 提前终止。Ctrl+C 优雅关闭所有连接。
+
+项目拆至少 3 个源文件：main.go、loadgen.go、stats.go。Go 标准库。

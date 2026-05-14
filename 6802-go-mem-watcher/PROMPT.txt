@@ -1,4 +1,11 @@
-上周 OOM 两次，都是内存缓慢增长没被发现。总量、已用、可用、缓存、swap 使用都得显示，设个阈值超了就告警。持续监控模式定期输出。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+上周 OOM 两次，都是内存缓慢增长没被发现，等告警触发的时候已经来不及了。
+
+`memwatch` 持续监控内存使用。显示总量、已用、可用、缓存、swap 使用量，设个阈值超了就告警。`--interval 3s` 设置采集间隔。`--threshold 90` 内存使用率超过 90% 时输出告警 "WARNING: memory usage XX% exceeded threshold 90%" 到 stderr。
+
+支持子命令结构：`memwatch status` 显示当前一次性的内存快照。`memwatch monitor` 持续监控模式定期输出。`memwatch monitor --log mem.jsonl` 输出 JSON Lines 日志，字段包括 timestamp、total、used、free、cached、swap_used、swap_total、usage_pct。
+
+`memwatch top --N 10` 显示内存占用最高的 N 个进程，输出 PID、名称、RSS、VSZ、内存占比。`--sort by-rss` 或 `--sort by-pct` 排序方式。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+
+告警时退出码 2，正常监控退出码 0。读 /proc/meminfo 失败退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。

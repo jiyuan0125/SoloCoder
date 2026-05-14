@@ -1,4 +1,9 @@
 20 个微服务健康检查全靠人工，每天早上花半小时逐个 curl。从配置文件读取服务列表和检查方式（HTTP/TCP/命令），输出整体健康报告。
+
+配置 config.json：`{"services":[{"name":"user-svc","type":"http","target":"http://localhost:8080/health","timeout":"5s","expected_status":200},{"name":"redis","type":"tcp","target":"localhost:6379","timeout":"3s"}]}`。
+
+`healthcheck run -config config.json` 执行所有检查，`-service user-svc` 只检查单个。输出 JSON：`{"checked":3,"healthy":2,"unhealthy":1,"details":[{"name":"user-svc","status":"healthy","latency_ms":12},{"name":"redis","status":"unhealthy","error":"connection refused"}]}`。有 unhealthy 的 exit 1，全部健康 exit 0。配置文件不存在报 `"error: config file not found"` exit 2。
+
 多个 worker 并发处理输入数据。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 
 Go 实现，只用标准库，交叉编译友好。

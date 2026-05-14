@@ -1,4 +1,11 @@
-老板说要提效，先搞个日志脱敏。自动检测并替换日志中的敏感信息（手机号、身份证、邮箱、IP），输出脱敏后的日志。安全审计要查日志，但里面有用户隐私数据不能直接给。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。需要维护数据源和查询配置。查询配置引用数据源。
+老板说要提效，安全审计要查日志，但里面有手机号、身份证号、邮箱这些隐私数据不能直接给。自动检测替换掉就行了吧？
+
+CLI 子命令结构：`log-redact namespace resource action`，比如 `log-redact data log process`。核心用法：`log-redact redact --input app.log --output redacted.log --rules rules.json`。内置规则自动检测手机号（`1[3-9]\d{9}`）、身份证号（`\d{17}[\dXx]`）、邮箱（标准 email 正则）、IP 地址。内置规则可以通过 `--rules` 追加自定义正则：`[{"name": "phone", "pattern": "1[3-9]\\d{9}", "replacement": "***PHONE***"}]`。
+
+替换策略：`--strategy mask`（用 `***TYPE***` 替换，如 `***PHONE***`）或 `--strategy hash`（用 SHA256 前 8 位替换）。默认 mask。脱敏后每行输出原格式不变，只有匹配到的部分被替换。统计输出到 stderr：`redacted: X lines, types: {phone: Y, email: Z, id_card: W, ip: V}`。
+
+需要维护数据源和查询配置，查询配置引用数据源。`--config-file config.json` 管理数据源声明。配置引用了不存在的数据源时退出码 2。
+
+处理空文件不报错，输出空文件。输入文件不存在退出码 1，提示 `input file not found: <path>`。
 
 Go 实现，只用标准库，交叉编译友好。

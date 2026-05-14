@@ -1,5 +1,7 @@
-JWT 过期了应该返回 401 但返回了 500，这种认证 bug 不好测。Go 工具验证 JWT、API Key、Basic Auth 等认证方式，检测 token 过期处理和权限控制。
+JWT 过期了应该返回 401 但返回了 500——这种认证 bug 不好测，线上出了两次了才想到要做自动化检查。
 
-日志文件可能存在各种编码。
+`auth-tester test --url http://localhost:8080/api/me --method jwt --token "eyJhbGciOi..."` 发送请求并验证认证行为。JWT 模式下自动检查：过期 token 是否返回 401（不是 403/500）、无效签名是否返回 401、缺少 Authorization header 是否返回 401、有效 token 是否返回 200。`--method basic --user admin --pass wrong` 测试 Basic Auth，`--method apikey --header "X-API-Key" --key "test-key"` 测试 API Key。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+输出 JSON：`{ "url": "...", "method": "jwt", "results": [{ "scenario": "expired_token", "expected_status": 401, "actual_status": 500, "pass": false }] }`。scenario 名称要具体：valid_token、expired_token、invalid_signature、missing_header。
+
+`auth-tester generate-jwt --secret mysecret --expire 1h --claims '{"sub":"user1"}'` 快速生成测试用 JWT。非法 UTF-8 的 token 文件不要 panic，stderr 打 warning 继续。Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,5 +1,9 @@
-CI/CD 流水线需要拿 OAuth2 token 才能调 API。写个工具支持 client_credentials 和 authorization_code 两种流程，拿到的 token 缓存到本地文件，过期了自动刷新。
+CI 流水线拿 token 调 API 这事，shell 脚本写了一版又来一版，每次改认证方式就要重写。
 
-工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
+两个流程用子命令区分：`./oauthcli client-credentials -client-id xxx -client-secret xxx -token-url https://auth.example.com/token` 和 `./oauthcli auth-code -client-id xxx -auth-url https://auth.example.com/authorize -token-url https://auth.example.com/token`。auth-code 流程自动起本地 HTTP 服务接收回调。
 
-用 Go 标准库写，go run . 或 go build 都行。
+拿到 token 后缓存到 `~/.oauthcli/tokens.json`，结构：`{"client_id":{"access_token":"...","expires_at":1700000000,"refresh_token":"..."}}`。每次请求前检查 `expires_at`，过期自动用 refresh_token 刷新，refresh 也过期才重新走完整流程。
+
+`-scope "read write"` 指定权限范围。`-output json` 打印完整 token 信息，`-output header` 直接输出 `Authorization: Bearer xxx`（方便管道接到 curl）。token 端点返回非 200 打印 "token request failed: HTTP <code>: <body>" 并 exit 1。
+
+Go 标准库，`go run .` 或 `go build` 都行。

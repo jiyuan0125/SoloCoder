@@ -1,5 +1,11 @@
-调试流式接口的时候要手动处理 chunked 编码，很烦。写个工具把输入转成 chunked 格式，也能反过来把 chunked 内容还原，管道友好可以直接接上下游。
+调试流式接口遇到 chunked 编码要手动处理？这事光想想就头大。
 
-需要用到 filepath.Walk 等标准库功能。
+两个子命令：`encode` 把 stdin 转成 chunked 格式输出到 stdout，`decode` 反过来。`echo "hello world" | ./chunked encode` 输出 `b\r\nhello world\r\n0\r\n\r\n`。`./chunked decode < chunked_input.txt` 还原原始内容。
 
-Go 实现，只用标准库，交叉编译友好。
+chunk 大小用 `-chunk-size 1024` 指定，默认 8192 字节。也支持从文件读取：`./chunked encode -i body.txt -o body_chunked.txt`。管道模式友好——可以 `cat data.bin | ./chunked encode | curl -X POST --data-binary @- http://localhost/upload`。
+
+decode 遇到格式错误的 chunked 流打印 "invalid chunked encoding at byte offset <n>: <reason>" 并 exit 1。encode 输入为空直接输出终止标记 `0\r\n\r\n`。大文件处理用流式读写，内存占用不超过 chunk-size。
+
+用 filepath.Walk 批量处理目录下所有文件：`./chunked encode -dir ./raw/ -outdir ./chunked/`，保留原文件名加 `.chunked` 后缀。
+
+Go 标准库，交叉编译友好。

@@ -1,4 +1,9 @@
-两个时间段的日志差异靠人工对比太慢了，这周和上周的错误类型有没有变化？找出新增的错误类型、变化的频率模式，输出差异时间线。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
+两个时间段的日志要对比差异，光靠肉眼看不过来。上周版本发布后错误类型突然多出好几种，人工对比花了两个小时。应该交给工具做——输入两个时间范围，自动发现新增错误类型和变化的频率模式，输出差异时间线。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+CLI：`tool diff --before before.log --after after.log --output timeline.json`。`--granularity hour|day` 控制时间线粒度。输出 JSON：`{ "added_errors": [...], "removed_errors": [...], "frequency_changes": [{ "error": "...", "before_count": N, "after_count": N, "change_pct": N }] }`。错误类型基于正则匹配，`--error-pattern` 自定义规则，默认匹配含 error/panic/fatal 的行。频率变化超过 20% 的也列出，change_pct 保留一位小数。
+
+项目拆成至少 3 个 Go 源文件：main.go 入口、diff.go 核心对比逻辑、model.go 数据结构。命令行遵循 `tool verb resource --filter key=value` 格式。映射规则修改后旧数据标记为 stale，已确认数据不受影响。
+
+空文件输出空数组退出码 0。两个文件完全相同额外输出 `"identical": true`。
+
+Go 标准库实现，go build 能编译通过。

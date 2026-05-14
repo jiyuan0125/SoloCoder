@@ -1,4 +1,9 @@
-按小时按星期统计日志量和错误量，看哪个时段最容易出问题。输出 JSON 格式的热力图矩阵，给前端渲染用。
-执行过程分成 init/prepare/run/finish 四个阶段，每个阶段都有前置条件。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。
+上周五下午四点又挂了，这种周期性问题要能一眼看出来才好。按小时按星期统计日志量和错误量，看哪个时段最容易出问题，输出 JSON 格式的热力图矩阵给前端渲染。
 
-Go 标准库，命令行参数用 flag 包解析。
+命令行：`heatmap-gen generate --input app.log --output heatmap.json --type error_count`。`--type` 支持 `total_count`（总日志量）、`error_count`（ERROR 级别数量）、`error_ratio`（ERROR 占比）。输出 JSON 结构：`{"matrix": {"0-1": [12, 8, 15, ...], "1-2": [...]}, "x_labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], "y_labels": ["0-1", "1-2", ..., "23-24"], "type": "error_count"}`。matrix 的 key 是小时段（`"0-1"` 表示 0 点到 1 点），value 是 7 个元素对应周一到周日的数值。
+
+执行过程分四阶段：init（读取输入文件元信息）、prepare（解析时间范围和格式）、run（统计计算）、finish（写入输出）。扫描完了才能处理，处理的时候先锁定数据文件再读取校验。用 `sync.Mutex` 保护文件锁。
+
+也支持文本输出模式：`--format text` 打印 ASCII 热力图到终端，用数字和 `#` 的密度表示数值高低。空文件输出空 matrix。
+
+Go 标准库，命令行参数用 flag 包解析。退出码 0 成功，1 文件读取错误，2 参数无效。

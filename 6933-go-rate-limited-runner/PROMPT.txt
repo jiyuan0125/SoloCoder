@@ -1,4 +1,6 @@
-第三方 API 有 QPS 限制，超过 100 就返回 429 还 ban 了我们 10 分钟。写个限速命令执行器，控制命令执行频率不超过指定速率。令牌桶算法，匀速补充令牌，没有令牌就等着。用于限制对外部服务的调用频率。
+第三方 API 有 QPS 限制，超过 100 就返回 429 还 ban 了我们 10 分钟，这种情况谁遇到都会抓狂。写个限速命令执行器，控制命令执行频率不超过指定速率。令牌桶算法，匀速补充令牌，没有令牌就等着。用于限制对外部服务的调用频率。
+
+CLI：`ratelimit run -rate 10 -burst 5 -f commands.txt`。-rate 是每秒允许执行的次数（令牌补充速率），-burst 是令牌桶容量（允许瞬间突发，默认等于 rate），commands.txt 每行一条命令。执行时先获取令牌，桶空则阻塞等待，输出 "waiting for token (bucket: 0/{burst})" 到 stderr。每条命令执行后输出 JSON 到 stdout：{"cmd":"...","status":"success|failed","exit_code":0,"wait_ms":120,"duration_ms":50}。`ratelimit exec -rate 5 -- curl http://api/endpoint` 单条命令限速执行模式。运行中按秒输出令牌状态到 stderr："rate: {rate}/s, bucket: {current}/{burst}, executed: {n}"。所有命令执行完输出汇总 "total: {n}, rate limited: {waited_count}, avg_wait: {ms}ms"。令牌桶状态纯内存维护，不持久化。burst 设为 0 报错输出 "burst must be > 0" 退出码 2。命令文件不存在退出码 1。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 

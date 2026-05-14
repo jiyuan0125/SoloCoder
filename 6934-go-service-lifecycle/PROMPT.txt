@@ -1,3 +1,5 @@
-服务的启动和关闭顺序很重要——数据库得先于 API 启动，API 先于网关关闭。写个服务生命周期管理工具，定义 init/start/health/stop 四个阶段的钩子，按顺序启动和关闭。输出状态机变化过程，方便调试。
+服务的启动和关闭顺序很重要——数据库得先于 API 启动，API 先于网关关闭。上次因为一个服务的依赖没起来就强行启动，疯狂报错刷了几百兆日志。写个服务生命周期管理工具，定义 init/start/health/stop 四个阶段的钩子，按顺序启动和反向顺序关闭。输出状态机变化过程，方便调试。
+
+服务列表通过 lifecycle.json 配置，是个有序数组，每项有 name、init（初始化命令，如创建目录）、start（启动命令）、health_check（健康检查命令，返回 0 视为健康）、stop（停止命令）、start_timeout（启动超时秒，默认 30）、stop_timeout（停止超时秒，默认 15）。CLI：`slcm -config lifecycle.json start` 按数组顺序依次执行 init→start→health_check，每阶段输出 "[{name}] {phase}: {status}"。health_check 最多重试 3 次，间隔 5 秒。任一阶段失败输出 "[{name}] {phase} failed: {error}" 并停止后续服务启动，已启动的按反序执行 stop，退出码 1。`slcm -config lifecycle.json stop` 按数组反序执行 stop。`slcm -config lifecycle.json status` 输出每个服务当前状态："{name}: {initialized|running|stopped|unknown}"。全部启动成功输出 "all services ready ({n})" 退出码 0。
 
 Go 实现，只用标准库，交叉编译友好。

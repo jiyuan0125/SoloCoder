@@ -1,3 +1,7 @@
-测试环境 8 核机器，跑编译任务的时候一不注意就起了 20 个并发，直接把机器干卡死了。需要一个限制同时运行进程数的命令行工具，包装命令执行，确保并发数不超过设定上限。排队的按 FIFO 等着，执行完了自动拉下一个进来。
+测试环境 8 核机器跑编译，一不注意起 20 个并发直接卡死。靠人控制并发数不靠谱，需要包装命令执行的并发限制器——超出的排队等着，执行完了自动拉下一个进来。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`limiter run --max 4 -- ./build.sh --target release` 包装命令执行。`--max` 设最大并发数，默认 CPU 核数。多 limiter 实例通过共享锁文件 `/tmp/limiter-{hash}.lock` 协调，hash 根据 `--group` 参数生成，同 group 共享同一个并发池。排队策略 FIFO，先提交的先执行。`--wait-timeout 300s` 等待超时后 stderr 输出 "timeout waiting for slot" 退出码 124。子进程退出码透传给调用方。
+
+`limiter status --group build` 显示当前组 running/max/waiting 三个数字。`limiter list` 列出所有活跃 group 及其状态。收到 SIGINT/SIGTERM 时先转发给正在运行的子进程，等它们退出后排队中的任务取消 stderr 打印 "cancelled: {command}"。子进程 stdout/stderr 直接透传不缓冲不修改。`--verbose` 时额外输出等待和启动的日志到 stderr。
+
+纯 Go 标准库，编译后单二进制直接跑。

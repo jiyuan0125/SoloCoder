@@ -1,4 +1,9 @@
 cgroup 资源限制手动设太容易出错，一个数字写错整台机器都可能受影响。按进程或用户限制 CPU、内存、文件描述符，基于 cgroups 实现。
+
+子命令结构：`limiter set -pid 1234 -cpu 50 -mem 512M -fd 1024`，`limiter show -pid 1234`，`limiter reset -pid 1234`。set 创建 cgroup 并移入进程，show 输出当前限制（JSON 格式 `{"pid":1234,"cpu_quota":50,"mem_limit":"512M","fd_limit":1024}`），reset 删除 cgroup。
+
+CPU 限制单位是百分比（1-100），写入 cpu.cfs_quota_us。内存支持 K/M/G 后缀。fd 限制写入 limits.conf 对应条目。-pid 不存在报错 `"error: process 1234 not found"` exit 2。权限不足报 `"error: permission denied, need root"` exit 3。重复 set 同一 pid 更新而非报错。
+
 去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。源文件修改后，之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

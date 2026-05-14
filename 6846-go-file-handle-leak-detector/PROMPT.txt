@@ -1,4 +1,9 @@
-一个服务打开 10 万个 fd 没关，ulimit 没设好直接把机器搞挂了。监控进程的 fd 数量变化，检测持续增长模式，输出可疑进程列表。
-任务有多个阶段，每个阶段完成后自动进入下一个。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
+谁能想到一个服务开了 10 万个 fd 没关？机器直接 OOM 了，排查花了两天。能不能有个工具持续监控每个进程的 fd 数量变化，发现那种一直在涨不下来的进程？
 
-用 Go 标准库写，go run .或 go build 都行。
+子命令：`fdetect watch --top 20 --interval 5` 每 5 秒采样一次 /proc/{pid}/fd 的数量，显示 fd 数 top 20 的进程，输出格式为表格：PID/Name/FD_Count/Trend。`fdetect analyze --pid 12345 --duration 60` 对指定进程做 60 秒的深度分析，每秒记录 fd 数，结束时输出增长速率（个/秒）和线性回归的斜率，斜率持续为正则标记为 LEAKING。`fdetect report --snapshot current.json` 对比上一次快照，输出 fd 增长最多的前 10 个进程。
+
+任务有多个阶段，每个阶段完成后自动进入下一个——watch→analyze→report 可以链式调用。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态——watch 模式下状态变更触发回调。命令支持多级子命令，`fdetect watch`、`fdetect analyze`、`fdetect report` 三级结构。
+
+检测逻辑：连续 3 次采样 fd 数递增且总增长超过 10 个，标记为 suspicious。扫描 /proc 时跳过 PID 1（init）和当前进程自身。容器环境下 /proc 可能被限制，此时输出 "limited view" 提示。支持 --json 输出完整数据。支持 --threshold 100 只显示 fd 数超过 100 的进程。
+
+用 Go 标准库写，go run . 或 go build 都行。退出码：0 正常，1 参数错误，2 无权限。

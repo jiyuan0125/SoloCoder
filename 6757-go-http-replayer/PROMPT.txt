@@ -1,5 +1,11 @@
-线上出问题后想复现当时的请求序列。从 HAR 或自定义 JSON 文件读取之前录制的 HTTP 请求，按原始时间间隔重放，用于本地复现问题。
+线上那个偶发 bug 怎么也复现不了，产品经理说"你就不能把当时的请求重放一遍吗"——说得轻巧。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+从 HAR 文件或自定义 JSON 格式读取录制的请求。输入：`./replayer -file session.har -mode replay`。HAR 解析取 entries 数组，每个 entry 的 request 提取 method、url、headers、body。自定义 JSON 格式：`[{"method":"POST","url":"...","headers":{},"body":"...","timestamp":"2024-01-01T10:00:00Z"}]`。
 
-Go 标准库，命令行参数用 flag 包解析。
+重放模式：`-mode replay` 按原始时间间隔重放（`-speed 2.0` 可加速），`-mode burst` 忽略间隔立即重放。每个请求打印响应状态码和耗时。某个请求失败不中断，记下来继续。
+
+输出结果文件 `replay_report.json`：`{"total":15,"success":13,"failed":2,"details":[{"url":"...","status":200,"latency_ms":45},{"url":"...","error":"connection refused"}]}`。
+
+目标地址用 `-base-url http://localhost:8080` 替换原始 URL 的 host 部分，方便本地复现。文件不存在或格式错误打印 "invalid input file: <error>" 并 exit 1。
+
+项目拆至少 3 个源文件：main.go、har.go、replayer.go。Go 标准库，flag 包。

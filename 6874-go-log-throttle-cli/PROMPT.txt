@@ -1,4 +1,11 @@
-日志风暴把 ELK 打挂了，一瞬间几百万条日志灌进来。限制日志输出速率，防止日志风暴，超过速率的日志缓存或丢弃。
-多个 worker 并发处理输入数据。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
+日志风暴不是开玩笑——上次一个 bug 触发了循环打印，几百万条日志一分钟灌进 ELK，直接打挂。这个工具限制日志输出速率，超过阈值的缓存或丢弃，防止下游被冲垮。
+
+命令行参数：`log-throttle throttle --input live.log --output throttled.log --rate 1000 --strategy drop`。`--rate` 是每秒最大输出条数。`--strategy` 支持 `drop`（超限直接丢）和 `buffer`（先缓存，缓存放不下再丢）。`--buffer-size 10000` 设置缓冲区容量，默认 5000。用令牌桶算法实现速率控制。
+
+多个 worker 并发处理输入数据，每个 worker 独立读取 input 的不同 offset（按行号范围分片）。工具遍历目录时会加锁防止并发冲突，但遇到嵌套子目录需要重新扫描同一个根目录——这时候先完成当前遍历再重试，不丢数据。
+
+映射规则修改后（通过 `--rules rules.json`），之前按旧规则转换的数据标记为 `needs_reprocess: true`，已确认的（`confirmed: true`）不动。规则文件格式：`[{"pattern": "regex", "action": "drop|buffer|pass", "rate_limit": 100}]`。
+
+统计输出到 stderr：`throttled: X, dropped: Y, buffered: Z, elapsed: <duration>`。退出码 0 正常，1 输入文件读错误，2 参数无效。`--dry-run` 模式只打印统计不写输出。
 
 用 Go 标准库写，go run .或 go build 都行。

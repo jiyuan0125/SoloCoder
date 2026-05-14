@@ -1,3 +1,9 @@
-前后端联调时跨域问题排查了半天，不确定是服务端 CORS 没配好还是前端请求方式不对。写个工具发 OPTIONS 预检请求，检查 Access-Control-Allow-Origin 等相关 header，输出 CORS 策略分析。
+前后端联调时跨域问题排查了半天——不确定是服务端 CORS 没配好还是前端请求方式不对。浏览器控制台报的错就一句 "has been blocked by CORS policy"，根本看不出来哪配错了。
+
+这个工具发 OPTIONS 预检请求然后分析 CORS 配置。用法 `corscheck https://api.example.com/data`，自动发 OPTIONS 请求检查响应头。`--origin` 指定 Origin 头，默认 `http://localhost:3000`。`--method` 指定 Access-Control-Request-Method，默认 GET。
+
+检查项包括：Access-Control-Allow-Origin 是否存在、是否匹配请求的 Origin；Allow-Methods 里有没有请求的方法；Allow-Headers 是否包含常用头部（Content-Type、Authorization）；Allow-Credentials 设了的话 Origin 不能是通配符 `*`，这个矛盾要报出来；Max-Age 值是多少，预检结果缓存多久。
+
+输出分三级——通过（绿色 PASS）、警告（黄色 WARN）、失败（红色 FAIL）。比如 "FAIL: Allow-Origin 缺失"、"WARN: Max-Age 未设置，每次请求都会触发预检"。`--json` 输出结构化结果方便集成到 CI。`--verbose` 显示完整的请求和响应头。请求失败退出码 1，CORS 配置有 FAIL 项退出码 2，全部 PASS 退出码 0。
 
 Go 标准库，命令行参数用 flag 包解析。

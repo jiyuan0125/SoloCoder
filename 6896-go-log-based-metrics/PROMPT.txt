@@ -1,4 +1,7 @@
-日志里有指标数据（QPS、响应时间），要导出给 Prometheus。统计每分钟的请求量、错误率、响应时间，输出 Prometheus 格式的 metrics。不想改代码加埋点，直接从日志提取。
-文件处理流水线：读取 → 解析 → 校验 → 转换 → 输出，每步可以独立失败。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+不想改代码加埋点，能直接从现有日志里把 QPS、响应时间、错误率这些指标提出来吗？而且最好输出 Prometheus 能直接拉的格式——这是我上周问自己的问题，答案是应该可以。
 
-用 Go 标准库写，go run .或 go build 都行。
+用 `tool parse-config --pattern '(\d{4}-\d{2}-\d{2}) .* status=(\d+) duration=(\d+)ms' --fields date,status,duration` 定义解析规则，保存为 rules.toml。然后 `tool extract --input access.log --config rules.toml --interval 60` 按分钟统计。输出严格遵循 Prometheus 文本格式：`# TYPE log_requests_total counter`、`log_requests_total{status="200"} 1234`，每个指标带 TYPE 和 HELP。duration 输出 histogram 类型，bucket 分布 50ms/100ms/250ms/500ms/1s/2.5s/5s/10s。错误率通过 status>=400 比例算，指标名 `log_error_rate_percent`。
+
+流水线步骤：读取→解析→校验→转换→输出，每步独立失败，解析失败的行计入 `log_parse_errors_total`。任务状态 pending→running→completed，running 失败可重试。`tool serve --config rules.toml --port 9090` 启动 HTTP 服务，`/metrics` 端点实时输出指标。Ctrl+C 优雅退出。
+
+Go 标准库实现，go run . 或 go build 都行。

@@ -1,4 +1,9 @@
-renice 一次改一个进程太麻烦了，几十个 Java 进程要批量降低优先级。批量设置 nice 值和调度策略，支持按名称匹配进程。
+renice 一次改一个进程太麻烦了，几十个 Java 进程要批量降低优先级——难道运维要写 shell 循环吗？批量设置 nice 值和调度策略，支持按名称匹配进程。
+
+`prio set -name java -nice 10 -policy SCHED_OTHER` 批量设置所有匹配进程。`prio show -name nginx` 显示匹配进程的当前优先级。`prio show -pid 1234` 显示单个进程。show 输出 `PID  NAME  NICE  POLICY  STATUS`，JSON 模式 `{"processes":[{"pid":1234,"name":"java","nice":10,"policy":"SCHED_OTHER"}]}`。
+
+-name 支持正则匹配进程名。-nice 范围 -20 到 19。-policy 支持 OTHER/BATCH/IDLE/FIFO/RR。set 执行前先 show 预览变更，加 `-yes` 跳过确认。无匹配进程报 `"error: no processes matching 'xxx'"` exit 1。nice 值越界报 `"error: nice value must be -20..19"` exit 2。
+
 统计的时候排除周末和法定节假日。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
 
 Go 标准库，命令行参数用 flag 包解析。

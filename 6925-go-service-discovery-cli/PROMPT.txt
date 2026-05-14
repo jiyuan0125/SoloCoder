@@ -1,3 +1,5 @@
-上周服务发现客户端出了个 bug，请求打到已下线的节点上，排查花了半天。需要一个可靠的服务发现客户端，查询可用的服务实例列表。支持多种后端——本地文件、DNS SRV 记录、HTTP 接口，不同环境用不同方式。输出实例列表，包含地址和端口。
+上周服务发现客户端出了个 bug，请求打到已下线的节点上，排查花了半天。一个能统一查询多后端的服务发现客户端应该很简单——本地文件、DNS SRV、HTTP 接口，不同环境用不同后端，输出统一的实例列表就行。
+
+查询命令 `sd query -backend file -source services.json` 读本地 JSON 文件，文件格式为 `[{"name":"svc-a","host":"10.0.1.1","port":8080,"status":"healthy"}]`。`sd query -backend dns -source _svc-a._tcp.example.com` 查询 DNS SRV 记录解析出 host:port。`sd query -backend http -source http://consul:8500/v1/catalog/service/svc-a` 从 HTTP 接口拉取，响应解析为 JSON 取出地址和端口。三种后端输出统一格式到 stdout：每行一个实例，格式 `{host}:{port}`，附加 `-j` 参数输出 JSON 数组。`-filter status=healthy` 过滤只输出 healthy 实例（file 和 http 后端适用，dns 后端忽略此参数）。`sd watch -backend ... -interval 10` 持续轮询模式，每 10 秒查询一次，实例列表变化时输出 diff："added: {list}" 或 "removed: {list}"。后端连接失败输出 "backend error: {msg}" 到 stderr，退出码 1。
 
 用 Go 标准库写，go run . 或 go build 都行。

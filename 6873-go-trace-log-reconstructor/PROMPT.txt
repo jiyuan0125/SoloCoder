@@ -1,4 +1,11 @@
-微服务链路排查要在多份日志里找 trace ID，手动找太痛苦了。通过 trace ID 关联多个服务的日志，按时间排序输出完整链路。支持多个终端同时操作同一个数据目录。
-任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+微服务链路排查是个体力活——在五六个服务的日志里 grep 同一个 trace ID，再手动按时间排序拼起来，一个链路查下来半小时。这个工具把这事自动化了。
+
+CLI：`trace-recon reconstruct --trace-id abc123 --log-dir /var/log/ --output trace.json`。递归扫描 `--log-dir` 下所有 `.log` 文件，grep 包含指定 trace ID 的行。匹配规则：每行里找 `trace_id=<VALUE>` 或 `"traceId":"<VALUE>"` 格式。找到的条目按时间戳排序输出 JSON 数组，每项包含 `timestamp`、`service`（从文件名提取）、`level`、`message`、`span_id`（如果有）。
+
+也支持批量模式：`--trace-id-file ids.txt`，文件里每行一个 trace ID，每个 ID 输出一个独立的 JSON 文件到 `--output-dir`。多个终端同时操作同一个数据目录不会冲突——每个 trace ID 的结果写独立文件，文件名包含 trace ID 的哈希。
+
+任务有生命周期：`pending → running → completed`。running 失败可以重试，completed 后可以重新发起加 `--force`。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成（除非加 `--force`）。
+
+如果某个 trace ID 在所有文件中都没有匹配，输出空数组 `[]` 到对应文件，并在 stderr 打印 `trace <ID>: no matches found`。日志目录不存在时退出码 2，提示 `directory not found: <path>`。
 
 用 Go 标准库写，go run .或 go build 都行。

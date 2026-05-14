@@ -1,3 +1,5 @@
-有些任务一跑就是几个小时，SSH 断了任务就丢了。写个后台任务管理器，提交任务后即使终端关了也能继续跑。能查询任务状态、取消正在跑的任务、列出所有历史任务。任务状态实时记录，断了再连上来能接着看。
+有些任务一跑就是几个小时，SSH 断了任务就丢了——这种事情经历过几次之后就知道有多痛苦了。写个后台任务管理器，提交任务后即使终端关了也能继续跑。能查询任务状态、取消正在跑的任务、列出所有历史任务。任务状态实时记录，断了再连上来能接着看。
+
+任务数据用 JSON 文件 tasks.json 持久化，每项包含 id（自增数字）、command、status（pending/running/completed/failed/cancelled）、pid、submit_time、start_time、end_time、exit_code、output_path（输出保存到 {id}.out 文件）。CLI 子命令：`btm submit -- echo hello` 提交任务，输出 "task submitted: id={n}"。`btm list` 列出所有任务，表格输出 "ID\tCOMMAND\tSTATUS\tSUBMIT_TIME"。`btm status -id 3` 查看单任务详情，包括输出内容（最后 20 行）。`btm cancel -id 3` 取消运行中的任务（发 SIGTERM），输出 "cancelled: id={n}"。`btm output -id 3` 完整输出任务日志。守护进程 `btm daemon -dir /var/btm` 在后台轮询 pending 任务并执行，执行完更新 status 和 exit_code。同时只运行一个 daemon 实例（通过 PID 文件锁）。daemon 收到 SIGTERM 把 running 任务标记为 cancelled 再退出。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

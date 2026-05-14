@@ -1,5 +1,9 @@
-API 性能要上 Prometheus 监控，但代码里还没埋点。先写个 HTTP 代理拦截请求和响应，记录响应时间、状态码、请求大小，输出 Prometheus 格式的指标，不用改业务代码。
+先启动指标代理 `./metrics -listen :8080 -target localhost:3000 -metrics-path /metrics`，然后把流量打到 8080。代理拦截每个请求和响应，记录：响应时间（ms）、状态码、请求方法、URL 路径、请求体大小（bytes）、响应体大小（bytes）。
 
-处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+Prometheus 格式指标暴露在 `-metrics-path`（默认 /metrics）：`http_request_duration_seconds{method="GET",path="/api/users",status="200"} 0.045`，`http_requests_total{method="GET",path="/api/users",status="200"} 123`，`http_request_size_bytes{method="POST",path="/api/users"} 1024`。
 
-用 Go 标准库写，go run . 或 go build 都行。
+统计结果每 10 秒自动写入 `metrics_summary.json` 汇总文件。没有匹配记录时跳过不写空文件。用 `-interval 30s` 调整写入间隔。
+
+代理本身健康检查 `GET /health` 返回 200 OK。目标不可达返回 502，加上 `X-Proxy-Error: upstream unreachable`。`-max-requests 10000` 达到后自动退出并输出最终报告。Ctrl+C 优雅关闭，打印最终统计。
+
+Go 标准库，`go run .` 或 `go build` 都行。

@@ -1,3 +1,9 @@
-之前用 shell 脚本管进程关闭，kill 完就不管了，数据库连接没释放、临时文件没清理，搞得下次启动各种报错。Go 写一个优雅关闭管理器，收到 SIGTERM 后通知子进程先把手头的活干完再退出。设个超时兜底，实在不退就 SIGKILL。等到所有子进程都退了主进程才退出。
+之前用 shell 脚本管进程关闭，kill 完就不管了——数据库连接没释放、临时文件没清理，下次启动各种报错。写个 Go 优雅关闭管理器，收到信号让子进程先干完活再退出。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+信号捕获：监听 SIGTERM 和 SIGINT，收到后进入关闭流程。全程日志记录：`[shutdown] received SIGTERM`、`[shutdown] notifying child processes`、`[shutdown] process {name} exited (code: 0)`。
+
+子进程管理：`graceful start --config services.yaml`。配置定义每个进程的 name、command、shutdown_timeout（默认 30s）、cleanup_command（可选）。收到 SIGTERM 后向所有子进程发 SIGTERM。超时未退 SIGKILL，stderr 输出 "process {name} did not exit gracefully"。所有子进程退了主进程才退出。`--global-timeout 120s` 总超时，超时强杀所有 exit 1。cleanup_command 在对应进程退后执行，本身 10 秒超时。
+
+配置文件不存在 exit 1。无子进程运行直接 exit 0。
+
+Go 标准库实现，go build 编译通过，无第三方依赖。

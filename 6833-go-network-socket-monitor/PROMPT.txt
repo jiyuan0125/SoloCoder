@@ -1,4 +1,9 @@
-SRE 团队要看每台机器的 socket 状态，TIME_WAIT 堆积会导致连接池耗尽。统计各状态的连接数（LISTEN/ESTABLISHED/TIME_WAIT/CLOSE_WAIT），支持按进程分组。
+SRE 团队要看每台机器的 socket 状态分布，TIME_WAIT 堆积会导致连接池耗尽，这个指标不监控不行。统计各状态的连接数（LISTEN/ESTABLISHED/TIME_WAIT/CLOSE_WAIT 等），支持按进程分组。
+
+接口设计用子命令和 flag 组合。`sockmon stats` 读取 /proc/net/tcp 和 tcp6，统计各状态连接数。`sockmon stats -by-process` 按 PID 分组显示，从 /proc/PID/fd 关联 socket。`sockmon watch -interval 5s` 持续刷新。`sockmon top -sort time_wait -limit 10` 显示 TIME_WAIT 最多的前 N 个进程。
+
+stats 输出 JSON：`{"total":1234,"by_state":{"LISTEN":10,"ESTABLISHED":800,"TIME_WAIT":400,"CLOSE_WAIT":24},"by_process":[{"pid":1234,"name":"nginx","established":200,"time_wait":150}]}`。表格模式 `STATE  COUNT  PCT`。/proc/net/tcp 不可读报 `"error: cannot read /proc/net/tcp"` exit 1。
+
 处理流程分好几步，上一步的输出是下一步的输入。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。工具管理配置模板和配置实例。实例基于模板生成。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

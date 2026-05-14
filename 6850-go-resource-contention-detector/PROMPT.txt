@@ -1,4 +1,9 @@
-写一个资源争用检测工具，分析 CPU 争用（run queue 长度）、内存争用（swap 频率）、I/O 争用（await 时间）。机器跑着跑着就慢了，不知道谁在抢资源。
-金额用整数存储（分为单位），显示的时候转为元。除法截断不是四舍五入。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+机器跑着跑着就卡了，CPU 被谁抢了？IO 等了多久？swap 怎么突然在用？这些问题能不能有个工具一次性说清楚，别让我一个一个去看 top/iostat/vmstat？
 
-用 Go 标准库写，go run .或 go build 都行。
+`contention check` 采集当前系统的三项争用指标——CPU 争用看 /proc/stat 的 run queue 长度（正在运行+不可中断睡眠的进程数），如果超过 CPU 核数的 2 倍标记为 HIGH。内存争用看 /proc/vmstat 的 pswpin/pswpout 变化率，10 秒内 swap 超过 100 页标记为 HIGH。IO 争用看 /proc/diskstats 的 await（读等待+写等待的平均毫秒数），超过 50ms 标记为 HIGH。输出表格：Resource/Metric/Value/Threshold/Status。
+
+`contention top --refresh 2` 持续监控模式，每 2 秒刷新一次，显示争用最严重的 top 10 进程（按 CPU/IO/MEM 综合排序）。`contention analyze --duration 60` 采集 60 秒的数据，结束后输出 P95/P99 延迟和争用趋势。`contention baseline --save baseline.json` 保存当前状态为基线，后续 check 时加 --baseline baseline.json 参数可以对比偏离程度。
+
+金额用整数存储（分为单位）——计数器全部用 uint64，显示时才转成人类可读的 ms/KB。除法截断不是四舍五入——计算百分比时整数除法向下取整。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态——baseline 数据全局可见。数据源更新时自动刷新下游的聚合结果——/proc 数据每次读取即刷新。已经导出的报表不重新生成。
+
+用 Go 标准库写，go run . 或 go build 都行。支持 --json 输出。容器环境下某些 /proc 字段可能为空，标注 N/A。

@@ -1,5 +1,9 @@
-从 Cloudflare DNS 迁移到 Route53 之后想确认记录有没有丢。写个工具查同一域名在两个 DNS 服务器上的结果，把不一致的记录列出来。域名多的话一次可能上千条。
+Cloudflare 迁 Route53 之后的第二天，前端说有个子域打不开了。赶紧查，发现 TXT 记录漏了一条。这种事不能靠人肉核对了。
 
-有可能一次导入上万条数据。
+用法：`./differ -domain example.com -server-a 1.1.1.1:53 -server-b 8.8.8.8:53`，查两个 DNS 服务器的记录然后对比。查询类型用 `-types A,AAAA,CNAME,MX,TXT,NS` 指定，默认全查。支持从文件批量查：`-domains-file domains.txt`，一行一个域名，文件可能上万行内存要可控。
 
-用 Go 标准库写，go run . 或 go build 都行。
+差异结果输出：只显示不一致的记录。格式 `<domain> <type> | server-a: <values> | server-b: <values>`。用 `-o diff.json` 输出 JSON 格式，每个差异项含 domain、type、only_in_a、only_in_b 字段。退出码：0=完全一致，1=有差异，2=查询失败。
+
+单域名查询超时 `-timeout 5s`，批量查询带进度显示 `processing 123/5000: sub.example.com`。某个域名查失败不中断，记为 error 继续下一个，最后汇总失败数。差异记录数太多时 `-limit 100` 限制输出条数，超出部分只显示总数。
+
+Go 标准库，`go run .` 或 `go build` 都行。

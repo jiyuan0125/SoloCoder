@@ -1,4 +1,11 @@
-凌晨 ERROR 比例突然升高要能看出来，白天正常夜间飙高往往是定时任务搞的。统计每小时的 DEBUG/INFO/WARN/ERROR 比例，输出时序图数据。
-日志中记录了完整的请求参数。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。CLI 用子命令组织：`tool group command subcommand`，支持三级。
+凌晨三点线上开始疯狂报 ERROR，但白天又恢复了，查了一圈发现是定时任务的锅。要能看清每个时段各级别日志的比例变化，这种周期性异常才能抓住。
+
+命令行：`log-level-dynamics analyze --input app.log --window 1h --output dynamics.json`。按 `--window` 指定的时间窗口（支持 `1m`、`5m`、`15m`、`1h`、`6h`、`1d`）统计每个窗口内 DEBUG、INFO、WARN、ERROR 的条数和占比。输出 JSON 格式：`{"windows": [{"start": "2026-05-14T00:00:00Z", "end": "2026-05-14T01:00:00Z", "counts": {"DEBUG": 100, "INFO": 500, "WARN": 20, "ERROR": 3}, "ratios": {"DEBUG": 0.16, "INFO": 0.80, "WARN": 0.03, "ERROR": 0.005}}]}`。
+
+也支持 ASCII 时序图模式：`--format chart` 在终端输出字符直方图，横轴时间窗口，纵轴各级别比例。日志中记录了完整的请求参数，可以通过 `--include-params` 把参数也输出。
+
+工具遍历目录时会加锁防止并发冲突。CLI 用子命令组织三级：`lld group command subcommand`，比如 `lld level hourly analyze`。
+
+异常标记：如果某个窗口的 ERROR 比例超过平均值的 2 倍标准差，在输出中加 `"anomaly": true` 标记。
 
 用 Go 标准库写，go run .或 go build 都行。

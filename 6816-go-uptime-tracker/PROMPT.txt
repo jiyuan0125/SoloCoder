@@ -1,4 +1,9 @@
-合规要求记录每次重启和宕机，还要算月度可用性。检测重启事件，记录启动和关机时间，支持统计月度可用性。
-支持多个终端同时操作同一个数据目录。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
+合规要求记录每次重启和宕机事件，还要算月度可用性。手动记录不现实，能不能自动检测？
+
+`uptimetrack current` 显示当前启动时间、运行时长、上次关机时间（从 /proc/uptime 和 last reboot 推算）。`uptimetrack log --output uptime.jsonl` 持续记录，每次运行把当前启动时间和运行时长追加到文件。
+
+`uptimetrack events` 从日志中检测重启事件——相邻两条记录的启动时间不同就算一次重启。输出：事件时间、类型（reboot/shutdown）、持续运行时长。`uptimetrack availability --month 2024-01` 计算指定月份的可用性百分比 =（总时长 - 宕机时长）/ 总时长 × 100%。`--sla 99.9` 设定 SLA 目标，低于目标标红。
+
+`uptimetrack report --month 2024-01 --output report.txt` 生成月度报告，包含总运行时长、重启次数、最长连续运行、最短连续运行、可用性百分比。支持多个终端同时操作同一个数据目录。处理流程是初始化→扫描→处理→完成。命令行参数支持 `tool verb resource --filter key=value` 格式。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

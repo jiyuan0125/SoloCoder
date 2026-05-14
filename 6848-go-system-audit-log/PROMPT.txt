@@ -1,4 +1,9 @@
-等保要求记录所有配置变更和服务启停，不然过不了审。记录关键系统事件（用户登录、服务启停、配置变更），输出审计报告。
-统计的时候排除周末和法定节假日。任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
+上次等保测评，审计日志这块被开了 3 个不符合项——没有记录配置变更、服务启停没有时间戳、用户登录记录不全。得赶紧做一个审计日志收集工具，不然下次测评还是过不了。
 
-用 Go 标准库写，go run .或 go build 都行。
+记录三类事件：用户登录（从 /var/log/auth.log 或 journalctl 读取 successful/failed 登录，提取用户名、IP、时间）、服务启停（从 systemctl list-units 和 journalctl 读取，记录服务名、操作 start/stop/restart、触发者）、配置变更（监控 /etc 下文件变化，记录变更前后的 diff）。`audit collect --type login --since "2024-01-01" --until "2024-01-31"` 按类型和时间范围收集事件。`audit report --format json --output audit-report.json` 生成审计报告，包含事件总数、按类型分组计数、按严重度分级（info/warning/critical）、可疑事件列表（同一 IP 连续失败登录超 5 次的标记为可疑）。
+
+统计的时候排除周末和法定节假日——report 加 --workday-only 参数时只统计工作日数据。任务有 等待、执行中、成功、失败、取消 几种状态——每个收集任务的进度状态，失败的可以重试（audit retry --task-id xxx）。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径，比如 --filter login/source-ip=10.0.0.0/24。
+
+报告格式：JSON 输出包含 summary（总数/各类型数）、events（事件数组，每条有 timestamp/type/user/source/detail/severity 字段）、anomalies（可疑事件数组）。纯文本输出用表格。无权限读日志文件时输出 warning 继续，不中断。
+
+用 Go 标准库写，go run . 或 go build 都行。

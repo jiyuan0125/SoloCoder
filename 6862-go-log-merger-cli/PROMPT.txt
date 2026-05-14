@@ -1,4 +1,9 @@
-多个服务的日志要按时间合并到一起看，不然排查跨服务问题根本看不出来。按时间戳排序合并，支持不同时间格式的自动识别，输出按时间排序的合并结果。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
+排查跨服务问题时，5 个服务的日志要按时间对齐来看，手动拼接完全搞不定。万一各服务的时间格式还不一样——有的用 ISO 8601，有的用 Unix 时间戳——那就更崩溃了。
 
-用 Go 标准库写，go run .或 go build 都行。
+子命令：`logmerger merge --files "svc-a.log,svc-b.log,svc-c.log" --output merged.log` 按时间戳排序合并多个文件，每行前缀标注来源服务名。`logmerger merge --files "*.log" --output -` 合并当前目录所有日志文件，输出到 stdout。`logmerger detect --file app.log` 检测日志文件的时间格式，输出识别结果如 "format: 2006-01-02T15:04:05Z07:00"。支持自动识别的时间格式：ISO 8601（2006-01-02T15:04:05）、Unix 时间戳（秒/毫秒/微秒）、Apache/Nginx 常见格式、自定义格式（--time-format 指定 Go 的 time.Parse 布局字符串）。
+
+项目拆成至少 3 个 Go 源文件：main.go、merger.go（合并和排序逻辑）、model.go（日志条目和排序接口）。处理流程是 初始化→扫描→处理→完成，扫描完了才能处理——先扫描所有文件头几行识别时间格式，再逐文件读取建堆排序。命令行参数支持 `logmerger merge --filter source=svc-a` 格式。
+
+合并算法：N 路归并，每个文件一个 reader，用最小堆按时间戳排序输出。内存控制：--buffer-size 10000 限制同时在堆中的条目数。时间戳无法解析的行放到最后，标注 UNPARSED。输出格式：每行 [来源文件名] [原始时间戳] 原始内容。--json 输出则为每行一个 JSON 对象。空文件跳过。文件打开失败输出 warning 继续。
+
+用 Go 标准库写，go run . 或 go build 都行。go build -o logmerger。

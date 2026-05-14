@@ -1,5 +1,9 @@
-测试时每次手动构造 mock 响应太费时间。SaaS 工具到量了收费太贵，Go 自己写交互式工具：指定状态码、header、body，保存为 JSON 文件供 mock server 用。
+测试时每次手动构造 mock 响应太费时间，更烦的是不同环境的 mock 数据散落在各处，版本对不上。SaaS 工具到量了收费太贵，那就自己写个命令行工具把这事管起来。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+先用 `mock-builder init` 创建一个配置目录 `.mocks/`，里面放一个 `config.json` 记录默认设置（默认 status code 200、默认 Content-Type 是 application/json）。然后 `mock-builder add --name getUser --status 200 --header "Content-Type:application/json" --body '{"id":1,"name":"test"}'` 会把这条 mock 定义存成 `.mocks/getUser.json`，文件内容就是完整的 HTTP 响应描述——包含 status_code、headers（map[string]string）、body（string）三个字段。
 
-Go 实现，只用标准库，交叉编译友好。
+`mock-builder list` 列出所有已保存的 mock 定义，table 格式输出 name、status、content-type、body 长度。`mock-builder export --name getUser --output response.json` 导出单条 mock 的 body 部分。`mock-builder serve --port 9090` 启动一个临时 HTTP server，路由按 mock name 分配（GET /mock/getUser 返回对应配置的响应），方便前端联调。
+
+body 参数如果不传，从 stdin 读取，支持管道：`cat payload.json | mock-builder add --name createUser --status 201`。status 传非数字要报错退出码 1。name 重复时覆盖旧版本，stderr 打 "overwriting existing mock: {name}"。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 实现，只用标准库，交叉编译友好。

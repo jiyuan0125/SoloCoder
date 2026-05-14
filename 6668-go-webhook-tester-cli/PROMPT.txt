@@ -1,5 +1,9 @@
-webhook 签名验证不过，但不知道是签名算法错了还是 payload 不对。Python 工具跑太慢了，Go 重写：生成签名、发送测试 payload、记录响应，支持重放之前的请求。
+webhook 签名验证不过，但不知道是签名算法错了还是 payload 不对——这种问题排查起来特别烦。Python 工具跑太慢了，Go 重写一个全功能的 webhook 测试命令行。
 
-文件可能很大，超过内存要能处理。
+你用这个工具的时候大概是这样的：`webhook-test sign --algo hmac-sha256 --secret mysecret --file payload.json`，它会读取 payload 文件内容，用指定算法计算签名，stdout 输出 hex 编码的签名字符串。支持的算法至少包括 hmac-sha256、hmac-sha1、hmac-sha512，通过 `--algo` 参数选择。
 
-用 Go 标准库写，go run . 或 go build 都行。
+然后 `webhook-test send --url https://example.com/hook --secret mysecret --algo hmac-sha256 --file payload.json --header "X-Custom:value"` 把签名放到 `X-Hub-Signature-256` header 里发送，同时打印服务端返回的 HTTP 状态码和响应 body。`--header` 可以多次使用追加自定义 header。
+
+`webhook-test replay --history history.jsonl --url https://example.com/hook` 从历史记录文件里读取之前发送过的请求，重新发送一遍。历史文件是 JSONL 格式，每行一个 JSON 对象，包含 timestamp、method、url、headers、body、response_status 字段。每次 send 操作都自动追加到这个文件里。
+
+文件可能很大，超过内存要能处理——用逐行读取，不能整个 slurp 进来。签名算法不认识要报错退出码 1，stderr 打 "unsupported algorithm: {name}"。URL 格式不对也报错退出码 1。用 Go 标准库写，go run . 或 go build 都行。

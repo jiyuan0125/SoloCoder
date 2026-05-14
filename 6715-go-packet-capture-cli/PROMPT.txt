@@ -1,5 +1,7 @@
-之前用 shell 脚本拼 tcpdump 命令做抓包，参数一复杂就出错，而且解析不了包内容。用 Go 重写一个，指定网卡抓包，解析 Ethernet/IP/TCP/UDP 头部信息，支持 BPF 过滤表达式缩小范围。
+之前用 shell 脚本拼 tcpdump 命令做抓包，参数一复杂就出错，而且解析不了包内容。用 Go 重写一个，至少能看到解析后的协议字段，不用再去 Wireshark 里翻了。
 
-用户可以自定义输出文件名。
+`pktcap --interface eth0 --filter "tcp port 80" --count 100 --output capture.pcap --verbose`。指定网卡开始抓包，`--filter` 是 BPF 过滤表达式（语法兼容 tcpdump），`--count` 抓多少个包后停止（0 表示无限，Ctrl+C 停止），`--output` 保存为 pcap 格式文件，`--verbose` 控制是否实时打印解析结果。
 
-用 Go 标准库写，go run . 或 go build 都行。
+每个包解析至少输出这些层的信息——Ethernet（src/dst MAC、EtherType）、IP（src/dst IP、协议号、TTL、总长度）、TCP（src/dst 端口、seq、ack、flags、window size）、UDP（src/dst 端口、长度）。`--verbose` 模式下逐包打印，格式如 `[ETH] aa:bb:cc:dd:ee:ff → 11:22:33:44:55:66 (IPv4) [IP] 192.168.1.1 → 10.0.0.1 proto=TCP ttl=64 len=60 [TCP] :54321 → :80 flags=[SYN] seq=0 win=64240`。不传 verbose 则只显示汇总统计：按协议分类的包计数、总字节数、捕获时长。
+
+`--output` 文件名支持用户自定义，默认 `capture.pcap`。pcap 文件头用标准格式（magic number 0xa1b2c3d4、version 2.4、snaplen 65535、linktype ETHERNET=1）。需要 root 权限，非 root 退出码 1，stderr 打 "error: root privileges required"。interface 不存在退出码 1。用 Go 标准库写，go run . 或 go build 都行。

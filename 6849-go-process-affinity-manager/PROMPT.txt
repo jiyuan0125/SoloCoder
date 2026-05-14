@@ -1,4 +1,9 @@
-手动 taskset 一个个绑核心太累了，而且重启就丢了。设置进程运行在指定 CPU 核心上，支持按进程名批量设置。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+手把手 taskset 绑核心，30 个进程绑了半小时，重启又全丢了。有没有办法按进程名批量绑定亲和性，而且能保存配置下次自动恢复？
 
-Go 实现，只用标准库，交叉编译友好。
+子命令：`affinity list` 列出所有进程当前的 CPU 亲和性，读 /proc/{pid}/status 的 Cpus_allowed 字段，输出 PID/Name/CPU_Mask。`affinity set --name nginx --cpus 0-3` 按进程名查找所有匹配进程，用 syscall sched_setaffinity 设置亲和性，支持范围写法（0-3）和逗号分隔（0,2,4）。`affinity save --output affinity.yaml` 把当前亲和性配置保存到 YAML 文件。`affinity restore --config affinity.yaml` 从配置恢复，适合开机自启脚本调用。
+
+去重的时候要考虑 5 分钟窗口，同一窗口内相同 key 只处理第一次——set 操作对同名进程在 5 分钟内只执行一次，避免重复设置。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验——list 时如果发现多个线程属于同一进程组，合并显示。系统管理项目和任务——affinity 配置按 profile 分组，不同场景用不同 profile。任务属于项目——每个 profile 包含多条规则，规则有 target（进程名或 PID）和 cpus（CPU 列表）。
+
+set 命令细节：找不到匹配进程输出 "no process found: xxx" 到 stderr，exit 1。CPU 编号超过系统可用核数输出 "cpu N out of range, available: 0-M" 并 exit 1。--dry-run 参数只显示将要执行的操作不实际设置。restore 时进程不存在则记录 warning 并继续。需要 root 权限，非 root 提示 "operation requires root" 并 exit 2。
+
+Go 实现，只用标准库，交叉编译友好。go build -o affinity-mgr。

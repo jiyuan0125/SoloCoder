@@ -1,4 +1,11 @@
-日志格式改了一版，新旧格式要能对比，不然升级后老日志就废了。记录每次格式变更，支持新旧格式对比，管理格式变更历史。
-用 Go 标准库的 encoding/xml 包。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
+日志格式改了一版，新旧格式要能对比，不然升级后老日志解析全废了。得记录每次格式变更，能查历史，能对比两个版本之间的差异。
+
+命令行：`version-tracker register --name "v2.1" --format json --sample sample.log --description "added user_agent field"`。注册新格式版本。`version-tracker list` 列出所有版本。`version-tracker diff --from v1.0 --to v2.1 --output diff.json` 对比差异，输出 `{"added_fields": ["user_agent"], "removed_fields": [], "changed_fields": [{"name": "timestamp", "from": "unix", "to": "rfc3339"}]}`。
+
+格式定义用 XML 存储（Go 标准库的 encoding/xml 包），结构为 `<formats><format name="v2.1" type="json"><fields><field name="timestamp" type="string" required="true"/></fields></format></formats>`。
+
+主流程修改全局状态后（注册新版本），内部触发的事件处理函数也要读取同一份状态——用 `sync.RWMutex` 保护。数据导入后自动更新 `format-index.xml` 索引文件。新导入的数据可能还没建立关联，此时查询返回空。
+
+版本名重复时退出码 1，提示 `version already exists: <name>`。对比版本不存在时退出码 2，提示 `version not found: <name>`。
 
 用 Go 标准库写，go run .或 go build 都行。

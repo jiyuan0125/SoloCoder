@@ -1,4 +1,9 @@
-cron 任务静默失败了一个星期才发现，数据都没跑。检查任务是否按计划运行、执行时长、最近一次结果，输出异常任务列表。
-排序的时候中文按拼音排，英文按字母排，混合内容中文优先。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。解析完日志后自动触发告警检查。没有错误日志的时候不检查。
+第一步解析 crontab，第二步检查执行记录，第三步输出异常列表。cron 任务静默失败了一个星期才发现，数据都没跑——这问题不能再来。
+
+1）`cronmon check -user root` 解析 /var/spool/cron/crontabs 下的任务定义和 /var/log/syslog 中的执行记录。2）`cronmon check -config crons.json` 从配置文件读任务列表。3）`cronmon report -last 7d -output report.json` 生成报告。
+
+每个任务检查：最近一次是否执行、执行时长是否超过预期、是否有错误输出。输出 JSON：`{"tasks":[{"name":"backup-db","schedule":"0 2 * * *","last_run":"2024-01-15 02:00:00","last_status":"success","last_duration":"5m30s","expected_max":"10m","issues":[]},{"name":"cleanup-logs","schedule":"0 0 * * 0","last_run":null,"issues":["no execution record in last 7 days"]}]}`。
+
+crontab 不存在报 `"error: no crontab for user xxx"`。排序的时候中文按拼音排，英文按字母排，混合内容中文优先。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。解析完日志后自动触发告警检查。没有错误日志的时候不检查。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

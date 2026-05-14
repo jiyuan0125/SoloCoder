@@ -1,5 +1,11 @@
-前端丢过来一个 50MB 的 HAR 文件让排查慢请求。Go 工具提取请求列表、统计域名分布、响应时间分布、错误率，输出 JSON 报告一目了然。
+前端丢过来一个 50MB 的 HAR 文件让排查慢请求，这种事每周至少一次。得有个趁手的工具快速定位问题。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+1. 命令行：`har-analyzer -file dump.har -top 20 -format json`，其中 `-file` 指定 HAR 文件路径，`-top` 控制展示慢请求前 N 条（默认 10），`-format` 可选 json 或 table，table 模式用 `text/tabwriter` 对齐输出。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+2. 提取的信息要包含：请求 URL（完整路径）、HTTP 方法、响应状态码、响应耗时（从 HAR 的 `time` 字段读取，单位 ms）、MIME 类型、body 大小。统计维度包括：域名分布（按 entries 里 URL 的 host 聚合计数）、响应时间分布（分桶：<100ms、100-500ms、500ms-1s、1s-5s、>5s）、HTTP 状态码分布（2xx/3xx/4xx/5xx 各多少）、错误率（4xx+5xx 占比百分比）。
+
+3. 输出 JSON 结构：顶层 `summary` 包含 `total_requests`、`error_rate`、`avg_duration_ms`、`p95_duration_ms`、`p99_duration_ms`；`domain_distribution` 是 map[string]int；`slowest` 是前 N 条详情数组，每条有 url、method、status、duration_ms、size_bytes 字段。
+
+4. 大文件用流式解析，不能整个读进内存。用 `encoding/json` 的 `Decoder` 逐 token 解析 entries 数组，内存占用控制在 50MB 以内。文件超过 100MB 时 stderr 打警告 "large file detected, streaming mode enabled"。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库实现，不依赖第三方包。go build 能编译通过。

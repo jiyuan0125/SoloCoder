@@ -1,5 +1,25 @@
-测试不同 header 组合对响应的影响，curl 每次改 header 要写一大串。写个工具从配置文件读 header 规则（添加/删除/修改），支持条件匹配——比如只对特定 URL 加某些 header。
+测试不同 header 组合对响应的影响——每次手动改 curl 参数实在太折磨了。
 
-并行扫描多个文件或目录。
+配置文件 `rules.yaml`：
+```yaml
+rules:
+  - match:
+      url_pattern: "^/api/.*"
+    actions:
+      - op: add
+        header: "X-Custom-Auth"
+        value: "token123"
+      - op: remove
+        header: "User-Agent"
+      - op: set
+        header: "Accept"
+        value: "application/json"
+```
 
-Go 实现，只用标准库，交叉编译友好。
+运行 `./headerm -config rules.yaml -target http://localhost:3000 -listen :9090`。代理监听本地端口，每个请求按规则匹配 URL（正则），命中的执行 header 变更后转发。`op` 三种操作：add（追加）、set（覆盖）、remove（删除）。规则按顺序执行，后面的可以覆盖前面的。
+
+请求日志打到 stdout：`[MATCH] GET /api/users -> +X-Custom-Auth, -User-Agent, =Accept`。没命中任何规则的请求原样转发，标记 `[PASS]`。用 `-o access.log` 把日志写到文件。
+
+多个配置文件用 `-config dir/` 指定目录，并行加载所有 yaml 文件。配置语法错误打印 "config error in <file>: <line>: <message>" 并 exit 1。
+
+Go 标准库，交叉编译友好。

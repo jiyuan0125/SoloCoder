@@ -1,4 +1,11 @@
-核心服务昨晚重启了但没人收到通知，早上用户反馈才知道。监控指定进程，检测重启事件，记录重启次数、时间和间隔。
+核心服务昨晚重启了但没人收到通知，早上用户反馈才知道。监控指定进程，检测重启事件，记录重启次数、时间和间隔——/proc 里 PID 会变但进程名不变，靠这个检测。
+
+处理流程分三步：1）`restartmon track -name nginx -interval 5s -output events.json` 持续监控进程。2）`restartmon history -file events.json -last 24h` 查询历史。3）`restartmon summary -file events.json` 输出汇总。
+
+track 模式下每次检测到 PID 变化（同进程名但新 PID）记录一条事件：`{"type":"restart","name":"nginx","old_pid":1234,"new_pid":5678,"detected_at":"2024-01-15T03:22:00Z","gap":"0.5s"}`。summary 输出 `{"name":"nginx","restart_count":3,"first_restart":"...","last_restart":"...","avg_interval":"2h","min_interval":"5m"}`。
+
+Ctrl+C 优雅退出时 flush 所有事件。-name 必须指定，不指定报 `"error: -name is required"` exit 1。监控期间进程始终未重启，history 输出空列表。
+
 输入文件可能是空的或者只有 header 行。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

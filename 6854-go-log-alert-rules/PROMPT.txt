@@ -1,4 +1,11 @@
-值班同学要 5 分钟内 ERROR 超 10 次就告警，人工盯着不现实。定义规则（如'5分钟内 ERROR 超过 10 次'），监控日志文件，触发时输出告警。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+凌晨三点线上 ERROR 爆了，值班同学到早上才看到——人工盯日志根本不现实。能不能定义规则自动监控，触发条件满足就立即告警？
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+规则配置用 YAML，每条规则包含 name（字符串）、condition（字段 like level=ERROR）、window（时间窗口，如 5m）、threshold（阈值，如 10）、action（目前只支持 print，输出到 stdout）。示例：`alert add --rule '{"name":"error_spike","condition":"level=ERROR","window":"5m","threshold":10,"action":"print"}'`。`alert watch --config rules.yaml --input /var/log/app.log` 持续监控，用 tail -f 模式跟踪文件末尾，每收到一行解析后检查所有规则。`alert test --config rules.yaml --input test.log` 回放历史日志测试规则是否正常触发。`alert list --config rules.yaml` 列出所有规则及状态。
+
+告警触发时输出格式：[ALERT] {rule_name} triggered at {timestamp}: {condition} exceeded threshold {threshold} in last {window}, current count: {count}。每条规则在窗口内只触发一次，窗口结束后重置计数。
+
+去重的时候要考虑 5 分钟窗口——同一规则在窗口内不重复告警。命令行参数支持 `alert verb resource --filter key=value` 格式。处理完成后自动把统计结果写入 alert-stats.json——告警历史追加写入，包含 triggered_at/rule_name/count/message 字段。如果这次没有匹配到任何记录就跳过——watch 模式下无匹配时不产生输出。
+
+文件轮转处理：监控的文件 inode 变化时（logrotate 场景），自动重新打开文件。规则热加载：watch 模式下收到 SIGHUP 重新读取 rules.yaml。
+
+纯 Go 标准库，编译后单二进制可以直接跑。go build -o log-alert。

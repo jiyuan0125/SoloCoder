@@ -1,3 +1,7 @@
-嵌入式设备上的服务跑着跑着就死锁了，外面又没有监控。加个看门狗定时器，服务正常运行时定期喂狗（写文件或者发心跳），超时没喂狗就执行预设的命令（比如重启服务或者发告警邮件）。用来监控自身健康状态，简单但很关键。
+嵌入式设备上服务跑着跑着死锁，外面没监控挂了也不知道。加个看门狗——服务正常时定期喂狗，超时没喂就执行预设命令。简单但关键，上次设备挂了两天才发现。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`watchdog start --pid-file /tmp/myapp.heartbeat --interval 10s --timeout 60s --on-timeout "systemctl restart myapp"`。被监控进程每 10 秒往文件写时间戳，watchdog 每 15 秒检查，超 60 秒没更新触发 on-timeout。喂狗三种模式：`--mode file` 写时间戳到文件；`--mode http` 发 GET 到 localhost:port/heartbeat；`--mode tcp` 往端口发数据。
+
+on-timeout 用 exec 执行（非 shell），结果写 watchdog.log 格式 `timestamp|event|command|exit_code`。`--max-timeouts 5` 达到后 watchdog 退出。`--cooldown 120s` 两次触发最小间隔。`watchdog status` 显示 last_heartbeat、距超时秒数、已触发次数。`watchdog test` 测试模式只打印不执行。PID 文件不存在给宽限期 `--grace 30s`。收到 SIGTERM 优雅退出不触发超时。
+
+纯 Go 标准库，编译后单二进制直接跑。

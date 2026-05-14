@@ -1,5 +1,9 @@
-需要构造一些特殊的数据包做协议测试——自定义 Ethernet/IP/TCP/UDP 头部字段，模拟异常报文。scapy 用起来不够灵活，Go 直接构造字节更精确。
+为什么要用 Go 来构造数据包？因为 scapy 那套 Python 封装太厚了，想精确控制每个 bit 还得自己来。
 
-需要用到 regexp.Regexp 等标准库功能。
+子命令 `inject` 发送构造好的包，`craft` 只构造不发送保存到文件。参数：`-dst-mac`、`-src-mac`、`-dst-ip`、`-src-ip`、`-proto tcp|udp|icmp` 指定各层头部。TCP/UDP 字段用 `-sport`、`-dport`、`-flags SYN,ACK` 等控制。payload 从 `-payload-hex` 或 `-payload-file` 读取。自定义字段用 `-ip-tos 0x10`、`-ip-ttl 64`、`-tcp-seq 1000` 之类精确设置。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+输出：`craft` 模式把包写入 `-o packet.bin`，同时打印各层头部摘要。`inject` 模式打印发送结果和响应（如果有）。输入校验用正则（regexp.Regexp）验证 MAC 地址格式 `^([0-9a-f]{2}:){5}[0-9a-f]{2}$` 和 IP 格式。
+
+缺少必要参数打印 "missing required flag: <name>" 并 exit 1。非法值打印 "invalid <field>: <value>"。发送失败打印 "send failed: <error>"。注意需要 raw socket 权限，无权限时提示 "permission denied: need root/cap_net_raw"。
+
+纯 Go 标准库，编译后单二进制直接跑。

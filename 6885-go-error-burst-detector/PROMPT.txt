@@ -1,4 +1,11 @@
-错误爆发了但监控图表太平滑没看出来，因为看的是分钟级聚合。识别短时间内错误率突然升高的时段，输出爆发时间、持续时间和峰值。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
+先从日志里提取所有 ERROR 的时间戳，然后按短时间窗口统计密度，密度突然升高的时段就是错误爆发。上次因为监控图表看的是分钟级聚合，秒级爆发完全被平滑掉了，问题拖了半天。
+
+第一步提取：`burst-detector detect --input app.log --window 10s --threshold 3 --output bursts.json`。`--window` 是检测窗口（支持 `5s`、`10s`、`30s`、`1m`），`--threshold` 是窗口内错误数的标准差倍数。算法：用滑动窗口统计每个窗口的错误数，计算全局均值和标准差，超过 `mean + threshold * stddev` 的窗口标记为爆发。
+
+输出 `bursts.json`：`[{"start": "2026-05-14T10:23:10Z", "end": "2026-05-14T10:23:40Z", "duration": "30s", "peak_count": 47, "peak_window": "2026-05-14T10:23:20Z", "baseline_mean": 2.1, "baseline_stddev": 1.5}]`。
+
+CLI 用子命令组织三级：`burst-detector group command subcommand`。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理，已确认的不动。
+
+空日志文件不报错，输出空数组。没有检测到爆发时 stderr 打印 `no burst detected`。退出码 0 成功，1 读取错误，2 参数无效。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

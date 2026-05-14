@@ -1,5 +1,9 @@
-V2 要上了，后端接口时不时会超时或返回 5xx，客户端得加重试。写个带智能重试的 HTTP 客户端，可以配重试条件（哪些状态码重试、超时多久重试）、退避策略（固定间隔/指数/随机），重试日志都记下来。
+后端接口时不时 5xx，客户端得加重试——但不是所有 5xx 都该重试，429 要特殊处理，网络超时和连接拒绝策略还得不同。
 
-输入可能包含乱码和特殊字符。
+用法：`./retrycli -url https://api.example.com/users -method GET -retry-on "500,502,503,504" -max-retries 5 -backoff exponential -initial-delay 1s`。重试条件：`-retry-on` 指定状态码，`-retry-on-timeout` 超时也重试（默认 true）。退避策略：`-backoff fixed|exponential|random`，exponential 公式 `delay * 2^attempt`，上限 `-max-delay 30s`。
 
-Go 标准库，命令行参数用 flag 包解析。
+每次重试打印日志：`[retry 2/5] 502, waiting 4s before next attempt...`。最终成功打印响应体和总耗时（含重试）。全部失败打印 "all retries exhausted: last status <code>" 并 exit 1。
+
+请求体从 `-d @body.json` 读取。超时 `-timeout 10s`。`-headers "Authorization: Bearer xxx"` 添加头。输入含乱码时用 base64 编码：`-d-base64 <encoded>`。
+
+Go 标准库，flag 包解析参数。

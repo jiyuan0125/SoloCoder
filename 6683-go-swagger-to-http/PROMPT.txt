@@ -1,3 +1,16 @@
-老板说接口文档和测试要提效，Swagger spec 里明明有所有接口信息。Go 工具把 Swagger/OpenAPI spec 转换为 .http 文件格式，每个接口一个请求块带参数和示例值，IDE 直接跑。
+有没有想过 Swagger spec 里明明有所有接口信息，还要手动写测试请求？`swagger2http convert --file api.yaml --output requests.http` 直接把 OpenAPI 3.0 spec 转成 IntelliJ HTTP Client 格式的 `.http` 文件。
 
-Go 标准库，命令行参数用 flag 包解析。
+每个 path+method 组合生成一个请求块，格式像这样：
+```
+### Get Users List
+GET {{baseUrl}}/users?page=1&limit=20
+Accept: application/json
+Authorization: Bearer {{token}}
+
+###
+```
+URL 里的 path 参数（如 `/users/{id}`）保留花括号变量形式，query 参数如果 spec 里有 example 就用 example 值，没有就用参数名作为占位。request body 如果 schema 定义了 example，直接填进请求体；没有 example 就根据 schema 类型生成最小合法 JSON（string 填 "string"、integer 填 0、boolean 填 true、array 填一个元素）。
+
+`--base-url http://localhost:8080` 可以覆盖 spec 里的 servers 字段，写到文件头作为 `@baseUrl` 变量定义。`--tag users` 只导出指定 tag 下的接口。`--pretty` 控制请求体是否格式化缩进（默认开启）。
+
+spec 里引用了外部文件的 `$ref`，工具要能解析同目录下的相对引用。循环引用要检测到并跳过，stderr 打 "skipping circular ref: {ref path}"。输出文件已经存在时覆盖，不提示。Go 标准库，命令行参数用 flag 包解析。

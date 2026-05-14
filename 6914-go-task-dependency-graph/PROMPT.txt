@@ -1,3 +1,7 @@
-公司的数据流水线有 50 多个任务节点，依赖关系复杂得像蜘蛛网。写个管理任务依赖关系的命令行工具，用 DAG 定义依赖，拓扑排序后自动执行。没有依赖关系的任务并行跑，省时间。最后输出一个执行时间线，能看出来哪个任务是瓶颈。
+50 多个任务节点依赖关系像蜘蛛网。写个 DAG 任务管理器，定义好依赖自动拓扑排序执行，无依赖的并行跑，最后给执行时间线看哪个是瓶颈。
 
-用 Go 标准库写，go run . 或 go build 都行。
+`dag run --config pipeline.yaml --parallel 8`。YAML 定义 tasks 列表，每项含 id、command、depends_on、timeout。`--parallel` 默认 4。拓扑排序检测环，有环报 "circular dependency: id1→id2→...→id1" 退出码 2。无未完成依赖的任务立即启动，完成后检查依赖它的任务是否可启动。每个任务 stdout/stderr 重定向到 `{task_id}.log`。
+
+执行完生成 timeline.json：`{ "tasks": [{ "id": "...", "status": "success/failed/timeout/skipped", "started_at": "...", "duration_ms": N }] }`。`dag timeline --format gantt` ASCII 甘特图，`--format table` 表格，最慢的标 bottleneck。某任务失败后依赖它的标 skipped，`--stop-on-failure` 控制是否继续。`dag validate` 只校验不执行。`dag graph --output deps.dot` 输出 DOT 格式。
+
+Go 标准库实现，go run . 或 go build 都行。

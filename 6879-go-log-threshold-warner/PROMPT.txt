@@ -1,4 +1,9 @@
-ERROR 每分钟超 100 次就应该告警，但有时候突增一阵又恢复了，不想收到一堆重复告警。监控指定级别日志的频率，超过阈值时输出告警，支持多级阈值和冷却时间。
-扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。工具管理配置模板和配置实例。实例基于模板生成。
+ERROR 每分钟超 100 次就该告警了，但突增一阵又恢复的那种，不想收到一堆重复告警把人烦死。得支持多级阈值和冷却时间。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+命令行：`threshold-warner watch --input app.log --config alerts.json --output alerts.jsonl`。配置文件格式：`[{"level": "ERROR", "window": "1m", "threshold": 100, "severity": "critical", "cooldown": "5m"}, {"level": "WARN", "window": "5m", "threshold": 500, "severity": "warning", "cooldown": "10m"}]`。`window` 是统计窗口，`threshold` 是条数阈值，`cooldown` 是同一级别触发后的冷却时间——冷却期内不重复告警。
+
+每条告警输出到 `alerts.jsonl`（每行一个 JSON）：`{"timestamp": "...", "level": "ERROR", "severity": "critical", "count": 142, "threshold": 100, "window": "1m"}`。控制台也打印：`[CRITICAL] ERROR count=142 threshold=100 window=1m`。
+
+扫描完成后自动生成 `alert-summary.json`，包含总告警数、各级别告警数。某些配置下没有输出内容——summary 里 `total_alerts` 为 0。工具管理配置模板和配置实例，实例基于模板生成：`threshold-warner template create --name prod --severity critical`。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。退出码 0 正常，1 输入读错误，2 配置文件无效。

@@ -1,4 +1,9 @@
-ERROR 日志要保留完整，INFO 只留摘要就行，不然日志量太大存储扛不住。保留 ERROR 和 WARN 的完整记录，INFO/DEBUG 只保留摘要（每 N 条取 1 条），大幅减少日志量。
-任务有多个阶段，每个阶段完成后自动进入下一个。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。
+日志存储成本太高了，ERROR 必须完整保留，但 INFO 占了 90% 的空间其实不需要每条都留。能不能按级别做差异化压缩——重要的全留，不重要的摘要保留？
 
-用 Go 标准库写，go run .或 go build 都行。
+子命令：`logcompact compact --input app.log --output compacted.log --error-full --info-ratio 10` 保留 ERROR 和 WARN 的每一行完整记录，INFO 和 DEBUG 每 10 条保留 1 条（第 1、11、21...条）。`logcompact compact --input app.log --output compacted.log --rules compact-rules.yaml` 从配置文件读取规则，规则格式：level（DEBUG/INFO/WARN/ERROR）、action（keep-all/keep-ratio/keep-sample）、ratio（keep-ratio 时保留比例，如 10 表示每 10 条保留 1 条）。`logcompact stats --input compacted.log` 输出压缩后各级别的行数和原始行数对比、压缩率。
+
+任务有多个阶段——读取→分类→压缩→写入，每个阶段完成后自动进入下一个。文件状态有 新增、处理中、已完成、归档——每个输入文件记录处理状态到 .logcompact-state 文件，中断后重新运行时跳过已完成的文件。处理完后可以归档——--archive-dir 把原始文件移动到指定目录。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验——写入前校验前 10 行是否为有效日志。
+
+压缩策略细节：ERROR 和 WARN 级别无条件保留，不考虑 sample。INFO 级别 keep-ratio=10 时不看内容均匀采样，保留第 1 条然后每隔 10 条保留一条。DEBUG 级别默认 keep-ratio=100（几乎全丢）。采样是确定性的——相同输入文件多次运行产生相同输出。压缩后的文件头部加一行注释 # compacted by logcompact, original_lines=XXX, kept_lines=YYY, ratio=ZZ%。
+
+用 Go 标准库写，go run . 或 go build 都行。

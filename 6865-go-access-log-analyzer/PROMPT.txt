@@ -1,4 +1,9 @@
-PV 2000 万的站，访问日志一天 50GB，要统计 PV/UV、状态码分布、响应时间分布、热门 URL、异常请求，手动根本做不来。
-日志中记录了完整的请求参数。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。管理分组和组内成员。成员操作基于分组进行。
+PV 2000 万的站，一天 50GB 访问日志，产品经理要 PV/UV、状态码分布、响应时间分布、热门 URL、异常请求。用 awk 跑了一小时没跑完。
 
-Go 标准库，命令行参数用 flag 包解析。
+`acclog analyze --input access.log` 一键全维度统计：PV（总请求行数）、UV（唯一 IP 数，用 HyperLogLog 估算，误差 <2%）、状态码分布（1xx/2xx/3xx/4xx/5xx 各多少）、响应时间分布（avg/P50/P95/P99/Max）、热门 URL Top 20（按请求量降序）、慢 URL Top 20（按平均响应时间降序）、异常请求（5xx 状态码、响应时间 >10s、请求体 >1MB）。`acclog timeline --input access.log --interval 5m` 每 5 分钟的 PV/QPS 时间序列，输出 CSV。`acclog ips --input access.log --top 50` 访问量 Top 50 IP 及其请求次数、占比、主要访问的 URL。
+
+日志中记录了完整的请求参数——请求行包含 query string 时，统计 URL 去掉 query 参数归一化（/api/user?id=1 和 /api/user?id=2 归为 /api/user）。命令行参数支持 `acclog analyze --filter status>=500` 格式，只分析 5xx 请求。嵌套参数用斜杠分隔路径——--filter response/time>=1000 过滤响应时间超过 1 秒的。管理分组和组内成员——IP 按网段分组（--group-by-cidr 24），URL 按路径前缀分组（--group-by-prefix 2）。
+
+性能要求：50GB 文件在 4 核机器上 10 分钟内处理完——逐行读取不 ReadAll，统计用固定大小数据结构。HyperLogLog 用 2^14 个桶，内存约 16KB。时间序列用固定间隔数组。
+
+Go 标准库，命令行参数用 flag 包解析。支持 --json 输出。空文件输出提示信息。

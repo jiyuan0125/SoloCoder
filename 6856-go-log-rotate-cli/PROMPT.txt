@@ -1,4 +1,9 @@
-logrotate 配置复杂还容易写错，上次配错了把日志全删了。按大小或时间切割日志文件，保留指定数量的历史文件，支持压缩旧文件。
-处理流程分好几步，上一步的输出是下一步的输入。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
+上次 logrotate 配错了把一周的日志全删了，老板差点让人背锅。能不能自己写一个简单可靠的日志轮转工具，逻辑清晰不出幺蛾子？
+
+子命令：`logrot rotate --file /var/log/app.log --max-size 100M --max-files 10` 按大小轮转，文件超过 100MB 时重命名为 app.log.1，原文件创建新的空文件，保留最多 10 个历史文件。`logrot rotate --file /var/log/app.log --max-age 7d` 按时间轮转，超过 7 天的历史文件自动删除。`logrot compress --file "app.log.*"` gzip 压缩旧日志文件，压缩后删除原文件。`logrot status` 显示所有被管理日志文件的当前大小、历史文件数量、最早的历史文件日期。`logrot cleanup --file /var/log/app.log --keep 5` 强制只保留最近 5 个历史文件，多余的删掉。
+
+处理流程分好几步，上一步的输出是下一步的输入——检测大小→重命名→压缩→清理，每步独立执行。任务经历 pending→running→completed 几个阶段，running 阶段失败可以重试（rename 失败自动回滚）。completed 之后可以重新发起——幂等设计，重复 rotate 不会产生 .1.1 这种文件。扫描时锁住结果集——rotate 过程中对目标文件加 flock，防止并发 rotate。
+
+文件命名规则：app.log → app.log.1（最新的历史），app.log.1 → app.log.2，以此类推。编号连续，删除中间编号时后面的不前移。--compress 自动压缩 .N 后缀的文件为 .N.gz。dry-run 模式（--dry-run）只输出将要执行的操作不实际执行。轮转后可选发送 HUP 信号给写入进程（--signal <pid>）。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

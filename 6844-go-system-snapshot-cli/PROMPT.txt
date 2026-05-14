@@ -1,4 +1,9 @@
-排查问题要收集一整台机器的状态，手动跑十几个命令再拼到一起。一次性收集 CPU、内存、磁盘、网络、进程、日志等信息，输出打包的快照文件。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+凌晨三点机器挂了，等我们上去排查的时候现场已经没了——内存 free 了、进程退了、日志被轮转了。需要一个工具在问题发生时（或者定期）把整台机器的状态全部抓下来，打包成一个快照文件。
 
-Go 实现，只用标准库，交叉编译友好。
+用法：`snapshot collect --output /tmp/snapshot-20240115.tar.gz`，收集以下信息并打包——CPU 信息（/proc/cpuinfo 摘要，只取 model name 和 cpu cores）、内存（/proc/meminfo 的 MemTotal/MemFree/Buffers/Cached）、磁盘（df -h 的输出、mount 信息）、网络（ip addr、ip route、ss -tlnp 等价信息）、进程快照（/proc 下所有进程的 PID/名称/状态/内存占用/CPU 时间，按内存降序排列，取 top 50）、最近的系统日志（journalctl -n 200 或读 /var/log/syslog 后 200 行）。
+
+`snapshot info --file snapshot.tar.gz` 列出快照包含哪些部分和采集时间。`snapshot compare --old snap1.tar.gz --new snap2.tar.gz` 对比两个快照，输出差异——进程列表新增/消失、内存变化超过 10%、磁盘使用率变化。
+
+——项目拆成至少 3 个 Go 源文件：main.go 入口、collector.go 采集逻辑、model.go 数据结构。命令行参数用 flag 包，子命令通过 os.Args[1] 分发。嵌套参数用斜杠分隔，比如 --filter disk/mount-point=/data。数据源更新时自动刷新下游的聚合结果——compare 命令实时解析。已经导出的报表不重新生成。
+
+Go 实现，只用标准库，交叉编译友好。快照文件用 tar.gz 格式，内部目录结构按类别分（cpu/、memory/、disk/、network/、process/、log/）。权限不足时跳过该采集项并在摘要中标注 SKIPPED。

@@ -1,4 +1,9 @@
-2TB 数据盘快满了，du -sh * 跑了十几分钟没出结果。按目录统计占用空间，排序显示最大的目录，能指定深度和最小大小过滤。
-用 Go 标准库的 encoding/xml 包。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+2TB 数据盘快满了，`du -sh *` 跑了十几分钟没出结果。大目录下传统工具太慢，需要一个并发扫描的磁盘占用分析器。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`diskscan /data --depth 3 --min-size 100MB` 扫描 /data 目录，只显示 3 层深度、大于 100MB 的目录。输出按占用从大到小排序，格式 `SIZE  PATH`。`--format human` 显示人类可读大小（KB/MB/GB），`--format bytes` 显示原始字节数。`--top 20` 只显示最大的 20 个目录。
+
+扫描过程并发遍历子目录，`--workers 8` 控制并发 goroutine 数量，默认 4。遇到权限不足的目录打印 "PERMISSION DENIED: /path" 跳过，不算致命错误。符号链接默认不跟随，`--follow-symlinks` 开启跟随。
+
+`--output report.json` 输出 JSON 结构：`[{"path":"/data/logs","size":5368709120,"files":1283,"dirs":45},...]`。`--exclude "*.tmp,node_modules,.git"` 排除匹配的目录名。
+
+使用 encoding/xml 包处理配置。数据导入后自动更新关联的索引文件。纯 Go 标准库，编译后单二进制可以直接跑。

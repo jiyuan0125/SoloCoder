@@ -1,3 +1,9 @@
-接口返回的内容格式不确定——可能是 JSON 也可能是 XML 或 HTML，手动判断再解析太容易出错。写个工具根据 Content-Type 自动识别格式化输出，JSON 就 pretty print、XML 就缩进，二进制给 hex dump。也支持注册自定义处理器。
+接口返回的内容格式不确定——可能是 JSON 也可能是 XML 或 HTML，手动判断再解析太容易出错。先拿到响应，然后根据 Content-Type 头自动选择处理器，最后统一输出格式化结果。
+
+`cthandler --url https://api.example.com/data` 发请求并自动处理。Content-Type 为 `application/json` 时 pretty print，缩进 2 空格，key 按字母排序。`text/xml` 或 `application/xml` 时缩进格式化输出。`text/html` 时提取 title 和 meta 标签信息。二进制类型（image/*、application/octet-stream）输出 hex dump，每行 16 字节，左侧偏移地址右侧 ASCII。`--hex-bytes 256` 限制 hex dump 的字节数。
+
+`text/plain` 直接原样输出。未知 Content-Type 提示"未识别的 Content-Type: xxx，使用 --handler 注册自定义处理器"。`--handler name:command` 注册自定义处理命令，比如 `--handler csv:"python3 -c 'import csv; ...'"`，将响应体 pipe 给外部命令。`--list-handlers` 列出所有已注册的处理器。
+
+`--output file.txt` 保存到文件，默认 stdout。请求失败退出码 1，成功退出码 0。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,4 +1,11 @@
-异地登录告警最近漏了两次，安全团队很不满意。显示当前登录用户、登录时间、来源 IP，支持检测异常登录（如异地登录）。
+异地登录告警最近漏了两次，安全团队很不满意。显示当前登录用户、登录时间、来源 IP，支持检测异常登录（如异地登录），这个能力到底能不能做到？
+
+从 /var/run/utmp 和 wtmp 读取登录记录。`sessmon list` 显示当前在线会话表格 `USER  TTY  FROM  LOGIN_AT`。`sessmon list -json` JSON 模式：`{"sessions":[{"user":"root","tty":"pts/0","from":"192.168.1.100","login_at":"2024-01-15 10:30:00","idle":"5m"}]}`。`sessmon history -user admin -last 7d` 查历史登录。
+
+异常检测：`sessmon check -whitelist ips.txt` 对比白名单 IP，非白名单登录输出 warning。`sessmon check -geo` 启用地理位置判断（基于 IP 段粗略判断）。同一用户 5 分钟内从不同 IP 登录标记为 `[SUSPICIOUS]`。白名单文件每行一个 IP 或 CIDR。
+
+utmp 文件不可读报 `"error: cannot read /var/run/utmp"` exit 1。无登录记录输出空列表。
+
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
 
 Go 标准库，命令行参数用 flag 包解析。

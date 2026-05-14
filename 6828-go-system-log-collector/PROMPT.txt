@@ -1,4 +1,9 @@
-上次排查问题要翻三台机器的日志，scp 来 scp 去。从 journalctl/syslog 提取指定时间范围和级别的日志，支持过滤和导出，一次性收齐。
+上次排查问题要翻三台机器的日志，scp 来 scp 去搞了半小时。从 journalctl/syslog 提取指定时间范围和级别的日志，支持过滤和导出，一次性收齐。
+
+`logcollect collect -source syslog -from "2024-01-15 00:00" -to "2024-01-15 23:59" -level err+ -filter "nginx|mysql" -output logs.json`。-from/-to 支持 RFC3339 和 `"YYYY-MM-DD HH:MM"` 格式。-level err+ 表示 err 及以上。-filter 正则匹配消息内容。-output 不指定则 stdout。
+
+输出 JSON 数组：`[{"timestamp":"2024-01-15T10:23:01Z","level":"err","source":"syslog","host":"web01","message":"connection refused"}]`。无匹配输出空数组 `[]`。时间范围超过 7 天警告 `"warning: time range exceeds 7 days, may be slow"`。源不可用报 `"error: journalctl not available"` exit 1。
+
 任务有多个阶段，每个阶段完成后自动进入下一个。命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
 
 Go 标准库，命令行参数用 flag 包解析。

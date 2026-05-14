@@ -1,4 +1,11 @@
-线上报了个错要在几十个日志文件里搜，一个一个 grep 花了半小时。在多个日志文件中搜索关键字或正则，支持上下文行数、高亮、多文件结果合并。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+线上报了个 Nil Pointer，得在 30 个日志文件里搜调用栈，一个一个 grep 花了半小时还没找全。要是能一次搜完所有文件，还带上下文就好了。
 
-Go 标准库，命令行参数用 flag 包解析。
+用法：`logsearch search --dir /var/log/ --query "nil pointer" --context 3` 在目录下所有 .log 文件中搜索关键字，每个匹配显示前后 3 行。`logsearch search --files "app1.log,app2.log" --regex "panic.*goroutine \d+"` 正则搜索。`logsearch search --dir /var/log/ --query "timeout" --level ERROR --from "2024-01-15T10:00:00"` 组合条件搜索。`logsearch index --dir /var/log/` 建立索引（行号偏移表），加速后续搜索。`logsearch index --status` 查看索引状态。
+
+搜索结果格式：[文件名:行号] 匹配行内容。上下文行用灰色显示。多个匹配之间用 -- 分隔。--merge 参数把多个文件的匹配结果按时间戳排序输出（要求日志包含时间戳）。--count 输出每个文件的匹配数量。--highlight 给匹配部分加颜色。
+
+CLI 用子命令组织：logsearch search、logsearch index，支持三级。数据源更新时自动刷新下游的聚合结果——搜索时如果发现文件 mtime 变了，输出 "file changed since last index, results may be incomplete" 警告。已经导出的报表不重新生成——搜索结果缓存到 /tmp/logsearch-cache/，相同 query+文件 hash 直接返回缓存。
+
+性能：索引模式下按行号二分查找，非索引模式逐行 grep。--max-results 1000 限制输出数量，防止匹配太多撑爆终端。没找到匹配输出 "no match found" 到 stderr，exit 0。目录不存在 exit 1。
+
+Go 标准库，命令行参数用 flag 包解析。go build -o logsearch。

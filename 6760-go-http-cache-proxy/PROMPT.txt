@@ -1,5 +1,9 @@
-开发环境调第三方接口有频率限制，每次请求都打到线上浪费配额。写个本地 HTTP 缓存代理，相同请求直接返回缓存，设个 TTL 过期自动刷新。
+先启动代理 `./cacheproxy -listen :8080 -ttl 300s`，然后把浏览器或 curl 的代理指向它。每个请求到了之后，把 method+url+body-hash 拼成缓存 key，先查缓存——有且没过期直接返回，没有就转发到目标服务，响应存缓存再返回。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+缓存 key 的生成：`SHA256(method + url + sorted_query_params + body_hash)`。响应头里加 `X-Cache: HIT` 或 `X-Cache: MISS` 标记缓存状态。`-ttl` 默认 5 分钟，`-max-size 100MB` 限制缓存总大小，LRU 淘汰。`-ignore-headers User-Agent,Accept` 忽略这些头对缓存 key 的影响。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+支持 `PURGE` 方法清除缓存：`curl -X PURGE http://localhost:8080/api/users` 清单条，`curl -X PURGE http://localhost:8080/*` 清全部。
+
+请求转发失败返回 502 并打印 "upstream error: <message>"。缓存存储方式用内存 map 即可，不需要持久化。启动时打印 "cache proxy listening on <addr>, forwarding to upstream, TTL=<duration>"。Ctrl+C 优雅关闭，打印缓存统计（命中率、总请求数）。
+
+项目拆至少 3 个源文件：main.go、proxy.go、cache.go。纯 Go 标准库。

@@ -1,4 +1,9 @@
-fd 泄露导致服务挂了两次了，才发现的时候进程已经打开了几万个文件描述符。检查文件描述符使用情况，系统级和进程级的使用数量，接近上限时告警，输出使用排名前 N 的进程。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。管理分组和组内成员。成员操作基于分组进行。
+fd 泄露导致服务挂了两次了，发现的时候进程已经打开了几万个文件描述符。每次都是先挂了才开始查，太被动了。
 
-用 Go 标准库写，go run .或 go build 都行。
+`fdcheck` 检查文件描述符使用情况。`fdcheck system` 显示系统级 FD 使用：当前打开数、系统上限（/proc/sys/fs/file-nr）、使用百分比。`fdcheck process --pid 1234` 显示指定进程的 FD 数量，列出类型分布（regular file、socket、pipe、device）。`fdcheck top --N 10` 显示 FD 使用排名前 N 的进程，输出 PID、名称、FD 数、FD 类型统计。
+
+`--threshold 80` 系统级 FD 使用率超过 80% 告警，stderr 输出 "WARNING: system FD usage XX% exceeds threshold"。`--watch --interval 10s` 持续监控。`--log fd.jsonl` JSON Lines 记录。
+
+命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。管理分组和组内成员，成员操作基于分组进行。项目拆成至少 3 个 Go 源文件。
+
+读取 /proc/[pid]/fd 和 /proc/sys/fs/file-nr。用 Go 标准库写，go run . 或 go build 都行。

@@ -1,3 +1,5 @@
-有 30 多个定时任务散落在不同服务器的 crontab 里，管理起来一团乱。搞一个定时器守护进程，注册多个定时任务统一管理。三种模式都要支持：一次性的、重复的、cron 表达式的。任务配置持久化，守护进程重启不丢任务。
+有 30 多个定时任务散落在不同服务器的 crontab 里，管理起来一团乱。上回有个任务在 A 服务器上被误删了两周才发现，数据断了半个月。搞一个定时器守护进程，注册多个定时任务统一管理。三种模式都要支持：一次性的、重复的、cron 表达式的。任务配置持久化，守护进程重启不丢任务。
+
+任务通过 tasks.json 配置，每项有 id（唯一标识）、type（once/repeat/cron）、command（要执行的命令）、schedule（once 类型是 "2024-01-15T10:00:00"，repeat 类型是间隔如 "30m"、"1h"，cron 类型是标准 5 段表达式）。CLI：`timerd -config tasks.json` 启动，启动时输出 "loaded {n} tasks"。任务触发时执行 command，输出 "task fired: {id} ({command})" 和执行耗时。once 类型执行后自动标记为 completed 不再触发。repeat 类型到点就执行，不限次数。任务执行失败输出 "task error: {id}, {error}" 不影响其他任务。`timerd -config tasks.json -list` 列出所有任务和下次触发时间，格式 "{id}\t{type}\t{schedule}\tnext: {time}"。执行记录写入 tasks.log 文件，每行一条 JSON：{"id":"x","fired_at":"...","status":"success|failed","duration_ms":120}。收到 SIGTERM 输出 "stopping, pending tasks: {n}" 后等待当前任务完成再退出。
 
 Go 标准库，命令行参数用 flag 包解析。

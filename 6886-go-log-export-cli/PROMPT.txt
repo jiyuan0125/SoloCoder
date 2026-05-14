@@ -1,4 +1,11 @@
-从日志里提字段导出给运营看，awk 太容易出错，字段一多就搞混。从日志文件提取指定字段，导出为 CSV/JSON/Excel 格式，支持字段选择和格式化。
-需要用到 sync.Pool 等标准库功能。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。
+运营说要从日志里拉几个字段做个报表，awk 太容易出错了，字段一多就搞混。得有个专门干这事儿的工具。
+
+CLI：`log-export export --input app.log --fields "timestamp,level,user_id,request_path,status_code" --format csv --output report.csv`。`--fields` 指定要提取的字段列表，逗号分隔。`--format` 支持 `csv`、`json`、`xlsx`（xlsx 用简单的 XML 格式，不依赖三方库）。字段来源：JSON 日志直接取 key，文本日志用 `--field-patterns` 配置正则捕获组。
+
+比如 `--field-patterns '{"timestamp": "(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2})", "level": "\\[(DEBUG|INFO|WARN|ERROR)\\]"}'`。CSV 输出第一行为列名，后续行为数据。JSON 输出 JSONL 格式。字段提取失败的行在对应列填空字符串，不跳过。
+
+需要用到 sync.Pool 复用行缓冲区。文件状态有四种：新增、处理中、已完成、归档。处理完后可以归档。主流程修改全局状态后，内部触发的事件处理函数也要读取同一份状态——用 `sync.RWMutex` 保护。
+
+处理完成后自动写入 `export-stats.json`，包含 `total_lines`、`exported_lines`、`failed_extractions`（各字段提取失败的次数）。退出码 0 成功，1 读取错误，2 字段名无效或格式不支持。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

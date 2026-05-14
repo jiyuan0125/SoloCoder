@@ -1,3 +1,13 @@
-我们组有十几个跑数据的脚本，现在全靠 crontab 管着，改一次要登服务器，还经常搞错执行顺序。自己写一个任务调度器，定义好任务和时间规则就按着跑。一次性的和重复的都要支持，执行完把结果记到日志里方便追溯。
+我们组十几个数据脚本全靠 crontab 管理，改一次要登服务器，执行顺序还经常搞错。上周有个依赖前置脚本的任务提前跑了，数据对不上查了一整天。
+
+需要自己写的任务调度器得处理这些问题：
+
+1. 任务定义：每个任务有 id、name、command、schedule（cron 表达式或 "once:2024-01-01T10:00:00"）、timeout（默认 3600 秒）、retry_count（默认 0）、last_run、last_status 字段。配置从 YAML 文件读取，格式是 tasks 列表。
+
+2. 执行引擎：一次性任务到时间执行后标记 completed，不再触发。重复任务按 cron 表达式周期执行。执行结果记录到 tasks.log，每行格式 `timestamp|task_id|status|duration_ms|exit_code`。任务超时后 SIGTERM，10 秒不退出 SIGKILL，status 记录为 timeout。
+
+3. CLI 操作：`scheduler start --config tasks.yaml` 启动调度器，`scheduler list` 显示所有任务和最近一次执行状态，`scheduler run --id task-3 --now` 手动触发指定任务。`scheduler log --task task-3 --last 10` 查看最近 10 次执行记录。`scheduler stop` 优雅停止，等当前执行中的任务完成。
+
+4. 错误处理：配置文件格式错误报行号和原因，退出码 1。任务 command 不存在时 status=failed，exit_code=-1。磁盘空间不足无法写日志时 stderr 警告但调度器不停。
 
 用 Go 标准库写，go run . 或 go build 都行。

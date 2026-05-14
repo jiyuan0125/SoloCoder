@@ -1,4 +1,9 @@
-上周出了个新错误码没人注意到，导致线上问题拖了两天。基于历史模式检测异常日志（不常见的错误码、异常流量突增），输出异常事件。
-需要用到 bytes.Buffer 等标准库功能。扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。工具管理配置模板和配置实例。实例基于模板生成。
+先喂一段历史日志让工具学习正常模式，然后拿新日志做比对，偏离历史模式的就是异常。上周出了个新错误码 5011 没人注意到，线上问题拖了两天才响应。
+
+第一步训练基线：`anomaly-detector baseline --input history.log --output baseline.json --window 1h`。按时间窗口统计各级别的频率分布和错误码的出现频率，写入 baseline 文件。第二步检测：`anomaly-detector detect --input new.log --baseline baseline.json --sensitivity 2.0 --output anomalies.json`。`--sensitivity` 是标准差倍数，超过就算异常，默认 2.0。
+
+检测维度有三个：错误码频率突增（某个错误码出现次数超过基线均值的 N 倍标准差）、日志量突增（总条数或某个级别的条数偏离基线）、新出现的错误码（基线里从未见过的）。输出 `anomalies.json` 格式：`[{"type": "error_burst", "error_code": "5011", "window": "2026-05-14T10:00", "baseline_mean": 0.5, "observed": 47, "z_score": 12.3}]`。
+
+需要用到 bytes.Buffer 做数据缓冲。扫描完成后自动生成 `summary.json`。某些配置下可能没有异常——输出空数组，不报错。工具还管理配置模板和配置实例，实例基于模板生成：`anomaly-detector template create --name prod --window 1h --sensitivity 2.0`。
 
 用 Go 标准库写，go run .或 go build 都行。

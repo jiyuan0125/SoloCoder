@@ -1,4 +1,11 @@
-DBA 说慢查询日志几十 GB 没法人工看。解析 MySQL/PostgreSQL 慢查询日志，提取 SQL、执行时间、扫描行数，按耗时排序输出。
-任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。管理分组和组内成员。成员操作基于分组进行。
+DBA 丢过来一个 30GB 的慢查询日志让分析，说重点看哪些 SQL 耗时最长、扫描行数最多。这玩意人工看不完的，得工具化。
 
-Go 标准库，命令行参数用 flag 包解析。
+子命令：`slowquery analyze --input slow.log --format mysql` 解析 MySQL 慢查询日志，提取每条查询的 SQL 文本、Query_time、Lock_time、Rows_sent、Rows_examined。`slowquery analyze --input pg.log --format postgresql` 解析 PostgreSQL 的 pg_stat_statements 格式。`slowquery top --input slow.log --metric query_time --top 20` 按耗时排序输出最慢的 20 条查询，表格格式：Rank/Query_Time/Rows_Examined/SQL（截断到 200 字符）。`slowquery digest --input slow.log` 把相似 SQL 归为一个 digest（去掉 WHERE 中的具体值），输出每个 digest 的总耗时、平均耗时、执行次数、样例 SQL。
+
+任务经历 pending→running→completed 几个阶段——每个输入文件是一个任务，running 阶段失败可以重试。completed 之后可以重新发起（--force 覆盖输出）。管理分组和组内成员——digest 按模式分组，组内是具体 SQL 实例。成员操作基于分组进行——digest 维度的统计聚合了组内所有实例。
+
+MySQL 慢查询日志格式：以 "# Time:" 开头，后面跟 "# User@Host:" 和 "# Query_time: X Lock_time: Y Rows_sent: Z Rows_examined: W"，SQL 在最后一行或多行。多行 SQL 合并为一条记录。无法解析的段落跳过，最终报告 skipping count。PostgreSQL 格式以 "duration:" 开头，后面跟 "statement:"。
+
+输出支持 --json 和 --csv。--min-time 1s 只输出耗时超过 1 秒的查询。--since "2024-01-15" 只分析指定日期之后的记录。空日志文件输出 "no slow queries found"。
+
+Go 标准库，命令行参数用 flag 包解析。go build -o slowquery。

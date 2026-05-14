@@ -1,4 +1,6 @@
-三个实例跑同一个定时任务，只有一个能执行，不然数据就重复处理了。写个领导者选举工具，多个实例竞争，只有一个成为 leader 来执行任务。基于文件锁实现就行，不需要引入 etcd/zk。leader 挂了剩下的自动重新选举，不能有空窗期。
+三个实例跑同一个定时任务，只有一个能执行，不然数据就重复处理了。场景很明确——用文件锁做简单的 leader 选举，不需要引入 etcd/zk 这种重依赖。写个领导者选举工具，多个实例竞争，只有一个成为 leader 来执行任务。基于文件锁实现就行。leader 挂了剩下的自动重新选举，不能有空窗期。
+
+CLI：`leader-elect -lock /tmp/election.lock -identity node-1 -ttl 30 -on-elected "echo I am leader" -on-retired "echo lost leadership"`。-identity 是节点唯一标识，-ttl 是租约秒数，-on-elected 成为主后执行的命令，-on-retired 失去主身份时执行的命令。锁文件用 flock 互斥，内容 JSON {"holder":"{identity}","expires_at":1705312300}。leader 每 ttl/3 秒续期，输出 "leader: {identity}, ttl renewed"。非 leader 每 5 秒检查锁 mtime，超 ttl 则抢占。状态变化输出 stderr："[{time}] role: follower→leader"。`leader-elect -lock /tmp/e.lock -status` 输出 "leader: {identity}, expires in {n}s"，无 leader 输出 "no active leader"。SIGTERM 释放锁，执行 on-retired 后退出。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 

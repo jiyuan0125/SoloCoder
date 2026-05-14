@@ -1,3 +1,9 @@
-机房的交换机路由信息要整理成拓扑图，Python 脚本跑一次要十几分钟。换成 Go，用 traceroute 探测链路，配合 SNMP 查交换机信息，构建网络拓扑输出 dot 格式，直接用 Graphviz 画图。
+机房的交换机路由信息要整理成拓扑图，Python 脚本跑一次要十几分钟。而且输出的 Graphviz dot 文件格式乱七八糟，改起来头疼。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+这次用 Go 来做，思路分两步：先用 traceroute 探测从本机到一组目标 IP 的完整链路，记录每一跳的 IP 和 RTT。命令行：`topo-disc --targets targets.txt --count 10 --timeout 2s --output topology.dot`。targets.txt 每行一个目标 IP 或网段。traceroute 每一跳发送 `--count` 次 ICMP 探测取平均 RTT，超时的跳记为 `*`。
+
+第二步把收集到的链路数据构建成图结构，节点是路由器/交换机（IP 地址），边是链路（标注 RTT 和丢包率）。输出标准 Graphviz dot 格式：`digraph network { "10.0.0.1" -> "10.0.1.1" [label="rtt=2.3ms, loss=0%"]; ... }`。相同路径上的重复节点自动合并（比如多条 traceroute 都经过同一个中间路由器，在图里只出现一次）。节点样式按层级区分：source 节点用矩形、中间跳用椭圆、target 节点用菱形。
+
+还支持 `--snmp-community public --snmp` 开关，开启后会尝试用 SNMP 查交换机的 sysName、ifDescr 等信息，把设备名称标注在节点上。SNMP 查不到就退化为用 IP 显示。
+
+输出 dot 文件后 `dot -Tpng topology.dot -o topology.png` 直接画图。traceroute 权限不足退化为 UDP 模式，stderr 打 warning。targets.txt 为空退出码 1。纯 Go 标准库，编译后单二进制可以直接跑。

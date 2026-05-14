@@ -1,4 +1,6 @@
-容器里的主进程和 sidecar 生命周期老是对不上——主进程退了 sidecar 还在跑，或者 sidecar 挂了主进程还在等它的输出。写个管理 sidecar 进程的工具，跟着主进程一起启动、一起停止。加上健康检查，sidecar 挂了自动重启。
+容器里的主进程和 sidecar 生命周期老是对不上，这个痛点困扰了好几个版本——主进程退了 sidecar 还在跑，或者 sidecar 挂了主进程还在傻等它的输出。排查下来发现是没有任何统一的进程编排机制。写个管理 sidecar 进程的工具，跟着主进程一起启动、一起停止。加上健康检查，sidecar 挂了自动重启。
+
+配置 sidecar.json 定义进程组：main（主进程命令）、sidecars（数组，每项有 name、command、health_check_url、restart_policy（always/on_failure/never）、restart_delay（重启间隔秒，默认 5））。CLI：`sidecar-mgr -config sidecar.json` 启动，先拉起所有 sidecar，等健康检查通过（HTTP GET 返回 200，超时 30 秒），然后启动主进程。全部启动完输出 "all processes ready: main={pid}, sidecars=[{name}:{pid}...]"。sidecar 崩溃时根据 restart_policy 决定是否重启，重启前输出 "restarting sidecar: {name}, attempt {n}"。主进程退出后向所有 sidecar 发 SIGTERM，等 10 秒未退出则 SIGKILL，输出 "main exited, cleaning sidecars"。健康检查持续每 10 秒探测一次，连续 3 次失败视为不健康。收到 SIGTERM 按主进程→sidecar 顺序停止。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 

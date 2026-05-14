@@ -1,5 +1,9 @@
-有一批资源文件要下，几十个 URL 不想一个个跑。写个下载队列管理器，把 URL 扔进队列按配好的并发数自动下，支持优先级排序，能暂停和恢复，队列状态持久化到文件。
+几十个资源文件要下，手动一个个跑？上个季度光是整理下载状态就花了一整天。
 
-需要用到 filepath.Walk 等标准库功能。
+队列管理器：`./dlqueue -input urls.txt -concurrency 3 -output ./downloads`。URL 从文件加载，也支持交互式添加：运行后输入 `add <url> -prio 1` 加入队列，`prio` 数值越小优先级越高。`pause` 暂停所有下载，`resume` 恢复，`status` 查看当前队列状态，`cancel <id>` 取消指定任务。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+状态持久化到 `queue_state.json`：每个任务的 ID、URL、进度字节数/总字节数、状态（pending/downloading/paused/completed/failed）。程序重启后自动加载未完成任务继续。
+
+并发下载用 goroutine 池，`-concurrency` 控制池大小。下载进度实时显示：`[#3] downloading file.zip 45.2% (2.3MB/5.1MB)`。完成后 `✓ [#3] file.zip 5.1MB 12.3s`。
+
+文件路径用 filepath.Walk 扫描已有文件避免重复下载，已完成文件跳过并标记 `[SKIP]`。磁盘空间不足打印 "disk full: cannot write <filename>" 并暂停队列。`-proxy socks5://proxy:1080` 支持代理下载。`go build` 编译通过。

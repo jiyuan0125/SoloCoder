@@ -1,5 +1,9 @@
-在调试一个自定义的二进制协议，需要一个能发任意 payload、检查响应的工具。支持 TCP 和 UDP，有客户端和服务端两种模式，这样本地起个 server 就能自己跟自己测。
+调试二进制协议需要能发任意 payload 再检查响应——这是个很具体的需求。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+两个模式：`-mode server` 在指定端口（`-port`，默认 9000）监听 TCP/UDP（`-proto tcp|udp`），收到数据后原样回显或按 `-response-hex 48656c6c6f` 回固定内容；`-mode client` 连接到目标地址（`-target 127.0.0.1:9000`），发送指定 payload（`-data-hex` 或 `-data-file payload.bin`），打印响应的十六进制和 ASCII 对照。
 
-Go 标准库，命令行参数用 flag 包解析。
+客户端超时用 `-timeout 5s`，连接失败或超时打印 "connection failed: <error>" 并 exit 1。服务端收到每个连接打印 "connection from <addr>"，客户端断开打印 "disconnected"。
+
+客户端还支持 `-repeat 5` 重复发送同一 payload，每次间隔 `-interval 1s`。服务端支持 `-max-conn 10` 限制最大连接数，超过时打印 "max connections reached, rejecting <addr>"。响应数据用 hex dump 格式显示，左列十六进制右列 ASCII，每 16 字节一行。
+
+项目拆成至少 3 个 Go 源文件：main.go（入口和 flag 解析）、socket.go（连接/监听核心逻辑）、message.go（payload 编解码数据模型）。Go 标准库，flag 包解析参数，`go build` 出单二进制。

@@ -1,4 +1,9 @@
-swap 占了 8G 机器卡得动不了，不知道哪个进程搞的。分析 swap 使用情况，总体使用量、按进程的 swap 占用都要有，建议哪些进程消耗过多 swap。
-需要用到 bytes.Buffer 等标准库功能。源文件修改后，之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+swap 占了 8G 机器卡得动不了。谁把内存吃了导致 swap 涨上去的？单个进程的 swap 占用看不到，top 里也不显示。
+
+`swapcheck summary` 显示总体 swap 使用量（总量、已用、可用、使用率）。`swapcheck by-process` 列出每个进程的 swap 占用，从 /proc/[pid]/status 读 VmSwap 字段，按 swap 使用量从大到小排序。输出 PID、名称、Swap 占用（KB）、建议（超过 100MB 标记 "建议检查该进程内存使用"）。
+
+`swapcheck by-process --top 10` 只看最多的 10 个。`swapcheck by-process --threshold 50MB` 只显示 swap 超过 50MB 的进程。`--json` 输出 JSON 数组。`--log swap.csv` 写 CSV 文件，列：timestamp,pid,name,swap_kb。
+
+`swapcheck monitor --interval 5s --threshold 70` 持续监控 swap 使用率，超过 70% 告警。需要用到 bytes.Buffer 等标准库功能。源文件修改后之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。系统管理项目和任务，可以添加、修改、删除任务。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

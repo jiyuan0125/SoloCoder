@@ -1,3 +1,9 @@
-对接各种服务要用不同的认证方式——Basic Auth、Bearer Token、AWS Signature V4、HMAC，每次查文档拼 header 太容易出错。写个工具生成好认证 header，直接复制到 curl 里用。
+对接了四五个服务，每个认证方式都不一样——Basic Auth、Bearer、HMAC、AWS V4，天天查文档拼 header，拼错一次就要调试半小时。
 
-Go 标准库，命令行参数用 flag 包解析。
+子命令对应不同认证方式：`./authgen basic -user admin -pass secret`，输出 `Authorization: Basic YWRtaW46c2VjcmV0`。`./authgen bearer -token eyJhbGc...`。`./authgen hmac -key mykey -data "POST\n/api/users\ntimestamp=123456"` 输出 `Authorization: HMAC-SHA256 signature=base64(hmac-sha256(key, data))`，同时加 `X-HMAC-Timestamp: <unix>` 和 `X-HMAC-Digest: <hex>` 头。
+
+`./authgen aws-v4 -access-key AKIA... -secret-key xxx -region us-east-1 -service s3 -method GET -url https://s3.amazonaws.com/bucket/key` 生成 AWS Signature V4 签名头。
+
+所有子命令支持 `-curl` flag 输出完整 curl 命令：`curl -H "Authorization: Basic ..." https://api.example.com`。`-copy` 输出到剪贴板。
+
+缺少必要参数打印 "missing required: -key for HMAC" 并 exit 1。Go 标准库，flag 包。

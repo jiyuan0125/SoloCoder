@@ -1,4 +1,11 @@
-上个月 nginx 服务挂了没人知道，用户报了才发现。监控 systemd 服务状态，检查指定服务是否运行、自动重启次数、内存使用，支持批量监控。
-处理流程分好几步，上一步的输出是下一步的输入。子命令结构：`tool namespace resource action`，比如 `tool db table export`。管理分组和组内成员。成员操作基于分组进行。
+上个月 nginx 服务挂了没人知道，用户报了才发现。得有个东西盯着关键服务，挂了就告警。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`svcmon check nginx redis postgresql` 批量检查指定服务状态。每个服务输出：名称、Active 状态（active/inactive/failed）、Sub 状态（running/exited）、Main PID、内存使用（RSS）、自动重启次数（从 /proc 或 systemctl show 读 NRestarts）。`svcmon check --all` 检查所有 enabled 的服务。
+
+`svcmon watch --services nginx,redis --interval 10s` 持续监控，状态变化时输出变更："nginx: active → inactive (failed)"。`svcmon watch --alert-script /path/to/alert.sh` 状态变为 failed 时执行告警脚本。
+
+`svcmon history nginx --last 24h` 显示服务最近 24 小时的状态变化记录。`--output report.json` JSON 格式保存。`svcmon top --count 10` 显示内存占用最高的 10 个服务。
+
+处理流程分好几步，上一步的输出是下一步的输入。子命令结构 `tool namespace resource action`。管理分组和组内成员，成员操作基于分组进行。
+
+使用 systemctl 和 /proc 文件系统。Go 标准库实现，不依赖第三方包。go build 能编译通过。

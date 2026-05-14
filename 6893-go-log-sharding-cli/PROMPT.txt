@@ -1,4 +1,11 @@
-日志文件太大要按时间或服务名拆分，一个文件几十 GB 什么工具都打不开。按时间或哈希键将日志分到不同文件，支持按服务名、级别等字段分片。
-日志文件可能存在各种编码。子命令结构：`tool namespace resource action`，比如 `tool db table export`。管理分组和组内成员。成员操作基于分组进行。
+日志文件几十 GB，什么工具都打不开，vim 直接卡死。这不是个别情况——每天产生的日志量一直在涨，不拆分根本没法分析。
 
-Go 实现，只用标准库，交叉编译友好。
+1. 核心子命令：`shard split --input huge.log --strategy time --interval 1h --outdir ./shards/`，按时间分片。`--strategy hash --key-field service` 按服务名哈希分，`--strategy level --mapping "ERROR=FATAL,WARN=WARN"` 按日志级别分。输出文件命名规则：`shard_{策略}_{键值}_{序号}.log`。
+
+2. 分片逻辑：时间策略先扫描文件识别时间戳格式（支持 RFC3339、`2006-01-02 15:04:05`、ISO8601 三种），识别失败时 stderr 输出 "unable to detect timestamp format" 并退出码 2。哈希策略对 key-field 的值做 FNV-32 取模，分片数由 `--shard-count` 控制，默认 10。
+
+3. 编码问题要处理：自动检测 UTF-8 和 GBK，`--encoding` 参数可以强制指定。遇到无法解码的行，记录行号到 stderr 但不停下来，该行归入 `shard_decode_error.log`。
+
+4. 空文件或者只有表头的文件直接输出 "no data to shard" 到 stderr，退出码 0。重复行不去重，原样保留。大文件用流式读取，内存占用不超过 64MB。
+
+子命令结构遵循 `tool verb resource` 格式。Go 标准库实现，交叉编译友好。

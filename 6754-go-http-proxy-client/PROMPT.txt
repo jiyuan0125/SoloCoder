@@ -1,5 +1,9 @@
-公司网络必须走代理，调试 API 的时候 curl 设代理参数写一大串。写个代理客户端工具，支持 HTTP/HTTPS/SOCKS5 代理，自动从环境变量读代理配置，把请求和响应的详细信息都打印出来。
+公司网络所有出站流量必须走代理，每次调试 API 都要 `curl -x http://proxy:8080` 写一长串，要是能自动读代理配置就好了。
 
-用户可以自定义输出文件名。
+子命令 `request`：`./proxycli request -url https://api.example.com/users -method GET`。代理配置优先级：`-proxy` 参数 > `HTTP_PROXY`/`HTTPS_PROXY` 环境变量 > `NO_PROXY` 排除列表。支持三种代理：`http://`、`https://`、`socks5://`。请求头用 `-H "Authorization: Bearer xxx"` 添加，多个 `-H` 叠加。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+输出详细信息到 stdout：请求行、所有请求头、响应状态码、响应头、响应体。用 `-v` 开启 verbose 模式打印代理握手过程（如 "connecting to proxy proxy:8080"、"tunnel established"）。`-o output.json` 指定输出文件名，把完整请求+响应写进去。
+
+请求体从 `-d '{"key":"val"}'` 或 `-d @file.json` 读取。超时 `-timeout 10s`。代理连接失败打印 "proxy connection failed: <error>"，目标不可达打印 "target unreachable: <error>"。响应状态码非 2xx 也正常输出，exit code 等于 HTTP 状态码首位（4xx→4，5xx→5），成功 exit 0。
+
+Go 标准库，`go build` 编译通过。

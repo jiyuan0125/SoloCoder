@@ -1,3 +1,5 @@
-SaaS 流量管理工具每月要 500 刀，我们总共也就 3 个服务。Go 自建一个流量切换管理，按比例把流量分到不同版本。灰度发布的流程要支持：先切 1% 观察，没问题再 10%、50%，最后全量。配置驱动，改配置不用重启。
+SaaS 流量管理工具每月 500 刀，我们总共也就 3 个服务——这笔钱花得冤不冤？Go 自建一个流量切换管理，按比例把流量分到不同版本。灰度发布的流程要支持：先切 1% 观察，没问题再 10%、50%，最后全量。配置驱动，改配置不用重启。
+
+配置文件 traffic.json：定义 routes 数组，每项有 path（路由路径，如 "/api"）、targets（数组，每项有 upstream 如 "localhost:8081"、weight 百分比如 1）、strategy（round_robin/weighted_random）。CLI：`tshift -config traffic.json` 启动反向代理，监听 8080 端口，根据 weight 分配流量到不同 upstream。`tshift -config traffic.json -route /api -set "v1=90,v2=10"` 运行时调整权重，不需要重启，输出 "route /api updated: v1=90% v2=10%"。请求转发后添加响应头 "X-Upstream: {address}" 标识命中的后端。upstream 不可用（连接失败或超时 5 秒）时自动从分配池中移除，输出 "upstream down: {addr}"，恢复后自动加回。权重总和不为 100 时按比例归一化处理。`tshift -config traffic.json -stats` 输出每个路由的流量统计："{path}\t{upstream}\trequests={n}\terrors={n}"。配置文件支持热加载——SIGHUP 信号触发重新读取。
 
 用 Go 标准库写，go run . 或 go build 都行。

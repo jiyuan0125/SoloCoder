@@ -1,3 +1,5 @@
-Grafana 监控面板缺进程级别的指标，Prometheus 采集不到单个进程的 CPU 和内存使用。写个导出进程指标的工具，指定要监控的进程名或 PID，定期采集 CPU 使用率、内存占用、打开的文件描述符数量，输出 Prometheus 能抓的 metrics 格式。
+Grafana 监控面板缺进程级别的指标，Prometheus 采集不到单个进程的 CPU 和内存使用。如果运维要自己写 exporter 还得学 client_golang 库，太麻烦了——能不能直接输出 textfile 格式让 node_exporter 抓？
+
+写个导出进程指标的工具，指定要监控的进程名或 PID，定期采集 CPU 使用率、内存占用、打开的文件描述符数量，输出 Prometheus 能抓的 metrics 格式。CLI：`proc-metrics -name nginx -interval 10` 按进程名匹配，或 `proc-metrics -pid 1234 -interval 5` 指定 PID。-name 匹配到多个同名进程则全部输出。输出格式为标准 Prometheus textfile：每行 `process_{metric}{pid="{pid}",name="{name}"} {value}`，metric 包含 cpu_percent（0-100）、memory_bytes（RSS，字节数）、fd_count（文件描述符数）、uptime_seconds（进程运行秒数）。指标打印到 stdout 后 flush，可配合 cron 重定向到 node_exporter textfile 目录。进程不存在时输出 "# process {name/pid} not found" 到 stderr，退出码 1。采集周期内读取 /proc/{pid}/stat 和 /proc/{pid}/statm 计算 CPU 和内存，读 /proc/{pid}/fd 目录统计 fd 数。`-once` 参数只采集一次就退出，适合 cron 场景。
 
 用 Go 标准库写，go run . 或 go build 都行。

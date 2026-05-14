@@ -1,4 +1,11 @@
-采样后错误率统计和全量差多少？老板问数据准不准，得有对比。对比全量日志和采样日志的统计差异，评估采样对监控准确性的影响。
-任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
+老板问采样后的错误率统计和全量差多少？数据准不准？得有个工具能对比全量和采样结果的差异，给出可信度评估。
+
+CLI：`sampling-analyzer compare --full full.log --sampled sampled.log --metrics error_rate,latency_p50,latency_p99 --output comparison.json`。对比维度由 `--metrics` 指定，支持 `error_rate`（错误率）、`log_count`（日志量）、`level_distribution`（级别分布）、`latency_p50`/`latency_p99`（延迟百分位，从日志中的耗时字段提取）。
+
+输出 `comparison.json`：`{"metrics": [{"name": "error_rate", "full": 0.023, "sampled": 0.025, "diff": 0.002, "diff_pct": 8.7, "confidence": "high"}, ...], "overall_score": 0.91, "sample_ratio": 0.1}`。`overall_score` 是 0-1 的综合可信度分数，0.9 以上算高可信度。`confidence` 分三档：`high`（差异 < 5%）、`medium`（5-15%）、`low`（> 15%）。
+
+任务有五种状态：等待、执行中、成功、失败、取消。失败的可以重试。数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成（除非加 `--force`）。
+
+输入文件为空时退出码 1，提示 `empty input: <path>`。采样文件比全量文件大时报错退出码 2，提示 `sampled file larger than full file`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

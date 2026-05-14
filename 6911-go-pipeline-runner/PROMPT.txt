@@ -1,3 +1,9 @@
-我们的 CI 流程里有一串处理步骤，上一步的输出是下一步的输入，中间任何一步失败了整个流程得停下来报告是哪步挂的。写一个处理管道工具，每步是一个命令，支持条件执行、超时控制和错误处理，最后输出每步的执行结果。
+CI 流程里一串处理步骤，上一步输出是下一步输入。中间挂了得报告哪步出问题——shell 脚本串起来难维护也没好错误处理。写个处理管道工具。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`pipeline run --config build.yaml`。YAML 定义 steps 列表，每个 step 含 name、command、timeout（默认 300s）、on_failure（stop/continue）、depends_on。条件执行 `--condition "prev.exit_code == 0"`。超时 SIGTERM 等 10 秒 SIGKILL 标 timeout。
+
+执行完自动生成 report.json：`{ "steps": [{ "name": "...", "status": "success/failed/timeout/skipped", "duration_ms": N, "exit_code": N }] }`。stdout 也打印摘要表格。on_failure=stop 时失败后后续标 skipped，=continue 时跳过失败继续。command 不存在报 "command not found" status=failed。
+
+`pipeline validate --config build.yaml` 校验：循环依赖报 "circular dependency at step: {name}"，未知 depends_on 报 "unknown dependency"。`pipeline list` 显示步骤和依赖关系。
+
+纯 Go 标准库，编译后单二进制直接跑。

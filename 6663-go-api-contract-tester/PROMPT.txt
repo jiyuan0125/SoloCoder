@@ -1,5 +1,9 @@
-接口改了返回格式但没通知客户端，线上出错了才发现。新项目要求契约测试：读 OpenAPI spec，对运行中的服务逐个接口验证响应格式，输出合规报告。
+接口改了返回格式但没通知客户端，线上出错了才发现——这种事故上个月出了两次，老板发火了。新项目要求做契约测试：读 OpenAPI 3.0 的 YAML spec 文件，对运行中的服务逐个接口发真实请求，验证响应的 HTTP 状态码、header 字段和 body 的 JSON schema 是否符合 spec 定义，输出一份合规报告。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+命令行用法：`contract-tester -spec api.yaml -base http://localhost:8080 -timeout 10s -o report.json`。其中 `-spec` 是 OpenAPI spec 文件路径，`-base` 是被测服务地址，`-timeout` 是单请求超时，`-o` 是输出报告路径。不带 `-o` 时直接 stdout 输出。
 
-用 Go 标准库写，go run . 或 go build 都行。
+报告 JSON 结构要有顶层 `summary`（total/pass/fail/skip 计数）和 `results` 数组，每个元素包含 `path`、`method`、`status`（pass/fail/skip）、`errors`（具体不符合的字段路径和期望值 vs 实际值的 diff）。spec 里引用了不存在的 `$ref` 要标 skip 并在 errors 里说明引用链断裂位置。
+
+遇到 spec 解析失败（比如 YAML 格式错、缺少 paths 字段）直接退出码 1，stderr 打 "invalid spec: ..." 前缀的错误信息。服务连不上不算 fail，算 skip，但汇总里要单独统计 `unreachable` 数量。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。用 Go 标准库写，go run . 或 go build 都行。

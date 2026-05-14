@@ -1,5 +1,5 @@
 V2 的网关服务启动时会 fork 出一堆子进程处理不同协议，停服务的时候只 kill 了父进程，子进程变成孤儿还在跑。写个管理进程树的工具，启动主进程后跟踪所有子进程。停止的时候递归发信号，确保整棵进程树都干净退出。中间还得能看到整棵树的状态。
 
-配置文件中可以指定要执行的命令。
+配置文件中可以指定要执行的命令。配置文件用 JSON 格式，字段包含 command（要启动的主命令）、stop_signal（停止信号，默认 SIGTERM）、stop_timeout（等待超时秒数，默认 30）。运行方式：`ptree -config process.json`，启动后打印主进程 PID。`ptree -config process.json -status` 以树形缩进格式打印整棵进程树，每行显示 PID、命令名、状态（running/sleeping/zombie）。`ptree -config process.json -stop` 先向叶子进程发信号，逐层向上，最后停主进程，任一子进程超时未退出则发 SIGKILL 强杀，全部清理完打印 "all processes stopped" 后退出码 0。如果有进程残留退出码 1 并列出残留 PID。子进程中途挂掉也要在树状态中标记为 exited。
 
 用 Go 标准库写，go run . 或 go build 都行。

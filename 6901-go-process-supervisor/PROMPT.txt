@@ -1,5 +1,7 @@
-线上服务跑了两年都是 nohup 起的，崩了没人知道。得写个进程守护工具，Go 实现最好，编译出来一个二进制文件扔到服务器上就能用。
+线上服务 nohup 起了两年，挂了没人知道——直到昨天凌晨三点报警才发现。Go 编译一个二进制扔服务器上就能用的进程守护工具，该怎么做？
 
-核心功能：启动子进程并持续监控，挂了自动拉起来。最大重启次数和退避间隔要能配，不然无限重启会把日志盘打满。健康检查也加上，端口探测或者 HTTP 探活都行。配置从 YAML 文件读取，改完重启生效。
+子命令：`supervisor start --config proc.yaml` 启动监控，`supervisor status` 查看状态，`supervisor stop --name worker-1` 停指定进程，`supervisor restart --all` 批量重启。配置用 YAML，每个进程含 name、command、max_restarts（默认 3）、restart_backoff（默认 5s 指数退避到最大 60s）、health_check。健康检查支持 `type: tcp` + port 和 `type: http` + url + expected_status，间隔 interval（默认 10s），连续失败 threshold（默认 3）次触发重启。
+
+重启控制：达 max_restarts 后标记 stopped，stderr 输出 "process {name} exceeded max restarts"。`supervisor reload` 热加载配置。所有事件写入 event.log，格式 `timestamp|event_type|process_name|detail`。子进程输出重定向到 `{name}.stdout.log` 和 `{name}.stderr.log`。收到 SIGTERM 先向子进程发 SIGTERM 等 10 秒再 SIGKILL。
 
 用 Go 标准库写，go run . 或 go build 都行。

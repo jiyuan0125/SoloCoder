@@ -1,5 +1,7 @@
 安全测试需要在隔离环境里跑不受信任的命令。Linux namespace 隔离正好能用——PID 隔离让进程看不到宿主的其他进程，网络隔离让它访问不了内网，挂载隔离限制文件系统访问。写个在 Linux namespace 中运行命令的工具，支持 PID、网络、挂载三种隔离，可以任意组合。
 
+CLI：`nsrun -pid -net -mount -- /bin/bash`，三个 flag 独立控制隔离维度。-pid 创建新 PID namespace，-net 创建新 network namespace（禁用网络），-mount 创建新 mount namespace 并挂载最小文件系统。`nsrun -net -- curl http://example.com` 应该失败输出 "network unreachable"。`nsrun -pid -- ps aux` 只能看到当前进程。`nsrun -config nsrun.json` 从配置文件读取，格式 {"namespaces":["pid","net"],"command":"/bin/sh","mount_dirs":["/usr","/lib"]}。命令退出码透传。非 root 运行输出 "requires root privileges" 退出码 1，命令为空退出码 2。
+
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 
 Go 标准库，命令行参数用 flag 包解析。

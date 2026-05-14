@@ -1,3 +1,7 @@
-爬虫抓回来的页面有些是 GBK 编码有些是 UTF-8，混在一起处理就乱码。写个工具自动检测 HTTP 响应的编码（从 Content-Type、meta 标签、BOM 头判断），统一转成 UTF-8。管道友好。
+上周爬虫组抓了一批政府网站的数据，回来一看全是 GBK 乱码，有的页面甚至混着 GB2312 和 Big5。手动 iconv 一个个转太蠢了，而且有的页面 Content-Type 写的 UTF-8 实际是 GBK，光看 header 根本不够。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+做个编码自动检测和转换的命令行工具。用法是 `converter --input raw.html --output utf8.html`，也能管道使用 `curl -s http://xxx | converter --output result.html`。检测优先级：先看 BOM 头（UTF-8 BOM、UTF-16 LE/BE BOM），再看 HTTP Content-Type 里的 charset，最后扫描 HTML meta 标签里的 `<meta charset>` 和 `<meta http-equiv="Content-Type">`。三层都检测不到就走统计学猜测（常见中文字符频率匹配）。
+
+转换结果统一输出 UTF-8，不加 BOM。输出到 stdout 方便管道串联，`--output` 指定文件路径则写到文件。`--show-encoding` 只输出检测到的编码名不转换，方便脚本调用。遇到无法识别的编码打印错误信息到 stderr 并退出码 1，成功退出码 0。空文件或读取失败也退出码 1。
+
+纯 Go 标准库实现，不依赖第三方包。go build 能编译通过。

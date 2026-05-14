@@ -1,4 +1,11 @@
-strace 太重了，跑上去进程就变慢。要一个轻量的事件跟踪：监控进程创建/退出、网络连接建立/关闭、文件系统事件，输出事件流就行。
+线上排查问题是这样的场景：strace 太重了，跑上去进程就变慢，但又要看进程在干什么。要一个轻量的事件跟踪——监控进程创建/退出、网络连接建立/关闭、文件系统事件，输出事件流就行。
+
+这个工具做的事情：`evtrace -pid 1234 -events proc,net,fs -duration 30s -output trace.json`。-events 逗号分隔选择监控类别。-duration 控制采集时长，0 表示持续到 Ctrl+C。proc 类监控 /proc 下进程 fork/exit，net 类监控 /proc/net/tcp 变化，fs 类监控 /proc/PID/fd 变化。
+
+输出 JSON 数组：`[{"ts":"2024-01-15T10:23:01.123Z","type":"proc","action":"fork","pid":1234,"child_pid":5678},{"ts":"...","type":"net","action":"connect","pid":1234,"dst":"10.0.0.1:80"}]`。duration 结束或 Ctrl+C 中断时 flush 所有事件到文件。
+
+PID 不存在报 `"error: process not found"` exit 1。无事件产生输出空数组 `[]`。
+
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
 
 用 Go 标准库写，go run .或 go build 都行。

@@ -1,5 +1,9 @@
-有一批镜像文件要下，curl 一个个跑太慢。写个批量下载工具，从文件读 URL 列表并发下载，断线了能续传、失败了自动重试，进度条显示当前状态。文件名直接从 URL 里推断。
+先准备好 URL 列表文件 `urls.txt`，一行一个 URL。然后 `./downloader -input urls.txt -output ./downloads -concurrency 5` 开始并发下载。也支持直接传 URL：`./downloader -url https://example.com/file.zip`。
 
-后台多个 goroutine 同时写结果文件。
+并发数 `-concurrency` 默认 3，最多 20。每个文件名从 URL 路径推断（取最后一段，无路径则用 URL 的 SHA256 前 8 位）。每个下载显示进度条：`[=====>      ] 45% 2.3MB/5.1MB filename.ext`。`-rate-limit 1MB/s` 可选限速。
 
-用 Go 标准库写，go run . 或 go build 都行。
+断点续传：下载前检查目标路径是否已有部分文件，如果有且服务器支持 Range 请求，从断点继续。不支持 Range 的从头下。失败重试 `-retries 3` 次，间隔指数退避（1s、2s、4s）。全部重试失败的文件记到 `failed.txt`。
+
+结果文件 `download_report.csv`：URL,文件名,大小,耗时,状态(ok/failed/skipped)。多个 goroutine 并发写需要加锁。空 URL 跳过，非法 URL 打印 "invalid URL: <url>"。目标目录不存在自动创建。
+
+Go 标准库，`go run .` 或 `go build` 都行。

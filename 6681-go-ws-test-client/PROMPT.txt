@@ -1,5 +1,9 @@
-WebSocket 接口调试只能靠浏览器控制台，消息多了看不过来。现有方案不满足需求，Go 自己写：连接服务器，发送接收消息，保存消息序列、自动重连、消息过滤。
+WebSocket 接口调试只能靠浏览器控制台，消息多了看不过来。这种体验太原始了，得有个专业点的命令行工具。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+第一步连上 WS 服务器：`ws-test connect --url ws://localhost:8080/ws --origin http://localhost:8080 --header "Authorization:Bearer xxx"`。连上之后进入交互模式，stdin 输入的消息直接发送（text frame），服务端推来的消息实时显示在 stdout，每条消息前面带时间戳和方向标记（`>>` 发出、`<<` 收到）。
 
-Go 实现，只用标准库，交叉编译友好。
+第二步可以发预设消息序列：`ws-test replay --url ws://localhost:8080/ws --file messages.jsonl`，从 JSONL 文件读取消息序列逐条发送，每条之间可以指定延迟（文件里每行是 `{"message":"...","delay_ms":100}`）。所有来往消息自动记录到 `--output session.log` 指定的文件里，格式还是 JSONL，带 timestamp 和 direction 字段。
+
+连接断了自动重连，`--reconnect` 开关控制（默认开启），`--max-reconnect 5` 限制重试次数，每次间隔指数退避。重连成功后打 "reconnected (attempt N)"。`--filter` 参数可以按正则过滤收到的消息，只显示匹配的，不匹配的不丢，照常写进 output 文件。
+
+Ctrl+C 优雅关闭连接，输出本次会话统计：发送 N 条、接收 N 条、持续时长、重连次数。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 实现，只用标准库，交叉编译友好。

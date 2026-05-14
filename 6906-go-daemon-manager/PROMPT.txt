@@ -1,3 +1,7 @@
-每台服务器上装了一堆守护进程，管理起来全靠记脑子——哪个跑着哪个停了根本不知道。写个 CLI 工具统一管理守护进程：安装、启动、停止、重启、看状态，一条命令搞定。开机自启动也得配好，PID 文件管理也加上，不然进程起两份都不知道。
+三十多台服务器跑着各种守护进程，哪个活着哪个停了全靠记。关键服务挂了两天才发现——这不该靠记性。
+
+CLI 覆盖完整生命周期：`daemon install --name my-worker --command "/usr/local/bin/worker" --user appuser --autostart true` 安装，生成 PID 文件和启动脚本。同名已存在报 "daemon already installed" 退出码 1，加 `--force` 覆盖。`daemon start --name my-worker` 启动，PID 文件存在且进程活着报 "already running (PID: XXX)" 退出码 1。`daemon stop --timeout 15s` 先 SIGTERM 超时后 SIGKILL。`daemon restart` 等价 stop+start。`daemon status` 输出所有进程状态表格。
+
+PID 文件管理：启动时写 PID 停止时删。加 `--check-port 8080` 时通过端口探测防重复启动。`daemon remove --name` 先停再清配置。`daemon log --name my-worker --lines 100 --follow` 查看日志。
 
 用 Go 标准库写，go run . 或 go build 都行。

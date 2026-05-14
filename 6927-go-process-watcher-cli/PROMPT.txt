@@ -1,4 +1,6 @@
-需要在生产服务器上监控一批关键进程，它们挂了得第一时间知道。写个监控进程状态变化的命令行工具，检测进程启动和退出事件。支持按进程名匹配，进程退出时触发预设的动作（发通知、执行脚本等）。
+生产服务器上那几个关键进程，挂了得第一时间知道，但总不能让人一直盯着终端吧？写个监控进程状态变化的命令行工具，检测进程启动和退出事件。支持按进程名匹配，进程退出时触发预设的动作。
+
+监控目标通过配置文件 watchers.json 指定，是个数组，每项有 name（进程名匹配模式）、pattern（支持精确匹配）、on_exit（退出时执行的命令，如 `curl -X POST webhook-url -d 'process {name} exited'`）、check_interval（轮询间隔秒数，默认 5）。CLI：`pwatch -config watchers.json` 启动持续监控。进程状态变化输出到 stderr："[{时间}] {name} (pid={pid}): {started|exited}(code={code})"。on_exit 命令执行失败不影响主循环，额外输出 "action failed: {error}"。进程名匹配到多个 PID 时每个都独立跟踪。收到 SIGTERM 时输出 "shutting down, tracked: {n} processes" 后退出。`pwatch -config watchers.json -list` 只列出当前匹配到的进程，不启动监控循环，输出格式 "{name}\tpid={pid}\tstatus={running}"。配置文件中 on_exit 为空时只打印通知不执行额外动作。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
 

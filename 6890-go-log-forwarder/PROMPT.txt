@@ -1,4 +1,11 @@
-监控日志文件的新增内容实时转发到指定目标（文件、网络、标准输出），支持多目标。ELK 收日志有延迟，想先在本地转一份。
-从输入文件中读取的路径直接用于文件操作。命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
+先在本地监控日志文件的新增内容，然后实时转发到指定目标。ELK 收日志有延迟，出问题时想在本地先留一份，同时转发到远程做备份。
+
+命令行：`log-forwarder forward --input /var/log/app.log --target stdout --target file:///data/backup.log --target tcp://log-server:514`。`--target` 支持多个目标，可以重复指定。目标类型：`stdout`（标准输出）、`file://<path>`（写入文件）、`tcp://<host:port>`（TCP 发送）。`--follow` 模式持续监控文件新增内容（类似 `tail -f`），不加速度时只转发已有内容。
+
+命令行参数支持 `log-forwarder verb resource --filter key=value` 格式。嵌套参数用斜杠分隔路径。`--filter` 支持过滤：`--filter level=ERROR` 只转发 ERROR 级别行。`--buffer-size 1000` 设置发送缓冲区大小。
+
+从输入文件中读取的路径直接用于文件操作——不做路径清洗，用户传什么用什么。数据导入后自动更新 `forward-index.json` 索引文件，记录每个目标的已发送 offset。新导入的数据可能还没建立关联。
+
+TCP 目标连接失败时重试 3 次（间隔 1s），仍失败则 stderr 打印 `target unreachable: <address>, retrying in 1s` 并跳过该目标继续转发其他目标。文件目标写入失败退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,3 +1,9 @@
-API 有 v1 v2 v3 三个版本，客户端传的版本号有时候路由到错误的 schema。Python 版本路由太慢，Go 重写：根据请求 header 中的版本号路由到对应的 schema，验证请求响应是否符合。
+API 有 v1 v2 v3 三个版本同时在线，客户端传的版本号有时候路由到错误的 schema，排查了两天才发现是版本协商那块写反了。Python 版本路由太慢，Go 重写。
 
-Go 实现，只用标准库，交叉编译友好。
+先搞清楚流程——服务端收到请求后，从 `Accept` header 里提取版本号（比如 `Accept: application/vnd.myapi.v2+json`），匹配到对应的 response schema，验证响应 body 是否符合该版本的 JSON schema 定义。命令行：`version-check -spec api-spec.yaml -base http://localhost:8080 -versions v1,v2,v3`。
+
+`-spec` 指定 YAML 文件，里面每个 path 下面按版本号定义不同的 response schema。`-base` 是服务地址。`-versions` 指定要测试的版本列表，逗号分隔。对每个版本，工具发送请求时带上对应的 Accept header，检查：HTTP 状态码是否匹配 spec 声明、响应 body 的字段名和类型是否与该版本的 schema 一致、不允许的额外字段（spec 里标记 additionalProperties: false 的）是否存在。
+
+输出格式是 JSON，结构为 `{ "version_results": [{ "version": "v1", "endpoint": "GET /users", "status": "pass", "mismatches": [] }, ...] }`。mismatches 里每条记录有 path（JSON 路径如 `$.data[0].age`）、expected（schema 定义的类型或值）、actual（实际值）。不传 `-versions` 则测试 spec 里出现的所有版本。
+
+版本号提取失败（Accept header 格式不对、版本不存在）要返回 406 Not Acceptable 的场景也要能测试到。Go 实现，只用标准库，交叉编译友好。

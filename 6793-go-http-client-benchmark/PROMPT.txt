@@ -1,5 +1,9 @@
-HTTP 客户端的连接池大小和 Keep-Alive 设置对性能影响很大，但文档上给的参考值不一定适用。写个工具对比不同连接池大小、Keep-Alive 开关、压缩选项下的性能，输出对比报告。
+HTTP 客户端的连接池大小和 Keep-Alive 设置对性能影响很大，但文档上给的参考值不一定适用。压测的时候发现 100 并发下 QPS 只有 200，调了 MaxIdleConns 之后直接翻倍。这种参数到底怎么配，得实测才知道。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+这个工具对比不同 HTTP 客户端配置下的性能表现。用法：`httpbench --url http://target/api --concurrency 10,50,100 --requests 1000`。concurrency 参数支持逗号分隔多组并发数，每组跑完自动切到下一组。`--keepalive true/false` 分别测开关 Keep-Alive 的效果，`--compression` 测 gzip 传输。
 
-用 Go 标准库写，go run . 或 go build 都行。
+1. 每组测试输出：QPS、平均延迟 P50/P95/P99、错误率、连接建立耗时。2. 多组测试完成后输出横向对比表格，方便直接看哪个配置最优。3. `--output report.json` 保存完整结果，JSON 结构包含每组参数和对应的指标数据。
+
+`--timeout` 单次请求超时，默认 5 秒。`--duration` 按时间跑而非请求数，比如 `--duration 30s` 跑 30 秒。连接目标失败退出码 1，全部测试完成退出码 0。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。用 Go 标准库写，go run . 或 go build 都行。

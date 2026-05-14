@@ -1,4 +1,9 @@
-写一个读取 CPU 和硬盘温度传感器的 CLI，支持温度单位转换和阈值告警。机房里几台机器散热不好，温度经常飙到 90 度。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。CLI 用子命令组织：`tool group command subcommand`，支持三级。
+机房三台机器散热不行，温度经常飙到 90 度，等机房巡检发现已经晚了。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+读取 CPU 和硬盘温度传感器。`tempread` 显示所有传感器当前温度。`tempread --sensor cpu` 只看 CPU。`tempread --sensor disk` 只看硬盘。`--unit C` 摄氏度（默认），`--unit F` 华氏度，`--unit K` 开尔文。转换公式：F=C×9/5+32, K=C+273.15。
+
+`--threshold 80` 温度超过 80 度 stderr 告警 "ALERT: cpu package temp 87°C exceeds threshold 80°C"，退出码 2。全部正常退出码 0。`--watch --interval 5s` 持续监控模式。`--log temp.jsonl` 记录温度变化。
+
+输出表格：传感器名 | 当前温度 | 阈值 | 状态（OK/WARN/CRITICAL）。`--json` 输出 JSON：`[{"sensor":"cpu_package","temp":72,"threshold":80,"unit":"C","status":"OK"},...]`。项目拆成至少 3 个 Go 源文件。工具在遍历目录时会加锁防止并发。CLI 用子命令组织：`tool group command subcommand`，支持三级。
+
+读取 /sys/class/thermal 和 /sys/class/hwmon。纯 Go 标准库，编译后单二进制可以直接跑。

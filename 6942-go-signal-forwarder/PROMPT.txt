@@ -1,3 +1,5 @@
-容器里跑了个进程组，但 Docker 发的 SIGTERM 只到了 init 进程，子进程收不到信号就一直不退出。写个信号转发器，收到信号后转发给整个子进程组。支持信号映射——比如把 SIGTERM 映射成 SIGQUIT，让 Java 进程能 dump 线程栈再退出。容器环境下很实用。
+容器里跑了个进程组，但 Docker 发的 SIGTERM 只到了 init 进程，子进程收不到信号就一直不退出。这坑踩了不止一次了——每次容器停不掉都得手动 docker exec 进去 kill。写个信号转发器，收到信号后转发给整个子进程组。支持信号映射——比如把 SIGTERM 映射成 SIGQUIT，让 Java 进程能 dump 线程栈再退出。容器环境下很实用。
+
+CLI：`sigfwd -command "java -jar app.jar" -map "SIGTERM=SIGQUIT" -timeout 15`。-command 是要启动的子进程命令，-map 定义信号映射规则（可多条用逗号分隔，如 "SIGTERM=SIGQUIT,SIGINT=SIGTERM"），-timeout 是转发后等待子进程退出的超时秒数（默认 30）。启动后 sigfwd 成为信号中继，捕获所有终端信号并按映射规则转发给子进程组（使用 kill -pgid）。未映射的信号原样转发。每次转发输出到 stderr："forwarding {signal} → {mapped_signal} to pgid {n}"。子进程在 timeout 内未退出则发 SIGKILL 强杀，输出 "force killed: pgid {n}"。子进程正常退出则 sigfwd 以相同退出码退出。不支持映射的信号名输出 "unknown signal: {name}" 忽略。`sigfwd -list-maps` 列出所有支持的信号名称。子进程启动失败输出 "command failed: {error}" 退出码 127。
 
 Go 标准库，命令行参数用 flag 包解析。

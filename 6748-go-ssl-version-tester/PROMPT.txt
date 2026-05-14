@@ -1,5 +1,9 @@
-安全审计要求把所有对外服务的 TLS 版本和加密套件列出来。写个工具尝试不同版本的 TLS 连接，列出服务器支持的组合，顺便做个安全评估——还在用 TLS 1.0 的标红。
+安全审计那张表——"列出所有对外服务的 TLS 版本和加密套件"——总不能一个个 openssl s_client 敲吧。
 
-配置文件中可以指定要执行的命令。
+输入：`./tester <host:port>`，支持 `-host`、`-port` 分开写，默认端口 443。依次尝试 TLS 1.0、1.1、1.2、1.3 连接，每个版本记录是否成功、协商出的 cipher suite 列表。超时 `-timeout 10s`。批量检测用 `-targets-file hosts.txt`，每行 `host:port`。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+输出表格：Host | TLS版本 | 支持的Cipher Suites | 安全评估。TLS 1.0 和 1.1 标记为 [INSECURE] 红色，弱密码套件（RC4、DES、3DES、MD5）也标红。JSON 输出用 `-o result.json`，结构 `{"host":"...","results":[{"version":"TLS 1.2","supported":true,"ciphers":["TLS_AES_128_GCM_SHA256",...],"insecure":false}]}`。
+
+连不上打印 "connection failed: <host>: <error>"，证书过期单独提示 "certificate expired: notAfter=<date>"。退出码：0=全部安全，1=存在不安全配置，2=连接失败。配置文件中指定命令那种特性不用管。
+
+纯 Go 标准库，编译后单二进制直接跑。

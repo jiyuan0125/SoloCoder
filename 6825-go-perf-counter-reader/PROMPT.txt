@@ -1,4 +1,11 @@
-CPU 缓存命中率从 95% 掉到 60%，性能差了一倍却不知道为什么。读取性能计数器：CPU 缓存命中率、分支预测、指令执行数，输出各项指标。
+CPU 缓存命中率从 95% 掉到 60%，性能差了一倍却不知道为什么。读取 Linux perf 计数器：CPU 缓存命中率、分支预测准确率、指令执行数、IPC，输出各项指标。
+
+先看接口。`perfmon read -counters cache-misses,cache-references,branch-misses,instructions,cycles` 读取指定 perf 事件。`perfmon snapshot` 一次性读取所有可用计数器。`perfmon diff -interval 2s` 持续采样显示增量。
+
+输出 JSON：`{"timestamp":"...","counters":{"cache-misses":12000,"cache-references":200000,"cache_hit_rate":"94.0%","ipc":1.8},"derived":{"cache_hit_rate":94.0,"branch_accuracy":99.5}}`。表格模式右对齐数字列。
+
+没有 perf 子系统报 `"error: perf_event_open not available"` exit 1。权限不足提示 `perf_event_paranoid <= 1`。不支持的 counter 名输出 `"warning: unknown counter 'xxx', skipping"`。
+
 处理流程分好几步，上一步的输出是下一步的输入。CLI 用子命令组织：`tool group command subcommand`，支持三级。需要维护数据源和查询配置。查询配置引用数据源。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

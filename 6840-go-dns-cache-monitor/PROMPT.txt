@@ -1,4 +1,11 @@
-DNS 解析偶发超时，但不知道是缓存的问题还是上游的问题。显示缓存条目数、命中率、过期率，支持刷新缓存操作。
+先搞定 DNS 缓存可见性，再谈排查超时问题。DNS 解析偶发超时，但不知道是缓存的问题还是上游的问题。显示缓存条目数、命中率、过期率，支持刷新缓存操作。
+
+接口设计。`dnscachemon stats` 读取系统 DNS 缓存状态（如 nscd 或 systemd-resolved 的统计数据）。`dnscachemon query -name example.com` 查询指定域名是否在缓存中。`dnscachemon flush` 清空本地 DNS 缓存。`dnscachemon watch -interval 10s` 持续监控。
+
+stats 输出 JSON：`{"cache_source":"systemd-resolved","total_entries":150,"hit_rate_pct":85.2,"miss_count":22,"expired_count":15,"stale_count":3,"queries_per_sec":12.5}`。query 输出 `{"name":"example.com","cached":true,"ttl_remaining":"120s","source":"cache"}`。flush 输出 `{"flushed":true,"entries_cleared":150}`。
+
+缓存服务未运行报 `"error: DNS cache service not found"` exit 1。域名查询无结果 `cached: false` 不报错。
+
 多个 worker 并发处理输入数据。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。
 
 Go 实现，只用标准库，交叉编译友好。

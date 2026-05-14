@@ -1,3 +1,5 @@
 朋友的创业项目上个月数据库误删了一张表，发现的时候已经过了一周，全量备份还是一个月前的。写个定时备份工具，按 cron 调度自动跑备份。全量和增量都要支持，全量每周跑一次，增量每天跑。历史备份保留最近 N 份就行，太老的自动清理。
 
+配置文件 backup.json 定义任务列表，每个任务有 name、source_dir（源目录）、output_dir（备份存放目录）、schedule（cron 表达式，支持 5 段标准格式）、mode（full 或 incremental）、keep_versions（保留份数，默认 5）。CLI：`backup-sched -config backup.json` 启动守护进程，按调度执行。全量备份用 tar 打包源目录，输出文件名 {name}_full_20240115_120000.tar.gz。增量备份对比上次全量备份的文件 mtime，只打包变化的文件，输出 {name}_inc_20240116_120000.tar.gz。每次备份完成后检查历史版本数，超出 keep_versions 的最旧备份自动删除，删除前输出 "pruning: {filename}"。备份失败时输出 "backup failed: {name}, error: {msg}" 不退出进程。守护进程启动时输出 "scheduler started, {n} tasks loaded"，收到 SIGTERM 等当前备份完成后退出。
+
 纯 Go 标准库，编译后单二进制可以直接跑。

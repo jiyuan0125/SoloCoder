@@ -1,5 +1,9 @@
-第三方接口说没改但我们怀疑改了。写个工具发两次请求对比 header 和 body 的差异，输出结构化 diff，用于检测 API 的变更。
+第三方接口到底改没改？文档没更新但返回值好像变了。有没有办法自动检测这种静默变更？
 
-需要用到 io.Pipe 等标准库功能。
+这个工具发送两次 HTTP 请求然后对比差异。用法：`diffreq --url1 https://api.example.com/v1/data --url2 https://api.example.com/v1/data`，两个 URL 可以相同（测时间维度的变化）也可以不同（测 A/B 端点差异）。`--method` 指定请求方法，默认 GET。`--header` 传自定义请求头，可以多次使用。`--body` 传请求体。
+
+对比结果分两部分输出。Header diff：两边都有但值不同的标黄色"CHANGED"，只有一边有的标红色"ADDED"/"REMOVED"，相同的标绿色"SAME"。Body diff：如果是 JSON 则做语义对比（忽略 key 顺序），列出新增、删除、值变更的字段路径，比如 `data.items[2].price: "9.9" → "12.5"`。非 JSON 内容做逐行文本 diff，格式类似 unified diff。`io.Pipe` 用于流式处理响应体。
+
+`--output result.json` 把 diff 结果保存为 JSON 结构。`--threshold` 设置忽略差异的阈值（比如只关注超过 N 字节的变化）。请求失败退出码 2，有差异退出码 1，无差异退出码 0。
 
 用 Go 标准库写，go run . 或 go build 都行。

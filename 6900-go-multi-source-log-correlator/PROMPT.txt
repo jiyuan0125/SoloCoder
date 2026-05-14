@@ -1,4 +1,9 @@
-写一个多源日志关联器。从不同服务的日志中通过 trace ID 关联请求链路，支持时间窗口匹配。上次排查一个跨服务问题，五个人翻了四个小时的日志。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
+先在配置里定义数据源和关联规则，再让工具去不同日志文件里找线索，最后输出完整请求链路。上次排查跨服务问题，五个人翻了四小时日志——有了这个工具，几分钟搞定。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+三步走：`tool source add --name user-svc --file user.log --format json` 注册数据源。`tool rule create --match "trace_id" --sources "user-svc,order-svc,pay-svc"` 定义关联规则。`tool correlate --trace-id "trace-abc123" --window 5s --output result.json` 执行查询。以 trace_id 为主键在所有数据源中查找匹配行，`--window` 限定时间窗口，超窗视为不同链路。输出 JSON：`{ "trace_id": "...", "spans": [{ "service": "...", "timestamp": "...", "log_line": "...", "sequence": N }] }`。
+
+项目拆成至少 3 个 Go 源文件：main.go 入口、correlator.go 核心逻辑、model.go 数据结构。数据导入后自动更新索引，新数据不影响已有查询。映射规则修改后旧数据标记为 stale。
+
+trace_id 无匹配输出 `"found": false` 退出码 0。数据源文件不存在报 "source file not found: xxx" 退出码 1。
+
+Go 标准库实现，go build 能编译通过。

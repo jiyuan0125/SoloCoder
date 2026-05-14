@@ -1,4 +1,11 @@
 内核组同事要看 dmesg 过滤出来的错误，dmesg 输出太乱了不好找。过滤新消息，按严重程度分类，支持关键字告警。
+
+CLI：`klogmon -source dmesg -level err,crit,alert,emerg -watch -keyword "OOM,panic" -output report.json`。-source 支持 dmesg/syslog。-watch 开启持续监控，否则只处理现有日志。-level 逗号分隔指定级别。-keyword 触发告警的关键字。
+
+输出 JSON：`{"total":42,"by_level":{"err":30,"crit":12},"alerts":[{"time":"...","level":"crit","msg":"Out of memory","keyword":"OOM"}]}`。持续模式每 5 秒轮询，新匹配行输出到 stderr。
+
+级别映射 emerg=0, alert=1, crit=2, err=3, warn=4, notice=5, info=6, debug=7。source 文件不存在报错 `"error: cannot open ..."` exit 1。空日志输出空结果集。
+
 处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

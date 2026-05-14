@@ -1,5 +1,9 @@
-自己写的登录接口想测一下密码强度够不够。写个 Basic Auth 暴力测试工具，从字典文件读用户名和密码组合逐个试。注意只用于安全测试自己的服务，别干坏事。
+自己写的内部系统上线前要过安全审计，Basic Auth 接口的密码强度得验证一下。上次审计说 admin/123456 这种组合没测到，被扣分了。
 
-需要用到 bytes.Buffer 等标准库功能。
+这是个 Basic Auth 暴力测试工具，用法 `bruter --url http://target/api --users userlist.txt --passwords passlist.txt`。用户名文件和密码文件都是一行一条的纯文本。工具逐个组合构造 `Authorization: Basic base64(user:pass)` 请求头发送，用 `bytes.Buffer` 拼接认证头。
+
+`--threads` 控制并发数，默认 5。`--delay` 设置每次请求间隔毫秒数，默认 0。遇到 HTTP 200 打印命中的用户名密码组合到 stdout。遇到 429 Too Many Requests 自动暂停 5 秒后重试，最多重试 3 次。全部试完没找到打印"未发现有效凭证"退出码 1，找到了退出码 0。
+
+`--verbose` 模式下每个请求的状态码都打印：`[200/401/403] user:pass`。`--proxy socks5://127.0.0.1:1080` 支持指定代理。连接超时 `--timeout` 默认 10 秒。注意只用于安全测试自己的服务，别干坏事。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

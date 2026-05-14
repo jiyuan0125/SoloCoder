@@ -1,3 +1,5 @@
-Makefile 太重了，就想要一个简单的东西：从 YAML 定义命令序列，支持环境变量替换、超时和重试，还能捕获输出。类似简化版 Makefile 但更灵活，不用学新语法。通用命令执行器，Go 写一个。
+先定义一个 commands.yaml，里面列出要跑的命令序列、每个命令的环境变量、超时和重试策略。然后运行 `crun -f commands.yaml`，工具按顺序执行命令，支持变量替换、超时中断、失败重试，最后汇总输出。比 Makefile 轻量，比 bash 脚本结构化。
+
+YAML 格式示例：commands 下面是一个数组，每项有 name、cmd（命令字符串）、env（键值对 map）、timeout（秒，默认 60）、retry（次数，默认 0）、workdir（工作目录）。cmd 中 ${VAR} 形式的变量从 env 字段和系统环境变量中替换。执行时按数组顺序串行跑，每条命令执行前输出 ">>> {name}: {cmd}"。超时到达后 SIGKILL 终止进程，标记为 timeout。重试只在 exit code 非 0 时触发，每次重试输出 "retry {n}/{max}: {name}"。全部执行完输出汇总表，列为 name、status（success/failed/timeout）、exit_code、duration、retries。任一命令最终状态为 failed 或 timeout 则工具退出码 1，全部 success 退出码 0。`-dry-run` 参数只解析 YAML 和变量替换，打印要执行的命令但不实际运行。YAML 解析失败输出 "invalid config: {msg}" 退出码 2。
 
 用 Go 标准库写，go run . 或 go build 都行。

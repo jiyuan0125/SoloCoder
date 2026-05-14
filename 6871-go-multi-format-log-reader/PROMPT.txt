@@ -1,4 +1,9 @@
-读取多种格式的日志文件统一输出 JSON，自动检测格式（Apache、Nginx、JSON、syslog、自定义）。Nginx 的 access log 和 Java 的 logback 格式完全不一样，手动指定格式太容易配错。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+谁还没被 Nginx access log 和 Java logback 的格式差异折腾过？手动指定格式模板容易配错，要是能自动检测格式就好了。
 
-Go 标准库，命令行参数用 flag 包解析。
+这个工具读取多种格式的日志文件，统一输出 JSON。支持 Apache Combined、Nginx default、JSON lines、RFC3164 syslog、自定义正则。自动检测：`log-reader read --input mixed.log --output stdout --format auto`。取前 100 行逐个尝试解析，匹配率最高的胜出。也可以手动指定：`--format nginx`、`--format json`、`--format custom --pattern '(?P<ts>\d{4}-\d{2}-\d{2}) (?P<msg>.*)'`。
+
+输出 JSONL 每行统一为 `{"timestamp": "RFC3339", "level": "INFO", "message": "...", "source": "nginx", "raw": "原始行"}`。解析失败的行输出 `"level": "UNKNOWN"` 并保留原始内容。
+
+项目拆成至少 3 个 Go 源文件：`main.go`、`detector.go`、`models.go`。任务有五种状态：等待、执行中、成功、失败、取消。失败的可以重试（`--retry 3`）。系统管理项目和任务，任务属于项目。可以添加、修改、删除任务：`log-reader project create --name test`、`log-reader task delete --id 5`。
+
+Go 标准库，命令行参数用 flag 包解析。退出码 0 成功，1 处理失败，2 格式不支持。

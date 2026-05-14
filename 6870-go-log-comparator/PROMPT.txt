@@ -1,4 +1,11 @@
-修复前后日志对比靠肉眼看太费劲了，改了什么要能直观看出来。按时间对齐，找出只在一侧出现的条目，用于对比修复前后的日志。
-日志文件可能存在各种编码。任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。源文件修改后，之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。
+先准备两份日志——修复前的和修复后的，然后按时间戳对齐，逐条比较找出差异。靠肉眼看太费劲了，改了什么得能直观看出来。
+
+第一步解析：`log-comparator compare --before before.log --after after.log --output diff.json`。两份日志按时间戳排序后对齐，时间戳格式用 `--timestamp-format` 指定，默认 `2006-01-02T15:04:05`。对齐容差 `--tolerance 1s`，时间戳差距在这个范围内的视为同一时刻。
+
+第二步输出差异：结果写入 `diff.json`，结构为 `{"only_before": [...], "only_after": [...], "changed": [...]}`。`only_before` 是修复前有但修复后消失的条目，`only_after` 是修复后新增的，`changed` 是时间戳匹配但内容不同的（输出两侧的原文）。控制台同时打印摘要：`Before-only: X, After-only: Y, Changed: Z, Total compared: N`。
+
+任务有生命周期：`pending → running → completed`。running 阶段失败（比如文件读一半磁盘挂了）可以重试，状态回退到 pending。completed 之后可以重新发起：加 `--force` 参数重新跑。
+
+源文件修改后，之前基于旧文件生成的缓存（`.cache/<hash>` 目录下）要同步失效——校验文件 MD5，不匹配就清除。已经在使用中的缓存可以继续用完再释放，不强杀。日志文件可能存在各种编码，遇到非 UTF-8 的行跳过并在 stderr 提示 `line <N>: encoding error`。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

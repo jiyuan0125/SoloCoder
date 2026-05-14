@@ -1,4 +1,9 @@
-群里有人问怎么做快速基准测试，说 sysbench 太重了。CPU 计算、内存带宽、磁盘 I/O、网络延迟，跑一轮出个各项得分。
+群里有人问怎么做快速基准测试，说 sysbench 太重了。CPU 计算、内存带宽、磁盘 I/O、网络延迟，跑一轮出个各项得分，拿这个就能做日常巡检对比。
+
+CLI 用子命令组织：`bench cpu -duration 5s`，`bench mem -size 1GB -ops 10000`，`bench disk -path /tmp -size 100MB -io read`，`bench net -target 127.0.0.1:80 -count 100`，`bench all` 跑全套。每个子命令输出 JSON：`{"test":"cpu","duration_ms":5000,"ops_per_sec":123456,"score":78,"details":{"prime_count":50000}}`。`bench all` 汇总成一份报告，总分 0-100。
+
+score 算法：以基准值（参考机器数据）为 50 分，线性映射。-path 对应的文件/目录不存在时自动创建测试文件并在结束后清理。测试中断（Ctrl+C）输出已完成项的结果。不支持的平台（如 disk bench 在 Windows）输出 `"error: benchmark 'disk' not supported on this platform"`。
+
 文件处理流水线：读取 → 解析 → 校验 → 转换 → 输出，每步可以独立失败。工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
 
 用 Go 标准库写，go run .或 go build 都行。

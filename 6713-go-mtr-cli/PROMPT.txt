@@ -1,3 +1,9 @@
-网络抖动的时候 mtr 比 traceroute 好用，能持续探测每一跳看丢包率。Linux 上的 mtr 依赖比较多，装起来麻烦，自己用 Go 写一个——把 traceroute 和 ping 结合起来，对每一跳持续探测，输出丢包率和延迟统计。
+网络抖动的时候 mtr 比 traceroute 好用，能持续探测每一跳看丢包率。Linux 上的 mtr 依赖比较多，装起来麻烦，尤其那种最小化的容器环境。自己用 Go 写一个，编译好扔上去就用。
 
-Go 标准库，命令行参数用 flag 包解析。
+先 traceroute 探出整条路径上的每一跳 IP，然后对每一跳并发发 ICMP echo，持续探测统计。命令行：`gmtr --host 8.8.8.8 --count 50 --interval 500ms --timeout 2s --json`。`--count` 每跳发送次数（默认 10），`--interval` 发包间隔，`--timeout` 单次超时。
+
+实时输出表格，每行一跳，列包括：hop 序号、IP 地址（解析不到显示 `*`）、丢包率百分比、发送/接收/丢失包数、avg/min/max RTT。格式参考 mtr 输出风格。探测过程中表格实时更新（覆盖写同一行），结束后输出最终结果。
+
+JSON 输出：`{ "target": "8.8.8.8", "hops": [{ "hop": 1, "ip": "192.168.1.1", "sent": 50, "recv": 50, "loss_pct": 0.0, "rtt": { "min_ms": 0.5, "avg_ms": 0.8, "max_ms": 2.1 } }, { "hop": 2, "ip": "10.0.0.1", "sent": 50, "recv": 48, "loss_pct": 4.0, "rtt": { "min_ms": 1.2, "avg_ms": 1.5, "max_ms": 5.3 } }] }`。
+
+ICMP 权限不足时退化为 UDP traceroute，stderr 打 "warning: no ICMP permission, using UDP mode"。host 不传或格式错误退出码 1。Go 标准库，命令行参数用 flag 包解析。

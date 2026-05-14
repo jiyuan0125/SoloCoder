@@ -1,5 +1,11 @@
-核心接口的响应时间最近有变慢的趋势，想长期跟踪。定期请求指定 URL，响应时间记到 SQLite，能查 P50/P95/P99 趋势，超阈值自动告警。
+核心接口响应时间在悄悄变慢，等到用户投诉才发现就晚了——能不能主动监控？
 
-需要用到 bytes.Buffer 等标准库功能。
+后台模式：`./tracker -url https://api.example.com/health -interval 30s -db metrics.db -threshold 500ms`。每 30 秒请求一次目标 URL，记录响应时间到 SQLite 数据库。表结构：`CREATE TABLE measurements (id INTEGER PRIMARY KEY, timestamp DATETIME, url TEXT, latency_ms INTEGER, status_code INTEGER, error TEXT)`。
 
-Go 标准库，命令行参数用 flag 包解析。
+查询模式：`./tracker query -db metrics.db -url https://api.example.com/health -period 24h` 输出 P50/P95/P99 延迟。格式：`P50: 120ms, P95: 340ms, P99: 890ms, samples: 2880`。`-period` 支持 1h/6h/24h/7d/30d。
+
+响应时间超过 `-threshold` 打印告警 "⚠ LATENCY ALERT: 580ms > 500ms threshold (url=<url>)"。HTTP 非 200 也告警。连续 3 次超阈值升级为 "CRITICAL"。
+
+数据库文件不存在自动创建。URL 不可达记录 error 字段，不中断监控。bytes.Buffer 用于构建查询结果的内存缓冲。
+
+Go 标准库，flag 包。

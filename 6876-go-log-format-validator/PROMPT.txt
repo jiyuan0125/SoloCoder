@@ -1,4 +1,11 @@
-日志格式不对下游解析全报错，上游说没问题下游说格式变了。检查每行是否符合预期格式，输出不符合的行和原因，支持自定义格式规则。
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。子命令结构：`tool namespace resource action`，比如 `tool db table export`。
+日志格式改了但谁也没通知下游，结果解析全报错，上游说没问题下游说格式变了——这种事发生了不止一次。能不能有个工具定期检查日志格式？
+
+CLI：`log-validator validate --input app.log --format nginx --report report.json`。`--format` 支持 `nginx`、`apache`、`json`、`syslog`、`custom`。自定义格式用 `--pattern` 传正则。逐行检查，不符合的记录行号、原因。输出 `report.json`：`{"total_lines": N, "valid_lines": M, "invalid_lines": [{"line": 42, "reason": "missing timestamp"}, ...]}`。
+
+子命令结构：`log-validator namespace resource action`。比如 `log-validator format nginx check --input test.log`，或者 `log-validator rule custom create --pattern '...' --name myformat`。
+
+项目拆成至少 3 个 Go 源文件：`main.go`、`validator.go`、`models.go`。处理完成后自动把统计结果写入 `validation-summary.json`。如果所有行都合规，`invalid_lines` 为空数组。输入为空文件时，报告里 `total_lines: 0`，`valid_lines: 0`。
+
+检测几种常见问题：时间戳缺失、级别字段不在预期范围（DEBUG/INFO/WARN/ERROR）、JSON 行格式损坏、行长度异常（超过 1MB）。退出码 0 全部合规，1 有不合规行，2 参数错误。
 
 Go 实现，只用标准库，交叉编译友好。

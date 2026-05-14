@@ -1,7 +1,9 @@
-上周线上排查一个问题，telnet 一个个敲端口太慢了，用 Go 写个并发端口扫描器。
+上周线上排查一个问题，telnet 一个个敲端口太慢了，三个人轮着测了一上午。用 Go 写个并发端口扫描器一次搞定。
 
-给定目标主机，指定端口范围（比如 1-1024 或 22,80,443,8080），设置超时和并发数，扫完输出每个端口的开放/关闭状态和响应耗时。不依赖 nmap 这些外部工具。
+命令行用法：`portscan --host 192.168.1.1 --ports 1-1024 --timeout 500ms --workers 100 --format json`。`--host` 支持主机名或 IP，`--ports` 支持范围（`1-1024`）和枚举（`22,80,443,8080`）以及混合写法（`22,80,443,8000-9000`），`--timeout` 是单端口连接超时，`--workers` 控制并发 goroutine 数，`--format` 可选 json 或 table。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+输出 JSON 结构：`{ "host": "192.168.1.1", "scan_time": "2024-01-01T00:00:00Z", "duration_ms": 2345, "results": [{ "port": 22, "state": "open", "latency_ms": 3.2, "service": "ssh" }, { "port": 80, "state": "open", "latency_ms": 1.1, "service": "http" }, { "port": 81, "state": "closed", "latency_ms": 0 } ] }`。state 只有 open 和 closed 两种，open 的才计算 latency。table 格式用 tabwriter 对齐输出 PORT/STATE/LATENCY/SERVICE 四列。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+service 字段根据常见端口映射（22→ssh、80→http、443→https、3306→mysql、5432→postgresql、6379→redis、8080→http-alt），不认识的留空字符串。扫描完成后输出汇总行：`Scanned {N} ports in {T}ms, {M} open`。
+
+端口参数格式不对退出码 1，stderr 打 "invalid port spec: {input}"。并发数超过 1000 时 stderr 打 warning 但不阻止。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，编译后单二进制可以直接跑。

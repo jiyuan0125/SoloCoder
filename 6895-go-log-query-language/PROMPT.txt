@@ -1,4 +1,11 @@
-要像 SQL 一样查日志，"SELECT count(*) FROM log WHERE level='ERROR' GROUP BY hour" 这种。支持字段比较、逻辑运算、聚合函数，类似 SQL 但面向日志，输出查询结果。
-用户可以自定义输出文件名。任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
+先定义好查询语法，再写解析器，最后把结果格式化输出——步骤很清晰。目标是实现一个面向日志的 SQL 子集：`SELECT count(*), level FROM log WHERE level='ERROR' GROUP BY hour` 这种写法能直接跑起来。
 
-用 Go 标准库写，go run .或 go build 都行。
+1. 语法规则：SELECT 支持的字段有 count、sum、avg、min、max、distinct 及原始字段名。WHERE 支持 =、!=、>、<、LIKE、IN 操作符，用 AND/OR/NOT 连接。GROUP BY 支持 hour、minute、day 三个时间粒度和任意字段。ORDER BY 支持 ASC/DESC。LIMIT 限制返回行数。
+
+2. 查询流程：先 `tool query --input log.txt --sql "SELECT ..."` 读入文件，解析 SQL，扫描匹配行，执行聚合，输出结果。也可以用 `tool explain --sql "SELECT ..."` 只显示解析后的执行计划不实际查询。`--output` 指定输出文件名，默认 stdout。
+
+3. 任务状态机：查询进入队列后经历 waiting → running → success/failed/cancelled 五种状态。失败的查询用 `tool retry --id <query_id>` 重试，重试时保留原始 SQL。结果为零行时输出空表头不报错。
+
+4. 错误处理：SQL 语法错误时 stderr 输出错误位置（行号、列号）和具体原因，退出码 2。字段不存在时提示 "unknown column: xxx"。不支持的操作符直接报 "unsupported operator"。
+
+Go 标准库实现，go run . 或 go build 都行。

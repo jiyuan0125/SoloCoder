@@ -1,4 +1,11 @@
-Docker stats 只看容器不够，要能按容器名过滤、一次性看所有容器。按容器显示 CPU、内存、网络、磁盘 I/O，支持指定容器名过滤。
+Docker stats 只看容器不够细，按容器名过滤、一次性看所有容器这种需求它做不到。按容器显示 CPU、内存、网络、磁盘 I/O，支持指定容器名过滤。
+
+三个视图：`crmon stats` 显示运行中容器的实时资源表格；`crmon stats -name nginx` 过滤指定容器，支持逗号分隔多个；`crmon stats -all` 包含停止的容器。表格列 `NAME  CPU%  MEM_USED/limit  MEM%  NET_RX  NET_TX  BLOCK_R  BLOCK_W  PIDS`。
+
+JSON 模式 `-json`：`{"containers":[{"name":"nginx","cpu_pct":2.5,"mem_used":"128MiB","mem_limit":"512MiB","mem_pct":25.0,"net_rx":"10MB","net_tx":"5MB","block_r":"1MB","block_w":"2MB","pids":12}]}`。数据来源读 /sys/fs/cgroup 和 /proc/net，不依赖 docker API。
+
+Docker 未运行时报 `"error: cannot read container cgroup data"`。容器名不存在输出空列表不报错。
+
 配置文件中可以指定要执行的命令。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

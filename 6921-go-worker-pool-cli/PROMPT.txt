@@ -1,3 +1,5 @@
 每次写并发处理都要重新实现 worker pool，goroutine 漫天飞，channel 到处传。干脆抽一个独立的 worker 池管理工具出来：启动 N 个 worker，任务扔进来空闲的 worker 自动接，支持运行时动态加减 worker 数量。优雅停止也加上，不能让正在处理的任务被中途杀掉。
 
+先定义任务格式：任务从 stdin 按行读取，每行是一条命令。启动方式 `wpool -workers 4 -timeout 30`，-workers 是初始 worker 数，-timeout 是每个任务的超时秒数。运行时可通过 Unix 信号动态调整：SIGUSR1 增加 1 个 worker，SIGUSR2 减少 1 个（不能减到 0），每次变化输出 "workers: {n}" 到 stderr。任务执行结果逐行输出到 stdout，格式为 JSON：{"task":"原始命令","status":"success|failed|timeout","exit_code":0,"duration_ms":120,"output":"前256字符"}。收到 SIGTERM 后停止接受新任务，等正在执行的 worker 完成（最多等 timeout 秒），然后输出汇总 "done: total={n} success={s} failed={f}" 并退出。如果任务行为空，直接输出 "no tasks submitted" 退出码 0。
+
 Go 标准库，命令行参数用 flag 包解析。

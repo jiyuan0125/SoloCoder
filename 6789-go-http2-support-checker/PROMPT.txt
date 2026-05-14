@@ -1,5 +1,9 @@
-服务端号称支持 HTTP/2 但客户端连上去走的是 HTTP/1.1。写个工具尝试 HTTP/2 连接，输出协商结果和支持的特性列表，看看到底支不支持。
+迁移到新机房之后，前端同学反馈页面加载变慢了，怀疑是 nginx 的 HTTP/2 没开。运维说配了但不敢确认客户端实际协商的协议。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+这个工具专门检测目标 URL 是否真正支持 HTTP/2。运行 `h2check https://example.com`，工具会尝试用 HTTP/2 建立连接，输出协商过程：TLS ALPN 协议列表、最终协商的协议版本、服务端支持的 HTTP/2 特性（如 server push、stream multiplexing）。`--verbose` 输出完整的 TLS 握手信息，包括证书链和 cipher suite。
 
-Go 实现，只用标准库，交叉编译友好。
+`--method` 指定请求方法，默认 GET。`--headers` 添加自定义请求头。如果服务端只支持 HTTP/1.1，输出"不支持 HTTP/2，当前协议: HTTP/1.1"并列出原因（TLS 未启用 ALPN、服务端拒绝 h2 等）。支持 h2 则输出"支持 HTTP/2"加上特性列表。
+
+`--json` 输出结构化结果：`{"url":"...","protocol":"h2","alpn":["h2","http/1.1"],"features":["push","multiplex"],"tls_version":"1.3"}`。连接超时 `--timeout` 默认 10 秒。连接失败退出码 1，成功退出码 0。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 实现，只用标准库，交叉编译友好。

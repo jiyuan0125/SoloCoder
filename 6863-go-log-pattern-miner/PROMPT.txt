@@ -1,4 +1,9 @@
-日志里的模式变了可能是出问题了，但每天百万行日志谁看得出来。自动发现频繁出现的日志模板，把变量部分替换为通配符，输出模式列表和频率。
-文件处理流水线：读取 → 解析 → 校验 → 转换 → 输出，每步可以独立失败。子命令结构：`tool namespace resource action`，比如 `tool db table export`。工具管理配置模板和配置实例。实例基于模板生成。
+有没有觉得日志里的错误模式变了但没人注意到？每天百万行日志，人工看模式变化不现实。要是能自动发现高频模板，模式出现频率突变还能告警就好了。
 
-用 Go 标准库写，go run .或 go build 都行。
+`logmine mine --input app.log --min-support 100` 挖掘出现 100 次以上的日志模板，把变量部分（数字、IP、UUID、路径）替换为通配符 <VAR>，输出模板列表和频率。表格格式：Template/Count/Percentage/First_Seen/Example。`logmine diff --input today.log --baseline baseline.json` 对比当前模式和基线的频率变化，新出现的模式标记 NEW，频率增长超过 50% 标记 SPIKE，消失的模式标记 GONE。`logmine baseline --input app.log --output baseline.json` 生成基线文件。
+
+文件处理流水线：读取→解析→模式提取→统计→输出，每步可以独立失败——解析失败的行跳过并计数，最终报告 skipping N lines due to parse errors。子命令结构：logmine mine、logmine diff、logmine baseline。工具管理配置模板和配置实例——挖掘参数保存为配置文件（--save-config mining.json），下次直接 --config mining.json 调用。实例基于模板生成——不同日志源可以有不同的模式提取规则。
+
+变量替换规则：连续数字替换为 <NUM>，IP 替换为 <IP>，UUID 替换为 <UUID>，引号内字符串替换为 <STR>，文件路径替换为 <PATH>。性能：用前缀树存储模板，内存占用主要由模板数量决定。--max-templates 5000 限制模板数上限。--sample-rate 0.1 采样 10% 的行做快速挖掘。
+
+用 Go 标准库写，go run . 或 go build 都行。支持 --json 输出。空输入输出空数组。

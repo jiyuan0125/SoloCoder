@@ -1,4 +1,9 @@
-K8s 里每个容器都有独立的 cgroup，资源使用情况要能单独看。显示指定 cgroup 的 CPU、内存、I/O 使用，支持层级遍历。
+K8s 里每个容器都有独立的 cgroup，上周有个容器把节点内存吃光了别的 pod 全被驱逐。显示指定 cgroup 的 CPU、内存、I/O 使用，支持层级遍历。
+
+`cgmon show -path /sys/fs/cgroup/memory/kubepods/pod123` 输出该 cgroup 及子组的资源使用，JSON 格式：`{"path":"...","cpu":{"usage_ns":1200000000,"limit_ns":2000000000},"memory":{"usage_bytes":536870912,"limit_bytes":1073741824,"oom_count":3},"io":{"read_bytes":1048576,"write_bytes":2097152}}`。`cgmon tree -path /sys/fs/cgroup` 递归展示层级，缩进表示嵌套。
+
+`cgmon top -interval 3s -sort mem` 持续刷新，-sort 支持 cpu/mem/io。cgroup 路径不存在报 `"error: cgroup path not found"` exit 1。权限不足时跳过该条目并在 stderr 打印 warning。
+
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。处理流程是 初始化 → 扫描 → 处理 → 完成。扫描完了才能处理。处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
 
 Go 实现，只用标准库，交叉编译友好。

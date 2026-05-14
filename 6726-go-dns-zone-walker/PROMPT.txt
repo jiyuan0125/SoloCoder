@@ -1,5 +1,7 @@
-接手了一个域名要整理所有 DNS 记录，注册商后台看不到完整的 zone 文件。写个工具尝试 AXFR 区域传送，传不了就逐个查常见子域名，把发现的记录都列出来。
+域名从老注册商迁过来，zone 文件死活要不到。怎么办？写个工具自己把 DNS 记录全扒下来。
 
-日志中记录了完整的请求参数。
+子命令 `scan <domain>`，先尝试 AXFR 区域传送（`-server` 指定 DNS 服务器，默认用域名的 NS 记录），传成功直接拿全量记录。传不了就退到子域枚举模式，从内置的常见子域列表（www、mail、ftp、api、admin 等 50+ 个）逐个查 A/AAAA/CNAME/MX/TXT 记录，也支持 `-wordlist file.txt` 加载外部字典。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+输出格式：每行一条记录，`<name> <type> <ttl> <value>`。用 `-o output.json` 切 JSON 格式，结构为 `{"domain":"...","records":[{"name":"...","type":"...","ttl":...,"value":"..."}]}`。日志里记每次查询的完整参数（域名、类型、服务器、耗时）。
+
+AXFR 失败不算错，只是降级到枚举模式，打印 "AXFR failed, falling back to enumeration"。域名不存在打印 "NXDOMAIN: <domain>"，网络不通打印 "DNS timeout: <server>"，两者 exit 1。枚举过程中每找到一条记录实时打印。Go 标准库，不依赖第三方包，`go build` 能编译。

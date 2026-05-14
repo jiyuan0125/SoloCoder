@@ -1,4 +1,9 @@
-统计每个 CPU 核心上各类中断的次数，按 CPU 核心和中断类型分类，支持持续监控和变化率计算。网卡中断集中在某一个核心上会导致性能瓶颈，要有数据才能调 IRQ 亲和性。
+先搞清楚每个 CPU 核心上各类中断分布，再调 IRQ 亲和性才有依据。统计 /proc/interrupts 里的数据，按核和类型分类，支持持续监控和变化率。
+
+步骤：1）读取 /proc/interrupts 解析成 `map[irq_type][]count_per_cpu`；2）支持单次快照 `intcount snapshot` 和持续监控 `intcount watch -interval 2s`；3）变化率模式 `intcount delta -interval 5s`，输出两次采样差值。
+
+输出表格格式对齐到终端宽度：`IRQ_TYPE  CPU0  CPU1  CPU2  ...  TOTAL`，最后一列合计。JSON 模式加 `-json` flag：`{"interrupts":[{"type":"RES","counts":[1200,3400,...],"total":46000,"delta":null}]}`。watch 模式按 Ctrl+C 停止时打印汇总。/proc/interrupts 不存在报 `"error: /proc/interrupts not found, Linux only"` exit 1。
+
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。工具管理配置模板和配置实例。实例基于模板生成。
 
 用 Go 标准库写，go run .或 go build 都行。

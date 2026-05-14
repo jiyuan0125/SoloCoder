@@ -1,5 +1,9 @@
-测试团队用 Postman 写了一堆接口测试用例，CI 里不想装 Postman。写个工具解析 Postman Collection JSON，按顺序执行请求，支持环境变量替换和断言检查，跑完输出执行报告。
+测试团队在 Postman 里攒了 200 多个用例，CI 环境不想装 Postman GUI——但用例还是得跑。
 
-用 Go 标准库的 encoding/binary 包。
+解析 Postman Collection v2.1 JSON 格式。用法：`./pmrunner -collection api_tests.postman_collection.json -env staging_env.json`。从 collection 的 item 数组提取每个请求的 method、url、headers、body。环境变量替换：URL 和 body 里的 `{{base_url}}`、`{{token}}` 用 env 文件中对应值替换。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+断言检查：检查 response code、response time（`pm.response.to.have.status(200)` 等常见 Postman 脚本语法，至少支持 status 和 json 属性检查）。请求按 collection 中顺序串行执行，某个失败可选继续或中止（`-stop-on-error`）。
+
+执行报告输出到 stdout：`✓ GET /api/users [200] 45ms`，`✗ POST /api/users [500] expected 201, got 500`。JSON 报告 `-o report.json`：`{"total":200,"passed":195,"failed":5,"details":[...]}`。退出码 0=全通过，1=有失败。
+
+collection 文件格式错误打印 "invalid collection: <error>"。Go 标准库，编译后单二进制。
