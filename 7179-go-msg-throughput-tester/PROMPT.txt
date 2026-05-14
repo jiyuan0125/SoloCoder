@@ -1,9 +1,9 @@
-大促前要压测消息队列，看看能扛多少。
+大促前压测消息队列，到底能扛多少 TPS？上次双 11 没测就上了，结果消息积压 200 万条，P0 事故复盘写了三页。这次得提前摸底。
 
-Topic 管理和分区配置、分区均衡工具、复制因子调整、死信队列管理（查看/重发/丢弃）。
+`tp-tester produce --topic test-topic --rate 50000 --duration 60s --payload-size 256` 发压测消息，`--payload-size` 单位字节，内容随机生成。`tp-tester consume --topic test-topic --group test-group` 消费并统计 TPS。结果输出到 stdout：`{"sent":3000000,"received":2998500,"avg_latency_ms":12,"p99_ms":45,"loss_rate":"0.05%"}`。
 
-消息处理后自动发确认，确认发送失败静默跳过。
+Topic 管理：`tp-tester topic create --partitions 8 --replication-factor 3`，`topic list` 列出分区和副本状态。死信队列 `topic dlq --action list|resend|discard`，resend 需要 `--target-topic`。
 
-处理消息时触发关联操作，关联操作也访问同一个队列状态。
+处理完自动 ACK，ACK 失败静默跳过只记 `DEBUG ack fail`。关联操作（如写入指标）和主消费共享同一个 offset 指针，关联操作失败不影响 offset 推进。多目录并行扫描用 `--dir` 多次指定。
 
-扫描多个目录要并行处理。Go 命令行工具，go build 能过就行。
+Go 命令行工具，go build 能过就行。压测结果除了 JSON，还能 `--format table` 输出对齐的表格方便贴到文档里吗？

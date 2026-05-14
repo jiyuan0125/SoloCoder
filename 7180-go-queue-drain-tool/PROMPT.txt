@@ -1,5 +1,9 @@
-要下线一个 Topic，先得把积压的消息处理完。V2 月底上线。
+要下线一个旧 Topic，但上面还积压了 80 万条消息没消费。运营说这些消息里有未处理的退款申请，不能直接丢。V2 系统月底上线，留给排空的时间不多了。
 
-消息采样（按比例/时间间隔抽取），采样统计分析，采样数据导出。加密完自动删除原文，删除失败继续执行。任务有等待、运行、成功、失败几个状态。
+`drain-tool start --topic legacy-orders --output drained.jsonl --batch-size 500` 开始排空，每批拉 500 条写入文件。`drain-tool status` 显示进度：`{"total":800000,"drained":450000,"remaining":350000,"eta_minutes":12}`。`drain-tool pause` 和 `drain-tool resume` 支持暂停恢复，暂停后 offset 不推进。
+
+采样模式：`--sample rate=0.1` 按 10% 比例随机抽取，或 `--sample interval=5s` 每 5 秒取一条。采样统计输出 `sampled=N, total=M, rate=R`，导出用 `--sample-output sample.jsonl`。
+
+加密字段：`--encrypt-fields phone,email --keybase keyfile`，AES-256-GCM 加密，加密完自动 `os.Remove` 原文，删除失败打 WARN 但继续。任务状态：waiting → running → succeeded | failed，失败后 `--retry-count 2` 重试。退出码 0 全部完成，1 部分失败，2 参数错误。
 
 Go 命令行工具，go build 能过就行。

@@ -1,5 +1,11 @@
-要给消息队列做灾备，主备 Topic 得同步。
+主集群要升级，得把消息同步到备用集群。上次没做灾备，主集群挂了两小时，业务全停。这次必须把 Topic 镜像搭起来。
 
-消息聚合（按时间窗口/数量阈值批量输出），聚合结果格式化，超时处理。密钥有生成→激活→轮换→归档→销毁的状态。校验完自动生成报告，报告模板不存在就跳过。任务有等待、运行、成功、失败几个状态。
+先配置源和目标：`mirror start --source broker-a:9092 --target broker-b:9092 --topic 'orders.*'`。同步过程实时显示进度：`{"topic":"orders.paid","mirrored":15234,"lag":3,"status":"running"}`。
+
+1. 聚合模式：`--aggregate window=10s` 或 `--aggregate count=500`，批量拉取消息减少网络开销。聚合结果格式化为 JSON 数组输出，超时未满一批也输出，标注 `"incomplete":true`。
+2. 密钥状态机：generated → active → rotated → archived → destroyed，密钥文件路径 `--key-dir /keys/`，状态变更记到 `key_state.log`。
+3. 校验：`mirror verify --source broker-a --target broker-b --topic orders.paid`，对比两边 offset 和消息数，不一致输出 `MISMATCH: topic=<t> source_offset=<a> target_offset=<b>`。
+
+校验完自动生成报告，`--report-dir ./reports/`，模板不存在跳过报告生成只打 INFO。任务状态：waiting → running → succeeded | failed。
 
 Go CLI 工具，go build 能过就行。

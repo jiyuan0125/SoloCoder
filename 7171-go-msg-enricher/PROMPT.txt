@@ -1,7 +1,9 @@
-消息里缺少用户信息，得关联查询补全。
+上周末线上出了一次事故，消息消费端拿到的数据缺了用户昵称和头像，推送通知全显示成匿名用户。排查发现上游服务没做用户信息关联，下游也没补。得写个消息富化工具，消费原始消息后查用户服务把字段补上。
 
-消息格式转换（JSON/XML/CSV 互转），字段映射和类型转换，消息头处理，消息聚合（按时间窗口/数量阈值批量输出）。
+命令行：`msg-enricher --input msgs.jsonl --enrich user --fields nickname,avatar --output enriched.jsonl`。输入 JSONL，每行一条消息，必须有 `user_id`（字符串），缺失则打 `WARN skip: missing user_id` 并跳过。富化后消息新增 `enriched` 对象放查询结果，查不到的字段填 null，整条用户查不到则 `enriched` 为空对象。
 
-消息处理后自动发确认，确认发送失败静默跳过。文件可能好几 GB 大。
+格式转换用 `--format json|xml|csv` 控制，默认 JSON。字段映射走 `--mapping map.json`，结构是 `{"src":"dst"}`，映射失败的原字段名保留。消息头里 `trace_id`、`timestamp`、`source` 原样透传。
+
+聚合模式：`--aggregate window=30s` 按时间窗口或 `--aggregate count=100` 按条数，先到先触发。处理完自动发 ACK，ACK 失败打 `ERROR ack failed: <reason>` 但不中断流程。文件可能好几 GB，流式读写，内存控制在 200MB 以内。退出码 0 表示全部处理完，1 表示有跳过但主流程完成，2 表示输入无法打开。
 
 Go CLI 工具，go build 能过就行。

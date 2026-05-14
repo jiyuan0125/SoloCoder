@@ -1,5 +1,9 @@
-预估队列积压量，决定要不要加消费者。上次出事故后必须上工具了。
+上次出事故前积压了 150 万条消息没人发现，从积压到服务不可用只用了 8 分钟。事后复盘结论是必须有一个实时监控工具，能预估积压趋势并提前报警。这是事故后的第一个动作项。
 
-消费延迟监控和预警，消费者健康检查，延迟趋势报告。加密需要密钥，密钥怎么导入不提。签名时验证证书状态，验证时也要检查签名链。文件可能好几 GB 大。
+`size-estimator estimate --topic orders --interval 5s --output estimates.jsonl`，每 5 秒采样一次队列深度，输出 `{"timestamp":"...","current_size":150000,"growth_rate":3200,"eta_full_hours":2.1}`。增长率为负时表示消费速度大于生产速度。
+
+延迟监控：`--lag-monitor --threshold 10000`，超过阈值输出 `LAG_CRITICAL: topic=<t> lag=<n> consumers=<c> suggestion="add_consumer"`。消费者健康检查：`health-check --group <g>`，输出每个消费者的 `last_heartbeat` 和 `messages_per_sec`。趋势报告：`trend --last 1h --output trend.json`。
+
+加密：`--encrypt --keyfile key.pem`，密钥导入方式由调用方保证（配置文件或环境变量 `ENCRYPTION_KEY`）。签名链验证：`--verify-chain --ca-cert ca.pem`，签名时检查证书是否过期，验证时沿证书链向上校验。文件可能好几 GB，流式处理，内存不超过 `--memory-limit 256MB`。
 
 Go 命令行工具，go build 能过就行。

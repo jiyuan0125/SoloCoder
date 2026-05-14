@@ -1,7 +1,9 @@
-消息格式要加字段又不能影响老消费者。
+消息格式要加个 `region_code` 字段，但老消费者不认识这个字段会报错。之前直接加字段导致三个消费者挂了，之后再也不敢改 schema 了。闲着没事写个工具解决这个问题。
 
-Topic 管理和分区配置、分区均衡工具、复制因子调整、死信队列管理（查看/重发/丢弃）。搜索索引时要更新引用计数，更新计数也要查索引完整性。
+先用 `schema-evolve plan --current v2.json --target v3.json` 看变更计划：输出 `{"added":["region_code"],"removed":[],"changed":[],"compatible":true}`。确认后 `schema-evolve apply --current v2.json --target v3.json --input msgs.jsonl --output evolved.jsonl`。
 
-字段值可能有各种奇怪格式，要容错。
+1. 兼容性检查：新增字段必须有默认值（`--default region_code=CN`），删除字段标记 `deprecated` 但保留 7 天，类型变更（如 `int→string`）自动转换。
+2. Topic 管理：`topic create --partitions 4 --rep-factor 2`，`topic rebalance --strategy round-robin`，`topic dlq --action list|resend|discard`。
+3. 引用计数：搜索索引 `indexes/<name>/docs/<doc_id>/fields/<field>`，schema 变更时更新引用该字段的索引计数，更新时检查索引完整性。
 
-闲着没事写的 Go CLI 工具，go build 能过就行。
+字段值容错：`--strict false` 时类型不匹配自动转成字符串，解析失败的 JSON 输出 `PARSE_WARN: line=<n>` 并跳过。闲着没事写的 Go CLI 工具，go build 能过就行。

@@ -1,5 +1,11 @@
-路由规则改了不知道影响哪些消费者。
+路由规则改了一行，三个消费者全挂了。没有测试工具，每次改规则就是直接上线赌运气。这次要写个路由规则测试器，改规则之前先测一遍。
 
-消息格式转换（JSON/XML/CSV 互转），字段映射和类型转换，消息头处理，消息聚合（按时间窗口/数量阈值批量输出）。密钥有生成→激活→轮换→归档→销毁的状态。用 encoding/csv 的 Reader 和 Writer。
+先定义路由规则文件：`route-tester test --rules routes.json --test-cases cases.jsonl`。规则文件结构：`[{"match":{"field":"msg.type","op":"eq","value":"order"},"target":"output_orders.jsonl"}]`，支持 `eq`、`neq`、`contains`、`regex` 四种操作符。
+
+1. 格式转换：输入用 `--input-format json|xml|csv`，内部统一转 JSON 处理。字段映射 `--field-map map.json`，映射失败的字段保留原名。消息头（`headers` 字典）自动透传。
+2. 聚合：`--aggregate window=10s|count=200`，聚合输出带 `batch_id` 和 `batch_size`。
+3. 密钥状态：generated → active → rotated → archived → destroyed，状态文件 `keys.json`。
+
+测试结果输出：`{"total":1000,"matched":998,"unmatched":2,"errors":0,"rules_hit":{"rule_1":800,"rule_2":198}}`，unmatched 的消息 ID 列表输出到 `unmatched.txt`。用 `encoding/csv` 的 Reader 和 Writer 处理 CSV 格式。
 
 Go 命令行工具，go build 能过就行。

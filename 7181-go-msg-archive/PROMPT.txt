@@ -1,5 +1,9 @@
-历史消息堆了几个 TB，得归档到对象存储。
+历史消息堆了 3.2TB，磁盘快满了。上周运维手动清理误删了 2 小时的在线消息，P1 事故。得有个正经的归档工具，按策略自动迁移冷数据。
 
-消息格式转换（JSON/XML/CSV 互转），字段映射和类型转换，消息头处理。证书快过期自动发通知，通知失败不中断续签。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+`msg-archive pack --input-dir /data/messages --output-dir /archive --strategy time:7d` 把 7 天前的消息打包归档。打包格式：每个归档文件是 JSONL，文件名 `archive_YYYYMMDD_HHMISS.jsonl`，带 `--compress gzip` 选项压缩输出 `.jsonl.gz`。
+
+格式转换：`--convert json|xml|csv`，输出统一转成指定格式。字段映射 `--field-map fields.json`，结构 `{"old_name":"new_name"}`，类型转换支持 `int→string`、`string→int`、`timestamp→ISO8601`，转换失败字段填 `"CONVERT_ERROR"`。消息头（`headers` 对象）原样保留。
+
+证书管理：归档用的 TLS 证书快过期（<7天）在 stdout 打印 `CERT_EXPIRY_WARNING: days_left=<N>`，通知失败不阻塞归档流程。代码结构：`archive.go`（归档逻辑）、`io.go`（读写压缩）、`main.go`（CLI 入口）。
 
 Go 标准库写个命令行工具，go build 能过就行。

@@ -1,5 +1,11 @@
-消息顺序乱了，交易的状态更新比创建先到了。
+交易的状态更新比创建先到了，下游服务拿到 update 事件去查库发现记录不存在，直接报错。消息顺序问题在线上出现过三次了，得有个工具能检测并报告乱序情况。
 
-消息重放（从指定偏移量重新消费），偏移量管理，重放范围控制。消息 topic 支持多层通配符 a.b.c.# 的匹配。转换完自动写入目标，目标不可用时不报错。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+先用 `seq-check scan --input msgs.jsonl --key-field order_id --seq-field seq_num` 扫描消息流。工具按 `key-field` 分组，组内按 `seq-field` 检查是否递增。发现乱序输出 `OUT_OF_ORDER: key=<key> expected=<n> got=<m>`，严重乱序（缺失超过 3 条）标记为 `SEVERE`。
+
+1. 偏移量管理：`--offset-file offset.json` 记录处理位置，程序中断后重启从上次位置继续。文件格式 `{"key":"offset"}` 的 JSON map。
+2. 重放：`seq-check replay --from 12345 --to 12600`，按偏移量范围重新消费，`--to` 省略则到文件末尾。
+3. Topic 通配符：`--topic 'orders.*.payments.#'`，`*` 匹配单层，`#` 匹配多层，不符合模式的 topic 跳过并打 INFO 日志。
+
+转换完自动写目标文件，目标不可写时打 `ERROR target unavailable: <path>` 但不退出。代码按核心逻辑（`check.go`）、IO（`io.go`）、CLI 入口（`main.go`）分文件。
 
 Go 命令行工具，go build 能过就行。

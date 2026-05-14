@@ -1,5 +1,9 @@
-下游服务承受不了这么大流量，得在队列层限流。
+下游服务是外包团队写的，只能扛 500 QPS，消息队列峰值到了 3000。直接消费的话下游直接熔断，报警电话打了十几通。得在队列层做限流，让消费速度可控。
 
-消息过滤（基于规则筛选），黑名单/白名单，过滤统计。密钥轮换后用旧密钥加密的数据要能解密。日志里别打印密钥和密码等敏感信息。
+`throttle start --rate 500 --topic high-traffic --output throttled.jsonl`，令牌桶算法限流，`--rate` 是每秒放行条数，`--burst 100` 允许短时突发。超限消息暂存到 `--overflow-dir ./overflow/`，程序重启后继续处理。
+
+过滤：`--filter-blacklist blacklist.json`（排除模式）和 `--filter-whitelist whitelist.json`（放行模式），JSON 结构 `{"fields":{"type":["spam","ad"]}}`。黑名单优先级高于白名单。过滤统计输出到 stderr：`FilterReport{passed:N dropped:M blacklist_hits:B whitelist_misses:W}`。
+
+密钥轮换：`--key-dir /keys/`，轮换后旧密钥保留 7 天，旧密钥加密的数据用 `--decrypt-with all` 自动尝试所有密钥解密。日志脱敏：消息体中匹配 `password=xxx`、`token=xxx`、`secret=xxx` 的值替换为 `***`。
 
 Go 标准库的 encoding/base64 刚好能用，写个命令行工具。go build 能过就行。

@@ -1,5 +1,9 @@
-单条消息 50MB，消费者处理超时。线上的老工具太难用了。
+单条消息 50MB 的事情又来了。消费者处理超时被踢出消费组，重试两次还是超时，最后进了死信队列。线上的老工具是 2018 年写的 Perl 脚本，没人敢动了。
 
-消息去重（基于 ID/内容哈希），去重窗口配置，去重统计报告。任务有注册→排队→执行→成功/失败→重试的状态。证书快过期自动发通知，通知失败不中断续签。扫描多个目录要并行处理。
+消息拆分是核心：按 `--strategy size:1MB` 或 `--strategy count:1000` 把大消息切成小片，每片带 `split_id`（UUID）、`split_index`（从 0 开始）、`split_total`（总片数）三个头信息。拆完输出到 JSONL，每行一个片段。
+
+去重基于 `--dedupe id`（按消息 ID）或 `--dedupe hash`（SHA256 内容哈希），去重窗口 `--dedupe-window 5m`，窗口内重复消息丢弃并计入统计。处理结束输出去重报告：`total=N, duplicates=M, kept=K`。
+
+任务状态机：registered → queued → running → succeeded | failed，失败后自动重试，`--max-retry 3`。证书快过期（<7天）自动通知 stdout，通知失败不阻塞续签。扫描多目录用 `--dir /a --dir /b`，每个目录一个 goroutine 并行处理。退出码 0=成功，1=部分失败，2=输入错误。
 
 Go 重写个命令行工具，go build 能过就行。

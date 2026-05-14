@@ -1,5 +1,11 @@
-消息序列化格式不统一，有的 JSON 有的 protobuf。
+团队里有三个服务，一个发 JSON，一个发 Protobuf，还有一个发自定义二进制。消费者每次都要猜格式然后写解析代码，维护成本很高。之前用 Python 写了个转换脚本，但性能太差，100 万条消息跑了 40 分钟。
 
-消息重放（从指定偏移量重新消费），偏移量管理，重放范围控制，消息采样（按比例/时间间隔抽取）。权限路径支持多层 resources/{type}/{id}/actions/{action}。处理消息时触发关联操作，关联操作也访问同一个队列状态。
+`msg-serializer convert --input data.bin --from protobuf --to json --output data.jsonl`。支持格式：json、protobuf、avro、csv。格式自动检测：`--auto-detect`，按 magic byte 判断——`0x00` 开头是 protobuf，`{` 开头是 JSON，`Obj\x01` 开头是 Avro。
+
+重放：`replay --offset-file offsets.json --from 1000 --to 5000`，offset 文件格式 `{"partition":offset}`。采样：`--sample rate=0.05` 按 5% 采样，或 `--sample interval=2s`。采样统计 `Sampled:N Total:M Rate:R`。
+
+权限路径格式 `resources/<type>/<id>/actions/<action>`，解析后按层级构建权限树，查询时 O(log n)。关联操作：主转换流程中调用子转换（如嵌套消息），子转换复用同一份 schema 映射表，避免重复加载。
+
+退出码 0=成功，1=部分转换失败，2=输入无法识别。`--verbose` 输出每条消息的转换耗时。
 
 Go 重写老 Python 脚本，命令行工具，go build 能过就行。

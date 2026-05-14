@@ -1,5 +1,9 @@
-消费延迟能预测就好了，提前扩容。下周要演示。
+消费延迟能预测就好了——提前半小时扩容，总比事故发生后再加机器强。下周要给老板演示，得做个能看的工具出来。
 
-消息采样（按比例/时间间隔抽取），采样统计分析，采样数据导出。数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。输入文件编码不确定，UTF-8、GBK、GB18030 常见的都支持。
+`lag-forecast predict --history lag_history.jsonl --window 1h --horizon 30m`，基于历史数据预测未来 30 分钟延迟。预测算法用移动平均（`--algo moving_avg`）或线性回归（`--algo linear_reg`），默认移动平均。输出：`{"predicted_lag_ms":4500,"confidence":"high","suggested_consumers":3,"current_consumers":1}`。
+
+采样：`--sample rate=0.1` 或 `--sample interval=10s`，统计数据导出 `--sample-output stats.json`。多层路径查询：`tables/<table>/rows/<id>/columns/<col>`，支持通配符 `*` 替代任意层级。
+
+输入文件编码：UTF-8 直接读，GBK 和 GB18030 用 `golang.org/x/text/encoding/simplifiedchinese` 自动检测并转换，检测失败输出 `WARN encoding detect failed, fallback to UTF-8`。预测结果 `--format json|table|chart`，chart 模式用 ASCII 字符画趋势图。
 
 Go CLI 工具，go build 能过就行。

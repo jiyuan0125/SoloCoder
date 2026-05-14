@@ -1,5 +1,9 @@
-消息投递失败了要重投，但得控制重投频率。
+消息投递失败要重投，但不能无限重试把队列打满。上次有个 bug 导致重投间隔设成了 0，队列里同一条消息被投递了 8000 次，下游服务直接 OOM。季度末赶着上线，代码质量要求不高但得能跑。
 
-消息路由（基于内容/头信息分发），路由规则配置，路由失败处理，消息过滤（基于规则筛选）。处理消息时触发关联操作，关联操作也访问同一个队列状态。输入数据格式常见的都支持就行。
+`redeliver start --input failed.jsonl --max-retry 5 --backoff exponential --output redelivered.jsonl`。退避策略：`exponential`（2^n 秒）或 `fixed`（固定间隔 `--interval 30s`）。每条消息带 `retry_count` 和 `next_retry_at` 字段。
+
+路由：`--route route.json`，按消息头 `X-Msg-Type` 分发到不同目标。路由规则支持 `exact`、`prefix`、`regex` 三种匹配。路由失败的消息写入 `dead_letter.jsonl` 并输出 `ROUTE_FAIL: msg_id=<id> reason=no_matching_rule`。
+
+过滤：`--filter rules.json`，不满足条件的消息跳过重投。关联操作和主消费共享队列状态文件 `state.json`，操作用 `sync.Mutex` 保护。输入格式支持 JSONL、CSV（自动检测），CSV 用逗号分隔，首行为表头。
 
 季度末赶着搞的 Go 命令行工具，go build 能过就行。

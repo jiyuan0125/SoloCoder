@@ -1,7 +1,9 @@
-每次 rebalance 消费暂停 30 秒，用户感知明显。之前手动排查积压全靠翻日志。
+每次 rebalance 消费暂停 30 秒，用户端体感就是页面加载转圈。之前排查积压全靠翻日志，grep 来 grep 去，效率低到不行。能不能让 rebalance 快点，顺便把监控也做了？
 
-消费延迟监控和预警，消费者健康检查，延迟趋势报告。导入完成自动更新索引，索引更新失败只记日志。
+`rebalancer analyze --group my-group --log-file rebalance.log` 分析最近一次 rebalance 日志，输出：`{"pause_ms":30000,"reassigned_partitions":12,"strategy":"range","slow_consumer":"consumer-3"}`。`rebalancer suggest --group my-group` 根据消费速度建议分区分配方案。
 
-令牌有创建→活跃→刷新→过期→吊销的状态。
+消费延迟监控：`--lag-check interval=10s --alert-threshold 500`，超过阈值输出 `LAG_WARN: partition=<p> lag=<n> consumer=<c>`。消费者健康检查：`health-check --group my-group --timeout 5s`，不响应的消费者标记 `UNHEALTHY`。延迟趋势报告：`trend-report --last 1h --output trend.json`。
+
+导入完成自动更新索引文件 `index.json`，更新失败只打日志 `WARN index update failed`。令牌状态：created → active → refreshed → expired → revoked，`--token-file tokens.json` 存储。上次事故后这是第一个必须上线的工具，数据源是消费者组的 offset 日志。
 
 Go 重写个命令行工具，go build 能过就行。

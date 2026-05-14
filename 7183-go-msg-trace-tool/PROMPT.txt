@@ -1,5 +1,9 @@
-一条消息从生产到消费经过了 7 个环节，不知道哪个慢。
+一条消息从生产到消费经过了 7 个环节，每次排查延迟都像大海捞针——先查 Broker 日志，再看 Consumer 日志，最后发现是网络抖动。得有个端到端的追踪工具。
 
-消息去重（基于 ID/内容哈希），去重窗口配置，去重统计报告，消费延迟监控和预警。认证需要用户角色，用户角色怎么创建不提。一次可能处理上万条记录。
+`trace-tool track --input traces.jsonl --trace-field trace_id --timestamp-field ts`，按 trace_id 聚合整条链路，计算每段耗时。输出格式：`{"trace_id":"abc","hops":[{"from":"producer","to":"broker","latency_ms":2},{"from":"broker","to":"consumer","latency_ms":15}],"total_ms":17,"bottleneck":"broker→consumer"}`。
+
+去重：`--dedupe id|hash`，窗口 `--window 5m`，处理结束输出 `DedupeReport: total=N dupes=M kept=K`。消费延迟监控：`--lag-threshold 1000ms`，超过阈值输出 `LAG_ALERT: consumer=<name> lag=<ms>`。用户角色放在消息头 `X-Role`，`admin` 可看全部 trace，`viewer` 只看自己服务的。
+
+一次可能处理上万条 trace 记录，按 trace_id 排序后分组处理，内存占用不超过 `--max-memory 512MB`。输出支持 `--format json|table`，table 模式列对齐显示每跳信息。
 
 Go 命令行工具，go build 能过就行。

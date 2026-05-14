@@ -1,5 +1,9 @@
-订单 30 分钟未支付要自动取消，需要延迟消息。
+朋友开了个小电商，订单 30 分钟未支付要自动取消。他用的消息队列没有延迟队列功能，之前写了个定时任务轮询数据库，数据库压力太大又改成了 Redis sorted set。但 Redis 宕机就全完了，延迟消息也不可靠。
 
-消息聚合（按时间窗口/数量阈值批量输出），聚合结果格式化，超时处理。权限路径支持多层 resources/{type}/{id}/actions/{action}。校验分语法检查、语义检查、引用检查三个阶段。
+`delayed-sender send --message '{"order_id":"A123","action":"cancel"}' --delay 30m --output delayed_queue.jsonl`。延迟消息写入本地队列文件，每条记录带 `deliver_at`（Unix 时间戳）和 `status: pending`。后台轮询 goroutine 每秒检查一次，到期的消息状态改为 `delivering`，发送完改为 `delivered`，发送失败改为 `failed` 并计入重试。
+
+聚合：`--aggregate window=10s|count=50`，到期消息攒批发送，减少网络开销。聚合超时未满一批照样输出，标记 `"partial":true`。格式化输出支持 JSON 和 table 两种。
+
+权限路径 `resources/<type>/<id>/actions/<action>`，解析后校验发送者是否有权限发延迟消息。校验分三阶段：语法检查（JSON 合法性）→ 语义检查（字段类型正确）→ 引用检查（引用的模板存在）。
 
 给朋友的小业务写的 Go CLI 工具，go build 能过就行。
