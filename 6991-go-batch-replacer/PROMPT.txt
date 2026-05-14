@@ -1,3 +1,9 @@
-V2 的域名从 api.old.com 换成了 api.new.com，几十个数据文件里散落着旧域名。手动改肯定漏。写个批量替换工具，在 CSV/JSON 数据里按规则批量替换字段值。替换规则从文件读——支持精确匹配和正则替换。一次性把所有旧域名都换成新的。
+域名从 api.old.com 换成了 api.new.com，散落在几十个文件里。上次漏了三个文件，线上 500 报错用户投诉了一整天。
+
+CLI：`batch-replace -path ./data/ -rules replacements.json -dry-run`。规则文件：`{"rules":[{"field":"endpoint","match":"exact","find":"api.old.com","replace":"api.new.com"},{"field":"body","match":"regex","find":"https?://api\\.old\\.com","replace":"https://api.new.com"}]}`。match 分两种——exact 精确匹配整个字段值，regex 用正则匹配值的一部分。
+
+`-path` 可以是文件或目录，目录下递归扫描 `.csv` 和 `.json`。加 `-dry-run` 只输出会改什么但不实际修改，格式：`file.csv:row 15, field 'endpoint': 'api.old.com/v1' → 'api.new.com/v1'`。不加 `-dry-run` 原地修改（先写临时文件再 rename，保证原子性）。
+
+替换 0 处时 stdout 输出 "no replacements made"，exit 0。规则文件 JSON 格式错误时 stderr 报错 "error: invalid rules format" 并 exit 1。正则语法错误时 stderr 输出 "error: invalid regex pattern" 并 exit 2。field 为 `*` 时匹配所有列。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,5 +1,7 @@
-消费者重启后 offset 重置了，重复消费了 5 万条。
+消费者重启后 offset 被重置了，重复消费了 5 万条——这种事故得靠工具防范。需要能持久化管理 offset 并做消息聚合的工具。
 
-消息聚合（按时间窗口/数量阈值批量输出），聚合结果格式化，超时处理。扫描有排队→扫描中→分析中→报告生成→完成状态。加密完自动删除原文，删除失败继续执行。代码分文件组织。
+场景是这样的：消费者崩溃重启时自动从持久化的 offset 恢复，不依赖 broker 的 auto-commit。`offset-manager save --topic orders --group my-group --offsets offsets.json --broker localhost:9092`：从 broker 拉取当前 committed offsets 并持久化到文件。`restore --offsets offsets.json --broker localhost:9092 --group my-group --dry-run`：dry-run 模式只打印要恢复的 offset 不实际提交，不加则真正重置。
 
-Go CLI 工具，go build 能过就行。
+聚合功能：`aggregate --input msgs.jsonl --window 1m --count-threshold 200 --output batch.jsonl`：按时间窗口或数量阈值批量输出。聚合结果 `{"window_start": "...", "count": 215, "messages": [...]}`。超时（`--timeout 60s`）未达到阈值也输出已有数据。聚合结果格式化：`--format summary` 输出简要统计，`--format full` 输出完整消息体。
+
+扫描状态机：queued → scanning → analyzing → report-generating → completed。加密场景：加密完自动删除原文（`--delete-after-encrypt`），删除失败继续执行只记警告。代码按职责分文件。offsets 文件损坏 exit code=2。go build 能过就行。

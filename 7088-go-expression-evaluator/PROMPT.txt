@@ -1,3 +1,3 @@
-Go 的接口和泛型挺有意思，找个实际项目试试。写个数据处理 CLI：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，数据脱敏遮敏感字段。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-go build 能过，命令行工具能正常运行。
+Go 的接口和泛型上了生产之后真香，但团队里没人用过，干脆找个实际项目练手——数据处理 CLI 正好能用到泛型做类型安全的转换。
+
+工具叫 `expreval`，几个子命令各管一摊。`split` 按条件拆分文件：`--by rows --size 1000` 按行数切，`--by size --size 10MB` 按大小切，`--by condition --expr "status=='error'"` 按条件切分到不同文件。`sample` 做数据采样，`--method random --rate 0.1` 随机抽 10%，`--method stratified --key category --rate 0.05` 分层采样，`--method interval --step 100` 等间隔取。`mask` 做脱敏，`--fields phone,email --strategy replace` 手机号中间四位变 `*`，邮箱 `@` 前面保留首尾字符。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。每个子命令都输出处理统计到 stderr——读了几行、处理了几行、跳过几行、耗时多少。输入 CSV/JSON 都行，`--format` 指定。纯标准库实现，go build 能过，命令行工具能正常运行，退出码 0 成功 1 错误。

@@ -1,9 +1,9 @@
-WAL 文件越来越大，不知道里面堆积了什么。
+WAL 文件越来越大，不知道里面堆积了什么——这是上周运维群里最频繁的问题。需要能直接解析 WAL 文件看内容的工具。
 
-批量查询执行（从 SQL 文件读取），结果汇总，错误处理策略。
+核心功能围绕 WAL 文件检查展开。CLI 入口 `wal-inspector`，子命令：`scan`、`batch`、`check`。`scan --file write-ahead.log --limit 100` 扫描 WAL 文件，输出最近 N 条记录，每条显示 LSN、操作类型（INSERT/UPDATE/DELETE）、时间戳、影响的表名和行 ID，格式为表格对齐输出。`batch --sql queries.sql --output results.json` 从 SQL 文件逐行读取查询语句批量执行，结果汇总到 JSON 文件，结构为 `{"total": 5, "success": 4, "failed": 1, "results": [{"query": "SELECT...", "status": "ok", "rows": 3}, {"query": "INSERT...", "status": "error", "error": "duplicate key"}]}`。`check` 做三阶段校验：语法检查 → 语义检查 → 引用检查，每个阶段输出 pass/fail 计数，有错误时 exit code 返回 1。
 
-密钥轮换后用旧密钥加密的数据要能解密。
+1. 密钥轮换后用旧密钥加密的数据要能解密——`--key-dir` 指定密钥目录，`--current-key` 指定当前密钥 ID，工具自动尝试历史密钥解密。
+2. 规则路径支持多层结构 `rules/{group}/{name}/{version}`，`list-rules --group dba` 列出指定组下所有规则。
+3. WAL 文件超大（>1GB）时流式读取，不一次性加载到内存。
 
-支持多层级的规则路径 rules/{group}/{name}/{version}。
-
-校验分语法检查、语义检查、引用检查三个阶段。朋友那边需要的 Go 命令行工具，go build 能过就行。
+go build 能过就行，纯标准库。

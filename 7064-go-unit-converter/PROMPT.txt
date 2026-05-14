@@ -1,4 +1,5 @@
-业务方等不及排期了，条件映射和表达式求值自己先搞。Go CLI：条件满足走映射 A 否则走 B，表达式求值支持四则运算和字符串拼接，查找表丰富字段数据。
-校验完成后自动生成报告，报告模板不存在就跳过。
-错误情况怎么处理你自己定。
-go build 能过，命令行工具能正常运行。
+业务方等不及排期了，条件映射和表达式求值自己先搞起来。Go CLI 实现三块：条件满足走映射 A 否则走 B，表达式求值支持四则运算和字符串拼接，查找表丰富字段数据。校验完成后自动生成报告，报告模板不存在就跳过。
+
+条件映射：`unit-converter conditional-map --input data.csv --condition "age>18" --true-mapping adult.json --false-mapping minor.json --output result.csv`，condition 支持 `>`、`<`、`==`、`!=`、`>=`、`<=`、`contains(field,"text")`、`startsWith(field,"prefix")`，条件解析失败报 `error: invalid condition: xxx` 退出码 1。表达式求值 `eval --input data.csv --expression "price*quantity" --as total --output result.csv`，新增 total 列，四则运算支持 `+`、`-`、`*`、`/` 和括号，字符串拼接用 `concat(field1,"-",field2)`，除零时该行结果填 null 并 stderr warning。查找表 `lookup --input data.csv --table ref.csv --key product_id --fetch category,brand --output enriched.csv`，key 匹配不到新列填 null。
+
+CSV/JSON 均支持，同格式输出。映射文件格式错误报错退出码 1。错误自行合理处理。go build 能过，纯标准库。

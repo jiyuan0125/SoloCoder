@@ -1,3 +1,9 @@
-测试环境要用生产数据，但手机号和身份证号不能明文出现在测试环境里。写个数据脱敏工具，对 CSV/JSON 中的敏感字段做脱敏处理。手机号中间四位打码（138****0000）、身份证号保留前三后四、姓名只保留姓。脱敏规则通过配置文件指定。
+测试环境要用生产数据，上个月安全审计查出手机号和身份证明文出现在测试库里，差点出事故。脱敏这事不能靠人自觉，得工具化。
+
+CLI：`mask -input users.csv -config mask_rules.json -output masked_users.csv`。规则文件：`{"rules":[{"field":"phone","type":"phone"},{"field":"id_card","type":"id_card","keep":"first3_last4"},{"field":"name","type":"name","mode":"surname_only"},{"field":"email","type":"email","keep_domain":true}]}`。
+
+脱敏规则——phone：中间四位打码，`13812345678` → `138****5678`。id_card：保留前三位后四位，`110101199001011234` → `110***********1234`。name：只保留姓，`张三丰` → `张**`。email：`@` 前面部分只保留首尾字符，`zhangsan@qq.com` → `z*****n@qq.com`。脱敏后值长度和原始值保持一致。
+
+field 不在输入列时 stderr 警告并跳过。未知 type 时 stderr 报错 "error: unknown mask type 'xxx'" 并 exit 2。输入为空输出空文件。加 `-validate` 只检查未脱敏的敏感数据不修改文件，发现敏感数据时 exit 1。
 
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,5 +1,7 @@
-DELETE 了 100 万条数据，磁盘空间一点没少。组长说要搞工具化。
+DELETE 了 100 万条数据磁盘空间一点没少——这种事发生过三次了。组长说要搞工具化，定期检测数据库膨胀率。
 
-SQLite schema 迁移做版本化管理，迁移脚本能执行能回滚，冲突检测，CSV 数据导入 SQLite。数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。输入数据格式常见的都支持。
+工具名 `bloat-finder`，三个子命令：`detect`、`migrate`、`import`。`detect --db path/to/db.sqlite --format json` 扫描每张表的实际数据大小 vs 文件占用大小，输出 `{"table": "orders", "data_size": 5242880, "file_size": 20971520, "bloat_ratio": 0.75, "wasted_bytes": 15728640}`，ratio > 0.5 的标红。`migrate` 子命令管理 SQLite schema 版本：`migrate up` 执行所有待执行的迁移脚本，`migrate down --steps 1` 回滚一步，`migrate status` 显示当前版本号和待执行列表。每个迁移文件名格式 `001_create_users.sql`，配套 `001_create_users_down.sql` 做回滚。冲突时（版本号跳跃或重复）报错退出 code=2。
 
-Go CLI 工具，go build 能过就行。
+`import --file data.csv --table users --db app.sqlite` 支持 CSV 导入，自动检测分隔符（逗号/制表符/分号），第一行作为列名。数据校验失败（类型不匹配、必填为空）输出警告行号继续执行，导入完成后打印成功/失败/跳过计数。
+
+REST 风格的数据操作路径 `tables/{table}/rows/{id}/columns/{col}` 用于程序内部组织。支持常见输入格式。go build 能过就行。

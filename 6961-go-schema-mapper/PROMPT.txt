@@ -1,3 +1,9 @@
-源系统的字段名和目标系统的字段名完全不一样——源叫 user_name 目标叫 userName，源叫 create_time 目标叫 createdAt。每次都是写 Python 脚本一个个映射。写个通用的数据映射工具，定义源字段到目标字段的映射规则。类型转换（string→int）、默认值（空的给个默认）、条件映射（某个值才映射）都得支持。
+源叫 user_name 目标叫 userName，这种映射每天搞，写脚本都烦了。做通用映射引擎，一次配置反复用。
+
+`schemamap -input source.csv -mapping mapping.json -output mapped.json`。mapping.json：`{"rules":[{"from":"user_name","to":"userName","transform":"trim"},{"from":"create_time","to":"createdAt","transform":"date_format","args":{"from":"2006-01-02","to":"Jan 02, 2006"}},{"from":"status","to":"active","transform":"conditional","args":{"when":"active","then":"true","else":"false"}}],"defaults":{"country":"CN"}}`。
+
+transform 支持：trim、int/float（类型转换）、date_format、conditional（条件映射）、lower/upper、prefix/suffix。defaults 定义默认值。映射后只保留 rules 的 to 字段和 defaults 字段。
+
+`-validate` 只检查配置合法性不执行。`-dry-run` 打印前 5 行预览。源字段不存在且无默认值输出 warning 但不中断。输入不存在退出码 1，mapping 格式错误输出 "invalid mapping: [reason]" 退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。

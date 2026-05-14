@@ -1,5 +1,7 @@
-去重逻辑写在了消费者那边，上游重复发送的问题没解决。
+去重逻辑写在了消费者那边，上游重复发送的问题没解决——结果就是消费者那边内存暴涨。得在上游或者中间件层面做去重。
 
-消息采样：按比例或时间间隔抽取，采样统计分析，采样数据导出。规则校验需要规则组，规则组怎么来的不提。审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
+`msg-deduper` 做消息去重和采样。`dedup --input msgs.jsonl --key-field message_id --window 5m --output unique.jsonl`：按指定字段去重，时间窗口内的相同 key 视为重复。去重统计报告输出到 stderr：`[dedup] input=50000 unique=48200 duplicates=1800 window_discard=500`。`--key-field` 支持 message_id 和 content_hash 两种模式，content_hash 对消息体做 SHA256 取前 16 字符。窗口过期后内存释放。
 
-Go CLI 工具，go build 能过就行。
+`sample --input msgs.jsonl --rate 0.1 --output sampled.jsonl`：按 10% 比例随机采样，或 `--interval 30s` 每 30 秒取一条。采样统计输出 `{"total": 50000, "sampled": 5000, "rate": "10%"}`。`--export-stats stats.json` 导出采样统计数据。
+
+规则校验需要规则组（`--rule-group dedup-rules`），规则组怎么来的不提——工具假定规则组已配置。审计日志按多层路径 `audits/{year}/{month}/{day}/{id}` 组织，去重操作自动记录审计条目。输入文件为空输出空文件不报错。超大文件流式读取。go build 能过就行。

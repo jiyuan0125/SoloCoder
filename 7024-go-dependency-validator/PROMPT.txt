@@ -1,5 +1,11 @@
-新规要求 XML 数据交换必须过 Schema 检查，不合规罚款很重。Go 写个 CLI 应急：XML Schema 验证支持命名空间，属性值枚举校验，ID/IDREF 引用完整性检查。
-校验完成后自动生成报告，报告模板不存在就跳过。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-批量操作并发执行，结果按顺序汇总。
-go build 能过，命令行工具能正常运行。
+新规要求 XML 必须过 Schema 检查不合规罚款很重下周开始查。Go 写个 CLI 应急：XML Schema 验证支持命名空间，属性值枚举校验，ID/IDREF 引用完整性检查。校验后自动生成报告模板不存在就跳过。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。批量并发结果按顺序汇总。go build 能过命令行能正常运行。
+
+CLI：xmlint --schema order.xsd --data orders.xml --ns "ord=http://example.com/order" --output report.json。批量 --data ./dir/ --parallel 4 每文件 goroutine 按文件名字典序汇总。
+
+Schema：解析 targetNamespace 校验元素属性子元素顺序。未知元素报 "unexpected element at line N"。枚举非法值报 "invalid 'EXPRESS' for 'shipping', valid: [standard priority overnight]"。
+
+ID/IDREF：收集 ID 到 map 检查 IDREF 存在性，缺失报 "dangling IDREF 'item-999' at /path/@ref"。
+
+报告存 --report-dir（默认 ./reports/），{name}_{ts}.json。模板找不到跳过。{"file":"...","valid":false,"errors":[...],"summary":{"errors":3}}。
+
+退出码：0=通过，1=失败，2=输入错误。xml.Decoder 流式。空 XML {"valid":true,"warnings":["empty"]}。

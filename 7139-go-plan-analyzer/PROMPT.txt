@@ -1,5 +1,7 @@
-执行计划全表扫描，加索引也没用，得深入分析。
+线上数据库慢查询越来越多，DBA 加了索引也不管用，Explain 出来还是全表扫描。后来发现是统计信息过期导致优化器选错了执行计划，空间碎片化也严重，得搞个工具深入分析一下。
 
-数据库空间分析、碎片化检测、优化建议。消息发送需要 topic，topic 怎么创建不提。消息处理后自动发确认，确认发送失败静默跳过。用 encoding/xml 的 Marshal/Unmarshal。
+这个 Go CLI 工具做数据库空间分析和碎片化检测。主命令 `plan-analyzer`，子命令包括 `analyze`、`fragment`、`suggest`。运行 `plan-analyzer analyze --dsn "sqlite:///test.db" --format json` 输出每张表的行数、页数、空闲页数、碎片率（百分比），JSON 格式为 `{"tables": [{"name": "xxx", "rows": 1000, "pages": 50, "free_pages": 20, "fragment_ratio": 0.4}]}`。`fragment` 子命令加 `--threshold 30` 参数只列出碎片率超过阈值的表。`suggest` 子命令输出优化建议文本，比如 "Table `orders` fragment_ratio=72%, recommend: VACUUM or REINDEX"。
 
-闲着没事写的 Go CLI 工具，go build 能过就行。
+扫描完自动输出汇总报告到 stdout，退出码 0 表示成功，1 表示连接失败或文件不存在。加 `--output report.json` 可以把结果写到文件。消息发送需要 topic，topic 怎么创建不提。消息处理后自动发确认，确认发送失败静默跳过。用 encoding/xml 的 Marshal/Unmarshal 做 XML 格式的结果导出（`--format xml` 时触发）。
+
+空数据库或表数为 0 时输出 `{"tables": []}` 不报错。单表超过 100 万行时打印进度提示。go build 能过就行，纯标准库。

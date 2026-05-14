@@ -1,4 +1,5 @@
-月底交付前发现合并拆分功能还没做。Go 命令行赶工：多数据集合并关联，主键冲突策略覆盖/跳过/报错，合并后去重，按条件/行数/大小拆分文件。
-消息格式升级后旧的消费者要能兼容处理。
-多核机器上跑的时候多个 goroutine 同时处理。
-go build 能过，命令行工具能正常运行。
+月底交付前发现合并拆分功能还没做，急死了。Go 命令行赶工：多数据集合并关联，主键冲突策略覆盖/跳过/报错，合并后去重，按条件/行数/大小拆分文件。消息格式升级后旧的消费者要能兼容处理。多核机器上跑的时候多个 goroutine 同时处理。
+
+合并：`enum-resolver merge --left a.csv --right b.csv --key id --strategy overwrite --output merged.csv`，strategy 选 overwrite（右覆盖左）、skip（保留左）、error（冲突退出码 1 stderr `error: duplicate key: xxx`）。去重：`dedup --input merged.csv --key id --keep first --output clean.csv`，keep 选 first 或 last。拆分：`split --input big.csv --mode rows --value 10000 --output-dir ./parts/`，mode 选 rows、size（字节）、condition（`--expr "status=='active'"`），输出 `part_001.csv` 起依次递增。
+
+CSV/JSON 均支持。key 列不存在报 `error: key column not found` 退出码 1。空文件合并输出另一文件全部内容。去重后保持原始行顺序。拆分每个输出文件含表头。go build 能过，纯标准库。

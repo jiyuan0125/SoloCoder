@@ -1,4 +1,5 @@
-帮朋友的小电商团队搞数据清洗，条件判断和表达式计算是刚需。Go CLI：条件映射走 A 或 B，表达式求值四则运算加字符串拼接，查找表丰富数据。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-用 archive/zip 的读写。
-go build 能过，命令行工具能正常运行。
+帮朋友的小电商团队搞数据清洗，条件判断和表达式计算是刚需。Go CLI 实现三步：条件映射走 A 或 B 分支，表达式求值四则运算加字符串拼接，查找表丰富字段数据。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+
+第一步条件映射：`id-mapper conditional --input orders.csv --condition "amount>1000" --if-true vip.json --if-false normal.json --output result.csv`，condition 支持 `>`、`<`、`==`、`!=`、`>=`、`<=`、`contains(f,"text")`、`startsWith(f,"pre")`。第二步表达式求值 `eval --input data.csv --expr "price*quantity" --alias total --output result.csv`，新增 alias 列，四则运算 + 括号优先级，`concat(first," ",last)` 字符串拼接，除零时该行结果填 null 并 stderr warning。第三步查找 `lookup --input data.csv --lookup ref.csv --key sku --fetch category --output enriched.csv`，key 匹配不到新列填 null。
+
+CSV/JSON 均支持。condition 语法错误报 `error: invalid condition` 退出码 1。eval 引用不存在的列报 `error: column not found: xxx` 退出码 1。用 archive/zip 读写。go build 能过，纯标准库。

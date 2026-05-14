@@ -1,4 +1,5 @@
-社区里好多人问增量计算有没有 Go 实现，干脆写一个。命令行工具：对比两个数据集的差异，变更类型标记新增/修改/删除，差异合并。
-索引有初始化→构建中→可用→重建→下线的状态。
-用 crypto 包做对称加密。
-go build 能过，命令行工具能正常运行。
+社区里好多人问增量计算有没有 Go 实现，干脆写一个开源。命令行工具：对比两个数据集的差异，变更类型标记新增/修改/删除，差异合并策略。索引有初始化→构建中→可用→重建→下线五个状态。用 crypto 包做对称加密。
+
+先做 diff：`group-aggregator diff --old base.csv --new current.csv --key id --output diff.json`，输出 JSON 数组 `[{"key":"1","type":"modified","old":{"name":"A"},"new":{"name":"B"}}]`，type 精确为 added/modified/deleted，逐字段对比值不同才标记 modified。然后合并 `merge --diff diff.json --old base.csv --strategy apply --output merged.csv`，strategy 可选 apply 和 selective，selective 模式用 `--types added,modified` 过滤变更类型。聚合 `aggregate --input data.csv --group-by category --metric sum:amount,count:* --output agg.json`，`count:*` 计数所有行。
+
+输入 CSV/JSON。key 列不存在报 `error: key column not found` 退出码 1。两个文件 key 重复报 `error: duplicate key: xxx` 退出码 1。空文件 diff 全为 added 或 deleted。聚合结果含分组列和聚合结果列，空值填 null。go build 能过，纯标准库。

@@ -1,3 +1,9 @@
-上游团队的数据管道产出的文件是 Avro 格式，我们这边只能处理 JSON。试了几个开源方案不是编译不过就是 API 太复杂。自己写一个读取 Avro 格式文件的解析器，解析出 schema 和数据记录，输出为 JSON。支持指定只读取某些字段，和按条件过滤行。
+上游的数据管道产的是 Avro 格式，我们这边只能处理 JSON——试过 github 上三个库，两个编译报错一个 API 复杂到让人怀疑人生。自己来写一个。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+CLI 接口：`avro-read -file data.avro -fields name,age,email -filter 'age>25' -output result.json`。`-fields` 指定只输出哪些列，逗号分隔，省略则输出全部字段。`-filter` 支持简单的字段条件过滤，格式为 `字段名 运算符 值`，运算符支持 `>`、`<`、`=`、`!=`。不加 `-output` 参数则打印到 stdout。
+
+输出格式为 JSON 数组，每个元素是一条记录的对象。schema 信息通过 `-schema-only` 标志单独输出：打印解析后的字段名和类型列表，格式如 `name:string|age:int|email:string`。
+
+文件不存在 exit 1 并 stderr 输出 "error: failed to open file"。文件内容不是合法 Avro 格式时 stderr 输出 "error: invalid avro format" 并 exit 3。空文件同样报错 exit 1。字段名在 schema 中找不到时，该字段跳过并在 stderr 警告。
+
+纯 Go 标准库，编译后单二进制可以直接跑。Avro 的二进制编码按规范手写解析，不支持压缩格式（deflate/snappy）——文档里说清楚这个限制。

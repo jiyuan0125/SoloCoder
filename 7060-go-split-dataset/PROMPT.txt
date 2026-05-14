@@ -1,5 +1,7 @@
-V2 上线倒计时，分桶计算还没实现。Go 命令行搞定：分桶/分箱把连续值离散化，排名计算支持密集/稀疏/百分位，滚动窗口计算。
-搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
-加密需要密钥，密钥怎么导入不提。
-用 encoding/json 的 Decoder 流式处理。
-go build 能过，命令行工具能正常运行。
+V2 上线倒计时两周，分桶计算还没实现，不赶就完了。Go 命令行搞定三件事：分桶/分箱把连续值离散化，排名计算支持密集/稀疏/百分位，滚动窗口计算。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。加密需要密钥。
+
+1. 分桶：`split-dataset bucket --input data.csv --column age --method equal-width --bins 10 --output bucketed.csv`，method 可选 equal-width（等宽）和 equal-frequency（等频），`--bins` 指定桶数量，新增 `_bucket` 列（1 到 bins）。
+2. 排名：`rank --input data.csv --column score --method dense --output ranked.csv`，method 可选 dense（1,1,2,3）、sparse（1,1,3,4）、percentile（0.0-100.0），新增 `_rank` 列。
+3. 滚动窗口：`rolling --input data.csv --column value --function mean --window 7 --output rolled.csv`，function 选 mean/sum/min/max/count。
+
+输入 CSV/JSON，输出同格式。`--column` 不存在报 `error: column not found` 退出码 1。分桶值全相同归入桶 1。百分位保留一位小数。滚动窗口不足 window 大小时输出已有数据计算结果。用 encoding/json 的 Decoder 流式处理大文件。空输入输出空。go build 能过。

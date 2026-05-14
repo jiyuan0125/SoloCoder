@@ -1,3 +1,7 @@
-cron 不如 systemd timer 好管理——timer 能看执行日志、能设依赖关系。但写 .timer 文件太烦了。写个生成 systemd timer unit 的工具，输入 cron 表达式，输出 .timer 和配套的 .service 文件，直接 `systemctl enable` 就能用。
+先用 `timer-gen -cron "*/5 * * * *" -name sync-data -exec "/usr/local/bin/sync.sh"` 生成 `sync-data.timer` 和 `sync-data.service`。.timer 含 `[Timer]` OnCalendar 转换结果（`*/5 * * * *` → `*:0/5`）、`Persistent=true`、`WantedBy=timers.target`。.service 含 ExecStart 指向 -exec、`Type=oneshot`、`WantedBy=multi-user.target`。
+
+额外 flag：`-desc "同步数据"` 设描述；`-output ./units/` 输出目录；`-dry-run` 只打印不写。`timer-gen -validate "*/5 * * * *"` 校验 cron 合法性，非法输出 "invalid cron expression" 到 stderr 退出码 1。
+
+cron 转 OnCalendar 覆盖五段式：`0 2 * * *` → `*-*-* 02:00:00`，`30 4 * * 1` → `Mon *-*-* 04:30:00`。不支持 `@reboot` 等输出 "unsupported cron syntax: XXX" 退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。

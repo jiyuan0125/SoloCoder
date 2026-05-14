@@ -1,5 +1,5 @@
-同事那边做数据分析需要分桶排名工具，Go 命令行帮他们搞：分桶/分箱把连续值离散化，排名计算密集/稀疏/百分位，滚动窗口计算。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-规则校验需要规则组，规则组怎么来的不提。
-错误情况怎么处理你自己定。
-go build 能过，命令行工具能正常运行。
+同事那边做数据分析需要分桶排名工具，Go 命令行帮他们搞什么功能好呢？分桶/分箱把连续值离散化，排名计算密集/稀疏/百分位，滚动窗口计算。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。规则校验需要规则组，规则组怎么来的不提。
+
+分桶：`json-path-extractor bucket --input data.csv --column score --method equal-width --bins 5 --output out.csv`，method 选 equal-width 或 equal-frequency，新增 `_bucket` 列（1 到 bins），值全相同归入桶 1。排名：`rank --input data.csv --column score --method dense --output out.csv`，method 选 dense（1,1,2,3 不跳号）、sparse（1,1,3,4 跳号）、percentile（0.0-100.0 保留一位小数），新增 `_rank` 列。窗口：`rolling --input data.csv --column value --function mean --window 7 --output out.csv`，function 选 mean/sum/min/max/count，不足 window 大小时输出已有数据结果。
+
+输入 CSV/JSON。列不存在报 `error: column not found: xxx` 退出码 1。空输入输出空。错误自行合理处理。go build 能过。

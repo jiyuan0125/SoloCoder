@@ -1,3 +1,9 @@
-线上那个规则引擎是五年前写的 Java，改一次部署半小时。Go 重写一个命令行版：AND/OR/NOT 组合条件，规则优先级排序加冲突检测，执行结果出汇总报告。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+线上那个规则引擎是五年前写的 Java，改一次部署半小时。Go 重写一个命令行版：AND/OR/NOT 组合条件，规则优先级排序加冲突检测，执行结果出汇总报告。代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。go build 能过，命令行工具能正常运行。
+
+1. CLI：rulego run --rules rules.json --data input.csv --output report.json。规则有 id、priority（越大越先）、condition（AND/OR/NOT 嵌套）、action（pass/fail/warn）。JSONPath 引用，支持 eq/ne/gt/gte/lt/lte/contains/regex/in/not_in。
+2. 优先级降序，同优先级按 id 字典序。冲突：匹配同行 action 矛盾记入 conflicts 含 rule_a、rule_b、行号。
+3. 代码：cmd/rulego/main.go 入口，internal/engine/ 解析执行，internal/io/ 读写，internal/report/ 报告。
+4. 报告：{"summary":{"total_rules":5,"records":1000,"passed":950,"failed":30,"warned":20,"conflicts":2},"details":[...],"conflicts":[...]}。
+5. 文本输出 passed 绿、failed 红、warned 黄，汇总行。
+
+空规则 "error: no rules defined" 退出码 1。空数据退出码 0。语法错误跳过打 warning。CSV 流式。

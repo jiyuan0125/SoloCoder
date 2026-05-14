@@ -1,5 +1,7 @@
-队列深度报警了但不知道是哪类消息堆积。
+队列深度报警了但不知道是哪类消息堆积——监控大屏上只有一个数字，根本没法定位问题。需要能按规则过滤和统计消息分布的监控工具。
 
-消息过滤（基于规则筛选），黑名单/白名单，过滤统计。规则修改后所有引用该规则的校验结果要重新计算。校验完自动生成报告，报告模板不存在就跳过。一次可能处理上万条记录。
+`queue-depth-monitor` 做消息过滤和深度统计。`monitor --input queue_dump.jsonl --rules classify.yaml --output stats.json`：按规则对消息分类统计。规则文件定义分类维度：`{"name": "payment", "match": {"field": "type", "values": ["pay", "refund"]}}`。输出每类消息的数量和占比 `{"categories": [{"name": "payment", "count": 5000, "percentage": 50.0}, {"name": "notification", "count": 3000, "percentage": 30.0}], "unclassified": 2000}`。
 
-Go 命令行工具，go build 能过就行。
+`filter --input queue_dump.jsonl --blacklist blacklist.yaml --output clean.jsonl`：黑名单过滤，匹配的消息不进入统计。`--whitelist` 模式只保留匹配的消息。过滤统计实时输出。`--track-over-time` 持续模式，每 `--interval 30s` 采样一次，输出各分类的趋势变化。
+
+规则修改后引用该规则的历史校验结果要重新计算（`--recalculate` 触发）。校验完自动生成报告（`--report-template report.tmpl`），模板不存在跳过报告生成只输出 JSON。一次处理上万条记录时显示进度。消息体无法解析（JSON 格式错误）归入 parse_error 分类不丢弃。go build 能过就行。

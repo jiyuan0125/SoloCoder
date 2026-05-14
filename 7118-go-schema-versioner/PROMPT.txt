@@ -1,5 +1,5 @@
-迁移脚本没有版本管理，回滚只能靠手动改。想用 Go 练手顺便解决这个痛点。
+迁移脚本没有版本管理，回滚只能手动改 SQL——上次改错了直接把生产搞挂了半小时。这次用 Go 练手把这个痛点彻底解决，顺便加个 SQL 静态检查能力。
 
-SQL 静态检查：未使用索引、SELECT *、缺失 WHERE，危险操作检测，优化建议输出。安全扫描需要扫描策略，策略怎么配不提。认证检查要查角色，角色检查也要验证认证状态，两头都不能漏。错误情况怎么处理你自己定。
+先说迁移管理：`schema-ver init --db orders.db` 初始化 _migrations 表记录版本历史。`schema-ver up --db orders.db` 执行所有未应用的迁移（按文件名排序，格式 V001__create_users.sql），`--to V005` 只执行到指定版本。`schema-ver down --db orders.db --steps 1` 回滚最近 1 个迁移。`schema-ver status --db orders.db` 输出当前版本和待应用的迁移列表。冲突检测：两个迁移修改同一张表同一列时输出 "migration conflict: column {col} in table {table} modified by both V003 and V005" 退出码 3。再说 SQL 检查：`schema-ver lint --file query.sql` 检查未使用索引、SELECT *、缺失 WHERE、危险操作（DROP/DELETE without WHERE），每条规则有 level（warning/error），输出 JSON 数组 [{rule, level, line, message}]。安全扫描需要扫描策略配置。认证和角色检查互相验证，两头不能漏。错误处理自行决定。
 
 Go 命令行工具，go build 能过就行。

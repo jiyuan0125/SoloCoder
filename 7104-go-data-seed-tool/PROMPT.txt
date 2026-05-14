@@ -1,7 +1,3 @@
-测试环境要造数据，每次手工插 CSV 又慢又容易出错，给朋友的小业务也弄一个自动化工具。
+测试环境要造数据，每次手工插 CSV 又慢又容易出错，给朋友的小业务也弄一个自动化工具。上次少插了一个 NOT NULL 字段，整个测试跑了一下午全废了。
 
-CSV 导入 SQLite，碰到冲突有处理策略（跳过、覆盖、报错），导入过程显示进度条。用 database/sql 的预处理语句，别拼 SQL。
-
-审计日志按 audits/{year}/{month}/{day}/{id} 的路径组织。
-
-Go CLI，go build 能过就行。
+Go CLI 工具 `dataseed`。子命令 `import`：`--file users.csv --table users` 把 CSV 导入 SQLite，`--conflict skip|overwrite|error` 处理主键冲突——skip 跳过已有记录，overwrite 更新已有记录，error 直接报错退出码 1。导入过程 stderr 显示进度条：`[=====>    ] 45% (4500/10000 rows)`。用 database/sql 的预处理语句和事务批量提交，每 1000 行一个事务，别拼 SQL 字符串。`--create-table` 自动建表（从 CSV 表头推断列类型，纯整数列 INTEGER，含日期关键字列 TEXT，其余 TEXT）。`--batch-size 500` 控制每批大小。审计日志按 audits/{year}/{month}/{day}/{id} 的路径组织成 JSON 文件，记录操作时间、影响行数、文件名。CSV 有 BOM 自动剥离，空行跳过，字段类型推断不出来的默认 TEXT。导入完成后 stderr 输出统计：总行数、成功行数、跳过行数、耗时。纯标准库，go build 能过就行。

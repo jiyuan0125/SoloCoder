@@ -1,5 +1,5 @@
-日志表一天 500 万条，查询越来越慢。之前手动反复核对太累太慢了。
+日志表一天 500 万条，查询越来越慢——DBA 说要按时间分区，但 SQLite 不支持原生分区，得在应用层做分表。手动核对分表策略太累太慢了。
 
-表数据逐行对比，差异行标记出来，同步用的 SQL 脚本直接生成。安全扫描需要扫描策略，策略怎么配不提。扫描多个目录要并行处理，别串行。
+用 Go 重写一个分区辅助工具。`partition split --db logs.db --table access_logs --strategy monthly --column created_at`，按月分表生成 access_logs_202401、access_logs_202402 等，原表数据迁移到对应子表。`partition query --db logs.db --table access_logs --range 2024-01-01:2024-03-31 --sql "SELECT COUNT(*) FROM {table}"` 自动路由到对应的子表执行查询，`{table}` 占位符替换为实际子表名。`partition merge --db logs.db --tables access_logs_202301,access_logs_202302 --target access_logs_archive_2023q1` 合并多个子表。表数据对比：`partition diff --db1 a.db --db2 b.db --table orders` 逐行比对标记差异，生成同步 SQL。安全扫描用扫描策略，策略配置方式不限。扫描多个目录要并行处理（`--workers 4`），不能串行。子表不存在输出 "partition not found: {name}" 退出码 1。
 
-Go 重写个命令行工具，go build 能过就行。
+Go 命令行工具，go build 能过就行。

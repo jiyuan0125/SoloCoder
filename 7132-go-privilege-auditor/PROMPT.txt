@@ -1,5 +1,5 @@
-谁有哪个库的权限说不清楚，安全审计过不了。调研了一圈发现 Go 做数据库工具比较合适。
+安全审计过不了——谁能访问哪个库、哪些表、权限是什么级别，一笔糊涂账。调研了一圈发现 Go 做数据库权限审计工具挺合适的。
 
-两个数据库的 schema 对比，差异 Markdown 报告，同步 SQL 脚本。加密完自动删除原文，删除失败继续执行。签名时验证证书状态，验证时也要检查签名链。
+Go 写个权限审计 CLI 工具。`prvaudit scan --db orders.db` 扫描所有用户的权限，输出 JSON：[{user, tables: [{table, privileges: [SELECT,INSERT,UPDATE,DELETE]}]}]。`prvaudit diff --db1 dev.db --db2 prod.db --format markdown` 对比两个库的权限差异生成报告。`prvaudit check --db orders.db --rule "no DELETE without WHERE"` 检查是否有用户拥有不合理的权限组合。`prvaudit report --db orders.db --output audit.md` 生成审计报告含权限矩阵表格。加密场景：导出报告时 `--encrypt --key-file key.pem` 加密，加密完自动删除原文，删除失败继续执行不中断。签名验证和证书状态互相校验。用户不存在时输出 "user not found: {name}" 退出码 1。空权限表输出 "no grants found" 退出码 0。
 
 Go 命令行工具，go build 能过就行。

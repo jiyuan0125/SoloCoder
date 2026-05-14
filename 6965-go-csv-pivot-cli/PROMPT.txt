@@ -1,3 +1,9 @@
-产品经理要一份按月份和地区两个维度看销售额的透视表，行是月份列是地区。Excel 能做但操作太繁琐，而且每次数据更新又要重来。写个 CSV 透视表工具，指定行键（月份）、列键（地区）、值列（销售额）和聚合方式（sum），一键生成透视结果。
+产品经理要透视表，行月份列地区值销售额——Excel 操作太繁琐还不自动化。这个工具能不能一劳永逸？
+
+`csvpivot -input sales.csv -row month -column region -value amount -agg sum -output pivot.csv`。输入 CSV 三列以上，-row 指定行维度列（如月份），-column 指定列维度列（如地区），-value 指定值列（如销售额），-agg 指定聚合方式（sum/avg/count/min/max 五种，默认 sum）。
+
+输出格式：第一列是 row 列的值（排序后的去重值），后续列按 column 列的去重值排列（字母序），交叉单元格是聚合结果。最后一行 `Total` 是行汇总，最后一列 `Total` 是列汇总。`-no-total` 不生成汇总行列。空值参与 count 时计为 0，参与 sum/avg 时跳过。
+
+多个行维度：`-row month,category` 用逗号分隔，输出按第一维度再按第二维度排列。值列非数值且指定 sum/avg 等运算，输出 "value column must be numeric for [agg]" 到 stderr 退出码 1。输入某行缺少 row 或 column 值，该行跳过并在 stderr 输出 "skipped row N: missing pivot key"。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

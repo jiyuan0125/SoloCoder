@@ -1,5 +1,9 @@
-市场部给了 200 个文本文件要从里面提取邮箱地址，手动翻肯定不行。写个批量提取邮箱的工具，从文件或 stdin 读文本，正则提取所有邮箱地址。去重排序后输出，同一个邮箱出现在多个文件里只留一条。
+市场部三天两头丢过来一堆文本文件——客服聊天记录、会议纪要、反馈表单——要从里面扒邮箱地址。以前手动搜，漏了被追责过两次。这回干脆写个工具一劳永逸。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+CLI：`email-extract -path ./data/ -output emails.csv -format csv`，扫描指定目录下所有 `.txt` 文件，提取邮箱。也支持单文件：`-path single.txt`。从 stdin 读也可以：`cat file.txt | email-extract -stdin -output result.json`。
 
-Go 标准库，命令行参数用 flag 包解析。
+邮箱正则用标准 RFC 5322 简化版匹配，提取结果去重（不区分大小写）后按字母排序。输出格式通过 `-format` 指定：csv 输出两列 `email,source_file`，json 输出数组 `[{"email":"xx","file":"yy","count":2}]`，count 是该邮箱在所有文件中出现的总次数。
+
+子目录递归扫描默认关闭，加 `-recursive` 开启。匹配不到任何邮箱时 stderr 输出 "warning: no email addresses found"，输出空文件，exit 0。目录不存在时 stderr 输出 "error: path not found" 并 exit 1。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库，命令行参数用 flag 包解析。

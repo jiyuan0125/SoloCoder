@@ -1,3 +1,11 @@
-多部门数据合并的时候，同一个字段格式五花八门：日期有 2024-01-01、2024/01/01、01-01-2024；电话有 138-0000-0000、13800000000、+86 138 0000 0000。写个数据标准化工具，按配置的规则统一格式。日期、电话号码、地址、姓名的标准化规则都要支持，规则可配置。
+四个部门合并数据，同一个"日期"列出来四种写法——2024-01-01、2024/01/01、01-01-2024 还有 Jan 1 2024。电话更离谱，带不带加号横杠空格全不一样。不统一格式后面所有分析都白做。
+
+CLI：`normalize -input messy.csv -config rules.json -output clean.csv`。规则配置文件示例：`{"rules":[{"field":"date","type":"date","target":"2006-01-02"},{"field":"phone","type":"phone","country":"CN"},{"field":"name","type":"name","case":"capitalize"}]}`。
+
+类型处理——date 类型：自动检测输入格式（支持 yyyy-mm-dd、yyyy/mm/dd、dd-mm-yyyy、MM DD YYYY），统一输出为目标格式。phone 类型：去除所有非数字字符，按 country 参数加国家码前缀（CN → +86）。name 类型：trim 空格后按 case 参数处理，capitalize 首字母大写、upper 全大写、lower 全小写。
+
+输出列名和输入一致，只改值不改结构。规则中引用的 field 不在输入 header 里时 stderr 警告 "warning: field 'xxx' not found, skipping"。无法识别的日期格式保留原值，stderr 打 warning 注明行号和原始值。
+
+空值不处理直接保留。规则文件格式错误时 stderr 报错 "error: invalid rules config" 并 exit 1。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

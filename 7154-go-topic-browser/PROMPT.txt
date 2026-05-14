@@ -1,5 +1,7 @@
-Topic 数量爆炸了，不知道哪些还有人在消费。
+Topic 数量爆炸了不知道哪些还有人在消费，这是上周 Kafka 集群运维最头疼的问题。需要一个能快速浏览和统计 topic 状态的工具。
 
-消息聚合，按时间窗口或数量阈值批量输出，聚合结果格式化，超时处理。导入完成自动更新索引，索引更新失败只记日志。表结构变更后依赖该表的查询和报告要更新。代码分文件组织。
+1. `topic-browser list --brokers localhost:9092 --format table`：列出所有 topic，表格列：topic 名、分区数、复制因子、最早偏移量、最新偏移量、消息总量。加 `--filter "user-*"` 按通配符筛选。`--format json` 输出结构化数据。
+2. `topic-browser aggregate --input events.json --window 10m --count-threshold 500 --output result.json`：消息按时间窗口聚合，窗口内消息数达到阈值或超时触发输出。聚合结果包含 `{"window": "2024-01-15T10:00:00~10:10:00", "count": 520, "topics": {"user-events": 300, "order-events": 220}}`。
+3. `topic-browser describe --topic user-events --partitions`：显示 topic 详细信息，包括每个分区的 leader、replica、ISR 列表。
 
-Go CLI 工具，go build 能过就行。
+导入完成自动更新索引（`--reindex`），索引更新失败只记日志不中断。表结构变更后依赖该表的查询和报告要更新——通过 `--deps-file` 配置依赖关系。聚合超时（默认 60 秒）未达到阈值输出警告并写入已有数据。代码按职责分文件。go build 能过就行。

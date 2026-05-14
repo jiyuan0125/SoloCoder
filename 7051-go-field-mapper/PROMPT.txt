@@ -1,3 +1,7 @@
-数据仓库的字段映射全写在 Excel 里，每次改都要手动同步到代码。Go 写个 CLI 统一管：字段映射源到目标的对应关系，类型转换覆盖字符串转数字/日期/布尔，默认值填充，条件映射满足条件走 A 否则走 B。
-消息格式升级后旧的消费者要能兼容处理。
-go build 能过，命令行工具能正常运行。
+数据仓库的字段映射全写在 Excel 里，每次改都要手动同步到代码——上个月有人改了 Excel 忘了改 ETL，结果线上跑了三天的脏数据。这个问题能不能用一个 Go CLI 工具统一管起来？
+
+`field-mapper map --config mapping.yaml --input source.csv --output target.csv` 实现字段映射。mapping.yaml 定义 source_field → target_field 对应关系、类型转换规则和默认值。类型转换：string_to_int（解析失败用默认值）、string_to_float、string_to_date（`--date-format "2006-01-02"` 指定 Go 时间格式）、string_to_bool（"true"/"1"/"yes" → true，"false"/"0"/"no" → false）。默认值填充：`default: "N/A"` 或 `default: 0`。条件映射：`condition: "source_field == 'type_a'"` 命中走 mapping_a，否则走 mapping_b。
+
+消息格式升级：输出 JSON 新增字段时，旧版消费者读不到的字段跳过不报错。映射失败（类型转换异常、源字段不存在）不中断，记录到 errors 数组含 row/target_field/source_value/error。
+
+CLI 输出 JSON：`{ "mapped_rows": N, "errors": [...], "field_stats": { "field": { "converted": N, "defaulted": N } } }`。退出码 0 成功 1 有映射错误 2 配置错误。纯标准库实现，go build 能过。

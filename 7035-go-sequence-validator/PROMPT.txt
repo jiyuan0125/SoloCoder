@@ -1,3 +1,7 @@
-YAML 校验之前全靠人肉看，一条一条对效率太低。Go 搞个自动化工具：YAML 类型校验（日期、时间、IP、URL），锚点引用解析检测循环引用，配置合并后验证 schema 合规性。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+YAML 校验之前全靠人肉看，一条一条对效率太低。上次遗漏了一个循环引用没发现，配置上线后服务直接起不来。
+
+Go 命令行工具 `sequence-validator` 专门做 YAML 校验。`sequence-validator check --schema schema.yaml --data config.yaml` 实现类型校验：日期格式匹配 RFC3339 或 YYYY-MM-DD，时间匹配 HH:MM:SS，IP 匹配 IPv4 点分十进制和 IPv6 冒号十六进制，URL 要求包含 scheme://host 格式。锚点引用解析追踪 &anchor 和 *alias 的引用关系图，检测到循环时输出 "circular reference detected: anchor A → B → C → A"，列出完整引用链。配置合并场景：`--base base.yaml --overlay override.yaml` 合并后对合并结果做 schema 合规性验证，字段类型冲突（base 里是 int，overlay 里是 string）也要报告。
+
+代码组织成三个文件：`validator.go` 核心校验逻辑，`io.go` 文件读写和编码处理，`main.go` 命令行入口。输入文件编码不支持时退出码 2 并提示 "unsupported encoding"。
+
+输出 JSON：`{ "valid": bool, "type_errors": [...], "anchor_errors": [...], "merge_conflicts": [...] }`。退出码 0 通过 1 校验失败 2 输入错误。纯标准库实现，go build 能过。

@@ -1,4 +1,7 @@
-开源的去重工具自定义规则太弱，编辑距离都不支持。Go 从零写：多字段联合去重键，编辑距离相似度去重（阈值可配），去重完出详细报告。
-任务有注册→排队→执行→成功/失败→重试的状态。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+开源的去重工具自定义规则太弱了，连编辑距离都不支持，遇到"张三"和"张 三"这种只能干瞪眼。Go 从零写个命令行工具搞定多字段联合去重——用 `--key-fields name,phone` 指定联合键字段，精确匹配先筛一轮。然后跑编辑距离相似度去重，`--similarity-threshold 0.8` 控制阈值，低于阈值的标记为疑似重复。去重完输出详细报告，每条疑似重复记录标明跟哪条记录相似、相似度多少、匹配了哪些字段。
+
+1. 任务状态机：registered → queued → running → succeeded/failed，failed 状态下 `--retry-count` 控制重试次数（默认 3），重试间隔 2 秒。状态持久化到本地 JSON 文件 `.encoding-validator-state.json`。
+2. 任务有等待、运行、成功、失败几个状态，CLI 提供 `status` 子命令查看当前任务状态列表。
+3. 大文件处理：CSV 按行流式读取，内存占用不超过 100MB。编码自动检测覆盖 UTF-8、GBK、Big5。
+
+CLI 入口：`encoding-validator dedup --input data.csv --output result.json --key-fields name,id_card --similarity-threshold 0.85`。输出 JSON 结构包含 total_count、duplicate_groups（每组列出相似记录的行号和相似度）。退出码 0 表示成功，1 表示输入错误，2 表示处理异常。纯标准库实现，go build 能过。

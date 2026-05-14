@@ -1,3 +1,11 @@
-前端要 JSON 格式的数据，但数据库里查出来是扁平的行。写个 SQL 查询结果转 JSON 工具，连 SQLite 执行查询，结果转成 JSON 数组。嵌套对象展开要支持——比如订单表 JOIN 商品表，结果里商品要嵌套在订单对象的 items 数组里，不能全平铺。
+前端要 JSON，数据库给的是扁平行——每个需求来了都得写个脚本转一下。问题不只是行列转换，JOIN 查询的结果想把子表数据嵌套进父表对象里，手动处理太容易出错了。
+
+CLI：`sql2json -db inventory.db -query "SELECT o.id,o.total,i.name,i.price FROM orders o JOIN items i ON o.id=i.order_id" -nest items:order_id:id -output result.json`。`-nest` 参数格式是 `子表列:子表外键:父表主键`，指定后自动把匹配的子表列收进父对象的数组里。
+
+无嵌套时输出扁平 JSON 数组：`[{"id":1,"total":99,"name":"pen","price":5}]`。有 `-nest` 时输出：`[{"id":1,"total":99,"items":[{"name":"pen","price":5},{"name":"book","price":15}]}]`。支持多层嵌套，多个 `-nest` 参数按顺序应用。
+
+SQL 执行失败时 stderr 输出 "error: query execution failed: <具体错误>"，exit 1。查询结果为空时输出 `[]`，exit 0。数据库文件不存在时 exit 2。`-db` 支持 SQLite 文件路径。
+
+加 `-pretty` 参数输出格式化 JSON（缩进两空格），不加则输出压缩 JSON。字段类型自动转换：INTEGER → number，REAL → number，TEXT → string，NULL → null。
 
 Go 实现，只用标准库，交叉编译友好。

@@ -1,4 +1,5 @@
-Go 并发模型挺有意思，找个数据处理的场景练练手。命令行工具：按条件/行数/大小拆分文件，数据采样支持随机/分层/等间隔，数据脱敏把敏感字段遮掉。
-表结构变更后依赖该表的查询和报告要更新。
-配置项有哪些你自己设计，够用就行。
-go build 能过，命令行工具能正常运行。
+Go 并发模型挺有意思，找个数据处理场景练练手怎么样？做个命令行工具：按条件/行数/大小拆分文件，数据采样支持随机/分层/等间隔，数据脱敏把敏感字段遮掉。表结构变更后依赖该表的查询和报告要更新。
+
+拆分：`filter-columns split --input big.csv --mode rows --value 1000 --output-dir ./out/`，mode 选 rows、size（字节）、condition（配合 `--expr "age>30"`），输出文件 `chunk_001.csv` 起。采样：`sample --input data.csv --method random --ratio 0.1 --seed 42 --output sampled.csv`，method 可选 random（随机比例）、stratified（按 `--strata-column` 分层采样）、systematic（等间隔 `--interval` 每 N 行取一行），random 支持 `--seed` 可复现。脱敏：`mask --input data.csv --columns phone,email --strategy partial --keep-prefix 3 --keep-suffix 4 --output masked.csv`，strategy 选 replace（全替换为 `***`）、hash（SHA256 摘要）、partial（保留首尾，中间用 `--char` 指定的字符填充，默认 `*`）。
+
+CSV/JSON 均支持。采样 ratio 超过 1.0 报错退出码 1。脱敏列不存在时 stderr 报 `warning: column xxx not found, skipped`。空文件采样输出空文件。配置项够用就行，不搞复杂。go build 能过，纯标准库。

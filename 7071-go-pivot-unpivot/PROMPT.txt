@@ -1,3 +1,5 @@
-映射逻辑写死在代码里，每加一个字段类型就要改代码部署。Go 写个可配置的 CLI：字段映射源到目标对应关系，类型转换字符串转数字/日期/布尔，默认值填充，条件映射满足条件走 A 否则走 B。
-认证需要用户角色，用户角色怎么创建不提。
-go build 能过，命令行工具能正常运行。
+映射逻辑写死在代码里，每加一个字段类型就要改代码重新部署，烦透了。Go 写个可配置的 CLI：字段映射源到目标对应关系，类型转换字符串转数字/日期/布尔，默认值填充，条件映射满足条件走 A 否则走 B。认证需要用户角色，角色怎么创建不提。
+
+映射配置 JSON 格式：`[{"src":"raw_age","dst":"age","type":"int","default":0},{"src":"raw_date","dst":"date","type":"date","format":"2006-01-02"}]`。映射命令：`pivot-unpivot map --input data.csv --config mapping.json --output mapped.csv`，type 支持 int/float/bool/date/string，bool 转换规则："true"/"1"/"yes"/"T" → true 其余 → false，转换失败用 default 填充，无 default 保留原值 + stderr `warning: row N field xxx conversion failed`。条件映射 `conditional-map --input data.csv --condition "region=='CN'" --true-config cn.json --false-config default.json --output result.csv`，condition 支持 ==、!=、>、<、contains(field,"text")。
+
+配置文件格式错误报 `error: invalid config: line N` 退出码 1。输入 CSV/JSON，输出同格式。空行跳过不报错。go build 能过，纯标准库。

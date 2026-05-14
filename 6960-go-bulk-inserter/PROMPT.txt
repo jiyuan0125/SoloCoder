@@ -1,3 +1,9 @@
-初始化数据库要插入 10 万条测试数据，一条一条 INSERT 跑了 20 分钟。写个批量数据插入工具，读 CSV/JSON 数据生成批量 INSERT SQL。batch size 要能配，一条 SQL 里放 1000 条还是 5000 条看数据库承受能力。去重也加上，重复的主键跳过不报错。
+初始化测试数据库插入 10 万条数据跑了 20 分钟？这也太慢了。得做一个批量插入 SQL 生成器，不直接连数据库，纯生成 SQL 文件让用户自己执行。
+
+`bulkinsert -input data.csv -table users -batch 1000 -output seed.sql`。读取 CSV 文件，按 -batch 大小分批生成 INSERT 语句：`INSERT INTO users (name,email,age) VALUES ('alice','a@b.com',25),('bob','b@b.com',30),...;`，每条 SQL 以分号结尾。`-batch` 默认 1000，范围 1-50000。`-format json` 时读取 JSON 数组文件而非 CSV。
+
+去重策略：`-dedup email` 按指定列去重，重复行只保留第一条，并在 stderr 输出 "skipped duplicate row N: column=email value=XXX"。`-on-conflict skip` 主键冲突时跳过（生成 `INSERT OR IGNORE`），`-on-conflict update` 生成 `INSERT OR REPLACE`。`-create-table` 额外生成 CREATE TABLE 语句，从 CSV 首行推断列类型。
+
+输入文件空输出 "empty input file" 到 stderr 退出码 1。`-table` 必填，缺失输出 usage 退出码 1。非法 batch 值输出 "batch size must be 1-50000" 退出码 2。生成的 SQL 文件编码 UTF-8，字符串值用单引号包裹，内部单引号双写转义。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

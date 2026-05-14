@@ -1,5 +1,5 @@
-几百张表不知道哪些还在用，哪些是历史遗留。
+几百张表哪些还在用、哪些是历史遗留的没人说得清——上次删了一张"没人用"的表，结果三个后台任务挂了。
 
-两个数据库的 schema 对比，差异生成 Markdown 报告，同步 SQL 脚本输出。数据库查询需要连接配置，连接怎么配不提你看着办。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
+用 Go 写个死表检测工具。`dead-table scan --db orders.db --log-dir ./slow_logs/` 分析慢查询日志和 SQLite 的查询记录，统计每张表的最近访问时间。`dead-table report --db orders.db --threshold 90d` 输出 90 天内没被查询过的表清单，JSON 格式：[{table, last_accessed, row_count, size_bytes, recommendation}]，recommendation 是 "review" 或 "safe_to_archive"。`dead-table archive --db orders.db --tables old_logs,temp_data --output archive.db` 把标记的表迁移到归档库，原库删除前输出确认提示。两个库的 schema 对比：`dead-table diff --db1 a.db --db2 b.db --format markdown`，差异生成 Markdown 报告，同步 SQL 脚本直接输出到 stdout。数据库查询需要连接配置。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。单次可能处理上万张表的元数据，内存控制好。
 
-Go 标准库写个 CLI 工具，代码分文件组织：核心逻辑、IO 处理、命令行入口分开。go build 能过就行。
+代码分文件组织：scanner.go、reporter.go、archiver.go、main.go。Go CLI 工具，go build 能过就行。

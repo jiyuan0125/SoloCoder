@@ -1,4 +1,5 @@
-字段映射规则散落在七八个配置文件里，查一个映射要翻半天。Go 统一成一个命令行工具：字段映射源到目标的对应关系，类型转换（字符串转数字/日期/布尔），默认值填充。
-任务有注册→排队→执行→成功/失败→重试的状态。
-文件可能有好几 GB 大，要能处理。
-go build 能过，命令行工具能正常运行。
+字段映射规则散落在七八个配置文件里，查一个映射要翻半天。Go 统一成一个命令行：字段映射源到目标的对应关系，类型转换（字符串转数字/日期/布尔），默认值填充。任务有注册→排队→执行→成功/失败→重试五个状态。
+
+映射子命令：`join-tool map --input data.csv --mapping mapping.json --output mapped.csv`，mapping.json 格式 `[{"src":"age_str","dst":"age","type":"int","default":0}]`，type 支持 int、float、bool、date、string，转换失败时用 default 填充，无 default 则 stderr 报 `warning: conversion failed for row N field xxx` 并保留原值。bool 转换规则："true"/"1"/"yes" → true，其余 → false。查找表 `lookup --input data.csv --lookup-table regions.csv --key city --fetch province --output enriched.csv`，按 key 列匹配查找表，fetch 指定拉取列，匹配不到填 null。
+
+批量映射 `batch-map --input-dir ./raw/ --mapping mapping.json --output-dir ./mapped/`，扫描目录下所有 CSV 逐一处理。输入 CSV/JSON，输出同格式。映射文件 JSON 不合法报 `error: invalid mapping file` 退出码 1。文件好几 GB 要能处理，用 bufio 流式读写。go build 能过，纯标准库。

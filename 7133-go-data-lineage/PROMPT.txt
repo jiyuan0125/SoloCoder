@@ -1,5 +1,5 @@
-这条数据从哪来的？上游改了字段没人通知。之前用 Python 做太慢。
+数据溯源是个让人头疼的问题——这条数据从哪来的？上游改了字段没人通知，下游报表全错了。之前用 Python 做太慢了，Go 搞一个试试。
 
-SQL 查询格式化、语法高亮终端输出、复杂度评分，再加表数据逐行对比。支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
+`lineage trace --db orders.db --table orders --column customer_id` 追踪指定列的数据血缘，输出 JSON 上下游关系图：{column: "orders.customer_id", upstream: [{table, column, transform}], downstream: [{table, column}]}。`lineage format --file query.sql --highlight` 格式化 SQL 并在终端高亮输出，`--score` 附带复杂度评分。`lineage diff --db1 before.db --db2 after.db --table orders` 逐行对比表数据标记差异。支持多层规则路径 rules/{group}/{name}/{version}，可以用规则定义字段间的转换关系。表不存在输出 "table not found: {name}" 退出码 1。规则不存在输出 "rule not found: {path}" 退出码 2。结果可导出为 DOT 格式用 Graphviz 可视化。
 
-Go 试试，命令行工具，go build 能过就行。
+Go 命令行工具，go build 能过就行。

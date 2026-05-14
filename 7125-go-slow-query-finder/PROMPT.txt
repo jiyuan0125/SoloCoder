@@ -1,9 +1,5 @@
-接口响应从 50ms 涨到 2 秒，定位到是慢查询。手动校验太耗时了。
+接口响应从 50ms 涨到 2 秒，查了一圈定位到是慢查询——但怎么快速把所有慢查询都找出来？手动一个个看 EXPLAIN 太耗时了。还得顺带把备份验证也做了。
 
-数据库备份做 SQL dump、增量备份、恢复验证。SQL 静态检查（未使用索引/SELECT */缺失 WHERE）。
+这个工具解决两个问题。慢查询分析：`slowfind analyze --db orders.db --log slow.log --threshold 500ms`，解析慢查询日志（格式：每条记录含 SQL 文本、执行时间、扫描行数），找出超过阈值的查询，按耗时排序输出 Top N（`--top 20`）。每条结果包含 sql、avg_time_ms、max_time_ms、call_count、scan_rows，JSON 数组格式。`slowfind explain --db orders.db --sql "SELECT ..."` 对指定 SQL 执行 EXPLAIN 并输出优化建议。备份功能：`slowfind dump --db orders.db --output backup.sql` 全量 SQL dump，`--incremental --since 2024-01-01` 增量备份。`slowfind verify --db orders.db --backup backup.sql` 验证备份完整性（行数校验）。SQL 静态检查：`slowfind lint --file queries.sql` 检测未使用索引、SELECT *、缺失 WHERE。索引有五个状态：初始化 → 构建中 → 可用 → 重建中 → 下线。CA 初始化方式不限。
 
-证书签发需要 CA，CA 怎么初始化不提。
-
-索引有初始化→构建中→可用→重建→下线的状态。
-
-Go 实现，代码分文件组织。go build 能过，命令行能跑就行。
+代码分文件组织。Go 实现，go build 能过，命令行能跑就行。

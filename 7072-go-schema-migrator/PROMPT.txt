@@ -1,4 +1,5 @@
-比了一圈 Go 的聚合库，没有一个同时支持透视和窗口函数的。自己搞：按维度分组聚合 sum/avg/count/max/min，窗口函数滚动平均/累计求和/排名，透视逆透视转换。
-规则校验需要规则组，规则组怎么来的不提。
-任务有等待、运行、成功、失败几个状态。
-go build 能过，命令行工具能正常运行。
+比了一圈 Go 的聚合库，没有一个同时支持透视和窗口函数的。自己搞：按维度分组聚合 sum/avg/count/max/min，窗口函数滚动平均/累计求和/排名，透视逆透视转换。规则校验需要规则组，规则组怎么来的不提。任务有等待、运行、成功、失败四个状态。
+
+聚合：`schema-migrator aggregate --input data.csv --group-by dept --metric sum:salary,avg:age,count:* --output agg.json`，输出 JSON 数组，每条含分组字段和聚合结果。窗口：`window --input data.csv --column salary --function cumulative_sum --partition-by dept --output windowed.csv`，function 选 rolling_avg（需 `--window-size`）、cumulative_sum、rank，`--partition-by` 可选先分组再窗口计算。透视 `pivot --input agg.json --row dept --column metric --value result --output pivot.csv`，value 列有多条取最后一条。逆透视 `unpivot --input pivot.csv --id-columns dept --variable metric --value result --output long.json`。
+
+输入 CSV/JSON，输出按参数定。group-by 列不存在报错退出码 1。聚合字段非数值 skip + stderr warning。空输入输出空。go build 能过。

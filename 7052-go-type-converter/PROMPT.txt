@@ -1,3 +1,5 @@
-ETL 工具里的聚合功能太弱，窗口函数都不支持。Go 自己写命令行：按维度分组聚合（sum/avg/count/max/min），窗口函数包括滚动平均、累计求和、排名，透视和逆透视转换。
-签名时需要验证证书状态，验证时也要检查签名链。
-go build 能过，命令行工具能正常运行。
+上次 ETL 工具聚合能力太弱，季度报表出了大事故，老板震怒。用 Go 命令行重写：按维度分组聚合（sum/avg/count/max/min），窗口函数包括滚动平均、累计求和、排名，透视和逆透视转换。签名验证时需要校验证书 OCSP 状态，验证签名链要逐级检查到根证书。
+
+子命令设计：`aggregate --input data.csv --group-by region,category --metric sum:amount,avg:price --output result.json`，`--group-by` 接逗号分隔的维度列名，`--metric` 格式为 `聚合方式:字段名`。窗口子命令 `window --input data.csv --function rolling_avg --window-size 7 --column value --output out.json`，`--function` 可选 rolling_avg、cumulative_sum、rank，rolling_avg 和 cumulative_sum 必须带 `--window-size` 正整数。透视 `pivot --input in.csv --row-key region --col-key category --value amount --output pivot.json`，逆透视 `unpivot --input pivot.json --row-key region --col-key category --value-col value --output flat.json`。
+
+输入按扩展名自动识别 CSV 或 JSON，输出统一 JSON。空文件输出 `[]` 退出码 0。维度列不存在时 stderr 报 `error: column not found: xxx` 退出码 1。聚合字段含非数值跳过该行，stderr 打 `warning: non-numeric value in row N`。窗口计算到数据边界自然截断不报错。go build 能过，纯标准库实现。

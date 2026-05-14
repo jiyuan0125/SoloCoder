@@ -1,3 +1,11 @@
-数据仓库要接入一个新的数据源，先得了解数据的分布情况——每列有多少空值、值域多大、唯一值有多少、分布是不是偏的。写个数据画像工具，分析数据集的分布特征，每列输出：值域范围、分布直方图数据、缺失率、唯一值数量。最后生成一份画像报告。
+数据仓库要接入新数据源，你得先摸清楚数据长什么样——空值多少、值域多宽、分布偏不偏。不然上来就建表写 ETL，后面发现数据质量不行又得返工。
+
+CLI：`profile -input dataset.csv -output report.json -top-values 10 -histogram-bins 20`。不加 `-output` 则打印到 stdout。加 `-format text` 输出人类可读的报告，`-format json` 输出结构化 JSON。
+
+每列输出以下信息——column_name：列名，total_count：总行数，null_count：空值行数，null_rate：空值率，unique_count：唯一值数量，type_inferred：推断类型（int/float/string/date）。数值列额外输出：min、max、mean、median、stddev，以及 histogram 数据（按指定 bins 数分桶，每个桶输出范围和频次）。字符串列额外输出：min_length、max_length、avg_length、top_values（出现频次最高的前 N 个值及其计数）。
+
+JSON 输出结构：`{"file":"dataset.csv","rows":50000,"columns":[{...每列的统计信息...}]}`。加 `-sample-rate 0.1` 对大数据集先采样再统计，stderr 提示 "profiling with 10% sample"。
+
+空输入文件输出空报告。列全部为空时 type_inferred 为 "null"。文件不存在时 exit 1。
 
 Go 实现，只用标准库，交叉编译友好。

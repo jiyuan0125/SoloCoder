@@ -1,3 +1,9 @@
-两个部门各有一份 CSV 数据，需要按员工 ID 关联起来做分析。SQL JOIN 的逻辑，但数据不在数据库里。写个 CSV 表连接工具，两个文件按指定的键做连接。inner join、left join、right join、full join 四种方式都得支持，输出合并后的 CSV。
+上周两个部门的数据要按员工 ID 关联，产品经理用 Excel VLOOKUP 搞了一下午都对不上。这东西就该用命令行解决——`csvjoin` 工具，和 SQL JOIN 一个思路。
+
+`csvjoin -left employees.csv -right departments.csv -key emp_id -type inner -output result.csv`。四种 join：`-type inner`（默认，两边都有的才输出）、`-type left`（左表全保留，右表无匹配填空）、`-type right`（反之）、`-type full`（两边全保留）。-key 指定连接列名，两个文件里列名必须一致，不一致则用 `-left-key id -right-key emp_id` 分别指定。
+
+输出 CSV 列顺序：左表列在前、右表列在后，key 列只保留一份。右表列名冲突时自动追加 `_right` 后缀。`-left-prefix "L_" -right-prefix "R_"` 可自定义前缀。大文件（>50 万行）用哈希表加载右表到内存，左表流式读取，内存不超过右表大小 ×2。
+
+文件不存在输出 "file not found: XXX" 到 stderr 退出码 1。key 列不存在输出 "key column not found in XXX" 退出码 2。两个文件都无数据输出空 CSV 退出码 0。inner join 无匹配输出 "warning: no matching rows" 到 stderr 但正常输出空 CSV。
 
 Go 标准库，命令行参数用 flag 包解析。

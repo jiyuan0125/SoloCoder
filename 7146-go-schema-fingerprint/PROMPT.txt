@@ -1,3 +1,9 @@
-需要给每个 schema 版本算个指纹方便比对。开源的对比工具自定义规则没做好。
+给每个 schema 版本算个指纹——这事说起来简单，但开源的对比工具自定义规则都没做好，算出来的哈希总是变来变去。我们组需要一个稳定、可定制的 schema 指纹工具。
 
-表数据逐行对比，差异行标记，同步 SQL 脚本输出。表结构变更后依赖该表的查询和报告要更新。错误情况怎么处理你自己定。Go 从零写的命令行工具，go build 能过就行。
+工具名 `schema-fingerprint`，命令 `fingerprint`。`fingerprint compute --db app.db --algorithm md5 --output fingerprints.json` 遍历所有表结构，对 CREATE TABLE 规范化后（去多余空格、统一大小写、按列名字典序）计算哈希。输出 JSON：`{"database": "app.db", "tables": [{"name": "users", "hash": "a1b2c3d4", "columns": ["id","name","email"], "algo": "md5"}]}`。支持 `--algorithm sha256`。
+
+`fingerprint compare --baseline v1.json --current v2.json` 对比两组指纹，输出差异：新增表、删除表、结构变更的表。表结构变更要逐字段对比，标记哪些列新增/删除/类型修改，差异输出为 Markdown 表格。加 `--sync-sql` 参数额外输出 ALTER TABLE 同步语句。
+
+`fingerprint diff --table users --source db1.db --target db2.db` 做表数据逐行对比，差异行标记为 inserted/deleted/modified，输出行 ID 和变更内容。表结构变更后依赖该表的查询和报告要通过 `--dependents-file deps.json` 自动更新。
+
+空表哈希为空字符串的 MD5。文件读写失败 exit code=1。错误处理你自己定。go build 能过就行。

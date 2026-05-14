@@ -1,3 +1,7 @@
-业务方催了好几次要 XML 校验能力，排队等不及了。Go CLI 快速搞：XML Schema 验证支持命名空间，属性值枚举校验，ID/IDREF 引用完整性检查。
-导入完成后自动更新索引，索引更新失败只记日志。
-go build 能过，命令行工具能正常运行。
+业务方催了好几次要 XML 校验能力，排队等不及了，只能自己先搞。那 XML Schema 这块到底要验什么？命名空间怎么处理？ID 引用完整性怎么查？
+
+Go 命令行工具 `threshold-alert validate --schema schema.xsd --data input.xml` 实现 XML Schema 验证。命名空间支持：schema 中定义的 targetNamespace 与 XML 实例中的 xmlns 声明必须匹配，不匹配时报 "namespace mismatch: expected X got Y"。属性值枚举校验——XSD 中定义的 restriction/enumeration 约束逐一检查，枚举值不匹配输出属性名、期望值列表、实际值。ID/IDREF 引用完整性检查：收集所有 ID 类型属性值，再遍历 IDREF/IDREFS 属性，引用不存在的 ID 报 "dangling reference: IDREF X has no matching ID"。
+
+导入完成后自动更新索引文件 `.threshold-alert-index.json`，记录每个 ID 的位置（行号、元素路径）。索引更新失败只写日志 "index update failed: {error}" 不中断主流程。
+
+CLI 输出 JSON：`{ "valid": bool, "errors": [{ "type": "namespace|enum|idref", "path": "...", "detail": "..." }] }`。退出码 0 通过 1 验证失败 2 schema 文件错误。纯标准库实现，go build 能过。

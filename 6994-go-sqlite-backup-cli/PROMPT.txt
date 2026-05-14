@@ -1,3 +1,11 @@
-下周要给甲方演示数据备份恢复的流程。先出个 SQLite 备份工具的原型。全量备份把整个数据库文件拷贝一份（带上压缩）。增量备份只记录上次备份后的变更。恢复的时候要验证备份文件的完整性，损坏的备份不能用来恢复。
+给甲方演示数据备份恢复——听起来简单，但上次全量备份 2GB 的库拷了 40 分钟，增量备份方案又写了两周还没上线。得有个靠谱的备份工具撑场面。
+
+CLI：`sqlite-backup -db mydata.db -mode full -output backup_20240115.db.gz`。`-mode` 三种——full：拷贝整个数据库文件并用 gzip 压缩；diff：和上次全量备份做 diff，只记录变更的 page；restore：从备份文件恢复。
+
+diff 模式依赖一个元数据文件 `.backup_meta.json`，记录上次全量备份的文件路径和时间戳。diff 输出一个 patch 文件，restore 时先还原全量再打 patch。restore 验证流程：先 gzip 解压，校验文件头是否为合法 SQLite（前 16 字节是 "SQLite format 3\000"），损坏则 stderr 输出 "error: backup file corrupted" 并 exit 3，不执行恢复。
+
+full 模式完成后更新 meta 文件。`-list` 参数列出所有可用备份（读 meta 文件），格式：`[full] 2024-01-15 backup_full.db.gz (2.1GB) [diff] 2024-01-16 backup_diff.patch (5.2MB)`。
+
+数据库文件不存在 exit 1。备份输出目录磁盘空间不足时 stderr 报错 "error: insufficient disk space" 并 exit 4。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

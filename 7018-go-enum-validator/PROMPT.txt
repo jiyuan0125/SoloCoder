@@ -1,4 +1,11 @@
-新客户的数据质量要求高，完整性校验必须过关。Go 搞个命令行工具：数据完整性校验（行数、列数、校验和），增量校验只检查变更部分，结果跟上次对比。
-数据库查询需要连接配置，连接怎么配不提。
-错误情况怎么处理你自己定。
-go build 能过，命令行工具能正常运行。
+新客户的数据质量要求高，完整性校验必须过关。人家说"每条数据可追溯可验证"。Go 搞个命令行工具：数据完整性校验（行数、列数、校验和），增量校验只检查变更部分，结果跟上次对比。数据库查询需要连接配置，连接怎么配不提。错误情况怎么处理你自己定。go build 能过，命令行工具能正常运行。
+
+怎么用？integchk verify --input data.csv --output integrity.json。加 --baseline last_run.json 对比退化。
+
+全量校验：行数（不含表头）、列数（取众数，不一致行单独计数）、每列 CRC32、文件 MD5、字节大小。输出 {"file":"data.csv","rows":50000,"columns":12,"col_mismatch_rows":3,"checksums":{...},"md5":"abc123","size_bytes":2048000,"timestamp":"..."}。
+
+增量：--incremental --snapshot-dir ./snapshots，首次存快照，后续从 offset 续读。文件缩短报 "file truncated: was 2048KB, now 1024KB" 退出码 1。
+
+退化：行数减少、列数变化、CRC32 变化列 "regressions"：{"regressions":[{"metric":"rows","previous":50000,"current":49800,"change":-200}]}。
+
+文件不存在退出码 1，编码错误打 warning 继续，快照损坏忽略做全量。空文件 {"rows":0} 退出码 0。100MB 内全量，超了走流式。

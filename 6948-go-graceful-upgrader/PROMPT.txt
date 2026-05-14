@@ -1,3 +1,9 @@
-之前用 Python 做优雅升级，先起新版本再停旧版本，但中间有 5 秒请求全部失败。Go 重写一个零停机升级工具：先启动新版本进程，等它就绪（健康检查通过）后再停止旧版本。万一新版本有问题还得能回滚到旧版本。整个升级过程请求不能断。
+之前用 Python 做优雅升级中间断了 5 秒请求，这次用 Go 彻底解决。工具名为 `graceful-up`，核心流程——
+
+`graceful-up -new ./app-v2 -old ./app-v1 -health http://localhost:8080/health -timeout 30`。启动后先 fork 新版本进程，每秒探针 -health 端点，连续 3 次 200 才认为就绪。就绪后向旧进程发 SIGTERM，等待最多 -timeout 秒让旧进程优雅退出。旧进程超时未退出则 SIGKILL 强杀。升级全程通过 Unix socket 转发流量，保证请求零丢失。
+
+回滚机制：`graceful-up -rollback`，读取上次记录的旧版本路径（存储在 /tmp/graceful-up-state.json），重新启动旧版本，走同样的健康检查流程。新版本启动失败（健康检查一直不过）自动触发回滚，打印 "health check failed, rolling back" 到 stderr 并退出码 2。
+
+状态文件格式：`{"old_bin":"./app-v1","old_pid":1234,"new_bin":"./app-v2","new_pid":5678,"status":"upgrading","started_at":"2024-01-01T00:00:00Z"}`。任何参数缺失打印 usage 到 stderr 并退出码 1。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

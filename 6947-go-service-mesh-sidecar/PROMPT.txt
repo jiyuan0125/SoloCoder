@@ -1,3 +1,5 @@
-V2 的服务网格架构确定了，每个服务旁边要挂一个 sidecar 代理，负责拦截流量和注入 trace header。时间紧，先实现核心功能：拦截服务的出入流量，注入 trace ID 到请求 header 里，然后转发到目标服务。配置驱动，不需要硬编码任何地址。
+每次排查跨服务调用问题都要翻日志凑 trace，太痛苦了。1. sidecar 启动方式：`sidecar -config config.json`，config.json 包含 `{"listen":":9080","upstream":"127.0.0.1:8080","trace_header":"X-Trace-ID","log":"sidecar.log"}`。2. 入站流量拦截：sidecar 监听 listen 端口，收到请求后检查是否已有 trace_header，没有则生成 UUID v4 填入，然后转发到 upstream。3. 出站流量拦截：拦截服务发出的 HTTP 调用（通过配置 `{"outgoing":["api-service:9090","auth-service:9091"]}`），自动注入当前 trace header。
+
+健康检查端点 `GET /health` 返回 200 和 `{"status":"ok","uptime_seconds":1234}`。请求转发失败返回 502 和 `{"error":"upstream unreachable","detail":"connection refused"}`。upstream 超时默认 30 秒，通过 config 的 `timeout_seconds` 配置。日志每行格式：`[时间] [TRACE-ID] [IN|OUT] 方法 路径 状态码 耗时ms`。配置文件不存在返回退出码 1 并打印 "config file not found" 到 stderr。
 
 Go 实现，只用标准库，交叉编译友好。

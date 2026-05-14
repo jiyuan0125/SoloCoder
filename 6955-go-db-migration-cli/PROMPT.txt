@@ -1,3 +1,7 @@
-数据库迁移全靠手动执行 SQL 文件，谁执行了哪个、执行到哪一步了完全靠记忆。出过一次事故——同一个迁移执行了两遍。写个数据库迁移工具，管理 SQL 迁移文件的执行顺序，记录哪些已经执行过了。回滚也要支持，指定版本号就能回滚到那个状态。
+手动执行迁移出了两次事故——一个执行了两遍，一个忘了执行。别再靠人肉记忆了。
+
+`migrate init -db app.db -dir ./migrations` 创建 `_migrations` 表（id, filename, applied_at, checksum）和目录。`migrate up -db app.db -dir ./migrations` 按文件名排序（`001_create_users.sql` 格式）执行未执行的 .sql 文件，执行前校验 SHA256 checksum，已执行但 checksum 变化输出 "checksum mismatch: XXX.sql" 退出码 2。
+
+`migrate down -db app.db -dir ./migrations -to 002` 回滚到指定版本，执行 `--- DOWN ---` 之后的 SQL，无 DOWN 段输出 "no rollback found: XXX.sql" 退出码 3。`migrate status` 输出列表：`001_create_users.sql  applied  2024-01-15T10:30:00\n002_add_email.sql     pending\n`。SQL 执行失败输出 "migration failed: XXX.sql: " 加错误退出码 1。全部完成输出 "all migrations applied" 退出码 0。
 
 Go 实现，只用标准库，交叉编译友好。

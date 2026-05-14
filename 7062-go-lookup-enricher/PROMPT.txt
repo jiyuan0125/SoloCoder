@@ -1,5 +1,5 @@
-报表数据聚合慢得要命，运维天天报警超时。Go CLI 重写聚合逻辑：按维度分组（sum/avg/count/max/min），窗口函数做滚动平均和累计求和，透视逆透视转换。
-扫描完自动提交报告，提交失败只记录。
-扫描规则更新后历史扫描结果的严重级别要重新评估。
-用 database/sql 的预处理语句。
-go build 能过，命令行工具能正常运行。
+报表数据聚合慢得要命，运维天天报警超时。Go CLI 重写聚合逻辑：按维度分组 sum/avg/count/max/min，窗口函数做滚动平均和累计求和，透视逆透视转换。扫描完自动提交报告，提交失败只记录日志。扫描规则更新后历史扫描结果的严重级别要重新评估。
+
+先用聚合：`lookup-enricher aggregate --input data.csv --group-by region --metric sum:amount,avg:price,count:* --output agg.json`，`count:*` 表示计数所有行。然后窗口函数：`window --input data.csv --column amount --function rolling_avg --window-size 7 --partition-by region --output windowed.json`，`--partition-by` 先按维度分组再计算窗口，function 选 rolling_avg、cumulative_sum、rank。最后透视 `pivot --input agg.json --row region --column metric --value result --output pivot.csv`，逆透视 `unpivot --input pivot.csv --id-columns region --variable metric --value result --output unpivoted.json`。
+
+输入 CSV/JSON，输出按参数决定格式。空分组输出空对象。窗口 partition-by 列不存在报错退出码 1。聚合字段非数值 skip + stderr warning。透视时 value 列有多条取最后一条。用 database/sql 预处理语句。go build 能过，纯标准库。

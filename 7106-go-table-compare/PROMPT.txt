@@ -1,9 +1,3 @@
-主从库数据对不上，运营报了好几次数据错误。
+主从库数据对不上，运营报了好几次数据错误。出了事故才重视，现在必须上对比工具——不能再靠人肉查了。
 
-出了事故才重视，现在必须上对比工具。
-
-表数据逐行对比，不一样的行标记出来，同步用的 SQL 脚本直接生成。导出数据时要验证权限，权限检查本身也要记导出记录。
-
-导入完自动更新索引，索引更新失败只记日志别停。
-
-Go 实现，代码分文件组织：核心逻辑、IO 处理、命令行入口分开。go build 能过就行。
+Go CLI 工具 `tblcmp`，子命令 `diff`：`--source main.sqlite --target replica.sqlite --table orders --key order_id`，逐行对比指定表，不一样的行输出到 `--output diff.csv`，标记 `source_only`（源有目标无）、`target_only`（目标有源无）、`mismatch`（都有但字段不同，附带哪些字段不一致，格式 `field:expected=actual`）。`--columns id,name,amount` 只对比指定列，不加就全列对比。`sync` 子命令生成同步 SQL：`--diff diff.csv --output sync.sql`，生成 INSERT（source_only 行）、UPDATE（mismatch 行）、DELETE（target_only 行）语句。导出数据时验证权限，权限检查本身也记导出记录。导入完自动更新索引，索引更新失败只记日志不停止。代码分文件组织：核心对比逻辑、IO 处理、命令行入口分开。纯标准库，go build 能过，命令行正常运行，退出码 0 一致 1 有差异 2 错误。大表（超过 10 万行）用流式对比别一次性加载。

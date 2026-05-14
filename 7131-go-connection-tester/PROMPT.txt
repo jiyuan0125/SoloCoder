@@ -1,7 +1,5 @@
-连不上数据库不知道是网络问题还是认证问题，测试连接的工具没有。
+连不上数据库——是网络问题还是认证问题？端口有没有开？防火墙拦没拦？每次都得写个小脚本测试，烦了。这个工具就是来一劳永逸解决连接诊断的。
 
-SQLite schema 迁移做版本化管理，迁移脚本能执行能回滚，冲突检测。消息格式升级后旧的消费者要能兼容处理，不能强升级。
-
-代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+`conntest ping --host 192.168.1.100 --port 3306 --timeout 5s`，测试 TCP 连通性，输出 "connected in Xms" 或 "connection refused" 或 "timeout after 5s"，退出码 0/1/2。`conntest auth --host 192.168.1.100 --port 3306 --user admin --password xxx --db testdb` 验证认证，失败时区分 "auth failed: wrong password"、"auth failed: user not found"、"auth failed: db not found"。`conntest batch --file hosts.csv --timeout 3s` 批量测试，CSV 格式 host,port,user,password,db，结果输出 CSV：host,status,latency_ms,error。`conntest latency --host 192.168.1.100 --port 3306 --count 10` 测 10 次取平均值。Schema 迁移：`conntest migrate --db target.db --up/--down`，冲突检测。消息格式升级后旧消费者要兼容处理。代码分文件组织：connector.go、reporter.go、main.go。
 
 Go 命令行工具，go build 能过就行。

@@ -1,5 +1,7 @@
-客户那边只会写 SQL 不会写代码，但数据在 CSV 文件里不在数据库。写个 SQL 查询执行器，把 CSV 加载到内存中的 SQLite 临时表，然后直接跑 SQL 查询。查询结果输出到终端或者保存为文件。大文件也要能处理，不能内存溢出。
+1. 客户只会写 SQL，数据在 CSV 里。工具做两件事：先把 CSV 加载到 SQLite 内存表，再让用户跑 SQL。`csvsql -load sales.csv -table sales -db :memory:`，自动从首行推断列类型建表，数据插入后打印 "loaded N rows into table: sales"。
 
-文件可能很大，超过内存要能处理。
+2. 查询模式：`csvsql -load sales.csv -query "SELECT region, SUM(amount) FROM sales GROUP BY region" -format csv -output result.csv`。-load 可多次指定加载多个文件。`-format` 支持 csv、json、table（终端对齐表格）。3. 交互模式：`csvsql -load sales.csv -interactive`，进入 REPL，输入 SQL 执行，输入 `.tables` 列出已加载表，`.schema sales` 显示表结构，`.quit` 退出。
 
-Go 实现，只用标准库，交叉编译友好。
+4. 大文件处理：超过 `-stream-threshold 50MB`（默认）的文件，逐行读取插入 SQLite 而不全量加载到 Go 内存。查询结果超过 10 万行时流式输出到文件，不缓存。5. 错误：SQL 语法错误输出 "SQL error: [message]" 退出码 1。CSV 列名有非法字符（空格、特殊符号）自动转义为下划线，并 warning 到 stderr。
+
+文件可能很大，超过内存要能处理。Go 实现，只用标准库，交叉编译友好。

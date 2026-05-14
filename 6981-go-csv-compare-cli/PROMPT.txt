@@ -1,3 +1,9 @@
-昨天导出的数据和今天导出的数据对不上，得逐行对比看哪里改了。文件都是几十万行的 CSV，Beyond Compare 比文本还行，比结构化数据不太方便。写个 CSV 对比工具，按主键对齐两个文件的行，找出新增的、删除的、修改的记录，输出差异报告。
+昨天导出的数据和今天的不一致，运营在群里 @ 了三次。几十万行的 CSV 用 Beyond Compare 看结构化差异根本对不上。
+
+命令行：`csv-compare -old yesterday.csv -new today.csv -key user_id -output diff_report.json`。`-key` 指定主键列用于对齐两边的行。按主键匹配后，逐字段比较：两边都有但值不同的记为 modified，只在 old 里的记为 deleted，只在 new 里的记为 added。
+
+输出 JSON 结构：`{"summary":{"total_old":50000,"total_new":50200,"added":250,"deleted":50,"modified":180},"added":[{"user_id":"123","row":{...}}],"deleted":[{"user_id":"456","row":{...}}],"modified":[{"user_id":"789","old":{"name":"A"},"new":{"name":"B"},"changed_fields":["name"]}]}`。加 `-format csv` 改输出 CSV，三种变更分三个文件：`diff_added.csv`、`diff_deleted.csv`、`diff_modified.csv`。
+
+主键列不存在时 stderr 报错 "error: key column 'xxx' not found" 并 exit 1。列名不一致时 stderr 报错 "error: column mismatch" 并列出差异列，exit 2。完全相同输出 "no differences found"，exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。

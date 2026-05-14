@@ -1,4 +1,7 @@
-平时经常要改校验规则又怕改坏了影响全量数据，想写个自己用的小工具。Go CLI：规则版本管理能回滚，变更影响范围评估，灰度校验先拿部分数据试。CSV 列类型自动推断也带上。
-校验分三阶段：格式校验→规则校验→关联校验，前一步通过才能做下一步。
-字段值可能有各种奇怪格式，要能容错。
-go build 能过，命令行工具能正常运行。
+平时经常要改校验规则又怕改坏了影响全量数据，想写个自己用的小工具。上次改了个日期范围校验，没测试直接上全量，结果把正常数据也拦了。
+
+Go CLI `temporal-validator` 实现规则版本管理和安全校验。`temporal-validator rules init --dir ./rules` 创建规则仓库，规则文件 YAML 格式含 name/version/expression/priority。`rules preview --old v3 --new v4 --sample 500` 用 500 条样本评估变更影响，输出 affected_count 和 diff 详情。`rules rollback --version v3` 从 `.temporal-history/` 恢复。`check --rules ./rules --data input.csv --range 0-100` 灰度校验只跑前 100 行。CSV 列类型自动推断采样前 100 行。
+
+校验分三阶段串行：格式校验（字段类型、编码、长度）→ 规则校验（expression 表达式求值）→ 关联校验（外键引用检查），前一阶段有 error 级别失败则不继续。字段值遇到奇怪格式记录到 parsing_errors 数组，含 row/column/raw_value/error。
+
+输出 JSON：`{ "phases": { "format": {...}, "rules": {...}, "relation": {...} }, "parsing_errors": [...] }`。退出码 0 成功 1 校验失败 2 配置错误。纯标准库实现，go build 能过。

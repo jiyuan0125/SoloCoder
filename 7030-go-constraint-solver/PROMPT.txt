@@ -1,4 +1,7 @@
-V2 月底上线，校验功能还是空的。Go 命令行赶紧写：多文件交叉校验，A 文件 ID 必须在 B 文件里，校验失败给修复建议，自动修复模式也要有。
-安全扫描需要扫描策略，策略怎么配不提。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+V2 月底上线，校验功能还是空的，产品天天催。上周末赶了版交叉校验的方案，但修复建议这块还没想清楚怎么出。
+
+Go 命令行工具 `constraint-solver` 实现多文件交叉校验。`constraint-solver check --primary users.csv --secondary orders.csv --foreign-key user_id` 校验 A 文件的 ID 列必须在 B 文件对应列中存在。找不到的输出为孤立记录，附带修复建议：suggest_delete（建议删除孤立记录）或 suggest_insert（建议在目标文件插入缺失记录）。加 `--auto-fix` 模式时自动执行修复，修复前写备份文件 `.constraint-solver-backup-{timestamp}.json`。修复日志记录每条操作：action、file、row、field、old_value、new_value。
+
+安全扫描策略通过 `--strategy` 指定策略文件路径（YAML 格式），定义扫描规则名、检查表达式、严重级别。输入文件编码自动检测覆盖 UTF-8、GBK、Latin-1，检测逻辑读前 4KB 字节判断 BOM 或字节分布。
+
+输出 JSON 结构：`{ "total_checked": N, "violations": [...], "suggestions": [...], "auto_fixed": [...] }`。退出码 0 通过 1 有违规 2 配置错误 3 修复失败。纯标准库实现，go build 能过。

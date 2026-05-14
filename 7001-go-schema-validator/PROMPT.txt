@@ -1,4 +1,7 @@
-第三方接口传过来的 JSON 格式三天两头变，手动对 schema 累死了。用 Go 标准库写个命令行校验器，JSON Schema 验证要支持 $ref 引用和自定义关键字，字段值域检查包括数值范围和日期区间，跨字段关联校验也得有。XML Schema 也要管，命名空间别漏了。
-转换主流程中调用子转换，子转换也需要读同一份映射表。
-输入数据的格式你看着办，常见的都支持就行。
-go build 能过，命令行工具能正常运行。
+第三方接口传过来的 JSON 格式三天两头变，手动对 schema 累死了。用 Go 标准库写个命令行校验器，JSON Schema 验证要支持 $ref 引用和自定义关键字，字段值域检查包括数值范围和日期区间，跨字段关联校验也得有。XML Schema 也要管，命名空间别漏了。转换主流程中调用子转换，子转换也需要读同一份映射表。输入数据的格式你看着办，常见的都支持就行。go build 能过，命令行工具能正常运行。
+
+CLI：schemaval --schema rules.json --data input.json --format json。XML 模式用 --format xml --schema schema.xsd。输出默认文本，--output report.json 写 JSON。
+
+$ref 支持本地文件引用（"$ref": "defs.json#/Address"）和同文档引用（"$ref": "#/definitions/Address"），循环引用报错退出码 2。自定义关键字通过 --keywords 文件加载。值域检查：minimum/maximum 用于数值，format "date" 用于日期区间。跨字段关联支持 if-then、dependencies。
+
+报告：{"valid": false, "errors": [{"path": "$.order.items[2].price", "keyword": "minimum", "message": "value 0.5 is less than 1"}]}。空输入退出码 1，schema 格式错误退出码 2。

@@ -1,5 +1,3 @@
-手头五个数据库，每次对比 schema 都要手动导出再 diff，眼睛都看花了。
+手头五个数据库，每次对比 schema 都要手动导出再 diff，眼睛都看花了。上周又漏了一个字段没同步，测试环境跑了两才发现。
 
-两个库的 schema 要能逐字段对比，差异生成 Markdown 报告，同步用的 SQL 脚本也一起输出。扫完自动提交报告，提交失败只记日志别中断。用 encoding/json 的 Decoder 做流式处理，别把大 JSON 一次性加载到内存。
-
-Go 命令行工具，go build 通过即可。
+Go CLI 工具 `sqldiff` 专治这个问题。子命令 `compare`：`--left db1.sqlite --right db2.sqlite`，逐表逐字段对比 schema 差异——多出的表、缺少的列、类型变化、约束变化（NOT NULL、DEFAULT、UNIQUE）都标记出来。`--output report.md` 生成 Markdown 报告，表格形式列出差异项。`--sync` 同时生成同步 SQL 脚本到 `sync.sql`，只包含 ALTER TABLE 和 CREATE TABLE，不自动执行。`--ignore-tables _migrations,sessions` 排除不需要对比的表。扫描完自动提交报告到 `--report-dir`，提交失败只记日志不中断。用 encoding/json 的 Decoder 做流式处理，大 JSON 不一次性加载到内存。输出报告里按表名排序，每个表下面分 added/modified/removed 三类。两个库完全没有差异时输出 `No schema differences found.`。纯标准库实现，go build 能过，命令行正常运行，退出码 0 一致 1 有差异 2 错误。

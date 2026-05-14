@@ -1,3 +1,9 @@
-文档里缺数据库表结构说明，每次新人来都要问一遍。写个数据库 schema 导出工具，读 SQLite 的表结构，输出成 SQL DDL（可以直接用来建表）、JSON Schema（前端用）、或者 Markdown 文档（写进技术文档）。选哪种格式命令行参数指定。
+文档里缺数据库表结构说明这事，每次新人来了都要问——上回那个人问了三遍还是记不住，因为根本没文档。数据库 schema 导出工具，一次生成，永久维护。
+
+CLI：`schema-dump -db mydata.db -format sql -output schema.sql`。`-format` 三选一——sql：输出标准 DDL，`CREATE TABLE` 语句带所有列定义、类型、NOT NULL、DEFAULT、PRIMARY KEY 约束，`CREATE INDEX` 语句；json：输出 JSON Schema，每个表一个对象，包含列名、类型、是否可空、默认值，格式如 `{"tables":[{"name":"users","columns":[{"name":"id","type":"INTEGER","nullable":false,"primary_key":true},...]}]}`；markdown：输出 Markdown 文档，每张表一个二级标题，列信息以表格展示。
+
+加 `-table users` 只导出指定表，不加则导出全部。加 `-with-index` 在 SQL 和 Markdown 格式中包含索引信息。视图（VIEW）通过 `-include-views` 开关控制，默认不导出。
+
+数据库文件不存在时 stderr 输出 "error: database file not found" 并 exit 1。指定表不存在时 stderr 输出 "error: table 'xxx' not found" 并 exit 2。空数据库输出空内容，exit 0。
 
 Go 实现，只用标准库，交叉编译友好。

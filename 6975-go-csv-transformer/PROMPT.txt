@@ -1,5 +1,9 @@
-数据组每天要对 CSV 做固定的列处理：重命名几列、把字符串日期转成时间戳、根据两列的值计算一个新列、删掉不需要的列。每次都是写 Python 脚本，但每个数据源逻辑不一样，脚本越攒越多。写个通用的 CSV 转换工具，转换规则用 JSON 文件定义，不同数据源用不同的规则文件就行。
+每天早上数据组的第件事就是对 CSV 做固定的列处理，每个数据源都有自己的一套规则，Python 脚本攒了几十个，新来的同事根本不知道该跑哪个。能不能搞个通用的？
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+CLI 用法：`csv-transform -input data.csv -rules transform_rules.json -output result.csv`。规则文件是 JSON 格式，举个例子：`{"rename":{"old_name":"new_name"},"derive":{"full_name":"first + ' ' + last"},"remove":["temp_col"],"format_date":{"col":"date","from":"2006-01-02","to":"20060102"}}`。rename 重命名列，derive 根据表达式生成新列（支持简单的字符串拼接和算术运算），remove 删除列，format_date 转换日期格式。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+规则文件不存在时 stderr 报错 "error: rules file not found" 并 exit 1。规则 JSON 解析失败时 stderr 输出具体哪一行有问题并 exit 2。derive 表达式中引用不存在的列名时，该行新列填空字符串并在 stderr 打 warning。输入列在 rename 中重复出现以最后一条规则为准。
+
+输出 CSV 保留原始列顺序（除了被 remove 的和被 rename 的），新列追加到末尾。空输入文件输出只含 header 的文件。超过 1M 行的大文件也能流式处理，不在内存里全量加载。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库实现，不依赖第三方包。go build 能编译通过。

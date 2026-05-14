@@ -1,5 +1,9 @@
-两个环境的数据库要同步，数据量还不小。老板说要搞数字化。
+先连上源库采集 schema 和数据，再跟目标库做差异对比，最后生成同步脚本——cross-db-sync 的流程就是这样。
 
-数据库空间分析、碎片化检测、优化建议、两个数据库 schema 对比。证书快过期自动发通知，通知失败不中断续签。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+1. `cross-db-sync analyze --source prod.db --target staging.db --output diff.json`：对比空间使用、碎片率、schema 差异。JSON 包含 `{"space": {...}, "fragmentation": {...}, "schema_diff": {"added_tables": [...], "removed_tables": [...], "modified_tables": [{"name": "orders", "changes": ["column 'status' type changed"]}]}}`。
+2. `sync --diff diff.json --output sync.sql --mode safe`：safe 模式只生成 ALTER 和 INSERT 不生成 DROP；`--mode force` 包含 DROP。同步脚本带事务包裹。
+3. `apply --sql sync.sql --target staging.db --batch-size 1000`：分批执行同步 SQL，失败时打印批次号和失败语句。
 
-Go CLI 工具，go build 能过就行。
+证书快过期（`--cert-dir` 指定证书目录，`--warn-days 30`）自动发通知到 `--notify-url`，通知失败不中断主流程只记日志。代码按核心逻辑、IO 处理、CLI 入口分文件组织。
+
+数据量超过 10 万行时显示进度条。源库或目标库文件不存在 exit code=1。go build 能过就行。

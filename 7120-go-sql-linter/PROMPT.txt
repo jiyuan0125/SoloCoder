@@ -1,5 +1,5 @@
-代码评审发现 SQL 质量参差不齐，没有 lint 工具。V2 版本月底上线，得赶紧搞定。
+线上出了一次事故：有人提交了没有 WHERE 的 DELETE，把整张表清了。代码评审发现 SQL 质量参差不齐，也没有 lint 工具拦一下。V2 版本月底上线，赶紧搞一个。
 
-批量查询执行（从 SQL 文件读取），结果汇总，错误处理策略。规则修改后所有引用该规则的校验结果要重新计算。输入文件编码不确定，UTF-8、GBK、GB18030 常见的都支持。
+你能想象没有 lint 的 SQL 开发有多危险吗？这个 Go CLI 工具就是来填这个坑的。`sqlint check --file queries.sql` 静态分析 SQL 文件，内置规则：SELECT * 标 warning、缺少 WHERE 的 UPDATE/DELETE 标 error、未使用索引标 warning、DROP TABLE 标 error 需二次确认。输出格式 `--format json|table|plain`，默认 table 在终端用 ANSI 高亮，JSON 格式输出 [{file, line, rule, level, message}]。`sqlint fix --file queries.sql --dry-run` 自动修复能修的（SELECT * 展开列名），`--apply` 真正写入。`sqlint batch --dir ./sqls/ --parallel 4` 批量扫描目录下所有 .sql 文件。输入文件编码支持 UTF-8、GBK、GB18030，自动检测。规则修改后引用该规则的校验结果全部重新计算。配置文件 `.sqlint.yaml` 可自定义规则级别和忽略列表。退出码：0 无问题，1 有 warning，2 有 error。
 
 Go 命令行工具，go build 能过就行。

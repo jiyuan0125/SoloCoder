@@ -1,3 +1,7 @@
-队列里混了大量垃圾消息，正常消息被淹没了。消息过滤：基于规则筛选，黑名单/白名单，过滤统计。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+队列里混了大量垃圾消息，正常消息被淹没了——最近一次上线后整个消息流全是无效的测试数据。需要一个能按规则过滤消息的工具，还得能看搜索结果。
 
-Go 标准库的 crypto/rsa 刚好能用，写个命令行工具。go build 能过就行。
+`msg-filter` 的过滤能力是核心。`filter --input msgs.json --rules filter.yaml --output clean.json`：基于规则筛选消息，规则支持三种模式——黑名单 `{"type": "blacklist", "field": "source", "values": ["test"]}`、白名单 `{"type": "whitelist", "field": "status", "values": ["active"]}`、正则匹配 `{"type": "regex", "field": "email", "pattern": ".*@company\\.com"}`。过滤统计实时输出。
+
+`search --index-dir ./idx --query "user_id:12345" --deep`：在索引中搜索消息，支持深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`。搜索结果输出匹配文档列表含 doc_id、匹配字段、分数。
+
+空规则文件不做过滤直接输出原数据。字段不存在时黑名单视为不匹配、白名单视为匹配失败。过滤完输出汇总 JSON。用 crypto/rsa 做签名验证场景。go build 能过就行。

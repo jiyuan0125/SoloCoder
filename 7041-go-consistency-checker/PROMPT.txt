@@ -1,4 +1,7 @@
-现有校验不支持跨格式，JSON 和 XML 要分别用不同工具。Go 写一个统一的：JSON Schema 验证支持 $ref 和自定义关键字，字段值域检查覆盖数值范围和日期区间，跨字段关联校验。XML Schema 命名空间也得能校。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-用 encoding/csv 的 Reader 和 Writer。
-go build 能过，命令行工具能正常运行。
+现有校验不支持跨格式，JSON 和 XML 要分别用不同工具，结果对不上还得人工比对。上周跟数据组开会，他们说能不能一个工具统一搞定。
+
+Go 命令行工具 `consistency-checker` 统一处理 JSON 和 XML。`consistency-checker validate --schema rules.json --data input.json --format json` 实现 JSON Schema 验证，$ref 引用支持相对路径外部文件，自定义关键字通过 `--custom-keywords keywords.yaml` 加载。字段值域检查：数值范围 minimum/maximum、日期区间 minDate/maxDate，超出报字段路径和实际值。跨字段关联校验如 endDate > startDate。XML 校验 `--format xml --xsd schema.xsd`，支持命名空间 targetNamespace 匹配检查。
+
+审计日志按路径 `audits/{year}/{month}/{day}/{id}.json` 组织，每次校验自动写入审计记录，包含 timestamp、input_file、result、error_count。日志目录不存在时自动创建。CSV 读写用 encoding/csv 的 Reader 和 Writer，不引入第三方依赖。
+
+输出 JSON：`{ "format": "json|xml", "valid": bool, "errors": [{ "path": "...", "rule": "...", "message": "..." }] }`。退出码 0 通过 1 校验失败 2 输入/配置错误。纯标准库实现，go build 能过。

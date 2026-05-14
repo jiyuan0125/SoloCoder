@@ -1,4 +1,3 @@
-各团队导出数据格式不统一，合并的时候经常冲突。Go 写工具统一处理：多数据集合并关联，主键冲突策略覆盖/跳过/报错，合并后去重，按条件/行数/大小拆分文件。
-认证需要用户角色，用户角色怎么创建不提。
-输入文件编码不确定，常见编码都要支持。
-go build 能过，命令行工具能正常运行。
+先合并各团队导出的数据，再按条件拆分发回去——每个 sprint 都要干这事，手动搞又慢又容易出错。上次把华南区的数据错发到华东，被吐槽了一整天。
+
+`samptool` 这个 Go CLI 把合并和拆分串成一条流水线。子命令 `merge` 合并多数据集：`--sources a.csv,b.json,c.tsv --key id`，格式自动识别，主键冲突用 `--conflict overwrite|skip|error` 处理，`--dedup true` 合并后自动去重。子命令 `split` 拆分文件：`--by rows --size 1000` 按行数，`--by size --size 5MB` 按大小，`--by condition --expr "region=='east'"` 按条件，拆分出来的文件用 `--prefix output_` 加序号命名。子命令 `sample` 数据采样：`--method random --rate 0.1` 随机采样，`--method stratified --key category` 分层采样保持比例，`--method interval --step 50` 等间隔采样。认证需要用户角色但角色怎么创建不提。输入文件编码不确定，常见编码 UTF-8、GBK、Big5 都要支持。纯标准库，go build 能过，命令行正常运行。

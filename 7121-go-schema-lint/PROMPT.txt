@@ -1,3 +1,5 @@
-开发环境和生产环境 schema 越来越不一样了，手工同步迟早出事。SQLite schema 迁移做版本化管理，迁移脚本能执行能回滚，冲突检测不能少。
+开发环境和生产环境 schema 越来越不一样了——上个月就因为少了一个字段导致线上报错。手工同步迟早出大事，得自动化。另外还得支持 CSV 数据导入，两个需求一起做。
 
-还得支持 CSV 数据导入 SQLite。转换完自动写入目标，目标不可用时不报错静默跳过。Go 标准库写个命令行工具，go build 能过就行。
+这是个 Go CLI 工具，`schema-lint diff --dev dev.db --prod prod.db` 对比两个库的 schema 差异：缺表、缺列、类型不匹配、缺索引，输出 Markdown 报告。`schema-lint check --db target.db` 检查常见 schema 问题：缺少主键、没有索引的大表（>1000 行估算）、外键没有索引、TEXT 列无长度约束，每条结果标 warning/error。`schema-lint migrate --db target.db --up` 执行 schema 版本化迁移，`--down` 回滚，碰到冲突输出 "migration conflict" 停止。CSV 导入：`schema-lint import-csv --file data.csv --db target.db --table users --on-conflict skip`，自动建表（`--create-if-missing`），自动类型推断。转换完自动写入目标数据库，目标不可用时静默跳过只记日志不报错。`schema-lint sync --source dev.db --target prod.db --dry-run` 生成同步 SQL。空数据库报 "nothing to check" 退出码 0。
+
+Go 标准库，go build 能过就行。

@@ -1,4 +1,11 @@
-季度报告下周要交，数据校验工具还没有。Go 命令行赶紧搞一个：YAML 类型校验包括日期、时间、IP、URL，锚点引用解析要检测循环，配置合并后验证 schema 合规性。
-权限变更后用户会话里的权限信息要同步。
-文件操作要注意权限检查。
-go build 能过，命令行工具能正常运行。
+季度报告下周要交，数据校验工具还没有。领导今天刚催完。Go 命令行赶紧搞一个：YAML 类型校验包括日期、时间、IP、URL，锚点引用解析要检测循环，配置合并后验证 schema 合规性。权限变更后用户会话里的权限信息要同步。文件操作要注意权限检查。go build 能过，命令行工具能正常运行。
+
+CLI：yamcheck check --schema types.yaml --data config.yaml --output report.json。--overrides prod.yaml 指定覆盖文件，合并后再校验。
+
+类型校验：date 匹配 YYYY-MM-DD 或 RFC3339，time 匹配 HH:MM:SS，IP 用 net.ParseIP，URL 用 url.Parse 需有 scheme。失败报 "invalid IP: '300.1.2.3' at $.server.host"。
+
+锚点循环：遍历 anchor/alias 建引用图拓扑排序，环报 "circular reference: 'db' -> 'prod' -> 'db'" 退出码 2。
+
+合并逻辑：后者覆盖前者，数组覆盖不合。合并结果过 schema。
+
+报告：{"valid":false,"errors":[{"path":"$.server.port","expected":"integer","actual":"string '8080'"}],"warnings":[...]}。文件不存在/权限不可读退出码 2。空 YAML {"valid":true,"warnings":["empty config"]}。

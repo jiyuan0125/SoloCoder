@@ -1,4 +1,7 @@
-Informatica 许可证到期不续了，太贵。Go 自建替代方案：多数据集合并和关联，主键冲突处理策略（覆盖/跳过/报错），合并后去重，按条件/行数/大小拆分文件。
-权限变更后用户会话里的权限信息要同步。
-认证需要用户角色，用户角色怎么创建不提。
-go build 能过，命令行工具能正常运行。
+Informatica 许可证到期不续了，一年十几万太贵了。Go 自建替代：多数据集合并和关联，主键冲突处理策略（覆盖/跳过/报错），合并后去重，按条件/行数/大小拆分文件。权限变更后用户会话里的权限信息要同步。认证需要用户角色。
+
+1. 合并子命令：`flatten-nested merge --left a.csv --right b.csv --key id --strategy overwrite --output merged.csv`，`--strategy` 控制主键冲突行为，可选 overwrite（右表覆盖）、skip（保留左表）、error（冲突时退出码 1 并 stderr 输出 `error: duplicate key: xxx`）。
+2. 去重：`dedup --input merged.csv --key id --keep first --output deduped.csv`，`--keep` 选 first 或 last。
+3. 拆分：`split --input big.csv --mode rows --value 1000 --output-dir ./parts/`，`--mode` 可选 rows（按行数）、size（按字节）、condition（按条件表达式 `--expr "region=='east'"`），输出文件命名 `parts_001.csv`、`parts_002.csv` 依次递增。
+
+输入 CSV 和 JSON 均支持，输出保持原格式。空数据集合并输出另一方全部数据。`--key` 指定的列不存在时报 `error: key column not found` 退出码 1。按大小拆分时单个输出文件不超过 `--value` 指定的字节数，最后一批可能更小。去重后保持原始行顺序。go build 能过，纯标准库。

@@ -1,5 +1,9 @@
-线上排障的时候需要临时查 CSV 数据，但 CSV 没有 WHERE 过滤，分析效率太低。写个 CSV 导入 SQLite 的工具，自动建表、推断列类型、批量插入。追加模式（往已有表加数据）和覆盖模式（重建表）都要有。导入完直接用 sqlite3 命令查。
+线上排查问题的时候最烦的就是查 CSV——没有 WHERE，没有 JOIN，想看 user_id=123 的记录得写脚本过滤。思路很直接：把 CSV 倒进 SQLite，然后用 SQL 随便查。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+命令行：`csv2sqlite -input data.csv -db report.db -table users -mode overwrite`。`-mode` 两个选项：overwrite 会 DROP TABLE IF EXISTS 再重建，append 往已有表追加数据。不指定 table 名则用文件名去掉扩展名作为表名。
 
-Go 实现，只用标准库，交叉编译友好。
+列类型推断逻辑——扫描前 100 行判断：全是整数 → INTEGER，全是浮点数 → REAL，其余 → TEXT。第一行是 header，自动作为列名，列名中的空格替换成下划线。追加模式下如果 CSV 的列数和已有表不一致，stderr 报错 "error: column count mismatch (expected N, got M)" 并 exit 2。空 CSV（只有 header）建空表，不报错。
+
+批量插入每 500 行一个事务，最后输出统计到 stderr：`imported N rows into table 'xxx' (took Xms)`。数据库文件路径目录不存在时自动创建。`-input` 支持逗号分隔多个文件，依次导入同一张表。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 实现，只用标准库，交叉编译友好。

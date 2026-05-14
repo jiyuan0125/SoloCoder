@@ -1,4 +1,5 @@
-新项目数据脱敏是硬性要求，不脱敏不能上线。Go 搞：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，脱敏字段用星号遮盖。
-数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
-用 database/sql 的预处理语句。
-go build 能过，命令行工具能正常运行。
+新项目数据脱敏是硬性要求，不脱敏不能上线。Go 搞三件事：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，脱敏字段用星号遮盖。数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。
+
+拆分：`string-normalizer split --input users.csv --mode rows --value 5000 --output-dir ./out/`，mode 选 rows、size（字节）、condition（`--expr "age>=18"`），输出 `split_001.csv` 起每个含表头。采样：`sample --input data.csv --method stratified --strata-column region --ratio 0.1 --seed 123 --output sample.csv`，method 选 random/stratified/systematic（`--interval` 每 N 行取），同 seed 结果可复现。脱敏：`mask --input users.csv --columns phone,email --strategy partial --keep-prefix 3 --keep-suffix 2 --char '*' --output masked.csv`，strategy 选 replace（全替换）、hash（SHA256 摘要）、partial（保留首尾中间填充），脱敏列不存在 stderr `warning: column xxx not found, skipped`。
+
+CSV/JSON 均支持。ratio 不在 (0,1] 报错退出码 1。采样 0 行输出空文件。用 database/sql 预处理语句。go build 能过，纯标准库。

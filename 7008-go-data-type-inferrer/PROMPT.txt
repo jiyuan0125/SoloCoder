@@ -1,4 +1,11 @@
-archive/zip 能处理压缩包，但数据完整性校验还得自己写。Go 命令行工具：校验行数、列数、校验和，支持增量校验（只检查变更部分），结果跟上次对比看有没有退化。
-校验时需要查关联表的规则，查关联表时也要校验触发方状态。
-可能一次处理上万条记录。
-go build 能过，命令行工具能正常运行。
+archive/zip 能处理压缩包，但数据完整性校验还得自己写。之前传输后行数少了几千行，等下游报表报错才发现。Go 命令行工具：校验行数、列数、校验和，支持增量校验只检查变更部分，结果跟上次对比看有没有退化。校验时需要查关联表的规则，查关联表时也要校验触发方状态。可能一次处理上万条记录。go build 能过，命令行工具能正常运行。
+
+CLI：datainteg check --input data.csv --output integrity.json。--baseline last.json 传上次结果做对比。
+
+全量校验：行数（不含表头）、列数（取众数）、每列 CRC32、文件 MD5、字节大小。输出 {"file":"data.csv","rows":50000,"columns":12,"col_checksums":{...},"md5":"abc123","checked_at":"..."}。
+
+增量：--incremental --snapshot-dir ./snapshots，记录 offset 续读。文件截短报 "file truncated" 退出码 1。
+
+退化对比：行数减少、列数变化、MD5 变化列入 "regressions"。
+
+关联规则：--rules rules.yaml 定义跨文件约束。上万条流式处理，内存不超 100MB。空文件 {"rows":0} 退出码 0。

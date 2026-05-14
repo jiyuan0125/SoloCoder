@@ -1,3 +1,9 @@
-财务每个月发来的报表都是 Excel 格式，但我们数据平台只吃 CSV。手动另存为太慢了，还得选工作表。写个 Excel 转 CSV 工具，指定 .xlsx 文件和工作表名，输出 CSV。批量转换也得支持，一个 Excel 里十几个 sheet 一键全转。列选择也要有，不需要的列不输出。
+财务说"这个月报表有 14 个 sheet 你帮我转一下"，手动操作到第三个就不耐烦了。做一个命令行批量转换工具——
+
+`excel2csv -input report.xlsx` 自动转换所有工作表，每个 sheet 输出一个 CSV 文件（命名为 `report_Sheet1.csv`、`report_Sheet2.csv`）。`excel2csv -input report.xlsx -sheet "Q3销售" -output q3.csv` 只转指定工作表。`-columns "A,C,E-G"` 选列输出，不指定则全部列。`-skip-empty` 跳过完全空白的行。
+
+因为 .xlsx 本质是 ZIP 包含 XML，纯标准库方案：用 archive/zip 打开，解析 xl/worksheets/sheet1.xml 和 xl/sharedStrings.xml，提取单元格文本。合并单元格取左上角值，其余填空。数字列保持原始精度，不截断。日期列（Excel 序列号格式）转为 `YYYY-MM-DD`。
+
+`-input` 必填，文件不存在输出 "file not found: XXX" 到 stderr 退出码 1。不是 xlsx 文件输出 "not a valid xlsx file" 退出码 2。`-sheet` 指定的 sheet 不存在输出 "sheet not found: XXX" 退出码 3，同时列出可用的 sheet 名。
 
 用 Go 标准库写，go run . 或 go build 都行。

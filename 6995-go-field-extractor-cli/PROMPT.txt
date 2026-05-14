@@ -1,3 +1,11 @@
-同事要从一大堆 JSON 文件里提取几个关键字段做分析。jq 命令他不熟，每次都得找我来写。写个字段提取工具，从 JSON 里按路径提取指定字段。支持通配符（提取所有数组元素里的某个字段）和数组索引。输出为 CSV 或 JSON，看需要。
+先用第一步拿到所有 JSON 文件的列表，然后从每个文件里提取 id、name、email 三个字段——同事不会 jq，每次都来找我。干脆写个专用工具，路径表达式直接写命令行就行。
+
+CLI：`extract -input ./data/ -fields id,name,email -format csv -output result.csv`。也支持单文件和 stdin：`-input file.json` 或 `cat data.json | extract -stdin -fields id,name`。字段路径支持嵌套：`address.city` 提取嵌套对象，`items[*].name` 提取数组所有元素的 name 字段，`items[0].id` 提取数组第一个元素。
+
+输入是 JSON 数组时，每个元素作为一条记录处理。输入是单个 JSON 对象时，作为一条记录处理。`-format` 支持 csv 和 json。csv 输出时，嵌套对象和数组序列化为 JSON 字符串。字段路径不存在时该列输出空字符串。
+
+通配符 `[*]` 展开后输出多行——一条记录中 items 有 3 个元素就输出 3 行。路径语法错误时 stderr 报错 "error: invalid field path 'xxx'" 并 exit 1。输入不是合法 JSON 时 stderr 输出 "error: failed to parse JSON" 并 exit 2。
+
+目录递归扫描用 `-recursive` 开启，默认只扫描一层。文件匹配模式默认 `*.json`，用 `-pattern` 可改。
 
 Go 实现，只用标准库，交叉编译友好。

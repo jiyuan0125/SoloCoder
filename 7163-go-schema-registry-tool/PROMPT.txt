@@ -1,5 +1,7 @@
-消息格式改了但忘了通知下游，消费者全报错。之前用 Python 做太慢。
+消息格式改了但忘了通知下游，消费者全报错——这种事一个季度至少两次。之前用 Python 做的 registry 服务太慢，这次用 Go 重写。
 
-消息去重（基于 ID/内容哈希），去重窗口配置，去重统计报告，消费延迟监控和预警。消息 topic 支持多层通配符 a.b.c.# 的匹配。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+schema-registry-tool 做消息 schema 管理、去重和延迟监控。`register --schema orders-v2.json --topic orders --version 2`：注册新 schema 版本，返回 `{"id": "orders-v2", "version": 2, "fingerprint": "a1b2c3", "registered_at": "..."}`。同版本指纹相同则拒绝注册（exit code=3，输出 "schema fingerprint conflict"）。`list --topic orders`：列出该 topic 所有版本。`check --message msg.json --topic orders --version 2`：校验消息是否符合指定版本 schema。
 
-Go 命令行工具，go build 能过就行。
+去重功能：`dedup --input msgs.jsonl --key message_id --window 10m --output unique.jsonl`，基于 ID 或内容哈希去重，去重窗口可配，统计报告输出到 stderr。消费延迟监控：`lag-monitor --brokers localhost:9092 --group my-group --threshold 5000`，延迟超阈值输出告警。
+
+topic 通配符匹配：`a.b.c.#` 匹配 `a.b.c.d.e`，`a.*.c` 匹配 `a.x.c`，在 `list` 和 `check` 子命令中生效。代码按核心逻辑、IO 处理、CLI 入口分文件。schema 文件不存在 exit code=1，JSON 语法错误 exit code=2。go build 能过就行。

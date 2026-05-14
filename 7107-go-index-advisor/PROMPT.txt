@@ -1,5 +1,3 @@
-慢查询日志 Top 10 全是没有索引的表，产品天天催优化。之前每次迁移都手动写 SQL，扛不住了。
+慢查询日志 Top 10 全是没有索引的表，产品天天催优化。之前每次迁移都手动写 SQL，扛不住了——该上工具了。
 
-Schema 文档生成 Markdown 表格，表关系描述清楚，索引使用情况统计。消息发送需要 topic，topic 怎么创建的你看着办。输出格式用常见的就行。
-
-Go 命令行工具，go build 通过即可。
+Go CLI 工具 `idxadvisor`，两个核心功能。子命令 `docgen`：`--db app.sqlite --output schema.md` 生成 Markdown 格式的 schema 文档，每个表一个小节，包含表名、字段列表（名称、类型、约束如 NOT NULL/DEFAULT）、索引列表、行数估算。表关系通过外键和命名约定（如 `user_id` → `users.id`）推断，输出 ER 描述。子命令 `advise`：`--db app.sqlite --slow-queries slow.log` 分析慢查询日志，找出缺失索引——WHERE 条件字段没有索引的建议创建，`--min-scans 1000` 扫描超过 1000 次的才建议，避免对低频查询建索引。输出建议 SQL：`CREATE INDEX idx_orders_user_id ON orders(user_id); -- reason: frequent WHERE filter`。消息发送需要 topic，topic 怎么创建你看着办。输出格式 Markdown，文件不存在或 db 损坏返回退出码 1，无慢查询时输出 `No optimization suggestions.`。纯标准库实现，go build 通过即可。

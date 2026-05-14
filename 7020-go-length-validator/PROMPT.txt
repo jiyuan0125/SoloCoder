@@ -1,3 +1,9 @@
-朋友公司那边数据校验全手动，跨文件比对根本做不来。Go 写个命令行帮他们：多文件交叉校验，A 文件 ID 在 B 文件必须存在，校验失败给修复建议，还能开自动修复。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+朋友公司数据校验全手动，跨文件比对根本做不来。上次财务对账，200 个客户 ID 在客户主数据不存在，手动查了两天。Go 写个命令行帮他们：多文件交叉校验，A 文件 ID 在 B 文件必须存在，校验失败给修复建议，还能开自动修复。代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。go build 能过，命令行工具能正常运行。
+
+1. CLI：crossfix check --primary orders.csv --secondary users.csv --key user_id --output report.json。缺失标 orphan。
+2. 修复建议：orphan 建议 "remove" 或 "possible match"（编辑距离 < 3）。报告 "suggestions" 数组含 primary_row、orphan_key、action、detail。
+3. 自动修复：crossfix fix --primary orders.csv --secondary users.csv --key user_id --strategy remove --output-clean clean.csv。--strategy 可选 remove 或 map-default（需 --default-value）。
+4. 代码组织：cmd/crossfix/main.go 入口，internal/checker/ 校验，internal/io/ 读写，internal/fix/ 修复。
+5. 双向检查：--bidirectional 反向也查。
+
+输入 CSV/TSV 自动检测。空 primary 空报告退出码 0。key 列不存在报 "error: column 'xxx' not found" 退出码 1。文件不存在退出码 1。50 万行以内。

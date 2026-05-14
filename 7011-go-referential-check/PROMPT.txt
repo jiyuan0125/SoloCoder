@@ -1,4 +1,11 @@
-现有的校验工具自定义规则太弱，复杂一点的校验逻辑写不了。Go 从零写一个：JSON Schema 验证支持 $ref 引用和自定义关键字，字段值域检查包括数值范围和日期区间，跨字段关联校验不能少。
-消息发送需要 topic，topic 怎么创建不提。
-扫描多个目录要并行处理。
-go build 能过，命令行工具能正常运行。
+现有校验工具自定义规则太弱，产品要校验"发货日期必须晚于下单日期"直接哑火。Go 从零写一个：JSON Schema 验证支持 $ref 引用和自定义关键字，字段值域检查包括数值范围和日期区间，跨字段关联校验不能少。消息发送需要 topic，topic 怎么创建不提。扫描多个目录要并行处理。go build 能过，命令行工具能正常运行。
+
+CLI：jschemaval --schema rules.json --data input.json --output report.json。$ref 支持 "defs.json#/Address"（外部）和 "#/definitions/Address"（内部），循环引用报错退出码 2。
+
+自定义关键字：--custom-keywords keywords.json，每条含 name、type、validate 表达式。
+
+值域：minimum/maximum 数值，exclusiveMinimum/exclusiveMaximum 也要。日期区间用 dateAfter/dateBefore。
+
+跨字段：if/then/else、dependencies、crossField {"field":"$.end_date","op":"gt","compare_to":"$.start_date"}。
+
+报告：{"valid":false,"errors":[{"path":"$.orders[2].end_date","keyword":"crossField","message":"end_date must be after start_date"}]}。多目录 --dirs --parallel 4 并行。退出码：0=通过，1=失败，2=schema 错误。

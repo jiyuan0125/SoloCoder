@@ -1,5 +1,7 @@
-花了一周调研 Go 生态的数据校验方案，没有现成的好用。自己搞：CSV 列类型自动推断，数据质量评分看空值率、唯一率、格式合规率，统计异常检测。
-导出数据时要验证权限，权限检查也要查导出记录。
-支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
-输入可能有乱码行和空行，别崩。
-go build 能过，命令行工具能正常运行。
+花了一周调研 Go 生态的数据校验方案，没有现成的好用——不是缺这个就是缺那个，索性自己搞。这个工具要解决的是数据质量可量化、可追踪的问题。
+
+Go 命令行工具 `compliance-reporter analyze --input data.csv` 实现 CSV 列类型自动推断：采样前 200 行判断 int/float/string/date/bool，推断结果写入 `--output-types types.json`。数据质量评分三项指标——空值率（null_count/total）、唯一率（distinct/total）、格式合规率（valid_format/total），加权平均算总分。统计异常检测对数值列跑 Z-score，`--z-threshold 2.5` 标记异常值。导出数据时验证操作者是否在 `--allowed-users` 列表中，权限检查也记录到导出审计日志。规则路径支持多层级 `rules/{group}/{name}/{version}`，加载时按 group 分组、按 version 排序。
+
+输入文件遇到乱码行跳过并记录行号到 warnings 数组，空行直接忽略。编码自动检测 UTF-8/GBK/Latin-1。
+
+输出 JSON：`{ "types": {...}, "scores": {...}, "anomalies": [...], "warnings": [...] }`。退出码 0 成功 1 质量不达标 2 输入错误。纯标准库实现，go build 能过。

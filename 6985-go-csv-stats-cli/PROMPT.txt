@@ -1,5 +1,9 @@
-数据分析报告里要写"该列均值为 XX，标准差为 XX，中位数为 XX"，每次都是 Python 算完复制粘贴。写个 CSV 统计工具，指定数值列直接算描述统计量——均值、中位数、标准差、四分位数。输出统计报告，直接可以贴到文档里。
+有没有觉得每周写分析报告里"该列均值为 XX，标准差为 XX"这种段落特别烦？Python 算完再复制粘贴，格式还经常对不上。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+CLI：`csv-stats -input data.csv -columns age,salary,score -format table -output stats.txt`。`-columns` 指定要统计的数值列，逗号分隔，省略则对所有数值列统计。`-format` 支持 table（对齐表格）和 json 两种。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+每列输出：count（非空行数）、mean、median、stddev、min、max、q1（25%）、q3（75%）。table 格式：`column | count | mean | median | stddev | min | max | q1 | q3`。json 格式：`{"columns":[{"name":"age","count":1000,"mean":35.2,...}]}`。
+
+非数值列 stderr 警告 "warning: column 'xxx' is non-numeric, skipping"。输入为空输出空报告。百分位数用线性插值法。加 `-precision N` 控制小数位数，默认 2。加 `-percentiles 10,25,50,75,90` 自定义百分位列表。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。Go 标准库实现，不依赖第三方包。go build 能编译通过。

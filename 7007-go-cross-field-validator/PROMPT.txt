@@ -1,3 +1,11 @@
-数据组那边每天花两小时做数据画像，全靠 Excel 透视表。用 Go 帮他们写个 CLI——分布统计、TopN、基数计算都要有，跑完跟预期 profile 比对标记偏差，偏差报告输出 JSON。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+数据组每天花两小时做数据画像，全靠 Excel 透视表，口径还不统一。用 Go 帮他们写个 CLI——分布统计、TopN、基数计算都要有，跑完跟预期 profile 比对标记偏差，偏差报告输出 JSON。多文件交叉校验也塞进去——A 文件 ID 在 B 文件得能找到。代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。go build 能过，命令行工具能正常运行。
+
+CLI：dataprofile profile --input users.csv --output profile.json。--expected baseline.json 传入预期做偏差比对。
+
+画像：每列类型推断、空值率、唯一率、数值列 min/max/mean/median/stddev、字符串列 TopN（默认 10，--topn 可调）、日期列最早最晚。输出 {"columns":{"age":{"type":"int","null_rate":0.02,...}},"row_count":10000}。
+
+偏差比对：数值容差 ±10%，比率 ±5%，超出标 deviated。"deviations" 列 column、metric、expected、actual、deviation_pct。
+
+交叉校验：crosscheck --source orders.csv --ref users.csv --key user_id --output cross.json。找不到的标 orphan。
+
+大文件流式处理。空文件 {"row_count":0,"columns":{}}。key 列不存在退出码 1。

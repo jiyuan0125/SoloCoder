@@ -1,5 +1,3 @@
-聚合查询在报表库里跑太慢了，每次超时运维就报警。Go CLI 把聚合前置：按维度分组 sum/avg/count/max/min，窗口函数滚动平均/累计求和/排名，透视逆透视。
-密钥轮换后用旧密钥加密的数据要能解密。
-签名时需要验证证书状态，验证时也要检查签名链。
-输入可能有乱码行和空行，别崩。
-go build 能过，命令行工具能正常运行。
+为什么聚合查询在报表库里跑这么慢？每次超时运维就报警，DBA 说先把聚合前置到 ETL 阶段再做。
+
+Go CLI 工具 `denorm` 就是干这个的。子命令 `agg` 做分组聚合：`--group-by region,category --metric amount --fn sum` 按 region 和 category 分组对 amount 求和，`--fn` 支持 sum/avg/count/max/min 五种，多个聚合函数用逗号分隔。`window` 子命令做窗口函数：`--type rolling-avg --window 7` 滚动平均，`--type cumsum` 累计求和，`--type rank --order desc` 排名，支持 `--partition-by` 做分组内窗口。`pivot` 和 `unpivot` 子命令做透视和逆透视：`pivot --rows region --cols category --value amount`，`unpivot --columns Q1,Q2,Q3,Q4 --name quarter --value revenue`。密钥轮换后旧密钥加密的数据要能解密。签名验证证书状态，验证时检查签名链。输入可能带乱码行和空行，跳过不崩，stderr 记录跳过了几行。纯标准库，go build 能过，命令行正常运行。

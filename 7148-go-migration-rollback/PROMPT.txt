@@ -1,5 +1,9 @@
-迁移上线失败要回滚，但没有回滚脚本。
+迁移上线失败要回滚，但没有回滚脚本——这事上个月出了两次 P2，现在终于批了时间搞。
 
-SQL 静态检查（未使用索引/SELECT */缺失 WHERE），危险操作检测，建议输出。签名时验证证书状态，验证时也要检查签名链。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+工具名 `migration-rollback`，做 SQL 安全检查和迁移回滚。子命令：`check`、`rollback`、`plan`。`check --sql migrate.sql` 执行三阶段静态分析：检测未使用索引、SELECT * 用法、缺失 WHERE 的 DELETE/UPDATE、DROP TABLE 无 IF EXISTS、ALTER COLUMN 无 DEFAULT——每条规则有 ID（如 R001、R002），输出表格列出规则 ID、严重级别（warn/error）、行号、描述。危险操作（DROP、TRUNCATE、DELETE 无 WHERE）标为 error 级别。
 
-Go 练手项目，命令行工具，go build 能过就行。
+`plan --sql migrate.sql --output rollback.sql`：根据迁移 SQL 自动生成逆操作回滚脚本。CREATE TABLE → DROP TABLE，ADD COLUMN → DROP COLUMN，INSERT → DELETE，ALTER 旧值需要从 `--baseline-schema schema.json` 读取。无法自动生成逆操作的语句加注释 `-- MANUAL REVIEW REQUIRED`。
+
+`rollback --input rollback.sql --db app.db --dry-run`：dry-run 模式只打印要执行的 SQL 不真正执行。执行时每条 SQL 单独事务，失败停止并打印已执行到第几条。签名验证场景：证书状态检查在签名时和验证时都要做，证书链校验也要覆盖。
+
+代码按核心逻辑、IO 处理、CLI 入口分文件。go build 能过就行。

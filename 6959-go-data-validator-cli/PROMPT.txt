@@ -1,3 +1,7 @@
-导入数据之前不校验，导进去一堆垃圾数据，清洗花了三天。老板说以后必须先校验再导入。写个数据验证工具，根据规则文件校验 CSV/JSON 数据。类型检查（这个字段是不是数字）、范围检查（年龄不能大于 150）、正则匹配（手机号格式）、唯一性约束（ID 不能重复）都得有。
+先准备 rules.json：`{"rules":[{"column":"email","type":"string","required":true,"pattern":"^[\\w.-]+@[\\w.-]+\\.\\w+$"},{"column":"age","type":"int","min":0,"max":150},{"column":"status","type":"enum","values":["active","inactive","pending"]},{"column":"user_id","type":"string","unique":true}],"separator":","}`。然后 `datavalid -input users.csv -rules rules.json`。
+
+type 支持 string/int/float/date/bool/enum 六种。逐行逐列校验：required 检查空值，pattern 正则匹配，range 检查 min/max，enum 检查值在列表内，unique 检查无重复。
+
+输出到 stdout：`{"valid":false,"total":500,"valid_rows":487,"invalid_rows":13,"errors":[{"row":3,"column":"email","value":"@bad","message":"pattern mismatch"}]}`。`-report valid.csv` 和 `-report invalid.csv` 分别导出通过和不通过的行。`-format table` 终端表格。文件不存在退出码 1，规则格式错误退出码 2，全部通过退出码 0。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,4 +1,4 @@
-新项目数据完整性是硬性要求，不过校验不能上线。Go 写：完整性校验算行数、列数、校验和，增量校验只检查变更部分，结果跟上次对比。
-审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。
-用 archive/zip 的读写。
-go build 能过，命令行工具能正常运行。
+1. 新项目数据完整性是硬性要求，不过校验不能上线。Go 命令行 `cross-table-validator check --input data.csv --mode full` 实现完整性校验：full 模式算行数、每列列数、CRC32 校验和，结果存到 `.cross-table-snapshot.json`。增量模式 `--mode incremental` 只检查 mtime 比快照新的行，输出 changes 含 added_rows、deleted_rows、modified_checksums。对比模式 `--mode diff --snapshot-old a.json --snapshot-new b.json` 对比两个快照文件。审计日志按 `audits/{year}/{month}/{day}/{id}.json` 自动写入，记录 timestamp、input_file、result。
+2. 审计日志目录不存在时自动创建，写入失败只打 warning 不中断。用 archive/zip 读写——`--archive output.zip` 选项将报告打包成 zip 文件，zip 内结构为 report.json + checksums.json。
+
+CLI 输出 JSON：`{ "total_rows": N, "columns": [...], "checksums": {...}, "changes": {...} }`。退出码 0 成功 1 校验失败（增量模式下有变更）2 配置错误。纯标准库实现，go build 能过。

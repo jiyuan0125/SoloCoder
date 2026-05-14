@@ -1,4 +1,11 @@
-周末没事想练练 Go，写个校验规则管理工具自己用：规则版本管理能回滚，变更前评估影响范围，灰度模式拿部分数据先试试。搞完发现还挺实用的。
-消息格式升级后旧的消费者要能兼容处理。
-字段值可能有各种奇怪格式，要能容错。
-go build 能过，命令行工具能正常运行。
+周末没事想练练 Go，写个校验规则管理工具自己用。搞完发现比公司那个改了要等半小时部署的 Java 工具好用多了。规则版本管理能回滚，变更前评估影响范围，灰度模式拿部分数据先试试。消息格式升级后旧消费者要能兼容处理。字段值可能有各种奇怪格式，要能容错。go build 能过，命令行工具能正常运行。
+
+CLI：rulemgr apply --rules v3.yaml --data records.csv --canary 0.1 --output report.json。规则 YAML 须含 version，--canary 灰度取前 10%。
+
+版本管理：apply 成功自动拷贝到 --version-dir（默认 ./versions/），文件名 v{timestamp}.yaml。回滚 rulemgr rollback --to v2。列表 rulemgr versions。
+
+影响评估：rulemgr estimate --new v3.yaml --old v2.yaml --baseline ./history/last.json。输出 {"newly_failed":45,"newly_passed":12,"unchanged":943,"risk":"medium"}。risk：<1% low，1-5% medium，>5% high。
+
+灰度：取前 N% 执行，失败率超 --threshold（默认 5%）报 "canary failed: 8.2%" 退出码 3。
+
+容错：类型不匹配尝试隐式转换（"42"→int），失败才报错。规则语法错误跳过打 warning。空数据退出码 0。

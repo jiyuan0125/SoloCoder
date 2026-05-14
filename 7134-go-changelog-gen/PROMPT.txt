@@ -1,5 +1,5 @@
-表结构改了什么、谁改的、什么时候改的，一问三不知。
+表结构改了什么、谁改的、什么时候改的——问谁谁不知道。上次审计就是因为没有变更记录被扣分了。
 
-CSV 导入 SQLite，冲突处理策略，进度显示。数据库操作支持多层路径 tables/{table}/rows/{id}/columns/{col}。处理用户输入的路径要注意别让目录遍历出问题。
+用 Go 写个 schema 变更日志生成器。`changeloggen track --db orders.db --baseline V001` 记录当前 schema 快照作为基线。`changeloggen diff --db orders.db --since baseline --output changelog.md` 对比当前 schema 与基线，生成 Markdown 变更日志：每个变更包含 timestamp、operation（CREATE/ALTER/DROP）、object_type（TABLE/INDEX/TRIGGER/COLUMN）、object_name、before、after、affected_queries（引用了该对象的查询列表）。CSV 导入：`changeloggen import --file data.csv --db target.db --table users --on-conflict skip`，进度显示 `[64/512] 12.5%`。数据库操作路径 `tables/{table}/rows/{id}/columns/{col}`。用户输入路径做目录遍历防护，`../` 拒绝并输出 "invalid path: path traversal detected" 退出码 3。没有变更输出 "no changes detected" 退出码 0。
 
 给朋友的小业务写的 Go CLI 工具，go build 能过就行。

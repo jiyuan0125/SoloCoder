@@ -1,3 +1,9 @@
-之前用 Python 做CSV 排序，500 万行要跑 3 分钟。换成 Go 试试。写个 CSV 排序工具，按指定列排序，升序降序可选。多列排序要支持——先按地区排，地区相同的按日期排。数值排序、日期排序、中文拼音排序都要正确处理。
+之前用 Python 做 CSV 排序，500 万行要跑 3 分钟。换成 Go 试试。写个 CSV 排序工具，按指定列排序，升序降序可选。多列排序要支持——先按地区排，地区相同的按日期排。数值排序、日期排序、中文拼音排序都要正确处理。Go 标准库，命令行参数用 flag 包解析。
 
-Go 标准库，命令行参数用 flag 包解析。
+用法：csvsort --input data.csv --output sorted.csv --by "region,date" --order "asc,desc" --type "string,date"。列可用列名或列号（0 起始），缺省 --output 写到 stdout。
+
+数值排序遇到非数字排到最后。日期自动识别 YYYY-MM-DD、YYYY/MM/DD、Unix 时间戳，识别不了当字符串。中文拼音用 golang.org/x/text/collate 包处理。多列排序先按第一列排，相等再按第二列，--order/--type 不够时沿用最后一个。
+
+文件 <100MB 全量排序，>100MB 外部归并排序，临时文件放 --tmpdir（默认 /tmp）。encoding/csv 流式读写。
+
+输入不存在→"error: file not found: xxx" 退出码 1。空文件输出空文件退出码 0。列名不存在→退出码 1。编码默认 UTF-8，--encoding 可指定其他编码。

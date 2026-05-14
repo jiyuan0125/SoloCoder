@@ -1,9 +1,7 @@
-营销消息一次发 50 万条，得分批控制速率。
+营销消息一次发 50 万条，直接全部灌进去队列直接爆了。得分批发送、控制速率、处理失败的进死信队列。
 
-Topic 管理和分区配置、分区均衡工具、复制因子调整、死信队列管理（查看/重发/丢弃）。
+1. `batch-sender send --input messages.jsonl --topic marketing --batch-size 500 --rate 100`：分批发送，每批 500 条，速率限制 100 条/秒。进度实时输出 `[batch 1/1000] sent=500 failed=2`。失败消息写入死信队列 `dead_letters.jsonl`。
+2. `batch-sender dlq --action list`：查看死信队列。`--action resend --dlq-file dead_letters.jsonl` 重发，`--action discard --before 2024-01-01` 丢弃旧死信。
+3. `batch-sender topics --brokers localhost:9092`：Topic 管理，列出 topic 及分区配置。`--create --topic new-topic --partitions 3` 创建 topic。
 
-任务有注册→排队→执行→成功/失败→重试的状态。
-
-权限路径支持多层 resources/{type}/{id}/actions/{action}。
-
-处理分多个阶段，每个阶段输出是下个阶段输入。Go 命令行工具，go build 能过就行。
+任务状态：registered → queued → executing → success / failed → retrying。权限路径支持多层 `resources/{type}/{id}/actions/{action}`，用于内部的权限检查。处理分多个阶段（验证→分批→发送→汇总），每个阶段输出是下个阶段的输入。发送中断可从断点续传（`--resume-from checkpoint.json`）。go build 能过就行。

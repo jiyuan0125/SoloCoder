@@ -1,3 +1,7 @@
-数据仓库那边要的 ETL 流程，每个步骤都不复杂但串起来很烦。从零写一个 ETL 管道工具：定义 Extract（从 CSV/JSON 读数据）、Transform（清洗转换）、Load（写入文件或数据库）三步。每步独立配置，可以灵活组合。
+数据仓库 ETL 流程每步单独写脚本太碎，得有个工具把 Extract、Transform、Load 串起来。
+
+`etl run -config pipeline.json`。配置：`{"extract":{"type":"csv","path":"raw.csv"},"transform":[{"type":"rename","mapping":{"old_name":"new_name"}},{"type":"filter","condition":"age>18"},{"type":"derive","column":"full_name","expr":"first_name+' '+last_name"}],"load":{"type":"json","path":"output.json"}}`。extract 支持 csv/json；transform 支持 rename、filter（列名+运算符+值）、derive（派生列）；load 支持 json、csv、sql（INSERT 语句）。
+
+`etl validate -config pipeline.json` 校验配置不执行。`etl dry-run` 打印每步行数预览。执行过程打印进度：`[extract] read 1000 rows\n[transform:filter] 1000→850 rows\n[load] wrote 850 rows`。任一步失败输出 "pipeline failed at step [name]: [error]" 到 stderr 退出码 1。
 
 用 Go 标准库写，go run . 或 go build 都行。

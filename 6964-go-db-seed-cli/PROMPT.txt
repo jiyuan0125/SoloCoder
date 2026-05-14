@@ -1,3 +1,7 @@
-开发环境数据库空的，每次都要手动造数据。写个数据库数据填充工具，根据表结构或模板自动生成测试数据插入 SQLite。生成 100 条还是 10000 条行数可配。名字、邮箱、地址这些常见字段得像真的，不要 aaa@bbb.com 这种。
+开发环境数据库空的，每次手动造数据。模板文件 template.json：`{"table":"users","count":1000,"columns":[{"name":"id","type":"serial"},{"name":"name","type":"name"},{"name":"email","type":"email","domain":"company.com"},{"name":"age","type":"int","min":20,"max":60},{"name":"city","type":"pick","values":["北京","上海","广州","深圳","杭州"]},{"name":"created_at","type":"date","from":"2023-01-01","to":"2024-12-31"}]}`。然后 `dbseed -db test.db -template template.json`。
+
+生成类型：serial（自增主键）、name（中文姓名，至少 50 姓 100 名组合）、email（用户名@domain）、int/float（范围随机）、date（范围随机 YYYY-MM-DD）、pick（列表随机选）、bool、phone（1开头11位）、address（省市区拼接）。
+
+`-format sql -output seed.sql` 生成 SQL 文件不插库。表不存在自动建表。count 默认 100。模板格式错误输出原因到 stderr 退出码 1。库路径不可写退出码 2。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

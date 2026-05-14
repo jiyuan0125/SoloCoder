@@ -1,3 +1,5 @@
-Python 扁平化脚本内存占用太大，2GB 的 JSON 直接 OOM。Go 处理大文件没这个问题：嵌套 JSON 用点号路径扁平化，扁平数据构建嵌套结构，数组展开聚合。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+Python 扁平化脚本内存占用太大，2GB 的 JSON 直接 OOM 崩了。Go 处理大文件没这个问题：嵌套 JSON 用点号路径扁平化，扁平数据构建嵌套结构，数组展开聚合。代码组织成多个文件——核心逻辑、IO 处理、命令行入口分开。
+
+扁平化：`format-normalizer flatten --input nested.json --separator . --max-depth 10 --output flat.json`，`--separator` 默认点号可改，`--max-depth` 控制展开深度默认无限制。嵌套：`nest --input flat.json --separator . --schema '{"user.name":"string","user.age":"int"}' --output nested.json`，schema 描述目标结构类型。数组展开：`expand-arrays --input data.json --path items --output expanded.json`，把指定路径数组每个元素展开为独立对象，元素 null 保留 null 字段。数组聚合：`collapse-arrays --input expanded.json --group-by order_id --array-field items --output collapsed.json`。
+
+仅支持 JSON 输入输出。路径不存在报 `error: path not found: xxx` 退出码 1。空 JSON 输入输出空数组。schema 格式错误报 `error: invalid schema` 退出码 1。大文件用 json.Decoder 流式处理不 OOM。go build 能过，代码分文件组织。

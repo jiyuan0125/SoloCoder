@@ -1,3 +1,11 @@
-对接的老系统只认 XML，但我们所有接口返回的都是 JSON。手动改太容易出错了。写个 JSON 转 XML 工具，递归转换嵌套结构。属性映射和命名空间都要支持，比如 JSON 里的 "@attr" 字段转成 XML 属性。输出格式化的、带缩进的 XML。
+先拿到 JSON 数据，然后要喂给只认 XML 的老系统——手动转了几次，属性和嵌套关系总是搞混。得有个靠谱的转换工具。
+
+CLI 用法：`json2xml -input data.json -output result.xml -root records -indent "  "`。`-root` 指定 XML 根节点名称，默认是 `root`。`-indent` 指定缩进字符，默认两个空格。不加 `-output` 则输出到 stdout。
+
+转换规则——JSON 对象的 key 变成 XML 标签，string/number/bool 值变成标签内容。特殊 key 以 `@` 开头的变成 XML 属性，比如 `{"@id":"1","name":"test"}` 变成 `<record id="1"><name>test</name></record>`。数组每个元素用父级 key 的单数形式（去掉尾部 s）作为标签名。null 值生成自闭合标签 `<field/>`。`#text` key 用于混合内容和属性的场景。
+
+XML 声明默认加 `<?xml version="1.0" encoding="UTF-8"?>`，加 `-no-decl` 可以省略。命名空间通过 `-ns` 参数指定：`-ns "http://example.com/ns"` 会在根标签加上 `xmlns` 属性。
+
+输入不是合法 JSON 时 stderr 输出 "error: invalid JSON input" 并 exit 1。输入为空数组时输出空标签 `<root></root>`。
 
 Go 标准库，命令行参数用 flag 包解析。

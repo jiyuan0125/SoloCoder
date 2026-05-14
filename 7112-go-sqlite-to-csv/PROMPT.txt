@@ -1,5 +1,7 @@
-甲方要数据报告，SQLite 里的结果得导出成他们能看的格式。试了好几个方案都不行。
+甲方每周要数据报告，SQLite 里的结果得导出成他们能看的 CSV 格式。试了好几个开源工具，编码问题、日期格式问题一堆，都不靠谱——干脆自己搞一个。
 
-两个数据库的 schema 对比，差异生成 Markdown 报告，同步脚本 SQL 输出。校验分三阶段走：格式校验→规则校验→关联校验，前一步过了才做下一步。批量操作并发执行，但结果按顺序汇总。
+直接说怎么用：`sqlite2csv export --db data.db --sql "SELECT * FROM orders WHERE date > '2024-01-01'" --output result.csv`，或者 `--table orders` 导整张表。`--delimiter` 默认逗号，`--encoding` 默认 UTF-8 可选 GBK，`--null-value` 控制空值显示（默认空字符串）。`--header` 加表头行，`--no-header` 不加。输出文件已存在时用 `--force` 覆盖，否则报 "file already exists: result.csv" 退出码 1。查询结果为空时输出 "no data" 到 stderr，但仍然创建空文件，退出码 0。数据库文件不存在输出 "database not found: xxx" 退出码 1。
+
+另外加了两个数据库 schema 对比的功能：`sqlite2csv diff --db1 a.db --db2 b.db --format markdown`，生成 Markdown 报告列出表级差异（新增/删除/修改）和字段级差异。校验分三阶段走：格式校验 → 规则校验 → 关联校验，前一步失败就不继续。批量操作并发执行但结果按原始顺序汇总。
 
 Go 命令行工具，go build 能过就行。

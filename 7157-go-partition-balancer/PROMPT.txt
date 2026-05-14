@@ -1,5 +1,7 @@
-三个分区一个积压 10 万条另外两个空的，分区不均衡。
+三个分区一个积压 10 万条另外两个空的——分区不均衡到这种程度，消费者等于单线程在跑。
 
-消息重放：从指定偏移量重新消费，偏移量管理，重放范围控制。证书签发需要 CA，CA 怎么初始化不提。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+工具名 `partition-balancer`，解决消息队列分区均衡和重放问题。`balance --brokers localhost:9092 --topic orders --strategy range`：查看当前分区分配情况，输出每个分区的消息量、消费者分配、负载不均衡度。`--strategy` 支持 range 和 roundrobin 两种策略。加 `--execute` 真正执行再均衡，不加只输出计划。
 
-Go 重写老 Python 脚本，命令行工具，go build 能过就行。
+`replay --brokers localhost:9092 --topic orders --partition 0 --offset 5000 --limit 1000`：从指定偏移量重新消费消息，支持 `--offset earliest/latest/具体数字`，`--limit` 控制重放条数，`--to-topic replay-orders` 指定重放到新 topic。偏移量管理：`offsets list --topic orders --group my-group` 显示每个分区的 committed offset 和 log end offset。
+
+证书签发需要 CA（`--ca-cert` 和 `--ca-key`），CA 怎么初始化不提——工具假定 CA 已存在。代码按核心逻辑、IO 处理、CLI 入口分文件。分区不存在时 exit code=1，offset 超出范围 exit code=2。这是从老 Python 脚本重写的。go build 能过就行。

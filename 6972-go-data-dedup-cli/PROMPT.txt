@@ -1,3 +1,9 @@
-合并多份数据源后发现大量重复记录——同一个用户 ID 出现在好几个文件里。写个数据去重工具，根据指定的列组合（比如 user_id + date）判断重复。保留策略要可选：保留第一次出现的、保留最后一次的、或者合并两条记录的字段。输出去重后的结果。
+合并了三个部门的数据后，用户表里重复率飙到 40%——同一个 user_id 配合不同来源的注册日期，出现了七八条。问题不只是去重，去重之后留哪条才是关键。
+
+这个工具命令行这么用：`dedup -input merged.csv -keys user_id,date -strategy last -output clean.csv`。`-keys` 指定判断重复的列组合，逗号分隔；`-strategy` 三选一：first 保留首次出现、last 保留最后一次、merge 合并字段（取非空值优先填充）。merge 模式下，被合并的记录如果有冲突字段，保留后一条的值，在 stderr 打一条 warning 说明哪一行哪个字段被覆盖了。
+
+输入支持多个文件：`-input file1.csv,file2.csv,file3.csv`，按文件顺序依次读取。输出是去重后的单一 CSV，列名和第一个输入文件一致。如果某个 key 列在输入中不存在，stderr 报错 "error: key column 'xxx' not found in header" 并 exit 2。空行直接跳过不参与去重，不计入总数。重复判断不区分大小写——加 `-case-sensitive` 才开启大小写敏感比较。
+
+去重统计信息最后输出到 stderr：原始行数、重复行数、输出行数、耗时。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

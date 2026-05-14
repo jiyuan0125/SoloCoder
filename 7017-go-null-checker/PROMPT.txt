@@ -1,4 +1,9 @@
-之前用脚本出的报告每次格式都不一样，领导看了直摇头。换 Go 写：数据画像分析跑分布、TopN、基数，跟预期 profile 比对标偏差，偏差报告统一输出 JSON。多文件交叉校验也塞进去——A 文件 ID 在 B 文件得能找到。
-转换完后自动写入目标，目标不可用时不报错。
-用 encoding/csv 的 Reader 和 Writer。
-go build 能过，命令行工具能正常运行。
+之前用脚本出的报告每次格式都不一样，领导看了直摇头。换 Go 认真搞：数据画像分析跑分布、TopN、基数，跟预期 profile 比对标偏差，偏差报告统一输出 JSON。多文件交叉校验也塞进去——A 文件 ID 在 B 文件得能找到。转换完后自动写入目标，目标不可用时不报错。用 encoding/csv 的 Reader 和 Writer。go build 能过，命令行工具能正常运行。
+
+1. 画像：profiler profile --input users.csv --expected baseline.json --output profile.json。统计每列类型、空值率、唯一值数、数值列 min/max/mean/median/stddev、TopN（默认 10）、日期最早最晚。JSON 按列组织。
+2. 偏差比对：数值容差 ±10%，比率 ±5%，超出标 deviated。"deviations" 列 column、metric、expected、actual、pct_diff。
+3. 交叉校验：profiler crosscheck --source orders.csv --ref users.csv --key user_id --output cross.json。找不到标 orphan 列出值和行号。
+4. CSV 用 encoding/csv 流式读写。目标不可用只打 warning 不退出。
+5. 报告 JSON UTF-8，数字两位小数。偏差报告含 summary：总列数、偏差列数。
+
+空文件 {"row_count":0,"columns":{}} 退出码 0。key 列不存在退出码 1。百万行内存不超 200MB。

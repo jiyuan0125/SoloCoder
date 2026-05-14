@@ -1,4 +1,3 @@
-encoding/csv 的 Reader 和 Writer 够用了，但拆分采样还得自己实现。Go 命令行：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，数据脱敏。
-导入完成后自动更新索引，索引更新失败只记日志。
-批量操作并发执行，结果按顺序汇总。
-go build 能过，命令行工具能正常运行。
+encoding/csv 的 Reader 和 Writer 够用了，但拆分采样还得自己实现，每次都复制粘贴上次写的代码，变量名还得改——不如抽成独立工具。
+
+Go CLI 工具叫 `ranktool`。`split` 子命令拆分文件：`--by rows --size 500` 每 500 行切一个文件，`--by size --size 10MB` 按大小切，`--by field --column region` 按字段值切（同值归同一个文件），输出文件名 `--prefix chunk_` 加序号或字段值。`sample` 子命令采样：`--method random --rate 0.05 --seed 42` 随机采样可复现，`--method stratified --key label --rate 0.1` 分层采样各层等比例，`--method interval --step 100` 等间隔。`mask` 子命令脱敏：`--fields phone,email,id_card`，手机号中间四位变 `****`，邮箱保留首字母和域名，身份证保留首尾各三位中间变 `***`。导入完成后自动更新索引，索引更新失败只记日志不影响主流程。批量操作并发执行，结果按原始顺序汇总输出。每个子命令 stderr 输出处理统计——读取行数、处理行数、跳过行数、耗时。go build 能过，命令行工具能正常运行。

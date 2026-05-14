@@ -1,5 +1,9 @@
-客户发来的 CSV 文件没有 schema 定义，不知道哪些列是数字、哪些是日期。写个数据类型推断工具，分析每列的数据，推断出最合适的类型——int、float、date、string、bool。比如一列数据全是 "2024-01-01" 格式的，那就推断为 date 类型。输出推断出的 schema。
+客户丢过来一个 CSV，表头中文，数据什么样完全不知道。得有个工具先扫描把类型搞清楚。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+`typeinfer -input data.csv -output schema.json`。扫描全部行（或 `-sample 1000` 采样前 N 行），对每列推断类型。优先级：bool（true/false/是/否/0/1）→ int → float → date（2006-01-02、01/02/2006、2006/01/02）→ datetime → string（兜底）。90% 以上匹配即定为该类型，否则降级。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+输出：`{"columns":[{"name":"姓名","type":"string","null_rate":0.02,"sample_values":["张三","李四"]},{"name":"年龄","type":"int","min":18,"max":65}],"row_count":5000}`。每列含 type、null_rate、sample_values（前 5 个非空值），数值类型有 min/max。
+
+`-threshold 0.95` 调匹配阈值。`-format table` 终端表格。文件不存在退出码 1，无数据行输出 "file has no data rows" 退出码 2。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，编译后单二进制可以直接跑。

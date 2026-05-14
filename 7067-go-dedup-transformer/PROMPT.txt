@@ -1,3 +1,5 @@
-Python 处理编码转换遇到 GBK 大文件就卡死。Go 重写：编码统一转 UTF-8，BOM 处理，非法字符替换。分桶/分箱把连续值离散化也一并做了。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+Python 处理 GBK 大文件编码转换经常卡死，内存直接拉满。Go 重写：编码统一转 UTF-8，BOM 处理不能丢，非法字符替换策略可配。分桶/分箱把连续值离散化也一并做了。代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
+
+编码转换：`dedup-transformer convert-encoding --input gb2312.csv --source-encoding GBK --replacement "�" --output utf8.csv`，自动检测源编码（`--source-encoding` 可覆盖），`--replacement` 指定非法字符替换串默认 `�`。BOM 检测和去除：输入有 BOM 自动识别跳过，输出默认不带 BOM，加 `--add-bom` 选项写入 BOM 头。大文件用 bufio.Scanner 逐行处理不 OOM。
+
+分桶 `bucket --input data.csv --column score --bins 5 --method equal-width --output bucketed.csv`，method 选 equal-width 或 equal-frequency，新增 `_bucket` 列（1 到 bins），输出额外附带 JSON 边界信息 `{"field":"score","bins":[0,20,40,60,80,100]}`。值不在范围内放入最近边界桶。输入有乱码行 stderr 报 `warning: malformed bytes at line N` 并跳过。空行直接跳过不报错。go build 能过，代码分文件组织。

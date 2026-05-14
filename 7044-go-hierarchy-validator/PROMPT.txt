@@ -1,5 +1,7 @@
-朋友创业团队三个人，数据校验没人管出了好几次线上问题。帮他写个 Go CLI：XML Schema 验证带命名空间，属性值枚举校验，ID/IDREF 引用完整性检查。小团队用不着太复杂。
-密钥有生成→激活→轮换→归档→销毁的状态。
-消息 topic 支持多层通配符 a.b.c.# 的匹配。
-字段值可能有各种奇怪格式，要能容错。
-go build 能过，命令行工具能正常运行。
+朋友创业团队三个人，数据校验没人管出了好几次线上问题——上次是 XML 配置里一个 ID 引用写错了，服务启动直接 panic。帮他写个 Go CLI 工具，小团队用不着太复杂但该有的不能少。
+
+`hierarchy-validator validate --schema schema.xsd --data config.xml` 实现 XML Schema 验证。命名空间处理：targetNamespace 必须与 XML 根元素 xmlns 声明一致，不一致报 "namespace mismatch"。属性值枚举校验：遍历 XSD 中 restriction/enumeration 定义的合法值列表，不匹配的输出属性名、期望枚举、实际值。ID/IDREF 引用完整性检查——收集全部 xs:ID 类型属性值建成索引，遍历 xs:IDREF/XS:IDREFS 属性检查引用目标是否存在，悬空引用报 "dangling IDREF: {value} at line {N}"。
+
+密钥状态机：generated → active → rotated → archived → destroyed，状态变更记录到 `.hierarchy-keys-state.json`。消息 topic 通配符匹配：`a.b.c.#` 匹配 a.b.c.d、a.b.c.d.e 等，`a.b.*` 只匹配一层。字段值格式异常不中断，记录到 errors 数组含行号、属性名、原始值。
+
+输出 JSON：`{ "valid": bool, "errors": [{ "type": "...", "detail": "..." }] }`。退出码 0 通过 1 验证失败 2 输入错误。纯标准库实现，go build 能过。

@@ -1,4 +1,7 @@
-数据质量报警天天响，一查又是 CSV 格式不统一。Go CLI：CSV 列类型自动推断，数据质量评分看空值率、唯一率、格式合规率，统计异常检测跑 Z-score。
-规则校验需要规则组，规则组怎么来的不提。
-配置项有哪些你自己设计，够用就行。
-go build 能过，命令行工具能正常运行。
+数据质量报警天天响，一查又是 CSV 格式不统一——有的用逗号有的用 tab，日期格式也五花八门。这个工具要能自动搞定这些破事。
+
+`integrity-verifier analyze --input data.csv` 自动推断列类型：采样前 200 行，判断每列是 int/float/string/date/bool，输出推断结果供确认。数据质量评分：空值率（null_count/total）、唯一率（distinct_count/total）、格式合规率（符合推断类型的行数/total），三者的加权平均作为总分，`--weights 0.3,0.3,0.4` 可自定义权重。统计异常检测对数值列跑 Z-score，`--z-threshold 3.0` 控制阈值，标记为异常的值在报告中列出行号和 Z 值。
+
+规则组通过 `--rules-file rules.yaml` 加载，定义校验规则列表，每条规则有 name、field、type、params 字段。配置项包括采样行数（默认 200）、Z-score 阈值（默认 3.0）、权重分配、输出格式。配置文件路径可通过 `--config` 指定或放当前目录 `.integrity-verifier.yaml`。
+
+输出 JSON：`{ "columns": [...], "scores": {...}, "anomalies": [{ "column": "...", "row": N, "value": "...", "z_score": F }] }`。退出码 0 成功 1 数据质量不达标（总分低于 `--min-score 0.7`）2 输入错误。纯标准库实现，go build 能过。

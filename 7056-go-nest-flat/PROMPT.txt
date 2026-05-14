@@ -1,4 +1,5 @@
-开源的日期转换工具时区处理全是 bug，也不敢用。Go 从零写：日期格式自动识别并转换，时区转换覆盖常用时区，相对日期计算支持"3天前""上个月末"这种。
-支持多层级的规则路径，比如 rules/{group}/{name}/{version}。
-文件可能有好几 GB 大，要能处理。
-go build 能过，命令行工具能正常运行。
+开源日期转换工具时区处理全是 bug，也不敢拿到生产用。Go 从零写一个：日期格式自动识别并转换，时区转换覆盖常用时区，相对日期计算支持"3 天前""上个月末"这种自然语言。支持多层规则路径 rules/{group}/{name}/{version}。
+
+第一步日期识别：`nest-flat parse --input data.csv --column created_at --auto-detect --output out.csv`，`--auto-detect` 自动识别 yyyy-MM-dd、MM/dd/yyyy、unix timestamp 等格式，统一转为 `--format` 指定的目标格式（默认 `2006-01-02`）。第二步时区转换：`convert-tz --input data.csv --column created_at --from Asia/Shanghai --to UTC --output out.csv`，`--from`/`--to` 必须是 IANA 标准时区名。第三步相对日期：`relative --base "2024-01-15" --expr "3天前" --output result.txt`，支持"Nd前/Nw后/Nm后/上个月末/本周一/本季度初"等中文表达。
+
+输入 CSV/JSON，输出同格式。日期列无法解析时该行原样保留，stderr 报 `warning: unparseable date in row N: "xxx"`。时区名无效报 `error: unknown timezone: xxx` 退出码 1。文件大于 1GB 用流式处理不能 OOM。空文件输出空文件退出码 0。go build 能过，纯标准库。

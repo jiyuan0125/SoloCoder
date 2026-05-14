@@ -1,3 +1,9 @@
-同事负责的项目需要把测试库的数据同步到本地开发库，每次都手动导出导入太麻烦。写个数据库同步工具，对比源和目标 SQLite 的数据，找出差异记录（新增、修改、删除），生成同步 SQL 语句。增量同步——只同步变化的部分，不用每次全量复制。
+测试库同步到本地开发库，每次手动导出导入，还得自己记哪些表改了。能不能自动化对比差异、生成同步 SQL？
+
+`dbsync -source staging.db -target local.db -output sync.sql`。对比流程：1) 列出两库共有的表；2) 每张表按主键逐行对比（哈希整行 SHA256）；3) 生成三类 SQL 语句。INSERT（源有目标无）：`INSERT INTO users (id,name,email) VALUES (5,'new_user','new@test.com');`。UPDATE（两边都有但内容不同）：`UPDATE users SET name='Alice V2' WHERE id=3;`。DELETE（目标有源无）：`DELETE FROM users WHERE id=10;`。
+
+SQL 文件头部注释标注统计：`-- sync plan: 5 inserts, 3 updates, 2 deletes`。`-table users,orders` 只同步指定表。`-direction pull` 只生成 INSERT+UPDATE（不删除目标多出的数据），`-direction full` 生成全部（默认）。`-dry-run` 只打印统计不生成文件。`-exec` 直接执行生成的 SQL 到目标库（执行前备份到 target.db.bak）。
+
+源或目标库不存在退出码 1。表无主键输出 "table XXX has no primary key, cannot sync" 退出码 2。同步 SQL 为空（完全一致）输出 "databases are in sync" 退出码 0。
 
 Go 标准库，命令行参数用 flag 包解析。

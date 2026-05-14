@@ -1,4 +1,5 @@
-database/sql 的预处理语句性能不错，但拆分和采样还得自己写。Go 命令行：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，数据脱敏遮掉敏感字段。
-密钥轮换后用旧密钥加密的数据要能解密。
-可能一次处理上万条记录。
-go build 能过，命令行工具能正常运行。
+database/sql 预处理语句性能不错，但拆分和采样还得自己写。Go 命令行：按条件/行数/大小拆分文件，数据采样随机/分层/等间隔，数据脱敏遮掉敏感字段。密钥轮换后用旧密钥加密的数据要能解密。
+
+拆分 `sort-transformer split --input big.csv --mode rows --value 5000 --output-dir ./chunks/`，mode 选 rows、size（字节）、condition（`--expr "status=='active'"`），输出文件 `chunk_001.csv` 起，每个文件包含表头。采样 `sample --input data.csv --method random --ratio 0.05 --seed 42 --output sampled.csv`，method 可选 random（`--ratio` 比例，`--seed` 可复现）、stratified（`--strata-column` 分层按 `--ratio` 比例抽）、systematic（`--interval` 每 N 行取一行）。脱敏 `mask --input data.csv --columns ssn,phone --method hash --output masked.csv`，method 选 hash（SHA256 摘要）、replace（全替换为 `***`）、partial（保留首尾，`--keep-prefix 3 --keep-suffix 4` 中间填 `--char` 默认 `*`）。
+
+CSV/JSON 均支持。ratio 超出 (0,1] 报错退出码 1。采样 0 行输出空文件不报错。上万条记录处理不崩。go build 能过。

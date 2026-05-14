@@ -1,5 +1,9 @@
-数据集有 1000 万条记录，做探索性分析太多了跑不动。写个数据采样工具，从大数据集里按需采样。随机采样（每个样本等概率）、分层采样（每个类别按比例抽）、系统采样（每隔 N 条取一条）三种方式都要支持。采样的数量或比例可配置。
+1000 万条数据跑个探索分析，模型半天没反应——数据量太大了。但采样这事不是随便抽就行的，有类别不平衡的数据你随机抽，少数类可能一个都抽不到。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+三种采样方式一个工具搞定。CLI：`sampler -input big.csv -method random -count 10000 -output sample.csv`。`-method` 三选一——random：纯随机采样，每个样本等概率，`-count` 或 `-ratio 0.01` 指定数量或比例；stratified：分层采样，`-strata-col category` 指定分层列，每层按比例采样，保证层间比例和原始数据一致；systematic：系统采样，`-interval 100` 每隔 100 条取一条。
 
-用 Go 标准库写，go run . 或 go build 都行。
+random 模式用 crypto/rand 或 math/rand 配时间种子确保随机性。stratified 模式下如果某层的样本数不足 count/层数，该层全部保留。输出 CSV 保留 header 行。加 `-seed 42` 可以固定随机种子以复现结果。
+
+采样数超过原始行数时直接输出原始数据，stderr 警告 "warning: sample size exceeds total rows"。输入文件为空（只有 header）时输出空文件。method 不合法时 stderr 报错 "error: unknown method 'xxx'" 并 exit 1。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。用 Go 标准库写，go run . 或 go build 都行。

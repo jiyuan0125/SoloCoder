@@ -1,3 +1,7 @@
-审计要求所有服务进程只能有最小权限的 Linux capabilities，不能一股脑全给。写个管理进程 capabilities 的命令行工具，查看当前进程的 capabilities、设置指定的 capability、删除不需要的。最小权限配置，该给的给，不该给的一个都不能多。
+为什么审计总是过不了？因为所有服务都跑在 root 下，capabilities 滥用。
+
+`capmgr` 三个子命令。`capmgr list -pid 1234` 读 /proc/1234/status 的 CapEff 行，解析为可读名称：`CAP_NET_BIND_SERVICE\nCAP_SETUID\n`。`capmgr set -pid 1234 -caps "cap_net_bind_service+cap_setuid"` 设置指定 capabilities。`capmgr drop -pid 1234 -caps "cap_setuid"` 移除指定项。
+
+`capmgr template -name web-service -caps "cap_net_bind_service,cap_net_raw"` 生成 JSON 配置。`capmgr apply -pid 1234 -template web-service.json` 按模板设置。不支持的 capability 名输出 "unknown capability: XXX" 退出码 1。pid 不存在输出 "process not found: PID" 退出码 2。无权限输出 "permission denied" 退出码 3。不加 -pid 默认查自身进程。
 
 用 Go 标准库写，go run . 或 go build 都行。

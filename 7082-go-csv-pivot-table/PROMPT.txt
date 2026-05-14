@@ -1,3 +1,3 @@
-pandas 的 pivot 在 Go 里找不到好用的替代。自己写命令行：按维度分组聚合 sum/avg/count/max/min，窗口函数滚动平均/累计求和/排名，透视逆透视转换。
-权限路径支持多层 resources/{type}/{id}/actions/{action}。
-go build 能过，命令行工具能正常运行。
+上个月财务那边做季度报表，用 pandas pivot_table 三行代码搞定，但我们的数据管道是 Go 写的，调 Python 就为了一个透视表太重了。干脆自己搞一个 Go CLI，以后其他团队也能用。
+
+命令 `csvpivot` 支持这些子命令：`agg` 按维度分组聚合，`window` 做窗口函数，`pivot` 透视转换，`unpivot` 逆透视。`agg` 接 `--group-by` 指定分组列（可多个），`--metric` 指定聚合列，`--fn` 选 sum/avg/count/max/min。`window` 接 `--type` 选 rolling-avg/cumsum/rank，`--window-size` 设窗口大小。`pivot` 的 `--rows` 和 `--cols` 分别指定行维度和列维度，`--value` 指定填充值列。输入都是 CSV，读 stdin 或 `--input` 指定文件，输出 `--output` 默认 stdout。聚合结果数值保留两位小数，空值跳过不参与计算。分组键为空的行单独归到 `<empty>` 组。输入文件超过 100MB 时用流式读取，别一口气加载。权限路径支持多层 resources/{type}/{id}/actions/{action}。纯标准库，go build 能过，命令行正常运行，退出码 0 成功 1 失败。

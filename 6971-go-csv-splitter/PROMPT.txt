@@ -1,3 +1,7 @@
-有个 500MB 的 CSV 文件要导入系统，但系统单次只接受不超过 10MB 的文件。写个 CSV 分割工具，按行数、文件大小、或者指定列的值来分割 CSV。header 行每个文件都得保留，不然下游不认。输出多个文件自动编号。
+上周五晚上导入系统崩溃了——运营丢过来一个 800MB 的用户行为 CSV，但咱们的数据平台单次上传限制 10MB，结果卡在那儿整晚没跑完。写一个 CSV 分割工具把这事儿自动化了。
+
+用法是 `csv-splitter -input data.csv -mode rows -size 10000 -output-dir ./parts`，按三种模式切分：rows 按固定行数、size 按目标文件大小（MB）、column 按指定列的值分组。用 column 模式时通过 `-column region` 指定分组列，相同值的行进同一个文件。无论哪种模式，原始 header 行必须在每个输出文件的第一行保留。输出文件自动编号，命名格式 `output_001.csv`、`output_002.csv`，如果 output-dir 不存在就自动创建。
+
+空文件或行数不足 size 时，输出单个完整文件不报错。文件编码统一按 UTF-8 处理，遇到 BOM 头自动跳过。输入文件不存在时 stderr 输出 "error: input file not found" 并 exit 1。分隔符默认逗号，通过 `-sep` 参数可改为 tab 或其他字符。进度信息输出到 stderr，不污染 stdout 的管道。每个输出文件切完后 stderr 打一行 "created output_00N.csv (X rows)"。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

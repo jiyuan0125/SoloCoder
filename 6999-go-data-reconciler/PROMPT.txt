@@ -1,3 +1,9 @@
-SaaS 对账工具到量了，每月 300 刀。其实功能很简单——对比源数据和目标数据是否一致。Go 自建一个数据对账工具，按主键匹配源和目标的数据，逐列比较值是否相同。不一致的记录输出差异报告，包括哪个字段、源值是什么、目标值是什么。
+SaaS 对账工具到量了，每月 300 刀。其实功能很简单——对比源数据和目标数据是否一致。Go 自建一个数据对账工具，按主键匹配源和目标的数据，逐列比较值是否相同。不一致的记录输出差异报告，包括哪个字段、源值是什么、目标值是什么。纯 Go 标准库，编译后单二进制可以直接跑。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+CLI：reconcile --source source.csv --target target.csv --key "order_id" --output report.json。--key 支持多列联合主键逗号分隔。输出默认 JSON，--format table 切表格。
+
+匹配阶段按主键建索引，源端多出的标 "source_only"，目标端多出的标 "target_only"，值不同的标 "mismatch"。数值忽略空格比较，字符串区分大小写，日期统一 RFC3339。
+
+JSON 报告：{"summary":{"total":100,"matched":95,"mismatched":3,"source_only":1,"target_only":1},"details":[{"key_value":"...","field":"price","source_value":"10","target_value":"10.5"}]}。
+
+两个文件各 10 万行以内。空行跳过，主键为空报 warning 继续。退出码：0=全部匹配，1=有差异，2=输入错误。

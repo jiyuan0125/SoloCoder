@@ -1,4 +1,5 @@
-之前的扁平化脚本碰到嵌套三层以上的 JSON 就报错。Go 重写：嵌套 JSON 扁平化用点号路径展开，扁平数据能构建成嵌套结构，数组展开和聚合都得有。
-令牌有创建→活跃→刷新→过期→吊销的状态。
-处理流程有预处理、主处理、后处理三个步骤。
-go build 能过，命令行工具能正常运行。
+之前扁平化脚本碰到嵌套三层以上的 JSON 就报错退出，每次都得手动改路径深度。Go 重写：嵌套 JSON 扁平化用点号路径展开（如 `user.address.city`），扁平数据能反向构建成嵌套结构，数组展开和聚合都得有。令牌有创建→活跃→刷新→过期→吊销五个状态。处理流程分预处理、主处理、后处理三步。
+
+CLI：`data-aggregator flatten --input nested.json --separator . --output flat.json`，`--separator` 默认点号，可改为 `_` 或 `/`。反向嵌套 `nest --input flat.json --separator . --schema schema.json --output nested.json`，`--schema` 描述目标嵌套结构。数组展开 `expand --input data.json --array-path items --output expanded.json`，把数组每个元素展开为独立对象。数组聚合 `collapse --input expanded.json --group-by order_id --array-field items --output collapsed.json`。
+
+输入仅支持 JSON，输出 JSON。`--array-path` 指定的路径不存在时，stderr 输出 `error: path not found: xxx` 退出码 1。空 JSON 数组输入输出空数组退出码 0。数组元素为 null 时展开行对应字段填 null。嵌套层级超过 20 层时 stderr 报 `error: nesting too deep (max 20)` 退出码 1。预处理阶段校验 JSON 合法性，非法 JSON 报 `error: invalid JSON at line N` 退出码 1。go build 能过，纯标准库。

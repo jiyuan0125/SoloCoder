@@ -1,3 +1,11 @@
-每次同步都是全量复制，500 万条数据传一遍要两个小时。其实每天新增和修改的也就几千条。写个增量同步工具，基于时间戳或版本号只同步有变化的记录。记一个同步点（上次同步到哪了），下次从那个点继续。新增的和修改的都要能同步到。
+每次同步 500 万条数据全量跑两小时，其实每天变动的也就几千条——上周网络还抖了一次，跑了 90 分钟断了，只能从头再来。得改成增量同步，还要能断点续传。
+
+CLI：`incr-sync -source source.csv -target target.csv -key id -track timestamp -state .sync_state.json -output synced.csv`。`-key` 指定主键列，`-track` 指定用于判断变更的列（时间戳或递增版本号）。state 文件记录上次同步点的值，格式：`{"last_sync_value":"2024-01-15T10:30:00","synced_keys":["id1","id2"]}`。
+
+同步逻辑——读取 source 中 track 列值大于 last_sync_value 的记录，分为新增（key 不在 synced_keys 里）和修改（key 已存在但其他字段变了）两类。新增的追加到 target，修改的按 key 更新 target 中对应行。同步完成后更新 state 文件。
+
+断点续传——如果中途中断，下次运行读取 state 文件，从上次的位置继续。加 `-full-reset` 清除 state 重新全量同步。source 和 target 列名不一致时通过 `-map src_col:tgt_col` 映射。
+
+state 文件损坏时 stderr 报错 "error: corrupted state file, use -full-reset to restart"，exit 3。source 文件不存在 exit 1。同步完成后 stdout 输出统计：`synced: +N new, ~M updated (Xms)`。
 
 Go 实现，只用标准库，交叉编译友好。

@@ -1,3 +1,7 @@
-运营每周发来一个 CSV 文件要导入系统，字段格式每次都不一样——日期有的写 2024-01-01 有的写 01/01/2024，必填字段还经常漏。写个 CSV 导入工具，读进来先做数据校验（类型对不对、必填有没有、数值在不在范围内），校验通过的转成 JSON 或 SQL INSERT 语句。分隔符和编码都要能自定义。
+运营那边的 CSV 又来了，日期格式混了三种，手机号填成了身份证号。做一个导入前自动校验转换的工具。
+
+`csv-importer -input data.csv -config rules.json -output result.json`。rules.json 定义规则：`{"columns":[{"name":"phone","type":"string","required":true,"pattern":"^1[3-9]\\d{9}$"},{"name":"age","type":"int","min":0,"max":150},{"name":"create_time","type":"date","format":"2006-01-02"}]}`。type 支持 string/int/float/date/bool。
+
+结果输出到 stdout：`{"total":1000,"passed":980,"failed":20,"errors":[{"row":5,"column":"phone","value":"abc123","rule":"pattern mismatch"}]}`。`-format sql` 输出 INSERT 语句，每 100 行一个 batch。`-sep ";"` 指定分隔符，`-encoding gbk` 指定编码。配置文件错误输出 "invalid config: " 加原因退出码 1。输入文件不存在退出码 2。
 
 用 Go 标准库写，go run . 或 go build 都行。

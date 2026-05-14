@@ -1,3 +1,7 @@
-后端接口返回的是嵌套 JSON，数据组要 CSV 格式才能导进 BI 工具。写个 JSON 转 CSV 平铺工具，把嵌套的对象展开成扁平的列名（比如 user.address.city → user_address_city）。数组也要能展开，每个元素变成一行。分隔符自定义。
+先用最基本的方式：`json2csv -input data.json -output result.csv`。输入 JSON 可以是对象数组 `[{"user":{"name":"alice","address":{"city":"bj"}},"tags":["a","b"]}]`，也可以是单对象。嵌套字段用下划线连接：`user_name`、`user_address_city`。数组展开为数组索引列：`tags_0`、`tags_1`，每行补齐到数组最大长度。
+
+第二步，`-separator "."` 改变嵌套连接符（默认 `_`）。`-array-mode expand` 展开数组为多行（默认），`-array-mode json` 把数组转成 JSON 字符串保留在一列里。`-null-value "N/A"` 指定空值显示（默认空字符串）。`-select "user_name,user_address_city"` 只输出指定列，逗号分隔。
+
+第三步处理边界情况。输入不是合法 JSON 输出 "invalid JSON: line X col Y" 到 stderr 退出码 1。输入是空数组输出空 CSV（只有换行符）退出码 0。单对象输入自动包装为数组处理。字段名冲突时追加后缀 `_2`、`_3`。超大文件（>100MB）流式读取，用 json.Decoder 逐 token 解析不全量加载。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

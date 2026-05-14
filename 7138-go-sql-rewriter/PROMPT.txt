@@ -1,5 +1,5 @@
-ORM 生成的 SQL 太丑了，得重写成人类能读的。新项目要求有这个能力。
+ORM 生成的 SQL 能看吗？七层嵌套子查询、SELECT *、重复 JOIN——人读不了，更别提优化了。新项目要求所有 SQL 都要经过重写才能上生产。
 
-SQL 静态检查（未使用索引/SELECT */缺失 WHERE），危险操作检测，建议输出。数据库查询需要连接配置，连接怎么配不提。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+你有过盯着 ORM 生成的 SQL 发呆的经历吗？这个 Go CLI 工具就是来救命的。`sqlrew format --file query.sql --indent 2` 格式化 SQL，关键词大写、缩进对齐、子查询分层。`sqlrew optimize --file query.sql --db orders.db` 重写优化：消除重复 JOIN、展开 SELECT * 为实际列名、简化嵌套子查询为 JOIN、合并 UNION。输出对比：before（原始）和 after（重写后），附带变更说明。`sqlrew lint --file query.sql` 静态检查：未使用索引（error）、SELECT *（warning）、缺失 WHERE（error）、隐式类型转换（warning），输出 JSON [{rule, level, line, message}]。数据库查询需要连接配置。代码分文件组织：formatter.go、optimizer.go、linter.go、main.go。SQL 语法错误输出 "syntax error at line {N}: {detail}" 退出码 1。优化后 SQL 保存到 `--output` 指定文件，不指定则输出到 stdout。
 
-Go 搞，命令行工具，go build 能过就行。
+Go 命令行工具，go build 能过就行。

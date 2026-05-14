@@ -1,9 +1,5 @@
-三个业务库要合并，表结构不统一，先得摸清楚差异。隔壁组做了个相关工具，我们顺便也搞一套。
+三个业务库要合并——表结构不统一，字段命名规范也不一样，先得摸清楚差异。隔壁组做了个类似的工具但不好扩展，我们干脆自己搞一套，顺便把文档也自动化了。
 
-Schema 文档生成 Markdown 表格，表关系描述，索引使用统计，再加个批量查询执行（从 SQL 文件读取）。
-
-证书续签后依赖该证书的 TLS 配置要同步更新。
-
-处理分多个阶段，每个阶段的输出是下个阶段的输入。
+直接上命令：`dbmerge analyze --db1 orders_a.db --db2 orders_b.db --db3 orders_c.db`，对比三个库的 schema 差异，输出 Markdown 表格报告包含：表级差异（只存在于某个库的表）、字段级差异（同名字段类型不同）、索引差异。`dbmerge sync --source orders_a.db --target orders_b.db --dry-run` 生成同步 SQL 脚本但不执行，`--apply` 才真正执行。表关系描述用 DOT 格式生成依赖图。索引使用统计：`dbmerge stats --db orders.db --top 10` 输出最活跃的索引和从未使用的索引。批量查询：`dbmerge query --dir ./sqls/ --db target.db --parallel 4` 从 SQL 文件批量执行，`--parallel` 控制并发数。证书续签后依赖该证书的 TLS 配置要同步更新。处理分多个阶段：analyze → transform → validate → apply，每阶段输出是下阶段输入，任何阶段失败就停止。
 
 Go 命令行工具，go build 能过就行。

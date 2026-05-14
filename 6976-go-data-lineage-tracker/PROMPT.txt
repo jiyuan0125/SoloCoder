@@ -1,3 +1,9 @@
-数据出了问题，追溯了半天才找到是哪一步 ETL 转换改错了字段。合规部门说必须有完整的数据血缘记录。写个数据血缘追踪工具，每次数据转换时记录输入源、输出目标、schema 变了什么。形成完整的转换链路，输出一张血缘图。出了问题一键追溯到源头。
+上次数据出问题追了两天才定位到是第二步 ETL 把 user_id 的格式从小写转成大写了，但没人知道这件事。合规审计的时候被点名说没有数据血缘记录。得赶紧把这个补上。
+
+用法是：每次执行数据转换操作时，调用这个工具记录转换元数据。CLI：`lineage record -input users.csv -output users_clean.csv -op "dedup" -desc "removed duplicate user_ids" -schema-change "removed:email_hash"`。`-op` 是操作类型，`-desc` 是描述，`-schema-change` 记录 schema 变化。所有记录持久化到本地的 JSON 文件（默认 `~/.lineage/history.json`）。
+
+查血缘链路：`lineage trace -target users_clean.csv`，从指定文件往回追溯，输出完整转换链。格式是每行一条：`[timestamp] input → output (op: xxx, schema: removed:email_hash)`，从最早到最新排列。输出完整链路图：`lineage graph`，以文本形式画出所有记录的转换关系图，节点是文件名，边是操作类型。
+
+history.json 的结构：每条记录包含 input、output、op、desc、schema_change、timestamp 六个字段。文件不存在时自动创建空数组。JSON 解析损坏时 stderr 报错 "error: corrupted lineage store" 并 exit 3。
 
 Go 实现，只用标准库，交叉编译友好。

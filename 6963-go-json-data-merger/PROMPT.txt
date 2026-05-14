@@ -1,3 +1,9 @@
-三个数据源各自产出一部分用户数据，要把它们合成一份完整的。写个 JSON 数据合并工具，多个 JSON 文件按指定键去重后合并。深度合并要支持——两个文件都有同一个对象的字段，取交集还是并集得有策略。冲突解决策略可选：保留第一个、保留最后一个、自定义。
+三个数据源各有一份用户数据，要合成完整的——关键是合并策略，不是简单拼接就完事。
+
+`jsonmerge -files a.json,b.json,c.json -key user_id -strategy last -output merged.json`。-key 指定去重键，相同 key 的对象进行深度合并。深度合并规则：基础类型（string/int/bool）按 -strategy 策略决定取哪个值；对象类型递归合并；数组类型可选 `-array-strategy concat`（拼接去重）或 `replace`（按策略取一个）。
+
+strategy 三选一：`first`（保留第一个文件中的值）、`last`（保留最后一个）、`longest`（字符串取最长的，数组取最长的）。冲突场景：两个文件都有 user.name 但值不同，输出 warning 到 stderr `"conflict at user.name: 'Alice' vs 'Bob', resolved by strategy: last"`。
+
+`-files` 支持目录：`-files ./data/` 自动扫描目录下所有 .json 文件。`-nested-key "profile.id"` 支持嵌套字段作为合并键。输出格式与输入一致（美化 JSON，2 空格缩进）。任一文件 JSON 解析失败输出 "invalid JSON in XXX: [error]" 退出码 1。合并键在某个文件中不存在，该文件整体作为新记录加入。合并后总数等于所有文件去重后的条数。
 
 Go 实现，只用标准库，交叉编译友好。

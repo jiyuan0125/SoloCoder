@@ -1,3 +1,11 @@
-每天各分公司发来的销售 CSV 要合成一份全国的，格式相同就是合并到一起。写个 CSV 合并工具，多个结构相同的 CSV 合成一个。去重选项要有——万一同一个分公司的数据发了两遍。通配符匹配输入文件也得支持，`sales_*.csv` 一键合并。
+全国 30 个分公司的销售数据每天得合到一起，格式一样就是简单拼。但上回有个分公司发了两遍数据，导致汇总数翻倍，报表直接炸了。合并加去重，缺一不可。
+
+CLI：`csv-union -input "sales_*.csv" -output national.csv -dedup order_id`。`-input` 支持通配符模式，用 filepath.Glob 匹配，也支持逗号分隔的文件列表。`-dedup` 指定去重列，合并后按该列去重保留首次出现。不加 `-dedup` 则不去重直接拼接。
+
+输出保留第一个文件的 header，后续文件跳过 header 行。所有文件的列数和列名必须一致，不一致时 stderr 报错 "error: schema mismatch: file2.csv has 8 columns, expected 7" 并 exit 2。通配符没匹配到文件时 stderr 输出 "error: no files matched pattern 'xxx'" 并 exit 1。
+
+加 `-sort-by date` 可以按指定列排序输出。排序方向默认升序，加 `-desc` 降序。加 `-header-only` 只输出 header 行用于检查 schema 是否一致。
+
+合并完成 stdout 输出统计：`merged N files, M total rows (K duplicates removed)`。空文件（只有 header）跳过不报错，但如果所有文件都为空则输出只含 header 的文件。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

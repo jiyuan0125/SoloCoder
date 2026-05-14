@@ -1,5 +1,7 @@
-上游发 JSON 下游只认 XML，中间得做转换。对账经常出错。
+上游发 JSON 下游只认 XML，中间得做格式转换——对账经常出错就是因为字段映射没对齐。需要一个灵活的消息转换和路由工具。
 
-消息路由：基于内容或头信息分发，路由规则配置，路由失败处理。消息过滤：基于规则筛选。消息格式升级后旧消费者要能兼容处理。用 text/template 的自定义函数。
+`msg-converter` 的核心是转换和路由。`convert --input data.json --output result.xml --mapping fields.yaml`：格式转换支持 JSON↔XML↔CSV，字段映射文件定义源字段名到目标字段名的对应关系和类型转换规则（string→int、日期格式变更等）。消息头通过 `--copy-headers` 自动迁移。转换失败的字段保留原值并输出警告到 stderr。
 
-Go 实现，命令行工具，go build 能过就行。
+`route --input msgs.json --rules routing.yaml --output-dir routed/`：基于消息内容或头信息分发到不同输出文件。路由规则配置示例：`{"match": {"header.source": "payment"}, "target": "payment.json"}`。没有规则匹配的消息写入 `unmatched.json`。`filter --input msgs.json --rule 'amount > 1000' --output filtered.json`：基于表达式筛选消息，支持比较运算和字符串包含。
+
+消息格式升级后旧消费者要能兼容——`--compat-mode v1` 时自动补齐新版本缺失的字段为默认值。用 text/template 的自定义函数做输出模板化，FuncMap 注册 `toUpper`、`toLower`、`dateFormat` 等工具函数。输入文件不存在 exit code=1，映射文件语法错误 exit code=2。go build 能过就行。

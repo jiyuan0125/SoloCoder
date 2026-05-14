@@ -1,7 +1,7 @@
-怀疑有数据损坏，需要校验完整性。
+隔壁组做了个数据校验工具，我们组的数据也怀疑有损坏，干脆自己也搞一套。需要能校验数据库完整性的 CLI 工具。
 
-隔壁组做了个相关工具我们顺便也搞。Schema 文档生成 Markdown 表格，表关系描述，索引使用统计。消息发送需要 topic，topic 怎么创建不提。
+1. `integrity-check verify --db app.db --check row-count,checksum,null-scan`：按指定检查项逐项验证。row-count 对比系统表统计的行数和实际扫描行数；checksum 对每行数据计算校验和，与上次保存的基准对比；null-scan 检查非空列是否存在 NULL 值。输出 JSON：`{"checks": [{"name": "row-count", "status": "pass", "details": {...}}, {"name": "checksum", "status": "fail", "failed_rows": [102, 205]}]}`。
+2. `integrity-check document --db app.db --output schema.md`：生成 Schema 文档，Markdown 表格列出每张表的列名、类型、约束、默认值、索引。表关系通过外键分析生成 Mermaid ER 图代码片段。索引使用统计基于 `sqlite_stat1` 或扫描查询日志。
+3. `integrity-check scan --dir ./dbs --parallel 4`：扫描多个数据库文件，并行处理。每个文件独立输出结果，汇总报告包含通过/失败文件数。
 
-支持多层级的规则路径 rules/{group}/{name}/{version}。扫描多个目录要并行处理。
-
-Go 命令行工具，go build 能过就行。
+消息发送需要 topic，topic 怎么创建不提。支持多层路径 `rules/{group}/{name}/{version}` 管理检查规则。检查失败 exit code=1，全部通过 exit code=0。单文件超过 500MB 打印进度。go build 能过就行。

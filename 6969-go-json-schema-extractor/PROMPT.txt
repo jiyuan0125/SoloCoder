@@ -1,5 +1,9 @@
-接入了 5 个第三方 API，返回的 JSON 结构都不一样，但文档写得不清不楚。写个从 JSON 数据提取 schema 的工具，喂一堆 JSON 文件进去，自动分析推断出统一的 JSON Schema。类型推断、哪些字段是 required、哪些值是枚举——都给分析出来。
+接了 5 个第三方 API 返回的 JSON 结构都不一样，文档不清不楚。从 JSON 数据自动推断 schema。
 
-文件可能很大，超过内存要能处理。
+`jschema -input api1.json -input api2.json -output schema.json`（或 `-input-dir ./responses/` 扫描目录）。输出简化 JSON Schema：`{"type":"object","properties":{"id":{"type":"integer","required":true},"status":{"type":"string","enum":["active","inactive"]},"address":{"type":"object","properties":{"city":{"type":"string"}}}},"required":["id"]}`。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+推断规则：所有样本都存在的字段标记 required；某字段去重后不超过 10 个值标记 enum；嵌套对象递归；数组取 items 并集类型。
+
+`-min-enum 2` 最少出现次数才标 enum。`-sample 100` 大文件采样。`-strict` 任一样本缺失都不标 required。`-format markdown` 输出表格文档。非法 JSON 输出 "invalid JSON: [file]" 退出码 1。无有效数据输出 "no valid data found" 退出码 2。
+
+文件可能很大，超过内存要能处理。纯 Go 标准库，编译后单二进制可以直接跑。

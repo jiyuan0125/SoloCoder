@@ -1,5 +1,7 @@
-下游要求批量接收，但上游是逐条发送的。季度末赶着搞。
+下游要求批量接收但上游逐条发送——这个不匹配害得我们写了一堆临时脚本。季度末赶着上，来不及买商业方案。
 
-消息路由：基于内容/头信息分发，路由规则配置，路由失败处理。证书续签后依赖该证书的 TLS 配置要同步更新。证书快过期自动发通知，通知失败不中断续签。用 encoding/xml 的 Marshal/Unmarshal。
+1. `msg-aggregator collect --input msgs.jsonl --window 30s --count-threshold 100 --output batched.jsonl`：逐条读入消息，满足时间窗口或数量阈值时输出一批。批输出格式 `{"batch_id": "uuid", "window_start": "...", "window_end": "...", "count": 105, "messages": [...]}`。超时未满阈值输出已有数据并标记 `{"incomplete": true, "reason": "timeout"}`。
+2. `msg-aggregator route --input msgs.jsonl --rules routing.yaml --output-dir routed/`：消息路由基于内容或头信息分发。规则示例 `{"match": {"header.type": "order"}, "target": "orders.jsonl"}`。路由失败的消息写入 `unrouted.jsonl`。
+3. 证书续签场景：`--cert-dir` 指定证书目录，续签后依赖该证书的 TLS 配置要同步更新（`--tls-config-file`）。证书快过期（`--warn-days 14`）自动发通知到 `--notify-url`，通知失败不中断续签。
 
-Go 命令行工具，go build 能过就行。
+聚合过程中进程中断，已完成的批次不受影响（每批独立文件或追加写入）。用 encoding/xml 的 Marshal/Unmarshal 做 XML 格式批输出（`--format xml` 时）。路由规则文件语法错误 exit code=2。go build 能过就行。

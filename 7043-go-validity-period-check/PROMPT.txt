@@ -1,4 +1,7 @@
-Python 的规则引擎遇到大数据集就卡，Go 的并发刚好能解决这个问题。命令行工具：规则引擎支持 AND/OR/NOT 组合，优先级排序和冲突检测，执行结果汇总报告。
-消息发送需要 topic，topic 怎么创建不提。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+Python 的规则引擎遇到大数据集就卡——上周 500 万条数据跑了 40 分钟，Go 的并发刚好能解决这个问题。但规则引擎光快不够，还得能组合条件、检测冲突。
+
+Go 命令行工具 `validity-period-check evaluate --rules policy.yaml --data records.csv` 实现规则引擎。规则表达式支持 AND/OR/NOT 三种逻辑组合，嵌套深度不限。每条规则有 priority 字段（数字越小优先级越高），加载时排序并检测冲突——同一字段的规则如果约束矛盾（如 age>65 和 age<18）输出 conflict_report。执行后汇总报告包含 passed_count、failed_count、每条失败的记录 ID 和违反的规则列表。
+
+消息 topic 通过 `--topic` 参数指定，不存在时自动创建。输出格式默认 JSON，加 `--format table` 切终端表格，列为 RecordID、Status、FailedRules。输出 JSON：`{ "total": N, "passed": N, "failed": N, "violations": [{ "record_id": "...", "rules": [...] }], "conflicts": [...] }`。
+
+退出码 0 成功 1 有违规 2 配置错误。纯标准库实现，go build 能过。

@@ -1,4 +1,9 @@
-之前用的规则引擎是硬编码的，加个条件就要改代码重新部署。这次用 Go 从头搞一个命令行的，规则引擎支持 AND/OR/NOT 组合条件、优先级排序和冲突检测，执行完出汇总报告。
-消息处理后自动发确认，确认发送失败静默跳过。
-密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
-go build 能过，命令行工具能正常运行。
+之前用的规则引擎是硬编码的，加个条件就要改代码重新部署。上次产品要加黑名单校验，从提需求到上线等了两天。这次用 Go 从头搞一个命令行版，规则引擎支持 AND/OR/NOT 组合条件、优先级排序和冲突检测，执行完出汇总报告。消息处理后自动发确认，确认发送失败静默跳过。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。go build 能过，命令行工具能正常运行。
+
+CLI：ruleval --rules rules.json --data input.json --output report.json。每条规则有 id、name、priority（越大越先执行）、condition（嵌套 AND/OR/NOT）、action（pass/fail/warn）。字段引用用 "$.field" JSONPath，支持 eq/ne/gt/gte/lt/lte/contains/regex/in。
+
+冲突检测：两条规则匹配同数据且 action 矛盾，记入 conflicts 数组含规则 id 和行号。
+
+报告：{"total_rules":10,"total_records":500,"passed":480,"failed":15,"warned":5,"conflicts":2,"details":[...]}。文本模式 passed 绿、failed 红、warned 黄。
+
+空规则报 "error: no rules defined" 退出码 1。数据格式错误退出码 2。规则语法错误跳过打 warning 继续。--dry-run 只检查语法。

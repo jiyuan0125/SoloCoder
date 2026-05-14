@@ -1,5 +1,7 @@
-消费者处理不过来，上游还在疯狂发，整个链路雪崩。
+消费者处理不过来上游还在疯狂发，整个链路雪崩——上次出事故后必须上个反压工具了。需要监控消费延迟、检查消费者健康、在过载时触发反压。
 
-消费延迟监控和预警，消费者健康检查，延迟趋势报告。扫描规则更新后历史扫描结果的严重级别要重新评估。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+工具名 `backpressure-tool`，三个核心子命令。`monitor --brokers localhost:9092 --group my-group --interval 5s --alert-threshold 5000`：持续监控消费延迟，每 5 秒输出 `{"timestamp": "...", "group": "my-group", "total_lag": 6200, "partitions": [{"id": 0, "lag": 5000}, {"id": 1, "lag": 1200}]}`。延迟超阈值输出 `ALERT` 到 stderr。`--persist lag_history.jsonl` 持久化采样数据。
 
-Go 命令行工具，上次出事故后必须上。go build 能过就行。
+`health --brokers localhost:9092 --group my-group`：消费者健康检查，验证每个消费者实例是否活跃，输出 `{"member_id": "consumer-1", "status": "active", "assigned_partitions": [0,1], "last_heartbeat": "..."}`。掉线的标记为 `status: dead`。`report --input lag_history.jsonl --output report.json --period 1h`：延迟趋势报告，包含峰值延迟、平均延迟、延迟增长速率、突增时间点。
+
+扫描规则更新后历史扫描结果的严重级别要重新评估（`--re-evaluate` 参数触发）。代码按核心逻辑、IO 处理、CLI 入口分文件。broker 不可达 exit code=1。go build 能过就行。

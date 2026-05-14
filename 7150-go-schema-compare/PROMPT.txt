@@ -1,5 +1,7 @@
-每张表的 schema 都要逐字段对比，100 多张表。V2 月底上线。
+100 多张表逐字段对比 schema，靠肉眼看 Excel 到年底也看不完。V2 月底要上线，时间紧。
 
-批量查询执行（从 SQL 文件读取），结果汇总，错误处理策略。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。任务有等待、运行、成功、失败几个状态。
+直接说功能。`schema-compare` 有三个子命令：`compare`、`batch`、`report`。`compare --source db1.db --target db2.db --format markdown` 逐表逐列对比，输出差异报告。Markdown 表格列：表名、列名、源库类型、目标库类型、差异类型（added/removed/modified）。加 `--table-filter "user*"` 只对比匹配的表。`--format json` 输出结构化结果 `{"diffs": [{"table": "users", "column": "age", "type": "modified", "source_type": "INTEGER", "target_type": "TEXT"}]}`。
 
-Go 命令行工具，go build 能过就行。
+`batch --sql queries.sql --db app.db --output results/` 批量执行 SQL 文件中的查询（一行一条），每个查询结果保存为独立 JSON 文件。错误处理策略：`--on-error stop`（默认，遇到错误停止）、`--on-error skip`（跳过继续）、`--on-error retry --retry-count 3`（重试 3 次）。汇总文件 `summary.json` 记录总数/成功/失败/跳过。
+
+密钥路径支持多层 `keys/{algorithm}/{key_id}/versions/{ver}`。任务状态：waiting → running → success / failed，状态变更写日志。源库和目标库表数差异超过 20% 时打印警告。go build 能过就行。

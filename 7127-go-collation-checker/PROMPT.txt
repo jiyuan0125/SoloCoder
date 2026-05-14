@@ -1,5 +1,5 @@
-中英文混合的数据排序结果不对，字符集配置有问题。有个老 Python 脚本做分析太慢了。
+中英文混合的数据排序结果不对——"张三"排在 "Alice" 后面还是前面取决于字符集配置，线上因为这个被客户投诉了。有个老 Python 脚本做分析但跑一次要 5 分钟，太慢了。
 
-Schema 文档生成 Markdown 表格，表关系描述，索引使用统计。认证需要用户角色，用户角色怎么创建不提。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+Go 重写一个字符集校对检查工具。`collcheck scan --db orders.db` 扫描所有文本列的 COLLATE 设置，输出 JSON：[{table, column, collation, has_index, issue}]，issue 可选 "mismatch"（同表不同列 collation 不一致）、"implicit"（未显式指定）、"inefficient"（排序用不了索引）。`collcheck compare --db orders.db --col1 users.name --col2 orders.customer --values "张三,Alice,Bob,李四"` 用实际数据对比不同 collation 下的排序结果。Schema 文档生成：`collcheck doc --db orders.db --format markdown` 输出 Markdown 表格列出所有表结构、索引、表关系、索引使用统计。`collcheck suggest --db orders.db` 给出 collation 优化建议。认证需要用户角色，角色创建方式不限。代码分文件组织：collation.go 扫描逻辑、compare.go 排序对比、doc.go 文档生成、main.go 入口。
 
-Go 重写，命令行工具，go build 能过就行。
+Go 命令行工具，go build 能过就行。

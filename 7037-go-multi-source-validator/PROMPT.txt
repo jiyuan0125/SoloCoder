@@ -1,4 +1,7 @@
-Python 写的数据画像脚本跑一次要 20 分钟，数据量再翻倍就扛不住了。Go 重写：分布统计、TopN、基数计算，跟预期 profile 比对标偏差，JSON 输出。多文件交叉校验也塞进去。
-证书签发需要 CA，CA 怎么初始化不提。
-处理分多个阶段，每个阶段输出是下个阶段输入。
-go build 能过，命令行工具能正常运行。
+Python 写的数据画像脚本跑一次要 20 分钟，数据量再翻倍就扛不住了。上周 P0 事故就是因为画像跑太慢，报告出晚了没拦住脏数据上线。
+
+Go 重写 `multi-source-validator` 命令行工具，分三个处理阶段顺序执行。阶段一 `profile`：分布统计输出 min/max/mean/median/stddev，TopN 计算 `--top-n 10` 每列高频值，基数估算用 HyperLogLog。阶段二 `compare`：`--expected baseline.json` 对标偏差，`--tolerance 0.15` 超过 15% 标记异常。阶段三 `cross-check`：`--primary master.csv --secondary detail.csv --foreign-key id` 多文件交叉校验。前一步失败不继续后续阶段。
+
+证书签发场景保留但不展开——命令行预留 `--ca-cert` 和 `--ca-key` 参数占位。处理分多个阶段，每阶段输出 JSON 数组作为下阶段输入，管道式串联。大文件流式处理，内存峰值不超 150MB。
+
+CLI 用法：`multi-source-validator run --input data.csv --expected baseline.json --cross-source detail.csv --foreign-key id`。输出 JSON 包含三个阶段结果：`{ "profile": {...}, "comparison": {...}, "cross_check": {...} }`。退出码 0 成功 1 数据异常 2 输入错误。纯标准库实现，go build 能过。

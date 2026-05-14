@@ -1,3 +1,8 @@
-数据去重全靠人眼比对 Excel，漏了就出重复订单。Go 写个 CLI 工具处理这个问题：结构化数据多字段联合去重键、编辑距离相似度去重（阈值可配）、去重完了出详细报告。
-扫描完自动提交报告，提交失败只记录。
-go build 能过，命令行工具能正常运行。
+数据去重全靠人眼比对 Excel，漏了就出重复订单。上个月发了两批同样的货，客户投诉了好几天。Go 写个 CLI 工具处理这个问题，一步步来：先加载源数据，选去重策略，跑完出详细报告。扫描完自动提交报告，提交失败只记录。go build 能过，命令行工具能正常运行。
+
+1. 加载：dedup --input data.csv --strategy key --keys "email,phone" --output report.json。支持 CSV 和 JSON，自动按扩展名判断。
+2. key 模式：按指定列建 set，--keep 控制保留 first/last/none，默认 first。
+3. similarity 模式：--strategy similarity --fields "name,address" --threshold 0.85。Levenshtein 编辑距离，相似度=1-edit_dist/max(len_a,len_b)。
+4. 报告：{"total":1000,"unique":950,"duplicates":50,"groups":[{"key":"john@example.com","count":3,"rows":[1,45,89]}]}。--output-clean clean.csv 写干净数据。
+
+50 万行以内可接受。空输入输出空报告退出码 0。全空行跳过不算重复。超 500 字符字段截断再比，统一转小写。

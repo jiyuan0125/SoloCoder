@@ -1,5 +1,9 @@
-统计信息没更新导致优化器选错了执行计划。
+先连上数据库收集统计信息，再生成对比报告，最后输出同步脚本——这是 stat-collector 的工作流。
 
-两个数据库 schema 对比，差异 Markdown 报告，同步 SQL 脚本。扫描规则更新后历史扫描结果的严重级别要重新评估。扫描完自动提交报告，提交失败只记录。任务有等待、运行、成功、失败几个状态。
+1. `stat-collector collect --dsn "sqlite:///prod.db" --output stats.json`：采集每张表的行数、索引数量、最后分析时间、未使用索引列表。输出 JSON 包含 `{"database": "prod.db", "collected_at": "2024-01-15T10:30:00Z", "tables": [{"name": "...", "rows": 500, "indexes": 3, "unused_indexes": ["idx_old"], "last_analyzed": "..."}]}`。
+2. `stat-collector diff --source stats_a.json --target stats_b.json --format markdown`：对比两个数据库的 schema 差异，生成 Markdown 报告，表格列出新增/删除/修改的表和列。`--format sql` 改为输出同步 ALTER 语句。
+3. `stat-collector check --input stats.json`：SQL 静态检查，检测未使用索引、SELECT * 用法、缺失 WHERE 的 DELETE/UPDATE，输出警告列表。
 
-Go 自己写的命令行工具，go build 能过就行。
+扫描规则更新后，历史扫描结果的严重级别要用新规则重新评估。扫描完自动提交报告到指定 URL（`--report-url`），提交失败只记录日志不中断。任务状态机：waiting → running → success / failed，状态变更写日志。
+
+采集时数据库连接失败 exit code=1，空数据库不报错返回空列表。go build 能过就行。

@@ -1,4 +1,8 @@
-review 代码发现校验逻辑散落在十几个地方，改一个漏一个。统一成一个 Go 命令行工具：JSON Schema 验证支持 $ref 引用和自定义关键字，字段值域检查（数值范围、日期区间），跨字段关联校验。
-权限变更后用户会话里的权限信息要同步。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+review 代码发现校验逻辑散落在十几个文件里，改一个漏一个。上周改了个日期格式校验，结果只改了 3 处漏了 5 处，线上又出了脏数据。痛定思痛统一成一个 Go 命令行工具。
+
+`pattern-enforcer validate --schema rules.json --data input.json` 实现 JSON Schema 验证，支持 $ref 引用外部定义文件（相对路径解析），自定义关键字通过 `--keywords` 加载插件目录。字段值域检查：数值范围用 `minimum`/`maximum`，日期区间用 `format: date` 加 `minDate`/`maxDate`，超出范围报字段路径和实际值。跨字段关联校验——比如 endDate 必须大于 startDate，用 `dependentFields` 约束表达。
+
+1. 权限变更后检查用户会话中的权限列表是否包含新增/删除项，不一致输出 `session_outdated: true` 和差异明细。
+2. 输出格式默认 JSON，加 `--format table` 输出终端表格，列包含 Field、Rule、Status、Message。
+
+CLI 输出：`{ "valid": bool, "errors": [{ "path": "...", "keyword": "...", "message": "..." }] }`。退出码 0 通过 1 校验失败 2 schema 语法错误。纯标准库实现，go build 能过。

@@ -1,5 +1,9 @@
-测试环境和生产环境的数据库结构不一样，每次发版都要对着改，经常漏掉字段。写个 SQL schema 对比工具，对比两个 SQLite 数据库的表结构差异。输出哪些表是新增的、哪些删了、哪些列的类型或约束改了。一目了然，不用再人肉比对。
+测试和生产数据库结构不一样——发版漏了字段变更线上直接报错。`sqldiff -source dev.db -target prod.db` 输出三类差异。
 
-需要用到 filepath.Walk 等标准库功能。
+纯文本按表分组：新增表 `[+] TABLE order_items`、删除表 `[-] TABLE legacy_logs`、修改的表 `[~] TABLE users\n    [+] column: email TEXT\n    [-] column: middle_name\n    [~] column: age INTEGER→BIGINT\n    [~] constraint: 无→UNIQUE(email)`。包含类型变化、约束变化（NOT NULL/DEFAULT/UNIQUE/PK）。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`-format json` 输出 JSON：`{"added_tables":[...],"modified_tables":[{"name":"users","added_columns":[...],"modified_columns":[{"name":"age","source_type":"INTEGER","target_type":"BIGINT"}]}]}`。`-output diff.txt` 写入文件。
+
+数据库不存在输出 "database not found: XXX" 退出码 1。完全相同输出 "schemas are identical" 退出码 0。不支持非 SQLite。
+
+需要用到 filepath.Walk 等标准库功能。Go 标准库实现，不依赖第三方包。go build 能编译通过。

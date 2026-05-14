@@ -1,7 +1,5 @@
-数据库文件 200GB 了，不知道空间都花在哪。
+先说问题：数据库文件 200GB 了，不清楚空间都花在哪里，得分析一下。然后还有个 CSV 导入的需求，两个事情一起解决。
 
-CSV 导入 SQLite，冲突处理策略，导入进度显示。签名时需要验证证书状态，验证时也要检查签名链，互相校验。
-
-字段值可能有各种奇怪格式，要能容错别崩。
+第一步，空间分析：`dbsize analyze --db orders.db --top 20`，输出每个表的行数、页面数、估算大小（bytes），按大小倒序排列，格式可选择 `--format table|json|csv`。大表（>1GB）标红。索引空间单独统计，列出每个索引占用的页面数。`dbsize breakdown --db orders.db --table orders` 展示单张表的详细：数据页、溢出页、空闲页数量。第二步，CSV 导入：`dbsize import --file data.csv --db target.db --table orders --batch-size 5000` 分批导入避免内存爆炸，进度显示 `[batch 3/20]`。冲突策略 `--on-conflict skip|replace`。字段值格式异常容错：记到错误日志 error.log 但不中断导入，导入完输出 "imported N rows, M errors"。签名验证和证书状态互相校验。表不存在时自动创建（`--auto-create`），否则报 "table not found" 退出码 1。
 
 Go CLI 工具，go build 能过就行。

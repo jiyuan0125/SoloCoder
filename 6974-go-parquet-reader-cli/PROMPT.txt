@@ -1,3 +1,11 @@
-数据湖里的文件全是 Parquet 格式，没有对应的工具看不了内容。手动转太慢了，需要一个 CLI 工具自动处理。写个读取 Parquet 格式文件的工具，解析列和行数据，输出为 CSV 或 JSON。列选择（只要某几列）和行过滤（某个条件）都要支持。
+数据湖里存的全是 Parquet 文件，没有工具根本看不了内容。运营来问"这个表里最近的数据长啥样"，我只能干瞪眼。先把这个读 Parquet 的工具搞定再说。
+
+第一步，解析 Parquet 文件的元数据：拿到 row group 数量、每个 row group 的行数、列的名称和类型。第二步，读取行数据，支持列裁剪和行过滤。CLI 用法：`pq-read -file data.parquet -columns name,score -filter 'score>0.8' -format csv -limit 100 -output out.csv`。
+
+`-columns` 选列，逗号分隔，省略则读全部列。`-filter` 的条件格式是 `列名 op 值`，op 支持 `=`、`!=`、`>`、`<`、`>=`、`<=`。`-format` 可选 csv 或 json，默认 csv。`-limit` 限制输出行数，不加则全量输出。输出文件不存在时自动创建，目录不存在则报错 exit 2。
+
+JSON 输出格式是数组，每个元素一行记录。CSV 输出带 header 行。列名不存在时 stderr 报错 "error: column 'xxx' not found"，exit 1。文件无法解析时 stderr 输出 "error: failed to parse parquet file" 并 exit 3。
+
+纯 Parquet 格式解析，不依赖外部 Parquet 库——用 Go 标准库手写解析 row group 的 page 数据。只支持 PLAIN 编码，Snappy 压缩不在此范围。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

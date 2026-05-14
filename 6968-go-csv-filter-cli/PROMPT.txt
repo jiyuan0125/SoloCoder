@@ -1,3 +1,9 @@
-100 万行的 CSV 文件，只需要其中满足条件的数据。Excel 打开都卡死了。写个 CSV 过滤工具，按条件过滤行——列值等于什么、正则匹配、数值在某个范围内。多个条件可以用 AND/OR 组合起来。过滤完的 CSV 输出到新文件。
+100 万行 CSV 只需要符合条件的几百行，Excel 都打不开。用命令行过滤——
+
+`csvfilter -input big.csv -where "age>30" -where "city=北京" -where "name~张" -logic and -output filtered.csv`。-where 可多次使用，-logic 指定组合方式（and/or，默认 and）。条件语法：`列名=值`（精确匹配）、`列名!=值`（不等于）、`列名>值`/`列名>=值`/`列名<值`/`列名<=值`（数值比较）、`列名~正则`（正则匹配）、`列名!~正则`（正则不匹配）。字符串值含空格用双引号包裹。
+
+`-where-file filters.txt` 从文件读取条件，每行一条。`-select "name,age,city"` 只输出指定列。`-limit 100` 最多输出 N 行（找到就停，不全扫）。`-header-only` 只输出表头不输出数据。`-count` 不输出文件，只打印匹配行数到 stdout。
+
+流式处理：逐行读取判断，不全部加载到内存。条件语法错误输出 "invalid filter: [expression]" 到 stderr 退出码 1。列名不存在输出 "column not found: XXX" 退出码 2。正则语法错误输出 "invalid regex: [pattern]" 退出码 3。输入文件不存在退出码 4。
 
 Go 实现，只用标准库，交叉编译友好。

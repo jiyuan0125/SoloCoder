@@ -1,3 +1,7 @@
-DBeaver 太重了，每次就是想从 SQLite 导几条数据出来还得开 GUI。从零写一个 SQL 导出工具，连接 SQLite 数据库，输入查询条件导出数据为 CSV 或 JSON。列出所有表的功能也得有，不然记不住表名。自定义查询也要支持，会写 SQL 的直接写 query。
+1. 就想快速从 SQLite 捞几条数据，不想开 DBeaver 等半分钟。`sqlexport -db test.db -tables` 列出所有表名和行数，输出格式：`users (1250 rows)\norders (8900 rows)\n`。2. `sqlexport -db test.db -query "SELECT * FROM users WHERE age > 18" -format csv -output users.csv` 执行自定义查询，-format 支持 csv 和 json，不传 -output 则打印到 stdout。
+
+3. `sqlexport -db test.db -table users -where "age>18" -limit 100 -offset 0` 快捷查询，自动拼 SQL。4. CSV 输出首行为列名，JSON 输出为数组 `[{\"id\":1,\"name\":\"alice\"},...]`。
+
+5. 错误处理：数据库文件不存在输出 "database file not found: XXX" 到 stderr 退出码 1；SQL 语法错误输出 "query error: " 加 sqlite 错误信息到 stderr 退出码 2；查询结果为空输出 "no rows returned" 到 stderr 但退出码 0。6. `-db` 参数必填，缺失打印 usage 到 stderr 退出码 1。7. 大结果集（>10000 行）CSV 模式下流式输出，不全部加载到内存。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

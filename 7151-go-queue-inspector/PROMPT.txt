@@ -1,7 +1,7 @@
-消息发出去了消费者没收到，不知道卡在哪一步。排了一天才发现是格式不对。
+消息发出去了消费者没收到，排了一天才发现是格式不对——这种排障效率太低了。需要能直接检查消息队列状态和内容的工具。
 
-消息格式转换做 JSON/XML/CSV 互转，字段映射和类型转换，消息头处理，消息聚合（按时间窗口或数量阈值批量输出）。文件可能好几 GB 大，别一次读进来。
+工具名 `queue-inspector`，做消息格式转换和检查。主命令 `inspect`。`inspect format --input msgs.json --output-dir out/ --source-format json --target-format xml`：批量转换消息格式，支持 JSON↔XML↔CSV 互转。字段映射通过 `--mapping mapping.json` 指定，格式为 `{"source_field": "target_field", "type": "string→int"}`。消息头（header）通过 `--preserve-headers` 保留并转换。文件可能好几 GB，必须流式处理，用 `bufio.Scanner` 逐行读取，`--batch-size 500` 控制内存中的消息数。
 
-认证通过后自动记日志，日志写挂了不影响结果。
+`inspect aggregate --input msgs.json --window 5m --count-threshold 100 --output aggregated.json`：按 5 分钟时间窗口聚合消息，或数量达到阈值触发输出。聚合结果格式 `{"window_start": "...", "window_end": "...", "count": 150, "messages": [...]}`。超时（`--timeout 30s`）未达到阈值也强制输出当前批次。
 
-Go 标准库写个命令行工具，go build 能过就行。
+认证通过后自动记日志到 `audit.log`，日志写入失败不影响主流程。格式转换失败（字段缺失、类型不匹配）输出行号和原因到 stderr，继续处理后续消息。退出码 0 全部成功，1 有错误，2 输入文件不存在。纯标准库，go build 能过就行。
