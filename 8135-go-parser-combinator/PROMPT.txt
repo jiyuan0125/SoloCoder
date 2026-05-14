@@ -1,3 +1,5 @@
+基础组合子（字符匹配、顺序、选择）能跑通但错误信息很差——expected char 完事了。生产级组合子库需要完善的错误恢复和位置追踪。
+
 写一个更完整的解析器组合子框架——不只是基础组合子，还要有完善的错误处理和高级组合能力。
 
 基础组合子：satisfy、char、string、choice、sequence、many、many1、optional、between、sepBy。高级组合子：label(parser, name) 给解析器命名，失败时显示期望的名称而不是底层的字符条件。try(parser) 回溯——如果 parser 失败，把输入位置恢复到尝试前的位置。chainl1(parser, operator) 左结合运算符解析（解析 1+2+3 为 ((1+2)+3)）。chainr1(parser, operator) 右结合运算符解析（解析 2^3^4 为 (2^(3^4))）。notFollowedBy(parser) 断言后面不匹配。eof 断言已经到输入末尾。

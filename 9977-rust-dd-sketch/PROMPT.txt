@@ -1,9 +1,7 @@
-写一个 Rust 的 DDSketch 实现。
+Datadog 开源的 DDSketch 有个独特之处：保证相对误差有界。不是绝对误差 5ms，而是相对误差 5%。这意味着 P99=100ms 时估计在 95-105ms 之间，P99=10s 时在 9.5-10.5s 之间。用 Rust 实现这个算法。
 
 DDSketch 是 Datadog 开源的分布式分位数 sketch 算法，特点是保证相对误差（relative error）有界。核心思想是把值映射到 bucket index：index = ceil(log(value) / log(γ))，相同 bucket 的值合并计数。实现 DDSketch：支持配置相对误差 γ（比如 0.01 表示 1% 相对误差），自动计算需要的 bucket 数量。支持正数范围的值，处理负数和零的边界情况。支持合并多个 sketch（分布式场景下多节点各自 sketch 后合并）。查询分位数时从 bucket 反推值。
 
 Rust 实现，cargo build 通过，演示不同 γ 值下的精度和内存消耗。
-
-这个工具的核心价值在于把dd sketch的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
 
 DD Sketch 是 Datadog 设计的分位数结构——关键特性是可合并，支持分布式聚合。相对误差有保证。

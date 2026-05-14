@@ -1,7 +1,5 @@
-用 Rust 实现 Viewstamped Replication 的视图切换（view change）协议。
+VR 里最复杂的部分是视图切换——Primary 挂了之后，Backup 要选出新 Primary 并确保日志一致。流程是：发现 Primary 无响应 → 递增 view-number 广播 StartViewChange → 收集多数后发 DoViewChange → 新 Primary 补齐日志后广播 StartView。用 Rust 实现完整的视图切换协议。
 
 当 VR 集群的 Primary 挂了，剩余副本需要通过视图切换选出新 Primary。这是 VR 最复杂的部分。实现视图切换流程：副本发现 Primary 无响应后，递增 view-number 并广播 StartViewChange 消息，收集到多数派（quorum）的 StartViewChange 后，发送 DoViewChange 给新 Primary 候选人（view-number 最大的那个）。新 Primary 收集到多数派的 DoViewChange 后，选出最新的日志，补齐自己的日志，然后广播 StartView 告知所有副本新视图已就绪。正确处理日志截断和补齐。
 
 Rust 标准库，cargo build 通过，模拟 Primary 故障后的完整视图切换过程。
-
-这个工具的核心价值在于把vr view change的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。

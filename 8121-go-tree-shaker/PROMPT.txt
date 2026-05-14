@@ -1,3 +1,5 @@
+打包分析工具显示 bundle 里有 40% 的代码是导出了但从未被使用的——lodash 的全量引入是重灾区。Tree shaking 能把这部分代码自动删掉。
+
 做一个 JS Tree Shaking 工具——分析 ES module 代码，找出哪些 export 实际被用到了，把没用的 export 和只被死代码引用的函数删掉。打包体积能减少 30%-50%。
 
 分析流程：从入口文件开始解析 ES module 代码（import/export 语法）。构建模块依赖图——每个文件是一个节点，import 关系是边。标记阶段：入口文件标记为 live，被 import 的模块标记为 live，被 live 模块 import 的 export 标记为 live。递归传播直到稳定。

@@ -1,4 +1,4 @@
-Yarn yarn.lock 文件解析器。Yarn 是 Node.js 的替代包管理器，yarn.lock 记录了所有依赖的精确版本和校验和。格式跟 npm 的 package-lock.json 完全不同，需要专门的解析器。
+npm 有 package-lock.json，Yarn 有 yarn.lock，格式完全不同——Yarn 的锁文件类似 YAML 但不是标准 YAML，解析起来要处理带 scope 的包名和缩进字段。安全审计工具需要统一处理这两种格式。
 
 Python 实现。yarn.lock 格式类似 YAML 但不是标准 YAML——以 "@scope/package@version": 开头定义一个依赖条目，下面缩进的字段包含 version、resolved（下载 URL）、integrity（SHA-512 校验和）、dependencies（该包的直接依赖列表）、optionalDependencies。
 

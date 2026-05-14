@@ -1,3 +1,5 @@
+Webpack 的 bundle 输出文件长什么样？一堆 __webpack_require__ 定义和模块映射表——理解这个结构最好的方式就是自己写一个简易版打包器。
+
 帮我做一个简单的 JS 模块打包器。理解 Webpack/Rollup 的原理最好的方式就是自己实现一个——从入口文件开始递归解析 require/import 依赖，把所有模块打包成一个文件。
 
 支持 CommonJS 的 require/module.exports 语法。工作流程：从入口文件开始，用正则或 AST 解析出 require() 调用的模块路径。如果模块路径是相对路径（./ 或 ../开头），解析成绝对路径；如果是 node_modules 包名，在 node_modules 目录里查找。

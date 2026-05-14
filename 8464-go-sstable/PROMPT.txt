@@ -1,13 +1,9 @@
-帮我写一个 Go 的 SSTable（Sorted String Table）实现。
+LevelDB 的 .sst 文件为什么查找这么快？秘密在于 SSTable 内部的分层索引——先在内存里的 index block 二分定位 data block，再去磁盘读那一小块数据，不用扫描整个文件。Go 实现这个磁盘格式。
 
-SSTable 是 LSM-Tree 存储引擎的磁盘文件格式，内部按 key 有序存储，带索引块和布隆过滤器加速查找。LevelDB 的 .sst 文件就是这种格式，是读路径的核心数据结构。
+文件组织成：data block 序列（每个 4KB，可配）+ index block + bloom filter block + footer。数据块内部做前缀压缩（restart interval），相邻 key 共享前缀，省不少空间。Footer 固定 48 字节放文件末尾，记录 index block 和 meta index block 的偏移和长度。
 
-需要做到：
-- 支持从有序 KV 对构建 SSTable 文件（table builder），key 必须按序写入
-- 文件格式：data block 序列 + index block + bloom filter block + footer（记录各块偏移）
-- 读取时通过 index block 二分查找定位 data block，再在 block 内二分查找 key
-- 支持 point query（精确查找）和范围迭代器（正向遍历）
-- 块大小可配置，默认 4KB，数据块内部用 restart interval 做前缀压缩节省空间
-- Footer 放在文件末尾，固定 48 字节，包含 index block 和 meta index block 的 offset + length
+Table Builder 负责构建：key 必须按升序写入（违反就 panic），攒够一个 block 就 finish 掉——写 CRC + 数据，同时生成本 block 的索引条目。所有数据写完后追加 index block、bloom filter block、footer。
 
-Go 标准库，go build 编译通过。编码统一用小端序（binary.LittleEndian）。
+Table Reader 负责读取：打开文件先读 footer 定位 index block，Get(key) 时 index block 二分找到目标 data block，再在 block 内二分找 key。bloom filter 先过滤一把——不存在的 key 直接跳过磁盘读取。
+
+编码统一小端序（binary.LittleEndian），go build 通过。

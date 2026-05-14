@@ -1,12 +1,7 @@
-写一个 Go 的 SSTable 多路归并工具。
+Compaction 的核心操作就是归并——把 5 个有 key 重叠的 SSTable 合并成 1 个有序的新文件。这跟归并排序一个道理，只不过数据源是磁盘上的多个有序流，还要处理版本覆盖和墓碑标记。Go 实现 K 路归并迭代器。
 
-LSM-Tree 做 compaction 或读操作时，需要从多个有序的 SSTable 中归并读取。这些 SSTable 的 key 范围可能有重叠，需要用归并排序的方式产出全局有序结果，同时处理相同 key 的版本覆盖和 tombstone 标记。这是 compaction 和读路径都依赖的核心操作。
+用最小堆（container/heap）驱动：每个输入迭代器当前指向的 key 入堆，每次弹出最小的那个就是全局下一个 key。同一个 key 出现多次时只返回 sequence number 最大的版本（最新的写入）。Tombstone 标记的 key 不输出给上层调用者，但归并写入新 SSTable 时得保留——因为下层可能还有同 key 的旧数据，墓碑提前丢了旧数据就"复活"了。
 
-要实现：
-- K路归并迭代器，输入多个有序 Iterator，输出全局有序的结果流
-- 重复 key 只返回最新版本（按 sequence number 或时间戳判断，大的更新）
-- Tombstone 标记的 key 不输出给上层调用者，但在归并写入新 SSTable 时要保留（下层可能还有相同 key 的旧数据，tombstone 不能提前丢掉）
-- 支持范围迭代，指定 startKey 和 endKey 做边界裁剪
-- 归并过程用最小堆驱动，时间复杂度 O(n log k)，k 是输入迭代器数量
+支持范围迭代：指定 startKey 和 endKey 做边界裁剪，只归并这个区间内的数据。整体时间复杂度 O(n log k)，k 是输入迭代器数量。
 
-Go 标准库，go build 编译通过。堆用 container/heap 实现，子迭代器接口统一：Seek/Next/Key/Value/Valid。
+子迭代器接口统一：Seek/Next/Key/Value/Valid。go build 通过。

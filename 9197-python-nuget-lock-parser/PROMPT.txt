@@ -1,4 +1,4 @@
-NuGet 锁文件解析器。.NET 项目的 packages.lock.json 记录了所有 NuGet 包依赖的精确版本，是 .NET 项目 SBOM 的基础数据。
+.NET 项目的依赖散落在 packages.lock.json 里，按目标框架分组，直接依赖和传递依赖混在一起。做 SBOM 的时候要把不同框架的依赖摊平去重，手动搞太容易出错。
 
 Python 实现。NuGet 锁文件是标准 JSON 格式。解析顶层字段——version（锁文件格式版本，1 或 2）、dependencies（依赖列表，按目标框架分组如 .NETCoreApp3.1、.NET6.0）。每个框架下的依赖列表包含每个包的——id（包名如 Newtonsoft.Json）、version（精确版本如 13.0.2）、type（直接依赖 Direct 或传递依赖 Transitive）、requestedHash（哈希校验和）。
 

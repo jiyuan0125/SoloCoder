@@ -1,4 +1,4 @@
-第一步，找到字幕轨道。MP4 里字幕轨的 handler_type 是 "sbtl" 或 "text"（在 trak/mdia/hdlr box 里），sample entry 类型是 "tx3g" 或 "stpp"。MKV 里 TrackType 为 17 (subtitle) 的就是字幕轨，CodecID 可能是 "S_TEXT/UTF8"（SRT）、"S_TEXT/SSA"（ASS）、"S_TEXT/WEBVTT"、"S_HDMV/PGS"（图形字幕）等。
+字幕轨道在容器里藏得不算深——MP4 里字幕轨的 handler_type 是 "sbtl" 或 "text"（在 trak/mdia/hdlr box 里），sample entry 类型是 "tx3g" 或 "stpp"。MKV 里 TrackType 为 17 (subtitle) 的就是字幕轨，CodecID 可能是 "S_TEXT/UTF8"（SRT）、"S_TEXT/SSA"（ASS）、"S_TEXT/WEBVTT"、"S_HDMV/PGS"（图形字幕）等。
 
 第二步，从 MP4 提取 tx3g 字幕数据。tx3g 的 sample 结构：2 字节长度 + 文本 + 可选的样式原子。时间信息从 stts 和 ctts 表获取——每个 sample 的开始时间和持续时长。注意 tx3g 的文本是用 UTF-8 编码的，样式信息包含字体大小、颜色、位置等。
 

@@ -1,3 +1,5 @@
+Swift 和 Julia 都允许用中文做变量名，Python 3 也不例外。如果词法分析器只认 ASCII，这些合法的标识符全会被错误地拒绝。
+
 帮我做一个 Unicode 感知的词法分析器。默认的词法分析器假设输入是 ASCII，但现代编程语言都支持 Unicode——变量名可以用中文、表情符号、阿拉伯字母。解析器得正确处理这些多字节字符。
 
 正确处理 UTF-8 多字节字符——Go 的 string 和 []rune 已经帮忙处理了编码，但需要确保位置追踪按 rune 而不是 byte 计算。Unicode 分类——用 unicode 包判断字符类型（字母 unicode.IsLetter、数字 unicode.IsDigit、空白 unicode.IsSpace、标点 unicode.IsPunct）。Unicode 转义序列——解析 \uXXXX（4 位十六进制）和 \UXXXXXXXX（8 位十六进制）转义，还原成实际的 Unicode 字符。

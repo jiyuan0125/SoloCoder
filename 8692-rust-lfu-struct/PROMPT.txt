@@ -5,4 +5,4 @@ CDN 缓存节点要淘汰冷门内容——LRU 只看最近访问时间，但一
 问题 2：怎么维护 min_freq？新插入的节点频率为 1，min_freq 设为 1。淘汰只在 min_freq 链表里找。频率增加时，如果旧频率链表空了且旧频率 == min_freq，min_freq 加 1。
 
 用 Rust 实现泛型 LFU 缓存，key 和 value 都是泛型（key 需要 Hash + Eq）。容量由构造函数指定。cargo build 通过。
-测试——构造容量为 3 的 LFU，put(1,10), put(2,20), put(3,30)，然后 get(1), get(2)，put(4,40) 应该淘汰 3（频率最低且最久没访问）。也测试 get 不存在的 key 返回 None，put 更新已存在的 key。
+跑一遍这个操作序列：put(1,10), put(2,20), put(3,30)，然后 get(1), get(2)，put(4,40) 应该淘汰 3（频率最低且最久没访问）。get 不存在的 key 返回 None，put 更新已存在的 key 也要验证。

@@ -1,13 +1,7 @@
-用 Go 实现 LSM-Tree 的 Range Delete 功能。
+用户点了"清空购物车"，里面有 2000 个商品。逐个写 tombstone 要写 2000 条记录，太慢了。Range Delete 只写一条范围墓碑记录，读取和 compaction 时用它批量跳过被删除的 key。这是 LSM-Tree 比 B-tree 难做的地方之一——B-tree 删范围可以直接砍半棵树。Go 实现。
 
-删除一段范围内的所有 key，不能逐个写 tombstone（范围大了太慢）。Range Delete 写一条特殊的范围墓碑记录（range tombstone），读取和 compaction 时用它来跳过被删除的 key。这是 LSM-Tree 比 B-tree 难做的地方之一。
+DeleteRange(startKey, endKey) 写入范围墓碑，走正常写入路径（WAL → Memtable → SSTable flush）。范围墓碑持久化到 SSTable 的 meta 区域，和普通 entry 分开。读取时检查 key 是否被某个范围墓碑覆盖（start ≤ key < end 且 seq 相同或更新），覆盖就返回 not found。
 
-功能：
-- DeleteRange(startKey, endKey) 写入范围墓碑到 Memtable，走正常写入路径（WAL → Memtable → SSTable）
-- 范围墓碑持久化到 SSTable 的 meta 区域，和普通 entry 分开存储
-- 读取时检查 key 是否被某个范围墓碑覆盖（start ≤ key < end 且 seq 相同或更新），覆盖则返回 not found
-- Compaction 时用范围墓碑清理底层文件中已删除的 key，减少空间占用
-- 支持范围墓碑的合并：相邻或重叠的范围墓碑合并为一条更大的范围
-- 范围墓碑本身带 sequence number，支持 snapshot 隔离
+Compaction 时范围墓碑可以清理底层文件中的已删 key，相邻或重叠的范围墓碑合并为一条更大的。范围墓碑本身带 sequence number，支持 snapshot 隔离。存储用区间树或排序列表，查询时二分定位。
 
-Go 标准库，go build 编译通过。范围墓碑用区间树或排序列表存储，查询时二分定位。
+go build 通过。

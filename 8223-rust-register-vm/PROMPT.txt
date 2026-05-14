@@ -8,8 +8,4 @@ Rust 的类型系统能帮上不少忙。
 - 支持条件比较 CMP 和条件跳转 JZ、JNZ、JMP
 - 支持函数调用 CALL/RET，保存恢复寄存器现场
 - 执行时可以打印寄存器快照
-
-这个工具在日常开发中能省不少重复劳动。
 CLI：register-vm run program.rvm，执行并输出结果。cargo build 通过。
-
-这个需求在 Rust 项目中很常见。

@@ -1,3 +1,5 @@
+Jenkins 要 JUnit XML 格式的测试报告、团队想要 HTML 格式的可视化报告——go test 原始输出两种都不支持，需要一个转换工具。
+
 帮我实现一个 Go 测试报告生成器。go test 的原始输出是文本流，CI 工具需要结构化的报告格式（JUnit XML 给 Jenkins、HTML 给人看）。
 
 收集 go test 的 JSON 输出（go test -json），解析后生成格式化的测试报告。支持这些输出格式：

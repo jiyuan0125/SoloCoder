@@ -1,3 +1,5 @@
+解析器直接处理字符串太痛苦了——位置追踪、回溯、预读都要自己管。抽象出一个 token stream 层，解析器就能专注语法逻辑。
+
 实现一个 Token Stream 库，给解析器提供统一的 token 读取接口。好的 token stream 抽象能让解析器代码更清晰——不用直接处理字符串和位置追踪，专注于语法逻辑。
 
 支持的操作：peek() 看下一个 token 但不消费、next() 消费一个 token 返回、putback(token) 回退一个 token 到流头部、bookmark() 标记当前位置、rollback() 回滚到最近的书签位置。可以嵌套书签——bookmark 多次后 rollback 按栈序回滚。

@@ -2,7 +2,7 @@ Python Poetry 依赖安全审计。Poetry 是 Python 新一代的包管理工具
 
 Python 实现。第一步解析 poetry.lock：读取 TOML 格式的锁文件，提取 [[package]] 段的每个包——name、version、category（main/dev）、optional（布尔）、dependencies（这个包的传递依赖列表）。也解析 poetry.toml 或 pyproject.toml 的 [tool.poetry.dependencies] 获取直接依赖列表。
 
-第二步漏洞查询：用包名和版本号调用 OSV API（POST https://api.osv.dev/v1/query，ecosystem=PyPI）。也支持查本地 CVE 数据库。解析漏洞信息——漏洞编号（CVE 或 OSV ID）、严重等级、受影响版本范围、修复版本。
+第二步漏洞查询：用包名和版本号调用 OSV API（POST https://api.osv.dev/v1/query，ecosystem=PyPI）。本地 CVE 数据库也能查。解析漏洞信息——漏洞编号（CVE 或 OSV ID）、严重等级、受影响版本范围、修复版本。
 
 第三步结果展示：终端表格——包名、当前版本、漏洞编号、CVSS 评分和严重等级、修复版本。默认只显示 category=main 的生产依赖，--include-dev 显示开发依赖。传递依赖追溯：显示有漏洞的传递依赖是通过哪个直接依赖引入的。
 

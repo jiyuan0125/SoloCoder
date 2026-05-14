@@ -8,6 +8,4 @@ Rust 社区对这类工具有很大需求。
 - 支持锚点 & 和别名 * 引用
 - 支持多文档流（--- 分隔）
 - 解析错误报告行号和具体问题
-
-这个工具在日常开发中能省不少重复劳动。
 CLI：yaml-parser docker-compose.yaml，输出解析结果的 JSON。cargo build 能编译通过。

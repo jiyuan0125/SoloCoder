@@ -1,3 +1,5 @@
+W3C 的规范文档里用 EBNF 定义 CSS 语法、SQL 标准里用 EBNF 定义查询语法——几乎所有语言规范都用它。解析 EBNF 是做语法工具链的第一步。
+
 写一个 EBNF（扩展巴科斯范式）解析器。EBNF 是描述语法的标准表示法，很多语言规范都用它来定义语法。能解析 EBNF 文本是做语法分析工具的基础。
 
 解析 Wirth 风格的 EBNF 语法。支持的语法元素：产生式——Identifier "=" Expression "."，每个产生式定义一个非终结符的规则。选择——Expression "|" Expression，匹配左边的或右边的。序列——Expression "," Expression，先匹配左边再匹配右边。可选——"[" Expression "]"，Expression 可以出现零次或一次。重复——"{" Expression "}"，Expression 可以出现零次或多次。分组——"(" Expression ")"，改变优先级。终结符——'"' character '"' 或 "'" character "'"，表示字面量。非终结符——Identifier，引用其他产生式。

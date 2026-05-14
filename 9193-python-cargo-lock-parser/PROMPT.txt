@@ -1,4 +1,4 @@
-Cargo.lock 解析器。Rust 项目的 Cargo.lock 文件记录了所有依赖 crate 的精确版本和校验和，是 SBOM 和安全审计的基础数据源。写个解析器提取结构化信息。
+Rust 项目依赖链越来越长，一个 web 框架能拉进来上百个 crate。做 SBOM 和安全审计的时候需要知道每个 crate 的精确版本和来源，手动看 Cargo.lock 不现实。
 
 Python 实现。Cargo.lock 文件格式是 TOML，有两种版本格式——v1（Rust 1.38 之前，没有 version 字段）和 v2（当前格式，有 version 字段）。解析 [[package]] 数组，每个 package 包含 name（crate 名称如 serde）、version（语义化版本如 1.0.152）、source（来源标识，如 registry+https://github.com/rust-lang/crates.io，或 git+https://...）、checksum（SHA-256 校验和）。
 

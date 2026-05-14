@@ -1,12 +1,7 @@
-帮我用 Go 实现 SSTable 的 Block Index 结构。
+没有索引的 SSTable 就像没有目录的字典——找一个 key 要从第一页翻到最后一页。Block Index 就是那个目录：记录每个 data block 的起始偏移、长度和最大 key，查找时先在索引里二分定位 block，再去磁盘读那一小块。Go 实现这个索引结构。
 
-Block Index 是 SSTable 文件中用来快速定位数据块的索引，记录每个数据块的起始 offset、长度和最大 key。读操作先在索引中二分查找定位 block，再去读对应的数据块——没有索引就只能线性扫描整个文件。
+索引条目包含 block offset（uint64）+ block size（uint64）+ separator key（分隔键，变长字节）。分隔键不是简单地取块的最大 key，而是取当前块最大 key 和下一块最小 key 之间的一个短字符串——找两个 key 的最长公共前缀，取前缀加上下一个 key 前缀后的第一个字符就行，这样索引本身更紧凑。
 
-需要：
-- 索引条目：block offset（uint64）+ block size（uint64）+ separator key（分隔键，变长字节）
-- 构建索引：遍历数据块时记录每个块的元信息，选择分隔键（取当前块最大 key 和下一块最小 key 之间的短字符串）
-- 查找：给定 key，二分查找找到可能包含该 key 的 block（key ≤ separator 的最后一个条目）
-- 支持索引块本身的序列化（写入 SSTable）和反序列化（从文件加载到内存）
-- 分隔键选择算法：找两个 key 的最长公共前缀，取前缀 + 下一 key 前缀后的第一个字符
+查找逻辑：给定 key，在 separator key 列表中二分找 key ≤ separator 的最后一个条目，就是目标 block。支持序列化到字节流写入 SSTable，以及从文件加载到内存（打开 SSTable 时一次读入，常驻内存）。编码用小端序。
 
-Go 标准库，go build 编译通过。索引可以常驻内存，打开 SSTable 时一次读入。编码用小端序。
+go build 通过。

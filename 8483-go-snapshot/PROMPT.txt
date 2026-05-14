@@ -1,13 +1,7 @@
-Go 实现 LSM-Tree 的 Snapshot 机制。
+增量备份要在凌晨 3 点跑，但数据库 24 小时都在写入——备份读到一半新数据插进来了怎么办？Snapshot 让读操作固定看到某个历史时刻的一致性视图，后续写入对它不可见。Memtable 和 SSTable 的 entry 都带 sequence number，读取时只看 seq ≤ snapshot 的数据就行。Go 实现。
 
-Snapshot 让读取操作看到数据库在某个历史时刻的一致性视图，不受后续写入影响。RocksDB 和 LevelDB 都支持这个特性——对事务隔离和增量备份都很重要。核心思路是记录 sequence number，读取时只看到 seq ≤ snapshot 的数据。
+创建 Snapshot 时记录全局 sequence number，返回 handle。Get/Scan 都支持绑定 snapshot seq。释放后 Unref，compaction 才能清理被 snapshot 保护着的旧版本数据。多个 snapshot 可以共存，SnapshotList 追踪所有活跃 snapshot 的最小 seq num，compaction 用这个值判断哪些旧版本能安全删除。
 
-功能：
-- 创建 Snapshot：记录当前的全局 sequence number，返回 snapshot handle
-- Snapshot 读：Get/Scan 只看到 sequence number ≤ snapshot seq 的数据，忽略更新的写入
-- 释放 Snapshot：Unref 后不再阻止旧数据被 compaction 清理
-- 多个 Snapshot 可以共存，Compaction 时不能清除被任何活跃 Snapshot 引用的旧版本数据
-- 支持 Snapshot 上的迭代器（绑定 snapshot seq，行为和普通迭代器一致）
-- SnapshotList 管理所有活跃 snapshot 的最小 sequence number
+也支持 snapshot 上的迭代器，行为和普通迭代器一致。
 
-Go 标准库，go build 通过。Memtable 和 SSTable 的 entry 都带 sequence number，读取时做过滤。
+go build 通过。

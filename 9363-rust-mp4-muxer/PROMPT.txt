@@ -1,4 +1,4 @@
-第一步构建 ftyp box。4 字节大小 + "ftyp" + major brand "isom" + minor version 0 + compatible brands "isom"、"iso2"、"avc1"、"mp41"。总大小约 24 字节。
+MP4 文件的身份证是 ftyp box——4 字节大小 + "ftyp" + major brand "isom" + minor version 0 + compatible brands "isom"、"iso2"、"avc1"、"mp41"。总大小约 24 字节。这是整个文件的第一个 box，播放器靠它识别文件类型。
 
 第二步解析输入数据。H.264 文件读取 NAL 单元，提取 SPS/PPS 用于构造 AVCDecoderConfigurationRecord（1 字节版本 + 1 字节 profile + 1 字节 compat + 1 字节 level + 0xFF + 0xE1 + SPS（2 字节长度+NAL 数据）+ 1 + PPS（2 字节长度+NAL 数据））。AAC 文件读取帧数据，从 ADTS 头或用户参数获取 AudioSpecificConfig。
 

@@ -1,3 +1,5 @@
+GraphQL 网关接到的查询字符串长这样——{ users(first: 10) { id name posts { title } } }——得先把它解析成 AST 才能做验证和执行计划。
+
 做一个 GraphQL 网关，第一步得把客户端发来的查询字符串解析成 AST。GraphQL 的语法虽然不像 SQL 那么复杂，但也不简单——字段选择集、片段展开、指令、变量，都得正确处理。
 
 Go 实现一个 GraphQL 解析器，能处理查询语言和 Schema 定义语言（SDL）两种格式。查询端：解析 Query、Mutation、Subscription 操作，支持字段选择（可以带别名 alias: field）、参数（key: value，支持变量 $var）、片段（fragment Name on Type {...} 和 ...FragmentName 展开）、变量定义（$var: Type! = defaultValue）、指令（@include(if: $cond)、@skip）。

@@ -7,6 +7,4 @@ Rust 社区对这类工具有很大需求。
 - 支持表 [section] 和数组表 [[array_section]]
 - 支持多行字符串和转义字符
 - 解析后输出为 JSON 格式，方便对比验证
-
-这个工具在日常开发中能省不少重复劳动。
 CLI：toml-parser config.toml，输出对应的 JSON。cargo build 通过。

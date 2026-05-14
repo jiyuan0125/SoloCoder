@@ -1,4 +1,4 @@
-vcpkg 依赖解析器。vcpkg 是微软的 C++ 包管理器，vcpkg.json 和 vcpkg-lock.json 记录了项目的依赖。C++ 项目的 SBOM 需要覆盖 vcpkg 安装的包。
+vcpkg 装了几十个包，但项目里到底依赖了什么、每个包什么版本、ABI 兼容性如何——这些信息散在 vcpkg.json 和 vcpkg-lock.json 两个文件里。SBOM 生成工具需要把这些信息统一起来。
 
 Python 实现。解析 vcpkg.json（项目配置文件）的 dependencies 数组——每个依赖可以是字符串（包名如 "fmt"）或对象（包含 name 和 version>= 等约束）。解析 vcpkg-lock.json（锁文件，类似 npm 的 package-lock.json），提取每个已安装包的 name、version、abi（二进制兼容性标识）。
 

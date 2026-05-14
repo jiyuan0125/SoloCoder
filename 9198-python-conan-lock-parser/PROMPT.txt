@@ -1,4 +1,4 @@
-Conan 锁文件解析器。C++ 项目用 Conan 管理依赖，conan.lock 文件记录了依赖的精确版本和构建配置。C++ 项目的依赖管理一直是个痛点，写个工具提取依赖信息做 SBOM。
+C++ 的依赖管理一直是团糟，Conan 算是比较成熟的方案了。conan.lock 里记录了每个包的版本、构建选项和依赖关系，做 SBOM 和安全审计得先把这些信息提取出来。
 
 Python 实现。conan.lock 文件是 JSON 格式。解析 graph 字段中的 nodes 对象——每个节点包含 ref（包引用，格式为 pkg/version@user/channel，如 fmt/9.1.1//@）、package_id（二进制包 ID，跟平台和编译器相关）、prev（包修订版本）、options（构建选项如 shared=True）、path（依赖链路径）。
 

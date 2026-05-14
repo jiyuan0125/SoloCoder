@@ -1,4 +1,4 @@
-1. MP4 是现代视频最常用的容器格式，底层是一层嵌一层的 box（atom）结构。把 H.264 视频帧和 AAC 音频帧打包成 MP4，需要手工构造这些 box 并填入正确的参数。理解 box 结构是写 MP4 封装器的前提。
+手工构造 MP4 的 box 结构——把 H.264 视频帧和 AAC 音频帧打包成 MP4，需要一层一层填入正确的参数。MP4 底层就是嵌套的 box（atom）结构，理解这个结构是写封装器的前提。
 
 2. 文件结构：ftyp box（文件类型声明，brand 为 isom）+ moov box（所有元数据）+ mdat box（实际的音视频数据）。moov 里面包含 mvhd（全局头：时间刻度 timescale、总时长 duration）、trak（每个轨道一个，视频一个音频一个）。每个 trak 里有 tkhd（轨道头）、mdia（媒体信息，包含 hdlr 和 minf→stbl）。stbl 里最重要的是 stsd（编码参数描述）、stts（时间戳到持续时间的映射）、stsz（每帧大小）、stco（每 chunk 的文件偏移）、stss（关键帧序号列表）。
 

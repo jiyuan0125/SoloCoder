@@ -1,4 +1,4 @@
-1. 写文档习惯用 Markdown，但发布到网页需要 HTML。写个渲染工具把 Markdown 文本转成 HTML，支持 CommonMark 的核心语法。
+Markdown 转 HTML 是内容发布的基础操作——支持 CommonMark 的核心语法就够了，不用搞花哨的扩展。
 
 2. 支持的语法。标题（# 到 ######）转 <h1> 到 <h6>。段落（空行分隔的连续文本）转 <p>。粗体（**text**）转 <strong>，斜体（*text*）转 <em>。行内代码（`code`）转 <code>。链接（[text](url)）转 <a href="url">text</a>。图片（![alt](url)）转 <img src="url" alt="alt">。有序列表和无序列表转 <ol>/<ul> 和 <li>。引用块（> 开头）转 <blockquote>。代码围栏（```lang ... ```）转 <pre><code>。表格转 <table> 结构。
 

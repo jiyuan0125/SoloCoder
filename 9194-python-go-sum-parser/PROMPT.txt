@@ -1,4 +1,4 @@
-Go go.sum 文件解析器。go.sum 记录了 Go 模块依赖的校验和，是 Go 模块完整性和来源验证的关键文件。写个工具解析 go.sum 提取依赖信息，方便做 SBOM 和安全审计。
+go.sum 文件里每行一个模块+版本+哈希，看着简单但信息量不少——哪些是正式版本、哪些是伪版本（没打 tag 的 commit）、模块都来自哪些域名。做安全审计和 SBOM 之前得先把这些信息结构化提取出来。
 
 Python 实现。go.sum 文件格式：每行包含三个字段——module_path（如 github.com/gin-gonic/gin）、version（如 v1.9.0 或 v1.9.0/go.mod）、hash（h1:开头的 SHA-256 校验和 Base64 编码值）。同一个模块可能有多行——模块本身和它的 go.mod 文件各一行。
 

@@ -1,3 +1,5 @@
+线上内存每 12 小时涨 1GB，pprof 看到 goroutine 数量持续增长——启动了协程但没有退出机制，典型的 goroutine 泄露。
+
 帮我写个工具分析 Go 代码里的 goroutine 使用情况。Go 的并发模型很强大，但 goroutine 泄露是最常见的生产问题——启动了协程但没有退出机制，内存会一直增长直到 OOM。
 
 扫描 Go 源码，找到所有 go 关键字启动的 goroutine 调用。对每个 goroutine 分析：

@@ -1,4 +1,4 @@
-第一步确定转换方向。支持的格式对：SRT↔ASS、SRT↔VTT、ASS↔VTT。用户通过 --to 参数指定目标格式（srt/ass/vtt）。
+SRT、ASS、VTT 三种字幕格式互转——核心是时间轴格式转换加文本清理。支持的格式对：SRT↔ASS、SRT↔VTT、ASS↔VTT。用户通过 --to 参数指定目标格式（srt/ass/vtt）。
 
 第二步读取源格式。SRT 解析：序号 + 时间轴（HH:MM:SS,mmm --> HH:MM:SS,mmm）+ 文本。ASS 解析：Events 段的 Dialogue 行，时间格式 H:MM:SS.cc。VTT 解析：WEBVTT 头 + cue（时间轴 HH:MM:SS.mmm + 文本）。
 

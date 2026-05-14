@@ -1,13 +1,7 @@
-帮我用 Go 实现 LSM-Tree 的 Column Family 支持。
+RocksDB 实例里存元数据用一种 compaction 策略，存用户数据用另一种——如果放在同一个 Memtable 里互相干扰。Column Family 就是"表"的概念：多个 CF 共享 WAL 但各自有独立的 Memtable 和 SSTable 文件集合，compaction 互不影响。Go 实现。
 
-Column Family 类似数据库的表，多个 Column Family 共享 WAL 但各自有独立的 Memtable 和 SSTable 文件。RocksDB 用这种方式在同一个实例里隔离不同类型的数据——比如一个 CF 存元数据，另一个存用户数据，compaction 独立不影响。
+CreateCF(name, options) 创建新 CF，DropCF(name) 删除，ListCF() 返回所有名称。默认有个 "default" CF 不用显式创建。每个 CF 独立管理 Memtable、SSTable 和 compaction 触发。
 
-要实现：
-- ColumnFamily 管理：CreateCF(name, options)、DropCF(name)、ListCF() 返回所有 CF 名称
-- 每个 CF 独立的 Memtable 和 SSTable 文件集合、独立 compaction 触发和执行
-- 共享 WAL：写操作记录 CF ID + key + value 到同一个 WAL 文件（批量写组提交）
-- 恢复时按 CF ID 分发 WAL 记录到对应 CF 的 Memtable
-- 全局操作：FlushAll（所有 CF 刷盘）、CloseAll（优雅关闭所有 CF，先刷 WAL 再释放资源）
-- 默认有个 "default" CF，不需要显式创建就可用
+共享 WAL 是关键设计：写操作把 CF ID + key + value 记录到同一个 WAL 文件（批量组提交提高吞吐），恢复时按 CF ID 分发记录到各自的 Memtable。FlushAll 所有 CF 刷盘，CloseAll 优雅关闭（先刷 WAL 再释放资源）。CF ID 用 uint32 自增，名称到 ID 的映射并发安全。
 
-Go 标准库，go build 通过。CF ID 用 uint32 自增分配，CF 名称到 ID 的映射要并发安全。
+go build 通过。

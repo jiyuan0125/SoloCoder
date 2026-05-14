@@ -1,4 +1,4 @@
-第一步理解 OGG 页面结构。每个页面以 "OggS" capture pattern 开头（4B），然后版本号（0，1B）、header type（1B：bit0=continuation、bit1=BOS、bit2=EOS）、granule position（8B）、serial number（4B 标识逻辑流）、page sequence number（4B）、CRC（4B）、segment count（1B）、segment table（N 个字节，每个表示一个 segment 的长度）。
+OGG 的页面结构是理解这个格式的钥匙——每个页面以 "OggS" capture pattern 开头（4B），然后版本号（0，1B）、header type（1B：bit0=continuation、bit1=BOS、bit2=EOS）、granule position（8B）、serial number（4B 标识逻辑流）、page sequence number（4B）、CRC（4B）、segment count（1B）、segment table（N 个字节，每个表示一个 segment 的长度）。
 
 第二步处理跨页拼接。segment 值为 255 表示数据延续到下一个 segment，值小于 255 表示当前数据单元结束。维护一个缓冲区——遇到 255 的 segment 就追加，遇到小于 255 就把完整数据交给上层。
 

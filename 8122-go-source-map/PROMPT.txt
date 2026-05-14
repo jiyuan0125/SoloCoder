@@ -1,3 +1,5 @@
+线上报了个 JS 错误，堆栈指向的是压缩后的 bundle.js 第 2 行第 34567 列——没有 source map 根本定位不到原始代码。这个映射关系的生成算法值得自己实现一遍。
+
 写一个 Source Map 生成器。前端构建过程中 JS/CSS 文件被压缩、合并、转译，出错时的堆栈信息指向的是构建后的文件——Source Map 就是把构建后的位置映射回原始文件位置，让调试成为可能。
 
 跟踪编译过程，记录每个输出位置对应的原始文件位置。支持 VLQ（Variable-Length Quantity）编码——Source Map v3 格式用 VLQ 编码坐标差值来压缩映射数据。生成标准 v3 格式的 source map JSON 文件，包含 version、sources（原始文件列表）、names（变量名列表）、mappings（VLQ 编码的位置映射字符串）、file（输出文件名）。

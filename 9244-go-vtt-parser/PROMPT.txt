@@ -2,4 +2,4 @@
 
 解析 WebVTT 字幕文件。文件以 "WEBVTT" 开头（可选后面跟空格和描述文字），然后是空行。之后是可选的 STYLE 块（包含 CSS 规则，::cue 选择器之类的）和 NOTE 块（注释，以 "NOTE" 开头到空行结束）。字幕 cue 块：可选的 cue identifier（非空行且不包含 "-->" 的字符串），然后是时间轴行——格式 HH:MM:SS.mmm --> HH:MM:SS.mmm（小时部分可以省略变成 MM:SS.mmm），后面跟着可选的 cue settings（position:50% align:center size:80% 等键值对，空格分隔）。时间轴之后到下一个空行之间的所有行都是 cue 的文本内容，支持 HTML 标签（<b>、<i>、<u>、<c.class>）和语音标签（<v name>）。解析后输出结构化数据：ID、起始秒数、结束秒数、settings map、文本内容。
 
-Go 标准库，go build 编译通过。
+Go 标准库实现 WebVTT 解析，不依赖外部库。编译通过。

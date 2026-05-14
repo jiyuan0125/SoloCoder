@@ -1,4 +1,4 @@
-做 OIDC 对接的时候需要从 JWKS endpoint 拉公钥来验证 JWT 签名。JWK（JSON Web Key）把密钥的各种参数用 JSON 格式表示，不同密钥类型有不同的字段。整个过程涉及 Base64URL 解码、大整数处理、密钥对象构建，值得从零写一遍搞清楚。
+对接第三方 SSO 的时候踩了个坑——他们的 JWKS endpoint 返回的公钥死活解析不了，最后发现是 n 和 e 的 Base64URL 编码有 padding。与其每次查 RFC 猜字段含义，不如自己写一遍 JWK 解析器，把 RSA 模数、EC 曲线坐标、对称密钥的解码全搞明白。
 
 用 Go 实现一个 JWK 解析器。支持三种密钥类型：
 

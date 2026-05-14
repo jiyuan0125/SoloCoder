@@ -1,13 +1,7 @@
-用 Go 写 SSTable 的 Data Block 读写模块。
+SSTable 里的 key 有个有趣的特征——相邻 key 往往共享很长的前缀，比如 "user:1001:name" 和 "user:1001:email"。LevelDB 利用这一点做前缀压缩：每个 entry 只存和前一个 key 不同的后缀部分，默认每 16 个 entry 插一个 restart point 存完整 key，兼顾压缩率和二分查找效率。Go 实现这个 block 格式。
 
-Data Block 是 SSTable 文件中实际存储 key-value 数据的部分，内部用前缀压缩（prefix compression）+ restart point 来节省空间。LevelDB 的 block 格式就是这样——相邻 key 往往有很长的公共前缀，只存差异部分就能大幅压缩。
+BlockBuilder 按 key 有序写入 entry，entry 格式是三个 varint（shared prefix length、unshared key length、value length）+ key suffix + value。每 16 个 entry 设一个 restart point（存完整 key），restart point 数组放在 block 末尾（uint32 数组 + num_restarts），支持二分查找跳转。block 满 4KB 就 finish 当前块开始新块。
 
-功能：
-- BlockBuilder：按有序 key 写入 entry，用 restart interval 做前缀压缩（默认每 16 个 entry 记录一个 restart point，该 entry 存完整 key）
-- BlockReader：从字节流重建 block，支持基于 restart point 的二分查找和顺序迭代
-- Restart point 数组放在 block 末尾（uint32 数组 + num_restarts），用于二分查找的跳转起点
-- entry 格式：shared prefix length + unshared key length + value length（三字节 varint）+ key suffix + value
-- Block 大小默认 4KB，满后 finish 当前 block 并开始新 block
-- Block 尾部记录所有 restart point 的偏移位置和总数
+BlockReader 从字节流重建 block，基于 restart point 做二分查找定位 entry，也支持顺序迭代遍历。key 必须有序写入，编码用小端序。
 
-Go 标准库，go build 通过。编码用小端序。写入时 key 必须有序。
+go build 通过。

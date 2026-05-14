@@ -1,3 +1,5 @@
+mock 验证调用次数和参数，stub 返回固定值——fake 则是完整的内存实现。UserRepository 的 fake 用 map 存数据，支持真实的增删改查。
+
 帮我实现一个 Go 的 fake 实现生成器。fake 和 mock 的区别是——mock 验证调用行为，fake 是一个功能完整但数据在内存里的假实现。比如 UserRepository 接口的 fake 实现，内部用 map 存数据，支持真实的 CRUD 操作。
 
 工具读取 Go 接口定义（从源码解析），生成基于内存 map 的 fake 实现。生成逻辑：对于 CRUD 类接口（Create/Read/Update/Delete 方法模式），自动识别实体类型，生成用 map[ID]Entity 存储的 fake。ID 生成可以用自增计数器。查询方法支持简单的过滤（按字段值匹配）。分页方法支持 offset/limit。

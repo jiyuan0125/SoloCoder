@@ -1,13 +1,7 @@
-帮我写一个 Go 的 SSTable Table Reader。
+Builder 把 SSTable 写到磁盘了，Reader 负责读回来。打开文件先读尾部 48 字节的 footer，拿到 index block 和 meta index block 的位置，后续所有查找都从 footer 出发。Go 实现。
 
-从磁盘读取 SSTable 文件，解析 footer 定位 index block，然后支持按 key 查询和范围迭代。和 Table Builder 是一对读写组合——Builder 写出来的文件由 Reader 来消费。
+Get(key) 的查找路径：index block 二分定位 data block → 读入 data block → block 内二分找 key → 返回 value。Bloom filter 先过一遍——miss 的 key 直接跳过磁盘读取。NewIterator(start, end) 提供范围迭代器，正向遍历（Seek → Next → Valid），跨 block 自动加载。
 
-功能点：
-- Open(path) 打开文件后先读尾部 footer（最后 48 字节），拿到 index block 和 meta index block 的位置
-- Get(key)：先在 index block 二分定位 data block → 读入 data block → block 内二分查找 key → 返回 value
-- NewIterator(start, end)：范围迭代器，支持正向遍历（Seek → Next → Valid），跨 block 自动加载
-- 利用 bloom filter 块提前过滤不存在的 key——bloom miss 直接跳过 block 读取
-- Block 缓存可选：读过的 data block 可以缓存在内存中（LRU），避免重复磁盘 I/O
-- 文件句柄管理：打开后保持 fd，关闭时释放资源
+读过的 data block 可以缓存在 LRU 里避免重复 I/O。文件句柄打开后保持 fd，关闭时释放。文件 I/O 用 os.File + bufio.Reader，mmap 可选。
 
-Go 标准库，go build 编译通过。文件 I/O 用 os.File + bufio.Reader，mmap 可选不必须。
+go build 通过。

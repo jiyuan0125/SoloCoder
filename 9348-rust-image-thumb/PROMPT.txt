@@ -1,4 +1,4 @@
-第一步确定缩放策略。用户传入 --max-size 参数（如 200x200），表示缩略图的最大宽高。等比缩放：计算原图宽高比 ratio = width/height，如果 ratio > max_width/max_height 则按宽度缩放（new_width = max_width, new_height = max_width/ratio），否则按高度缩放。如果用户传 --exact-size 200x150 则强制拉伸到指定尺寸。
+缩略图生成的核心就是等比缩放——用户传入 --max-size 参数（如 200x200），表示缩略图的最大宽高。计算原图宽高比 ratio = width/height，如果 ratio > max_width/max_height 则按宽度缩放（new_width = max_width, new_height = max_width/ratio），否则按高度缩放。如果用户传 --exact-size 200x150 则强制拉伸到指定尺寸。
 
 第二步读取图片。通过文件头判断格式——JPEG（FFD8 开头）或 PNG（89 50 4E 47 开头）。解码为像素矩阵：JPEG 解析 SOF0 获取宽高和分量信息，解码像素数据；PNG 解析 IHDR 获取参数，zlib 解压 IDAT，滤波还原。如果不想完整实现编解码，可以用 image crate 做这一步。
 

@@ -1,9 +1,9 @@
 补丁检查工具。运维那边有几十台服务器，每台装了几百个包，手动检查哪些有安全补丁没打太费劲了。写个工具自动对比已安装版本和最新安全补丁版本。
 
-Python 实现补丁状态检查器。数据采集：从服务器收集已安装包列表——dpkg -l（Debian/Ubuntu）或 rpm -qa（RHEL/CentOS）的输出，或者直接解析 /var/lib/dpkg/status 和 /var/lib/rpm/Packages 文件。也支持从 docker exec 收集容器内的包列表。
+Python 实现补丁状态检查器。数据采集：从服务器收集已安装包列表——dpkg -l（Debian/Ubuntu）或 rpm -qa（RHEL/CentOS）的输出，或者直接解析 /var/lib/dpkg/status 和 /var/lib/rpm/Packages 文件。还能从 docker exec 收集容器内的包列表。
 
 版本对比：对每个已安装包，查询安全更新源（加载本地缓存的 CVE 数据或安全公告 JSON），对比当前安装版本和修复版本。版本比较用 packaging.version 的语义化版本比较，处理好 Debian 和 RPM 不同的版本号格式。
 
 输出：已安装包总数、有安全补丁未打的包列表（包名、当前版本、修复版本、相关 CVE 编号、严重等级）、补丁覆盖率百分比（已打补丁数/总补丁数）。按严重等级排序——Critical 和 High 的补丁应优先安装。
 
-也支持对比两台服务器的补丁状态差异（找出不一致的包版本）。python3 命令行工具。
+还能对比两台服务器的补丁状态差异（找出不一致的包版本）。python3 命令行工具。

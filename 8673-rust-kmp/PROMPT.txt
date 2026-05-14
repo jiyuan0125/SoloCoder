@@ -7,4 +7,4 @@ next 数组计算——next[i] 表示 pattern[:i+1] 中既是前缀又是后缀�
 搜索过程——双指针 i（主串）和 j（模式串）。匹配时双双前进。失配时 j=next[j-1]，不回退 i。j 走完 pattern 长度就找到一个匹配，记录位置后 j=next[j-1] 继续找下一个。
 
 正确处理空模式串（返回所有位置）、空主串（无匹配）、模式串全是同一字符的退化情况。提供 CLI：kmp search "ATCG" "基因组序列文件"。cargo build 编译通过。
-测试——"catsanddog" 词典 {cat,cats,and,sand,dog} 应返回 "cat sand dog" 和 "cats and dog" 两种切分。空字符串返回 true。词典为空任何非空串返回 false。
+退化测试——模式串 "AAAAA" 在主串 "AAAAAAAAAAAA" 中搜索，暴力方法每次只移一位（O(n×m)），KMP 应该高效处理。DNA 序列文件搜索 "ATCGATCG" 应返回所有出现位置。空模式串匹配所有位置。

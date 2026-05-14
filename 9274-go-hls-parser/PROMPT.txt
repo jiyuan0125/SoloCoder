@@ -1,4 +1,4 @@
-第一步判断 m3u8 类型——如果文件包含 #EXT-X-STREAM-INF 就是主播放列表（Master），否则是媒体播放列表（Media）。两种类型解析逻辑完全不同。
+m3u8 文件有两副面孔——带 #EXT-X-STREAM-INF 标签的是 Master Playlist，列出所有码率变体供播放器选择；没有的就是 Media Playlist，逐条列出 TS 分片。两种的解析逻辑完全不同，拿到文件得先判断类型。
 
 第二步解析 Master Playlist。#EXT-X-STREAM-INF 后面的属性是 key=value 对，用逗号分隔（注意值里面可能有引号包裹的逗号）。提取 BANDWIDTH（码率，单位 bps）、RESOLUTION（宽x高）、CODECS（编码格式字符串，引号包裹）、FRAME-RATE 等属性。紧跟着的下一行就是该变体的 URI。
 

@@ -1,4 +1,4 @@
-NVD（国家漏洞数据库）数据客户端。直接调 NVD API 有限速（每 30 秒 5 次请求没有 API Key，有 Key 可以 50 次），而且响应比较慢。写个带缓存和限速的客户端库，方便其他工具使用。
+NVD API 没有密钥的话每 30 秒只能请求 5 次，有密钥也才 50 次。安全工具链里几十个模块都要查 CVE，这个限速根本不够用。需要一个带缓存和限速的客户端库来协调。
 
 Python 实现一个 NVD API 客户端。API 封装：查询 CVE 信息（GET /rest/api/cves/2.0?cveId=CVE-YYYY-NNNNN）、按关键词搜索、按 CPE 名称查询、按时间范围查询。每个请求自动处理分页（resultsPerPage 参数和 startIndex）。
 

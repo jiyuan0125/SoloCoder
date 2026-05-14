@@ -1,3 +1,5 @@
+优化了一行代码，跑了三遍 benchmark——每次结果都不一样，波动 20%。单次 benchmark 噪声太大，需要多次运行统计分析。
+
 帮我实现一个 Go benchmark 运行和分析工具。做性能优化时需要反复跑 benchmark 对比——但 go test -bench 的输出格式不利于对比，而且单次运行有噪声。
 
 工具包装 go test -bench，提供这些功能：
@@ -5,8 +7,4 @@
 多次运行取平均值——默认跑 5 次，取 ns/op 的平均值和标准差，减少噪声影响。对比两次 benchmark 的结果——bench-runner compare old.json new.json，自动计算每个函数的性能变化百分比（+15% 表示变慢了 15%，-10% 表示快了 10%）。生成 CSV/JSON 格式的结果文件——方便用 Excel 或绘图工具做可视化。检测结果的统计显著性——用 t-test 判断性能变化是否显著（p < 0.05）。
 
 对 benchmark 函数支持设置：运行时间（--time 30s，每个函数跑 30 秒）、内存分析（--benchmem，开启 -benchmem）。
-
-这个工具在日常开发中能省不少重复劳动。
 命令行工具，Go 标准库，go build 通过。
-
-这是 Go 开发者迟早会遇到的场景。

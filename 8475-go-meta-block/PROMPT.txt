@@ -1,13 +1,7 @@
-Go 实现 SSTable 的 Meta Block 管理。
+SSTable 不只有数据和索引——bloom filter 是一个 meta block，压缩字典是另一个，统计信息又是一个。这些附加数据类型会随着版本迭代增加，不能每加一种就改文件格式。做一个通用的 meta block 容器，Go 实现。
 
-SSTable 文件中除了数据块和索引块，还有元数据块（meta block），存储 bloom filter、统计信息、压缩字典等附加数据。需要统一的读写接口来管理这些不同类型的 meta block，扩展时不用改 SSTable 的核心格式。
+容器格式很简单：type tag（变长字符串，如 "bloom"、"stats"、"properties"）+ data length（uint32）+ payload。写入时按 type tag 字母序追加到 SSTable 的 meta 区域。读取时通过 meta index block 做 type → offset 映射，O(1) 定位。
 
-要做的：
-- Meta Block 的通用容器格式：type tag（变长字符串）+ data length（uint32）+ data payload
-- 支持注册不同类型的 meta block（"bloom"、"stats"、"properties"、"compression_dict" 等）
-- 写入时按 type tag 字母序追加到 SSTable 文件的 meta 区域
-- 读取时按 type tag 索引，快速定位和加载特定 meta block（通过 meta index block 做映射）
-- Footer 中记录 meta index block 的 offset + length，meta index block 内部格式同 data block
-- 提供迭代器遍历所有 meta block
+Footer 里记录 meta index block 的 offset + length。meta index block 本身也是有序 KV 结构（key 是 type tag，value 是 meta block 的位置）。提供迭代器遍历所有 meta block，支持注册新类型——加个 "compression_dict" 不用改任何已有代码。
 
-Go 标准库，go build 编译通过。参考 LevelDB 的 table format 设计，meta index 也是有序 KV 结构。
+参考 LevelDB 的 table format。go build 通过。

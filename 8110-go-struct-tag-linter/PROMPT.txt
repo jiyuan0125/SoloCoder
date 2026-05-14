@@ -1,3 +1,5 @@
+上次 JSON 序列化出来的字段全是小写，查了半天发现是 struct tag 里 json 的 key 拼错了——这种错误编译器不报，运行时也不 panic，就是数据不对。
+
 写一个 Go struct tag 检查和格式化工具。struct tag 写错了不会编译报错，但运行时 json 序列化/数据库映射会出各种莫名其妙的 bug——字段名拼错了、漏了 omitempty、key 重复了这些都要靠工具检查。
 
 验证 json/db/validate/bson/yaml 等常见 tag 的格式正确性。检查项包括：tag 里 key 是否重复（json 出现了两次）、驼峰命名是否符合规范（json 的 key 应该用 snake_case 还是 camelCase，可配置）、字段类型和 tag 是否匹配（int 字段加 bson 标签的 omitempty 策略）、缺少 omitempty 的可选字段给出建议、gorm 标签的 column 名和字段名不一致的警告。

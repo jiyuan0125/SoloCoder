@@ -1,13 +1,7 @@
-用 Go 实现一个简化版的 LSM-Tree 存储引擎。
+为什么 LevelDB 写入比 B-Tree 快 10 倍？因为它把随机写变成了顺序写——数据先进内存的 Memtable（跳表），满了刷成 SSTable 文件追加到磁盘，后台再慢慢合并整理。这套架构叫 LSM-Tree，Go 撸一个简化版出来。
 
-LSM-Tree 是写密集型数据库的核心数据结构，LevelDB 和 RocksDB 都基于它。核心思想是把随机写变成顺序写——写入先到 Memtable（内存），满了刷成 SSTable 文件，后台做 compaction 合并文件。
+写入路径：WAL（可选，先不做也行）→ Memtable → 满了切成 Immutable Memtable → 后台 Flush 到 SSTable 文件。读取反过来：先查 Memtable → Immutable Memtable → 然后从 Level-0 开始逐层找 SSTable。
 
-核心功能：
-- 写入路径：WAL（可选）→ Memtable → Immutable Memtable → Flush 到 SSTable 文件
-- 读取路径：Memtable → Immutable Memtable → Level-0 SSTables → Level-1 → ... 逐层查找
-- 多层 SSTable 文件管理，每层容量递增（L0 4MB、L1 40MB、L2 400MB...），放大倍数可配
-- Get/Put/Delete/Scan 基本接口，Delete 写入 tombstone 标记
-- 简单的 size-tiered compaction：某层文件数超阈值就合并到下一层
-- 内存中的 Memtable 用跳表实现，达到阈值切为 immutable 等待刷盘
+每层容量递增，L0 放 4MB、L1 放 40MB、L2 放 400MB，放大倍数可配。Compaction 策略先用最简单的 size-tiered——某层文件数量超阈值就合并到下一层。Delete 不真删，写一条 tombstone 标记，compaction 时才清理。
 
-Go 标准库，go build 能编译通过。先不做并发 compaction，把基本流程跑通就行。
+对外暴露 Get/Put/Delete/Scan 四个接口。Memtable 内部用跳表。先不做并发 compaction，单线程把基本流程跑通。go build 能编译就行。

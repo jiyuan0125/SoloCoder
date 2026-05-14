@@ -1,4 +1,4 @@
-CIRCL（CVE Search）平台客户端。CIRCL.lu 提供了一个免费的 CVE 搜索服务，API 比 NVD 更简洁易用，适合做快速查询。写个客户端封装它的 API。
+NVD 的 API 又慢又限速，CIRCL.lu 提供了一个免费的 CVE 搜索服务，API 简洁得多。做快速查询的时候用 CIRCL 比 NVD 省事很多，写个客户端把它的 API 封装起来。
 
 Python 实现 CIRCL CVE Search 客户端。API 端点封装：GET /api/cve/{cve_id} 查询单个 CVE 详情、GET /api/search/{keyword} 关键词搜索、GET /api/browse/{vendor} 按供应商浏览、GET /api/cvefor/{cpe} 按 CPE 查询。
 

@@ -1,4 +1,4 @@
-第一步，确定 PID 分配方案。PAT 固定 PID 0x0000，PMT 分配一个 PID（比如 0x1000），视频分配一个 PID（0x1001），音频分配一个 PID（0x1002）。PCR 时钟绑定在视频 PID 上。
+PID 分配是 TS 封装的起手式。PAT 固定 PID 0x0000，PMT 分配一个 PID（比如 0x1000），视频分配一个 PID（0x1001），音频分配一个 PID（0x1002）。PCR 时钟绑定在视频 PID 上。
 
 第二步，构建 PAT 和 PMT 表。PAT 内容：表 ID 0x00，传输流 ID 任选一个，里面有一个条目——节目号 1，PMT PID。PMT 内容：表 ID 0x02，节目号 1，PCR PID 设为视频 PID，两个流描述——视频流类型 0x1B（H.264）+ 视频 PID，音频流类型 0x0F（AAC）+ 音频 PID。PAT 和 PMT 的插入间隔默认每 100ms 一次。
 

@@ -1,4 +1,4 @@
-1. TIFF 格式的灵活性是出了名的——它用 IFD（Image File Directory）的链表结构组织数据，一个 TIFF 文件可以包含多页图像。文件开头 2 字节是字节序标志（II = 小端 Intel，MM = 大端 Motorola），然后是 2 字节的 magic number（42），再是 4 字节的第一个 IFD 的偏移量。
+TIFF 用 IFD 链表组织数据，一个文件可以包含多页图像。文件开头 2 字节是字节序标志（II = 小端 Intel，MM = 大端 Motorola），然后是 2 字节的 magic number（42），再是 4 字节的第一个 IFD 的偏移量。
 
 2. 每个 IFD 的结构：2 字节 tag 数量，然后是若干 tag 条目（每个 12 字节：2 字节 tag ID、2 字节数据类型、4 字节值的数量、4 字节值或值的偏移量），最后是 4 字节指向下一个 IFD 的偏移（0 表示链表结束）。数据类型有 BYTE(1)、ASCII(2)、SHORT(3)、LONG(4)、RATIONAL(5，两个 LONG 组成分数)、SBYTE(6)、UNDEFINED(7)、SSHORT(8)、SLONG(9)、SRATIONAL(10)、FLOAT(11)、DOUBLE(12)。
 

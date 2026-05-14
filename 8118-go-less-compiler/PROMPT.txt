@@ -1,3 +1,5 @@
+接手了一个 2018 年的老项目还在用 LESS 写样式——迁移到 SASS 工作量太大，先搞个 LESS 编译器把构建流程统一到 Go 工具链里。
+
 写一个 LESS 到 CSS 编译器。LESS 比 SASS 简单一些——不需要缩进语法，完全兼容 CSS 语法加上变量和 mixin 功能。老项目迁移的时候经常需要把 LESS 编译成 CSS。
 
 支持的特性：变量（@primary-color: #333; 用 @primary-color 引用，变量可以存储颜色、数字、字符串）、嵌套规则（.header { .nav { ... } } 编译为 .header .nav { ... }）、mixin（.border-radius(@radius) { border-radius: @radius; } 定义，.border-radius(5px) 调用）、运算（@width: 100px; .class { width: @width * 2; }）、函数（lighten(@color, 10%)、darken(@color, 10%)、rgba(@color, 0.5)、extract(@list, @index)）、@import（引入其他 LESS 文件，输出时合并为单个 CSS）。

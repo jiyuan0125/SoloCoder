@@ -1,3 +1,5 @@
+Go 并发编程的核心就是 channel，但 channel 的使用模式有好有坏——单向 channel、buffered channel、nil channel 各有各的陷阱。
+
 写一个 Go channel 使用模式分析器。channel 是 Go 并发编程的核心，但用错 channel 的代价很高——向关闭的 channel 发送会 panic、永久阻塞的 goroutine 会泄露内存。
 
 分析 Go 源码中所有 channel 的完整生命周期：创建（make(chan T) 或 make(chan T, N)）、传递（作为函数参数、赋值给变量、存入 struct）、发送（ch <- x）、接收（<-ch）、关闭（close(ch)）。

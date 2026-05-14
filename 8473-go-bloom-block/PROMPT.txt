@@ -1,13 +1,7 @@
-Go 实现 SSTable 中的 Bloom Filter 块。
+一个 4KB 的 data block 里有几千个 key，磁盘读一次要 0.1ms。如果 99% 的查询都 miss，那 99% 的磁盘读取全是浪费。Bloom filter 块就是干这个的——用几 KB 的位图快速判断 key 大概率不在 block 里，直接跳过读取。可能误报但不漏报。Go 实现。
 
-Bloom Filter 块放在 SSTable 文件末尾，用来快速判断一个 key 是否可能存在于某个数据块中，避免不必要的磁盘读取。每个数据块对应一段 bloom filter 位图。Probabilistic data structure，可能误报但绝不漏报。
+每个 data block 对应独立的一段 bitset。构建 SSTable 时收集每个 block 的 key 集合，按 1% 误报率配置位数组大小（m = -n×ln(p)/(ln2)^2），哈希函数个数 k = m/n × ln2。查询时先定位到对应 block 的 bloom 段，检查所有哈希位——全命中才去读磁盘，任何一个 miss 直接跳过。
 
-具体要求：
-- 标准 Bloom Filter：多个哈希函数（用 double hashing 模拟 k 个哈希）+ 位数组
-- 支持按数据块分段的 bloom filter（每个 data block 对应独立的一段 bitset）
-- 构建：写入 SSTable 时收集每个 block 的 key 集合，生成对应的 bloom filter 段
-- 查询：给定 key，先定位到对应 block 的 bloom filter 段，检查所有哈希位是否命中
-- 支持序列化/反序列化到字节流，格式：段数 + 每段偏移 + bitset 数据
-- 误报率按 1% 配置位数组大小（m = -n*ln(p)/(ln2)^2），哈希函数个数 k = m/n * ln2
+哈希函数用 double hashing 模拟：hashes[i] = h1 + i×h2。序列化格式是段数 + 每段偏移 + bitset 数据，反序列化后常驻内存。
 
-Go 标准库，go build 通过。哈希函数用 murmur hash 或简单的混合哈希（hashes[i] = h1 + i*h2）。
+go build 通过。

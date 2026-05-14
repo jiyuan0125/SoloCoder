@@ -1,13 +1,5 @@
-Go 实现 Bit Packing 压缩。
+Parquet 列式存储里一个 int32 列的值都在 0-31 之间——每个值其实只需要 5 bit，但 uint64 存要 8 字节，浪费了 92% 的空间。Bit Packing 就是把固定宽度整数紧凑排列：8 个 5-bit 值塞进 5 字节（40 bit），而不是 8 个 8 字节。列式存储和向量化执行都靠它减少内存带宽。Go 实现。
 
-Bit Packing 把固定宽度的整数打包成紧凑的 bit 流。比如 5 bit 宽的整数可以 8 个一组打包进 5 字节（40 bit），而不是用 8 字节的 uint64 存储。常用在列式存储（Parquet/ORC）和向量化执行里，减少内存带宽和存储空间。
+Pack(values []uint64, bitWidth int) 按指定位宽打包成 bit 流。Unpack 反过来解包还原。支持 1-64 bit 任意位宽。难点在跨字节边界的 bit 拆分合并——一个 5-bit 值可能横跨 2 个字节。批量处理：一次打包 32 或 64 个值为一个 block，block 间对齐。还支持差分编码变体（先 delta encode 再 bit pack）。
 
-要求：
-- Pack(values []uint64, bitWidth int) → []byte：把整数序列按指定位宽打包成 bit 流
-- Unpack(data []byte, bitWidth int, count int) → []uint64：从 bit 流解包还原指定数量的整数
-- 支持 1-64 bit 的任意位宽
-- 处理跨字节边界的 bit 拆分和合并（一个整数可能横跨 2-3 个字节）
-- 批量处理：一次打包 32 或 64 个值为一个 block，block 间对齐
-- 支持带差分编码的变体（先 delta encode 再 bit pack，SIMD-friendly format 可选）
-
-Go 标准库，go build 编译通过。位操作统一用小端序（LSB first）。写几个测试验证 pack → unpack 往返一致性。
+位操作统一小端序（LSB first）。写几个测试验证 pack → unpack 往返一致。go build 通过。

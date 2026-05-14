@@ -1,4 +1,4 @@
-排查域名安全问题需要检查 DNS 配置是否健全——有没有配 SPF、DMARC、DKIM 这些防伪造机制，DNSSEC 有没有部署，MX 记录指向哪里，有没有暴露过多信息。
+安全团队钓鱼演练成功伪造了内部域名发邮件——查了一圈才发现 SPF 记录根本没配、DMARC 策略是 p=none、DKIM 也没部署。花了一下午把公司所有域名的 DNS 安全配置手动查了一遍，决定写个工具批量跑。
 
 用 Go 写一个 DNS 安全检查工具。check 子命令：查询域名的各种 DNS 记录——A/AAAA（Web 服务地址）、MX（邮件服务器）、NS（域名服务器）、TXT（SPF、DKIM、验证信息）。检查 SPF 记录——是否有 v=spf1 记录、是否用了 +all（允许所有 IP 发邮件，非常危险）、是否用了 ~all（软拒绝）或 -all（硬拒绝）。检查 DMARC 记录——查询 _dmarc.domain 的 TXT 记录，是否有 v=DMARC1 记录、p 策略是什么（none/quarantine/reject）。检查 DKIM——尝试查询常见选择器（default、google、selector1）的 TXT 记录。检查 DNSSEC——查询域名的 DS 记录判断是否部署了 DNSSEC。
 

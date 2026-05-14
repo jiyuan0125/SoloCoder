@@ -2,7 +2,3 @@
 用 Python 调 ffmpeg 做视频转码封装，支持常见格式互转（MP4、AVI、MKV、MOV → MP4）。可以指定输出编码、分辨率、码率、帧率参数。支持批量处理目录下所有视频文件。
 转码过程要显示进度。Python 3 实现，subprocess 调 ffmpeg。
 python transcode.py input.avi -o output.mp4 --codec h264 --resolution 1080p --bitrate 4M
-
-最后一步别忘了，音频质量不能因为处理明显下降——处理前后可以做频谱对比确认没有引入额外噪声。支持常见的采样率（44100、48000、96000）和位深（16-bit、24-bit）。批量处理时如果某个文件格式不支持跳过并记录到日志里。使用说明打印 --help 要清晰，每个参数的作用和默认值都要写明。
-
-测试用例要覆盖边界情况——空文件、超大文件、格式不对的文件、编码异常的文件。每个具体来说都要有对应的测试。用 Python 的 unittest 或 pytest 都行，python -m pytest tests/ 能跑通。

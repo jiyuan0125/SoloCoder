@@ -1,13 +1,7 @@
-用 Go 实现 SSTable 的 Table Builder。
+Memtable 写满 4MB 要刷盘了——把跳表里的有序 KV 对依次写入 SSTable 文件，组织成 data block + index block + bloom filter + footer 的结构。Compaction 输出也走同一条路径。这个 Table Builder 就是 LSM-Tree 写入磁盘的最后一公里。Go 实现。
 
-Table Builder 负责把有序的 key-value 对依次写入 SSTable 文件，组织成 block 结构，生成索引和 bloom filter，最后写入 footer。这是 LSM-Tree 刷盘和 compaction 的核心写入路径——Memtable 刷盘和 compaction 输出都经过它。
+Add(key, value) 接口，key 必须升序写入（违反就 panic）。数据攒够 4KB 就 finish 当前 block：可选压缩 → 算 CRC → 写入文件 → 顺便生成一条 index entry（block offset + size + separator key）和 bloom filter 段。所有数据写完后依次追加 meta blocks（bloom filter 等）→ index block → footer。
 
-需要：
-- Add(key, value) 接口，key 必须按升序写入（违反则 panic）
-- 数据块满 4KB 时 finish 当前 block：压缩（可选）→ 计算 CRC → 写入文件 → 生成索引条目和 bloom filter 段
-- 每个 finish 的 data block 生成一条 index entry（block offset + size + separator key）
-- 所有数据写完后，依次写入 meta blocks（bloom filter 等）→ index block → footer
-- Footer 固定 48 字节：index handle + meta index handle + padding + magic number
-- 支持可选的 block 压缩（预留接口，先实现 no-compression 路径）
+Footer 固定 48 字节放在文件最末尾：index handle + meta index handle + padding + magic number。block 压缩先预留接口，走 no-compression 路径。所有写入先缓冲在内存，Finish() 时一次性刷盘。
 
-Go 标准库，go build 通过。所有写入先缓冲在内存，Finish() 时一次性刷盘。
+go build 通过。

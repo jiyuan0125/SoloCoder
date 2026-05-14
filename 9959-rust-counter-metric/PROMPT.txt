@@ -1,11 +1,7 @@
-帮我写一个 Rust 的 Counter 指标实现。
+最基础的监控指标就是 Counter——只增不减的数字。总请求数、总错误数、已处理字节数，这些值单调递增。Counter 的价值在于算速率：一分钟内 counter 增加了多少就是 QPS。用 Rust 实现带标签的线程安全 Counter。
 
 Counter 是最基础的监控指标类型——只能单调递增，比如总请求数、总错误数、总处理字节数。实现一个线程安全的 Counter：支持增加指定量（inc_by），增加 1（inc），获取当前值（get），以及重置为 0（reset，重置时返回重置前的值，方便做差值计算速率）。支持给 Counter 打标签（labels），比如 "method=GET,status=200" 这样，相同名字不同标签的 Counter 是独立的。能用文本格式输出所有 Counter 的值。
 
 Rust 标准库，cargo build 编译通过，演示多个带标签的 Counter 并发递增。
 
-这个工具的核心价值在于把counter metric的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
-
 Counter 是最基础的指标——只增不减的数字。请求总数、错误总数、已处理字节数。Counter 的价值在于计算速率（QPS）。
-
-程序要打印关键操作的详细信息，让使用者清楚看到每一步的效果。Rust 标准库实现，cargo build 通过。

@@ -1,4 +1,4 @@
-第一步，从 JPEG 文件中找到 APP1 段。SOI（FFD8）之后紧跟的如果是 FFE1，那就是 APP1。读取长度字段后检查前 4 字节是否是 "Exif"，再后面是 TIFF 头——6 字节，包含字节序标记（II 或 MM）、魔数 42、第一个 IFD 的偏移。
+修图软件删了照片的拍摄参数？还是想看看手机偷偷记录了哪些 GPS 信息？EXIF 数据就藏在 JPEG 的 APP1 段里。从 SOI（FFD8）之后开始找——紧跟的如果是 FFE1，那就是 APP1。读取长度字段后检查前 4 字节是否是 "Exif"，再后面是 TIFF 头——6 字节，包含字节序标记（II 或 MM）、魔数 42、第一个 IFD 的偏移。
 
 第二步，遍历 IFD 条目。EXIF 数据通常包含三个主要 IFD——IFD0 存主图像信息（Make、Model、Orientation、DateTime 等），EXIF IFD 存拍摄参数（通过 IFD0 中 tag 34665 的偏移找到），GPS IFD 存定位数据（通过 tag 34853 找到）。每个 IFD 的结构和 TIFF 一样：2 字节计数 + N 个 12 字节条目 + 4 字节下一 IFD 偏移。
 

@@ -1,4 +1,4 @@
-第一步验证字节序和魔数。TIFF 文件头 8 字节：2 字节字节序标记——"II"（0x4949）小端或 "MM"（0x4D4D）大端；2 字节魔数 42；4 字节第一个 IFD 的偏移量。根据字节序标记决定后续所有多字节数据的读取方式。
+TIFF 文件头 8 字节就决定了后续所有读取方式：2 字节字节序标记——"II"（0x4949）小端或 "MM"（0x4D4D）大端；2 字节魔数 42；4 字节第一个 IFD 的偏移量。根据字节序标记决定后续所有多字节数据的读取方式。
 
 第二步遍历 IFD。定位到 IFD 后，2 字节读取条目数量，然后每个条目 12 字节：2 字节 tag ID、2 字节数据类型（1=BYTE、2=ASCII、3=SHORT、4=LONG、5=RATIONAL 两个 LONG、6=SBYTE、7=UNDEFINED、8=SSHORT、9=SLONG、10=SRATIONAL、11=FLOAT、12=DOUBLE）、4 字节值的数量、4 字节值或偏移。每个类型的大小不同：BYTE/ASCII/UNDEFINED 1 字节，SHORT/SSHORT 2 字节，LONG/SLONG/FLOAT 4 字节，RATIONAL/SRATIONAL/DOUBLE 8 字节。如果所有值能塞进 4 字节就直接存在条目里，否则 4 字节是数据偏移。
 

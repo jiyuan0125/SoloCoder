@@ -3,6 +3,4 @@
 扫描 Go 源码中所有 embed 指令（//go:embed file.txt 或 //go:embed *.json）。分析嵌入的文件和目录：
 
 检测过大的文件——嵌入超过 10MB 的文件会显著增加二进制大小，给出警告。检测敏感文件——嵌入了 .env、config.yaml、id_rsa 等可能包含密码或私钥的文件，给出严重警告。glob 模式匹配意外——//go:embed * 可能匹配到了 .git、node_modules 等不想要的文件。embed 变量未使用——声明了 embed 变量但代码里没有引用。embed.FS 使用方式——是否有不必要的 ReadFile 调用（可以改为直接嵌入 string 或 []byte）。
-
-这个工具在日常开发中能省不少重复劳动。
 输出 embed 使用报告——每个 embed 指令的文件列表、总大小、问题标记。Go 标准库，go build 编译过。

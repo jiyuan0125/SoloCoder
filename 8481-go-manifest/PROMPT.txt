@@ -1,13 +1,7 @@
-Go 实现 LSM-Tree 的 Manifest 文件管理。
+磁盘上散落着几百个 SSTable 文件，崩溃后重启怎么知道哪些文件属于哪层、哪些已经被 compaction 清理了？Manifest 就是"数据库的数据库"——记录所有状态变更历史：哪个文件被创建、哪个被删除、哪次 compaction 完成。Go 实现。
 
-Manifest 记录 LSM-Tree 的状态变更历史：哪个 SSTable 被创建、删除，compaction 完成了哪些文件。相当于"数据库的数据库"——crash recovery 时靠它重建 level state，决定哪些文件属于哪层。没有 manifest 就不知道磁盘上那些 SSTable 怎么组织。
+记录格式参考 LevelDB 的 log format：record type（ADD/DELETE/NEW_CURRENT）+ level + file metadata（id, size, smallest/largest key）。每次 flush 完成、compaction 完成、文件删除都追加一条记录到 manifest 文件，每条带 CRC32 校验。
 
-要做：
-- Manifest 记录格式：record type（ADD/DELETE/NEW_CURRENT）+ level + file metadata（id, size, smallest/largest key）
-- 追加写入：每次状态变更（flush 完成、compaction 完成、文件删除）追加一条记录到 manifest 文件
-- Checkpoint：定期把当前完整状态快照写入新 manifest 文件（全量快照），加速恢复
-- 恢复流程：读取最新 checkpoint manifest → 从 checkpoint 开始重放增量记录 → 重建完整层级状态
-- 文件滚动：manifest 文件太大时创建新文件，旧文件保留做备份
-- 每条记录带 CRC32 校验，损坏记录跳过并报警
+定期做 checkpoint：把当前完整状态快照写入新 manifest 文件，恢复时读最新 checkpoint 再重放之后的增量记录就行，不用从头回放几万条历史。manifest 文件太大时滚动创建新的，旧的保留备份。损坏的记录跳过并报警。
 
-Go 标准库，go build 通过。记录格式参考 LevelDB 的 log format。
+go build 通过。

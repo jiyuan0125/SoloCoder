@@ -1,3 +1,5 @@
+channel 用法比想象中容易出错——向关闭的 channel 发送会 panic、没有消费者的 channel 永久阻塞、select 随机选择让结果不确定。
+
 写一个 Go channel 解析器，分析代码中 channel 的使用模式。channel 是 Go 并发的核心原语——goroutine 之间通过 channel 通信。但 channel 用法多样且容易出错——没有消费者的 channel 会永久阻塞、重复关闭 channel 会 panic。
 
 输入 Go 源码，找出所有 channel 的创建（make(chan T)、make(chan T, N) 带缓冲区）、发送（ch <- x）和接收（<-ch、x = <-ch、x, ok := <-ch）操作。

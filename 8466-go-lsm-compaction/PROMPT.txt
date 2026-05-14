@@ -1,12 +1,7 @@
-Go 实现 LSM-Tree 的 Compaction 策略模块。
+线上数据库跑了三个月，读延迟从 5ms 涨到 200ms——LSM-Tree 的 SSTable 文件越积越多，读一个 key 要翻十几层。Compaction 就是治这个病的：合并文件、消除重复、清理墓碑标记。但策略选错了写放大会更严重。Go 实现两套策略对比。
 
-Compaction 是 LSM-Tree 里最复杂的部分，负责合并多个 SSTable 文件，消除重复 key 和 tombstone，降低读放大和空间放大。不同策略适用于不同工作负载——写多的用 size-tiered，读多的用 leveled。
+Size-Tiered 适合写密集场景（Cassandra 用这个）：同层文件数达到阈值就合并成下层的一个大文件。写放大低，但合并后文件更大，读的时候还是得翻很多层。Leveled 适合读密集场景（LevelDB 用这个）：每层按 key 范围分成多个有序不重叠的小文件，和上层有重叠的文件一起合并，读性能好但写放大高。
 
-做两种策略：
-- Size-Tiered：同一层文件数量达到阈值就合并成下一层的一个大文件（Cassandra 用这种，写放大低但读放大高）
-- Leveled：每层按 key 范围分成多个有序不重叠的 SSTable，和上层输出有重叠的文件一起合并（LevelDB 风格，读性能好但写放大高）
-- 支持配置每层放大倍数（fanout）和文件数量阈值
-- Compaction 期间新写入不受影响，用 snapshot 隔离
-- 合并过程中遇到 tombstone 时，如果确认底层没有同 key 数据就可以丢弃
+每层放大倍数（fanout）和文件数阈值都能配。Compaction 期间用 snapshot 隔离不影响新写入。合并时遇到 tombstone，如果确认底层没有同 key 的数据就可以放心丢掉，否则得留着防止旧数据"复活"。
 
-Go 标准库，go build 通过。用模拟的 SSTable 文件元数据（包含 key range、size、level）来做测试，不需要真实文件 I/O。
+测试用模拟的 SSTable 元数据（key range、size、level），不需要真实文件 I/O。go build 通过。

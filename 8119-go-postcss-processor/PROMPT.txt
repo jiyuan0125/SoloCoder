@@ -1,8 +1,8 @@
+SASS 和 LESS 是在语言层面扩展 CSS，PostCSS 的思路不一样——先把 CSS 解析成 AST，然后插件链处理 AST。这个架构更灵活也更轻量。
+
 实现一个 PostCSS 风格的 CSS 处理器。PostCSS 的核心思想是——CSS 先解析成 AST，然后通过一系列插件处理 AST，最后输出 CSS。这个架构比 SASS/LESS 的"在语言层面扩展 CSS"更灵活。
 
 核心是一个插件系统：解析 CSS 成 AST（规则、声明、选择器、值等节点类型），然后依次经过各个插件处理，最后从 AST 生成 CSS 文本输出。
 
 自带几个内置插件：autoprefixer（自动加浏览器前缀 -webkit-、-moz-、-ms-、-o-，根据 caniuse 数据判断哪些属性需要加前缀）、minify（压缩空白、合并相同选择器、缩短颜色值 #ffffff -> #fff）、remove-empty（删除没有声明的空规则）、merge-rules（合并相同选择器的多个规则块为一个）。
-
-这个工具在日常开发中能省不少重复劳动。
 用法：postcss input.css --plugins autoprefixer,minify -o output.css。用户可以写自定义插件——注册一个 func(ast) ast 处理函数。Go 标准库，go build 通过。

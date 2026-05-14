@@ -1,4 +1,4 @@
-加固服务器的时候需要检查 SSH 配置是否安全——还在用 diffie-hellman-group1-sha1 密钥交换？还支持 ssh-rsa 签名算法？root 能直接登录吗？类似 ssh-audit 那个工具的功能。
+等保测评扫出来一堆 SSH 弱算法——还在用 diffie-hellman-group1-sha1 做密钥交换、ssh-rsa 签名、3des-cbc 加密。几十台服务器逐个手动排查根本来不及，写个工具自动连上去把 ServerHello 里的算法列表全拽出来，和弱算法黑名单比对。
 
 用 Go 写一个 SSH 服务审计工具。audit 子命令：用 crypto/ssh 连接目标 SSH 服务器（只做密钥交换不实际登录），从 ServerHello 中获取支持的算法列表——密钥交换算法（kex）、服务器密钥算法（host key）、加密算法（cipher）、MAC 算法、压缩算法。
 

@@ -1,4 +1,4 @@
-用 Rust 写一个日志条目应用（entry apply）引擎。
+Raft 里日志被 commit 和被 apply 是两回事——commit 是多数节点确认了，apply 才是真正执行命令改状态机。而且 apply 必须按 index 顺序来，跳着执行会导致状态机不一致。用 Rust 把 apply 这个环节单独实现清楚。
 
 背景：在 Raft 之类的共识协议里，leader 产生日志条目，follower 接收并持久化。但"提交"和"应用"是两回事——commitIndex 前进后，还得一条一条 apply 到状态机。这个模块专注于 apply 这一步。
 
@@ -11,5 +11,3 @@
 - apply 完成后持久化 last_applied，重启后从这里继续
 
 Rust 标准库，cargo build 通过。
-
-这个工具的核心价值在于把entry apply的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。

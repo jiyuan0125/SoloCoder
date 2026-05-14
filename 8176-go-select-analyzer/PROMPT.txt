@@ -1,3 +1,5 @@
+select 是 Go 里最不直觉的控制结构——nil channel 的 case 永久跳过、没有 case 的 select 永久阻塞、default 做非阻塞操作。这些行为容易写出隐蔽的 bug。
+
 帮我写个 Go select 语句分析工具。select 是 Go 并发里最复杂的控制结构——多个 channel 操作同时就绪时随机选一个、nil channel 的 case 被永久跳过、没有 case 的 select 永久阻塞。这些行为不直观，容易写出 bug。
 
 分析 Go 源码中所有 select 语句的结构和行为。检测这些情况：

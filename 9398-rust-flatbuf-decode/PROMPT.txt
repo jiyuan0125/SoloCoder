@@ -1,4 +1,4 @@
-第一步理解 FlatBuffers 的二进制布局。和 Protobuf 不同，FlatBuffers 是零拷贝设计——数据直接在 buffer 中原地读取，不需要先解析成内存对象。核心是 vtable 机制：每个对象前面有一个 vtable 偏移，vtable 里记录了每个字段的偏移量。
+FlatBuffers 和 Protobuf 的哲学完全不同——它是零拷贝设计，数据直接在 buffer 中原地读取，不需要先解析成内存对象。核心是 vtable 机制：每个对象前面有一个 vtable 偏移，vtable 里记录了每个字段的偏移量。
 
 第二步定位 vtable。读取 buffer 前面的根对象偏移（4 字节 little-endian），定位到根对象。根对象的头 4 字节（有符号整数，soffset）是 vtable 的偏移——当前对象位置减去 soffset 得到 vtable 位置。vtable 结构：2 字节 vtable 大小、2 字节对象大小、2 字节×N 个字段偏移（0 表示字段不存在）。
 

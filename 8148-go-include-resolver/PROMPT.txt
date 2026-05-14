@@ -1,3 +1,5 @@
+C/C++ 项目的编译时间主要花在解析头文件上——一个 #include windows.h 会递归拉进来几千个头文件。搞清楚 include 依赖树是优化编译速度的基础。
+
 写一个 #include 文件解析器。C/C++ 项目的编译依赖关系主要通过 #include 体现——理解了 include 依赖树就理解了项目的文件组织结构。
 
 分析 C/C++ 源文件中的 #include 指令（包括 #include <file> 系统头文件和 #include "file" 用户头文件两种），递归解析所有引用的头文件，构建完整的 include 依赖树。

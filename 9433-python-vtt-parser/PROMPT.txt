@@ -1,4 +1,4 @@
-1. WebVTT 是网页视频的标准字幕格式，比 SRT 多了不少特性。文件以 WEBVTT 开头（可选后面跟换行和元数据头），然后是空行分隔的 cue 块。每个 cue 块可能有可选的 cue identifier（一行非时间轴的字符串），然后是时间轴，最后是字幕文本。
+WebVTT 比 SRT 多了不少特性——文件以 WEBVTT 开头（可选后面跟换行和元数据头），然后是空行分隔的 cue 块。每个 cue 块可能有可选的 cue identifier（一行非时间轴的字符串），然后是时间轴，最后是字幕文本。
 
 2. 时间轴格式：HH:MM:SS.mmm --> HH:MM:SS.mmm，小时部分可以省略（变成 MM:SS.mmm）。箭头后面可以跟定位标签：position:50% line:80% align:center，控制字幕在视频上的显示位置。这些标签要解析出来但不能影响时间的提取。
 

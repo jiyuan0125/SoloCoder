@@ -1,4 +1,4 @@
-在做 API 网关的时候需要严格校验上游服务颁发的 JWT token。市面上 JWT 库很多但我想从底层理解整个流程——header 怎么编码的、签名怎么算的、claims 里每个字段的含义、过期校验要注意什么时区问题。
+API 网关上线一个月了，上游服务颁发的 JWT token 一直没仔细校验过——alg 字段随便填、过期时间有时差、有些 token 的 audience 跟本服务对不上。市面上的 JWT 库封装得太好，出了问题不知道是库的 bug 还是配置错了，干脆自己从头实现一遍把流程搞透：header 怎么编码、签名怎么算、claims 各字段含义、过期校验的时区坑。
 
 用 Go 实现一个 JWT 校验器。解析函数 ParseJWT(tokenString string) (*JWT, error)：按 . 分割成 header、payload、signature 三部分，分别 Base64URL 解码。header 解析出 alg（算法）和 typ（类型）。payload 解析出 claims（标准声明和自定义声明）。
 

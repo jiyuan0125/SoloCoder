@@ -1,4 +1,4 @@
-第一步从容器读声明的分辨率。MP4 从 tkhd box 读 width/height（32.16 固定点格式——除以 65536 得到像素值），或者从 stsd 的 avc1 读 width/height。MKV 从 TrackEntry 的 Video 子元素读 PixelWidth/PixelHeight。FLV 从 onMetaData 的 width/height 读。
+分辨率信息在不同容器里存的位置各不相同。MP4 从 tkhd box 读 width/height（32.16 固定点格式——除以 65536 得到像素值），或者从 stsd 的 avc1 读 width/height。MKV 从 TrackEntry 的 Video 子元素读 PixelWidth/PixelHeight。FLV 从 onMetaData 的 width/height 读。
 
 第二步（可选）从编码器获取实际编码分辨率。H.264 的 SPS 里有 frame_width 和 frame_height——有时候容器声明的是对齐后的值（如 1920x1088），但 SPS 里的实际值是 1920x1080。工具同时输出两个值如果它们不一致。
 

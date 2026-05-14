@@ -9,4 +9,4 @@
 - Unicode 处理按 char，不要按 u8
 
 CLI：lcs "ABCDGH" "AEDFHR" 返回 "ADH"。同时输出长度和子序列内容。cargo build 通过。
-测试用例——"ABCBDAB" vs "BDCAB" 应返回 LCS "BCAB" 长度 4。也测试完全相同的字符串（LCS 就是自身）、完全不同的字符串（LCS 为空）。长字符串（5000 字符）只测长度模式（用空间优化版本），验证时间可接受。
+验证几组："ABCBDAB" vs "BDCAB" 应返回 LCS "BCAB" 长度 4。完全相同的字符串 LCS 就是自身，完全不同的返回空。长字符串（5000 字符）用空间优化版本只测长度，确认时间可接受。

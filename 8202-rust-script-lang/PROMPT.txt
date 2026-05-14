@@ -4,6 +4,4 @@ Rust 的性能优势在这里很明显。
 用 Rust 写一个脚本语言解释器，功能包括：四种基本类型——number（f64 统一用浮点数）、string（双引号字符串，支持转义）、bool（true/false）、nil（空值）。函数定义和递归调用——用 fn 关键字定义函数，支持参数和返回值，函数是一等公民可以赋值给变量。table 数据结构——类似 Lua 的 table，本质是 HashMap，可以用数字或字符串做 key，支持嵌套。循环（while 和 for-in 遍历 table）和条件分支（if/elseif/else）。
 
 环境用 Rc<RefCell<Env>> 实现作用域链，闭包捕获外部变量。垃圾回收用 Rc 的引用计数自动管理。
-
-这个工具在日常开发中能省不少重复劳动。
 解析或运行出错时报告具体行号和原因。运行方式：script-lang example.script，从文件读入脚本执行。cargo build 通过。

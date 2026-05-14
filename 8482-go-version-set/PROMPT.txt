@@ -1,13 +1,7 @@
-用 Go 写一个 LSM-Tree 的 Version Set 管理。
+读操作正在进行的时候，后台 compaction 把文件重组了——如果读操作直接引用文件列表，可能读到一半文件被删了。Version 机制解决这个问题：每次 compaction/flush 生成一个不可变的新 version，读操作引用旧 version 不受影响，这就是 LSM-Tree 里的 MVCC。Go 实现 Version Set。
 
-Version 代表 LSM-Tree 在某一时刻的所有层级文件快照，是不可变的。每次 compaction 或 flush 完成后生成新 version。Version Set 维护版本链，支持读取操作使用旧的 version 快照而不被新写入影响——这就是 MVCC 的基础。
+Version 结构是每层 SSTable 文件列表的不可变快照，带引用计数。VersionSet 管理当前 version（current）和历史版本链。读操作 Ref 当前 version，用完 Unref——引用计数归零才能回收文件资源。
 
-需要：
-- Version 结构：每层 SSTable 文件列表的不可变快照，带引用计数
-- VersionSet 管理当前 version（current）和历史 version 链表
-- 新 compaction/flush 完成后创建新 version（应用增量变更：哪些文件加了、哪些删了）
-- 读取操作 Ref 引用当前 version，用完 Unref（引用计数归零才能回收）
-- 无引用的旧 version 从链表中移除，释放文件引用
-- 通过 manifest 持久化 version 变更（LogAndApply 方法）
+新 compaction/flush 完成后创建新 version（应用增量变更：哪些文件加了、哪些删了），通过 manifest 持久化（LogAndApply）。current 指针切换要原子化，用 atomic pointer 或 mutex 保护。
 
-Go 标准库，go build 编译通过。version 切换要原子化——用 atomic pointer 或 mutex 保护 current 指针。
+go build 通过。

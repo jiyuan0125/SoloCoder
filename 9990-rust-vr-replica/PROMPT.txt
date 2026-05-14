@@ -1,9 +1,7 @@
-帮我实现 Viewstamped Replication 的副本状态机，用 Rust 写。
+VR（Viewstamped Replication）和 Raft 几乎是同时期独立发明的，核心思路很像。VR 用 view number 而不是 term，Primary 对应 Leader，Backup 对应 Follower。用 Rust 实现 VR 副本的核心状态机：处理 Prepare/PrepareOK/Commit 消息和视图切换。
 
 VR（Viewstamped Replication）是和 Paxos 同时代的复制协议，比 Paxos 更容易理解。一个 VR 副本可以是 Primary（领导者）或 Backup（跟随者），视图号 (view number) 决定谁是 Primary。实现副本的核心逻辑：处理 Client 请求（如果是 Primary，将请求排序后发送给 Backup），处理 Prepare/PrepareOK 消息，处理 Commit 消息。副本维护一个操作日志（log），记录已提交的操作序号。支持视图切换——当 Primary 故障时，Backup 通过增加视图号来发起新选举。
 
 Rust 实现，cargo build 通过，模拟 3 个副本和一个客户端的正常操作流程。
-
-这个工具的核心价值在于把vr replica的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
 
 Viewstamped Replication 和 Raft 非常相似，但侧重副本管理。每个 replica 有 view number，view change 时重新选 primary。

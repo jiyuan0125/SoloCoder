@@ -1,4 +1,4 @@
-帮我用 Rust 实现快照发送（snapshot send/InstallSnapshot）逻辑。
+Follower 断线好一阵子重新上线，结果 Leader 那边的日志已经被快照截断了——Follower 需要的旧日志根本不存在了。这时候只能走 InstallSnapshot：Leader 把整个快照发给 Follower，让它从快照恢复。用 Rust 把这条路径实现出来。
 
 场景：Raft 里有个 follower 严重落后，leader 的日志已经被截断了（快照覆盖了 follower 需要的部分）。这时候 leader 只能把快照发给 follower，让 follower 直接从快照恢复。
 

@@ -1,13 +1,7 @@
-用 Go 写一个基于 WAL 的崩溃恢复模块。
+上周测试环境数据库进程被 OOM Kill 了，重启后数据竟然没丢——WAL 的功劳。现在要把这个恢复流程实现出来：读 WAL 文件，重放每条记录，重建 Memtable 到崩溃前的状态。没有这步，内存里的数据就真丢了。
 
-数据库启动时读取 WAL 日志文件，重放所有成功写入的记录，恢复 Memtable 到崩溃前的状态。这是 LSM-Tree 存储引擎启动流程的核心——如果没有 WAL，crash 后内存里的 Memtable 数据就全丢了。
+按文件名序号排序读取一个或多个 WAL 文件（包括已归档的和当前活跃的），顺序重放每条记录到新的 Memtable。CRC 校验失败或不完整的记录直接跳过——那是崩溃瞬间写的半截数据，不可信。
 
-做以下功能：
-- 读取一个或多个 WAL 文件（按文件名序号排序），按顺序重放记录到 Memtable
-- 忽略不完整或 CRC 校验失败的记录（这些是崩溃时写的半截数据，不可信）
-- 重放结果构建出一个完整的 Memtable，包含所有成功的 PUT 和 DELETE 操作
-- 支持检查点（checkpoint）：记录已持久化到 SSTable 的 sequence number，恢复从检查点之后开始重放
-- 恢复完成后返回重建的 Memtable 和最后成功的 sequence number
-- 支持多个 WAL 文件的连续恢复（旧的已归档 + 当前活跃文件）
+有个优化点：检查点（checkpoint）。如果已经记录了哪些 sequence number 之前的操作已持久化到 SSTable，恢复就从检查点之后开始重放，不用从头来。恢复完返回重建的 Memtable 和最后成功的 sequence number。
 
-Go 标准库，go build 编译通过。先实现简单的 WAL reader + Memtable 重建流程，全程并发安全。
+全程并发安全。先做简单版：WAL reader 逐条读 + Memtable 重建。go build 通过。

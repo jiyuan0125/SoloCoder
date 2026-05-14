@@ -1,13 +1,7 @@
-Go 实现 LSM-Tree 中的 Tombstone 管理。
+LSM-Tree 的删除不是真删——写一条 tombstone 记录标记"这个 key 已死"，读取时遇到 tombstone 返回 not found。等到 Compaction 才真正清理底层的旧版本数据。这种延迟删除听起来绕，但避免了随机删除的巨大开销，是 LSM-Tree 高写入吞吐的关键设计。Go 管理这些墓碑。
 
-Tombstone（墓碑）是 LSM-Tree 里删除操作的标记，删除不是真的删数据，而是写一条 tombstone 记录。只有 Compaction 时遇到 tombstone 才真正清理底层的旧版本数据。这种延迟删除是 LSM-Tree 高写入吞吐的关键设计。
+Tombstone 条目格式：key + sequence number + type（DELETE 普通删除 / RANGE_DELETE 范围删除 / SINGLE_DELETE 单次删除）。写入和普通 Put 走完全相同的路径（WAL → Memtable → Immutable → SSTable flush），不需要特殊处理。
 
-需要：
-- Tombstone 条目格式：key + sequence number + type（DELETE 普通删除 / RANGE_DELETE 范围删除 / SINGLE_DELETE 单次删除）
-- 写入时和普通 Put 走完全相同的路径（WAL → Memtable → Immutable → SSTable flush）
-- 读取时遇到 tombstone 返回 key not found，而不是把 tombstone 值返回给调用方
-- Compaction 时 tombstone 清理策略：如果确认更底层没有同 key 数据就可以丢掉 tombstone（否则保留防止旧数据复活）
-- 统计 tombstone 数量和占用空间（tombstone space amplification）
-- SINGLE_DELETE 是 RocksDB 的优化语义：只删一次就清理，不保留 tombstone 传播到下层
+Compaction 时的清理策略是核心：如果确认更底层没有同 key 的数据，tombstone 可以安全丢弃；否则必须保留防止旧数据"复活"。SINGLE_DELETE 是 RocksDB 的优化语义——只删一次就清理，tombstone 不传播到下层。统计 tombstone 数量和占用空间，评估空间放大。
 
-Go 标准库，go build 通过。tombstone 的 value 字段为空或存 range delete 的 end key。
+tombstone 的 value 字段为空或存 range delete 的 end key。go build 通过。

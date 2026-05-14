@@ -2,4 +2,4 @@
 
 解析 ASS/SSA 字幕文件的各个段落。文件由多个 section 组成，每个 section 以 [SectionName] 开头：[Script Info] 含 Title、ScriptType（v4.00+ 是 ASS）、PlayResX/Y、WrapStyle 等元数据；[V4+ Styles] 含 Format 行定义字段顺序，然后是 Style 行（逗号分隔：Name、Fontname、Fontsize、PrimaryColour、SecondaryColour、OutlineColour、BackColour、Bold、Italic、BorderStyle、Outline、Shadow、Alignment、MarginL/R/V 等属性）；[Events] 含 Format 行和 Dialogue 行（Layer、Start、End、Style、Name、MarginL/R/V、Effect、Text）。文本里的覆写标签用花括号包裹：\\pos(x,y) 定位、\\an(n) 对齐方式、\\b1 加粗、\\i1 斜体、\\c&HBBGGRR& 颜色（ASS 用 BGR 不是 RGB）、\\fs(n) 字号、\\k(n) 卡拉OK效果。解析 Style 定义和 Dialogue 事件，覆写标签识别但不做渲染。
 
-Go 标准，go build 通过。
+Go 标准库解析 ASS 格式，别引外部包。go build 编译没问题。

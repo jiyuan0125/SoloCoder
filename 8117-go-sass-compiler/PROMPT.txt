@@ -1,3 +1,5 @@
+Go 工具链里缺一个原生的 SASS 编译器——现在要么依赖 Node.js 的 dart-sass，要么用 libsass 的 CGO 绑定。想在纯 Go 项目里直接编译 SCSS 文件。
+
 用 Go 写一个 SASS/SCSS 到 CSS 的编译器。前端构建工具链里 SASS 编译是标配——变量、嵌套规则、mixin 这些特性让样式代码更好维护。虽然 Node 生态有 dart-sass，但 Go 工具链里需要一个原生实现。
 
 支持 SCSS 核心特性：变量（$primary-color: #333; 后续引用 $primary-color）、嵌套规则（.nav { ul { li { ... } } } 编译为 .nav ul li { ... }）、& 父选择器引用（a { &:hover { ... } } 编译为 a:hover { ... }）、@mixin/@include（定义可复用的样式块，支持参数）、@extend（选择器继承，把样式规则合并到同一组）、基本运算（颜色运算 #111 + #222、数学运算 10px * 2）。

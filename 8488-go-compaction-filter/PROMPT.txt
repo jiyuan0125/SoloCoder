@@ -1,13 +1,7 @@
-帮我用 Go 写一个 LSM-Tree 的 Compaction Filter。
+缓存里的 key 带 TTL，过期了还占着空间——要清理就得全表扫描，太浪费了。Compaction Filter 是个巧妙的设计：不用额外扫描，借着 compaction 顺便检查每个 key-value，过期的删掉、需要迁移的改值。后台自动完成，前台无感知。Go 实现。
 
-Compaction Filter 在 compaction 过程中对每个 key-value 做自定义处理：可以修改值、跳过、标记删除。适合做 TTL 过期清理、数据迁移、垃圾回收等后台任务——不用额外扫描，借着 compaction 顺便就把事情做了。
+Filter 接口：Filter(key, value, level) → (Decision, newValue)。Decision 三种：Keep 保留不变、Remove 丢弃、ChangeValue 替换为新值。注册到 compaction 流程后，遍历每个 key-value 时自动调用。
 
-要做：
-- Filter 接口：Filter(key, value, level) → (Decision, newValue)
-- Decision 枰举：Keep（保留不变）/ Remove（丢弃，相当于删除）/ ChangeValue（替换为新值）
-- 内置 TTL Filter：自动删除过期 key（value 前缀包含过期时间戳 int64，当前时间 > 过期时间就 Remove）
-- 内置 Prefix Filter：按 key 前缀批量删除（配置要删除的前缀列表，匹配就 Remove）
-- 注册到 Compaction 流程中，compaction 遍历每个 key-value 时调用 filter 决策
-- Filter 可以在任意 compaction 层级生效，可以按 level 配置不同的 filter
+内置两个实用 filter：TTL Filter（value 前缀包含过期时间戳 int64，当前时间超过就 Remove）和 Prefix Filter（配置要删除的前缀列表，匹配就 Remove）。Filter 可以按 level 配置不同的实例。
 
-Go 标准库，go build 通过。filter 实现必须无副作用，因为 compaction 可能因 crash 重试多次。
+关键约束：filter 实现必须无副作用。因为 compaction 可能因 crash 重试多次，有副作用的 filter 会造成数据不一致。go build 通过。

@@ -1,13 +1,7 @@
-Go 实现 Varint 编码（可变长度整数编码）。
+Protocol Buffers 里一个 uint64 最少 1 字节最多 10 字节——怎么做到的？Varint 编码。每个字节的最高位是 continuation flag：1 表示后面还有数据，0 表示结束。低 7 位拼起来就是实际值，小端序。小数字只占 1 字节，省空间。Go 自己实现一套，不依赖 encoding/binary。
 
-Varint 是 Protocol Buffers 和很多二进制协议里用的整数编码方式，小数字用少量字节，大数字用多字节。每个字节的最高位（MSB）是 continuation flag——1 表示后面还有字节，0 表示这是最后一个字节。低 7 位是实际数据。
+编码 uint64 → 变长字节流，解码反过来。signed int 用 ZigZag 编码映射到无符号（0→0, -1→1, 1→2, -2→3...）再 varint。流式接口支持 io.Reader/io.Writer。SizeVarint(v) 计算编码后长度方便预分配缓冲区。
 
-功能：
-- 编码 uint64 → 变长字节流（每个字节低 7 位是数据，最高位是 continuation flag，小端序）
-- 解码变长字节流 → uint64（读取字节直到 MSB=0，拼接 7-bit 组）
-- 支持 signed int32/int64 的 ZigZag 编码（0→0, -1→1, 1→2, -2→3...映射有符号到无符号）
-- 流式编解码：支持 io.Reader/io.Writer 接口，读写 varint 格式
-- 计算 SizeVarint(v uint64) 返回编码后的字节长度（用于预分配缓冲区）
-- 处理溢出（超过 10 字节的 varint 非法）和非法输入（EOF 中途截断）
+超过 10 字节的 varint 非法，EOF 中途截断也是错误，都要检测和返回。
 
-Go 标准库，go build 通过。自己实现，不依赖 encoding/binary 的 Varint。
+go build 通过。

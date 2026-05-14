@@ -1,4 +1,4 @@
-Gradle 锁文件解析器，解析 Gradle 构建系统的依赖锁文件。
+Java 项目的依赖树通常很深，Gradle 的 gradle.lockfile 记录了每个配置的精确版本。排查依赖冲突和做 SBOM 的时候需要把这个文件解析出来，但格式不是 JSON 也不是 YAML，得专门处理。
 
 Gradle 的 gradle.lockfile 记录了 Java 项目的精确依赖版本，格式简单但有些特殊的标记需要处理。
 

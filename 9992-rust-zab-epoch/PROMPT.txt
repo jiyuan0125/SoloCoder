@@ -1,7 +1,5 @@
-写一个 Zab 协议的 Epoch 管理模块，用 Rust 实现。
+Zab（Zookeeper Atomic Broadcast）用 epoch 来区分不同 Leader 周期。epoch 是单调递增的整数，新 Leader 当选时 +1。事务 ID（zxid）由 epoch 和 counter 组合而成：zxid = epoch << 32 | counter。用 Rust 实现 Epoch 管理器。
 
 Zab（Zookeeper Atomic Broadcast）用 epoch（纪元）来区分不同的领导者周期，和 Paxos 的提案编号类似但更简洁。每个 epoch 是单调递增的整数，新领导者当选时 epoch+1。实现 EpochManager：维护当前 epoch 和事务 ID（zxid = epoch << 32 | counter），每个事务在当前 epoch 内有递增的 counter。新 epoch 开始时重置 counter。支持 epoch 比较（epoch 更大的消息优先），检测过期的 epoch（旧 leader 的消息应该被拒绝）。持久化当前 epoch 到"文件"（模拟磁盘存储，防止重启后 epoch 回退）。
 
 Rust 实现，cargo build 通过，演示几次 leader 切换后 zxid 的变化。
-
-这个工具的核心价值在于把zab epoch的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。

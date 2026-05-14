@@ -7,6 +7,4 @@
 - 支持 let 多态（let-polymorphism）
 - 支持 if/else 分支的类型一致性检查
 - 推导失败时报告具体的类型冲突
-
-这个工具在日常开发中能省不少重复劳动。
 CLI：type-inference source.ti，输出每个表达式的推导类型。cargo build 编译通过。

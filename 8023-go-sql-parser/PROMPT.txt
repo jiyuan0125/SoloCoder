@@ -1,3 +1,5 @@
+网关层拿到用户传过来的 SQL 要做两件事：校验有没有注入、改写查询加权限过滤。前提是得先把 SQL 解析成结构化的 AST。
+
 做一个数据查询中间件，用户传 SQL 过来要先解析再转发，不可能直接把原始 SQL 丢给数据库——注入风险不说，还得校验权限、改写查询。
 
 用 Go 写一个 SQL 解析器。能解析基本的 SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY/LIMIT 语句，支持 JOIN（INNER JOIN、LEFT JOIN、RIGHT JOIN，带 ON 条件）、子查询（WHERE 里嵌套 SELECT、FROM 子句里的派生表）、聚合函数 COUNT/SUM/AVG/MAX/MIN、DISTINCT 关键字。

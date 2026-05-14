@@ -2,4 +2,4 @@ MKV 视频里嵌了字幕想提取出来单独编辑，每次用 mkvtoolnix 图�
 
 从 MKV/MP4 视频容器中提取内封字幕轨道。MKV 容器：先解析 Tracks 元素找到所有 TrackType=17（subtitle）的轨道，列出每个字幕轨道的信息表——TrackNumber、CodecID（S_TEXT/UTF8=SRT、S_TEXT/ASS、S_TEXT/WEBVTT、S_HDMV/PGS 图形字幕）、Language（BCP 47 标签如 eng、chi、jpn）、TrackName、TrackUID。指定轨道 ID（--track 3）后，遍历所有 Cluster 元素提取该轨道的 Block 和 BlockGroup 数据，按 Timecode 排序，根据 CodecID 把二进制数据转换为对应格式的外挂字幕文件。MP4 容器：moov → trak（hdlr type=sbtl），从 stbl 的 stsd 读取编码格式，然后遍历 stco + stsc + stsz 定位并读取每个采样的数据，tx3g 编码转成 SRT，wvtt 直接输出。不指定 --track 时列出所有可用字幕轨道供用户选择。输出文件名自动生成：{视频名}.{语言}.{扩展名}。
 
-Go 标准库，go build 编译通过。
+Go 标准库实现字幕提取，不用 CGO。go build 编译通过。

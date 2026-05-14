@@ -2,4 +2,4 @@
 
 解析视频容器里的音频轨道。MP4 的解析路径：moov → trak（hdlr handler type='soun'）→ mdia → minf → stbl。从 stsd 的 AudioSampleEntry 读取编码格式：mp4a 是 AAC、mp3 是 MPEG-1 Audio、Opus 是 Opus、alac 是 Apple Lossless。AAC 的情况进一步解析 esds box 里的 ES_Descriptor → DecoderConfigDescriptor → AudioSpecificConfig，提取 audioObjectType（2=AAC-LC、5=SBR/HE-AAC）、samplingFrequencyIndex、channelConfiguration。MKV 的解析路径：TrackEntry（TrackType=2）→ Audio 元素拿 SamplingFrequency、Channels、BitDepth，CodecID 标识编码（A_AAC/MPEG4/LC/SBR、A_VORBIS、A_FLAC）。计算音频轨道时长（mdhd 的 duration/timescale 或者 MKV 的 TrackTime + Duration），跟视频轨道时长对比如果不一致标注警告。
 
-Go 标准库，go build 通过。
+Go 标准库搞定，不需要解码音频数据本身。编译直接 go build。

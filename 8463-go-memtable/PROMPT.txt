@@ -1,13 +1,7 @@
-用 Go 实现一个 Memtable，就是 LSM-Tree 里内存中的有序 key-value 表。
+RocksDB 写入 100 万条数据只用了 2 秒，秘诀之一就是 Memtable——数据先写到内存里的有序跳表，攒够了再一次性刷到磁盘。跳表这东西插入 O(log n) 不用旋转平衡，代码比红黑树短一半。Go 写一个。
 
-Memtable 是写入路径的第一站，数据先写到内存里的有序结构（通常用跳表），写满后刷到磁盘变成 SSTable。这是 LevelDB/RocksDB 的核心组件之一，所有写操作都先经过它。
+核心是跳表。节点高度按概率 1/4 随机生成（最大 12 层），这样查找和插入平均都是 O(log n)。每个 entry 存 key + value + sequence number + type（PUT 或 DELETE），用 seq num 实现快照读——读操作只看到 seq ≤ 某个时刻的数据，写入不阻塞读。
 
-要求实现：
-- 基于 SkipList 的有序 KV 存储，支持并发读写（读写锁或细粒度锁）
-- Put/Get/Delete/Scan 操作，Scan 支持范围查询（startKey, endKey），返回迭代器
-- 记录写入数据量大小，达到阈值（可配置，默认 4MB）后标记为 immutable，不再接受新写入
-- 支持 Snapshot 读：读操作看到的是某个时刻的一致性视图，用 sequence number 隔离
-- 内部 entry 格式包含 key + value + sequence number + type (PUT/DELETE)
-- 跳表节点高度按概率 1/4 随机生成，最大高度 12 层
+接口方面：Put/Get/Delete/Scan 四个操作，Scan 要支持范围查询（startKey, endKey）返回迭代器。并发安全用读写锁或细粒度锁都行。关键有个容量监控——Memtable 写入数据量达到 4MB（可配）就标记为 immutable，不再接受新写，等后台刷盘。
 
-Go 标准库，go build 通过。先不做 WAL，只做内存结构。跳表的高度和概率参数用经典值就行。
+先不做 WAL，纯内存结构。go build 通过。

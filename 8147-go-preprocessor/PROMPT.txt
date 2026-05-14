@@ -1,3 +1,5 @@
+C 代码编译之前要先过预处理——#include 展开头文件、#define 做文本替换、#ifdef 条件编译。这个步骤独立于编译器，想用 Go 实现一个。
+
 做一个 C 风格的预处理器。C 代码在编译之前要经过预处理——展开 #include、替换 #define 宏、处理 #ifdef 条件编译。这个步骤虽然简单但非常重要，想用 Go 实现一遍来理解。
 
 处理的指令：#include "file.h" ——把指定文件的内容插入到当前位置（递归处理被包含文件里的指令）。#define NAME value ——定义宏，后续文本中的 NAME 替换为 value。#ifdef NAME / #ifndef NAME / #else / #endif ——条件编译，根据是否定义了某个宏来决定保留哪部分代码。#undef NAME ——取消宏定义。

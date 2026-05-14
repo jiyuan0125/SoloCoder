@@ -7,4 +7,4 @@
 问题 3：怎么实现？member、insert、delete、successor、predecessor、min、max。min/max 直接存，不用查。
 
 用 C 实现，U 取 16 或 64 做小规模测试。gcc 编译。验证所有操作的正确性。
-测试——U=16，插入 3,7,1,15,8。successor(3) 应返回 7，predecessor(8) 应返回 7。删除 7 后 successor(3) 应返回 8。
+U=16 的话，插入 3,7,1,15,8 后 successor(3) 应返回 7，predecessor(8) 应返回 7。删掉 7 再查 successor(3) 就变成 8 了。
