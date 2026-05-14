@@ -1,0 +1,12 @@
+用 Go 实现 LSM-Tree 的 Range Delete 功能。
+
+删除一段范围内的所有 key，不能逐个写 tombstone（太慢了）。Range Delete 写一条特殊的范围墓碑记录，读取和 compaction 时用它来跳过被删除的 key。
+
+功能：
+- DeleteRange(startKey, endKey) 写入范围墓碑
+- 范围墓碑持久化到 SSTable 的 meta 区域
+- 读取时检查 key 是否被某个范围墓碑覆盖，覆盖则返回 not found
+- Compaction 时用范围墓碑清理底层文件中已删除的 key
+- 支持范围墓碑的合并：相邻或重叠的范围墓碑合并为一条
+
+Go 标准库，go build 编译通过。范围墓碑本身也要带 sequence number 做 snapshot 隔离。

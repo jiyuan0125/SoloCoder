@@ -1,0 +1,5 @@
+实现一个 Slab 分配器，类似 Linux 内核里的那种。为固定大小的对象分配内存，避免频繁调用 malloc/free 产生碎片。
+
+维护多个 slab，每个 slab 包含若干固定大小的 object。支持 slab_alloc(size) 和 slab_free(ptr)。一个 slab 的 object 全部分配完后就新建一个 slab。空闲 object 用链表串起来管理。
+
+C 语言，gcc 编译。底层用 malloc 申请大块内存作为 slab。测试：反复分配和释放不同大小的对象，验证没有内存泄漏。

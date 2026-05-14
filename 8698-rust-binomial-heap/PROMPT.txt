@@ -1,0 +1,5 @@
+在学习各种堆数据结构，Binomial Heap 是可合并堆的基础之一。用 Rust 实现二项堆。
+
+二项堆是由一组二项树组成的森林，每个二项树 Bk 有 2^k 个节点。insert 就是创建 B0 然后和现有堆 merge。merge 时按度数合并度数相同的树。extract_min 找最小根节点，删除后把子树反序排列成新堆再 merge。
+
+支持 insert、extract_min、find_min、merge、decrease_key。cargo build 编译通过。

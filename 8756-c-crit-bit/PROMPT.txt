@@ -1,0 +1,4 @@
+用纯 C 实现一个 crit-bit tree（也叫 patricia trie），用来存字符串集合。
+crit-bit tree 的好处是查找只走关键位分支，不浪费空间存公共前缀，比普通 trie 省很多内存。
+支持 insert、delete、lookup、prefix_search（前缀搜索）四个操作。
+写个命令行工具：输入一堆单词建树，然后交互式查询单词是否存在，或者搜某个前缀下的所有词。gcc 能编就行。

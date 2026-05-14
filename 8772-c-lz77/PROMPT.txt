@@ -1,0 +1,4 @@
+帮我实现 LZ77 压缩算法，C 语言。
+LZ77 用滑动窗口来找重复出现的内容，用 (distance, length) 三元组替代重复数据。
+参数：窗口大小 32KB、lookahead buffer 256 字节。压缩输出用自定义的 bit 流格式，解压要能还原。
+命令行工具：lz77 compress file.txt file.lz77 和 lz77 decompress file.lz77 out.txt。压缩后解压要和原文完全一致。gcc 编译。

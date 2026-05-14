@@ -1,0 +1,11 @@
+Go 实现 LSM-Tree 的 Compaction 策略模块。
+
+Compaction 是 LSM-Tree 里最复杂的部分，负责合并多个 SSTable 文件，消除重复和 tombstone，降低读放大。不同策略适用于不同工作负载。
+
+需要实现两种策略：
+- Size-Tiered：同一层文件数量达到阈值就合并成下一层的一个大文件（Cassandra 用这种）
+- Leveled：每层按 key 范围分成多个有序不重叠的 SSTable，和上层+本层重叠文件一起合并（LevelDB 风格）
+- 支持配置每层放大倍数和文件数量阈值
+- Compaction 期间新写入不受影响
+
+Go 标准库，go build 通过。用模拟的 SSTable 文件元数据（包含 key range、size、level）来做测试就行，不需要真实文件 I/O。

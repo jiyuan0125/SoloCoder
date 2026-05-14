@@ -1,0 +1,5 @@
+帮我实现 Aho-Corasick 多模式匹配算法，C 语言。
+一次扫描文本，同时匹配多个模式串。杀毒软件、敏感词过滤都在用。
+先构建 Trie，然后在 Trie 上跑 BFS 建立 fail 指针和 output 链。匹配时沿着 fail 链收集所有命中的模式。
+支持 add_pattern(pattern)、build()、search(text) 返回所有 (pattern, position) 匹配。
+命令行：加载模式文件（每行一个），然后扫描输入文本，输出所有匹配。gcc 编译通过。

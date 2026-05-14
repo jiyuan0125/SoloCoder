@@ -1,0 +1,12 @@
+基于 Merkle Tree 做一个数据校验工具，重点是 proof 的生成和验证。Go 实现。
+
+场景：分布式文件系统中，客户端下载了一个文件分片，需要向其他节点验证这个分片确实是完整文件的一部分。
+
+实现：
+- 构建一棵 Merkle Tree，叶子节点是数据分片的哈希
+- GenerateProof(index) 返回第 index 个分片的 Merkle Proof
+- VerifyProof(leafHash, proof, rootHash) 验证该叶子是否在树中
+- 支持奇数个叶子的情况（最后一个节点复制一份凑偶数）
+- 批量验证：一次验证多个分片
+
+main 里模拟：4MB 文件切成 1KB 分片，建树后随机挑 10 个分片做 proof 验证。go build 通过，纯标准库。

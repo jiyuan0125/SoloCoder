@@ -1,0 +1,3 @@
+在学编译原理，想亲手写一个基于字节码的虚拟机。用 Python 实现一个小型字节码 VM：先设计一套字节码指令集（LOAD_CONST、STORE、BINARY_ADD、COMPARE、JUMP、CALL、RETURN 等），然后写一个简单表达式语言的前端（算术、变量、if/else、函数定义调用）编译到这套字节码，最后在 VM 上执行。
+
+要能看到反汇编的字节码输出。纯 Python 实现，python 能跑。

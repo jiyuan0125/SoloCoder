@@ -1,0 +1,3 @@
+Haskell 风格的解析器组合子写起来很优雅，想在 Python 里也这么干。实现一套解析器组合子库：提供基础组合子（char、string、regex、choice、sequence、many、many1、optional）、组合操作（map、bind、then、left/right）和错误处理（label、try_）。
+
+用这套组合子写一个能解析简单算术表达式和 JSON 的示例解析器。纯 Python 实现，python 能跑，代码风格要函数式一些。

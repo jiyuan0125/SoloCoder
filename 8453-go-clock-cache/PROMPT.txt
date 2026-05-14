@@ -1,0 +1,11 @@
+帮我实现一个 Clock（时钟）缓存算法，用 Go 写。
+
+Clock 是 LRU 的一种近似实现，比严格 LRU 开销低很多，用环形链表加引用位来模拟时钟指针扫描，在操作系统页面置换里很常见。
+
+具体要做：
+- 环形缓冲区存储缓存条目，每个条目有一个 referenced 标志位
+- Get 时标记 referenced=true，淘汰时指针扫过把 referenced=false 的踢掉
+- 支持 Put/Get/Delete，设置最大容量
+- 淘汰时如果遇到 referenced=true 的就清零跳过，继续扫下一个
+
+Go 标准库，go build 能过。考虑下并发场景加个读写锁。

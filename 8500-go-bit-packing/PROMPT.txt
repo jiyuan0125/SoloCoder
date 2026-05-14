@@ -1,0 +1,13 @@
+Go 实现 Bit Packing 压缩。
+
+Bit Packing 把固定宽度的整数打包成紧凑的 bit 流。比如 5 bit 的整数可以 8 个一组打包进 5 字节（40 bit），而不是 8 字节。常用在列式存储和向量化执行里。
+
+要求：
+- Pack(values []uint64, bitWidth int) → []byte：把整数序列按指定位宽打包
+- Unpack(data []byte, bitWidth int, count int) → []uint64：解包还原
+- 支持 1-64 bit 的任意位宽
+- 处理跨字节边界的 bit 拆分和合并
+- 批量处理：一次打包 32 或 64 个值为一个 block
+- 支持带差分编码的变体（SIMD-friendly format 可选）
+
+Go 标准库，go build 编译通过。位操作要小心字节序，统一用小端。写几个测试验证 pack-unpack 往返正确性。

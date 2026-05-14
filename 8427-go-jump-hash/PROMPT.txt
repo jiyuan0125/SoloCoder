@@ -1,0 +1,9 @@
+Jump Consistent Hash 是 Google 论文里的一个一致性哈希算法，不需要环，代码就几行但非常巧妙。用 Go 实现并封装成可用的库。
+
+要求：
+- JumpHash(key, numBuckets) 返回 key 应该分配到哪个桶（0 到 numBuckets-1）
+- 当桶数从 N 变成 N+1 时，只有 1/(N+1) 的 key 需要迁移
+- 分布要均匀：统计大量 key 的分配结果，每个桶的数量应该接近均匀
+- 不支持带权重的场景（这个算法本身就不支持）
+
+写个 main 做 benchmark：100 万个 key 分配到 100 个桶，统计均匀性。然后桶数从 100 变到 101，验证迁移比例。go build 通过。

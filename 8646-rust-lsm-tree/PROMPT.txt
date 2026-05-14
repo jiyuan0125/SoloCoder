@@ -1,0 +1,1 @@
+帮我用 Rust 实现一个简化版的 LSM-Tree 存储引擎。结构包括：Memtable（内存中的跳表或有序 Map）、WAL（写前日志）、SSTable 文件。写入流程：先写 WAL 再写 Memtable，Memtable 满了就刷成 SSTable。读取时先查 Memtable 再查各级 SSTable（从新到旧）。维护一个 Level 结构，每层有多个 SSTable。写个 demo 连续写入然后读取验证数据正确。cargo run 能看到读写结果。

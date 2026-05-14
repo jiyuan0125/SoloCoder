@@ -1,0 +1,4 @@
+用 C 实现 SSTable（Sorted String Table）的读写。
+SSTable 是 LSM 存储引擎中磁盘上的数据文件格式，内容是排序好的 key-value 对，附带索引区。
+我要的功能：创建 sstable（接收排序好的 kv 对，写文件）、加载索引到内存、按 key 查找（先用索引二分定位 block，再读取对应 block）、merge 多个 sstable（归并排序去重）。
+文件格式自己设计，索引区放在文件尾部方便加载。写个命令行工具测试创建、查询、合并。gcc 编译。

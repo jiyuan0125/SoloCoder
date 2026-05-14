@@ -1,0 +1,4 @@
+用 C 实现一个 Posting List（倒排记录表）的压缩存储和合并。
+搜索引擎里每个 term 对应一个 posting list（文档 ID 的有序列表），存成连续数组太浪费空间了。
+要做的事：用 delta 编码 + varint 把 posting list 压缩存储，解压还原。然后实现两个 posting list 的 AND 和 OR 合并（类似归并）。
+写个命令行 demo：构建若干 posting list，压缩后看空间节省多少，合并查询返回结果。gcc 编译通过。

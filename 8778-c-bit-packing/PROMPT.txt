@@ -1,0 +1,4 @@
+帮我实现 Bit Packing 算法，C 语言。
+列式存储里经常用 bit packing 来压缩整数数组：如果所有值都在 [0, 63] 范围内，每个数只需要 6 bits 存，比 int32 省很多。
+输入一个 int32 数组和一个 bits 参数（比如 5 表示每个值只用 5 位），紧凑地打包成字节数组，也能解包还原。
+需要处理跨字节对齐的问题。接口：pack(input, len, bits, output) 和 unpack(packed, len, bits, output)。写测试验证各种 bits 值。gcc 编译。

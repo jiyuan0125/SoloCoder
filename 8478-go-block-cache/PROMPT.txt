@@ -1,0 +1,12 @@
+Go 实现一个 Block Cache，给 SSTable 读取加速用。
+
+读取 SSTable 时频繁读磁盘太慢，需要把热点 data block 缓存在内存里。Block Cache 通常用 LRU 策略，key 是 (file_id, block_offset) 的组合。
+
+需要：
+- LRU 缓存，key 为 fileID + blockOffset 的组合
+- Get 和 Put 接口，缓存的是反序列化后的 block 对象
+- 支持配置最大内存占用（不是条目数，是字节数）
+- 并发安全，高并发读场景下性能要好
+- 统计命中率和驱逐次数
+
+Go 标准库，go build 通过。内存统计需要维护一个近似值，条目放入时记录大小。用分片锁减少锁竞争。

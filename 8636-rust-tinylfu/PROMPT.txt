@@ -1,0 +1,1 @@
+实现 TinyLFU 缓存准入策略，Rust 版。TinyLFU 用 Count-Min Sketch 记录历史访问频率，新元素只有在频率高于即将被淘汰的元素时才允许进入缓存，这样能抗住扫描 workload。结合 Window 策略给新元素一个短暂的窗口期。写个简单的缓存结构，支持 put 和 get，内部用 TinyLFU 决定是否接纳。demo 里跑一组访问序列，打印缓存命中率和淘汰记录。cargo run 能看到结果。

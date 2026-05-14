@@ -1,0 +1,9 @@
+路由匹配场景需要一棵基数树（Radix Tree / Patricia Trie），比如 "/api/user/:id/profile" 这种路径。用 Go 实现一个支持路径参数的 Radix Tree。
+
+要做的事：
+- Insert 插入路径和对应的 handler
+- Lookup 根据请求路径找到匹配的 handler，同时提取路径参数（如 :id → 实际值）
+- 支持通配符 * 匹配剩余路径
+- 查找时遇到公共前缀要正确拆分节点
+
+写个 main 注册一组路由规则，然后测试各种 URL 的匹配结果，把提取到的参数打印出来。go build 通过，只用标准库。

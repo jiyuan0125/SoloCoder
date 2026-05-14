@@ -1,0 +1,12 @@
+帮我用 Go 实现 WAL（Write-Ahead Log）的写入器。
+
+WAL 是数据库保证持久性的关键组件，每次写操作先追加写日志文件，崩溃后可以重放恢复。LevelDB 的 .log 文件就是 WAL 格式。
+
+要做的：
+- 日志记录格式：CRC32 校验 + 长度 + 类型（full/first/middle/last）+ 数据
+- 支持大记录分块写入（block 32KB，记录跨 block 用类型标记拼接）
+- Sync 写入：每次 Write 后可选 fsync 刷盘
+- 写满一个文件后自动滚动到新文件
+- 提供 Write(key, value, opType) 接口
+
+Go 标准库，go build 能编译通过。CRC32 用标准库的包。注意 block 对齐和 padding。

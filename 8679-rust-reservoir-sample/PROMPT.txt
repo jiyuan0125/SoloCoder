@@ -1,0 +1,5 @@
+在做日志分析的时候需要从海量请求流里均匀采样，但数据量太大没法先存下来再随机选。用 Rust 实现蓄水池采样算法（Reservoir Sampling）。
+
+从数据流中维护一个固定大小 k 的样本池，每个元素被选入池子的概率都是 k/n（n 是总元素数）。实现 Algorithm R（简单版）和 Algorithm L（更高效版）。数据流走完后，池子里就是一个无偏的均匀样本。
+
+支持从文件逐行读取、采样后输出。`reservoir-sample --k 100 bigfile.txt`。cargo build 通过。

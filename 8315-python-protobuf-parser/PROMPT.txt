@@ -1,0 +1,3 @@
+做微服务通信调试的时候需要检查 protobuf 编码的原始数据，但手头没有 .proto 文件。用 Python 写一个 Protobuf 二进制解析器，能根据 wire format 规范解析 varint、定长、长度分隔等编码类型，自动推断字段编号和类型。
+
+支持嵌套 message 和 repeated 字段的解析。输出人类可读的结构化文本。纯 Python 实现，不依赖 protobuf 库。python 能跑，命令行读二进制文件打印解析结果。

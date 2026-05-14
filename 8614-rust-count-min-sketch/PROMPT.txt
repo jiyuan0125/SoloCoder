@@ -1,0 +1,1 @@
+用 Rust 实现一个 Count-Min Sketch 概率数据结构。我想拿它来做流式数据的热点统计，比如统计 API 请求中每个 endpoint 的调用次数，但数据量太大存不下精确计数。支持 add（给某个 key 的计数加一）、estimate（查询某个 key 的估计频次）。用户能指定宽度和深度，或者根据期望误差和置信度自动算。main 里模拟一批请求流，打印 top-K 热点 key。cargo run 能跑起来。

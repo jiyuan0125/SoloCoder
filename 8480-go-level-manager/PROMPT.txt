@@ -1,0 +1,13 @@
+帮我用 Go 实现 LSM-Tree 的 Level Manager。
+
+管理 LSM-Tree 中多个层级的 SSTable 文件，跟踪每层的文件列表、key range 和大小。负责文件的创建、删除和层间移动。Level Manager 是 compaction 和读取的基础。
+
+功能：
+- 维护 L0-Ln 的层级结构，每层一个文件列表
+- 添加新 SSTable 到指定层（flush 时加到 L0）
+- 查询某层中和指定 key range 有重叠的文件
+- 文件层级移动：compaction 后从源层删除、目标层添加
+- 统计每层文件数量和总大小
+- L0 文件 key range 可以重叠，L1+ 文件 key range 不重叠
+
+Go 标准库，go build 编译通过。key range 重叠检测要高效，可以用区间树或简单遍历。

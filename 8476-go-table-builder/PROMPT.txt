@@ -1,0 +1,13 @@
+用 Go 实现 SSTable 的 Table Builder。
+
+Table Builder 负责把有序的 key-value 对依次写入 SSTable 文件，组织成 block 结构，生成索引和 bloom filter，最后写入 footer。这是 LSM-Tree 刷盘和 compaction 的核心写入路径。
+
+需要：
+- Add(key, value) 接口，key 必须有序写入
+- 数据块满 4KB 时 finish 当前 block，开始新 block
+- 每个 finish 的 data block 生成索引条目和 bloom filter 段
+- 所有数据写完后，依次写入 meta block、index block、footer
+- Footer 包含 index block 和 meta index block 的位置信息
+- 支持可选的 block 压缩（snappy 或不压缩）
+
+Go 标准库，go build 通过。先不接压缩库，支持 no-compression 就行。

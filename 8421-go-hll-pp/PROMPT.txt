@@ -1,0 +1,9 @@
+HyperLogLog++ 是 Google 对 HyperLogLog 的改进版，精度更高，尤其在小基数情况下。用 Go 实现。
+
+相比标准 HLL，要实现这些改进：
+- 使用 64 位哈希（而不是 32 位），消除大基数的偏差
+- 小基数时使用 empirically determined 的修正表
+- 支持稀疏表示（sparse representation）：当寄存器大部分为 0 时用稀疏编码节省内存
+- 数据量变大后自动切换到密集表示
+
+接口和标准 HLL 一样：Add、Count、Merge。main 里对比标准 HLL 和 HLL++ 在 1000 到 1000 万不同基数下的误差。go build 通过。

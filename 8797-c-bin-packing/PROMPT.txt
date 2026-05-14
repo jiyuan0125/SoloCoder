@@ -1,0 +1,5 @@
+实现装箱问题（Bin Packing）的几种算法，C 语言。
+问题：给定 n 个物品（各有大小）和箱子容量，最少需要几个箱子装完？
+实现 First Fit、First Fit Decreasing、Best Fit 三种贪心策略。FFD 先按大小降序排列再装，效果通常最好。
+同时实现一个简单的近似比统计：和最优解（用整数规划或穷举小规模实例）对比。
+命令行：binpack capacity items.txt，输出每种策略用了几个箱子。gcc 编译通过。

@@ -1,0 +1,12 @@
+Go 实现 SSTable 的 Meta Block 管理。
+
+SSTable 文件中除了数据块和索引块，还有元数据块（meta block），存储 bloom filter、统计信息、压缩字典等附加数据。需要统一的读写接口来管理这些 meta block。
+
+要做的：
+- Meta Block 的通用容器格式：type tag + length + data
+- 支持注册不同类型的 meta block（bloom filter、stats、properties 等）
+- 写入时按类型顺序追加到 SSTable 文件的 meta 区域
+- 读取时按 type tag 索引，快速定位和加载特定 meta block
+- Footer 中记录 meta index block 的 offset
+
+Go 标准库，go build 编译通过。参考 LevelDB 的 table format 设计。

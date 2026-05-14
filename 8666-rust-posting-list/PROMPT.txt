@@ -1,0 +1,5 @@
+搜索引擎里倒排索引的 posting list 如果用朴素数组存太占空间了，而且求交集很慢。用 Rust 实现一个高性能的 Posting List 数据结构。
+
+要支持动态添加文档 ID（有序去重），两个 Posting List 之间的高效 AND、OR、NOT 运算（用跳表或二分跳过来加速）。对连续的 docid 范围要做游程编码压缩。提供迭代器接口可以遍历所有 docid。
+
+ Posting List 要能在内存里序列化和反序列化。cargo build 通过。

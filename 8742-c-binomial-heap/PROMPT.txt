@@ -1,0 +1,5 @@
+帮我实现一个二项堆（Binomial Heap），支持高效合并两个堆。用在需要频繁 merge 的优先队列场景。
+
+基本操作：make_heap、insert、find_min、extract_min、merge（union）。二项树满足堆性质，合并时同度数的树链接。每个操作的时间复杂度要对——merge 是 O(log n)。
+
+C 语言，gcc 编译。测试：建两个堆各插入一些元素，合并后 extract_min，验证输出有序。

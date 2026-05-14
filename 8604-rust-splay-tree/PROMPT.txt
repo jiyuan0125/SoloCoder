@@ -1,0 +1,1 @@
+帮我搞个 Splay Tree 的 Rust 实现。这个结构适合做缓存淘汰，因为最近访问的元素会被提到根部。实现基本的 insert、search、delete，每次操作完做 splay 把目标节点旋到根。写个 CLI 小程序，从命令行接受一系列操作指令（比如 "insert 5" "find 3" "delete 7"），然后输出当前树的先序遍历。cargo run -- "insert 1" "insert 2" "find 1" 这样能跑起来。

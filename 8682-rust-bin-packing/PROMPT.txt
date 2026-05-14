@@ -1,0 +1,5 @@
+服务器部署的时候要把一批服务分配到尽量少的机器上，每个服务占不同资源。用 Rust 实现装箱问题（Bin Packing）的几种近似算法。
+
+实现 First Fit、Best Fit、First Fit Decreasing 这三种启发式算法。输入一组物品大小和箱子容量，输出需要多少个箱子以及每个箱子里装了哪些物品。要能和最优解对比（可以通过暴力搜索小规模实例验证）。
+
+`bin-packing ffd items.txt --capacity 100`。cargo build 编译通过。

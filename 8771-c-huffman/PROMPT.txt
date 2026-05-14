@@ -1,0 +1,4 @@
+用纯 C 实现哈夫曼编码的压缩和解压。
+先统计字节频率，构建哈夫曼树，生成编码表。压缩时按编码表输出 bit 流，解压时按树还原。
+处理任意二进制文件。命令行：huffman compress input.bin output.huf、huffman decompress output.huf restored.bin。
+解压后的文件要和原文件字节一致。用位操作来读写 bit 流，注意最后一个字节可能不满 8 位要 padding。gcc 编译。

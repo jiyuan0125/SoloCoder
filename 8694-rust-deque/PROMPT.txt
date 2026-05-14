@@ -1,0 +1,5 @@
+需要一个两端都能高效插入和删除的队列，Vec 的头部操作太慢了。用 Rust 实现一个双端队列（Deque）。
+
+用环形数组实现，支持 push_front、push_back、pop_front、pop_back 四个操作，均摊 O(1)。容量不够时自动扩容，扩容策略要合理（比如翻倍）。实现 Iterator trait 支持正反遍历。能处理空队列 pop 时的情况。
+
+提供基本功能测试，验证两头插入删除的正确性。cargo build 编译通过。

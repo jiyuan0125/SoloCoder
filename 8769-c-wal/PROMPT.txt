@@ -1,0 +1,5 @@
+帮我写一个 WAL（Write-Ahead Log）模块，C 实现。
+数据库系统为了保证崩溃恢复，写数据之前要先把操作记录到 WAL 文件里。崩溃后重放 WAL 就能恢复到一致状态。
+WAL 的格式：每条记录包含 length、CRC32 校验、操作类型（PUT/DELETE）、key、value。
+支持 append_record、recover（从头读 WAL 并回放）。写满一定大小后滚动到新文件。
+写个 demo 程序：写入若干条记录，模拟崩溃（不正常关闭），再启动时从 WAL 恢复。gcc 编译。

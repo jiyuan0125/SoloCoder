@@ -1,0 +1,12 @@
+用 Go 写一个基于 WAL 的崩溃恢复模块。
+
+数据库启动时读取 WAL 日志文件，重放所有成功写入的记录，恢复 Memtable 到崩溃前的状态。这是 LSM-Tree 存储引擎启动流程的核心部分。
+
+需要实现：
+- 读取一个或多个 WAL 文件，按顺序重放记录
+- 忽略不完整或 CRC 校验失败的记录（可能是崩溃时写的半截数据）
+- 重放结果构建出一个完整的 Memtable
+- 支持检查点（checkpoint）：记录已持久化的 sequence number，从检查点之后开始重放
+- 恢复完成后返回重建的 Memtable 和最后成功的 sequence number
+
+Go 标准库，go build 编译通过。可以先实现一个简单的 WAL reader + memtable 重建的流程。

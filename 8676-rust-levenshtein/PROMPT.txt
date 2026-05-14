@@ -1,0 +1,5 @@
+在做地址清洗，需要比较两条地址记录是不是同一个地方。Levenshtein 距离是最基本的相似度度量。用 Rust 实现 Levenshtein 距离计算。
+
+标准 Levenshtein 距离允许插入、删除、替换三种操作，每步成本都是 1。要提供距离值和归一化相似度（1 - distance/max_len）。支持 Unicode 字符串，不能按字节切分。可以加一个阈值参数，超过阈值提前返回，不用算完整个 DP 表。
+
+`levenshtein "北京市朝阳区" "北京朝阳区"`。cargo build 编译通过。

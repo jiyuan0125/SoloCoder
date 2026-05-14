@@ -1,0 +1,9 @@
+写一个 Go 的 RLE（Run-Length Encoding）位图。有些场景位图数据是高度有序的，比如 ID 从 1 递增到 100 万，用 RLE 压缩能省很多空间。
+
+核心功能：
+- Add/Delete/Contains 基本操作
+- 压缩存储：连续的位用 [start, end] 对表示
+- 支持 AND、OR、XOR 等位图间的集合运算
+- 序列化到字节流和从字节流恢复
+
+Go 标准库就够了，go build 通过。注意处理空位图和超大值的情况。

@@ -1,0 +1,5 @@
+实现一个斐波那契堆（Fibonacci Heap），理论上 extract_min 是 O(log n) 均摊，其他操作都是 O(1) 均摊。用在 Dijkstra 优化等场景。
+
+支持 insert、find_min、extract_min、decrease_key、merge。用双循环链表连接兄弟节点，用 mark 标记是否失去过孩子。extract_min 时合并同度数的树。delete 可以通过 decrease_key + extract_min 实现。
+
+C 语言，gcc 编译。测试 insert 和 extract_min 的正确性，验证提取顺序是从大到小。

@@ -1,0 +1,12 @@
+用 Go 实现一个 Memtable，就是 LSM-Tree 里内存中的有序 key-value 表。
+
+Memtable 是写入路径的第一站，数据先写到内存里的有序结构（通常用跳表），写满后刷到磁盘变成 SSTable。这是 LevelDB/RocksDB 的核心组件之一。
+
+要求实现：
+- 基于 SkipList 的有序 KV 存储，支持并发读写
+- Put/Get/Delete/Scan 操作，Scan 支持范围查询（startKey, endKey）
+- 记录写入数据量大小，达到阈值标记为不可变（immutable）
+- 支持 Snapshot 读：读操作看到的是某个时刻的一致性视图
+- 操作日志可选（先不做 WAL，只做内存结构）
+
+Go 标准库，go build 通过。跳表的高度和概率参数用经典值就行。

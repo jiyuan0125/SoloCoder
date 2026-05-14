@@ -1,0 +1,9 @@
+我需要一个轻量级的位集合实现，用 Go 写。跟 Roaring Bitmap 那种复杂方案不同，Concise Bitset 用更简单的 RLE 变体来压缩 0/1 序列。
+
+主要功能：
+- 设置和清除指定位
+- 批量设置某个范围的所有位
+- 支持 AND、OR、NOT 位运算
+- 能快速统计有多少位被设置了（population count）
+
+Go 标准库，go build 编译通过。稀疏数据场景下要比朴素位数组省内存。

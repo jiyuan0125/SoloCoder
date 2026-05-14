@@ -1,0 +1,4 @@
+用 C 实现一个 LSM-Tree（Log-Structured Merge Tree），一个简易的 KV 存储引擎。
+LSM-Tree 是 RocksDB、LevelDB 的核心数据结构，写性能很高：写操作先到内存的 memtable，满了之后刷成磁盘上的 sstable，后台定期合并。
+我需要 put(key, value)、get(key)、delete(key)、scan(start, end) 四个操作。内存部分用跳表，磁盘 sstable 用简单有序文件。
+整个程序编译成一个命令行工具，数据存在指定目录下。gcc 编译。

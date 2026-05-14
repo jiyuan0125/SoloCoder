@@ -1,0 +1,3 @@
+后台页面需要生成邮件和通知文案，写一个轻量模板引擎。支持变量插值 {{ name }}、条件块 {% if score > 90 %}优秀{% endif %}、循环 {% for item in list %}、模板继承（{% extends "base.html" %} 和 {% block content %}）和自定义过滤器（{{ date | format_date }}）。
+
+模板语法错误要指明行号和原因。纯 Python 实现，不用 Jinja2。python 能跑起来，命令行传入模板文件和数据 JSON 输出渲染结果。

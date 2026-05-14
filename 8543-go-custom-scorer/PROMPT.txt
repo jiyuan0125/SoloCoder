@@ -1,0 +1,9 @@
+用 Go 实现自定义评分框架（Custom Scorer）。搜索场景多种多样，有时 BM25 不够用，需要让用户自定义评分逻辑。
+
+设计要求：
+- 定义 Scorer 接口：Score(docID, query) float64
+- 内置几种评分实现：常数评分、字段值评分（如按 popularity 分数排序）、衰减评分（时间衰减）
+- 支持评分组合：多个 Scorer 的得分可以用加权求和、相乘等方式组合
+- 支持函数查询：基于文档的字段值计算评分（如 log(popularity) + freshness）
+
+Go 标准库，go build 通过。接口设计要灵活，能轻松扩展新的评分策略。

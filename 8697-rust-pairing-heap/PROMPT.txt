@@ -1,0 +1,5 @@
+Pairing Heap 实现比 Fibonacci Heap 简单很多，实际性能也不错，想试试。用 Rust 实现 Pairing Heap。
+
+操作：insert（O(1)）、find_min（O(1)）、merge（O(1)）、extract_min（均摊 O(log n)）、decrease_key。核心是 two-pass merge：extract_min 后把子树列表从前到后两两配对合并，再从后往前合并结果。decrease_key 用切下来再合并的方式实现。
+
+支持泛型，能用于 Dijkstra 或其他贪心算法。cargo build 编译通过。

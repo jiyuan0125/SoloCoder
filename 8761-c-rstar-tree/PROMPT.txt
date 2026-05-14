@@ -1,0 +1,4 @@
+用 C 实现一棵 R*-Tree，R-Tree 的改进版本。
+R* 相比普通 R-Tree 主要改进了插入策略：强制重插和面积+重叠双重优化，查询性能好很多。
+支持 insert(rect, id)、delete、range_search、nearest_k(query_point, k)。重点关注 choose_subtree 和 split 算法的实现。
+随机插入大量矩形后验证查询效率，和暴力遍历对比一下速度。gcc 编译，纯 C 标准库。

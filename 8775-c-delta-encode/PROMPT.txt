@@ -1,0 +1,4 @@
+用 C 写一个 Delta Encoding（增量编码）模块。
+时序数据、版本号序列这类数据相邻值差距很小，存差值比存原值省空间多了。
+支持 encode(int array, len) 输出差值数组，decode(delta_array, len, base_value) 还原。再提供一个 zigzag 编码函数处理有符号整数。
+delta 编码后的数据可以配合 varint 进一步压缩。写个测试验证各种序列（递增、递减、随机）的正确性。gcc 编译。

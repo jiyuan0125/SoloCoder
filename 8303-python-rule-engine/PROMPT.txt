@@ -1,0 +1,3 @@
+业务侧经常要加各种风控规则，硬编码太麻烦了。帮我用 Python 写一个规则引擎，支持用类自然语言定义规则（比如 "when amount > 10000 and risk_score < 60 then reject"），能对输入的事实（fact）字典批量求值，返回匹配的规则列表和执行动作。
+
+规则之间支持 AND/OR/NOT 组合，优先级排序。遇到规则冲突要能检测出来。纯 Python，python 能跑。

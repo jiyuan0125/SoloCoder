@@ -1,0 +1,4 @@
+用 C 写一个 Block Cache，LSM 存储引擎里的磁盘块缓存。
+从 sstable 读数据时先查缓存，命中就免一次磁盘 IO。用 LRU 淘汰策略，缓存粒度是 4KB 的 block。
+支持 get(block_id) 和 put(block_id, data)。缓存容量可配置，满了淘汰最久未用的 block。
+另外加个简单的命中率统计（hit/miss/total）。hash 表 + 双向链表实现 LRU。写个测试程序验证淘汰逻辑和命中统计。gcc 编译。

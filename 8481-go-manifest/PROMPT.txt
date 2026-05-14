@@ -1,0 +1,12 @@
+Go 实现 LSM-Tree 的 Manifest 文件管理。
+
+Manifest 记录 LSM-Tree 的状态变更历史：哪个 SSTable 被创建、删除，compaction 完成了哪些文件。相当于数据库的"数据库"，crash recovery 时靠它重建 level state。
+
+要做：
+- Manifest 记录格式：record type (ADD/DELETE) + level + file metadata
+- 追加写入：每次状态变更追加一条记录到 manifest 文件
+- Checkpoint：定期把当前完整状态快照写入，加速恢复
+- 恢复：读取 manifest，从最近的 checkpoint 开始重放记录，重建完整层级状态
+- 文件滚动：manifest 文件太大时创建新文件
+
+Go 标准库，go build 通过。记录格式参考 LevelDB 的 log format，带 CRC 校验。

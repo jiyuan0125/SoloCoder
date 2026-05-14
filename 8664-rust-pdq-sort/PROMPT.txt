@@ -1,0 +1,5 @@
+Rust 标准库的 sort 不够快，想试试 pdqsort 这个混合排序算法。帮我用 Rust 实现一个 pattern-defeating quicksort。
+
+pdqsort 的核心是在快速排序基础上，检测并处理一些特定模式（比如已经有序、完全逆序、只有少数元素不在位），遇到这些情况切换到插入排序或堆排序。要保证最坏情况 O(n log n)，最好情况接近 O(n)。
+
+实现为一个泛型排序函数，可以接受自定义比较器。cargo build 编译通过。

@@ -1,0 +1,10 @@
+区块链项目里需要生成 Merkle Tree 来校验数据完整性。用 Go 实现一个通用的 Merkle Tree。
+
+功能点：
+- 给定一组数据块（[]byte 切片），构建 Merkle Tree，每两个叶子节点的 hash 合并成父节点
+- 支持 SHA-256 作为默认哈希算法，也可以传入自定义哈希函数
+- 能输出根哈希（Merkle Root）
+- 支持生成某个数据块的 Merkle Proof（从叶子到根的路径上的兄弟节点哈希列表）
+- 验证函数：给定数据块、proof 和 root hash，验证数据块确实属于这棵树
+
+写个 main 演示：构造 8 个数据块的 Merkle Tree，生成某个叶子的 proof 并验证。go build 通过。

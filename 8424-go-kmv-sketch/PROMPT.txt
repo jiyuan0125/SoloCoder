@@ -1,0 +1,10 @@
+KMV（K-Minimum Values）是一种基数估计 sketch，原理是只保留哈希值最小的 K 个值来估计不同元素的数量。用 Go 实现一个 KMV Sketch。
+
+功能：
+- Add(elem) 添加元素，计算哈希值后决定是否保留
+- Estimate() 返回基数估计值
+- Merge(other) 合并另一个 KMV Sketch（保留两个中最小的 K 个值）
+- 支持配置 K 的大小
+- 能计算估计的标准误差
+
+main 里测试：添加 100 万个不同元素，看估计精度。然后创建两个 KMV 各加 50 万个元素，合并后估计值和实际并集基数对比。go build 通过。

@@ -1,0 +1,4 @@
+用 C 实现 Introselect 算法。
+Introselect 是 quickselect 的改进：先用快排式的分区，但监测递归深度，如果太深（说明运气差 pivot 总是不好），就切换到 median-of-medians 保证最坏 O(n)。
+这算法是 C++ STL 的 nth_element 背后的思路。
+实现时追踪递归深度限制（2*ceil(log2(n))），超限后切到确定的 BFPRT 选择算法。测试：随机数组验证每次选出来的第 k 小确实正确。gcc 编译。

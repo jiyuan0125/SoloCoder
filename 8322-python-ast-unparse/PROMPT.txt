@@ -1,0 +1,3 @@
+做一个代码生成器需要把修改过的 Python AST 转回源代码。Python 自带的 ast.unparse 不够用，想自己实现一个更可控的 AST 反解析器。能处理所有常见节点：函数、类、import、赋值、表达式、装饰器、async、类型注解和 f-string。
+
+格式化输出要遵循 PEP 8 缩进和空格规范。能保留注释（通过特殊标记节点）就更好了。纯 Python 实现，python 能跑。

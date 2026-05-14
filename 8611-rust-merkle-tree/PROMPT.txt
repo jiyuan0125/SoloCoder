@@ -1,0 +1,1 @@
+用 Rust 实现一个 Merkle Tree（默克尔树）。背景是想验证一批数据文件有没有被篡改，类似 Git 或区块链里那种哈希校验。把一组数据块（字符串或字节）作为叶子节点，两两哈希往上算，最终得到一个 root hash。支持构建树、获取 root hash、生成某个叶子节点的 Merkle proof、验证 proof 是否正确。用 SHA-256 做哈希。main 里跑个 demo 证明验证逻辑正确。cargo run 能看到结果。

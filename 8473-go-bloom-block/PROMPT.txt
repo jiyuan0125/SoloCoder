@@ -1,0 +1,12 @@
+Go 实现 SSTable 中的 Bloom Filter 块。
+
+Bloom Filter 块放在 SSTable 文件末尾，用来快速判断一个 key 是否可能存在于某个数据块中，避免不必要的磁盘读取。每个数据块对应一段 bloom filter 位图。
+
+具体要求：
+- 标准 Bloom Filter：多个哈希函数 + 位数组
+- 支持按 key 前缀分组的分段 bloom filter（每个数据块一段）
+- 构建：写入 SSTable 时收集每个 block 的 key，生成对应的 bloom filter
+- 查询：给定 key，先定位 block 再检查 bloom filter，可能误报但不漏报
+- 支持序列化/反序列化到字节流
+
+Go 标准库，go build 通过。哈希函数用 murmur 或者简单的混合哈希就行，误报率按 1% 来配置位数组大小。

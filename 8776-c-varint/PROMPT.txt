@@ -1,0 +1,4 @@
+帮我用 C 实现 Varint 编解码。
+Protocol Buffers、LevelDB 都用 varint 来紧凑地存整数：每个字节用最高位表示"还有没有后续字节"，低 7 位是数据。
+要支持编码和解码 uint32、uint64。再实现 signed varint（zigzag 编码：把有符号数映射成无符号数，小绝对值的数编码更短）。
+提供 encode/decode 函数和简单的 benchmark，对比 varint 和定长编码在不同数值范围下的字节数。gcc 编译。

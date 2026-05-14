@@ -1,0 +1,3 @@
+想自己实现一个 Jinja2 风格的模板引擎来学习编译原理。支持 Jinja2 的核心语法：{{ expr }} 输出、{% if/elif/else %} 条件、{% for %} 循环（含 loop 变量）、{% set %} 赋值、{% include %} 和 {% macro %} 宏定义调用。
+
+表达式求值要支持属性访问（obj.key）、方法调用（str.upper()）和算术运算。模板编译错误要有行号提示。纯 Python 实现，python 能跑。

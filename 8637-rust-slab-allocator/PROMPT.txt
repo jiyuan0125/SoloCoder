@@ -1,0 +1,1 @@
+用 Rust 写一个 Slab 分配器。场景是在高性能服务器里管理固定大小对象的内存池。初始化时分配一大块内存，然后分成多个相同大小的 slot，支持 allocate 分配一个 slot 和 deallocate 释放一个 slot 回收再用。用一个空闲链表或者 bitmap 跟踪哪些 slot 可用。用户可以指定 slot 大小和总数量。写个 demo 分配一批对象，释放几个，再分配，验证复用了之前释放的 slot。cargo run 能跑通。

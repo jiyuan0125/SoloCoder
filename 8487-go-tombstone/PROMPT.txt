@@ -1,0 +1,12 @@
+Go 实现 LSM-Tree 中的 Tombstone 管理。
+
+Tombstone（墓碑）是 LSM-Tree 里删除操作的标记，删除不是真的删数据，而是写一条 tombstone 记录。Compaction 时遇到 tombstone 才真正清理底层的旧版本数据。
+
+需要：
+- Tombstone 条目格式：key + sequence number + type (DELETE/RANGE_DELETE/SINGLE_DELETE)
+- 写入时和普通 Put 走同一路径（WAL → Memtable → SSTable）
+- 读取时遇到 tombstone 返回 key not found 而不是把 tombstone 值返回
+- Compaction 时 tombstone 清理策略：如果确认更底层没有同 key 数据就可以丢掉 tombstone
+- 统计 tombstone 数量和占用空间
+
+Go 标准库，go build 通过。SINGLE_DELETE 是 RocksDB 的优化：只删一次就清理，不保留 tombstone。

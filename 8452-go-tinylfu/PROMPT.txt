@@ -1,0 +1,11 @@
+用 Go 写一个 TinyLFU 缓存策略的实现。
+
+TinyLFU 是一种空间高效的准入策略，用 Count-Min Sketch 估计元素频率来决定是否让新元素进入缓存，比传统 LRU 在各种工作负载下命中率都更高。
+
+需要实现：
+- Count-Min Sketch 频率计数器，支持 add 和 estimate 操作
+- 基于频率的门控机制：新元素只有在频率超过被淘汰元素时才准入
+- 维护一个主缓存（SLRU 或 Windowed），配合 TinyLFU 准入策略
+- 支持设定容量，提供 Get/Put 接口
+
+纯 Go 标准库实现，go build 通过。Count-Min Sketch 的衰减机制也要考虑到，否则老元素的频率会一直很高。

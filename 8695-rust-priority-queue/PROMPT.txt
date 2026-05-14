@@ -1,0 +1,5 @@
+在做一个任务调度器，需要按优先级取出任务。用 Rust 实现一个优先队列（Priority Queue）。
+
+基于二叉堆实现，支持 insert 和 extract_max（或 extract_min）操作，都是 O(log n)。要能在创建时指定大顶堆还是小顶堆。支持从一个数组原地建堆（heapify，O(n) 时间）。提供 peek 操作看堆顶但不移除。
+
+支持泛型，只要元素实现了 Ord trait 就能用。cargo build 编译通过。

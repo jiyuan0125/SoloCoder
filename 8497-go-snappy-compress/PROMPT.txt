@@ -1,0 +1,12 @@
+用 Go 实现一个简化版的 Snappy 压缩算法。
+
+Snappy 是 Google 开发的高速压缩算法，追求压缩解压速度而不是极致压缩率。广泛用在 RPC、日志传输、数据库存储中。
+
+要实现核心部分：
+- Literal 模式：不压缩的字节直接输出
+- Copy 模式：引用前面出现过的数据块，用 (offset, length) 表示
+- 匹配查找：用哈希表快速定位候选位置
+- 输出格式：tag byte 区分 literal 和 copy，copy 又分 1-byte/2-byte/4-byte offset
+- 解码：解析 tag byte，执行 literal 复制或 copy 引用
+
+Go 标准库，go build 通过。不需要实现完整格式规范，核心的 literal + copy 模式就行。匹配最小长度 4 字节。

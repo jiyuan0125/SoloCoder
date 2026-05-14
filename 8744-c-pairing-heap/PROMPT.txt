@@ -1,0 +1,5 @@
+写一个配对堆（Pairing Heap），结构简单但实际性能很好。合并操作是 O(1)。
+
+支持 insert、find_min、extract_min、merge、decrease_key。用左孩子右兄弟的表示法。extract_min 时把所有子树两两配对合并（two-pass merge）。decrease_key 直接切断子树挂到根列表。
+
+C 语言，gcc 编译。测试：插入随机数据，extract_min 验证有序，decrease_key 后验证堆性质保持。

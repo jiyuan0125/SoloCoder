@@ -1,0 +1,5 @@
+Git 用的 diff 算法是 Myers diff，它找的是最短编辑脚本（SES）。用 Rust 实现 Myers diff 算法。
+
+Myers 算法的核心是在 edit graph 上用 BFS 找最短路径，时间复杂度 O((M+N)D)，D 是最小编辑距离。要输出最短编辑脚本（哪些行删、哪些行增），同时能生成 unified diff 格式的输出。对大文件要能控制性能。
+
+`myers-diff file_a.txt file_b.txt` 输出差异。cargo build 编译通过。

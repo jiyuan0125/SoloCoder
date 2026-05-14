@@ -1,0 +1,12 @@
+用 Go 写 SSTable 的 Data Block 读写模块。
+
+Data Block 是 SSTable 文件中实际存储 key-value 数据的部分，内部用前缀压缩（prefix compression）+ restart point 来节省空间。LevelDB 的 block 格式就是这样。
+
+功能：
+- BlockBuilder：按有序 key 写入 entry，用 restart interval 做前缀压缩
+- BlockReader：从字节流重建 block，支持二分查找和顺序迭代
+- Restart point 数组放在 block 末尾，用于二分查找的起点
+- entry 格式：shared prefix length + unshared key length + value length + key suffix + value
+- 默认 restart interval = 16，每 16 个 entry 完整存一次 key
+
+Go 标准库，go build 通过。block 大小默认 4KB，满了就切新 block。注意编码用小端序。

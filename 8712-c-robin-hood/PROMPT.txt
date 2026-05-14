@@ -1,0 +1,5 @@
+实现一个 Robin Hood 哈希表，用开放寻址法，key 插入时把"离家距离远"的元素优先留在原位，减少最坏查找长度。
+
+插入时线性探测，遇到 probe distance 比当前元素小的就把它踢出去继续找位置。支持 insert、lookup、erase。要记录每个 slot 的探测距离。删除用 tombstone 标记或者 backward shift。
+
+C 语言，gcc 编译。测试：插入随机 key 后统计最大探测长度，应该比普通线性探测短。

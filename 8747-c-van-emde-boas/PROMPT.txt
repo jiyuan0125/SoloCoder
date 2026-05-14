@@ -1,0 +1,5 @@
+实现一个 van Emde Boas 树，用来处理 0 到 U-1 范围内的整数，支持 O(log log U) 的插入、删除、查找、前驱、后继操作。
+
+用递归结构：每个 vEB 树包含一个 cluster 数组（每项是更小的 vEB 树）和一个 summary。支持 member、insert、delete、successor、predecessor、min、max 操作。宇宙大小 U 取 2 的幂。
+
+C 语言，gcc 编译。取 U=16 或 64 做小规模测试，验证所有操作的正确性。

@@ -1,0 +1,4 @@
+帮我写一个倒排索引（Inverted Index），C 实现。
+搜索引擎的核心数据结构：对一批文档建立倒排索引，term → 出现该 term 的文档 ID 列表。
+流程：分词（简单按空格/标点切割就行，转小写）、建索引、支持查询。查询支持单词查询 AND 和 OR 组合查询。
+命令行程序：index build docs.txt 生成索引文件，index query "hello AND world" 返回匹配的文档 ID。索引可以持久化到文件。gcc 编译。

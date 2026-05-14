@@ -1,0 +1,12 @@
+帮我用 Go 写 Delta-of-Delta 编码。
+
+Delta-of-Delta 是时间序列数据库（Gorilla/Prometheus/VictoriaMetrics）里压缩时间戳的常用方法。先算相邻时间戳的差值，再算差值的差值，大部分值趋近于零，可以用很少的 bit 存储。
+
+功能：
+- 编码：计算 delta-of-delta 序列，根据值大小选择不同位宽存储
+- 位宽方案参考 Gorilla paper：1 bit (值为 0)、2 bit (值在 [-63,64])、3 bit (值在 [-255,256])...
+- 解码：按位宽方案还原原始时间戳
+- 支持纳秒和毫秒级时间戳
+- 异常检测：如果 delta-of-delta 突然变大，能正确处理
+
+Go 标准库，go build 编译通过。bit 操作要精确，注意有符号数的处理。用位运算不要用 big.Int。

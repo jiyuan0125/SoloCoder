@@ -1,0 +1,5 @@
+Dijkstra 算法用 Fibonacci Heap 理论复杂度最优，虽然实际工程中用得不多但了解一下也好。用 Rust 实现 Fibonacci Heap。
+
+支持 insert、find_min、extract_min、decrease_key、delete、merge 操作。insert、find_min、merge 是 O(1)，extract_min 是 O(log n) 均摊。用循环双向链表管理同一度的树，合并时做度数合并。decrease_key 要做级联剪切。
+
+提供 Dijkstra 最短路径作为使用示例。cargo build 编译通过。

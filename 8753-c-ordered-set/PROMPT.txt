@@ -1,0 +1,4 @@
+写一个 C 语言的有序集合（Ordered Set），底层用跳表实现。
+我们要做一个排行榜系统，元素带一个分值，按分值排序，同时支持按 key 快速查找、删除、更新分值。
+接口：insert(key, score)、remove(key)、get_rank(key)、get_by_rank(n)、range(start, end)。
+跳表层数动态生长，查询 O(logn)。命令行交互，从 stdin 读取操作指令。make 能编译通过。

@@ -1,0 +1,12 @@
+帮我写一个 Go 的 SSTable Table Reader。
+
+从磁盘读取 SSTable 文件，解析 footer 定位 index block，然后支持按 key 查询和范围迭代。和 Table Builder 是一对读写组合。
+
+功能点：
+- 打开文件后先读 footer，拿到 index block 和 meta index block 的位置
+- Get(key)：先在 index block 二分定位 data block，读入 data block 后二分查找
+- NewIterator(start, end)：范围迭代器，支持正向和反向遍历
+- 利用 bloom filter 块提前过滤不存在的 key
+- Block 缓存：读过的 data block 可以缓存在内存中
+
+Go 标准库，go build 编译通过。文件 I/O 用 os.File，可以 mmap 加速可选。

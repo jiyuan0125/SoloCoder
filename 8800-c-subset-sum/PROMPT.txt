@@ -1,0 +1,6 @@
+用 C 写一个子集和（Subset Sum）问题的求解器。
+给一组正整数和一个目标值 target，判断能否从这组数里选出若干个数使和恰好等于 target。
+用 DP：bitset 做背包，或者用 bool 数组 dp[s] 表示和 s 是否可达。复杂度 O(n*target)。
+如果 target 很大就换成 meet-in-the-middle：把数组分两半，分别枚举所有子集和，排序后二分查找。
+两种方法都实现，大的数据用 MITM。
+命令行：subset_sum target numbers.txt，输出 yes/no 和具体选了哪些数。gcc 编译。

@@ -1,0 +1,3 @@
+帮我用 C 写一个 Memtable 数据结构，就是 LSM 存储引擎里内存中的写入缓冲区。
+要求：支持有序插入和查找，底层数据结构用跳表或者红黑树都行。接口有 put(key, value)、get(key)、delete(key)（用墓碑标记）、scan(from, to) 范围遍历、size()、flush_to_file() 导出为有序文件。
+memtable 有容量上限，满了要能被 immutable 化等待刷盘。写个简单的 demo 验证正确性和有序性。gcc 编译，纯标准库。

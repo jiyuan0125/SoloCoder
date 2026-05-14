@@ -1,0 +1,1 @@
+帮我用 Rust 写一个 Block Index 组件，这是 SSTable 里用来加速查找的索引结构。把 SSTable 文件按固定大小（比如 4KB）分成 Block，索引记录每个 Block 的：起始偏移量、该 Block 的第一个 key、Block 大小。索引本身也存在文件里（SSTable 尾部）。查找某个 key 时先在索引中二分找到可能包含该 key 的 Block，然后只读那个 Block。写个 demo 构建索引并验证查找。cargo run 能跑。

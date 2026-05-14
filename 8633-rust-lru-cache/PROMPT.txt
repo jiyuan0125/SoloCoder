@@ -1,0 +1,1 @@
+帮我用 Rust 写一个 LRU Cache。就是最经典的最近最少使用淘汰策略。支持 get 和 put 操作，get 命中时要把元素移到最前面，put 超出容量时淘汰最久没用的。get 和 put 都要 O(1) 时间复杂度，用 HashMap 加双向链表实现。设一个容量上限，用户可以指定。写个命令行 demo 演示插入、查询、淘汰的过程。cargo build 能编译，cargo run 能看到缓存状态变化。

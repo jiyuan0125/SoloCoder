@@ -1,0 +1,3 @@
+Python 装饰器用起来方便但内部机制不太直观，想做个分析工具。写一个装饰器分析器，能解析 Python 源码中的装饰器用法，展开装饰器的调用链（从 @decorator 还原到 func = decorator(func)），识别带参数的装饰器、类装饰器和装饰器堆叠顺序。
+
+能检测常见的装饰器使用错误，比如缺少 functools.wraps。纯 Python，用 ast 模块，python 能跑，命令行分析 .py 文件。

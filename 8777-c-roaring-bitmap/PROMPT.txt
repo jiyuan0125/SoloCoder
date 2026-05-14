@@ -1,0 +1,4 @@
+用 C 实现 Roaring Bitmap，一种压缩位图数据结构。
+普通位图存 40 亿个 bit 要 512MB，Roaring Bitmap 把 32 位整数空间分成 65536 个 chunk，每个 chunk 内按密度选择用数组还是位图存储，很省内存。
+支持 add、remove、contains、and、or、xor、andnot 操作，以及迭代遍历所有设置的位。
+add 和 contains 要快。写个程序测试集合运算的正确性，再和普通位图对比一下内存占用。gcc 编译。

@@ -1,0 +1,3 @@
+想把一个简单的脚本语言转译成 Python 执行。用 Python 写一个通用转译器框架，输入源语言代码（自定义语法），经过词法分析、语法解析、AST 变换，最后生成目标语言（Python）代码。
+
+内置一个示例：把类 Pascal 语法（begin/end、:=、if/then/else、while/do、procedure）转译成 Python。转译后生成的代码能直接 python 执行。纯 Python 实现，python 能跑。

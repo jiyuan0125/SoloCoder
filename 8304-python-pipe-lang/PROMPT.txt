@@ -1,0 +1,3 @@
+数据清洗的时候老是要写一堆临时脚本，我想做一个管道式的小语言，像 shell pipe 那样串起来。比如 "read csv users.csv | filter age > 18 | select name, email | sort by name | write json out.json"。
+
+支持常见的管道操作符：filter、map、select、sort、uniq、limit。每个阶段处理完传给下一阶段。纯 Python 实现，python 直接跑，命令行传入管道表达式和数据文件就行。

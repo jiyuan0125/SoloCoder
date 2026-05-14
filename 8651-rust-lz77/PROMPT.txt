@@ -1,0 +1,5 @@
+我最近在做一个嵌入式项目，需要对配置文件做轻量级压缩，不想引入太重的依赖。帮我用 Rust 实现一个 LZ77 压缩算法的命令行工具。
+
+主要功能：支持对输入文件进行 LZ77 压缩和解压，滑动窗口大小可配置，能处理文本和二进制数据。命令行用法类似 `lz77 compress input.txt output.lz77` 和 `lz77 decompress output.lz77 restored.txt`。
+
+压缩后的文件应该能正确还原，解压结果和原始文件一模一样。用 cargo build 能编译通过，cargo run 测试压缩解压流程。

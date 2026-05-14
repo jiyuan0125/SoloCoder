@@ -1,0 +1,11 @@
+Go 实现 Window TinyLFU 缓存策略。
+
+这是 Caffeine 缓存用的策略，比 W-TinyLFU 简化一点：一个小的 window 缓存接新 key，一个大的主缓存用 SLRU，淘汰 window 里的 key 时用 TinyLFU 的频率估计决定是否准入主缓存。
+
+要实现：
+- Window 区域（小比例，约 1% 容量）用 FIFO 接收新条目
+- Main 区域（SLRU）作为主缓存
+- Count-Min Sketch 做频率估计，window 淘汰时和 main 中最小频率的条目比
+- Put/Get/Delete，支持容量设定
+
+Go 标准库，go build 能编译通过。Count-Min Sketch 的哈希函数选几个不同的种子就行。

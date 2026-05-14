@@ -1,0 +1,4 @@
+写一个 R-Tree 的 C 实现，用来管理二维空间里的矩形区域索引。
+地图应用中需要对大量多边形/矩形做空间查询，R-Tree 是标准方案。
+支持 insert(rect, id)、delete(id)、search(query_rect) 查所有相交的矩形。节点分裂用最简单的 quadratic split 就行。
+写个测试程序，插入 5000 个随机矩形，然后做范围查询统计命中数量。make 编译，只用标准库和 stdlib。

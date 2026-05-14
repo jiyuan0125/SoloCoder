@@ -1,0 +1,1 @@
+实现一个 WAL（Write-Ahead Log）预写日志，Rust 版本。数据库写入数据前先把这个操作记录到日志文件里，崩溃后可以通过重放日志恢复。支持 append 操作（追加一条记录）、recover（从日志文件恢复所有记录）。每条记录包含：操作类型（insert/delete）、key、value、CRC 校验码。日志文件用二进制格式，追加写入。写个 demo：写一批操作，模拟"恢复"，验证数据一致。cargo run 能跑通。

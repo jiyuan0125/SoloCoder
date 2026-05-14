@@ -1,0 +1,12 @@
+帮我用 Go 实现 SSTable 的 Block Index 结构。
+
+Block Index 是 SSTable 文件中用来快速定位数据块的索引，记录每个数据块的起始 offset、长度和最大 key。读操作先在索引中二分查找定位 block，再去读对应的数据块。
+
+需要：
+- 索引条目：block offset + block size + separator key（分隔键）
+- 构建索引：遍历数据块时记录每个块的元信息，选择分隔键
+- 查找：给定 key，二分查找找到可能包含该 key 的 block
+- 支持索引块本身的持久化和加载
+- 分隔键选择：取相邻 block 的最大 key 和下一个 block 最小 key 之间的短字符串
+
+Go 标准库，go build 编译通过。索引可以常驻内存，加载时一次读入。

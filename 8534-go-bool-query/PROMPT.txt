@@ -1,0 +1,10 @@
+用 Go 实现布尔查询（Boolean Query）解析和执行。搜索引擎支持 AND、OR、NOT 组合查询，比如 "golang AND (web OR api) NOT python"。
+
+要实现的功能：
+- 解析布尔查询表达式：支持 AND、OR、NOT 操作符和括号嵌套
+- 把查询字符串解析成 AST（抽象语法树）
+- 对 AST 求值：在倒排索引上执行集合运算（交、并、差）
+- 支持 MUST（+）、MUST_NOT（-）的简写语法
+- 返回匹配的文档 ID 集合
+
+Go 标准库，go build 通过。查询解析要处理优先级：NOT > AND > OR，括号优先。

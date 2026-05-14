@@ -1,0 +1,1 @@
+用 Rust 实现一棵基数树（Radix Tree / Patricia Trie）。我打算用它做路由匹配，类似 web 框架里那种根据 URL path 查到对应处理函数的逻辑。支持插入路径、精确匹配、最长前缀匹配。路径用 "/" 分隔的字符串。写个 demo 模拟注册几条路由规则，然后测试各种 URL 能匹配到正确的路由。cargo build 编译通过，cargo run 打印匹配结果。

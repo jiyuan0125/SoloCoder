@@ -1,0 +1,3 @@
+项目配置要迁移到 TOML 格式，但我需要自己掌控解析逻辑。用 Python 写一个 TOML 解析器，支持 TOML v1.0 的主要特性：基本键值对、table（[section]）、嵌套 table（[a.b.c]）、数组、内联 table、多行字符串、日期时间类型和数组 of table（[[products]]）。
+
+解析到 Python 字典，遇到非法格式要报行号。不依赖 tomllib 或第三方库。python 直接跑，命令行读文件输出 JSON。

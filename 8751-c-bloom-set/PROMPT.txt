@@ -1,0 +1,4 @@
+帮我用纯 C 写一个基于布隆过滤器的集合数据结构。
+场景是这样的：我们需要在海量数据里快速判断某个元素是否"可能存在"，允许少量误判但不能漏判。
+支持 add、contains、union、intersect 这四个操作，误判率通过参数可调。写个命令行程序，从 stdin 逐行读取，支持 +keyword 添加、?keyword 查询、& keyword1 keyword2 求交集、| keyword1 keyword2 求并集。
+gcc 能编译通过就行，只依赖标准库。

@@ -1,0 +1,1 @@
+用 Rust 实现 LSM-Tree 的 Compaction（压缩合并）策略。包括 Size-Tiered 和 Leveled 两种。Size-Tiered：同一层 SSTable 数量达到阈值就合并成一个新的更大的 SSTable 放到下一层。Leveled：每层维护一个有序的 SSTable 集合，用 L0 到 Ln 分层，越往下数据量越大。合并时读入多个 SSTable 做多路归并，输出新的 SSTable，去掉被覆盖和删除的旧数据。写个 demo 模拟几轮 compaction。cargo run 能看到层级变化。

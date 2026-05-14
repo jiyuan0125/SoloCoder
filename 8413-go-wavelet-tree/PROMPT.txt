@@ -1,0 +1,9 @@
+小波树（Wavelet Tree）擅长处理字符串上的 rank/select 操作，在全文索引里有应用。用 Go 实现一个 Wavelet Tree。
+
+需要支持：
+- Build：从字符串或整数序列构建小波树
+- Rank(c, pos)：统计位置 pos 之前字符 c 出现的次数
+- Access(pos)：获取指定位置的字符
+- Select(c, k)：找到字符 c 第 k 次出现的位置
+
+用位运算来压缩每一层的比特位表示。写个 main 读入一段英文文本建树，然后做一系列 rank/select 查询，和暴力法对比结果验证正确性。go build 通过。

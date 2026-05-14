@@ -1,0 +1,12 @@
+帮我写一个 Go 的 SSTable（Sorted String Table）实现。
+
+SSTable 是 LSM-Tree 存储引擎的磁盘文件格式，内部按 key 有序存储，带索引块和布隆过滤器加速查找。LevelDB 的 .sst 文件就是这种格式。
+
+需要做到：
+- 支持从有序 KV 对构建 SSTable 文件（table builder）
+- 文件格式：数据块 + 索引块 + 布隆过滤器块 + footer
+- 读取时通过索引块二分查找定位数据块，再块内二分
+- 支持 point query（精确查找）和范围迭代器
+- 块大小可配置，默认 4KB
+
+Go 标准库，go build 编译通过。数据块内部可以用 restart interval 做前缀压缩来节省空间。

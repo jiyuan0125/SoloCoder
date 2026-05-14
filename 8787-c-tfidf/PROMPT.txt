@@ -1,0 +1,4 @@
+实现 TF-IDF 计算和文本相似度，C 语言。
+TF-IDF 把文档表示成向量：每个维度是一个 term，值是 TF×IDF。TF 是词频，IDF 是 log(总文档数/包含该词的文档数)。
+功能：从文件读取一组文档，构建词表，计算每篇文档的 TF-IDF 向量。然后支持余弦相似度计算两篇文档的相似程度。
+命令行：tfidf build docs.txt，然后 tfidf similar doc1 doc2 输出相似度分数。gcc 能编译就行。

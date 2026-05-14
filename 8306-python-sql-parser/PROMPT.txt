@@ -1,0 +1,3 @@
+需要在一个内部工具里分析 SQL 查询，提取表名、列名、JOIN 关系和 WHERE 条件。用 Python 写一个 SQL 解析器，支持 SELECT、FROM、WHERE、JOIN（INNER/LEFT/RIGHT）、GROUP BY、ORDER BY、LIMIT 这些常见子句。
+
+能把 SQL 解析成 AST，然后提供遍历接口拿到表依赖和列引用。语法错误要报出行号位置。纯 Python 实现，python 能跑。

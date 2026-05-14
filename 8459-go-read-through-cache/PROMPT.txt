@@ -1,0 +1,12 @@
+帮我实现一个 Go 版的 Read-Through 缓存封装。
+
+就是缓存未命中时自动从数据源加载数据并写入缓存，上层调用者不需要先查缓存再查数据库这种模板代码。类似 Guava Cache 的 get(key, loader) 模式。
+
+具体要求：
+- Cache Get(key) 时如果命中直接返回，未命中调用注册的 loader 函数加载
+- loader 加载的结果自动写回缓存
+- 同一个 key 并发加载时只让一个请求去加载，其他请求等待结果（防缓存击穿）
+- 支持 TTL 过期和最大容量淘汰（LRU）
+- loader 返回 error 时不要缓存错误结果
+
+只用 Go 标准库，go build 编译通过。singleflight 的语义是关键。
