@@ -1,4 +1,4 @@
-先解析模板文件，然后读取输入数据，将数据代入模板渲染输出——流程就是这样。数据清洗全靠 Excel 宏，一个报表跑二十分钟，格式稍微一改宏也得跟着改，维护成本太高。Go 写一个模板驱动的转换工具。
+数据清洗全靠 Excel 宏，一个报表跑二十分钟，格式稍微一改宏也得跟着改，维护成本太高。Go 写一个模板驱动的转换工具，把数据和模板分离开来。
 
 用法：`tmplconv --template report.tmpl --input data.csv --output result.txt --format csv`。模板语法支持 `{{.Field}}` 变量、`{{range .Items}}...{{end}}` 循环、`{{if eq .Status "active"}}...{{end}}` 条件。模板解析出错给出精确位置：`template error: line 5, col 12: unexpected <`，退出码 4。
 

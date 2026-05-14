@@ -1,9 +1,9 @@
-先说场景：日志目录每周涨 2G，保留最近 5 个版本就够了，更早的要么删掉要么压缩归档。手动清理容易误删，得自动化。
+日志目录每周涨 2G，保留最近 5 个版本就够了，更早的要么删掉要么压缩归档。上周手动清理的时候手滑把当天的日志也删了，排查问题才发现。得自动化。
 
-第一步，命令行参数：`rotate-archive --dir /var/log/app --keep 5 --strategy compress --pattern "*.log"`。`--keep` 指定保留最近 N 个版本，默认 5。`--strategy` 支持 delete（直接删除）和 compress（gzip 压缩后移到 archive 子目录）。`--pattern` 用 glob 匹配要处理的文件。
+命令行参数：`rotate-archive --dir /var/log/app --keep 5 --strategy compress --pattern "*.log"`。`--keep` 指定保留最近 N 个版本，默认 5。`--strategy` 支持 delete（直接删除）和 compress（gzip 压缩后移到 archive 子目录）。`--pattern` 用 glob 匹配要处理的文件。
 
-第二步，版本判断按文件修改时间戳排序，最新的 N 个保留不动，其余按策略处理。压缩后的文件名格式为 原名.时间戳.gz，如 app.log.20250101.gz。
+版本判断按文件修改时间戳排序，最新的 N 个保留不动，其余按策略处理。压缩后的文件名格式为 原名.时间戳.gz，如 app.log.20250101.gz。
 
-第三步，同步完成后自动记录同步日志。日志记录写入数据库（SQLite，路径用 `--db` 指定），表结构包含 id、filename、action、timestamp、size_bytes 五个字段。数据库不可用时降级写本地文件 rotate.log，格式为每行一条 JSON：{"file":"...","action":"compress","ts":"...","size":1234}。
+同步完成后自动记录同步日志。日志记录写入数据库（SQLite，路径用 `--db` 指定），表结构包含 id、filename、action、timestamp、size_bytes 五个字段。数据库不可用时降级写本地文件 rotate.log，格式为每行一条 JSON：{"file":"...","action":"compress","ts":"...","size":1234}。
 
 目录为空时打印 "no files to rotate" 并退出码 0。Go 做轮转归档，go build 能编译通过，不依赖第三方库。

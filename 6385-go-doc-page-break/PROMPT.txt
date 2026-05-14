@@ -1,9 +1,7 @@
-先解析文档结构，再按规则分页，最后生成索引。
+50 页的技术文档要打印，结果一个表格从第 23 页断到第 24 页，中间正好被分页符切断。手动调分页位置调了半小时。得有个工具按标题结构自动插分页符，还不切断表格和代码块。
 
-1. 命令 `pagebreak apply --input <file> --output <file> [--level 2]`，按标题级别插入分页符。`--level 2` 表示在每个 `##` 标题前插入 `---`（或 `<div class="page-break"></div>`）。`--level 1` 只在 `#` 前分页。分页后自动生成分页索引文件 `<basename>.index.json`，格式：`{"pages": [{"title": "章节名", "page": 1, "line": 15, "children": [{"title": "子节", "page": 1, "line": 20}]}]}`。
+`pagebreak apply --input <file> --output <file> [--level 2]`，`--level 2` 在每个 `##` 标题前插入 `---`（或 `<div class="page-break"></div>`），`--level 1` 只在 `#` 前分页。分页后自动生成 `<basename>.index.json`，格式：`{"pages": [{"title": "章节名", "page": 1, "line": 15, "children": [{"title": "子节", "page": 1, "line": 20}]}]}`。
 
-2. 子命令：`pagebreak preview --input <file>` 预览分页位置（输出每个分页点的行号和标题），`pagebreak index --input <file>` 只生成索引不修改文件，`pagebreak adjust --input <file> --after <line> --push` 手动在指定行后插入分页。
+辅助操作：`pagebreak preview --input <file>` 预览分页位置（输出每个分页点的行号和标题），`pagebreak index --input <file>` 只生成索引不修改文件，`pagebreak adjust --input <file> --after <line> --push` 手动在指定行后插入分页。
 
-3. 连续标题之间没有内容的空章节输出 `EMPTY_SECTION: line=<n> title="<text>"`。处理完主文件后生成摘要 `<basename>.summary.md`，包含总页数和每页标题。无标题的文件不生成摘要，输出 `NO_HEADINGS: <file>`。
-
-4. 表格和代码块不被分页切断——如果分页点落在表格或代码块内部，自动移到块结束后。`go run .` 直接跑，不用装任何依赖。
+连续标题之间没有内容的空章节输出 `EMPTY_SECTION: line=<n> title="<text>"`。处理完主文件后生成摘要 `<basename>.summary.md`，包含总页数和每页标题。无标题的文件不生成摘要，输出 `NO_HEADINGS: <file>`。分页点落在表格或代码块内部时自动移到块结束后。`go run .` 直接跑，不用装任何依赖。

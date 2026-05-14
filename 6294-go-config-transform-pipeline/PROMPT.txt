@@ -1,4 +1,4 @@
-配置加载前要做一串转换——解密、插值、覆盖默认值、验证——全写在 init() 里维护性极差。改成管道模式，每步独立，顺序可配。
+上个月密钥轮换，改了加密密钥后配置加载逻辑改了三处 init()，结果有一处忘了更新导致服务启动失败回滚了两次。这种一坨的逻辑就该拆成管道——每步独立，顺序可配，出错了知道是哪步炸的。
 
 第一步定义管道：`pipeline.yaml` 描述执行顺序，`[{name: "decrypt", action: "aes-decrypt", key: "$SECRET_KEY"}, {name: "interpolate", action: "env-subst"}, {name: "defaults", action: "merge", base: "defaults.yaml"}, {name: "validate", action: "json-schema", schema: "config.schema.json"}]`。第二步执行：`config-pipe run pipeline.yaml --input config.enc.yaml -o config.yaml`。`--step decrypt` 只跑到指定步骤，方便调试。
 

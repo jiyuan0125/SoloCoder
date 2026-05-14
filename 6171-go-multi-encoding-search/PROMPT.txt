@@ -1,9 +1,9 @@
-先来理一下流程：用户有一批中文日志文件，编码混杂——有些 GBK，有些 BIG5，有些 UTF-8。想在里面搜关键字，iconv 一个个转太慢。需要一个能自动检测编码并搜索的工具。
+历史包袱重的公司日志系统什么编码都有——子公司 A 用 GBK，老系统 BIG5，新服务 UTF-8，搜个关键字得先猜编码再 iconv 转一遍，碰到二三十个文件直接放弃。做个能自动检测编码并搜索的工具，省去转码这一步。
 
-步骤一，命令行格式：`multi-search --dir ./logs --keyword "错误" --encoding auto`。`--encoding` 支持 utf-8、gbk、big5、auto（自动检测）。自动检测时用字节序标记和常见汉字编码范围判断，检测结果标注在输出里。`--recursive` 遍历子目录。
+命令行格式：`multi-search --dir ./logs --keyword "错误" --encoding auto`。`--encoding` 支持 utf-8、gbk、big5、auto（自动检测）。自动检测时用字节序标记和常见汉字编码范围判断，检测结果标注在输出里。`--recursive` 遍历子目录。
 
-步骤二，搜索结果输出格式：每条匹配打印 "文件路径:行号:内容:编码(如GBK)"。加 `--output json` 导出 [{file, line, content, encoding}]。文件编码检测失败时标注 "UNKNOWN" 仍然尝试按 UTF-8 搜索。
+搜索结果输出格式：每条匹配打印 "文件路径:行号:内容:编码(如GBK)"。加 `--output json` 导出 [{file, line, content, encoding}]。文件编码检测失败时标注 "UNKNOWN" 仍然尝试按 UTF-8 搜索。
 
-步骤三，导入成功后自动通知下游系统——通过 HTTP POST 调用 `--webhook` 指定的 URL，请求体为 {"files_searched":N,"matches":N,"timestamp":"..."}。本地模式没有配置 `--webhook` 时跳过通知，不报错。
+导入成功后自动通知下游系统——通过 HTTP POST 调用 `--webhook` 指定的 URL，请求体为 {"files_searched":N,"matches":N,"timestamp":"..."}。本地模式没有配置 `--webhook` 时跳过通知，不报错。
 
 目录不存在退出码 1，关键字为空退出码 2。文件数超过 1000 时打印进度到 stderr。不用第三方包，go build 通过就行。

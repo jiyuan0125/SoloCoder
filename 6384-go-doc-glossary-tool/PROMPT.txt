@@ -1,7 +1,7 @@
-先说场景——团队写了上百篇内部文档，同一个概念"发布流水线"在不同文档里分别叫 pipeline、流水线、部署流程，新人看得一头雾。需要一个工具自动管理术语表，检测文档里术语首次出现的位置，生成统一索引。
+"发布流水线"这个概念，架构组叫 pipeline，运维组叫流水线，新人写的文档叫部署流程——术语不统一，跨组沟通成本直线上升。
 
-第一步，用 `glossary init` 在当前目录创建 `glossary.yaml`，格式为术语列表，每条含 `term`（标准名称）、`aliases`（别名数组）、`description`（一句话解释）。第二步，`glossary scan ./docs` 扫描所有 Markdown 文件，找出术语和别名的首次出现位置。输出 `glossary-index.json`，结构是数组，每条含 `term`、`file`、`line`、`context`（该行前后各 20 字符的摘要）。第三步，`glossary check` 校验文档一致性：如果某个术语的别名在非首次出现时被使用，报 warning。
+`glossary init` 在当前目录创建 `glossary.yaml`，每条术语含 `term`（标准名称）、`aliases`（别名数组）、`description`（一句话解释）。定义好之后，`glossary scan ./docs` 扫描所有 Markdown 文件，找出术语和别名的首次出现位置，输出 `glossary-index.json`，每条记录含 `term`、`file`、`line`、`context`（该行前后各 20 字符的摘要）。`glossary check` 校验文档一致性：某个术语的别名在非首次出现时被使用就报 warning。
 
-审批流程走 `glossary submit`（提交术语变更）→ `glossary review --approve/--reject`（初审）→ `glossary finalize`（复审通过），初审不过可以修改后重新 submit。状态记录在 `.glossary-state.json`，字段包括 `status`（draft/pending/approved/archived）、`reviewer`、`timestamp`。
+术语变更要走流程：`glossary submit` 提交 → `glossary review --approve/--reject` 初审 → `glossary finalize` 复审通过。初审不过可以修改后重新 submit。状态存在 `.glossary-state.json` 里，字段 `status`（draft/pending/approved/archived）、`reviewer`、`timestamp`。
 
 术语文件为空时 `scan` 输出 "no terms defined" 并 exit 0。docs 目录不存在 exit 1。纯标准库，go build 编译通过。

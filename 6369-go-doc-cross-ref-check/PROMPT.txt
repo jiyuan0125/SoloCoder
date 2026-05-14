@@ -1,9 +1,7 @@
-先读文件列表，再逐个检查链接，最后出报告。
+上周新人按文档里的 [[架构设计]] 链接找资料，点进去 404——那个页面三个月前就重命名了，但文档里没人更新。内部链接、脚注引用、图片路径这些交叉引用散落在几十个 .md 里，手工排查根本不现实。
 
-1. 命令 `check refs --dir <dir> [--format text|json]`，扫描 `.md` 文件提取内部链接、脚注（`[^id]`→`[^id]:`）、图片引用。失效输出 `BROKEN: <file>:<line> -> <target> reason=<not_found|anchor_missing>`。孤立脚注 `ORPHAN_FOOTNOTE: <file>:<line> ref=<id>`。
+`check refs --dir <dir> [--format text|json]` 扫描 `.md` 文件提取内部链接、脚注（`[^id]`→`[^id]:`）、图片引用。失效输出 `BROKEN: <file>:<line> -> <target> reason=<not_found|anchor_missing>`。孤立脚注 `ORPHAN_FOOTNOTE: <file>:<line> ref=<id>`。
 
-2. 子命令：`check links --file <p>` 单文件，`check all --dir <d>` 全目录，`check external --file <p>` 外部 URL 可达性（HEAD 超时 5s，不可达 `UNREACHABLE: <url> status=<code>`），`check anchors --dir <d>` 锚点检查。
+子命令分工：`check links --file <p>` 单文件，`check all --dir <d>` 全目录，`check external --file <p>` 外部 URL 可达性（HEAD 超时 5s，不可达 `UNREACHABLE: <url> status=<code>`），`check anchors --dir <d>` 锚点检查。
 
-3. 报告 text 逐行列出，JSON 为 `{"file": "p", "issues": [{"line": 10, "type": "broken_link", "target": "..."}]}`。无问题 `ALL_CLEAR: <file>`。
-
-空目录 `NO_FILES: <dir>`。`go build` 一下就过，不用第三方包。
+报告 text 逐行列出，JSON 为 `{"file": "p", "issues": [{"line": 10, "type": "broken_link", "target": "..."}]}`。无问题 `ALL_CLEAR: <file>`。空目录 `NO_FILES: <dir>`。`go build` 一下就过，不用第三方包。

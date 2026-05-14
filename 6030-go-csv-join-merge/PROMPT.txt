@@ -1,6 +1,4 @@
-先交代背景：客户催了好几轮，数据汇总要关联两张 CSV 表。SQL 能做但他们没有数据库环境，只好在命令行直接 JOIN。用 Go 写一个轻量的 CSV 关联工具。
-
-步骤：
+客户催了好几轮，数据汇总要关联两张 CSV 表。SQL 能做但他们没有数据库环境，只好在命令行直接 JOIN。用 Go 写一个轻量的 CSV 关联工具。
 1. 命令 `csvjoin --left users.csv --right orders.csv [--on user_id] [--on-left uid --on-right user_id] [--type inner|left] [-o result.csv]`。--type inner 只输出匹配行，left 时左表全输出右表缺失填空。
 2. --on 指定同名关联列。不同名用 --on-left 和 --on-right。都不提供时 stderr 输出 "join key required" 并 exit 1。
 3. 输出包含两表所有列，重复列名加文件名前缀（users_name），前缀取文件名去扩展名。列顺序：先左全部列，再右非关联列。

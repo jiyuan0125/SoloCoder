@@ -1,6 +1,8 @@
-先用 `regex search <pattern> <path>` 搜索匹配，再用 `regex replace <pattern> <replacement> <path>` 执行替换。预览模式 `--dry-run` 显示替换前后对比但不实际修改文件，输出格式是 `file.go:15: - oldText\n + newText`。支持捕获组引用，替换串里 `$1`、`${2}` 都能对应到正则的分组。
+上个月全组把日志库从 logrus 换成 slog，涉及两百多个 Go 文件里的调用格式。手动改不如直接跑路，sed 又怕正则写错改坏东西——得先预览确认再批量替换。Go 写个正则搜索替换工具，两步搞定。
 
-先扫描文件列出所有匹配行号和内容，确认后批量替换。`--include "*.go"` 和 `--exclude "*_test.go"` 控制文件范围。`--count` 只输出匹配数量不显示内容。`-i` 忽略大小写。替换后自动备份原文件到 `.bak`，`--no-backup` 跳过备份。
+搜索：`regex search <pattern> <path>` 列出所有匹配。替换：`regex replace <pattern> <replacement> <path>` 执行替换。`--dry-run` 显示替换前后对比但不实际修改文件，输出格式 `file.go:15: - oldText\n + newText`。支持捕获组引用，替换串里 `$1`、`${2}` 都能对应到正则的分组。
+
+`--include "*.go"` 和 `--exclude "*_test.go"` 控制文件范围。`--count` 只输出匹配数量不显示内容。`-i` 忽略大小写。替换后自动备份原文件到 `.bak`，`--no-backup` 跳过备份。
 
 正则语法错误时 stderr 输出 `error: invalid regex: <detail>` 并 exit 2。无匹配输出 `no matches found` 并 exit 0。替换完成输出统计：`replaced 42 occurrences in 7 files`。生成报告后尝试邮件通知，未配置 SMTP 时仅打印 `notification skipped: SMTP not configured`。
 

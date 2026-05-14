@@ -1,3 +1,7 @@
-第一步：扫描目录下所有 Markdown 文件，提取 front matter 里的 `tags` 字段（YAML 格式，如 `tags: [后端, 性能优化, Go]`）。第二步：建立标签到文档的反向索引。第三步：按标签查询并输出文档列表。
+产品问"咱们有哪个项目用了 gRPC + 限流器吗？"，我翻了半天文档也没找全。front matter 里明明写了 tags，就是没有工具把它们串起来。
 
-工具名 `doctag`，支持这些命令：`doctag index --dir ./docs` 建立索引，索引文件 `tag_index.json` 保存在目录根，格式为 `{"后端": [{"path":"api/design.md","title":"API 设计规范"}], ...}`；`doctag query --tag 后端,Go --dir ./docs` 按标签查询，逗号分隔表示 AND 关系（同时包含所有指定标签）；`doctag tags --dir ./docs` 列出所有标签及其文档数量。front matter 没有 tags 字段的文件跳过，打印 `skipping <文件>: no tags in front matter`。索引文件损坏时重建并打印 `warning: index corrupted, rebuilding`。空目录打印 `no documents found` 退出码 0。目录不存在退出码 1 输出 `error: directory not found: <path>`。`go build` 能编译通过，不依赖第三方库。主逻辑和辅助函数分文件写。
+`doctag` 就干这事。`doctag index --dir ./docs` 扫描所有 Markdown 文件的 front matter，提取 `tags` 字段（YAML 格式，如 `tags: [后端, 性能优化, Go]`），建立标签到文档的反向索引。索引文件 `tag_index.json` 保存在目录根，格式为 `{"后端": [{"path":"api/design.md","title":"API 设计规范"}], ...}`。
+
+查的时候用 `doctag query --tag 后端,Go --dir ./docs`，逗号分隔表示 AND 关系（同时包含所有指定标签）。`doctag tags --dir ./docs` 列出所有标签及其文档数量。
+
+front matter 没有 tags 字段的文件跳过，打印 `skipping <文件>: no tags in front matter`。索引文件损坏时重建并打印 `warning: index corrupted, rebuilding`。空目录打印 `no documents found` 退出码 0。目录不存在退出码 1 输出 `error: directory not found: <path>`。`go build` 能编译通过，不依赖第三方库。主逻辑和辅助函数分文件写。

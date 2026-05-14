@@ -1,6 +1,4 @@
-先用场景说明：教育那边老系统的配置全是 Java Properties 文件，中文字段还带着 Unicode 转义 \uXXXX，人工读根本看不懂。新平台要 JSON 格式，手动转了三十多个文件之后决定写个工具。
-
-步骤：
+教育那边老系统的配置全是 Java Properties 文件，中文字段还带着 Unicode 转义 \uXXXX，人工读根本看不懂。新平台要 JSON 格式，手动转了三十多个文件之后决定写个工具。
 1. 命令 `prop2json -i messages.properties -o output.json`，也支持 stdin/stdout 模式（不传 -i 读 stdin，不传 -o 写 stdout）。
 2. 多行值（行尾反斜杠 \ 续行）要正确拼接，去掉反斜杠和换行符，下一行前导空格保留一个。续行中间的空行也视为续行。
 3. Unicode 转义 \u4e2d\u6587 还原成实际中文字符（用 strconv.ParseUint 解析 4 位十六进制再转 rune）。反斜杠转义 \n 还原成换行，\t 还原成 tab，\\ 还原成单个反斜杠。非法的 \uXXXX（不足 4 位或非十六进制）保留原样不转义。

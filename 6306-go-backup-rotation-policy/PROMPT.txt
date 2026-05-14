@@ -1,4 +1,4 @@
-先看看需求：备份目录已经 2TB 了，每天还在涨 5GB，再不管磁盘就要爆。然后定轮转策略——最近 7 天每天保留一份、最近 4 周每周保留一份（取每周日的那份）、最近 12 个月每月保留一份（取每月 1 号的那份），其余过期备份自动删除。
+备份目录已经 2TB 了，每天还在涨 5GB，再不管磁盘就要爆。轮转策略定死——最近 7 天每天保留一份、最近 4 周每周保留一份（取每周日的那份）、最近 12 个月每月保留一份（取每月 1 号的那份），其余过期备份自动删除。
 
 第一步，子命令 policy 设置和查看轮转策略。--daily 保留最近 N 天（默认 7），--weekly 保留最近 N 周（默认 4），--monthly 保留最近 N 月（默认 12）。policy --show 输出当前策略到 stdout。第二步，子命令 rotate 执行轮转，--dir 指定备份目录，扫描目录下的文件按修改时间分类，超出策略的文件删除。删除前打印 "deleting: FILENAME (age: Xd)" 到 stderr。--dry-run 只列出要删的文件不实际删。第三步，子命令 status 查看备份目录状态，输出 JSON 格式 {"total_files":N,"total_size_bytes":M,"oldest":"DATE","newest":"DATE","policy_violations":K}。备份文件识别按文件名日期（支持 YYYYMMDD、YYYY-MM-DD、YYYY_MM_DD 三种格式）或修改时间。目录不存在 exit 1，空目录 exit 0。
 

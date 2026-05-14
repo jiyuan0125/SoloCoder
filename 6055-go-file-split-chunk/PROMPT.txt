@@ -1,4 +1,4 @@
-先确定分割模式——按行数还是按字节数，然后分割并生成 manifest，最后可以合并回来。大文件上传经常需要这样的工具。
+上周给客户传一个 5GB 的数据包，邮件附件限制 100MB，网盘上传又总中断。后来想明白了——切成小块传，传完再拼回去。Go 写一个文件分割合并工具。
 
 命令：`fsplit --input bigfile.log --mode lines --size 10000 --output-dir ./chunks/`。`--mode lines` 按行数分割，`--mode bytes` 按字节数分割。文件命名 `part_001`、`part_002`，`--prefix` 自定义前缀。分割后生成 `manifest.json`：`{"source": "bigfile.log", "source_size": 104857600, "chunks": [{"index": 0, "file": "part_001", "size": 10485760}], "checksum": "sha256:abc..."}`。
 

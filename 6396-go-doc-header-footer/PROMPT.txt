@@ -1,3 +1,7 @@
-先用 `docfmt --input report.md --output report.pdf --header "内部文档 | {date} | 第{page}页"` 这样给文档加上页眉页脚。`--header` 和 `--footer` 分别定义页眉页脚模板，`{date}` 替换为当前日期 `YYYY-MM-DD`，`{page}` 替换为当前页码，`{total}` 替换为总页数。不加 `--header` 和 `--footer` 则不生成页眉页脚。模板中不支持的其他占位符原样保留。
+合同文档打印出来没有页码，对方翻到第 30 页说"你把第 12 页那段改一下"——找半天找不到是哪段。给文档统一加页眉页脚是刚需。
 
-这个工具叫 `docfmt`，处理 Markdown 或纯文本文档。先扫描文档内容，分析标题层级和段落结构，然后生成带页眉页脚的输出。扫描分四个阶段推进：初始化→扫描中→分析中→报告生成，每完成一个阶段在 stderr 打印 `[阶段名] done`。分析过程中发现格式问题（如标题层级跳跃从 h1 直接到 h3）标记为异常，在 stderr 里列出 `warning: heading level skipped at line <N>: h<H1> to h<H2>`。输入文件不存在退出码 1，输出 `error: file not found: <path>`。空文件输出只有页眉页脚的空白文档。加 `--verbose` 在 stderr 打印每个阶段的处理详情。`go build` 通过就行，第三方库一个不碰。代码至少分两个 .go 文件。
+工具叫 `docfmt`，`--header` 和 `--footer` 分别定义页眉页脚模板，`{date}` 替换为当前日期 `YYYY-MM-DD`，`{page}` 替换为当前页码，`{total}` 替换为总页数。模板中不认识的占位符原样保留。不加 `--header` 和 `--footer` 则不生成页眉页脚。
+
+处理流程：先扫描文档内容，分析标题层级和段落结构，然后生成带页眉页脚的输出。扫描分四个阶段：初始化→扫描中→分析中→报告生成，每完成一个阶段 stderr 打印 `[阶段名] done`。分析中发现格式问题（标题从 h1 跳到 h3）标记异常，stderr 列出 `warning: heading level skipped at line <N>: h<H1> to h<H2>`。
+
+输入文件不存在退出码 1 输出 `error: file not found: <path>`。空文件输出只有页眉页脚的空白文档。加 `--verbose` 在 stderr 打印每个阶段的处理详情。`go build` 通过就行，第三方库一个不碰。代码至少分两个 .go 文件。

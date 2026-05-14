@@ -1,4 +1,4 @@
-二十几个分公司的 CSV 要合成一份，列名还不完全一样，有的叫"销售额"有的叫"sale_amount"。手工合并每次都是灾难——先定合并策略，再 Go 写纵向合并一步步搞定。
+二十几个分公司的 CSV 要合成一份总表，列名还不统一——有的叫"销售额"有的叫"sale_amount"。上次手工合并漏了一个分公司的数据，季度报告差了 200 万，总监直接发飙。
 
 合并命令：`vmerge --files "branch_*.csv" --output merged.csv --strategy common`。strategy 决定列名不一致时的处理：common 只保留交集列，all 保留并集列（缺少的填空字符串）。默认 common。
 

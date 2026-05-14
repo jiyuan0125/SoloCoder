@@ -1,9 +1,9 @@
-1. 三个系统的状态码不统一——A 系统 status=1 对应 B 系统的 "active"，手动映射容易出错。写个字段值映射工具，映射表从文件读取，批量转换。
+三个系统的状态码完全不统一——A 系统 status=1 对应 B 系统的 "active"，每次对接都要人肉翻译映射表，上周又搞错了一个值，线上出了 bug。写个字段值映射工具，映射表从文件读取批量转换。
 
 用法：`field-map --input data.csv --mapping rules.yaml --column status --output mapped.csv`。mapping 文件格式每行一条规则：`1 → active`、`2 → inactive`、`0 → pending`。不在映射表里的值保持不变，原样输出。输入输出支持 CSV 和 TSV，自动检测分隔符。`--column` 指定要映射的列名，列名不存在报错 "column not found: xxx" 退出码 1。
 
 多列映射：`--column status,priority` 可以一次映射多个列，每个列用各自的映射规则文件，对应 `--mapping rules_status.yaml,rules_priority.yaml`。映射时做类型兼容处理——数字 1 和字符串 "1" 都能匹配。
 
-2. `--dry-run` 输出每行的变更预览：`行5: status 1→active`，不写输出文件。统计最后汇总：`映射 N 个值, 未映射 N 个值, 跳过 N 行`。空映射文件报 "empty mapping" 退出码 1。
+`--dry-run` 输出每行的变更预览：`行5: status 1→active`，不写输出文件。统计最后汇总：`映射 N 个值, 未映射 N 个值, 跳过 N 行`。空映射文件报 "empty mapping" 退出码 1。
 
-3. 不用第三方包，go build 通过就行，主逻辑和辅助函数分文件写。
+不用第三方包，go build 通过就行，主逻辑和辅助函数分文件写。

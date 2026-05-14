@@ -1,7 +1,7 @@
-先说清楚需求：日志里想搜两个标记之间的内容，比如从 ERROR 开始到堆栈结束（空行或下一个时间戳），grep 搞不了这种区域匹配。
+上周排查内存泄漏，日志里每个 OOM 事件后面跟了几十行堆栈，中间还夹杂着 GC 日志。想把完整的错误上下文一次性提出来，但 grep 只能匹配单行——两个标记之间的区域搜索它做不了。
 
-步骤一，命令行：`region-search --input app.log --start "ERROR" --end "^[0-9]{4}-" --nested`。`--start` 和 `--end` 都是正则。`--nested` 支持嵌套区域——起始标记可以再次出现在区域内，形成嵌套层级，输出时用缩进表示层级深度。
-步骤二，输出格式：每个区域打印起止行号、行数、内容。加 `--json` 导出 [{start_line, end_line, line_count, level, content}]。`--max-depth 3` 限制嵌套深度，超过的截断并在 content 后标注 "TRUNCATED"。`--context 2` 在区域前后各多展示 2 行。
-步骤三，处理完每个目录后更新进度到 stderr："搜索 /logs/app: 5/20 files, 12 regions found"。空目录不用处理但计数要更新，显示 "skipped empty dir: /logs/old"。
+命令行：`region-search --input app.log --start "ERROR" --end "^[0-9]{4}-" --nested`。`--start` 和 `--end` 都是正则。`--nested` 支持嵌套区域——起始标记可以再次出现在区域内，形成嵌套层级，输出时用缩进表示层级深度。
 
-无区域匹配退出码 0 打印 "no regions found"。起始模式无对应结束模式时，区域延伸到文件末尾并在输出标注 "OPEN_ENDED"。`--dir` 模式批量处理目录。go build 能编译通过，不依赖第三方库。
+输出格式：每个区域打印起止行号、行数、内容。加 `--json` 导出 [{start_line, end_line, line_count, level, content}]。`--max-depth 3` 限制嵌套深度，超过的截断并在 content 后标注 "TRUNCATED"。`--context 2` 在区域前后各多展示 2 行。
+
+处理完每个目录后更新进度到 stderr："搜索 /logs/app: 5/20 files, 12 regions found"。空目录不用处理但计数要更新，显示 "skipped empty dir: /logs/old"。无区域匹配退出码 0 打印 "no regions found"。起始模式无对应结束模式时，区域延伸到文件末尾并在输出标注 "OPEN_ENDED"。`--dir` 模式批量处理目录。go build 能编译通过，不依赖第三方库。

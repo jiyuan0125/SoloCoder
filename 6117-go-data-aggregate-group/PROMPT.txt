@@ -1,4 +1,4 @@
-文档量上了百万级，Excel 直接打不开了，Python pandas 也跑得巨慢。Go 做流式分组聚合，不把全部数据加载到内存。
+文档量上了百万级，Excel 直接打不开，Python pandas 处理分组聚合内存就爆了。运营要按地区统计销售额总和和平均值，按产品线统计最大最小值，这些操作数据库里一行 SQL 的事，CSV 上就得自己算。
 
 用法：`aggregate --input <CSV文件> --group-by <列名1,列名2> --agg <聚合列:方式> [--output <文件>]`。聚合方式支持 count、sum、avg、max、min，可以指定多个 `--agg`。
 

@@ -1,4 +1,4 @@
-上周做用户画像要把标签表和维度表做笛卡尔积，SQL 跑了二十分钟还没出结果。日志文件散落在几十台机器上，手动 grep 效率太低了。Go 做数据交叉合并，得能处理笛卡尔积也得能做条件连接。
+拼接标签表和维度表做笛卡尔积，SQL 跑了二十分钟还没出结果。80 万条用户日志要和 200 个标签交叉，数据库直接超时断开连接。Go 做数据交叉合并——笛卡尔积和条件连接两种模式都得支持。
 
 笛卡尔积模式：`crossjoin --left a.csv --right b.csv --output result.csv --type cartesian`，结果行数 = A 行数 × B 行数。如果预估结果超过 100 万行（可通过 `--limit 1000000` 配置），在 stderr 输出警告 "result will exceed 1000000 rows (estimated: 5000000), use --force to proceed" 并且退出码 4。加 `--force` 强制执行。
 

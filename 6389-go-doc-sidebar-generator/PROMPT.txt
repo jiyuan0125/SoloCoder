@@ -1,9 +1,7 @@
-文档站 200 多个 Markdown 文件，侧边栏手动维护跟不上了。文件重命名忘了改导航，用户点进去全是 404。从目录结构自动推断层级，加上排序和分组，侧边栏从此不用手写。
+每次有人加了新文档忘了更新侧边栏配置，用户就在群里问"xxx 文档在哪"。200 多个 Markdown 文件手动维护导航菜单根本不可持续——得从目录结构自动生成。
 
-1. `sidebar generate ./docs/ --depth 3 -o sidebar.json` 从目录结构生成侧边栏配置。目录层级对应导航层级，文件名作为菜单项（去掉序号前缀 `01-`）。`--sort alpha|time|manual` 排序策略，默认按文件名。`--group-by first-dir` 按一级子目录分组，组名作为顶级菜单。
+`sidebar generate ./docs/ --depth 3 -o sidebar.json` 从目录层级推断导航层级，文件名作为菜单项（去掉序号前缀 `01-`）。`--sort alpha|time|manual` 排序策略，默认按文件名。`--group-by first-dir` 按一级子目录分组，组名作为顶级菜单。
 
-2. `sidebar check ./docs/ sidebar.json` 校验侧边栏引用是否都指向真实文件，输出断裂引用 `broken link: "getting-started" → docs/getting-started.md not found`。`sidebar diff old.json new.json` 比较两个版本差异，显示新增/删除/修改的菜单项。
+`sidebar check ./docs/ sidebar.json` 校验侧边栏引用是否都指向真实文件，断裂引用输出 `broken link: "getting-started" → docs/getting-started.md not found`。`sidebar diff old.json new.json` 比较两个版本差异，显示新增/删除/修改的菜单项。
 
-3. 输出 JSON 结构：`[{title, path, children: [{title, path}]}]`。空目录跳过不生成菜单项。文件名含特殊字符（空格、中文）用 URL 编码。`--prefix /docs/` 给所有路径加前缀。
-
-纯标准库，`go run .` 能跑。命令格式 `tool action target options`，比如 `tool scan dir --depth 3`。
+输出 JSON 结构：`[{title, path, children: [{title, path}]}]`。空目录跳过不生成菜单项。文件名含特殊字符（空格、中文）用 URL 编码。`--prefix /docs/` 给所有路径加前缀。纯标准库，`go run .` 能跑。命令格式 `tool action target options`，比如 `tool scan dir --depth 3`。

@@ -1,4 +1,4 @@
-先读取配置文件列表，然后逐个检测更新时间，以新的为准覆盖旧的——这就是配置同步的基本逻辑。之前用 Python 脚本做的，环境依赖太多迁移不了，Go 重写。
+之前用 Python 脚本做的配置同步，环境依赖太多迁移不了，Go 重写一遍。逻辑不复杂：同名的 JSON 和 YAML 文件以修改时间更晚的为准覆盖另一方。
 
 命令：`sync --dir ./configs/ --dry-run`。扫描目录下所有 `.json` 和 `.yaml`/`.yml` 文件，同名的配对（比如 `db.json` 和 `db.yaml`），比较修改时间（精确到秒），以更晚的为准覆盖另一方。`--dry-run` 只输出计划不执行：`would overwrite db.yaml with db.json (newer by 2h)`。同名文件只有一个（无配对）跳过，stderr 输出 `unpaired: <filename>`。
 

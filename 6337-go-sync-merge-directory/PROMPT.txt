@@ -1,4 +1,4 @@
-先用场景说明：两个团队各自维护了一版文档目录，结构大体相同但有差异，现在要合成一个权威版本。
+两个团队各自维护了一版文档目录，结构大体相同但有差异，现在要合成一个权威版本。
 
 1. 命令 `merge dir --left <dir1> --right <dir2> --output <dir> --strategy skip|overwrite|rename`。同名文件冲突处理：skip 跳过保留第一个，overwrite 用第二个覆盖，rename 两个都保留并加 `_left`/`_right` 后缀。合并完成后 `merge verify --output <dir>` 验证完整性——检查每个文件可读、非空、非零字节，失败输出 `INVALID_FILE: <path> reason=<empty|unreadable|zero_bytes>`。
 

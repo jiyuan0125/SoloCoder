@@ -1,4 +1,4 @@
-先有个大问题——电商项目的用户行为数据集 15GB，本地调试只需要一小部分。CSV、JSON、纯文本文件都要支持抽样。
+电商项目的用户行为数据集 15GB，本地调试根本用不了这么多，只要一小部分就够了。CSV、JSON、纯文本文件都要支持抽样，按比例抽或者按数量抽都行。
 
 `sample-extract extract --source /data/logs/ --dest /data/sample/ --mode percent --value 10`，`--mode` 支持 `percent`（百分比抽样）和 `count`（固定数量），`--value` 是对应数值。百分比范围 0.1-100，count 最小 1。保持源目录的相对路径结构，比如 `source/a/b.csv` 抽样后是 `dest/a/b.csv`。
 

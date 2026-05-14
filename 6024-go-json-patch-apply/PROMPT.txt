@@ -1,6 +1,4 @@
-先说明需求：给一个小工具加上 JSON Patch 应用功能，支持 RFC 6902 的 add、remove、replace、move、copy、test 六种操作。test 失败时不应用任何变更，整体回退。
-
-步骤：
+给一个小工具加上 JSON Patch 应用功能，支持 RFC 6902 的 add、remove、replace、move、copy、test 六种操作。test 失败时不应用任何变更，整体回退。
 1. 命令 `jsonpatch -doc original.json -patch ops.json -o result.json`，不传 -doc 时从 stdin 读取。
 2. patch 文件是 JSON Patch 数组，每条操作必须含 op 和 path（JSON Pointer 如 /users/0/name）。add/replace 需要 value，move/copy 需要 from，test 需要 value。缺字段时 stderr 输出 "missing field '<field>' in operation N" 并 exit 1。
 3. test 操作用 reflect.DeepEqual 比较，不相等时 stderr 输出 "test failed at <path>"，不应用已执行的变更（需深拷贝原始文档），exit 3。

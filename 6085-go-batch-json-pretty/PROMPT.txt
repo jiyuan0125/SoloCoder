@@ -1,4 +1,4 @@
-先说场景：隔壁监控平台传过来的 JSON 数据，有的压成一行有的缩进 4 空格有的用 tab，风格完全不统一，下游的 JSON 解析器遇到混合缩进的文件直接报错。然后我们的方案：Go 写个批量格式化工具，一行命令统一风格。最后验证：跑完之后所有 JSON 文件缩进一致、key 可选排序。
+隔壁监控平台传过来的 JSON 格式一言难尽——有的压成一行，有的缩进 4 空格，有的用 tab，下游解析器遇到混合缩进直接报错。Go 写个批量格式化工具，一行命令统一风格，跑完所有文件缩进一致、key 可选排序。
 
 命令用法：`jsonfmt <路径> --indent 2 --style spaces|tabs --sort-keys --dry-run --recursive`。--indent 指定缩进级别，默认 2。--style 选空格或 tab 缩进，默认 spaces。--sort-keys 对 object 的 key 按字典序排序。路径可以是单个文件或目录，目录时 --recursive 递归处理 .json 文件。
 

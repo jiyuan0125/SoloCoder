@@ -1,6 +1,4 @@
-先说场景：之前用 Python 写过一个 JSON 展平脚本，速度还行但部署环境装不了 Python，只好换 Go 重写。
-
-步骤如下：
+之前用 Python 写过一个 JSON 展平脚本，速度还行但部署环境装不了 Python，只好换 Go 重写。
 1. 命令 `jsonflat -i nested.json -o flat.json [--sep .] [--array-style bracket]`，默认分隔符是点号，数组层级用 [index] 表示，比如 users[0].name。
 2. --array-style 可选 bracket（默认，用 [0]）或 dot（用 .0），影响数组索引的表示方式。
 3. 展平后输出 JSON 对象，key 是展平路径字符串，value 是原始叶节点值。null 值保持 null，空对象 {} 的 key 跳过不输出，空数组 [] 的 key 也跳过。布尔值保持 true/false，数字保持原始类型。

@@ -1,1 +1,7 @@
-SRE 要给新机器复制目录结构但不要文件内容。`treecopy <source> <target> --dry-run --exclude .git,vendor,node_modules --log treecopy.log`。递归遍历源目录（filepath.Walk），在目标创建对应的空目录，不复制任何文件。`--exclude` 指定跳过的目录名，逗号分隔，匹配时精确比较 filepath.Base 与排除列表。目标已存在的目录跳过，stdout 输出 "skip: <path>"。`--dry-run` 只输出计划创建的目录列表不实际创建，每行 "mkdir: <relative-path>"。源目录不存在时 stderr 输出 "error: source directory not found: <path>" 退出码 1。目标根目录不存在自动用 os.MkdirAll 创建。权限不足的路径 stderr 输出 "warning: permission denied: <path>" 跳过。`--log` 指定时写入日志文件，格式 "时间戳 操作 路径"。执行完毕 stdout 输出 "created: N, skipped: M, failed: K, total: T"。审批流程集成：`treecopy approve submit --desc <desc>` 提交，`treecopy approve review <id> --action approve|reject` 初审，`treecopy approve final-review <id>` 复审，初审不过可 `treecopy approve amend --id <id> --desc <new>` 修改重提。不用第三方包，go build 通过就行。
+新上线三台机器，每台都要搭一样的项目目录结构，但只要空目录不要文件内容。手动一个个 mkdir 太蠢了，写个脚本又怕漏了嵌套的子目录。Go 做一个目录结构复制工具，递归复制整棵目录树但只建空目录。
+
+`treecopy <source> <target> --dry-run --exclude .git,vendor,node_modules --log treecopy.log`。递归遍历源目录（filepath.Walk），在目标创建对应的空目录，不复制任何文件。`--exclude` 指定跳过的目录名，逗号分隔，匹配时精确比较 filepath.Base 与排除列表。目标已存在的目录跳过，stdout 输出 "skip: <path>"。`--dry-run` 只输出计划创建的目录列表不实际创建，每行 "mkdir: <relative-path>"。
+
+源目录不存在时 stderr 输出 "error: source directory not found: <path>" 退出码 1。目标根目录不存在自动用 os.MkdirAll 创建。权限不足的路径 stderr 输出 "warning: permission denied: <path>" 跳过。`--log` 指定时写入日志文件，格式 "时间戳 操作 路径"。执行完毕 stdout 输出 "created: N, skipped: M, failed: K, total: T"。
+
+审批流程集成：`treecopy approve submit --desc <desc>` 提交，`treecopy approve review <id> --action approve|reject` 初审，`treecopy approve final-review <id>` 复审，初审不过可 `treecopy approve amend --id <id> --desc <new>` 修改重提。不用第三方包，go build 通过就行。

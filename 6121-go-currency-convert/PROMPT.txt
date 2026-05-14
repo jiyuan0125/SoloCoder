@@ -1,4 +1,4 @@
-先用 Go 写一个金额格式互转工具，再处理财务那堆五花八门的报销单。支持人民币大写（壹万贰仟叁佰元整）、千分位（12,300.00）、纯数字（12300.00）三种格式互转。
+财务那堆报销单金额格式五花八门——有写「壹万贰仟叁佰元整」的，有千分位 12,300.00，还有纯数字 12300。每月核对要来回转换三种格式，出错一次就得重新审。Go 写个金额格式互转工具把这事自动化。
 
 单条转换：`currency --input "12,300.00" --from comma --to uppercase` 输出「壹万贰仟叁佰元整」。反过来 `currency --input "壹万贰仟叁佰元整" --from uppercase --to number` 输出 `12300.00`。from/to 参数值：comma（千分位）、uppercase（大写）、number（纯数字）。不支持 from 和 to 相同，此时报错 "source and target format are the same" 退出码 1。
 

@@ -1,4 +1,4 @@
-数据集有空值怎么办？导到分析工具里就报错，手动填又填不过来。能不能有个工具自动处理？
+导到分析工具里就报错——数据集里到处是空值，手动填根本填不过来。上周做个用户画像，age 列 30% 是空的，income 列更夸张快 50%，模型直接拒绝训练。
 
 `null-fill fill --input data.csv --output filled.csv --strategy forward --columns "age,income"`，`--strategy` 支持 `fixed`（固定值，需搭配 `--value` 参数）、`forward`（前一个非空值填充）、`backward`（后一个非空值填充）、`mean`（数值列的平均值）、`median`（中位数）。`--columns` 指定要填充的列，逗号分隔；不指定则处理所有有空值的列。
 
