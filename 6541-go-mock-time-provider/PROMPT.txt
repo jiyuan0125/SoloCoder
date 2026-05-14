@@ -1,4 +1,4 @@
-time.Now() 在测试里不可控，mock 掉它才能测过期、超时、定时触发这些场景。
+那段 token 过期检查的逻辑怎么测？等 24 小时 token 自然过期显然不行，`time.Sleep` 又拖慢整个测试套件。需要一个可控的时钟——想设几点就几点，想快进就快进，freeze 住就停。生成一个 `Clock` 接口和对应的 `MockClock` 实现，业务代码依赖接口而非 `time.Now()`，测试时注入 mock 时钟随意操控时间。
 
 `generate -pkg mocktime -out ./mocktime/` 生成 Go 包。接口：`type Clock interface { Now() time.Time; Since(t time.Time) time.Duration; Sleep(d time.Duration) }`。实现 `MockClock`：`NewMockClock(fixed time.Time)`、`Set(t time.Time)` 设时间、`Advance(d time.Duration)` 前进、`Freeze()`/`Resume()` 暂停恢复。
 

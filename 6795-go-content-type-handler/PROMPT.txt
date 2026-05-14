@@ -1,4 +1,4 @@
-接口返回的内容格式不确定——可能是 JSON 也可能是 XML 或 HTML，手动判断再解析太容易出错。先拿到响应，然后根据 Content-Type 头自动选择处理器，最后统一输出格式化结果。
+对接了十几个第三方接口，有的返回 JSON 有的返回 XML，偶尔还冒出 HTML 和二进制流。每次写客户端都得先判断 Content-Type 再选解析器，代码里一堆 if-else。干脆写个通用工具——发请求，按 Content-Type 自动选处理方式，统一输出格式化结果。
 
 `cthandler --url https://api.example.com/data` 发请求并自动处理。Content-Type 为 `application/json` 时 pretty print，缩进 2 空格，key 按字母排序。`text/xml` 或 `application/xml` 时缩进格式化输出。`text/html` 时提取 title 和 meta 标签信息。二进制类型（image/*、application/octet-stream）输出 hex dump，每行 16 字节，左侧偏移地址右侧 ASCII。`--hex-bytes 256` 限制 hex dump 的字节数。
 

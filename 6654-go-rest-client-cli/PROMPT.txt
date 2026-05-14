@@ -1,3 +1,9 @@
 curl 命令一行写三行长，Postman 太重还没法版本控制。自己用 Go 写个命令行 REST 客户端，请求配置用 YAML 存，放 git 跟团队共享。
 
-用法：`restcli send request.yaml`，请求文件 `method: POST url: https://api.example.com/users headers: Content-Type: application/json Authorization: Bearer {{token}} body: '{"name":"test"}'`。`{{variable}}` 替换优先级：`--var token=xxx` > `--env production.yaml` > 系统环境变量。`restcli save --name create-user` 保存模板到 `~/.restcli/templates/`。`restcli list` 列出已保存模板。`restcli history --limit 10` 显示最近请求的 URL、方法、状态码和耗时，历史存 `~/.restcli/history.json`，每条含 timestamp、method、url、status_code、latency_ms。支持 GET/POST/PUT/DELETE/PATCH。响应默认输出 body，`--verbose` 追加响应头和状态码。超时默认 30s，`--timeout 60s` 覆盖。连接失败、超时、DNS 错误输出到 stderr 退出码 1；HTTP 4xx/5xx 仍输出 body，退出码为状态码值。请求文件 YAML 解析失败退出码 2。项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，`go run .` 或 `go build` 都行。
+`restcli send request.yaml` 发请求，请求文件里写 `method: POST url: https://api.example.com/users headers: Content-Type: application/json Authorization: Bearer {{token}} body: '{"name":"test"}'`。`{{variable}}` 替换优先级：`--var token=xxx` > `--env production.yaml` > 系统环境变量。
+
+模板和历史功能——`restcli save --name create-user` 保存模板到 `~/.restcli/templates/`，`restcli list` 列出已保存模板。`restcli history --limit 10` 显示最近请求的 URL、方法、状态码和耗时，历史存 `~/.restcli/history.json`，每条含 timestamp、method、url、status_code、latency_ms。支持 GET/POST/PUT/DELETE/PATCH。
+
+响应默认输出 body，`--verbose` 追加响应头和状态码。超时默认 30s，`--timeout 60s` 覆盖。连接失败、超时、DNS 错误输出到 stderr 退出码 1；HTTP 4xx/5xx 仍输出 body，退出码为状态码值。请求文件 YAML 解析失败退出码 2。
+
+项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，`go run .` 或 `go build` 都行。

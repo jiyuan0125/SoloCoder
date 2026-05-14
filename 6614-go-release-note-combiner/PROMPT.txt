@@ -1,4 +1,4 @@
-六个子项目各写各的 release notes，最后合并成主项目版本公告时手动复制粘贴，漏了两个子项目的重大修复。需要一个合并工具自动收集并按规则组织。
+六个子项目各写各的 release notes，合并成主项目公告时手动复制粘贴漏了两个重大修复——一个是安全补丁，客户都看到了。自动收集、按规则组织，这种重复活不该让人做。
 
 1. 命令 `rncombiner merge -dir ./releases -output RELEASE.md`。扫描目录下所有子项目的 release note 文件（格式 `<project-name>-v<version>.md`），每个文件按 Markdown 标题分节。合并策略：按子项目分组，每组内按版本号降序排列，组间按 `-sort` 参数指定顺序（`alpha` 字母序、`time` 按文件修改时间）。输出一份合并后的 Markdown，顶部是总览：`## v2.0.0 Release Notes`，然后按子项目列出变更。
 

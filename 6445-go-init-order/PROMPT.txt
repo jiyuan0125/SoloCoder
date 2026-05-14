@@ -1,4 +1,4 @@
-先说问题：上周服务冷启动偶发 panic，排查发现是两个包的 init 函数有隐式依赖，A 包的 init 调了 B 包的函数，但 B 的 init 还没跑完，B 的全局变量是 nil。这种 init 副作用太难定位了。
+上周服务冷启动偶发 panic，排查了半天发现是两个包的 init 函数有隐式依赖——A 包的 init 调了 B 包的函数，但 B 的 init 还没跑完，全局变量还是 nil。init 的执行顺序由 import 拓扑决定，但这种隐式依赖根本看不出来，只能靠工具把链路理清楚。
 
 工具的使用流程：先 initorder analyze --dir ./mypkg，工具用 go/parser 解析所有 .go 文件的 import 关系和 init 函数体。然后构建包级依赖图，确定 init 执行顺序（Go 规范是按 import 拓扑排序）。接着扫描每个 init 函数的 AST，记录它引用了哪些包级变量和调用了哪些函数，标注副作用。
 

@@ -1,4 +1,4 @@
-CI 跑完产物散落各 runner 上——覆盖率报告、日志、截图，手动收集太烦。不同 CI 系统环境变量都不一样，脚本写了一堆 if-else。自动检测 CI 类型，统一收集打包。
+每次 CI 失败都要手动去 runner 上翻日志、找覆盖率报告、下截图——GitHub Actions 的 artifact 在 UI 里要点好几层才能下载，Jenkins 更麻烦还得装插件。不同 CI 系统的环境变量和路径格式都不一样，写了一堆 if-else 的 shell 脚本维护到崩溃。自动检测 CI 类型，把产物统一收集打包，一条命令搞定。
 
 `collect -outdir ./artifacts -patterns "coverage.out,*.log,screenshots/*.png"` 收集匹配 glob 模式的文件到输出目录。自动检测 CI（环境变量）：`GITHUB_ACTIONS`/`GITLAB_CI`/`JENKINS_HOME`/`BUILDKITE`/`CIRCLECI`，未检测到按本地模式处理。
 

@@ -1,4 +1,4 @@
-git bisect 要手动一步步试 good/bad，50 个 commit 跑 6 轮。自动搞定，直接告诉你哪个 commit 引入的问题。
+50 个 commit 的范围内出了 regression，`git bisect` 手动跑要试六七轮，每轮 checkout、编译、跑测试、标记 good/bad——光编译就要两分钟，整个过程得盯在电脑前一个多小时。交给工具自动完成，二分查找缩小范围，直接告诉你哪个 commit 引入了问题、谁写的、commit message 是什么。
 
 `hunt -good v1.0.0 -bad HEAD -test "go test ./..." -dir ./project` 二分查找。算法：`git rev-list --ancestry-path` 获取列表，取中点 checkout 运行 test，退出码 0 标 good 否则 bad，缩小到剩一个 commit。
 

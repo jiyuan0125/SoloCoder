@@ -1,4 +1,4 @@
-fuzz corpus 跑了三天积累了上万条数据，里面一半是重复的。手工整理太费劲。按以下步骤处理：
+fuzz corpus 跑了三天积累了上万条数据，里面一半是重复的，手工整理太费劲了。得有个工具能合并、去重、排序、统计一条龙。
 
 1. `merge -dirs dir1,dir2,dir3 -out ./merged` 合并多个 corpus 目录。相同内容（SHA-256 相同）的条目只保留一份，输出 `merged: {total} entries, {duplicates} duplicates removed`。条目以文件原始内容做哈希，不看文件名。
 2. `dedup -dir ./corpus -strategy sha256` 去重，策略可选 `sha256`（内容完全相同）或 `fuzzy`（内容相似度 > 0.9 视为重复）。`fuzzy` 策略输出 `SIMILAR: file1 <-> file2 (similarity: 0.93)` 格式的报告。

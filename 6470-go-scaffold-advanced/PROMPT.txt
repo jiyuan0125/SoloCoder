@@ -1,4 +1,4 @@
-先规划项目结构，再根据配置生成三层骨架代码，最后写入目录——新服务搭建三步走。
+新建一个微服务从零搭到能跑，光骨架代码就要写半小时——handler/service/repository 三层的接口定义、实现、依赖注入、路由注册，全是体力活。能不能一行命令全生成好？
 
 命令行：`scaffold -name user-service -layers handler,service,repository -output ./generated`。-name 服务名，-layers 指定层（handler/service/repository），-output 输出目录默认当前目录。
 

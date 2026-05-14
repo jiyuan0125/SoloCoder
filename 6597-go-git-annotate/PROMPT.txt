@@ -1,4 +1,4 @@
-给关键 commit 打标记方便以后查找，git notes 会推到远程影响别人。本地标记方案更合适。
+上周排查线上问题，记得某次安全修复改了认证逻辑，但翻了半天 git log 找不到那个 commit——几千条记录里凭记忆找无异于大海捞针。给关键 commit 打上分类标签就好了，比如 "security-fix"、"hotfix"，以后按标签秒检索。git notes 会推到远程影响别人，本地维护一套标注更合适。
 
 命令行子命令用 os.Args[1] 区分：
 - `annotate add <hash> -tag "security-fix" -note "patched CVE-2024-1234"` → 存入 `.git/annotations/<hash>.json`

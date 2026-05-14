@@ -1,4 +1,4 @@
-先用工具连接目标 HTTPS 服务器，然后抓取 TLS 握手过程中客户端发出的 ClientHello 信息，最后算出指纹哈希输出。整个流程就三步，每一步的结果都要在终端展示清楚。
+上次排查一个 HTTPS 连接问题，服务端死活不肯用 TLS 1.3，日志里又看不到协商细节。如果有工具能把 TLS 握手过程完整展示出来——客户端发了什么 cipher suite、服务端选了哪个、最终协商出什么协议版本——根本不用猜。
 
 1. 连接阶段：`tlsfp -host example.com -port 443`。用 `tls.Dial` 建立连接，配置自定义的 ClientHello 参数。默认端口 443，不填 -host 报 `error: -host is required` 退出码 1。连接超时 10 秒，超时报 `error: connection timeout after 10s` 退出码 1。
 

@@ -1,4 +1,4 @@
-安全审计要求构建产物必须签名，但现在的流程完全没覆盖这块。Go 写个签名工具，命令分两个子命令。
+过等保三级的时候审计方要求所有上线产物必须有签名可追溯，我们的 CI 流程完全没覆盖。手写了个 shell 脚本但经常忘执行，上次漏签的包直接被运维打回来了。Go 重写个靠谱的，命令分 sign 和 verify 两个子命令。
 
 `artifact-signer sign --key private.pem --algo rsa --input build/app.tar.gz`，`--algo` 支持 `rsa`（默认）和 `ecdsa`。签名算法 RSA 用 SHA256，ECDSA 用 P256 曲线。生成签名文件在输入文件同目录，文件名是 `{原文件名}.sig`，内容是 Base64 编码的签名值。同时生成 `{原文件名}.sha256` 文件，内容是文件的 SHA256 哈希值，格式和 `sha256sum` 命令输出一致。
 

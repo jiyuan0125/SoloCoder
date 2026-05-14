@@ -1,4 +1,4 @@
-先用 AST 解析 Go 源文件，找出 defer 在循环体内的调用、defer 和 Lock/Unlock 的顺序问题。工具目标是静态分析，不需要运行代码。
+排查了六小时的故障，根因藏在 for 循环里的 defer——一万个请求处理完才统一关闭文件句柄，fd 耗尽，新连接全被拒。defer 误用靠测试根本发现不了，得上静态分析。
 
 1. `defer-check scan ./src/` 递归扫描所有 `.go` 文件。检测规则：defer 出现在 for/range 循环体内时标注 `defer-in-loop: <file>:<line> defer will not execute until function returns`。`defer mu.Unlock()` 出现在 `mu.Lock()` 之前的标注 `defer-before-lock: <file>:<line>`。defer 在 if 块内但对应资源在 if 外分配的标注 `scope-mismatch`。
 

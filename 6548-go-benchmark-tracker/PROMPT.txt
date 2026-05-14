@@ -1,4 +1,4 @@
-benchmark 数据需要持久化追踪，光看一次看不出趋势。优化有没有效，对比才知道。
+上次性能优化完，leader 问"快了多少"，我答不上来——基准数据没存，只有当时的终端截图。benchmark 跑一次的数据没有意义，得纵向对比才有说服力。把每次 benchmark 结果存 SQLite，按函数名追踪 ns/op 和内存分配的趋势变化，优化前后一比便知。
 
 `record -bench bench.out -db benchmarks.db` 解析 `go test -bench` 输出，提取函数名、N次/秒、单次耗时、内存分配。写 SQLite 表 `benchmarks`：`id INTEGER PRIMARY KEY`、`func_name TEXT`、`ns_per_op REAL`、`allocs_per_op INTEGER`、`recorded_at DATETIME`。
 

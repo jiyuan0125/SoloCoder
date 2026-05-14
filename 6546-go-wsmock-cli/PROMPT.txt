@@ -1,4 +1,4 @@
-WebSocket mock 手写消息序列太折腾了，每次联调临时拼。用 JSON 配置文件定义消息序列。
+前端联调 WebSocket 接口的时候，后端还没开发完，前端只能对着协议文档猜消息格式。上次联调会上双方各执一词吵了半小时——最后发现是文档没写清楚推送消息的时序。搞个 WebSocket mock 服务，用 JSON 配置文件定义收到什么消息就回什么消息，前端不用等后端，自己先把交互逻辑调通。
 
 `serve -config mock.json -port 8080` 启动 mock 服务。配置：`{"responses":[{"match":{"type":"subscribe","pattern":"order.*"},"reply":{"type":"snapshot","data":"..."},"delay_ms":200}],"default_reply":{"type":"error","data":"unknown"}}`。收到消息解析 JSON，按 `match.type`（支持 glob）匹配，延迟 `delay_ms` 后发送 reply。`match` 为空则连接后立即发送。
 

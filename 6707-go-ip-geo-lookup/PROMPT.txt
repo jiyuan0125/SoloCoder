@@ -1,7 +1,9 @@
-先用场景说明：日志分析系统每天产生几十万条访问记录，里面的 IP 要分析来源地做地域统计。MaxMind 的 mmdb 格式数据库已经有了，就差一个能批量查询的工具。
+日志系统每天几十万条访问日志里的 IP 要做地域归档，MaxMind 的 GeoLite2 库已经有了，差一个能把 IP 批量灌进去查出国家城市运营商的命令行工具。
 
-步骤一，三种查询模式。单个 IP：`ipgeo lookup 8.8.8.8 --db GeoLite2-City.mmdb`。批量文件：`ipgeo batch --input ips.txt --db GeoLite2-City.mmdb --output result.csv`。CIDR 范围：`ipgeo range 192.168.0.0/24 --db GeoLite2-City.mmdb`，展开所有可用 IP 逐个查询。
-步骤二，输出字段：country（国家代码如 CN）、city（城市名）、isp（运营商）。CSV 模式输出表头 "ip,country,city,isp"。`--json` 模式输出 [{ip, country, city, isp, lat, lon}]。查询无结果时字段填 "N/A"。
-步骤三，mmdb 文件不存在退出码 1 打印 "database file not found"。IP 格式无效退出码 2 打印 "invalid IP: xxx"。批量模式空行跳过，重复 IP 只查一次缓存结果。
+三种查询模式。单个 IP：`ipgeo lookup 8.8.8.8 --db GeoLite2-City.mmdb`。批量文件：`ipgeo batch --input ips.txt --db GeoLite2-City.mmdb --output result.csv`。CIDR 范围：`ipgeo range 192.168.0.0/24 --db GeoLite2-City.mmdb`，展开所有可用 IP 逐个查询。
+
+输出字段：country（国家代码如 CN）、city（城市名）、isp（运营商）。CSV 模式输出表头 "ip,country,city,isp"。`--json` 模式输出 [{ip, country, city, isp, lat, lon}]。查询无结果时字段填 "N/A"。
+
+mmdb 文件不存在退出码 1 打印 "database file not found"。IP 格式无效退出码 2 打印 "invalid IP: xxx"。批量模式空行跳过，重复 IP 只查一次缓存结果。
 
 纯 Go 标准库（mmdb 解析用 os.ReadFile + binary 读取），编译后单二进制可以直接跑。

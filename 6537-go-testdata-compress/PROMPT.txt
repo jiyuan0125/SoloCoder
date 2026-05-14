@@ -1,4 +1,4 @@
-测试数据目录 2GB 了，每次 clone 都拉这些。压缩打包、增量更新、校验完整性。
+测试数据目录膨胀到 2GB 了——其中大部分是 JSON fixture 和二进制采样文件。每次 git clone 都要拉这些，新人入职第一件事就是等 15 分钟拉仓库。CI 也一样，每个 job 都要重新下载。按子目录分组打包成 tar.gz，支持增量打包只压缩变化的文件，解压时校验 SHA-256 确保没损坏。
 
 `pack -dir ./testdata -group-by project -out ./testdata.tar.gz` 按顶层子目录分组，每个生成一个 tar.gz。`-incremental -checkpoint .checkpoint` 只打包 SHA-256 变化的文件，首次全量。输出 `packed: {new} new, {modified} modified, {unchanged} unchanged`。
 

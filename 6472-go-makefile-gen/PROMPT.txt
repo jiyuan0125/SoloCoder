@@ -1,8 +1,6 @@
-十个项目十个 Makefile 不一样，新人不知道 make 什么。生成标准 Makefile。
+`makegen generate <目录> [--output Makefile] [--cross-compile linux,darwin,windows]`，扫描 Go 项目自动生成统一风格的 Makefile。十个项目十种写法——有的 go build 有的 go install，lint 目标有人叫 check 有人叫 lint，新人 clone 下来一脸懵。
 
-命令：`makegen generate <目录> [--output Makefile] [--cross-compile linux,darwin,windows]`。扫描项目确定 main 包和模块名，生成目标：build（go build -ldflags "-s -w" -o bin/<名>）、test（go test -v -race -coverprofile=coverage.out ./...）、lint（go vet + gofmt -l）、clean（rm -rf bin/ coverage.out）、all（依赖 lint test build）。交叉编译目标 build-linux/build-darwin/build-windows 设 GOOS/GOARCH。
-
-变量：GO=go、BINARY=<名>、VERSION=$(shell git describe --tags --always --dirty)、LDFLAGS=-ldflags "-s -w -X main.version=$(VERSION)"。
+生成目标：build（`go build -ldflags "-s -w" -o bin/<名>`）、test（`go test -v -race -coverprofile=coverage.out ./...`）、lint（go vet + gofmt -l）、clean（rm -rf bin/ coverage.out）、all（依赖 lint test build）。变量统一：GO=go、BINARY=<名>、VERSION=$(shell git describe --tags --always --dirty)、LDFLAGS="-s -w -X main.version=$(VERSION)"。交叉编译目标 build-linux/build-darwin/build-windows 自动设 GOOS/GOARCH。
 
 配置：`config get <key>`、`config set <key> <value>`、`config list`、`config env switch dev|prod`（dev 不加 -race，prod 加）。
 

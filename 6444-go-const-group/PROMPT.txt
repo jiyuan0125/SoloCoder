@@ -1,4 +1,4 @@
-先说事故：iota 的常量组定义里中间插了个不带类型的常量，后面的值全偏了一位，跑了两个月才被 QA 发现。这种隐式依赖太危险了，需要静态检查。
+iota 的常量组定义里中间插了个不带类型的常量，后面的值全偏了一位，跑了两个月才被 QA 发现。这种隐式依赖太危险了，需要静态检查。
 
 第一步 constcheck scan --dir ./pkg 递归扫描 .go 文件，用 go/parser 提取所有 const 声明块。第二步检查每个 const block 里 iota 的使用——如果有 iota，验证每一行的表达式是否显式写了值（带 iota 的显式表达式算通过，空行隐式继承标 WARNING）。第三步检查同组常量的类型是否一致，mixed types 标 WARNING: mixed types in const group at file.go:10。
 

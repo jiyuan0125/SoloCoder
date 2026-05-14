@@ -1,10 +1,10 @@
-对接第三方 API，手写请求构造和响应解析写两天，对方改个字段名又得改。从 API 定义自动生成 Go SDK。
+`sdkgen generate <spec文件> --package <包名> [--output <目录>] [--client http|mock]`，从 API spec 一键生成 Go SDK。每个 endpoint 生成 Request struct（json tag 自动加）、Response struct、完整方法函数——构造请求、发 HTTP、解析响应、错误处理一条龙。
 
-从 YAML/JSON spec 生成 Go client。每个 endpoint 生成 Request struct（带 json tag）、Response struct、方法函数（构造请求→发送→解析→错误处理）。
+对接支付网关那会儿，20 个接口手写了两天，对方一改字段名又要跟着改。这种体力活就该自动化掉。
 
-用法：`sdkgen generate <spec文件> --package <包名> [--output <目录>] [--client http|mock]`。--client http 生成真实调用，mock 生成固定数据方便测试。方法签名：`func (c *Client) <OpID>(ctx context.Context, req *<Op>Request) (*<Op>Response, error)`。错误封装 APIError{StatusCode, Message, RequestID}，429 自动解析 Retry-After。
+--client http 生成真实调用，mock 生成固定返回值方便单测。方法签名：`func (c *Client) <OpID>(ctx context.Context, req *<Op>Request) (*<Op>Response, error)`。错误统一封装 APIError{StatusCode, Message, RequestID}，429 自动从 header 解析 Retry-After。
 
-子命令：`db migrate` 生成 SQL migration、`db rollback` 回滚、`db status` 生成历史、`db seed` 测试数据代码。
+子命令：`db migrate` 生成 SQL migration、`db rollback` 回滚、`db status` 查看历史、`db seed` 插入测试数据代码。
 
 spec 不存在退出码 1，格式错误 "invalid spec: <行> <原因>" 退出码 1，无写权限退出码 1。
 

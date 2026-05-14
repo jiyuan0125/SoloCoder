@@ -1,4 +1,4 @@
-调试流式接口遇到 chunked 编码要手动处理？这事光想想就头大。
+调了半天流式上传接口，服务端说收到的 chunked 数据格式不对，但肉眼看二进制根本看不出哪截多了一位少了一位。得有个工具把数据编解码来回转，编码时按指定 chunk size 切分，解码时逐块校验，格式错了精确定位到字节偏移。
 
 两个子命令：`encode` 把 stdin 转成 chunked 格式输出到 stdout，`decode` 反过来。`echo "hello world" | ./chunked encode` 输出 `b\r\nhello world\r\n0\r\n\r\n`。`./chunked decode < chunked_input.txt` 还原原始内容。
 

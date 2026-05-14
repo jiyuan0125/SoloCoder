@@ -1,6 +1,6 @@
-先说说背景——服务器有两块网卡，一块走内网一块走外网，想让特定服务只走指定网卡。需要一个工具先列出所有网卡和 IP，然后测试绑定到指定网卡后的网络连通性。
+服务器两块网卡，一块走内网一块走外网，想让特定服务只走指定网卡出口。得先看清楚有哪些网卡和 IP，再验证绑定后能不能通。
 
-第一步，`netbind list` 列出所有网络接口，输出表格：列包括 Interface、IPv4、IPv6、MAC、Status（up/down）。加 `-json` 输出 JSON 数组格式。第二步，`netbind test -iface eth1 -target 8.8.8.8:53` 绑定到指定接口后发一个 TCP 连接测试，报告连通性和延迟。第三步，`netbind bind -iface eth1 -command "curl http://example.com"` 在绑定环境下执行指定命令，报告命令的 exit code 和输出。
+`netbind list` 列出所有网络接口，输出表格：列包括 Interface、IPv4、IPv6、MAC、Status（up/down）。加 `-json` 输出 JSON 数组格式。`netbind test -iface eth1 -target 8.8.8.8:53` 绑定到指定接口后发一个 TCP 连接测试，报告连通性和延迟。`netbind bind -iface eth1 -command "curl http://example.com"` 在绑定环境下执行指定命令，报告命令的 exit code 和输出。
 
 list 时如果没有发现任何网络接口（不太可能但处理边界）输出 "no network interfaces found" exit 0。test 时接口名不存在报 "interface not found: <name>" exit 1。target 地址格式错误（不含端口）报 "invalid target, expected host:port" exit 1。bind 执行命令超时（`-timeout 30s`）杀掉子进程并报告 "command timed out"。
 

@@ -1,4 +1,4 @@
-先说背景：项目从 errors.New 迁移到 fmt.Errorf("%w", err) 做错误包装，结果漏了不少地方，有些该用 %w 的地方还在用 %v，导致 errors.Is 和 errors.As 链路断了，线上排障时根本追踪不到根因。
+项目从 errors.New 迁移到 fmt.Errorf("%w", err) 做错误包装，结果漏了不少地方，有些该用 %w 的地方还在用 %v，导致 errors.Is 和 errors.As 链路断了，线上排障时根本追踪不到根因。
 
 处理流程分几步：
 1. 扫描所有 .go 文件，找 fmt.Errorf 调用，分析格式化动词是 %w 还是 %v

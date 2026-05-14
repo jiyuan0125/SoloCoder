@@ -1,4 +1,4 @@
-构建产物散落在各台机器上，找起来费劲。搞个工具统一管理上传下载。
+上周排查线上问题要拿特定版本的二进制，在五台构建机之间翻来翻去花了半小时。三个项目的产物命名还不统一，差点拿错版本上了线。得有个地方统一存、按项目版本管起来。
 
 `artifact-mgr upload --file build/app.tar.gz --project myapp --version v1.2.3`，上传到 `./artifacts/{project}/{version}/`。已存在拒绝输出 "already exists" 退出码 2，`--force` 可覆盖。上传时自动生成 `manifest.json` 含文件名、SHA256、大小、上传时间。
 

@@ -1,4 +1,4 @@
-有些测试加 -race 就挂，有些加了 -tags 才能编译通过，到底是哪个 flag 的问题？
+`-race` 加上就挂、`-tags` 换个值编译就不过——同一个测试套件，不同的 flag 组合跑出截然不同的结果。手动逐个试太慢了，上次排查 race condition 用了两天，最后发现加 `-count=1` 就消失了。把所有 flag 组合定义好，自动跑笛卡尔积，哪个组合失败一目了然。
 
 工具接收 JSON 配置文件 `matrix.json` 定义 flag 矩阵：`{"flags":[{"name":"race","values":["true","false"]},{"name":"tags","values":["linux","darwin",""]}],"test_cmd":"go test ./...","timeout":"5m"}`。自动生成所有组合（笛卡尔积），逐个执行 `go test` 加对应 flag，记录通过/失败和耗时。
 

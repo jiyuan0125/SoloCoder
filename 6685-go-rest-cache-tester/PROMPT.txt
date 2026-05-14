@@ -1,1 +1,7 @@
-后端说 API 加了缓存，但前端测下来响应时间没变化，到底缓存有没有生效？`cachetest <url> --method GET|POST --headers "Accept: application/json" --count 10 --interval 500ms --timeout 5s --output result.json`。发 N 次相同请求，第一次记录响应头中的 ETag 和 Last-Modified，后续请求自动带上 If-None-Match（ETag 值）和 If-Modified-Since（Last-Modified 值）。统计每轮的 HTTP 状态码、响应时间（毫秒，用 time.Since 测量）、Content-Length。输出三部分：第一部分逐次请求的详细结果表格（序号、状态码、耗时ms、Content-Length、是否缓存命中 304），第二部分汇总（总请求数、304 次数、命中率百分比、平均响应时间、最快/最慢响应时间），第三部分缓存头验证（ETag 是否每次一致、Last-Modified 是否保持不变）。`--output` 指定时写 JSON 格式。全部请求返回 200 说明缓存没生效，stderr 输出 "warning: no 304 responses, cache may not be working"。连接失败或超时 stderr 输出 "error: request failed: <error>" 退出码 1。用 Go 标准库写，go run . 或 go build 都行。
+后端说 API 加了缓存，但前端测下来响应时间没变化，到底缓存有没有生效？
+
+`cachetest <url> --method GET|POST --headers "Accept: application/json" --count 10 --interval 500ms --timeout 5s --output result.json`。发 N 次相同请求，第一次记录响应头中的 ETag 和 Last-Modified，后续请求自动带上 If-None-Match（ETag 值）和 If-Modified-Since（Last-Modified 值）。统计每轮的 HTTP 状态码、响应时间（毫秒，用 time.Since 测量）、Content-Length。
+
+输出分三块：第一，逐次请求的详细结果表格（序号、状态码、耗时ms、Content-Length、是否缓存命中 304）。第二，汇总统计——总请求数、304 次数、命中率百分比、平均响应时间、最快/最慢响应时间。第三，缓存头验证——ETag 是否每次一致、Last-Modified 是否保持不变。
+
+`--output` 指定时写 JSON 格式。全部请求返回 200 说明缓存没生效，stderr 输出 "warning: no 304 responses, cache may not be working"。连接失败或超时 stderr 输出 "error: request failed: <error>" 退出码 1。用 Go 标准库写，go run . 或 go build 都行。

@@ -1,7 +1,9 @@
-先说现状：状态变更后要通知五六个模块，每个模块都直接调用其他模块的方法，改一个牵一发动全身。需要生成观察者模式的模板代码——主题接口、观察者接口、事件分发机制，让各模块解耦。
+先说现状：状态变更后要通知五六个模块——邮件、短信、日志、审计、缓存刷新、搜索引擎更新。每个模块都直接调用其他模块的方法，改一个牵一发动全身。需要生成观察者模式的模板代码——主题接口、观察者接口、事件分发机制，让各模块解耦。
 
-命令：observer-gen -subject Order -events Created,Updated,Deleted -observers EmailNotifier,SMSNotifier,Logger -output observer.go。-subject 指定主题名称，-events 事件列表逗号分隔，-observers 观察者列表逗号分隔，-output 输出文件路径。生成内容包含：Subject 接口（Register、Unregister、Notify 三个方法）、Observer 接口（OnEvent 方法含 event 参数）、具体 Subject 实现类含观察者切片和线程安全的注册与注销（用 sync.Mutex 保护）。每个事件对应一个 struct（如 OrderCreatedEvent），包含 Type、Timestamp、Payload 三个字段。
+命令：observer-gen -subject Order -events Created,Updated,Deleted -observers EmailNotifier,SMSNotifier,Logger -output observer.go。生成 Subject 接口（Register、Unregister、Notify）、Observer 接口（OnEvent）、具体 Subject 实现类（观察者切片 + sync.Mutex 保护线程安全）。每个事件一个 struct（如 OrderCreatedEvent），含 Type、Timestamp、Payload。
 
-Notify 方法遍历观察者列表依次调用 OnEvent，单个观察者 panic 时用 recover 捕获后记录错误继续通知下一个，不因一个观察者崩溃影响其他人。生成的代码包含完整 import 声明和 package 声明。-package observers 指定包名，默认 main。参数不完整时（比如缺 -subject）输出 usage 帮助信息并退出码 1。
+单个观察者 panic 时 recover 捕获后记录错误继续通知下一个，不因一个崩溃影响其他人。生成的代码包含完整 import 和 package 声明，-package observers 指定包名（默认 main）。参数不完整输出 usage 退出码 1。
 
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。纯标准库，go run . 就行。
+审批流程：提交→初审→复审→通过，初审不过可以修改重提。
+
+纯标准库，go run . 就行。

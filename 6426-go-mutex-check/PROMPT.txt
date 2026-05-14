@@ -1,4 +1,4 @@
-先说问题：线上服务死锁了，追查发现有个 goroutine 拿了锁之后 panic 没释放，另一个 goroutine 就卡死了。还有的地方 defer unlock 写漏了，或者同一个 goroutine 里重复加锁。写个静态分析工具，扫描 Go 源码检查锁的使用是否规范。
+服务死锁了——一个 goroutine 拿了锁之后 panic 没释放，另一个 goroutine 就永久卡死了。还有 defer unlock 写漏的、同一 goroutine 重复加锁的。靠人审查锁的配对太容易遗漏了，得用工具把 sync.Mutex 和 sync.RWMutex 的使用全扫一遍。
 
 扫描 AST 找到所有 sync.Mutex 和 sync.RWMutex 的使用，逐函数检查。检查项包括：调用 Lock 后在同一个函数内是否有对应的 Unlock（包括 defer Unlock）；RWMutex 的 RLock 是否有配对的 RUnlock；是否存在 Lock 之后又在 Unlock 之前再次 Lock 的重复加锁；是否有 Unlock 但往前找不到对应的 Lock 调用。输出格式：[ERROR] file.go:42: Lock without matching Unlock，[WARN] file.go:55: Unlock without Lock。
 

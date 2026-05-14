@@ -1,6 +1,8 @@
-第一步扫描——`authors-map scan -repo ./project` 遍历 `git log --format='%aN <%aE>'` 获取所有作者名+邮箱组合。第二步分析——把邮箱的域名部分提取出来做分组依据，同时用作者名的相似度（去除空格和大小写后完全相同视为同一人）建议合并。第三步输出——生成 `.mailmap` 文件，格式 `Proper Name <proper@email.com> Other Name <other@email.com>`。
+做开源贡献统计的时候发现，同一个人在仓库里有 4 种名字——"Zhang San"、"zhangsan"、"San Zhang"、"zhang san"，邮箱也不一样。git shortlog 数出来 4 个 contributor，实际就 1 个人。`.mailmap` 能修但手动对齐太费劲。
 
-子命令 `authors-map scan` 输出发现的所有作者变体，表格列：规范名、变体名、邮箱、commit 数。`authors-map suggest` 输出建议合并的映射列表，每个建议包含 `{规范名, 规范邮箱, 变体列表}`。`authors-map generate -output .mailmap` 直接生成 .mailmap 文件。`authors-map apply` 读取已有的 .mailmap 验证格式正确性（每行 `Name <email> [Name <email>]`），格式错误行输出 `warning: invalid line {n}: {content}`。
+`authors-map scan -repo ./project` 遍历 `git log --format='%aN <%aE>'` 获取所有作者名+邮箱组合，把邮箱域名做分组依据，再用作者名相似度（去除空格和大小写后完全相同视为同一人）建议合并。子命令 `suggest` 输出建议合并的映射列表，每个建议包含 `{规范名, 规范邮箱, 变体列表}`。`generate -output .mailmap` 直接生成 .mailmap 文件，格式 `Proper Name <proper@email.com> Other Name <other@email.com>`。
+
+`scan` 输出所有作者变体，表格列：规范名、变体名、邮箱、commit 数。`apply` 读取已有的 .mailmap 验证格式正确性（每行 `Name <email> [Name <email>]`），格式错误行输出 `warning: invalid line {n}: {content}`。
 
 只有一个邮箱一个名字的作者不出现在建议列表中。`-min-commits 5` 过滤掉 commit 数低于阈值的变体（减少噪音）。已有 .mailmap 时 `generate` 追加新映射不覆盖已有条目。不在 git 仓库报错退出码 1。
 

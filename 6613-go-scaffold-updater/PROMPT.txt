@@ -1,4 +1,4 @@
-团队的脚手架模板上周更新了 ESLint 配置和 Dockerfile，但十几个老项目还在用旧版本，上次部署就因为过时的 Node 版本出了问题。需要一个工具自动对比模板和项目文件的差异，提示哪些配置该更新了。
+团队的脚手架模板上周更新了 ESLint 配置和 Dockerfile，十几个老项目还在用旧版本——上次部署就因为过时的 Node 版本出了问题。能不能自动对比模板和项目文件，看哪些配置该更新了？
 
 CLI 命令 `scaffoldup check -template ./template -project ./myproject`。递归扫描两个目录中同路径的文件，对每个文件按行对比。差异分为三类：`added`（模板有项目没有的行）、`removed`（项目有模板没有的行）、`changed`（同一位置内容不同）。输出 `diff-report.json`，结构：`{"files": [{"path": ".eslintrc", "diffs": [{"type": "changed", "line": 5, "template": "...", "project": "..."}]}], "summary": {"total_files": 8, "changed_files": 3}}`。
 

@@ -1,4 +1,4 @@
-先解析源码 → 构建 AST → 检测泄漏模式 → 输出报告。
+去年双十一压测，服务跑了半小时内存就飙到 8G——查下来是每处理一个请求起了一个 goroutine，channel 没关、WaitGroup 没加，十万并发等于十万个泄漏的协程。这种问题 code review 根本扫不出来，得靠工具。
 
 1. `goroutine scan --dir <dir>` 检测三类问题：未关闭 channel（`make(chan T)` 无 `close` → `UNCLOSED_CHANNEL: <file>:<line> ch=<name>`），缺少 WaitGroup（`go func()` 无 `wg.Add` → `MISSING_WAITGROUP: <file>:<line>`），泄漏 timer/ticker（无 `Stop()` → `LEAKED_TIMER: <file>:<line> type=<ticker|timer>`）。
 

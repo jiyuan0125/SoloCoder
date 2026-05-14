@@ -1,4 +1,4 @@
-`commit-lint` 做一件事——检查 commit message 是不是符合 Conventional Commits 规范，不符合就告诉你哪里有问题。
+上次发版 commit message 写成了 "update stuff"，线上回滚的时候翻半天 git log 找不到对应改动。团队约定了 Conventional Commits 规范，但每次都有人忘，CI 也没拦住。得有个工具在提交那一刻就检查格式，不合规矩直接打回去。
 
 用法分两种：从 stdin 管道读 `echo "fix: resolve null pointer" | commit-lint`，或者从文件读 `commit-lint -file msg.txt`。检查规则默认开启 Conventional Commits 格式（正则 `^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .{1,100}`），subject 行不超过 100 字符，body 每行不超过 200 字符，空行分隔 subject 和 body。支持自定义规则文件 `-rules custom.json`，里面可以覆盖正则、行长度上限、允许的 type 列表。
 

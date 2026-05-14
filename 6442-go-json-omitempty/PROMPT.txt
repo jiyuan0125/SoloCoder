@@ -1,4 +1,4 @@
-先用场景说一下：前端同学报了个 bug，用户关闭了某项设置（布尔值 false），但接口返回的 JSON 里这个字段直接没了，前端拿到的就是 undefined，等于没法区分"用户关闭了"和"用户没设置过"。根源是 bool 类型字段加了 omitempty。
+前端同学报了个 bug，用户关闭了某项设置（布尔值 false），但接口返回的 JSON 里这个字段直接没了，前端拿到的就是 undefined，等于没法区分"用户关闭了"和"用户没设置过"。根源是 bool 类型字段加了 omitempty。
 
 处理流程：
 1. 扫描 Go struct 的 JSON tag，找出所有带 omitempty 的字段

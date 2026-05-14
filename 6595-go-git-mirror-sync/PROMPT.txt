@@ -1,4 +1,4 @@
-源码仓库同步到内部镜像，全量 clone 要下 5GB 不现实。增量同步才行，还得定时跑。
+公司安全合规要求所有外部依赖源码必须有内部镜像备份，十几个仓库手动同步根本管不过来。全量 clone 一个仓库就 5GB，整个组织几十个仓库走全量太浪费带宽。增量同步才是正解，还得挂个定时任务保证镜像不会落后太多。
 
 命令行：`mirror-sync -source https://github.com/org/repo.git -target /local/mirror.git`。`-refs "refs/heads/*,refs/tags/*"` 指定同步的引用范围，默认全部。`-interval 300` 每 300 秒循环同步（不指定则同步一次退出）。`-incremental` 增量模式只传输新增对象。
 

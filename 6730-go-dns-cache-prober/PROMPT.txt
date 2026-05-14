@@ -1,6 +1,6 @@
-先描述场景：部署了一套本地 DNS 缓存，怀疑它返回过期记录。症状是改了 DNS 记录后本地还是旧 IP。需要一个工具能判断查询结果到底是来自缓存还是真的递归查了权威 DNS。
+改了 DNS 记录后本地还是旧 IP，怀疑本地缓存没刷新。需要一个探针工具，能判断查询结果是来自缓存还是真的递归查了权威 DNS——发两次同样的查询，对比响应时间就行。
 
-第一步 dnsprobe query --domain example.com --server 127.0.0.1:53 发第一次查询，记录响应时间和 Answer 里的 TTL。第二步等 1 秒后自动发第二次完全相同的查询，对比响应时间——如果第二次明显更快（比如不到第一次的 10%），大概率是命中了缓存。
+用法：`dnsprobe query --domain example.com --server 127.0.0.1:53`，发第一次查询记录响应时间和 Answer 里的 TTL。等 1 秒后自动发第二次完全相同的查询，对比响应时间——如果第二次明显更快（比如不到第一次的 10%），大概率是命中了缓存。
 
 加上 --recursive 标志同时发一次直接到权威 DNS 的递归查询作为对照组。输出结果包含：query1_time_ms、query2_time_ms、cache_hit_probable（bool）、ttl_remaining（秒）、recursive_time_ms。
 

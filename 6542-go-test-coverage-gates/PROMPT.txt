@@ -1,4 +1,4 @@
-覆盖率从 85% 降到 72% 没人发现，上线出了两个低级 bug。先配阈值再跑检查。
+覆盖率从 85% 悄悄降到 72%，整整两个 sprint 没人注意到，直到线上出了两个本该被测试拦住的低级 bug。事后查 git history 才发现是某次重构删了一批测试用例。配一个阈值门禁，每次跑完覆盖率自动检查——全局不低于 80%，核心包不低于 90%，未达标的阻止合并。
 
 `init -out gates.json` 生成配置模板：`{"global_threshold":80.0,"packages":{"pkg/handler":90.0},"allowlist":["pkg/generated"]}`。
 

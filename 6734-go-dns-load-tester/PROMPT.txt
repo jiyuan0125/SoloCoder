@@ -1,6 +1,8 @@
-先指定目标 DNS 服务器（`-server 8.8.8.8:53`）和 QPS（`-qps 1000`），再选择查询类型（`-type A|AAAA|MX|TXT`，默认 A），工具就开始按设定速率发查询。域名用 `-domain example.com` 指定，或 `-domains-file list.txt` 批量加载。
+上次 DNS 切换完想压测一下新服务器的承载能力，找不到趁手的工具。需要一个能按指定 QPS 对 DNS 服务器发查询的负载测试器，递归和迭代两种模式都跑一遍看延迟分布。
 
-第一步跑递归查询（`-mode recursive`），第二步跑迭代查询（`-mode iterative`），也可以 `-mode both` 两种都跑。每个查询记录响应时间，统计成功率和延迟分布。测试时长用 `-duration 30s` 控制，默认 10 秒。
+指定目标 DNS 服务器（`-server 8.8.8.8:53`）和 QPS（`-qps 1000`），再选择查询类型（`-type A|AAAA|MX|TXT`，默认 A），工具就开始按设定速率发查询。域名用 `-domain example.com` 指定，或 `-domains-file list.txt` 批量加载。
+
+跑递归查询（`-mode recursive`）、迭代查询（`-mode iterative`），也可以 `-mode both` 两种都跑。每个查询记录响应时间，统计成功率和延迟分布。测试时长用 `-duration 30s` 控制，默认 10 秒。
 
 结果实时写入 `dns_result.csv`，字段：timestamp,query_type,domain,server,latency_ms,status(ok/timeout/servfail)。测试结束后打印摘要：总查询数、成功率、P50/P95/P99 延迟。多个 goroutine 并发写结果文件需要加锁或用 channel 汇总。QPS 为 0 或负数打印 "invalid qps" 并 exit 1。
 

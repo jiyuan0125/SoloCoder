@@ -1,4 +1,4 @@
-测试不同 header 组合对响应的影响——每次手动改 curl 参数实在太折磨了。
+对接的 CDN 厂商说缓存命中率低是因为客户端传了奇怪的 header，但我们不确定是哪个 header 导致的。得在请求到服务端之前把 header 拦下来改一改看效果——加个 Auth 头试试缓存行为、把 Accept-Language 换成 en-US 对比响应内容。手动 curl 每次改一组参数太折磨了。
 
 配置文件 `rules.yaml`：
 ```yaml

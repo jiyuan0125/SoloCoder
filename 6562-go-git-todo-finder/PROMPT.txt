@@ -1,4 +1,6 @@
-第一步扫描——`todo-finder -path ./src` 递归遍历指定目录下所有文本文件（跳过 `.git/` `vendor/` `node_modules/`），用正则匹配 `TODO` `FIXME` `HACK` `XXX` `OPTIMIZE` 注释（支持 `//` 和 `/*` 风格，也支持 Python `#`）。第二步解析——提取注释内容、所在文件路径、行号、作者（通过 `git blame -L n,n file` 获取该行最后修改者）、日期。
+上个月接手一个老项目，里面散落着两百多个 TODO 和 FIXME，有些三年前的注释，原作者都离职了。逐个 grep 再 blame 效率太低。
+
+`todo-finder -path ./src` 递归遍历指定目录下所有文本文件（跳过 `.git/` `vendor/` `node_modules/`），用正则匹配 `TODO` `FIXME` `HACK` `XXX` `OPTIMIZE` 注释（支持 `//` 和 `/*` 风格，也支持 Python `#`）。每条注释自动提取内容、所在文件路径、行号，再通过 `git blame -L n,n file` 找到该行最后修改者和日期。
 
 汇总输出 Markdown 列表，按标签分组：`## TODO (234)\n- [src/auth.go:42] zhangsan (2024-01-15): 处理 token 过期刷新\n...`。`-tag TODO` 按标签过滤只显示指定类型。`-author zhangsan` 只显示指定作者的。`-since 2024-01-01` 过滤日期范围。`-output todos.md` 写文件。`-format json` 输出 JSON 数组，每个元素 `{"tag","file","line","author","date","content"}`。
 

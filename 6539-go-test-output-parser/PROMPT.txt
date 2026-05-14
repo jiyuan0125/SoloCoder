@@ -1,4 +1,4 @@
-多语言项目的测试报告格式不统一——Go test、pytest、JUnit XML 各一种。全解析统一成 JSON。
+monorepo 里 Go 服务、Python 脚本、Java 工具都有，CI 跑完测试报告格式五花八门——Go 的 `go test -v` 输出、Python 的 pytest stdout、Java 的 JUnit XML，想汇总一个总通过率都做不到。统一解析这三种格式，输出标准化 JSON，再生成一个 HTML 汇总页面一目了然。
 
 `parse -format gotest|pytest|junit|auto -file output.txt` 解析测试输出。统一输出 JSON：`{"framework":"","test_suites":[{"name":"","tests":[{"name":"","status":"pass|fail|skip","duration_ms":0,"error_message":""}]}],"summary":{"total":0,"passed":0,"failed":0,"skipped":0,"duration_ms":0}}`。
 

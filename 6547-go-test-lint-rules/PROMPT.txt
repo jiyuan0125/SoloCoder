@@ -1,4 +1,4 @@
-测试里 `time.Sleep(5*time.Second)` 等待、硬编码 `localhost:8080`、测试间共享全局变量——这些反模式 review 不一定看得出。先扫描，再分类，最后出报告。
+code review 的时候测试文件经常被跳过—— reviewer 觉得"测试能跑过就行"。但 `time.Sleep(5*time.Second)` 等待、硬编码 `localhost:8080`、测试间共享可变全局变量这些反模式，CI 里时灵时不灵，flaky test 的根源往往就在这儿。写个扫描器自动检测测试代码中的反模式，按规则分类输出报告。
 
 `lint -dir ./project -rules all` 扫描 `_test.go` 文件。内置规则：
 1. `no-assert`：测试函数无 `t.Error`/`t.Fatal`/`assert`/`require` 调用

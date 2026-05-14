@@ -1,4 +1,4 @@
-先有个 Netscape 格式的 cookies.txt 文件（浏览器插件导出的那种），然后用这个工具解析它。命令行跑起来是这样的：
+从浏览器导出的 cookies.txt 里面塞了几百条记录，过期的、重复的、不知名域名的混在一块。要查某个域名有哪些 cookie、清掉过期的、导出给 curl 用——手工编辑这个纯文本文件实在太容易改错了。
 
 `cookiejar load cookies.txt` 默认加载文件并显示所有 cookie。`cookiejar load cookies.txt --domain example.com` 只看某个域名的。`cookiejar load cookies.txt --filter-expired` 过滤掉过期的条目。`cookiejar load cookies.txt --delete-expired --output cleaned.txt` 删除过期的写回新文件。
 

@@ -1,4 +1,4 @@
-先加载 OpenAPI 文档，再逐接口检查必填字段，最后输出报告——API 文档质量检查三步。
+接口文档缺了 description 被合规扫出来了，P2 工单催着补全。200 个接口谁也不想逐个翻，让工具自动扫描一遍缺什么。
 
 命令行：`apidoclint -doc openapi.json -rules required_fields`。-doc 指定 OpenAPI 3.0 JSON/YAML。-rules 支持 required_fields（接口有 description、参数有 description、响应有 example）。加 `-severity warn` 将 error 降为 warning 不影响退出码。
 

@@ -1,4 +1,4 @@
-Go 的 interface mock 代码手写一遍，每个方法返回零值，十几个接口写下来纯体力活。从 .go 文件里解析 interface 定义，自动生成零值 stub，特殊类型还能配置固定返回值。
+仓储层有 7 个 interface，每个 5-8 个方法，写 stub 实现的时候全都是返回零值——纯体力活，复制粘贴改方法名。不小心粘错了还没编译错误，跑到运行时才发现返回值不对。从 .go 文件里解析 interface 定义自动生成零值 stub，特殊方法还能通过配置文件指定固定返回值。
 
 `stubgen parse --file repository.go`，读取 .go 文件找到所有 `type Xxx interface{}`，输出接口名和方法签名。`stubgen generate --file repository.go --interface UserRepository --output stub.go --package stubs --config stubs.json`。config 格式：`{"GetUser":{"returns":["nil","errors.New('not found')"]},"ListUsers":{"returns":["[]User{}","nil"]}}`，未配置的方法按零值规则：int→0、string→""、bool→false、error→nil、slice/pointer/interface→`nil`。生成 `<Interface>Stub` struct 实现所有方法。.go 编译失败输出 "compilation failed: <error>" exit 1。interface 不存在输出 "interface not found: <name>" exit 2。`--interface Repo,Service` 逗号分隔多接口。不传 `--output` 则 stdout。代码拆成至少 3 个 Go 源文件：main.go、parser.go、generator.go。
 

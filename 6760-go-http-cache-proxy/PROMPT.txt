@@ -1,4 +1,6 @@
-先启动代理 `./cacheproxy -listen :8080 -ttl 300s`，然后把浏览器或 curl 的代理指向它。每个请求到了之后，把 method+url+body-hash 拼成缓存 key，先查缓存——有且没过期直接返回，没有就转发到目标服务，响应存缓存再返回。
+第三方接口有 QPS 限制，每次重复请求都消耗配额。开发阶段同一个接口被前后端、测试、CI 反复调，本地加一层缓存代理能挡掉大量重复请求。
+
+启动：`./cacheproxy -listen :8080 -ttl 300s`，把浏览器或 curl 的代理指向它。每个请求到了之后，把 method+url+body-hash 拼成缓存 key，先查缓存——有且没过期直接返回，没有就转发到目标服务，响应存缓存再返回。
 
 缓存 key 的生成：`SHA256(method + url + sorted_query_params + body_hash)`。响应头里加 `X-Cache: HIT` 或 `X-Cache: MISS` 标记缓存状态。`-ttl` 默认 5 分钟，`-max-size 100MB` 限制缓存总大小，LRU 淘汰。`-ignore-headers User-Agent,Accept` 忽略这些头对缓存 key 的影响。
 

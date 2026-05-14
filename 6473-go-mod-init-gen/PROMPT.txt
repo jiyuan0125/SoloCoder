@@ -1,12 +1,6 @@
-先运行 `modinit generate <项目名> --module <路径>`，工具创建项目目录结构、生成 go.mod、main.go 和基础目录。然后再做一次依赖分析，把间接依赖也写进 go.mod。
+新开一个 Go 项目要手动建目录、写 go.mod、搭 main.go 骨架、放 placeholder 防空目录——每次都干同样的事还是会漏步骤。
 
-具体步骤：
-1. 创建目录 cmd/、internal/、pkg/、api/（如果指定了 --with-api）
-2. 生成 go.mod，模块路径取 --module 参数，Go 版本取当前环境
-3. 生成 cmd/<项目名>/main.go，包含 package main 和空 func main()
-4. 生成 internal/placeholder.go 和 pkg/placeholder.go 防止空目录被 git 忽略
-5. 如果指定了 --with-readme，生成 README.md 写上项目名和模块路径
-6. 运行 go mod tidy 检查（仅提示不自动执行）
+命令 `modinit generate <项目名> --module <路径>` 一步搞定：创建 cmd/、internal/、pkg/ 目录，加 --with-api 额外建 api/。go.mod 自动填模块路径和当前 Go 版本。cmd/<项目名>/main.go 包含 package main 和空 func main()。internal/placeholder.go 和 pkg/placeholder.go 防空目录被 git 忽略。--with-readme 生成 README.md 写项目名和模块路径。最后提示 go mod tidy（不自动执行）。
 
 子命令用法——`sync local <目录>` 基于已有代码重建 go.mod、`sync remote <git-url>` 克隆后分析依赖、`sync status` 显示上次初始化的记录。处理完成后自动在项目根目录写 .modinit-meta.json 记录项目名、模块路径、生成时间。
 

@@ -1,4 +1,4 @@
-测试跑了 47 次，3 次失败但不确定是真 bug 还是 flaky。自动分析自动重跑。
+测试跑了 47 次才出现 3 次失败，PR 被合并了还是被 revert 了取决于那天 CI 心情——没有人知道到底是真 bug 还是 flaky test。靠手动 rerun 纯属浪费时间，统计 pass/fail 比例算 flaky score，超过阈值自动多跑几轮复现，输出一份确定性判定：STABLE、FLAKY 还是 BROKEN。
 
 `analyze -log test-output.log` 解析 `go test -v`/`-json` 输出，统计 pass/fail 次数。输出：`TEST | TOTAL | PASS | FAIL | FLAKY_SCORE`，FLAKY_SCORE > 0.1 标 `⚠ FLAKY`。
 

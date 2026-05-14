@@ -1,4 +1,4 @@
-老的测试文件全用 `testing.T` 写的，Setup/Teardown 散落各处，每个文件风格都不一样。迁移到 testify/suite 一键搞定。
+接手了一个三年老项目，150 个测试文件全用裸 `testing.T` 写的——setup/teardown 逻辑每个文件各写一遍，公共 fixture 全局变量满天飞，想加个 beforeAll 都不知道该改哪里。迁移到 testify/suite 统一结构，解析 AST 自动识别 TestMain 中的初始化逻辑、共享变量、子测试，转成 suite 模式。
 
 `migrate -dir ./project -out ./migrated` 扫描 `_test.go` 解析 AST 识别模式：`TestMain` 中 setup/teardown → `SetupSuite`/`TearDownSuite`；公共初始化 → `SetupTest`/`TearDownTest`；共享 var → suite struct 字段；`t.Run("subtest",...)` → 独立 Test 方法。输出 suite 文件：`type {Name}Suite struct { suite.Suite }`，原函数转方法，保留注释。
 

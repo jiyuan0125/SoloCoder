@@ -1,4 +1,6 @@
-先看怎么用：`mesh-validator check config.yaml` 校验单文件，`mesh-validator check ./manifests/ --recursive` 扫描目录。校验规则覆盖三类——路由规则检查 destination host 非空且 subset 在 DestinationRule 中有定义；超时设置检查 timeout 为合法 duration（如 `3s`、`500ms`）且不超过 `300s`；重试策略检查 attempts ≥ 1 且 perTryTimeout > 0。
+上次 VirtualService 的 weight 总和写成 110，10% 的流量打到不存在的地方，排查了一下午。Istio 配置项多、校验规则散落各处，提交前得过一遍自动化检查。
+
+`mesh-validator check config.yaml` 校验单文件，`mesh-validator check ./manifests/ --recursive` 扫描目录。校验规则覆盖三类——路由规则检查 destination host 非空且 subset 在 DestinationRule 中有定义；超时设置检查 timeout 为合法 duration（如 `3s`、`500ms`）且不超过 `300s`；重试策略检查 attempts ≥ 1 且 perTryTimeout > 0。
 
 接着看具体校验项：VirtualService 的 gateway 字段不能为空，regex match 的正则语法必须合法，weight 总和必须等于 100（有显式 weight 时）。DestinationRule 的 trafficPolicy 中 connectionPool 要有合理的 maxConnections。
 

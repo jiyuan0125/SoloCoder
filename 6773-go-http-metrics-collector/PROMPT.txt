@@ -1,4 +1,6 @@
-先启动指标代理 `./metrics -listen :8080 -target localhost:3000 -metrics-path /metrics`，然后把流量打到 8080。代理拦截每个请求和响应，记录：响应时间（ms）、状态码、请求方法、URL 路径、请求体大小（bytes）、响应体大小（bytes）。
+服务上线后没人知道平均响应时间多少、错误率多少，等到用户投诉才发现 P99 已经飙到好几秒了。得有个轻量代理在前面拦一道，边转发边记录每个请求的耗时和状态码。
+
+启动：`./metrics -listen :8080 -target localhost:3000 -metrics-path /metrics`，然后把流量打到 8080。代理拦截每个请求和响应，记录：响应时间（ms）、状态码、请求方法、URL 路径、请求体大小（bytes）、响应体大小（bytes）。
 
 Prometheus 格式指标暴露在 `-metrics-path`（默认 /metrics）：`http_request_duration_seconds{method="GET",path="/api/users",status="200"} 0.045`，`http_requests_total{method="GET",path="/api/users",status="200"} 123`，`http_request_size_bytes{method="POST",path="/api/users"} 1024`。
 

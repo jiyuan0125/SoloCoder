@@ -1,1 +1,7 @@
-线上的 API 要对外限流，但不确定该限多少。先上个代理跑几天看看真实流量模式再调参数。`shaper --listen :8080 --upstream http://localhost:8081 --rules rules.json`。rules.json 格式：[{"path": "/api/*", "rate_rps": 100, "max_concurrent": 20, "bandwidth_bps": 0}]，rate_rps 限制每秒请求数，max_concurrent 限制并发连接数，bandwidth_bps 限制带宽（0 表示不限）。超限请求返回 429 Too Many Requests，响应头加 X-RateLimit-Limit、X-RateLimit-Remaining、X-RateLimit-Reset（Unix 时间戳）。路径匹配用 filepath.Match 规则，匹配顺序按数组顺序，第一个命中的规则生效。没有规则命中则不限制，直接转发。proxy 转发时透传请求头和响应头，添加 Via: traffic-shaper 头。upstream 不可达时返回 502 Bad Gateway，stderr 输出 "error: upstream unreachable: <url>"。rules.json 文件变更后自动热加载，stdout 输出 "info: rules reloaded"。Go 标准库，命令行参数用 flag 包解析。
+线上的 API 要对外限流，但不确定该限多少。先上个代理跑几天看看真实流量模式再调参数。
+
+`shaper --listen :8080 --upstream http://localhost:8081 --rules rules.json`。rules.json 格式：`[{"path": "/api/*", "rate_rps": 100, "max_concurrent": 20, "bandwidth_bps": 0}]`，rate_rps 限制每秒请求数，max_concurrent 限制并发连接数，bandwidth_bps 限制带宽（0 表示不限）。
+
+超限请求返回 429 Too Many Requests，响应头加 X-RateLimit-Limit、X-RateLimit-Remaining、X-RateLimit-Reset（Unix 时间戳）。路径匹配用 filepath.Match 规则，匹配顺序按数组顺序，第一个命中的规则生效。没有规则命中则不限制，直接转发。
+
+proxy 转发时透传请求头和响应头，添加 Via: traffic-shaper 头。upstream 不可达时返回 502 Bad Gateway，stderr 输出 "error: upstream unreachable: <url>"。rules.json 文件变更后自动热加载，stdout 输出 "info: rules reloaded"。Go 标准库，命令行参数用 flag 包解析。

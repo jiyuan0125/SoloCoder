@@ -1,13 +1,9 @@
-1. 先说命令行接口。`changelog-lint -file CHANGELOG.md` 是基本用法，检查指定文件。`-format` 标志控制输出格式，可选 `text`（默认）或 `json`。`-strict` 模式下所有 warning 当 error 处理。
+changelog 文件格式乱了——有人写 `## [1.2.0]` 有人写 `## v1.2`，日期格式也不统一，版本号顺序还有倒退的。CI 没拦住就合进去了，发版文档差点出事故。
 
-2. 检查规则按顺序执行：
-   - 版本号格式必须是语义化版本（`X.Y.Z`），每个新条目版本号必须大于前一个，违反时输出 "version regression: %s < %s"
-   - 日期格式检查，`-date-format` 标志指定期望格式，默认 `YYYY-MM-DD`，不匹配输出 "invalid date format: %s, expected: %s"
-   - 条目分类只能是 `Added`、`Changed`、`Deprecated`、`Removed`、`Fixed`、`Security` 六种，其他值报错 "unknown category: %s"
-   - 文件第一个非注释行必须是标题 `# Changelog`
+`changelog-lint -file CHANGELOG.md` 检查指定文件，`-format text`（默认）或 `-format json` 控制输出，`-strict` 把 warning 全当 error。
 
-3. 输出格式：text 模式按行打印 `[ERROR] xxx` 或 `[WARN] xxx`；json 模式输出 `{"errors": [{"line": 5, "rule": "version_reg", "message": "..."}], "warnings": [...]}`。退出码：0 = 通过，1 = 有 error，`-strict` 下 warning 也返回 1。
+检查规则：版本号必须是 `X.Y.Z` 语义化格式，新条目版本号不能比前一个小（违反输出 "version regression: %s < %s"）。日期格式默认 `YYYY-MM-DD`，`-date-format` 可自定义，不匹配输出 "invalid date format: %s, expected: %s"。条目分类限 `Added`/`Changed`/`Deprecated`/`Removed`/`Fixed`/`Security` 六种，别的报 "unknown category: %s"。文件第一行非注释必须是 `# Changelog`。
 
-4. 空文件或文件不存在时退出码 1 打印 "changelog file not found: %s"。
+text 模式逐行打印 `[ERROR] xxx` 或 `[WARN] xxx`；json 模式输出 `{"errors": [{"line": 5, "rule": "version_reg", "message": "..."}], "warnings": [...]}`。退出码 0 通过，1 有 error，`-strict` 下 warning 也返回 1。空文件或不存在时退出码 1 打印 "changelog file not found: %s"。
 
 Go 标准库，flag 包解析。`go build -o changelog-lint .`。
