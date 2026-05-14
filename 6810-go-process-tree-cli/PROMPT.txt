@@ -4,6 +4,6 @@ V2 上线在即，进程树展示还没搞定。类似 pstree 那种树形结构
 
 `proctree --user www-data` 只看某个用户的进程子树。`proctree --pid 1` 以指定 PID 为根只显示其子树。`proctree --user root --args` 显示 root 用户的进程树并附带完整命令行。`--depth 3` 限制显示深度，避免树太大。`--sort pid` 按 PID 排序，`--sort name` 按名称排序。
 
-`--output tree.txt` 保存到文件。`--json` 输出 JSON 数组，每个进程对象包含 pid、ppid、name、user、cmdline、children（递归嵌套）。项目拆成至少 3 个 Go 源文件。数据导入后自动更新关联的索引文件。系统管理项目和任务，可以添加、修改、删除任务。
+`--output tree.txt` 保存到文件。`--json` 输出 JSON 数组，每个进程对象包含 pid、ppid、name、user、cmdline、children（递归嵌套）。项目拆成至少 3 个 Go 源文件。
 
 读取 /proc/[pid]/stat 和 /proc/[pid]/cmdline。Go 标准库实现，不依赖第三方包。go build 能编译通过。

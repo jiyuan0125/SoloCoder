@@ -4,6 +4,6 @@ swap 占了 8G 机器卡得动不了。谁把内存吃了导致 swap 涨上去�
 
 `swapcheck by-process --top 10` 只看最多的 10 个。`swapcheck by-process --threshold 50MB` 只显示 swap 超过 50MB 的进程。`--json` 输出 JSON 数组。`--log swap.csv` 写 CSV 文件，列：timestamp,pid,name,swap_kb。
 
-`swapcheck monitor --interval 5s --threshold 70` 持续监控 swap 使用率，超过 70% 告警。需要用到 bytes.Buffer 等标准库功能。源文件修改后之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。系统管理项目和任务，可以添加、修改、删除任务。
+`swapcheck monitor --interval 5s --threshold 70` 持续监控 swap 使用率，超过 70% 告警。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

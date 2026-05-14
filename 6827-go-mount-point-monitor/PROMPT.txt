@@ -4,6 +4,6 @@ NFS 挂载点时不时就 stale 了，导致写入失败业务报错，线上事
 
 NFS 类型额外做 stat 触发检测，超时 3 秒标记 stale=true。stale 挂载状态码=2，warn=1，crit=2，ok=0。/proc/mounts 不可读报 `"error: cannot read /proc/mounts"` exit 1。
 
-日志文件可能存在各种编码。文件状态有 新增、处理中、已完成、归档。处理完后可以归档。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+
 
 纯 Go 标准库，编译后单二进制可以直接跑。

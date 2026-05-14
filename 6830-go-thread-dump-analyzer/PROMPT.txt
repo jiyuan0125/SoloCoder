@@ -4,6 +4,6 @@
 
 report JSON：`{"deadlocks":[{"threads":["Thread-1","Thread-2"],"type":"circular"}],"blocked":[{"thread":"Thread-3","wait_time":"45s","waiting_on":"lock-xyz"}],"hot_threads":[{"thread":"Thread-4","state":"RUNNABLE","stack":["com.app.Service.process()"]}]}`。无问题输出 `"no issues detected"` exit 0。文件为空报 `"error: empty dump file"` exit 1。
 
-处理流程分好几步，上一步的输出是下一步的输入。处理的时候先锁定数据文件，然后内部还需要读取同一个文件做校验。系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
+
 
 用 Go 标准库写，go run .或 go build 都行。

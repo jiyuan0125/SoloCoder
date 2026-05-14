@@ -4,6 +4,6 @@
 
 `loadavg record --interval 5s --log load.jsonl` 持续记录到文件。`loadavg show` 显示当前负载三项数值。`loadavg history --from 2024-01-01 --to 2024-01-02` 查询历史范围的数据。`loadavg trend --window 1h` 分析最近 1 小时的趋势，输出"上升/下降/平稳"以及斜率值。
 
-`--threshold 10` 负载超过 10 时 stderr 告警 "WARNING: load average XX exceeds threshold"。JSON Lines 格式：`{"ts":"...","load_1":2.5,"load_5":3.1,"load_15":3.8}`。中文按拼音排序，英文按字母排序。解析完日志后自动触发告警检查。没有错误日志的时候不检查。系统管理项目和任务，可以添加、修改、删除任务。
+`--threshold 10` 负载超过 10 时 stderr 告警 "WARNING: load average XX exceeds threshold"。JSON Lines 格式：`{"ts":"...","load_1":2.5,"load_5":3.1,"load_15":3.8}`。
 
 读取 /proc/loadavg。Go 实现，只用标准库，交叉编译友好。
