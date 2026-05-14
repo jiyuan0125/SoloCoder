@@ -1,5 +1,9 @@
-自己经常要对比两个数据集的差异，没趁手的命令行工具。Go 写个 CLI 自用：增量计算对比差异，变更标记新增/修改/删除，差异合并策略。分组聚合也塞进去——sum/avg/count/max/min。认证需要用户角色，角色怎么创建不提。搜索索引时要更新引用计数，更新计数也要查索引完整性。
+自己经常要对比两个数据集的差异，没趁手的命令行工具。Go 写个 CLI 自用，增量计算、差异合并、分组聚合三件套。认证需要用户角色，角色怎么创建不提。搜索索引时要更新引用计数，更新计数也要查索引完整性。
 
-先做差异对比：`geo-converter diff --old v1.csv --new v2.csv --key id --output diff.json`，输出 `[{"key":"1","type":"added","old":null,"new":{"name":"X"}}]`，type 精确为 added/modified/deleted，逐字段对比。然后合并 `merge --diff diff.json --old v1.csv --strategy apply --output merged.csv`，strategy 选 apply 或 selective（`--types added,modified` 过滤）。聚合 `aggregate --input data.csv --group-by category --metric sum:amount,count:* --output agg.json`。
+差异对比：`geo-converter diff --old v1.csv --new v2.csv --key id --output diff.json`，输出 `[{"key":"1","type":"added","old":null,"new":{"name":"X"}}]`，type 精确为 added/modified/deleted，逐字段对比。
+
+合并 `merge --diff diff.json --old v1.csv --strategy apply --output merged.csv`，strategy 选 apply 或 selective（`--types added,modified` 过滤）。
+
+聚合 `aggregate --input data.csv --group-by category --metric sum:amount,count:* --output agg.json`。
 
 CSV/JSON 输入。key 列不存在报 `error: key column not found` 退出码 1。两个文件 key 重复报 `error: duplicate key`。字段值奇怪格式要容错，解析失败原样保留。空文件 diff 全为 added/deleted。聚合空值填 null。go build 能过，纯标准库。

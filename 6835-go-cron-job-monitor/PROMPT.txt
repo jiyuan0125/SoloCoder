@@ -1,4 +1,4 @@
-第一步解析 crontab，第二步检查执行记录，第三步输出异常列表。cron 任务静默失败了一个星期才发现，数据都没跑——这问题不能再来。
+cron 任务静默失败了一个星期才发现，数据都没跑——这种事出了三次了。得有个东西能解析 crontab 定义，对照执行记录，看哪些任务没跑、跑超时了、报错了，一条命令把异常列表拉出来。
 
 1）`cronmon check -user root` 解析 /var/spool/cron/crontabs 下的任务定义和 /var/log/syslog 中的执行记录。2）`cronmon check -config crons.json` 从配置文件读任务列表。3）`cronmon report -last 7d -output report.json` 生成报告。
 

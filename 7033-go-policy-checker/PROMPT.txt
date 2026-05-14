@@ -1,5 +1,7 @@
-1. 架构评审说规则引擎和去重逻辑要解耦成独立工具，耦合在一起改规则怕影响去重、改去重怕影响规则。Go 命令行工具 `policy-checker` 实现规则引擎：规则表达式支持 AND/OR/NOT 组合，用 `--rules policy.yaml` 加载规则文件。规则有优先级字段 priority（数字越小越先执行），冲突检测在加载时扫描同一字段的多条规则是否有矛盾（比如一条要求 >100 另一条要求 <50），冲突时输出 conflict_report。`policy-checker evaluate --rules policy.yaml --data records.csv` 执行后汇总报告，包含通过数、失败数、每条失败记录的字段路径和违反的规则名。结构化数据去重：`--dedup-fields name,id_card` 指定联合去重键，去重结果合并到最终报告。
-2. 数据转换映射模板通过 `--mapping mapping.yaml` 指定，定义 source_field → target_field 的对应关系和转换函数。模板不存在时退出码 2 并提示。
-3. 大数据量流式处理，万条记录内存不超过 200MB。
+架构评审结论很明确：规则引擎和去重逻辑耦合在一个服务里，改规则怕影响去重、改去重怕影响规则，必须拆。
 
-CLI 输出 JSON：`{ "evaluation": {...}, "dedup": {...}, "conflicts": [...] }`。退出码 0 成功 1 有违规 2 配置错误。纯标准库实现，go build 能过。
+Go 命令行工具 `policy-checker` 把规则引擎独立出来。规则表达式支持 AND/OR/NOT 组合，`--rules policy.yaml` 加载规则文件，每条规则有 priority 字段（数字越小越先执行）。冲突检测在加载时扫描同一字段的多条规则是否矛盾（比如一条要求 >100 另一条要求 <50），发现矛盾输出 conflict_report。`policy-checker evaluate --rules policy.yaml --data records.csv` 跑完出汇总报告，包含通过数、失败数、每条失败记录的字段路径和违反的规则名。去重也塞进去：`--dedup-fields name,id_card` 指定联合去重键，结果合并到最终报告。
+
+数据转换映射模板 `--mapping mapping.yaml` 定义 source_field → target_field 的对应关系和转换函数。模板不存在退出码 2 并提示。万条记录流式处理，内存不超 200MB。
+
+输出 JSON：`{ "evaluation": {...}, "dedup": {...}, "conflicts": [...] }`。退出码 0 成功 1 有违规 2 配置错误。纯标准库实现，go build 能过。

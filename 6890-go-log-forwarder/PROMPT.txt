@@ -1,4 +1,4 @@
-先在本地监控日志文件的新增内容，然后实时转发到指定目标。ELK 收日志有延迟，出问题时想在本地先留一份，同时转发到远程做备份。
+ELK 收日志有 15 分钟延迟，出问题时想看实时日志根本来不及等。上次排查一起线上故障，本地日志和远程备份各只有一半——得有个工具同时往多个目标转发，本地留一份远程也留一份。
 
 命令行：`log-forwarder forward --input /var/log/app.log --target stdout --target file:///data/backup.log --target tcp://log-server:514`。`--target` 支持多个目标，可以重复指定。目标类型：`stdout`（标准输出）、`file://<path>`（写入文件）、`tcp://<host:port>`（TCP 发送）。`--follow` 模式持续监控文件新增内容（类似 `tail -f`），不加速度时只转发已有内容。
 

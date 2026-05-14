@@ -1,5 +1,7 @@
-1. 评审排了下周三，交叉校验功能还没有，到时候拿不出来就尴尬了。Go CLI `completeness-scorer` 实现多文件交叉校验。`completeness-scorer check --primary users.csv --secondary orders.csv --foreign-key user_id` 校验 A 文件 ID 在 B 文件必须存在。失败记录给出修复建议——suggest_delete 删除孤立记录，suggest_insert 在目标文件补充缺失记录。`--auto-fix` 自动修复模式先写备份 `.completeness-backup-{timestamp}.json` 再执行，修复日志记 action/file/row/field/old_value/new_value。
-2. 校验时查关联表的规则定义（通过 `--rules rules.yaml`），查关联表时也校验触发方记录的状态字段（status 必须为 active/valid 才算有效关联），否则报 "trigger status invalid"。
-3. 配置项放 `.completeness-scorer.yaml`：backup_dir、log_level、max_errors（默认 1000 超过即终止）。
+评审排了下周三，交叉校验功能还没有，到时候拿不出来就尴尬了。
 
-CLI 输出 JSON：`{ "total": N, "valid": N, "violations": [...], "suggestions": [...], "auto_fixed": [...] }`。退出码 0 通过 1 有违规 2 配置错误。纯标准库实现，go build 能过。
+Go CLI `completeness-scorer` 搞多文件交叉校验。`completeness-scorer check --primary users.csv --secondary orders.csv --foreign-key user_id` 校验 A 文件 ID 在 B 文件必须存在。失败记录给修复建议——suggest_delete 删除孤立记录，suggest_insert 在目标文件补充缺失记录。`--auto-fix` 自动修复模式先写备份 `.completeness-backup-{timestamp}.json` 再执行，修复日志记 action/file/row/field/old_value/new_value。校验时查关联表的规则定义（`--rules rules.yaml`），查关联表也校验触发方记录的状态字段（status 必须为 active/valid），否则报 "trigger status invalid"。
+
+配置项放 `.completeness-scorer.yaml`：backup_dir、log_level、max_errors（默认 1000 超过即终止）。
+
+输出 JSON：`{ "total": N, "valid": N, "violations": [...], "suggestions": [...], "auto_fixed": [...] }`。退出码 0 通过 1 有违规 2 配置错误。纯标准库实现，go build 能过。

@@ -1,4 +1,6 @@
-先用 `timer-gen -cron "*/5 * * * *" -name sync-data -exec "/usr/local/bin/sync.sh"` 生成 `sync-data.timer` 和 `sync-data.service`。.timer 含 `[Timer]` OnCalendar 转换结果（`*/5 * * * *` → `*:0/5`）、`Persistent=true`、`WantedBy=timers.target`。.service 含 ExecStart 指向 -exec、`Type=oneshot`、`WantedBy=multi-user.target`。
+30 多个 systemd timer 要手写，每个 .timer 和 .service 配对，cron 转 OnCalendar 经常算错——上周有个凌晨两点的任务因为 OnCalendar 写错了压根没跑。写个生成器，输入标准 cron 表达式直接输出配对的 .timer 和 .service 文件。
+
+`timer-gen -cron "*/5 * * * *" -name sync-data -exec "/usr/local/bin/sync.sh"` 生成 sync-data.timer 和 sync-data.service。.timer 含 `[Timer]` OnCalendar 转换结果（`*/5 * * * *` → `*:0/5`）、`Persistent=true`、`WantedBy=timers.target`。.service 含 ExecStart 指向 -exec、`Type=oneshot`、`WantedBy=multi-user.target`。
 
 额外 flag：`-desc "同步数据"` 设描述；`-output ./units/` 输出目录；`-dry-run` 只打印不写。`timer-gen -validate "*/5 * * * *"` 校验 cron 合法性，非法输出 "invalid cron expression" 到 stderr 退出码 1。
 

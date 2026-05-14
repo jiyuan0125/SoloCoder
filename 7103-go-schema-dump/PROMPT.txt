@@ -1,3 +1,7 @@
-终端里看 SQL 全是灰色的，SELECT 和 DROP 看不出区别。Python 写的那个高亮工具太慢了，换 Go 重做。同时加个复杂度评分，让新人一眼看出哪些查询该优化。
+Python 写的那个 SQL 高亮工具太慢了，终端里看代码全是灰色，SELECT 和 DROP 看不出区别。换 Go 重做，顺便加个复杂度评分，新人 review 代码的时候一眼就能看出哪些查询该优化。
 
-Go CLI 工具 `schemadump`。子命令 `highlight`：`--input query.sql` 读取 SQL 文件，ANSI 彩色输出到终端——关键字蓝色、字符串绿色、数字黄色、注释灰色、DML 语句（SELECT/INSERT/UPDATE/DELETE）加粗。`--theme dark|light` 切换配色。`format` 子命令格式化 SQL：缩进对齐、关键字大写、逗号后换行、子查询缩进，`--indent 2` 控制缩进空格数。`score` 子命令给 SQL 打复杂度分：`--input query.sql` 输出 0-100 的分数，评分因素包括嵌套子查询层数（每层 +15）、JOIN 数量（每个 +10）、GROUP BY + HAVING 组合（+20）、窗口函数使用（+15）。>70 分标记 `high complexity`，40-70 标记 `medium`，<40 标记 `low`。认证通过后自动记日志到 stderr，日志写挂了不影响主结果。一次可能处理上万条记录别崩，用流式逐行处理。纯标准库实现，go build 过了就行，退出码 0 成功 1 错误。SQL 语法错误时 stderr 输出具体出错位置不直接崩。
+工具名叫 `schemadump`，三个子命令。`highlight --input query.sql` 在终端做 ANSI 彩色输出——关键字蓝色、字符串绿色、数字黄色、注释灰色、DML 语句加粗，`--theme dark|light` 切换配色。`format` 子命令格式化 SQL：缩进对齐、关键字大写、逗号后换行、子查询缩进，`--indent 2` 控制缩进空格数。
+
+`score` 子命令给 SQL 打复杂度分（0-100），评分因素：嵌套子查询层数（每层 +15）、JOIN 数量（每个 +10）、GROUP BY + HAVING 组合（+20）、窗口函数使用（+15）。>70 标 `high complexity`，40-70 标 `medium`，<40 标 `low`。
+
+认证通过后自动记日志到 stderr，日志写挂了不影响主结果。一次可能处理上万条记录别崩，用流式逐行处理。纯标准库实现，go build 过了就行，退出码 0 成功 1 错误。SQL 语法错误时 stderr 输出具体出错位置不直接崩。

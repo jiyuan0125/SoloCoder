@@ -1,4 +1,4 @@
-先在配置里定义数据源和关联规则，再让工具去不同日志文件里找线索，最后输出完整请求链路。上次排查跨服务问题，五个人翻了四小时日志——有了这个工具，几分钟搞定。
+上次排查跨服务问题，五个人翻了四小时日志才拼出一条完整链路。要是能配好数据源和关联规则，让工具自动去各服务日志里找线索、输出请求链路，几分钟就能搞定。
 
 三步走：`tool source add --name user-svc --file user.log --format json` 注册数据源。`tool rule create --match "trace_id" --sources "user-svc,order-svc,pay-svc"` 定义关联规则。`tool correlate --trace-id "trace-abc123" --window 5s --output result.json` 执行查询。以 trace_id 为主键在所有数据源中查找匹配行，`--window` 限定时间窗口，超窗视为不同链路。输出 JSON：`{ "trace_id": "...", "spans": [{ "service": "...", "timestamp": "...", "log_line": "...", "sequence": N }] }`。
 

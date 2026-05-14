@@ -1,6 +1,6 @@
-要从 RabbitMQ 迁移到 Kafka，消息格式全不一样。先从 RabbitMQ 导出，转换格式，再写入 Kafka——三步走。
+同事把 RabbitMQ 的 vhost 删了，整个消息管道断了。CTO 说年底前全部切到 Kafka，格式迁移的事落我头上了。RabbitMQ 那边的消息格式和 Kafka 完全不一样——headers 结构不同、字段命名风格不同、连时间戳格式都不同。
 
-1. `queue-migrator export --source rabbitmq --url amqp://localhost:5672 --queue task-queue --output export.jsonl --limit 10000`：从源队列导出消息，每条一行 JSON Lines，含 `{"headers": {...}, "body": "...", "content_type": "...", "timestamp": "..."}`。`--limit 0` 表示全部。
+1. `queue-migrator export --source rabbitmq --url amqp://localhost:5672 --queue task-queue --output export.jsonl --limit 10000`：从源队列导出消息，每行一条 JSON Lines，含 headers、body、content_type、timestamp。`--limit 0` 表示全部。
 2. `queue-migrator convert --input export.jsonl --output converted.jsonl --mapping transform.yaml`：格式转换支持 JSON↔XML↔CSV，字段映射通过 YAML 指定 `{"field_map": [{"src": "user_id", "dst": "userId", "type": "int"}]}`。`--header-map` 单独映射 header。主流程中调用子转换（日期格式化、枚举映射），子转换读同一份映射表的 `transforms` 段。
 3. `queue-migrator import --input converted.jsonl --target kafka --brokers localhost:9092 --topic migrated-tasks --batch-size 100`：分批写入目标队列。
 

@@ -1,4 +1,4 @@
-消息格式要加个 `region_code` 字段，但老消费者不认识这个字段会报错。之前直接加字段导致三个消费者挂了，之后再也不敢改 schema 了。闲着没事写个工具解决这个问题。
+给消息格式加个 `region_code` 字段，看着简单对吧？上次直接加字段导致三个消费者挂了，之后组里再也没人敢动 schema。得有个工具来管理 schema 演进，让变更可控。
 
 先用 `schema-evolve plan --current v2.json --target v3.json` 看变更计划：输出 `{"added":["region_code"],"removed":[],"changed":[],"compatible":true}`。确认后 `schema-evolve apply --current v2.json --target v3.json --input msgs.jsonl --output evolved.jsonl`。
 

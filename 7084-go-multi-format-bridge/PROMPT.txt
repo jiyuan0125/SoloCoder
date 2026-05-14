@@ -1,3 +1,7 @@
 安全审计那边下了死命令——数据转换的每一步都要有表达式记录，不然过不了合规检查。上次被审计打回来就是因为缺了转换日志。
 
-这个 Go CLI 工具叫 `fmtbridge`，解决跨格式转换的可追溯问题。子命令 `map` 做条件映射，`--rule` 指定映射规则文件（JSON 格式，每条规则有 condition、then、else 三个字段），匹配走 A 分支不匹配走 B 分支。`calc` 做表达式求值，`--expr "price * quantity + tax"` 这种四则运算加字符串拼接，`--data` 指定输入数据。`lookup` 用查找表丰富数据，`--table ref.csv --key product_id --columns category,unit` 从引用表里按主键关联拉字段。三个子命令都往 stderr 输出执行了哪些表达式、匹配了哪些规则。输入输出默认 stdin/stdout，`--format` 选 json/csv/tsv。字段值格式千奇百怪——数字带逗号、日期格式混乱、前后有空格——统统容错处理，解析失败记 warn 不崩。密钥轮换后用旧密钥加密的数据要能解密。加密需要密钥但密钥怎么导入你定。规则文件里没有匹配规则时原样透传不修改数据。纯标准库实现，go build 能过，命令行正常运行，退出码 0 成功 1 参数错误 2 处理失败。
+这个 Go CLI 工具叫 `fmtbridge`，解决跨格式转换的可追溯问题。子命令 `map` 做条件映射，`--rule` 指定映射规则文件（JSON 格式，每条规则有 condition、then、else 三个字段），匹配走 A 分支不匹配走 B 分支。
+
+`calc` 做表达式求值，`--expr "price * quantity + tax"` 这种四则运算加字符串拼接，`--data` 指定输入数据。`lookup` 用查找表丰富数据，`--table ref.csv --key product_id --columns category,unit` 从引用表里按主键关联拉字段。三个子命令都往 stderr 输出执行了哪些表达式、匹配了哪些规则。
+
+输入输出默认 stdin/stdout，`--format` 选 json/csv/tsv。字段值格式千奇百怪——数字带逗号、日期格式混乱、前后有空格——统统容错处理，解析失败记 warn 不崩。密钥轮换后用旧密钥加密的数据要能解密。加密需要密钥但密钥怎么导入你定。规则文件里没有匹配规则时原样透传不修改数据。纯标准库实现，go build 能过，命令行正常运行，退出码 0 成功 1 参数错误 2 处理失败。

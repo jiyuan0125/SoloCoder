@@ -1,5 +1,7 @@
-1. 月底前必须交付校验模块，Go 命令行赶紧搞。`mutation-detector check --schema schema.yaml --data config.yaml --base baseline.yaml` 实现 YAML 类型校验（日期 RFC3339、时间 HH:MM:SS、IP v4/v6、URL 带 scheme），锚点引用解析检测循环并输出引用链，配置合并后 schema 合规性验证。数据完整性校验：计算行数、列数、每列 CRC32 校验和，结果与 baseline.yaml 快照对比，变更项在报告中标明 field、old_value、new_value。
-2. 密钥路径格式 `keys/{algorithm}/{key_id}/versions/{ver}`，algorithm 支持 AES/RSA/ECDSA，ver 为整数版本号。列出密钥时按 version 降序。
-3. 批量校验并发执行：`--workers 4` 控制并发数（默认 runtime.NumCPU()），结果按输入文件顺序汇总到输出，乱码行跳过不阻塞。
+月底前必须交付校验模块，没时间细想了。
 
-CLI 输出 JSON：`{ "type_errors": [...], "anchor_errors": [...], "integrity": { "rows": N, "checksums": {...}, "changes": [...] } }`。退出码 0 通过 1 校验失败 2 配置错误。纯标准库实现，go build 能过。
+`mutation-detector check --schema schema.yaml --data config.yaml --base baseline.yaml` 把 YAML 类型校验、锚点循环检测、配置合并验证和数据完整性一股脑全做了。类型校验覆盖日期（RFC3339）、时间（HH:MM:SS）、IP（v4/v6）、URL（带 scheme）。锚点引用解析检测循环并输出引用链，配置合并后验证 schema 合规性。完整性这边算行数、列数、每列 CRC32，结果跟 baseline.yaml 快照对比，变更项标明 field、old_value、new_value。
+
+密钥路径 `keys/{algorithm}/{key_id}/versions/{ver}`，algorithm 支持 AES/RSA/ECDSA，ver 整数版本号，列出时按 version 降序。批量校验并发执行 `--workers 4`（默认 runtime.NumCPU()），结果按输入文件顺序汇总，乱码行跳过不阻塞。
+
+输出 JSON：`{ "type_errors": [...], "anchor_errors": [...], "integrity": { "rows": N, "checksums": {...}, "changes": [...] } }`。退出码 0 通过 1 校验失败 2 配置错误。纯标准库实现，go build 能过。

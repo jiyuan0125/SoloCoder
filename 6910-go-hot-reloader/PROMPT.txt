@@ -1,4 +1,4 @@
-每次改完代码手动重启太浪费时间。写个文件变更自动重启工具，监控目录文件一改就触发进程重启。
+前端同事改个 CSS 都要手动重启 dev server，一天重启四五十次。后端更惨——改完 Go 代码等 20 秒编译再手动启动，开发体验极差。写个文件变更自动重启工具，监控目录文件一改就触发进程重启。
 
 `hotreload start --watch ./src --command "go run ." --ignore ".git,vendor,node_modules" --debounce 500ms`。`--watch` 可多次指定。`--debounce` 防抖间隔默认 300ms。旧进程先 SIGTERM，`--kill-timeout 5s` 后 SIGKILL。`--health-check "http://localhost:8080/health"` 可选探活，连续失败 3 次 stderr 输出 "health check failed after restart"。
 

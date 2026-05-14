@@ -1,4 +1,4 @@
-先用配置文件定义依赖关系，然后工具自动检查每个依赖的健康状态。具体流程是：第一步读取 YAML 配置，第二步逐个探测依赖，第三步生成依赖图，第四步输出状态报告。
+上次 Redis 挂了导致订单服务不可用，问题在于没人知道订单服务依赖了 Redis。20 个微服务之间的依赖关系全靠口头传，得有个工具把依赖关系管理起来并自动巡检。
 
 配置文件 deps.yaml 格式：每个依赖包含 name（字符串）、type（tcp/http/grpc 三选一）、address（host:port）、timeout（秒，默认 5）、expected_status（HTTP 类型专用，默认 200）。`depcheck check --config deps.yaml` 执行检查，每个依赖的探测结果包含 status（healthy/degraded/down）、latency（ms）、last_error（字符串，无错误为空）。`depcheck graph --config deps.yaml --format dot` 输出 Graphviz DOT 格式的依赖图，节点颜色按状态区分：绿=healthy，黄=degraded，红=down。`depcheck watch --config deps.yaml --interval 30` 持续监控，每 30 秒检查一次，状态变化时输出到 stdout。
 

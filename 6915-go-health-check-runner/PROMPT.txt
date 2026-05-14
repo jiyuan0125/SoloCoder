@@ -1,4 +1,4 @@
-先写好配置定义检查项，再启动工具周期性跑。之前用 Python 写的健康检查脚本服务多了就撑不住——换成 Go 重写。
+半夜 3 点支付网关挂了，Python 健康检查脚本因为 GIL 卡住没发现，损失了 2 小时交易。服务涨到 20+ 个之后 Python 脚本已经力不从心——用 Go 重写一个周期性健康检查工具。
 
 配置 YAML checks 列表每项：name、type（http/tcp/dns/command）、target、interval（默认 30s）、timeout（默认 5s）、threshold（连续失败几次告警，默认 3）、on_failure（失败时执行的修复脚本）。`checker start --config health.yaml` 启动。
 

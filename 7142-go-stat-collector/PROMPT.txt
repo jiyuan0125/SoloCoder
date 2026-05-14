@@ -1,8 +1,10 @@
-先连上数据库收集统计信息，再生成对比报告，最后输出同步脚本——这是 stat-collector 的工作流。
+上周生产库查询突然变慢，排查半天才发现是索引统计信息过期了。得定期收集统计信息，但手动做太慢。顺便把 schema 对比和 SQL 检查也自动化了。
 
-1. `stat-collector collect --dsn "sqlite:///prod.db" --output stats.json`：采集每张表的行数、索引数量、最后分析时间、未使用索引列表。输出 JSON 包含 `{"database": "prod.db", "collected_at": "2024-01-15T10:30:00Z", "tables": [{"name": "...", "rows": 500, "indexes": 3, "unused_indexes": ["idx_old"], "last_analyzed": "..."}]}`。
-2. `stat-collector diff --source stats_a.json --target stats_b.json --format markdown`：对比两个数据库的 schema 差异，生成 Markdown 报告，表格列出新增/删除/修改的表和列。`--format sql` 改为输出同步 ALTER 语句。
-3. `stat-collector check --input stats.json`：SQL 静态检查，检测未使用索引、SELECT * 用法、缺失 WHERE 的 DELETE/UPDATE，输出警告列表。
+`stat-collector collect --dsn "sqlite:///prod.db" --output stats.json`：采集每张表的行数、索引数量、最后分析时间、未使用索引列表。输出 JSON 包含 `{"database": "prod.db", "collected_at": "2024-01-15T10:30:00Z", "tables": [{"name": "...", "rows": 500, "indexes": 3, "unused_indexes": ["idx_old"], "last_analyzed": "..."}]}`。
+
+`stat-collector diff --source stats_a.json --target stats_b.json --format markdown`：对比两个数据库的 schema 差异，生成 Markdown 报告，表格列出新增/删除/修改的表和列。`--format sql` 改为输出同步 ALTER 语句。
+
+`stat-collector check --input stats.json`：SQL 静态检查，检测未使用索引、SELECT * 用法、缺失 WHERE 的 DELETE/UPDATE，输出警告列表。
 
 扫描规则更新后，历史扫描结果的严重级别要用新规则重新评估。扫描完自动提交报告到指定 URL（`--report-url`），提交失败只记录日志不中断。任务状态机：waiting → running → success / failed，状态变更写日志。
 

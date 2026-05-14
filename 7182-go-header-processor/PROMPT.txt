@@ -1,9 +1,7 @@
 消息头里的 trace ID 不知道什么时候丢了，全链路追踪直接断链，排查了半天才定位到是某个中间件没透传 header。
 
-这个工具处理消息头的转发和管理。核心功能：确保关键 header（`X-Request-ID`、`X-Trace-ID`、`X-Span-ID`）在请求链路中透传，缺失时自动生成 UUID 填入。配置文件（`--config headers.yaml`）指定哪些 header 必须透传、哪些需要改写、哪些需要删除。
+这个工具叫 `hdrproc`，处理消息头的转发和管理。确保关键 header（`X-Request-ID`、`X-Trace-ID`、`X-Span-ID`）在请求链路中透传，缺失时自动生成 UUID 填入。配置文件（`--config headers.yaml`）指定哪些 header 必须透传、哪些需要改写、哪些需要删除。
 
 死信队列管理：`hdrproc dlq list --store dlq.db` 查看死信消息表格（ID、原因、原始 header、时间）。`hdrproc dlq retry --id 5` 重发指定死信。`hdrproc dlq discard --id 5` 丢弃。死信原因分类统计 `hdrproc dlq stats`：`{"missing_trace_id": 45, "invalid_format": 12, "duplicate_id": 3}`。自动重发策略：`--retry-interval 30s --max-retries 3`，超过次数标记为 `dead`。
 
-处理完自动生成报告（`--report report.json`），报告模板不存在（`--template` 指定）就跳过生成只写 JSON 统计。输入 header 中有乱码行（非 ASCII 且非 UTF-8）和空行时跳过该行不崩溃，记到 warning。
-
-Go 标准库写个 CLI 工具，`go build` 能过就行。
+处理完自动生成报告（`--report report.json`），报告模板不存在（`--template` 指定）就跳过生成只写 JSON 统计。输入 header 中有乱码行（非 ASCII 且非 UTF-8）和空行时跳过该行不崩溃，记到 warning。Go 标准库写个 CLI 工具，`go build` 能过就行。

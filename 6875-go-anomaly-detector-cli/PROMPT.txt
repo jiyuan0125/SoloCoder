@@ -1,4 +1,4 @@
-先喂一段历史日志让工具学习正常模式，然后拿新日志做比对，偏离历史模式的就是异常。上周出了个新错误码 5011 没人注意到，线上问题拖了两天才响应。
+上周出了个新错误码 5011，线上问题拖了两天才有人注意到——监控只看总量，不关注模式变化。得让工具学一遍历史日志的正常模式，再来新日志自动比，偏离的就报出来。
 
 第一步训练基线：`anomaly-detector baseline --input history.log --output baseline.json --window 1h`。按时间窗口统计各级别的频率分布和错误码的出现频率，写入 baseline 文件。第二步检测：`anomaly-detector detect --input new.log --baseline baseline.json --sensitivity 2.0 --output anomalies.json`。`--sensitivity` 是标准差倍数，超过就算异常，默认 2.0。
 

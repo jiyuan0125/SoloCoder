@@ -1,4 +1,4 @@
-运维说要看 5 分钟窗口里的日志量有没有突增，手动 count 根本来不及。这个工具统计滑动时间窗口内的日志条目数，按级别和模式分组，输出实时计数结果。
+上周流量高峰时日志量突然涨了 3 倍，但事后才知道——运维说要能实时看 5 分钟窗口里的日志量变化，手动 count 根本跟不上。这个工具统计滑动时间窗口内的日志条目数，按级别和模式分组，窗口一滑就出数。
 
 CLI：`window-counter count --input stream.log --window 5m --slide 1m --output counts.json --group-by level`。`--window` 是窗口大小，`--slide` 是滑动步长（默认等于 window，即滚动窗口）。`--group-by` 支持 `level`（按日志级别分组）、`pattern`（按正则匹配的消息模式分组）、`none`（不分组）。
 

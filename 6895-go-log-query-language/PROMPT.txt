@@ -1,4 +1,4 @@
-先定义好查询语法，再写解析器，最后把结果格式化输出——步骤很清晰。目标是实现一个面向日志的 SQL 子集：`SELECT count(*), level FROM log WHERE level='ERROR' GROUP BY hour` 这种写法能直接跑起来。
+每次要统计日志都得写一段 Go 脚本——同一个需求不同人写了三遍。要是能直接对着日志文件跑 `SELECT count(*), level FROM log WHERE level='ERROR' GROUP BY hour` 这种 SQL 就好了。
 
 1. 语法规则：SELECT 支持的字段有 count、sum、avg、min、max、distinct 及原始字段名。WHERE 支持 =、!=、>、<、LIKE、IN 操作符，用 AND/OR/NOT 连接。GROUP BY 支持 hour、minute、day 三个时间粒度和任意字段。ORDER BY 支持 ASC/DESC。LIMIT 限制返回行数。
 

@@ -1,3 +1,7 @@
-接手的老项目连个表结构文档都没有，字段含义全靠猜。每次新人来都要 DBA 口头讲一遍，不如搞个工具自动生成。顺便把空间优化也做了，老项目的 SQLite 跑了两年没 VACUUM 过。
+老项目的 SQLite 跑了两年没 VACUUM 过，碎片化严重。接手的时候连个表结构文档都没有，字段含义全靠猜，新人来了 DBA 口头讲一遍又一遍。
 
-Go CLI 工具 `schemadocgen`。子命令 `analyze`：`--db app.sqlite` 做 SQLite 空间分析——每张表的页数、空闲页比例、碎片化率（百分比），`--output analysis.json` 输出结构化报告。碎片化率 >30% 的表给出 `VACUUM` 建议，10-30% 给出 `OPTIMIZE` 提示。子命令 `doc`：`--db app.sqlite --output schema.md` 生成 Markdown 文档，每张表一个章节：字段表格（名称、类型、是否允许 NULL、默认值）、索引列表、行数、外键关系。`--include-data` 额外输出每表前 5 行样例数据。子命令 `diff`：`--left db1.sqlite --right db2.sqlite` 对比两个库的 schema 差异，输出新增表、删除表、字段变更到 `--output diff.md`。扫描时发现漏洞要生成报告，报告生成本身也扫描关联文件。输入数据格式常见 CSV 和 JSON 都支持。纯标准库实现，go build 过了就行，退出码 0 成功 1 错误。
+空间分析用子命令 `analyze`：`--db app.sqlite` 扫描每张表的页数、空闲页比例、碎片化率，`--output analysis.json` 输出结构化报告。碎片化率 >30% 的表建议 `VACUUM`，10-30% 给 `OPTIMIZE` 提示。
+
+文档生成用子命令 `doc`：`--db app.sqlite --output schema.md` 生成 Markdown 文档，每张表一个章节——字段表格（名称、类型、是否允许 NULL、默认值）、索引列表、行数、外键关系。加 `--include-data` 额外输出每表前 5 行样例数据。
+
+还有个 `diff` 子命令：`--left db1.sqlite --right db2.sqlite` 对比两个库的 schema 差异，输出新增表、删除表、字段变更到 `--output diff.md`。扫描时发现漏洞要生成报告，报告生成本身也扫描关联文件。输入数据格式常见 CSV 和 JSON 都支持。纯标准库实现，go build 过了就行，退出码 0 成功 1 错误。

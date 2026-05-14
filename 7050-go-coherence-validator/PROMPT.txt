@@ -1,4 +1,7 @@
-1. 朋友团队的跨文件校验还是用 diff 命令做的，根本不靠谱——diff 只能比文本，不知道哪个字段是 ID 哪个是外键。Go 命令行帮他搞个正经的。`coherence-validator check --primary master.csv --secondary detail.csv --foreign-key id` 实现多文件交叉校验：A 文件 ID 列必须在 B 文件对应列中存在。失败记录给修复建议 suggest_delete 或 suggest_insert。`--auto-fix` 自动修复先写备份 `.coherence-backup-{ts}.json`，修复日志记 action/file/row/field/old_value/new_value。表结构变更后扫描依赖该表的查询定义文件（`--queries-dir`），列出受影响的查询文件名和引用的列名。
-2. 数据库操作路径 `tables/{table}/rows/{id}/columns/{col}`，查询单个字段值。字段不存在返回 null 不报错。错误场景：输入文件不存在打印 "file not found: {path}" 退出码 2，外键列不存在打印 "foreign key column not found" 退出码 2。
+朋友团队的跨文件校验还在用 diff 命令，根本不靠谱——diff 只能比文本，不知道哪个字段是 ID 哪个是外键。
+
+Go 命令行 `coherence-validator` 帮他们搞个正经的。`check --primary master.csv --secondary detail.csv --foreign-key id` 实现 A 文件 ID 列必须在 B 文件对应列中存在。失败记录给修复建议 suggest_delete 或 suggest_insert。`--auto-fix` 自动修复先写备份 `.coherence-backup-{ts}.json`，修复日志记 action/file/row/field/old_value/new_value。表结构变更后扫描依赖该表的查询定义文件（`--queries-dir`），列出受影响的查询文件名和引用的列名。数据库操作路径 `tables/{table}/rows/{id}/columns/{col}`，字段不存在返回 null 不报错。
+
+输入文件不存在打印 "file not found: {path}" 退出码 2，外键列不存在打印 "foreign key column not found" 退出码 2。
 
 输出 JSON：`{ "total": N, "valid": N, "violations": [...], "suggestions": [...], "affected_queries": [...] }`。退出码 0 通过 1 有违规 2 配置错误。纯标准库实现，go build 能过。

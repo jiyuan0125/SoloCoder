@@ -1,4 +1,4 @@
-先说痛点：线上数据库连接池配了 200 个连接，实际活跃的不到 20 个，剩下 180 个空闲连接占着内存和数据库端资源。现有的连接池管理工具太老了不好用。
+线上数据库连接池配了 200 个连接，实际活跃的不到 20 个，剩下 180 个空闲连接占着内存和数据库端资源。现有的连接池管理工具太老了不好用。
 
 第一步 connkill scan --dsn "user:pass@tcp(localhost:3306)/db" 连接数据库，查询 information_schema.processlist，找出所有 Sleep 状态超过阈值的连接（默认 --idle-threshold 300s）。输出 idle_conns.json：{"total": 200, "active": 18, "idle": [{"id": 42, "user": "app", "host": "10.0.1.5:52341", "time": 1800, "state": "Sleep"}], "idle_count": 182}。
 

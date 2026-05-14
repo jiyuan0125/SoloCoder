@@ -1,4 +1,4 @@
-从一堆重复报错里找有几种不同的错误？直接数不现实。这个工具把 ERROR 级别日志按错误类型分组，每组显示首次出现时间、末次出现时间、出现次数、堆栈摘要，最后输出一份错误报告。
+线上报了 2000 多条 ERROR，翻了两小时发现有 5 种不同的错误类型——但每种到底什么时候开始的、出现了多少次，全靠脑子记。ERROR 级别日志按错误类型分组，每组显示首次/末次出现时间、出现次数、堆栈摘要，一份报告搞定。
 
 子命令 `scan`：`error-tracker scan --input app.log --output report.txt --top 20`。`--top` 限制输出分组数量，默认 10。分组逻辑：取每条 ERROR 日志的 message 去掉数字和 UUID 后做相似度匹配，相似度 ≥ 0.8 的归为一组。报告格式用 Go 标准库的 text/template，模板默认内嵌，也可以 `--template custom.tmpl` 自定义。每个分组输出包含 `group_id`（自增整数）、`fingerprint`（去数字后的模式串）、`count`、`first_seen`、`last_seen`、`sample_stacktrace`（取第一条的堆栈）。
 

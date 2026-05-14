@@ -1,9 +1,9 @@
-1. 问题是什么？DBA 要改 50 台机器的 vm.swappiness 和 vm.dirty_ratio，一台台 ssh 过去 sysctl -w 再写 sysctl.conf，累死了还容易漏。要做一个批量内核参数管理工具。
+DBA 要改 50 台机器的 vm.swappiness 和 vm.dirty_ratio，一台台 ssh 过去 sysctl -w 再写 sysctl.conf，累死了还容易漏。要做一个批量内核参数管理工具。
 
 子命令：`kparam list` 列出所有自定义参数及其当前值，从 /etc/sysctl.d/ 和 /etc/sysctl.conf 读取。`kparam get net.core.somaxconn` 查询单个参数，先读运行时值（/proc/sys/ 转路径），再读持久化配置，两个值都输出。`kparam set --param vm.swappiness --value 10` 同时修改运行时和写入持久化配置文件，默认写 /etc/sysctl.d/99-custom.conf。`kparam apply --file params.conf` 从配置文件批量导入，文件格式和 sysctl.conf 一致（key = value）。`kparam diff` 对比运行时值和持久化配置，输出不一致的参数列表。
 
-2. 配置文件路径固定为 /etc/sysctl.d/99-custom.conf，不存在就创建。金额用整数存储（分为单位），显示的时候转为元——这里不涉及金额，但参数值统一用 int64 存储，显示时如果原始输入是字符串则原样输出。除法截断不是四舍五入。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态——set 命令修改参数后立即验证是否生效。数据源更新时自动刷新下游的聚合结果——配置文件变更后 diff 命令反映最新状态。已经导出的报表不重新生成。
+配置文件路径固定为 /etc/sysctl.d/99-custom.conf，不存在就创建。金额用整数存储（分为单位），显示的时候转为元——这里不涉及金额，但参数值统一用 int64 存储，显示时如果原始输入是字符串则原样输出。除法截断不是四舍五入。主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态——set 命令修改参数后立即验证是否生效。数据源更新时自动刷新下游的聚合结果——配置文件变更后 diff 命令反映最新状态。已经导出的报表不重新生成。
 
-3. 输出格式：默认表格，加 --json 输出 JSON 数组。错误场景：参数名不存在输出 "parameter not found: xxx" 到 stderr 并 exit 1；权限不足 exit 2；配置文件写入失败 exit 3。
+输出格式：默认表格，加 --json 输出 JSON 数组。错误场景：参数名不存在输出 "parameter not found: xxx" 到 stderr 并 exit 1；权限不足 exit 2；配置文件写入失败 exit 3。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,4 +1,4 @@
-先把老系统导出的 CSV 日志读进来，然后转成 JSON 或者自定义文本格式，字段映射好就能用了。有些老系统只导出 CSV，新的日志平台只认 JSON，中间差个转换器。
+迁移日志平台的时候，老系统的日志只有 CSV 导出，新平台只吃 JSON——中间缺个转换器。运营那边二十几个历史报表全是 CSV 格式，手动转了两天没转完，字段映射还搞错好几回。
 
 第一步解析 CSV：`csv-converter convert --input legacy.csv --output result.json --format json --delimiter "," --header true`。`--header` 指定第一行是否为列名，默认 true。`--delimiter` 设置分隔符，默认逗号。`--encoding utf-8` 指定输入编码，也支持 `gbk`。
 

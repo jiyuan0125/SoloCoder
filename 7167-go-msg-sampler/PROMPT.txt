@@ -1,6 +1,6 @@
 日均 1000 万条消息全量分析太慢了，先采样看看分布再决定要不要深挖。之前用脚本清洗重复劳动太多，这次用 Go 写个正式工具。
 
-先配置采样策略，再执行采样，最后导出统计数据。`msg-sampler` 的流程分三步：
+`msg-sampler` 的流程就是采样、可选重放、然后导出统计数据。
 
 1. `sample --input msgs.jsonl --rate 0.01 --output sampled.jsonl`：按 1% 比例随机采样。或 `--interval 10s` 每 10 秒取一条。采样统计实时输出 `{"scanned": 1000000, "sampled": 10000, "rate": "1.00%"}`。`--strategy reservoir --size 1000` 用蓄水池抽样保证均匀。
 2. `replay --input sampled.jsonl --topic orders --offset 1000 --limit 500 --target replay-topic`：从指定偏移量重新消费，支持 earliest/latest/具体 offset，`--limit` 控制条数。偏移量管理：`offsets show --topic orders --group my-group` 显示当前 offset。

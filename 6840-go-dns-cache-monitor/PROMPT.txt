@@ -1,4 +1,4 @@
-先搞定 DNS 缓存可见性，再谈排查超时问题。DNS 解析偶发超时，但不知道是缓存的问题还是上游的问题。显示缓存条目数、命中率、过期率，支持刷新缓存操作。
+DNS 解析偶发超时，P99 从 2ms 飙到 500ms，查了半天不确定是本地缓存的问题还是上游 DNS 的问题。如果能看到缓存命中率、过期条目数这些指标，排查就快多了。显示缓存条目数、命中率、过期率，支持刷新缓存操作。
 
 接口设计。`dnscachemon stats` 读取系统 DNS 缓存状态（如 nscd 或 systemd-resolved 的统计数据）。`dnscachemon query -name example.com` 查询指定域名是否在缓存中。`dnscachemon flush` 清空本地 DNS 缓存。`dnscachemon watch -interval 10s` 持续监控。
 

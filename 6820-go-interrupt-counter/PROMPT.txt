@@ -1,4 +1,4 @@
-先搞清楚每个 CPU 核心上各类中断分布，再调 IRQ 亲和性才有依据。统计 /proc/interrupts 里的数据，按核和类型分类，支持持续监控和变化率。
+昨晚网卡中断全打到 CPU 0 上了，单核跑到 100% 其他核闲着。调 IRQ 亲和性得先知道中断分布，不然就是瞎调。统计 /proc/interrupts 里的数据，按核和类型分类，支持持续监控和变化率。
 
 步骤：1）读取 /proc/interrupts 解析成 `map[irq_type][]count_per_cpu`；2）支持单次快照 `intcount snapshot` 和持续监控 `intcount watch -interval 2s`；3）变化率模式 `intcount delta -interval 5s`，输出两次采样差值。
 

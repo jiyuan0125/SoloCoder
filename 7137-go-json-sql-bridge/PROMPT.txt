@@ -1,5 +1,7 @@
-先说场景：日志全存的是 JSON 文件，产品要做分析得先转成 SQL 导入数据库。之前用 shell 脚本拼 SQL，转义和编码问题一堆，太混乱了。
+日志全存的是 JSON 文件，产品要做分析得先转成 SQL 导入数据库。之前用 shell 脚本拼 SQL，转义和编码问题一堆，太混乱了。
 
-第一步，`json2sql convert --file logs.json --db analytics.db --table access_logs --mapping '{"timestamp":"created_at","user_id":"uid","action":"event_type"}'`，JSON 字段映射到 SQL 列，自动建表。`--batch-size 1000` 分批插入，`--on-error skip|stop`。支持嵌套 JSON 用点号路径 `--mapping '{"request.method":"http_method"}'`。第二步，`json2sql schema --db analytics.db --format markdown` 生成 Markdown 文档含表结构、索引、表关系、索引使用统计。第三步，`json2sql query --dir ./sqls/ --db analytics.db --parallel 3` 从 SQL 文件批量执行查询，结果汇总 JSON {total, results: [{file, rows, error}]}。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。代码分文件组织：converter.go、schema.go、executor.go、main.go。JSON 解析失败输出 "invalid json at line {N}: {detail}" 退出码 1。
+`json2sql convert --file logs.json --db analytics.db --table access_logs --mapping '{"timestamp":"created_at","user_id":"uid","action":"event_type"}'`，JSON 字段映射到 SQL 列，自动建表。`--batch-size 1000` 分批插入，`--on-error skip|stop`。支持嵌套 JSON 用点号路径 `--mapping '{"request.method":"http_method"}'`。`json2sql schema --db analytics.db --format markdown` 生成 Markdown 文档含表结构、索引、表关系、索引使用统计。`json2sql query --dir ./sqls/ --db analytics.db --parallel 3` 从 SQL 文件批量执行查询，结果汇总 JSON {total, results: [{file, rows, error}]}。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。
+
+代码分文件组织：converter.go、schema.go、executor.go、main.go。JSON 解析失败输出 "invalid json at line {N}: {detail}" 退出码 1。
 
 Go 命令行工具，go build 能过就行。

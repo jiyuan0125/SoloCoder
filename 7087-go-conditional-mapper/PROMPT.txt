@@ -1,3 +1,7 @@
 隔壁团队在搞数据平台，编码标准化他们没排上优先级，但我们这边数据过来了全是乱码——GBK、Big5、带 BOM 的 UTF-8 混着来，每次清洗都头大。
 
-`condmap` 是个 Go CLI 工具，先把编码统一再处理数据。子命令 `encode` 统一编码到 UTF-8，`--from` 指定源编码（不指定就自动检测），碰到 BOM 自动剥离，非法字符用 `--replace "?"` 替换而不是直接丢。子命令 `bucket` 做连续值离散化，`--column age --ranges "0-18,19-35,36-60,60+"` 按范围分桶，边界值归下界，不在任何范围内的归入 `other`。子命令 `condmap` 做条件映射，`--rules rules.json` 指定映射规则文件，规则里 condition 是表达式（支持 `==`、`!=`、`>`、`<`、`contains`），then 和 else 分别指定目标值。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。模板引擎用 text/template 的自定义函数，扩展 `upper`、`lower`、`trim`、`default` 四个函数。输入输出都支持 stdin/stdout，`--format` 指定 json 或 csv。go build 能过，命令行工具能正常运行。
+`condmap` 是个 Go CLI 工具，先把编码统一再处理数据。子命令 `encode` 统一编码到 UTF-8，`--from` 指定源编码（不指定就自动检测），碰到 BOM 自动剥离，非法字符用 `--replace "?"` 替换而不是直接丢。
+
+子命令 `bucket` 做连续值离散化，`--column age --ranges "0-18,19-35,36-60,60+"` 按范围分桶，边界值归下界，不在任何范围内的归入 `other`。子命令 `condmap` 做条件映射，`--rules rules.json` 指定映射规则文件，规则里 condition 是表达式（支持 `==`、`!=`、`>`、`<`、`contains`），then 和 else 分别指定目标值。
+
+密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。模板引擎用 text/template 的自定义函数，扩展 `upper`、`lower`、`trim`、`default` 四个函数。输入输出都支持 stdin/stdout，`--format` 指定 json 或 csv。go build 能过，命令行工具能正常运行。

@@ -1,5 +1,7 @@
-上次时区没统一导致海外订单时间全错了一整天，客服接到一堆投诉电话。Go 写个日期处理工具：日期格式自动识别转换，时区转换覆盖主要时区，相对日期计算。审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。扫描多个目录要并行处理。
+上次时区没统一导致海外订单时间全错了一整天，客服接到一堆投诉电话。Go 写个日期处理工具，解析、时区转换、相对日期计算都涵盖。审计日志按多层路径 audits/{year}/{month}/{day}/{id} 组织。扫描多个目录要并行处理。
 
-解析：`date-parser parse --input orders.csv --column order_time --auto-detect --target-format "2006-01-02T15:04:05Z07:00" --output parsed.csv`，`--auto-detect` 自动识别 ISO8601、yyyy-MM-dd、MM/dd/yyyy、unix 秒/毫秒等常见格式。时区：`convert-tz --input data.csv --column ts --from Asia/Shanghai --to America/New_York --output out.csv`，时区名必须是 IANA 标准名。相对日期：`relative --base "2024-06-15" --expr "上个月末" --output result.txt`，支持"Nd前/Nw后/Nm后/上个月末/本周一/本季度初"等中文表达。
+解析：`date-parser parse --input orders.csv --column order_time --auto-detect --target-format "2006-01-02T15:04:05Z07:00" --output parsed.csv`，`--auto-detect` 自动识别 ISO8601、yyyy-MM-dd、MM/dd/yyyy、unix 秒/毫秒等常见格式。
+
+时区：`convert-tz --input data.csv --column ts --from Asia/Shanghai --to America/New_York --output out.csv`，时区名必须是 IANA 标准名。相对日期：`relative --base "2024-06-15" --expr "上个月末" --output result.txt`，支持"Nd前/Nw后/Nm后/上个月末/本周一/本季度初"等中文表达。
 
 CSV/JSON 输入。无法解析的日期原样保留 + stderr `warning: row N unparseable: "xxx"`。无效时区报 `error: unknown timezone: xxx` 退出码 1。空文件输出空退出码 0。多目录并行扫描。go build 能过，纯标准库。

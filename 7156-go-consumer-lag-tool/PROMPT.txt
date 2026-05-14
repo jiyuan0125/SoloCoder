@@ -1,6 +1,6 @@
-消费延迟从 0 涨到 2 小时，用户看到的是两小时前的数据——这个问题一个月出现了四次。得有个工具持续监控延迟并预警。
+消费延迟从 0 涨到 2 小时，用户看到的是两小时前的数据——这个问题一个月出现了四次。
 
-先执行延迟采集，再生成趋势报告，最后判断是否需要告警。`lag-tool monitor --brokers localhost:9092 --group my-consumer --interval 10s`：每 10 秒采样一次消费延迟，输出到 stdout：`[2024-01-15 10:30:00] group=my-consumer topic=orders partition=0 lag=15230`。`--threshold 10000` 设置预警阈值，超过时输出 `⚠ ALERT: lag=15230 > threshold=10000` 到 stderr。
+`lag-tool monitor --brokers localhost:9092 --group my-consumer --interval 10s`：每 10 秒采样一次消费延迟，输出到 stdout：`[2024-01-15 10:30:00] group=my-consumer topic=orders partition=0 lag=15230`。`--threshold 10000` 设置预警阈值，超过时输出 `⚠ ALERT: lag=15230 > threshold=10000` 到 stderr。
 
 `lag-tool report --input lag_samples.json --output report.html --period 1h`：生成延迟趋势报告，包含每个 topic-partition 的最大/最小/平均延迟、延迟突增时间点。报告输出为 HTML 表格。`lag-tool health --brokers localhost:9092 --group my-consumer`：消费者健康检查，验证消费者组是否存在、成员是否活跃、是否有消费者掉线。
 

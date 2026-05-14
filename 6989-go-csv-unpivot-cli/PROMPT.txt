@@ -1,10 +1,6 @@
-第一列是 entity_id，后面 12 列是 jan 到 dec 的值——这是典型的透视表格式，但下游的分析工具只认长格式，也就是 entity_id + month + value 三列。手动转了几次，每次都要写不同的脚本。
+`csv-unpivot -input wide.csv -columns jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec -name month -value sales -output long.csv`。解决的是宽表转长表的问题——第一列 entity_id 后面 12 列是 jan 到 dec，下游分析工具只认 entity_id + month + value 三列，手动转了几次每次都要写不同脚本。`-columns` 支持范围写法 `jan-dec`（按字母序），`-name` 是展开后存放原列名的列名，`-value` 是存放对应值的列名。
 
-CLI 用法：`csv-unpivot -input wide.csv -columns jan,feb,mar,apr,may,jun,jul,aug,sep,oct,nov,dec -name month -value sales -output long.csv`。`-columns` 指定要展开的列，逗号分隔，支持范围写法 `jan-dec`（按字母序）。`-name` 是展开后存放原列名的列名，`-value` 是存放对应值的列名。
-
-输出逻辑——原始每行变 N 行（N 是展开列数），保留不展开的列作为标识列。比如输入有 id,name,jan,feb 两行数据，输出 id,name,month,value 四行。空值行默认保留，加 `-skip-null` 跳过 value 为空的行。
-
-展开列在 header 中不存在时 stderr 报错 "error: column 'xxx' not found in header" 并 exit 1。所有列都被展开时没有标识列，输出只有 name 和 value 两列。输入只有 header 没有数据行时输出只有 header。
+输出逻辑——原始每行变 N 行（N 是展开列数），保留不展开的列作为标识列。比如输入有 id,name,jan,feb 两行数据，输出 id,name,month,value 四行。空值行默认保留，加 `-skip-null` 跳过 value 为空的行。展开列在 header 中不存在时 stderr 报错 "error: column 'xxx' not found in header" 并 exit 1。所有列都被展开时没有标识列，输出只有 name 和 value 两列。输入只有 header 没有数据行时输出只有 header。
 
 加 `-keep-original` 会在输出中额外保留展开列的原始值。支持通过 `-sep tab` 指定非逗号分隔符。
 

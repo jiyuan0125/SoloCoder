@@ -1,5 +1,7 @@
-先说背景：存储过程 200 多个，文档为零，参数含义全靠看代码。下周要给客户演示，得赶紧弄个管理工具出来。
+存储过程 200 多个，文档为零，参数含义全靠看代码。下周要给客户演示，得赶紧弄个管理工具出来。
 
-第一步，`proc-mgr list --db orders.db` 列出所有存储过程，输出 table 格式：name、params_count、return_type、created_at。第二步，`proc-mgr show --db orders.db --name calc_monthly_report` 显示完整定义和参数列表，参数信息包含 name、type、mode（IN/OUT/INOUT）、default_value。第三步，`proc-mgr doc --db orders.db --output ./docs/ --format markdown` 批量生成文档，每个存储过程一个 .md 文件，包含参数说明、返回值、示例调用。批量查询：`proc-mgr exec --dir ./sqls/ --db orders.db --on-error skip|stop` 从 SQL 文件读取并执行，结果汇总 JSON 报告 {total, success, failed, errors: [{file, message}]}。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。导入完成后自动更新索引，索引更新失败只记日志不中断。存储过程不存在输出 "procedure not found: {name}" 退出码 1。
+`proc-mgr list --db orders.db` 列出所有存储过程，输出 table 格式：name、params_count、return_type、created_at。`proc-mgr show --db orders.db --name calc_monthly_report` 显示完整定义和参数列表，参数信息包含 name、type、mode（IN/OUT/INOUT）、default_value。`proc-mgr doc --db orders.db --output ./docs/ --format markdown` 批量生成文档，每个存储过程一个 .md 文件，包含参数说明、返回值、示例调用。
+
+批量查询：`proc-mgr exec --dir ./sqls/ --db orders.db --on-error skip|stop` 从 SQL 文件读取并执行，结果汇总 JSON 报告 {total, success, failed, errors: [{file, message}]}。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。导入完成后自动更新索引，索引更新失败只记日志不中断。存储过程不存在输出 "procedure not found: {name}" 退出码 1。
 
 代码分文件组织：proc.go、docgen.go、executor.go、main.go。Go CLI 工具，go build 能过就行。

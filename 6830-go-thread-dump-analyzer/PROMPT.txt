@@ -1,4 +1,4 @@
-先解析线程 dump，再识别问题模式，最后输出报告——分三步走。解析 Java jstack 和 Go goroutine dump 文件，识别死锁、长时间阻塞、CPU 热点线程。上次线上死锁查了两个小时。
+上次线上死锁查了两个小时，jstack 输出 3000 行一行行看眼睛都花了。解析 Java jstack 和 Go goroutine dump 文件，自动识别死锁、长时间阻塞、CPU 热点线程，别再人工排查了。
 
 1）`tda parse -file thread_dump.txt -format auto` 解析 dump 文件，-format 支持 auto/java/go。2）`tda detect -file dump.txt` 检测问题：死锁循环检测（A 等 B、B 等 A）、阻塞超 30 秒的线程、RUNNABLE 且栈顶在用户代码的线程。3）`tda report -file dump.txt -output report.json` 综合分析。
 
