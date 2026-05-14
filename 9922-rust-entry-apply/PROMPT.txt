@@ -1,0 +1,13 @@
+用 Rust 写一个日志条目应用（entry apply）引擎。
+
+背景：在 Raft 之类的共识协议里，leader 产生日志条目，follower 接收并持久化。但"提交"和"应用"是两回事——commitIndex 前进后，还得一条一条 apply 到状态机。这个模块专注于 apply 这一步。
+
+实现：
+- 维护一个 apply 状态：记录 last_applied 索引
+- 接收日志条目流（按索引排序），批量或逐条 apply 到状态机
+- 状态机是一个简单的 KV 存储，日志条目包含操作类型（Set/Delete）和参数
+- apply 时检查索引连续性：不能跳着 apply（last_applied + 1 才是下一条）
+- 支持查询：给定 key，返回当前状态机中的值（反映已 apply 的状态）
+- apply 完成后持久化 last_applied，重启后从这里继续
+
+Rust 标准库，cargo build 通过。

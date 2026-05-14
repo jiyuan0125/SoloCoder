@@ -1,0 +1,1 @@
+视频文件里经常内嵌多条字幕轨道，需要列出来看看有哪些。写个Python工具来检测和列出MP4/MKV文件中的字幕轨信息。能识别字幕编码格式（S_TEXT/SSA、S_TEXT/UTF8、S_HDMV/PGS等），语言代码，轨道名称。对于文本字幕轨还能预览前几条字幕内容。MKV的subtitle track element和MP4的tx3g/subtitle sample description都要支持。python3直接跑。

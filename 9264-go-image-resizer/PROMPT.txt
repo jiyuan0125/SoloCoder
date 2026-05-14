@@ -1,0 +1,10 @@
+帮我用 Go 写一个图片批量缩放工具。
+
+平时处理产品图需要统一尺寸：
+- 读取 JPEG/PNG 图片并解码
+- 支持精确缩放到指定宽高（拉伸模式）和等比缩放（fit 模式）
+- fit 模式下可以指定填充颜色补足空白区域
+- 批量处理整个目录下的图片
+- 输出保持原格式或统一转为 JPEG
+
+用法 img-resize -width 800 -height 600 -mode fit -bgcolor "#ffffff" ./photos/，go build 通过。标准库实现。

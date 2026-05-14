@@ -1,0 +1,12 @@
+用 Rust 实现日志复制（Log Replication）。
+
+这是共识算法的核心部分：leader 把操作日志复制到所有 follower，保证多数节点确认后才提交。
+
+功能：
+- leader 接收客户端写入请求，追加到自己的日志
+- 并行把日志条目发送给所有 follower，每个条目有 index 和 term
+- 收到多数节点确认后标记为 committed，通知客户端写入成功
+- follower 日志落后时，leader 需要找到一致的点，从那里开始补发（日志一致性检查）
+- 能看到每个节点的日志内容和 commit index
+
+cargo run 能演示日志复制过程。内存模拟，不用真的走网络。

@@ -1,0 +1,9 @@
+帮我用 Go 写一个带 CRC 校验的 WAL 记录编解码器。每条写入的日志记录都要带校验和，读取时验证数据完整性。
+
+具体实现：
+- 记录格式：[length(4字节)][crc32(4字节)][data(N字节)]
+- Write(data) → 计算 CRC32 → 写入 length + crc + data
+- Read() → 读 length → 读 crc + data → 验证 CRC → 返回 data 或报错
+- 处理边界情况：文件末尾 length 不够 4 字节就忽略（部分写入）
+
+用 Go 标准库的 hash/crc32，go build 通过就行。

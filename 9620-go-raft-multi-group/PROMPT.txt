@@ -1,0 +1,5 @@
+帮我用 Go 实现一个支持多 Raft 组的框架。单个 Raft 组只能串行处理请求，多组可以并行，比如 TiKV 那样的 multi-raft 架构。
+
+每个 Raft 组管理自己独立的日志和状态机，组之间互不干扰。需要一个 RegionRouter 来根据 key 的范围把请求路由到对应的 Raft 组。支持动态分裂（split）：当一个组的负载太大时可以一分为二。
+
+写个 demo：启动 3 个 Raft 组，分别管理 key range [a-f)、[f-m)、[m-z)，客户端发请求能看到被正确路由，触发一次 split 能看到组重新划分。go build 编译通过。

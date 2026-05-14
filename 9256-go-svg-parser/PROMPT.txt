@@ -1,0 +1,9 @@
+帮写一个 SVG 文件解析工具，Go 语言，不依赖外部库。
+
+要做的事：
+- 解析 SVG XML 结构，提取 viewBox、width、height 等基本属性
+- 识别常见图形元素：rect、circle、ellipse、line、polyline、polygon、path
+- 解析 path 的 d 属性里各种指令（M L C Q A Z 等）
+- 支持 transform 属性（translate、rotate、scale、matrix）
+
+命令行 svg-parse logo.svg，输出画布尺寸、元素数量、各元素类型统计。go build 编译通过。

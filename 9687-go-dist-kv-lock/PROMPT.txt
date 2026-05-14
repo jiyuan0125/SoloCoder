@@ -1,0 +1,1 @@
+基于上面那个 KV 存储，加一个分布式锁。lock(key) 成功后其他客户端不能 lock 同一个 key，unlock 释放。需要带超时——持锁客户端挂了，锁自动过期。Go 实现，底层基于 lease，锁和租约绑定。tryLock 非阻塞版本也要有。go build 能过。

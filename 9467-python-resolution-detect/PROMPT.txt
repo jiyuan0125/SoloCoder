@@ -1,0 +1,5 @@
+做视频处理的时候经常需要先知道视频的分辨率。写个 Python 工具快速获取视频的宽高信息。
+
+支持 MP4 和 MKV 格式。MP4 从 tkhd box 或 stsd 中提取分辨率，MKV 从 TrackEntry 的 Video 元素读取。输出宽度和高度像素值，如果有 SAR（采样宽高比）信息也要显示，并计算实际显示分辨率。
+
+Python 3 标准库，python resolution_detect.py movie.mkv 输出类似 "1920x1080 (SAR 1:1)"。

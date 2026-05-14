@@ -1,0 +1,5 @@
+最近在折腾无损音乐，手上有不少 FLAC 文件，想看看每个文件的编码参数和元数据情况。
+
+写个 FLAC 解析器，能读取 FLAC 文件头的 magic number 和 STREAMINFO block，解析出采样率、总采样数、声道数、位深度这些基本信息。还要能遍历 VORBIS_COMMENT block 里的 tag 列表。命令行传入文件路径就能输出解析结果。
+
+Go 写，纯手写二进制解析，go build 编译通过。

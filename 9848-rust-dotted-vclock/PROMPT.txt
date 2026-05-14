@@ -1,0 +1,12 @@
+用 Rust 实现 Dotted Version Vector（点版本向量）。
+
+普通向量时钟有个问题：客户端写数据时不知道应该递增哪个节点，容易产生冲突。Dotted Version Vector 给每次写入分配一个唯一的 (node_id, counter) 点，避免兄弟值（sibling）的产生。
+
+核心逻辑：
+- 每个节点维护一个 version vector（类似普通向量时钟）
+- 客户端读取时获取当前 context（包含 version vector）
+- 客户端写回时带上 context，服务端据此生成分配新的 dot
+- dot = (node_id, counter)，其中 counter 从 version vector 中该节点的值 + 1
+- 合并时，已经包含在 version vector 中的 dot 不再产生新 sibling
+
+cargo build 通过，模拟两个客户端并发读写同一 key，测试不产生多余 sibling。

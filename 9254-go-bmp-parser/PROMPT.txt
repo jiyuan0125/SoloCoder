@@ -1,0 +1,9 @@
+写一个 BMP 图片解析器，Go 实现，只用标准库。
+
+这个工具要能：
+- 解析 BMP 文件头（BITMAPFILEHEADER）和信息头（BITMAPINFOHEADER）
+- 处理不同的位深：1位、4位、8位、24位、32位
+- 支持 RLE8 和 RLE4 压缩格式的解码
+- 读取色彩表（调色板），把像素数据正确还原
+
+命令行 bmp-parse image.bmp，输出宽高、位深、压缩方式、数据大小。go build 能过。

@@ -1,0 +1,1 @@
+帮我实现一个简单的发布订阅消息系统。发布者往 topic 发消息，所有订阅了该 topic 的订阅者都收到一份。Go 实现，支持 create-topic、subscribe、unsubscribe、publish 四个操作。消息投递方式用 channel 模拟，订阅者消费不过来时背压处理。go build 编译通过。

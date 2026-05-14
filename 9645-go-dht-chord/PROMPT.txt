@@ -1,0 +1,5 @@
+用 Go 实现 Chord DHT 算法。Chord 是一个经典的分布式哈希表，能在 P2P 网络中快速定位数据所在的节点。
+
+核心机制：一致性哈希环（节点和数据都映射到环上）、finger table（每个节点维护 O(log N) 个路由条目加速查找）、查找算法（通过 finger table 逐跳接近目标，O(log N) 跳找到数据）、节点加入和离开时的环维护。稳定化协议（stabilize）定期修正 finger table。
+
+跑一个 demo：10 个节点组成 Chord 网络，插入 100 个 key，查询任意 key 都能在 log 级别跳数内找到。打印一次查找的完整路由路径。go build 通过。

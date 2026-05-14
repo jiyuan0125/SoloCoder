@@ -1,0 +1,3 @@
+室内灯光下拍的照片总是偏黄，阴天拍的偏蓝，想写个白平衡校正工具。
+程序自动检测图片的色温偏移（比如分析灰度世界假设），然后做白平衡校正让白色区域真正显示白色。也支持手动指定色温值或者点选图片上的中性灰参考点来校正。
+Python 3，Pillow 或 OpenCV，命令行：python wb.py photo.jpg -o corrected.jpg，或者 python wb.py photo.jpg --temp 5500 --tint +5

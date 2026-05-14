@@ -1,0 +1,3 @@
+WAV 文件写入器。需要从原始 PCM 数据生成标准 WAV 文件。
+把原始音频采样数据写入 WAV 文件。支持 8-bit、16-bit、24-bit、32-bit 位深，单声道/立体声/多声道，采样率可配置。正确构造 RIFF/WAVE 文件头和 fmt、data 块。也能追加写入已有 WAV 文件（流式写入模式，边录边写）。
+Python 3 标准库 wave 或自己用 struct 写二进制头。python wav_writer.py --input samples.raw --output audio.wav --sample-rate 48000 --channels 2 --bit-depth 16

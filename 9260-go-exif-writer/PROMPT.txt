@@ -1,0 +1,10 @@
+之前读 EXIF 的工具挺好用，现在还需要一个往图片里写 EXIF 的 Go 工具。
+
+要实现的功能：
+- 创建新的 EXIF 数据块，构造 IFD0、EXIF IFD 结构
+- 支持写入常见标签：DateTime、Make、Model、Orientation、Copyright、UserComment 等
+- 能修改已有 EXIF（读取、修改指定标签、重新编码写回）
+- GPS 信息写入：支持写入经纬度、海拔
+- 保持 JPEG 文件完整性，不损坏图片数据
+
+用法 exif-write -tag DateTime -value "2024:01:15 10:30:00" photo.jpg，修改后保存。Go 标准库，go build 通过。

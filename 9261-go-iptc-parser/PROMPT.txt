@@ -1,0 +1,9 @@
+做一个 IPTC 元数据解析工具，Go 实现。
+
+新闻图片和商业图库经常把 IPTC 信息嵌在图片里，我需要：
+- 从 JPEG/TIFF 的 APP13 段中定位 IPTC-NAA 数据
+- 解析 IPTC Record 2 的各个标签：ObjectName、Caption、Keywords、Byline、Copyright、City、Country 等
+- 支持多个重复标签（比如多个 Keywords）
+- 把解析结果以可读格式或 JSON 输出
+
+用法 iptc-parse news_photo.jpg，打印所有 IPTC 字段。Go 标准库，go build 通过。

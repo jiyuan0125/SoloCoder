@@ -1,0 +1,10 @@
+做一个图片缩略图生成工具，把大图缩小生成指定尺寸的缩略图。
+
+生成逻辑：
+- 支持 JPEG 和 PNG 输入格式（通过文件头 magic number 判断）
+- 按比例缩放：用户指定最大宽高，保持原始宽高比，图片 fit 到目标框内
+- 也支持指定精确的宽高，强制拉伸模式
+- 使用最近邻（nearest neighbor）或双线性插值（bilinear）进行像素重采样
+- 输出 JPEG 缩略图，可设置压缩质量（1-100）
+
+Rust 实现，cargo build 通过。`image-thumb photo.jpg --max-size 200x200 --quality 85 -o thumb.jpg`。

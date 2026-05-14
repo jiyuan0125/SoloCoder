@@ -1,0 +1,5 @@
+写一个 Rust 工具来解析 DASH 的 MPD（Media Presentation Description）文件。
+
+解析 MPD 的 XML 格式，提取出 Period、AdaptationSet、Representation 的层级关系，每个 Representation 的编码信息（codec、bandwidth、width、height）和 SegmentList/SegmentTemplate 的分片信息。支持静态 MPD（static）和动态 MPD（dynamic）。输出结构化的媒体描述信息，方便后续拉流用。
+
+Rust 实现，cargo build 通过，按 ISO/IEC 23009-1 规范解析。

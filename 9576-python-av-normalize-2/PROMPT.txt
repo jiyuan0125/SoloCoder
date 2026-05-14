@@ -1,0 +1,4 @@
+音量标准化工具。不同来源的音频文件音量差别很大，想统一到一个水平。
+分析音频的响度，然后自动调整增益让所有文件达到目标响度（默认 -14 LUFS）。支持单个文件处理和批量处理目录下所有音频。不要只做简单的 peak normalization，要用 LUFS 标准。
+保留原音频格式和质量。Python 3 + ffmpeg loudnorm 滤镜。
+python normalize.py music/ --target -14 -o normalized/，或 python normalize.py song.mp3 -o song_norm.mp3

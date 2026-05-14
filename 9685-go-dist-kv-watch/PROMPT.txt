@@ -1,0 +1,1 @@
+客户端需要监听某个 key 的变化，一旦 value 被修改就收到通知。帮我实现 watch 机制——客户端注册 watch key，服务端在 key 变更时推送新值。Go 实现，模拟长连接场景，支持取消 watch。多个客户端可以 watch 同一个 key。go build 通过。

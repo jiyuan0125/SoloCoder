@@ -1,0 +1,9 @@
+帮我用 Go 写一个通用的分布式状态机框架。不同的业务可以插入不同的状态机实现，框架负责管理日志 apply 的顺序和持久化。
+
+需要做的：
+- 定义 StateMachine 接口：Apply(command []byte)、Snapshot()、Restore(snapshot []byte)
+- 实现一个示例状态机：计数器，支持 Incr/Get/Decr 操作
+- 框架层保证命令按日志顺序 apply，并提供查询当前状态的接口
+- 命令行可以提交操作并查看结果
+
+Go 标准库实现，go build 能编译通过。

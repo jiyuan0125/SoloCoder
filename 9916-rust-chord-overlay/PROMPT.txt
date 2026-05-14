@@ -1,0 +1,13 @@
+用 Rust 实现一个简化版的 Chord DHT 覆盖网络。
+
+Chord 是经典的分布式哈希表算法。节点和数据都映射到一个环形空间（0~2^m-1），每个节点只需要维护少量路由信息就能定位任何 key 属于哪个节点。
+
+要做的东西：
+- 实现 Chord 环：节点 ID 通过 SHA-1 哈希映射到环上
+- Finger table：每个节点维护 m 个 finger entry，第 i 个指向 ID 后面 2^(i-1) 位置的节点
+- 查找操作：给定一个 key，沿 finger table 在 O(log N) 跳内找到负责该 key 的节点
+- 节点加入：新节点通过已知节点查找自己的后继，插入环中，更新 finger table
+- 稳定化（stabilize）：定期运行，修正后继指针和 finger table
+- 数据操作：put(key, value) 放到负责节点上，get(key) 通过查找定位到节点并返回
+
+纯 Rust，内存模拟，cargo build 通过。

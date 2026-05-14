@@ -1,0 +1,13 @@
+帮我用 Rust 实现一个 follower 请求转发代理。
+
+场景：Raft 集群里只有 leader 能处理写入。如果客户端把写请求发到了 follower 上，follower 需要把请求转发给 leader，等 leader 处理完再把结果返回给客户端。这个模块处理的就是转发逻辑。
+
+要做：
+- 模拟一个 Raft 集群（leader + 多个 follower），各节点知道谁是 leader
+- follower 收到写请求时，转发给 leader
+- leader 处理完后，结果原路返回给 follower，再由 follower 返回给客户端
+- 如果 leader 在转发过程中变了（term 变化），follower 返回错误让客户端重试
+- 读请求可以由 follower 本地处理（但不保证强一致）
+- 超时处理：转发后 leader 一定时间内没响应，返回超时错误
+
+Rust 标准库，内存模拟节点间通信，cargo build 通过。

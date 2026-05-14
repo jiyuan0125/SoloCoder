@@ -1,0 +1,5 @@
+帮我写一个文件签名生成工具，生成数字签名摘要。
+
+虽然完整的数字签名需要非对称加密，但这里先做一个简化版：用 HMAC-SHA256 对文件生成签名，配合一个密钥文件来验证文件未被篡改。支持生成签名文件（.sig）和验证签名两个操作。密钥从文件读取，不硬编码。
+
+python main.py sign --key secret.key --input data.tar --output data.tar.sig 生成签名；python main.py verify --key secret.key --input data.tar --sig data.tar.sig 验证。Python 标准库 hmac 和 hashlib 实现。

@@ -1,0 +1,8 @@
+帮我写个 FLAC 无损音频文件的解析器，能把 FLAC 文件的结构拆开来看。
+
+需要支持：
+- 解析 FLAC 文件头（fLaC magic number）和 metadata block 链（STREAMINFO、VORBIS_COMMENT、CUESHEET 等）
+- 读取 STREAMINFO 中的采样率、声道数、位深、总采样数等关键参数
+- 列出所有 metadata block 的类型和大小，能处理 PICTURE block 中的封面图信息
+
+Rust 项目，cargo build 通过。用法：`flac-parser info music.flac` 输出文件结构摘要。

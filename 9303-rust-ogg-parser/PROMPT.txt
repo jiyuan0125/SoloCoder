@@ -1,0 +1,8 @@
+我需要解析 OGG 容器格式，了解里面封装的音频数据是怎么组织的。
+
+具体要做：
+- 解析 OGG 页面结构（capture pattern、版本、header type、granule position、serial number、page sequence）
+- 正确处理跨页的 segment 拼接（一个逻辑流的数据可能跨多个物理页）
+- 识别 BOS（beginning of stream）和 EOS（end of stream）标记
+
+Rust 实现，cargo build 能过。运行 `ogg-parser dump audio.ogg` 打印每页的头部信息和 segment 概要。

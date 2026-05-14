@@ -1,0 +1,5 @@
+有个老项目用的是 FLV 格式存视频，现在需要把 H.264+AAC 数据封装成 FLV。用 Python 写个 FLV 封装器。
+
+按 FLV 规范组装文件：FLV Header + PreviousTagSize0 + 一系列 Tag（Script Data / Video Tag / Audio Tag）。视频 Tag 按 AVC 格式封装，音频 Tag 按 AAC 格式封装。生成的 FLV 能用 ffplay 播放。
+
+Python 3 操作二进制数据，不依赖外部库。python flv_muxer.py --video input.h264 --audio input.aac -o output.flv。

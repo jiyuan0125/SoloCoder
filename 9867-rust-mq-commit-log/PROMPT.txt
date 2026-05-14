@@ -1,0 +1,11 @@
+用 Rust 实现一个提交日志（Commit Log）存储引擎。
+
+消息队列的核心就是一个 append-only 的日志文件，消息只能追加不能修改。这个工具就是实现这个底层存储。
+
+要做：
+- 实现 append-only 日志文件，支持写入消息（byte array）和按 offset 读取
+- 日志文件要分 segment 存储，单个 segment 达到大小上限后自动切换到新文件
+- 每个 segment 有对应的索引文件，加速按 offset 查找（类似 Kafka 的稀疏索引）
+- 支持日志清理：根据 retention policy（按时间或按大小）删除旧的 segment
+
+cargo build 通过，实际操作本地文件。

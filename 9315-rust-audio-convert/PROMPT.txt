@@ -1,0 +1,9 @@
+做一个简单的音频格式转换工具，支持 WAV、PCM 裸数据之间的转换。
+
+转换能力：
+- WAV 转 PCM：剥离文件头，只输出裸采样数据（支持指定输出位深：16bit/24bit/32bit）
+- PCM 转 WAV：给裸 PCM 数据加上 WAV 文件头，需要用户指定采样率、声道数、位深
+- 支持单声道/双声道、大端/小端字节序的指定
+- 位深转换时做正确的量化（如 32bit float 转 16bit int 要 clamp 到 -32768~32767）
+
+Rust，cargo build 通过。`audio-convert to-pcm input.wav --bits 16` 或 `audio-convert to-wav raw.pcm --rate 44100 --channels 2 --bits 16`。

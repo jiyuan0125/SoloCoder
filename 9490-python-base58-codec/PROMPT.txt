@@ -1,0 +1,5 @@
+帮我做一个 Base58 编解码工具。
+
+Base58 是比特币那边搞出来的编码，去掉了 Base64 里容易混淆的字符（0/O、l/I/1、+/）。在区块链和短 URL 场景用得很多。工具要支持 Bitcoin 和 Ripple 两种字母表（主要区别是字母顺序），支持编码解码字符串和文件。
+
+python main.py encode --text "Hello World" 输出 Base58 编码；python main.py decode --text "9Ajdvzr" 还原。加 --alphabet ripple 切换字母表。Python 标准库，自己实现 Base58 的编解码逻辑（base64 模块不直接支持 Base58）。

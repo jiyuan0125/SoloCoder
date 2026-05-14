@@ -1,0 +1,5 @@
+调试二进制协议的时候经常需要看十六进制数据。写个 Python 的十六进制编解码工具。
+
+功能：把二进制文件转成十六进制字符串显示（类似 hexdump），也支持把十六进制字符串还原成二进制数据。输出格式每行 16 字节，左侧偏移量，中间十六进制，右侧 ASCII 可见字符。支持大文件流式处理。
+
+Python 3 标准库，python hex_codec.py dump binary_file 输出 hexdump 格式，python hex_codec.py encode "hello" 输出十六进制字符串，python hex_codec.py decode "68656c6c6f" 还原文本。

@@ -1,0 +1,1 @@
+G-Counter 只能加不能减，我需要一个 PN-Counter，既能增也能减。思路是内部维护两个 G-Counter，一个计增量一个计减量。Go 实现，increment、decrement、value、merge 都要支持。模拟 3 个节点各自操作然后合并，验证结果一致。go build 编译通过。

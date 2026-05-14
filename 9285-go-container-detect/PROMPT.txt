@@ -1,0 +1,11 @@
+帮我写一个媒体容器格式检测工具，Go 实现。
+
+场景是用户上传文件时不一定带正确后缀，需要根据内容判断：
+- 读取文件头部魔数（magic bytes）判断实际格式
+- 支持检测：MP4（ftyp）、FLV、AVI、MKV/WebM、MPEG-TS、Ogg、WAV、AIFF、FLAC、MP3（ID3/sync word）、AAC（ADTS）
+- 有些格式魔数在文件头部固定位置，有些需要更深的解析
+- 返回格式名称、MIME 类型、可能的文件扩展名
+- 支持批量检测目录下所有文件
+- 对无法识别的文件给出最佳猜测
+
+用法 container-detect mystery_file.dat，输出实际格式。Go 标准库，go build 通过。

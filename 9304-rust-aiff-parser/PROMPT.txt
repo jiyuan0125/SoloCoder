@@ -1,0 +1,8 @@
+给我写一个 AIFF 音频文件格式的解析工具，主要处理未压缩的 AIFF 和 AIFF-C 压缩变种。
+
+功能要求：
+- 解析 AIFF 容器的 chunk 结构（FORM、COMM、SSND、MARK、INST 等）
+- 从 COMM chunk 读出声道数、采样率、位深、采样帧数
+- 能处理 AIFF-C 中的压缩类型标识（如 NONE、fl32、FL32、alaw、ulaw）
+
+用 Rust 写，cargo build 编译通过。`aiff-parser info sound.aiff` 输出格式详情。

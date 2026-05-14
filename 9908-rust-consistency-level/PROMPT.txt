@@ -1,0 +1,12 @@
+帮我实现一个一致性级别选择器，用 Rust 写。
+
+问题：不同的业务场景对数据一致性要求不同。用户查询用户资料可以接受短暂不一致（eventual），但扣款操作必须强一致。需要一个模块让上层按需选择一致性级别，底层自动处理对应的读写策略。
+
+要做的：
+- 定义三种一致性级别：Eventual、Quorum、Strong（Linearizable）
+- 写入时根据级别决定要等多少副本确认（Eventual=1, Quorum=majority, Strong=all）
+- 读取时根据级别决定读策略（Eventual 读任一副本, Quorum 读 majority, Strong 需要读最新版本）
+- 提供一个 KV 接口：put(key, value, consistency_level) 和 get(key, consistency_level)
+- 不同级别的读可能返回不同结果（比如 Eventual 可能读到旧值），这是预期行为
+
+Rust 标准库，内存模拟多副本，cargo build 通过。

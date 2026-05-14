@@ -1,0 +1,5 @@
+帮我用 Python 写一个 WAV 音频文件解析器。
+
+解析 WAV 文件的 RIFF 容器结构，读取 fmt chunk 获取音频格式信息（采样率、位深、声道数、编码格式），读取 data chunk 提取原始 PCM 样本数据。支持 8-bit、16-bit、24-bit、32-bit 整型和 32-bit 浮点格式。输出音频的基本信息和波形统计（最大值、最小值、RMS 响度）。也能处理包含其他 chunk（LIST、cue、fact 等）的 WAV 文件，跳过未识别的 chunk。
+
+Python 3 实现，不依赖第三方音频库，直接解析二进制。python 能跑起来。

@@ -1,0 +1,12 @@
+用 Rust 实现 Kademlia DHT。
+
+Kademlia 是 BitTorrent 使用的 DHT 协议。节点 ID 是 160 位，距离用 XOR 度量。每个节点维护 k-bucket 路由表，查找效率是 O(log N)。
+
+要做的事情：
+- 160 位 node ID（用 SHA-1 生成），XOR 距离计算
+- K-bucket 路由表：按与自身距离的 2^i 到 2^(i+1) 范围分桶，每桶最多 k 个节点
+- FIND_NODE RPC：返回距离目标最近的 k 个节点
+- 迭代查找：发起者逐步向更近的节点查询，直到找不到更近的
+- 节点加入：先找一个已知节点，然后查找自己的 ID 填充 k-bucket
+
+cargo build 通过，模拟网络测试 FIND_NODE 在 3 跳内收敛。

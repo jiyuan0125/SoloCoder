@@ -1,0 +1,5 @@
+用 Rust 写一个 WebM 封装器，把 VP8/VP9 视频和 Opus/Vorbis 音频封装成 WebM 文件。
+
+WebM 底层是 Matroska (MKV) 容器的子集，按 EBML 格式写入。要生成 EBML Header、Segment、Info（包含时长）、Tracks（视频和音频轨道描述）、Clusters 和里面的 SimpleBlock/Block。每个 Cluster 里按时间戳写入音视频帧。输出的 .webm 能在 Chrome 里播放。
+
+Rust 实现，按 Matroska 规范处理 EBML 二进制结构，cargo build 通过。

@@ -1,0 +1,1 @@
+OR-Set 删除后再添加比较麻烦，我想用 AWORSet（Add-Wins OR-Set）——添加优先于删除，同一个元素并发 add 和 remove 时 add 胜出。Go 实现，add/remove/contains/merge 操作，模拟多节点并发场景验证 add-wins 语义。go build 编译通过。

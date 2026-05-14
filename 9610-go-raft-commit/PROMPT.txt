@@ -1,0 +1,5 @@
+帮我用 Go 做一个 Raft 的 commit index 推进模块。leader 需要知道哪些日志已经被多数节点确认了，才能安全地应用到状态机。
+
+核心逻辑：leader 维护每个 follower 的 matchIndex，根据多数节点的 matchIndex 计算出 commitIndex。commitIndex 只能前进不能后退。只有当前 term 的日志被复制到多数节点才能提交（这是 Raft 论文里的一个重要安全约束）。
+
+写个 demo 展示：leader 持续接收日志，随着 follower 确认，commitIndex 一步步推进，打印每条日志的提交情况。go build 编译通过。

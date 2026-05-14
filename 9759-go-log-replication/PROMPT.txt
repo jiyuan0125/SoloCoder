@@ -1,0 +1,9 @@
+用 Go 实现分布式日志复制的核心逻辑。Leader 接收客户端写入的日志条目，然后复制到所有 Follower，确保大多数节点确认后才提交。
+
+功能：
+- Leader 维护一个日志数组，客户端写入时追加新条目
+- Leader 向所有 Follower 发送 AppendEntries（模拟），携带日志内容
+- 收到多数确认后标记该条目为 committed，通知客户端写入成功
+- Follower 日志不一致时，Leader 需要回退到一致位置重新发送
+
+Go 标准库，go build 通过。模拟多节点通信打印复制过程日志。

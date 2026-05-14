@@ -1,0 +1,5 @@
+帮我用 Go 实现 Kademlia DHT。这是 BitTorrent、IPFS 等系统用的分布式哈希表，通过 XOR 距离来组织节点。
+
+实现要点：160-bit 的节点 ID 和 key ID、k-bucket 路由表（按 XOR 距离分桶，每个桶最多存 k 个节点）、FIND_NODE 和 FIND_VALUE 两种 RPC、α 并发查找（同时向 α 个最近节点查询）。节点查找过程：每轮选择离目标最近的 α 个节点并发查询，逐步逼近目标。
+
+模拟一个 50 节点的 Kademlia 网络：执行一次 FIND_VALUE 操作，打印每一轮查询了哪些节点、收到了哪些响应，最终找到目标。go build 编译通过。

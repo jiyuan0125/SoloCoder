@@ -1,0 +1,5 @@
+我有一批拍歪了的照片需要批量旋转校正。帮我写个 Python 命令行工具，可以按指定角度顺时针或逆时针旋转图片。
+
+支持传入旋转角度（90/180/270 或者任意角度），能处理 JPEG 和 PNG 格式。旋转后保持图片质量，JPEG 不要反复压缩丢画质。命令行用法大概是 python rotate.py input.jpg -a 90 -o output.jpg 这样。
+
+纯 Python 实现，用 Pillow 库就行，python xxx.py 能直接跑。

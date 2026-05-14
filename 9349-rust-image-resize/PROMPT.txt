@@ -1,0 +1,10 @@
+写一个图片缩放工具，支持 JPEG 和 PNG 图片的放大和缩小。
+
+缩放功能：
+- 读取 JPEG（解析到像素）或 PNG（解码像素数据）图片
+- 指定目标宽度和高度进行缩放，支持保持宽高比模式（只给宽度自动算高度）
+- 使用双线性插值进行像素重采样，保证缩放后图片质量可接受
+- 输出格式可选 JPEG（带质量参数）或 PNG
+- 正确处理 RGB 三通道和 RGBA 四通道数据
+
+Rust 项目，cargo build 通过。`image-resize input.jpg --width 800 --height 600 -o output.jpg` 或 `image-resize input.png --width 800 --keep-ratio -o output.png`。

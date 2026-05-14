@@ -1,0 +1,5 @@
+帮我做一个 Protobuf 编码工具，从 JSON 或文本数据生成 protobuf 二进制。
+
+和那个解码工具配对使用。给定一个简单的 JSON 数据（可能还有 .proto schema），生成对应的 protobuf 二进制文件。即使没有 .proto 文件，也能通过 JSON 的数据类型自动推断并编码。整数用 varint，浮点数用固定长度，字符串用 length-delimited。
+
+python main.py encode --input data.json --output data.bin。如果提供了 --schema message.proto 则按 schema 编码。Python 标准库，自己实现 wire format 编码。

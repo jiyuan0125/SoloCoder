@@ -1,0 +1,11 @@
+用 Rust 实现一个基于 Raft 的分布式 KV 存储。
+
+上层是简单的 key-value 操作，底层依赖 Raft 共识保证一致性。写操作必须经过 Raft 日志复制提交后才能应用到状态机，读操作可以从 Leader 直接返回。
+
+功能要求：
+- 支持 put(key, value)、get(key)、delete(key) 三个操作
+- 写操作通过 Raft 提交后应用到内存 HashMap
+- Leader 节点处理所有写请求，Follower 转发到 Leader
+- 多个客户端并发写不丢数据
+
+cargo build 通过，模拟 3 节点集群跑测试验证线性一致性。

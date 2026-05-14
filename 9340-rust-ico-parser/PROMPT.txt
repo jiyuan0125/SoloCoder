@@ -1,0 +1,9 @@
+做一个 ICO 图标文件解析工具，读取 Windows 图标文件中包含的多个图像。
+
+解析功能：
+- 读取 ICO 文件头（保留字节=0、类型=1、图像数量）
+- 解析每个图像目录条目：宽高（0 表示 256）、颜色数、色彩平面数、位深、数据大小和偏移
+- 读取每张图像的实际数据，识别是 BMP 格式还是 PNG 格式（通过 magic number 判断）
+- 对于 PNG 格式的图像，提取出来直接保存为 .png 文件
+
+Rust 项目，cargo build 通过。`ico-parser extract favicon.ico --output-dir ./icons/`。

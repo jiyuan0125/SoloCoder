@@ -1,0 +1,13 @@
+实现向量时钟（Vector Clock），用 Rust。
+
+分布式系统需要跟踪事件的因果顺序。每个节点维护一个向量，记录已知各节点的事件序号。比较两个向量就能判断事件是因果有序、并发还是同一事件。
+
+功能要求：
+- 每个节点有独立 ID，向量中对应位置递增
+- increment(node_id)：本节点事件发生，递增对应的计数器
+- merge(other)：取两个向量每个节点的最大值（并集）
+- happened_before(other)：判断本向量是否严格先于 other（所有分量 ≤ 且至少一个 <）
+- is_concurrent(other)：既不先于也不后于，即并发
+- compare_equal(other)：完全相同
+
+cargo build 通过，测试 A→B→C 的因果链和 A∥B 的并发关系。

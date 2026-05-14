@@ -1,0 +1,3 @@
+通用播放列表解析器。想统一处理各种播放列表格式。
+能自动识别播放列表文件格式，解析出里面所有的音轨路径或 URL。支持的格式越多越好：M3U/M3U8、PLS、XSPF、ASX、WPL 等。输出统一的 JSON 格式（每条记录包含文件路径、标题、时长等可用信息）。
+Python 3 纯标准库。python playlist.py music.m3u --json -o tracks.json，或 python playlist.py playlist.pls show

@@ -1,0 +1,5 @@
+帮我写个音视频转封装工具，把文件从一种容器格式换到另一种，不重新编码。
+
+需求很简单：比如把 MKV 转成 MP4、FLV 转成 MP4、TS 转成 FLV 这些常见转换。只改容器，视频和音频编码保持原样，所以速度很快。要处理容器间的编码标识映射，确保转完能正常播放。
+
+python main.py input.mkv --output-format mp4 -o output.mp4。至少支持 MP4、FLV、MKV、TS 之间的互转。纯 Python 标准库，自己处理二进制格式解析和封装。

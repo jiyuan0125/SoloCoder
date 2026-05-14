@@ -1,0 +1,10 @@
+写一个给图片加水印的 Go 工具。
+
+需求：
+- 支持文字水印：指定文字内容、字体大小、颜色、透明度、位置（九宫格定位）
+- 支持图片水印：把一个 logo 图片叠加到目标图片上，支持透明度
+- 水印可以平铺（整张图重复排列）或只放一个
+- 输出为 JPEG 或 PNG
+- 处理 JPEG 时能保留原始 EXIF 信息
+
+用法 watermark -text "© 2024" -size 24 -color "#ffffff" -opacity 50 -position bottom-right photo.jpg，go build 编译通过。标准库。

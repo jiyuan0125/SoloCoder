@@ -1,0 +1,10 @@
+我需要一个 EXIF 数据写入工具，能往 JPEG 文件中写入或修改 EXIF 元数据。
+
+写入功能：
+- 如果 JPEG 已有 APP1/EXIF 段，定位并替换；如果没有，在 SOI 后插入新的 APP1 段
+- 支持写入基本标签：DateTime、ImageDescription、Artist、Copyright
+- 支持写入拍摄参数：FNumber、ExposureTime、ISO、FocalLength
+- 写入时正确构建 TIFF 头 + IFD 结构，处理字节序和偏移量计算
+- 写入后 JPEG 的其他段（DQT、SOF、DHT、SOS）不受影响
+
+Rust，cargo build 通过。`exif-writer write photo.jpg --artist "张三" --datetime "2025:01:15 14:30:00" -o output.jpg`。

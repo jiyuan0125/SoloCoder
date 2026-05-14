@@ -1,0 +1,5 @@
+最近在搞分布式追踪，需要一个 Rust 的 span 构建器。
+
+需求是这样的：在追踪系统中，一个请求会经过多个服务，每个服务处理阶段就是一个 span。实现一个 span builder，支持设置 span 的 trace_id、span_id、parent_span_id、操作名称、开始时间和标签（key-value 对）。span 之间可以嵌套，子 span 自动继承父 span 的 trace_id。支持将 span 树序列化输出为 JSON 格式，方便后续可视化分析。
+
+Rust 标准库就行，cargo build 通过，能跑个 demo 展示嵌套 span 的创建和 JSON 输出。

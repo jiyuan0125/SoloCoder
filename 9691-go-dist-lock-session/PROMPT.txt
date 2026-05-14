@@ -1,0 +1,1 @@
+客户端和锁服务之间需要维护 session，session 存活时锁才有效。session 断了（心跳超时），所有持有的锁自动释放。Go 实现 session 管理——创建 session、定时心跳保活、session 过期清理关联的锁。模拟网络分区导致 session 超时的场景。go build 通过。

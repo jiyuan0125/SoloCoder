@@ -1,0 +1,12 @@
+用 Rust 实现多路复用连接（Multiplexing Connection）。
+
+一条 TCP 连接上同时跑多个逻辑流（stream），互不干扰。类似 HTTP/2 的多路复用或者 SSH 的 channel。
+
+要实现的：
+- 在一条连接上支持多个 stream，每个 stream 有独立的 ID
+- 实现 frame 协议：每帧包含 stream_id + payload + flags，能区分不同 stream 的数据
+- 发送方往不同 stream 写数据，接收方按 stream_id 分拣
+- 支持 stream 的创建和关闭（关闭某个 stream 不影响其他 stream）
+- 可以模拟发送交错的数据帧，验证接收方正确重组各 stream 的数据
+
+cargo build 通过。不用真的跑 TCP，内存中模拟帧的收发。

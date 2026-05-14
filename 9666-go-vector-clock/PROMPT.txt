@@ -1,0 +1,1 @@
+写一个向量时钟的实现，用来追踪分布式系统中的因果关系。每个节点一个计数器，事件发生时自增，消息传递时携带并合并。Go 实现，increment、merge、before/after/concurrent 比较三个方法。能检测并发事件。go build 编译通过。

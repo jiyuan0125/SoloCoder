@@ -1,0 +1,9 @@
+帮我写一个 SRT 字幕文件解析器，把字幕内容结构化读取。
+
+解析需求：
+- 读取 SRT 文件，解析序号、时间轴（HH:MM:SS,mmm --> HH:MM:SS,mmm）和字幕文本
+- 支持多行字幕文本的合并保留
+- 处理常见格式问题：BOM 头、\r\n 换行、空行分隔
+- 解析后输出 JSON 数组，每条字幕包含 index、start_ms、end_ms、text
+
+Rust 实现，cargo build 通过。`srt-parser parse subtitles.srt --json` 输出结构化数据。

@@ -1,0 +1,3 @@
+音频重采样工具。有些音频设备只支持特定采样率，需要转换。
+把音频文件从一个采样率转换到另一个（比如 48000 → 44100，或者任意采样率互转）。支持常见音频格式（WAV、MP3、FLAC）。重采样质量要好，不能有明显失真。也支持同时改变声道数。
+Python 3 + ffmpeg 或者用 scipy 的重采样。python resample.py input.wav --sr 44100 -o output.wav，或 python resample.py input.mp3 --sr 48000 -o output.flac

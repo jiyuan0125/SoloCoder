@@ -1,0 +1,13 @@
+帮我用 Rust 实现快照发送（snapshot send/InstallSnapshot）逻辑。
+
+场景：Raft 里有个 follower 严重落后，leader 的日志已经被截断了（快照覆盖了 follower 需要的部分）。这时候 leader 只能把快照发给 follower，让 follower 直接从快照恢复。
+
+实现：
+- leader 检测到 follower 需要的 nextIndex 已经被快照覆盖
+- leader 读取最新快照，发送 InstallSnapshot RPC 给 follower
+- RPC 包含：leader_term、leader_id、last_included_index、last_included_term、快照数据
+- follower 收到后：如果 last_included_index 大于自己的日志，丢弃已有日志，用快照替换状态机
+- 快照可能很大，支持分块传输（chunk），follower 收齐后再组装
+- 传输完成后 follower 的状态机和 leader 快照一致
+
+Rust 标准库，内存模拟，cargo build 通过。

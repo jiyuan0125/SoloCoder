@@ -1,0 +1,5 @@
+用 Go 做一个 Raft 的传输层抽象。不同的网络环境可能用不同的通信方式，所以得把 RPC 通信抽象出来，方便切换实现。
+
+设计一个 Transport 接口：支持 SendRequestVote、SendAppendEntries、SendInstallSnapshot 三种 RPC，以及注册对应的 handler。提供两个实现：一个基于 HTTP 的用于真实网络环境，一个基于 channel 的用于单元测试。支持节点地址解析和连接管理。
+
+写个测试用 channel transport 模拟 3 节点通信，再用 HTTP transport 跑同样的逻辑。go build 编译通过。

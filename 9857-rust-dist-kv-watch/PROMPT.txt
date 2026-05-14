@@ -1,0 +1,11 @@
+写个 Rust 程序，给分布式 KV 加上 watch 机制。
+
+就是客户端能订阅某个 key 的变化，一旦这个 key 被更新了，订阅者能收到通知。类似 etcd 的 watch 功能。
+
+要做的事：
+- 模拟一个 KV 集群，支持基本的 put/get 操作
+- 客户端可以 watch 一个或多个 key，当这些 key 的值发生变化时，watch 回调被触发
+- watch 事件要带上变更前的值和变更后的值，以及一个递增的 revision 号
+- 如果客户端中途才订阅，支持从某个历史 revision 开始回放事件
+
+用内存模拟，cargo build 通过。

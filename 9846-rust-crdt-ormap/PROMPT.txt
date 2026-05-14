@@ -1,0 +1,13 @@
+用 Rust 写一个 OR-Map（Observed-Remove Map）CRDT。
+
+OR-Map 是一个 key-value 映射，每个 key 对应一个 OR-Set 的 value。支持对单个 key 的值做 add/remove 操作，不同 key 之间的操作互不影响。适合分布式配置、购物车等场景。
+
+实现内容：
+- put(key, value)：给 key 添加一个值（一个 key 可以有多个值）
+- remove(key)：删除该 key 的所有值
+- remove_value(key, value)：删除 key 的某个特定值
+- get(key)：获取 key 的所有当前值
+- merge(other)：递归合并每个 key 对应的 OR-Set
+- key 的添加和删除遵循 OR-Set 的 observed-remove 语义
+
+cargo build 通过，测试两个节点对同一 key 并发操作后合并正确。

@@ -1,0 +1,5 @@
+写一个 Rust 的视频时长检测工具。
+
+从媒体文件中快速获取总播放时长。对于 MP4，解析 mvhd 的 duration 和 timescale 计算；MKV 从 Segment Info 的 Duration 获取；FLV 从 onMetaData 的 duration 字段读取；TS 通过 PAT/PMT 定位后从最后的 PTS 减去起始 PTS 计算。输出以秒为单位的时长，也显示格式化的 HH:MM:SS.ms。
+
+Rust 实现，cargo build 通过。

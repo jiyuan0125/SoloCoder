@@ -1,0 +1,5 @@
+做一个 TSV 解析工具，处理 Tab 分隔值文件。
+
+很多生物信息和日志分析场景用 TSV 格式。工具要能正确解析 TSV：处理字段内的换行（引号包裹的情况）、支持不同行尾符（LF/CRLF）、能处理超大的 TSV 文件不爆内存。提供几种常用操作：查询指定列、统计行数、按列值筛选、转成 CSV 或 JSON。
+
+python main.py parse data.tsv --columns 1,3,5 提取指定列；python main.py parse data.tsv --where "col2=hello" 按条件筛选；python main.py parse data.tsv --to csv --output out.csv 格式转换。Python 标准库，流式处理。

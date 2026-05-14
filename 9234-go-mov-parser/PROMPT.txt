@@ -1,0 +1,5 @@
+MOV 和 MP4 格式很相似但有些区别，想写个专门处理 MOV 的解析器。
+
+解析 QuickTime MOV 文件的 atom 结构，重点解析 mvhd（电影头部）、tkhd（轨道头部）、stbl（采样表）这些 atom。提取视频的宽高、帧率、编码格式信息。能处理 moov 在文件末尾的情况。
+
+Go 标准库，go build 能编。

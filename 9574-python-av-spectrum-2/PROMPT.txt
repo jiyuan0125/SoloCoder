@@ -1,0 +1,4 @@
+音频频谱分析工具。想看看音乐里各个频率的分布。
+读取音频文件，做 FFT 频谱分析，生成频谱图。支持生成静态频谱快照（某一时刻的频率分布），也支持生成随时间变化的频谱瀑布图（spectrogram）。频率范围和分辨率可调。
+输出 PNG 图片。Python 3，用 scipy 或 numpy 做 FFT，matplotlib 或 Pillow 画图。
+python spectrum.py song.wav -o spectrum.png --type spectrogram --freq-max 20000

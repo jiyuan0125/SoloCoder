@@ -1,0 +1,5 @@
+帮我用 Go 做 Gossip 的 ping-pong 心跳检测。节点之间需要互相探测对方是否存活，不能光靠 TCP 连接状态判断。
+
+机制是这样的：节点 A 随机选一个节点 B 发 ping，B 收到后回复 pong。如果 A 在超时时间内没收到 pong 就把 B 标记为 suspect。suspect 状态不是立即判定死亡，需要多个节点都怀疑 B 才确认 dead。要支持间接探测（indirect probe）：A 可以请 C 代为 ping B，避免 A-B 之间网络问题导致的误判。
+
+写个 demo：正常情况下节点互 ping 正常，模拟一个节点网络故障后，能看到 suspect 到 dead 的状态转换过程。go build 编译通过。

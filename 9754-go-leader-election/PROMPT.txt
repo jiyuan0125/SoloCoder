@@ -1,0 +1,9 @@
+用 Go 实现一个简单的 Leader 选举机制。集群里有 3-5 个节点，某个时刻只有一个能成为 Leader，其他人都是 Follower。Leader 挂了要能重新选举。
+
+具体要求：
+- 模拟多个节点（goroutine 或 struct 即可），每个节点有唯一 ID 和状态（Leader/Follower/Candidate）
+- 通过心跳超时触发选举，随机化超时时间避免同时竞选
+- 选举成功后 Leader 定期发心跳维持权威，Follower 检测超时则发起新选举
+- 打印选举过程日志：谁发起选举、谁投票给谁、谁当选
+
+Go 标准库，go build 编译通过。

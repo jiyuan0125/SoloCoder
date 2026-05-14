@@ -1,0 +1,5 @@
+写一个文件魔数（Magic Number）识别工具。
+
+很多文件格式在文件头部有固定的特征字节，比如 PDF 以 %PDF 开头、PNG 以 89 50 4E 47 开头。这个工具读取文件头部字节，和已知的魔数数据库对比，判断文件的真实类型。要覆盖至少 30 种常见格式：图片（JPEG/PNG/GIF/BMP/WebP）、压缩包（ZIP/GZ/XZ/RAR/7z）、文档（PDF/DOCX/XLSX）、音频（MP3/WAV/FLAC/OGG）、视频（MP4/MKV/AVI）等。
+
+python main.py unknown_file 输出检测到的文件类型。纯 Python 标准库。

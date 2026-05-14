@@ -1,0 +1,13 @@
+帮我用 Rust 写一个分布式链路追踪采集器（trace collector）。
+
+场景：微服务一次请求可能经过 5-6 个服务，出了问题需要看到完整调用链。每个服务产生 span 数据上报给 collector，collector 负责拼装完整 trace。
+
+要实现：
+- Span 数据结构：trace_id、span_id、parent_span_id、服务名、操作名、开始时间、结束时间、标签
+- 接收 span：提供一个 ingest 接口接收单个 span
+- Trace 拼装：根据 trace_id 把 span 聚合，按 parent 关系构建调用树
+- 检测问题：自动检测慢 span（超过阈值）、错误 span（含 error 标签）、断裂链路（parent span 缺失）
+- 查询接口：按 trace_id 查完整调用链；按服务名查最近的 trace 列表
+- 统计：每个服务的平均延迟、P99 延迟、错误率
+
+Rust 标准库，cargo build 通过。

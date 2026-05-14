@@ -1,0 +1,9 @@
+我需要一个从视频文件中自动提取内嵌字幕的工具。
+
+提取能力：
+- 从 MKV 文件提取字幕轨道，支持 S_TEXT/UTF8（输出 .srt）和 S_TEXT/ASS（输出 .ass）
+- 从 MP4 文件提取 tx3g 字幕轨道并转换为 SRT 格式
+- 列出所有可用的字幕轨道（编号、语言、编码格式），让用户选择要提取的
+- 自动检测字幕轨道的语言标识（如 eng、chi）
+
+Rust 项目，cargo build 编译通过。`sub-extract movie.mkv --list` 列出轨道，`sub-extract movie.mkv --track 3 -o sub.srt` 提取。

@@ -1,0 +1,1 @@
+我做播客录制的时候每期音量不一样，想批量标准化。写个Python音频响度归一化工具，读取WAV文件，分析整体RMS音量，然后按目标音量级别（比如-16dB）进行增益调整。支持peak normalization和RMS normalization两种模式。要注意防止削波（clipping），如果增益后超过0dBFS要做软限幅。处理好浮点精度。python3运行，命令行指定文件和目标音量。

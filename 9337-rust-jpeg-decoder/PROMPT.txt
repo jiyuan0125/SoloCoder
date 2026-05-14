@@ -1,0 +1,10 @@
+帮我做一个 JPEG 解码器，解析 JPEG 文件的内部结构。
+
+解码步骤：
+- 解析 JPEG SOI 标记和各段（marker segment）：APP0/JFIF、DQT（量化表）、SOF0（帧头）、DHT（霍夫曼表）、SOS（扫描头）
+- 从 SOF0 读取图像宽度、高度、颜色分量数（1=灰度，3=YCbCr）
+- 对 MCU 块做霍夫曼解码 → 反量化 → IDCT 变换，还原 8x8 像素块
+- YCbCr 转 RGB 颜色空间
+- 输出像素数据到 PPM 文件验证正确性
+
+Rust 项目，cargo build 编译通过。`jpeg-decoder decode photo.jpg -o output.ppm`。

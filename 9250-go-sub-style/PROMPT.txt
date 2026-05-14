@@ -1,0 +1,5 @@
+ASS 字幕的样式定义想批量修改，比如统一改字体大小、调颜色。
+
+ASS 字幕样式编辑工具，能读取 [V4+ Styles] 段落的所有样式定义，支持修改 Fontname、Fontsize、PrimaryColour、Outline 等属性。可以指定样式名精确匹配修改，也可以批量修改所有样式。输出修改后的完整 ASS 文件。
+
+Go 标准库，go build 编译通过。

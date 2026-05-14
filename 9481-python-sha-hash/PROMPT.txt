@@ -1,0 +1,5 @@
+我需要一个 SHA 哈希计算工具，支持 SHA-1、SHA-256、SHA-512。
+
+有些场景要求用 SHA-256 甚至 SHA-512 来校验文件完整性，MD5 已经不够安全了。工具要灵活支持多种 SHA 算法，默认用 SHA-256。同样支持单文件、批量、校验三种模式，大文件流式处理。
+
+python main.py file.iso --algo sha256 输出哈希；python main.py --dir ./isos/ --algo sha512 批量；加 --verify 参数可以对比校验。Python 标准库 hashlib。

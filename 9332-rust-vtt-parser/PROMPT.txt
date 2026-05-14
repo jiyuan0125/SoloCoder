@@ -1,0 +1,10 @@
+做一个 WebVTT 字幕文件解析器，处理 Web 视频常用的 VTT 格式。
+
+功能：
+- 解析 WEBVTT 文件头、可选的元数据区域
+- 读取每个 cue 的时间戳（HH:MM:SS.mmm --> HH:MM:SS.mmm 格式，也支持简写的小时省略格式）
+- 支持 cue identifier（可选的标签行）
+- 处理 VTT 的基本标签（<b>、<i>、<u>、<c.class>）和位置信息（position、line、align）
+- 支持 STYLE 块和 NOTE 注释块的跳过
+
+Rust 实现，cargo build 通过。`vtt-parser parse captions.vtt --json` 输出结构化字幕。

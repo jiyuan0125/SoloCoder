@@ -1,0 +1,11 @@
+帮我写一个 FLV 封装器，Go 实现。
+
+老项目要从 TS 转成 FLV 格式：
+- 构建 FLV 文件头（FLV signature + 版本 + flags）
+- 封装视频标签（Video Tag）：支持 H.264（AVC Sequence Header 和 NALU）
+- 封装音频标签（Audio Tag）：支持 AAC（AudioSpecificConfig + raw data）
+- 写入 Script Data Tag（onMetaData 信息）
+- 正确计算每个 Tag 的大小和 PreviousTagSize
+- 支持 FLV Version 1
+
+用法 flv-mux -video input.h264 -audio input.aac -output output.flv，go build 通过。标准库。

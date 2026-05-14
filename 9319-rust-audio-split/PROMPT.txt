@@ -1,0 +1,9 @@
+做一个音频分割工具，把一个长 WAV 文件按固定时长或静音检测自动拆分成多段。
+
+两种分割模式：
+- 按固定时长分割：用户指定每段长度（如 60 秒），均匀切割
+- 按静音分割：检测静音段作为分割点，参数包括静音阈值和最短静音时长
+- 输出文件自动命名：原文件名_001.wav、原文件名_002.wav...
+- 每段输出的 WAV 文件头都是独立完整的
+
+Rust 实现，cargo build 通过。`audio-split long.wav --mode duration --segment 60` 或 `audio-split long.wav --mode silence --threshold -35`。

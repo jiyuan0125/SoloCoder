@@ -1,0 +1,1 @@
+有些照片的EXIF信息需要修改或添加，比如GPS隐私保护要清除位置信息。写个Python EXIF写入工具，能往JPEG文件里添加、修改、删除EXIF字段。保留原有EXIF数据不被破坏，只更新指定的tag。支持写入常用字段：DateTime、Artist、Copyright、ImageDescription，以及清除整个GPS IFD。修改后的图片还能正常查看。Python3实现，命令行操作。

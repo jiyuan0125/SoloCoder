@@ -1,0 +1,3 @@
+做 HDR 照片合成。同一个场景拍了好几张不同曝光的图，想合成一张高动态范围的。
+工具读取多张不同曝光参数的同一场景照片，用曝光融合算法合并成一张 HDR 图像。至少支持 3 张输入，能处理不同 EV 值的图片。输出的图片在亮部和暗部都有合理细节。
+Python 3，用 OpenCV 或 Pillow 都可以。命令行：python hdr_merge.py dark.jpg normal.jpg bright.jpg -o hdr.jpg

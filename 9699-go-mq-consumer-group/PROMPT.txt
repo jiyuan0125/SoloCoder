@@ -1,0 +1,1 @@
+队列模式下多个消费者竞争消费太粗暴了，我需要消费者组——同一个组内的消费者分担消费，不同组各自独立消费完整数据。类似 Kafka 的 consumer group。Go 实现，组内消费者数量变化时触发 rebalance，重新分配 partition。go build 通过。

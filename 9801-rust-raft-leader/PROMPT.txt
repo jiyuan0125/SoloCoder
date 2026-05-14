@@ -1,0 +1,10 @@
+我需要一个 Raft 领导者选举模块，用 Rust 实现。
+
+场景：分布式系统中各节点需要通过投票选出唯一 Leader，实现 Term 递增、随机超时选举、RequestVote RPC 处理。节点状态要在 Follower/Candidate/Leader 之间正确切换。
+
+功能要求：
+- 支持启动多个模拟节点，节点之间可以互相发送 RequestVote
+- Leader 选出后能持续发送心跳维持权威
+- 网络分区时不会出现双主（同一 Term 只有一个 Leader）
+
+cargo build 通过，用单元测试验证选举正确性。

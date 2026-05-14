@@ -1,0 +1,12 @@
+帮我实现一个完整的 Gossip 协议引擎，Rust 编写。
+
+Gossip 协议是很多分布式系统的基础——Cassandra、Redis Cluster 都在用。要求实现一个通用的 Gossip 引擎，可以承载不同类型的数据传播。
+
+需要做的：
+- 定义通用的消息格式，支持不同 payload 类型
+- 实现定时 round 机制：每个 round 随机选 k 个节点发送消息
+- 支持多种传播模式：rumor-mongering（推模式）和 anti-entropy（推拉模式）
+- 消息去重，避免无限传播
+- 可配置的 fanout 和 round 间隔
+
+cargo build 通过，用一个 key-value payload 测试消息在集群中的传播。

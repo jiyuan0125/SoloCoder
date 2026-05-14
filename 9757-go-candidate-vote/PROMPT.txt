@@ -1,0 +1,10 @@
+用 Go 实现分布式选举中的投票环节。当 Candidate 发起选举时，需要向其他节点拉票，获得多数票才能成为 Leader。
+
+具体要做的：
+- 节点有三种角色：Follower、Candidate、Leader
+- Candidate 自增 term，向所有其他节点发送 RequestVote RPC（模拟即可）
+- 每个节点在一个 term 内只能投一票，先到先得
+- 获得超过半数票的 Candidate 晋升为 Leader
+- 打印投票过程：谁发起、谁投给谁、最终结果
+
+Go 标准库实现，go build 编译通过。

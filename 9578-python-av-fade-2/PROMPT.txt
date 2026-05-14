@@ -1,0 +1,3 @@
+音频淡入淡出工具。剪出来的音频片段开头结尾太突然了，需要加个渐变。
+给音频文件的开头加淡入效果，结尾加淡出效果。淡入淡出时长可配置（比如 2 秒淡入、3 秒淡出）。也支持只加淡入或只加淡出。处理后音质不能下降。
+Python 3 + ffmpeg afade 滤镜。python fade.py intro.wav --fade-in 2 --fade-out 3 -o intro_faded.wav

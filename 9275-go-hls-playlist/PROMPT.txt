@@ -1,0 +1,11 @@
+帮我做一个 HLS 播放列表生成器，Go 写的。
+
+不是简单的切片，而是从已有的 TS 分片文件生成合规的 m3u8：
+- 扫描指定目录下的 .ts 文件，按文件名或修改时间排序
+- 自动探测每个 TS 分片的实际时长（解析 PAT/PMT 和 PTS）
+- 生成标准合规的 HLS m3u8 媒体播放列表
+- 支持设置各种参数：目标分片时长、版本号（HLS 版本 3/4/5/6）
+- 支持 #EXT-X-DISCONTINUITY 标记不连续点
+- 可选生成多码率主播放列表
+
+用法 hls-playlist -dir ./segments/ -target 6 -version 3，go build 编译通过。标准库。

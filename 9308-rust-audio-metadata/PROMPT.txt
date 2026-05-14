@@ -1,0 +1,11 @@
+我想要一个通用的音频元数据提取工具，能自动识别文件格式然后提取标签信息。
+
+支持的格式：
+- MP3（ID3v1/v2 标签）：标题、艺术家、专辑、年份、曲目号、时长
+- FLAC（Vorbis Comment）：同样的字段加上采样率和位深
+- WAV（RIFF INFO 块）：基本的标题、艺术家、创作日期
+- OGG Vorbis（Vorbis Comment）：标签字段
+
+根据文件扩展名或 magic number 自动判断格式，统一输出结构化的元数据。
+
+Rust 实现，cargo build 通过。`audio-meta info xxx.mp3` 或 `audio-meta info xxx.flac`。

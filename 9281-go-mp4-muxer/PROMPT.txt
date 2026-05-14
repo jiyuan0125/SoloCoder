@@ -1,0 +1,11 @@
+写一个 MP4 封装器，Go 标准库实现。
+
+需求是把 H.264 + AAC 封装成 MP4 容器：
+- 构建 ftyp box（文件类型）和 moov box（电影元数据）
+- moov 里包含 mvhd、trak（视频轨和音频轨各一个）、udta
+- 每个 trak 里包含 tkhd、mdhd、hdlr、minf（vmhd/smhd、dinf、stbl）
+- stbl 里写好 stsd、stts、stss、stsc、stsz、stco 等采样表
+- 把实际数据写进 mdat box
+- 视频关键帧要在 stss 中标记
+
+用法 mp4-mux -video input.h264 -audio input.aac -output output.mp4，go build 编译通过。

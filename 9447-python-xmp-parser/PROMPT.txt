@@ -1,0 +1,1 @@
+XMP是Adobe搞的元数据标准，基于RDF/XML，嵌在各种文件里。写个Python工具来解析XMP数据，从JPEG、PNG、TIFF文件中提取XMP段。解析RDF结构，读取dublin core标题/描述/作者、tiff宽高/分辨率、xmp创建/修改时间、iptc扩展信息等常用命名空间下的属性。处理好XML命名空间前缀。输出为key-value格式方便使用。Python3实现，标准库xml解析。

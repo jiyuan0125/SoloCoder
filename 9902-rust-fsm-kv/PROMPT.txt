@@ -1,0 +1,12 @@
+我想做一个基于有限状态机的嵌入式 KV 存储，用 Rust 写。
+
+背景：需要一个轻量级的本地 KV 引擎，它内部用状态机来管理每个 key 的生命周期——比如 UNINIT→ACTIVE→DELETING→TOMBSTONE→GC 这些状态。不同状态下对 get/put/delete 操作的响应不同。
+
+具体要做的：
+- 支持 set/get/delete 操作，每个 key 有自己的状态机跟踪
+- set 把 key 从 UNINIT 或 TOMBSTONE 状态迁移到 ACTIVE
+- delete 先进入 DELETING，标记为 TOMBSTONE，之后可以回收
+- get 遇到非 ACTIVE 状态的 key 返回合适的错误码（NotFound / Deleted）
+- 支持手动触发 GC，清理所有 TOMBSTONE 状态的 key
+
+Rust 标准库，cargo build 通过，不用外部依赖。

@@ -1,0 +1,13 @@
+帮我用 Rust 写一个 Raft term 管理器。
+
+在 Raft 协议里，term（任期）是一个非常核心的概念。每次选举产生新 leader 时 term 递增，所有 RPC 都带 term 用于过期判断。这个模块专门管理 term 相关的逻辑。
+
+功能：
+- 每个节点维护自己的 current_term，持久化到磁盘（这里模拟持久化）
+- 收到更高 term 的消息时，立即更新自己的 term 并退回 follower
+- 发起选举时递增 term
+- 投票记录：voted_for 记录当前 term 投给了谁，每个 term 最多投一票
+- term 比较：提供 compare_and_update(new_term) 方法，如果 new_term > current_term 就更新并重置 voted_for
+- 支持 term 历史查询：可以看到 term 变化的时间线
+
+Rust 标准库，cargo build 通过。

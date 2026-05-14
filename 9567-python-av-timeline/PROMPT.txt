@@ -1,0 +1,3 @@
+帮视频剪辑写个时间线分析工具。想快速了解一个视频的结构。
+分析视频文件，提取每一秒的关键帧或者场景变化点，生成一张时间线缩略图条。把视频按时长均分成 N 个片段，每个片段取一帧，拼成一张长条形的预览图。支持标注场景切换位置。
+输出 PNG 预览图。Python 3 + ffmpeg。python timeline.py video.mp4 -o timeline.png --segments 20 --show-scene-cuts

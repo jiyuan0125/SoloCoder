@@ -1,0 +1,5 @@
+有一堆 MIDI 文件想看看里面的音符和事件信息，搜了一圈没找到顺手的命令行工具。
+
+解析 Standard MIDI File（SMF），读取文件头获取格式类型（0/1/2）、轨道数、时间分辨率。每个 track 里的 Note On/Off、Program Change、Control Change、Tempo 事件都要能解析出来。时间戳要换算成实际秒数。
+
+Go 写，纯标准库，go build 通过。

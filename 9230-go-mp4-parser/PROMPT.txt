@@ -1,0 +1,5 @@
+想看看视频文件的内部结构，MP4 容器里 box 嵌套层级挺复杂的。
+
+解析 MP4 文件的 box 结构（也叫 atom），递归遍历所有 box，输出每个 box 的类型、偏移量、大小。对 ftyp、moov、mvhd、tkhd、stts、stsc、stsz、stco 这些常见 box 要解析内部字段。能处理嵌套 container box（如 moov 下的子 box）。
+
+Go 标准库，二进制解析，go build 通过。

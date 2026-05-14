@@ -1,0 +1,5 @@
+写一个音视频拼接工具，把多个同格式的文件合并成一个。
+
+场景是这样的：录播课分成好几段录制，每段都是独立的 MP4 或 TS 文件，现在要拼成一个完整的。支持 MP4 和 MPEG-TS 格式的拼接。TS 直接拼接就行，MP4 需要重新构建 moov box。处理完后时长和播放都得正常。
+
+python main.py -i part1.mp4 part2.mp4 part3.mp4 -o merged.mp4。纯 Python 标准库实现，自己处理二进制拼接和 box 结构。

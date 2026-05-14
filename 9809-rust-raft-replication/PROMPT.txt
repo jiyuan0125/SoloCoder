@@ -1,0 +1,11 @@
+写一个 Raft 日志复制引擎，Rust 实现。
+
+Leader 需要把日志条目高效地复制到所有 Follower。每个 Follower 维护独立的 nextIndex 和 matchIndex，复制失败时回退 nextIndex 重试。
+
+功能：
+- Leader 为每个 Follower 维护复制进度（nextIndex、matchIndex）
+- 正常情况下批量发送日志条目，减少网络开销
+- Follower 日志不一致时逐步回退 nextIndex 找到一致点
+- 根据所有 Follower 的 matchIndex 计算已提交的 log index
+
+cargo build 能过，用模拟节点测试复制流程的快路径和回退路径。

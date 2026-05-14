@@ -1,0 +1,10 @@
+帮我写个字幕格式转换工具，在 SRT、ASS、VTT 三种常见格式之间互相转换。
+
+转换逻辑：
+- SRT → ASS：生成基本的 ASS 文件结构，使用默认样式，时间轴从逗号分隔改为点分隔
+- ASS → SRT：去掉样式定义和内联标签（{\...}），保留纯文本，时间格式转换
+- SRT → VTT：加 WEBVTT 头，时间轴的逗号改为小数点
+- VTT → SRT：去掉 WEBVTT 头和 HTML 标签，时间格式转换
+- 转换时保留所有字幕条目，不支持的功能（如样式）用合理默认值替代
+
+Rust，cargo build 通过。`sub-convert input.srt --to vtt -o output.vtt`。

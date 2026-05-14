@@ -1,0 +1,10 @@
+帮我写一个 EXIF 数据读取工具，从 JPEG/TIFF 文件中提取拍摄参数。
+
+提取功能：
+- 定位 JPEG 中的 APP1 段（Exif 标识），解析 TIFF 头和 IFD 结构
+- 读取常用的 Exif 标签：Make（厂商）、Model（相机型号）、DateTime（拍摄时间）
+- 读取拍摄参数：FNumber（光圈）、ExposureTime（快门）、ISO、FocalLength（焦距）
+- 读取 GPS 信息（如果存在）：GPSLatitude、GPSLongitude、GPSAltitude
+- 对 rational 类型（有理数）的值做浮点数转换输出
+
+Rust 实现，cargo build 通过。`exif-reader photo.jpg` 输出格式化的 EXIF 信息。

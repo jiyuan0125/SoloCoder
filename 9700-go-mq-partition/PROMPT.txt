@@ -1,0 +1,1 @@
+topic 的高吞吐靠分区实现——一个 topic 拆成多个 partition，每个 partition 独立有序，整体并行写入。Go 实现分区管理：创建指定分区数的 topic、按 key hash 选择分区、分区内的 offset 管理（commit offset、seek offset）。模拟多分区并发写入和消费。go build 编译通过。

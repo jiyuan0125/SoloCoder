@@ -1,0 +1,5 @@
+用 Rust 实现原子广播（Atomic Broadcast）协议的模拟。
+
+原子广播保证：所有正确的进程以相同的顺序接收相同的消息集。这是分布式系统中最强的一致性保证之一。实现一个基于 Paxos 的原子广播：多个客户端发送消息，Proposer 把消息编入全局有序的 slot 中，Acceptor 投票决定每个 slot 的值，Learner 学习每个 slot 的最终值并按 slot 顺序交付给应用层。保证全序（total order）——所有 Learner 看到的消息顺序完全一致。模拟网络延迟和消息乱序，验证最终所有 Learner 的交付顺序相同。
+
+纯 Rust，cargo build 通过，3 个客户端并发发消息，验证所有副本的交付序列一致。

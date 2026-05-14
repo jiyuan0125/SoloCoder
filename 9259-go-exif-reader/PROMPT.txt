@@ -1,0 +1,10 @@
+我手上有大量数码相机拍的照片，想写个 Go 工具批量读取 EXIF 信息。
+
+核心需求：
+- 从 JPEG/TIFF 文件中定位并解析 APP1 段的 EXIF 数据
+- 解析 IFD0（主图像）、EXIF IFD、GPS IFD 等不同 IFD 标签
+- 提取常用信息：拍摄时间、相机型号、焦距、光圈、快门速度、ISO、GPS 坐标
+- 正确处理 EXIF 的各种数据类型（ASCII、SHORT、LONG、RATIONAL、SRATIONAL）
+- 输出格式要可读，最好能输出 JSON
+
+用法 exif-read photo.jpg，打印所有 EXIF 标签和值。Go 标准库，go build 通过。

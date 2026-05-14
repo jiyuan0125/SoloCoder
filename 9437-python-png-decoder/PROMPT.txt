@@ -1,0 +1,1 @@
+想自己实现一个PNG图片解码器来理解这个格式的细节。写个Python工具读取PNG文件，解析PNG签名、各个chunk（IHDR、PLTE、IDAT、IEND等），从IHDR提取宽高、位深度、颜色类型。对IDAT chunk的数据做zlib解压，然后处理PNG的过滤算法（None、Sub、Up、Average、Paeth），还原出原始像素数据。支持8位RGB和RGBA模式。python3实现。

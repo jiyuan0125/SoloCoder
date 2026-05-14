@@ -1,0 +1,13 @@
+用 Rust 写一个 Lamport 逻辑时钟。
+
+这是最简单的分布式排序机制——每个事件递增一个计数器，发送消息时带上自己的计数器，接收方取 max(自己的, 收到的) + 1。虽然不能反映真实时间，但能保证因果有序。
+
+实现要求：
+- 每个节点维护一个单调递增的计数器
+- 本地事件：counter += 1
+- 发送消息：counter += 1，消息携带 counter
+- 接收消息：counter = max(self.counter, msg.counter) + 1
+- 支持 compare：如果 A.counter < B.counter 则 A 先于 B
+- 多个节点事件流可以按 Lamport 时间戳排序
+
+cargo build 通过，模拟 3 个节点交换消息后验证因果顺序正确。

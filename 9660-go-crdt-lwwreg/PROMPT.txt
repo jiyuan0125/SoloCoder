@@ -1,0 +1,1 @@
+写一个 Last-Writer-Wins Register，CRDT 里最简单的冲突解决策略——同名 key 并发写入时，时间戳大的赢。Go 实现，set、get、merge 操作，注意处理时钟偏移的情况，可以加一个节点 ID 作为 tiebreaker。go build 通过。

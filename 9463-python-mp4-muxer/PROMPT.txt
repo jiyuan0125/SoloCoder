@@ -1,0 +1,5 @@
+需要把原始 H.264 视频和 AAC 音频打包成 MP4 容器。写个 Python 工具来生成最基本的 MP4 文件。
+
+理解 MP4 的 box（atom）结构，按顺序写入 ftyp、moov（包含 mvhd、trak、stbl 等子 box）、mdat。把视频帧和音频帧按正确的时间戳排列到 chunk 里。生成的 MP4 至少要能被 ffplay 或 VLC 播放。
+
+Python 3，纯手工构造二进制 box 结构。python mp4_muxer.py --video in.h264 --audio in.aac -o out.mp4。

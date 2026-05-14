@@ -1,0 +1,9 @@
+做一个视频章节信息解析器，读取视频文件中的章节标记数据。
+
+解析能力：
+- MP4 文件：解析 moov/udta/meta 中的 chapter 列表，或 trak 中的 chap 引用
+- MKV 文件：解析 Chapters Element 下的 EditionEntry 和 ChapterAtom，读取章节标题和起始时间码
+- 输出每章的标题、开始时间（转为 HH:MM:SS.mmm 格式）、结束时间
+- 支持嵌套章节（子章节）的展示
+
+用 Rust 写，cargo build 通过。`chapter-parser info movie.mkv` 列出所有章节。

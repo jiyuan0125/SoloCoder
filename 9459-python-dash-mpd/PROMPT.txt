@@ -1,0 +1,5 @@
+工作中需要解析 DASH 的 MPD 文件来获取视频流信息。写个 Python 工具来解析 MPEG-DASH 的 MPD（Media Presentation Description）XML 文件。
+
+从 MPD 中提取关键信息：Period 列表、AdaptationSet（音视频轨）、Representation（各码率变体）的 id/bandwidth/codec/resolution。解析 SegmentTemplate 或 SegmentList 里的分片信息，算出各 Representaion 的完整 URL 列表和分片时长。
+
+Python 3，用标准库 xml.etree 就行。python mpd_parser.py manifest.mpd 输出结构化的 JSON 信息。

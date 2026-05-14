@@ -1,0 +1,5 @@
+用 Rust 实现 Paxos 的 Learner 角色。
+
+Learner 在 Paxos 中负责"学习"最终被选定的值——它不参与投票，只是观察哪些提案被多数 Acceptor 接受了。实现一个 Learner：监听所有 Acceptor 的 Accepted 消息，对每个提案编号统计接受数，当某个提案被多数 Acceptor 接受时，标记该值为"已选定"（chosen）。支持多个 Learner（不同的 Learner 可能看到不同顺序的消息，但最终都会学到相同的值）。处理消息乱序——Acceptor 的 Accepted 消息可能不按顺序到达。记录学习过程的日志。
+
+纯 Rust，cargo build 通过，模拟 5 个 Acceptor 和 2 个 Learner 的场景。

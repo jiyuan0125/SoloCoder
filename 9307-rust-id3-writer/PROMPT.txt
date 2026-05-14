@@ -1,0 +1,8 @@
+之前有个 ID3 解析器了，现在我需要一个 ID3 标签写入工具，能往 MP3 文件里写 ID3v2.4 标签。
+
+功能点：
+- 创建新的 ID3v2.4 标签头和帧结构，支持 TIT2、TPE1、TALB、TRCK、TDRC 等帧的写入
+- 文本帧使用 UTF-8 编码（v2.4 推荐编码），正确计算帧大小和标签总大小
+- 写入时不破坏已有的音频数据，新标签追加在文件开头，padding 对齐
+
+Rust 项目，cargo build 编译通过。`id3-writer write song.mp3 --artist "周杰伦" --title "晴天"` 这样的用法。

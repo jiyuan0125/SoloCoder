@@ -1,0 +1,5 @@
+帮我实现 Viewstamped Replication 的副本状态机，用 Rust 写。
+
+VR（Viewstamped Replication）是和 Paxos 同时代的复制协议，比 Paxos 更容易理解。一个 VR 副本可以是 Primary（领导者）或 Backup（跟随者），视图号 (view number) 决定谁是 Primary。实现副本的核心逻辑：处理 Client 请求（如果是 Primary，将请求排序后发送给 Backup），处理 Prepare/PrepareOK 消息，处理 Commit 消息。副本维护一个操作日志（log），记录已提交的操作序号。支持视图切换——当 Primary 故障时，Backup 通过增加视图号来发起新选举。
+
+Rust 实现，cargo build 通过，模拟 3 个副本和一个客户端的正常操作流程。

@@ -1,0 +1,1 @@
+分布式锁的续约不能靠客户端手动调用，需要一个自动续约机制。后台 goroutine 定期发送续约请求，续约失败后通知客户端锁已丢失。Go 实现，提供 WithAutoRenew 接口，返回一个 context，锁丢失时 context 自动 cancel。go build 编译通过。

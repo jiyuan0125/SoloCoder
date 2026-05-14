@@ -1,0 +1,1 @@
+手上有几个AIFF格式的音频文件需要处理。写个Python解析器来读取AIFF/AIFF-C文件的chunk结构，解析COMM chunk里的声道数、采样点数、位深度、采样率，以及SSND chunk里的音频数据偏移。AIFF的采样率用80位浮点数表示，要正确解码。支持遍历文件中所有chunk并打印类型和大小。python3直接跑，命令行传文件路径。

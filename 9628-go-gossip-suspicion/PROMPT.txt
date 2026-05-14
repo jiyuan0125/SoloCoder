@@ -1,0 +1,5 @@
+用 Go 写一个 Gossip 可疑机制。节点是不是挂了不能凭一个节点说了算，得有怀疑和确认的过程，防止网络抖动导致误判。
+
+实现 suspect 到 dead 的渐进确认：一个节点 ping 不通另一个节点就标记为 suspect，suspect 信息通过 gossip 传播。如果收到来自 suspect 节点的心跳（它还活着），就清除 suspect 状态。如果多个节点在超时时间内都报告该节点 suspect，就确认 dead。suspect 超时时间要随集群规模动态调整。
+
+跑个场景：某节点网络间歇性丢包，能看到它被 suspect 然后恢复，最终网络完全断开后被确认 dead。go build 编译通过。

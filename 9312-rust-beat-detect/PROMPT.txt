@@ -1,0 +1,9 @@
+帮我写个音乐节拍检测工具，分析音频文件找出节奏的 BPM 和每拍的时间点。
+
+核心功能：
+- 读取 WAV 文件，计算每帧的能量（energy/amplitude envelope）
+- 用 onset detection 找到能量突增的攻击点（attack），推测节拍间隔
+- 根据检测到的节拍间隔计算 BPM（每分钟节拍数），结果取整到常见 BPM 范围（60-200）
+- 输出 BPM 值和检测到的前 20 个节拍时间戳（毫秒）
+
+用 Rust 写，cargo build 编译通过。`beat-detect song.wav` 输出 BPM 和节拍列表。

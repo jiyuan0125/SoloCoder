@@ -1,0 +1,10 @@
+现在 WebP 格式越来越普及了，我需要一个纯 Go 的 WebP 解析器。
+
+需要支持：
+- 解析 RIFF 容器格式，读取 VP8/VP8L chunk
+- 处理有损压缩（VP8 bitstream）的宏块解码
+- 处理无损压缩（VP8L）的变换和色彩编码
+- 解析 ALPHA chunk，支持带透明通道的 WebP
+- 输出图片宽高、是否透明、压缩类型
+
+用法 webp-parse image.webp，打印图片信息和 chunk 列表。Go 标准库，go build 能过。

@@ -1,0 +1,1 @@
+需要一个范围扫描操作，给定起始 key 和数量限制，返回连续的一批 key-value 对。类似 LSM-Tree 的 seek + next 语义。Go 实现，底层用 sorted map 或者 skip list，支持正向和反向扫描。go build 通过。

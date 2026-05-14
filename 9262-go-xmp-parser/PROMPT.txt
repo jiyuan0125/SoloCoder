@@ -1,0 +1,9 @@
+帮我写一个 XMP 元数据解析器，Go 语言。
+
+需求是这样的：
+- 从 JPEG、PNG、TIFF 文件中提取 XMP 数据包（通常是 XML 格式嵌入在文件里）
+- 解析 XMP 的 RDF/XML 结构，读取 dc:title、dc:creator、dc:description、xmp:CreateDate 等命名空间下的属性
+- 支持嵌套结构和数组类型（如多个创作者、多个主题标签）
+- 能处理扩展的 XMP 部分
+
+命令行 xmp-parse design.png，输出所有 XMP 属性。Go 标准库即可，go build 能编译。

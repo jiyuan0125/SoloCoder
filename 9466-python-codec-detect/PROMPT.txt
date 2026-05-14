@@ -1,0 +1,5 @@
+服务器上收到用户上传的视频文件，需要验证编码格式是否符合平台要求。写个 Python 工具来检测视频和音频的编码格式。
+
+通过解析文件头和元数据（MP4 读 moov box，MKV 读 Segment Info 等），识别视频编码（H.264/H.265/VP9/AV1）和音频编码（AAC/MP3/Opus/Vorbis）。输出编码名称和 profile/level 信息。
+
+Python 3，直接解析二进制。python codec_detect.py video.mp4，输出如 "Video: H.264 High@L4.1, Audio: AAC LC"。

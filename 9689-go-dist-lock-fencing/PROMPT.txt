@@ -1,0 +1,1 @@
+分布式锁有个经典问题：客户端拿到锁后 GC 卡住，锁过期被别人拿到，等 GC 恢复后两个客户端同时操作。我需要 fencing token 机制——每次锁分配递增的 token，存储层只接受 token 比上一次大的请求。Go 实现锁服务和 fencing token 的生成、校验。go build 通过。

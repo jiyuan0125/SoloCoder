@@ -1,0 +1,1 @@
+MKV用的是EBML格式，跟MP4很不一样。写个Python工具来解析Matroska/WebM文件的EBML元素结构。能解码EBML变长整数（VINT）和变长元素大小，识别常见的元素ID如Segment、Info、Tracks、Cluster、Cues等。打印每个元素的ID、名称（如果能识别的话）、层级和大小。遇到未知元素也能跳过继续解析。Python3实现，命令行传文件路径。

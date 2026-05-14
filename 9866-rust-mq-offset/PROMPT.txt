@@ -1,0 +1,11 @@
+帮我用 Rust 写一个消息队列的 offset 管理器。
+
+消费者处理消息时需要记录自己消费到了哪条（offset），重启后能从上次的位置继续。这个工具就是管理这些 offset 的。
+
+功能：
+- 为每个 consumer group 维护每个 topic-partition 的消费 offset
+- 支持 commit offset（确认消费成功）、seek offset（跳到指定位置）、reset offset（重置到最早/最新）
+- offset 存储要持久化到本地文件，程序重启后能恢复
+- 能查看所有 consumer group 的 offset 状态，显示 lag（积压量 = 最新 offset - 消费 offset）
+
+命令行工具，cargo build 通过。

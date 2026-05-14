@@ -1,0 +1,3 @@
+DFF 文件解析器。DFF 是 Philips DSDIFF 格式，想解析它的文件结构。
+解析 DFF（DSD Interchange File Format）文件。DFF 使用类似 IFF 的块结构：FRM8 容器 → FVER 版本 → PROP 属性 → DSD 数据。逐块解析，提取格式版本、采样率、声道数、压缩方式等信息。也处理 DST 压缩的 DFF。
+Python 3 纯标准库二进制解析。python dff_parser.py audio.dff info，输出块结构和音频参数。

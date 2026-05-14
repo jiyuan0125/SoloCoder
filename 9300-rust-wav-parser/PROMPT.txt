@@ -1,0 +1,11 @@
+用 Rust 写一个 WAV 音频文件解析器。
+
+我最近在做音频处理相关的项目，需要深入理解 WAV 格式：
+- 解析 RIFF/WAVE 文件头，读取 fmt chunk（音频格式、声道数、采样率、位深）
+- 读取 data chunk 中的 PCM 采样数据
+- 支持常见的 WAV 子格式：PCM（format 1）、IEEE Float（format 3）
+- 处理额外的 chunk：LIST（元数据）、fact（压缩格式的事实信息）
+- 计算并显示音频时长、总采样数、数据速率
+- 支持导出采样数据为 CSV（方便分析波形）
+
+用法 wav-parser audio.wav，输出音频参数和基本信息。cargo build 和 cargo run 通过。标准库实现，不依赖外部 crate。

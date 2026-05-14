@@ -1,0 +1,5 @@
+帮我用 Rust 做一个 FLV 封装器，把音视频数据封装成 FLV 容器格式。
+
+输入 H.264 视频帧和 AAC 音频帧，按照 FLV 规范写入 FLV 文件头和 Tag 结构。视频 Tag 要正确设置 codec ID、frame type、AVC packet type 和 composition time。音频 Tag 设置 sound format、sound rate、sound size 和 AAC packet type。脚本 Tag 写入 onMetaData 信息（时长、宽度、高度、码率等）。
+
+按 Adobe FLV 规范处理二进制格式，Rust 实现，cargo build 通过。

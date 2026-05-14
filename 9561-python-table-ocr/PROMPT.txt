@@ -1,0 +1,3 @@
+经常要把纸质的表格录入电子档，太费时间了。能不能写个表格 OCR 工具？
+输入一张表格图片，自动检测表格的网格线结构，识别出行列关系，然后把每个单元格里的文字识别出来。最终输出 CSV 或者 Markdown 格式的表格。要能处理有合并单元格的情况就更好了。
+Python 3，可以用 OpenCV 做图像处理。命令行：python table_ocr.py table_photo.jpg -o output.csv --format csv

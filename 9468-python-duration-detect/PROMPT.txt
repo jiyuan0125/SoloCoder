@@ -1,0 +1,5 @@
+帮我写个检测视频时长的工具。
+
+需求很简单：给一个视频文件，返回它的总时长（秒）。但要做到不依赖 ffprobe，自己从文件结构中读取。支持 MP4、FLV、TS 三种格式。MP4 从 mvhd 或 track 的 duration 读，FLV 从 metadata 的 duration 读，TS 从 PCR 或 PTS 计算。
+
+python main.py video.mp4 输出 "Duration: 125.34 seconds"。纯 Python 标准库，处理二进制解析。

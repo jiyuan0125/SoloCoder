@@ -1,0 +1,5 @@
+用 Rust 实现一个 FlatBuffers 编码工具，把数据序列化为 FlatBuffers 二进制格式。
+
+根据给定的 schema 定义（简化版，可以用 JSON 描述表结构和字段类型），把结构化数据编码成 FlatBuffers 二进制。按照 FlatBuffers 规范：构建 vtable、写入字段偏移、字符串和 vector 放在 buffer 尾部、根表偏移写在 buffer 头部。确保输出的 buffer 可以被官方 FlatBuffers 库正确读取。
+
+Rust 实现，cargo build 通过。

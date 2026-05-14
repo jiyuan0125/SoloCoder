@@ -1,0 +1,1 @@
+LWW-Register 会丢数据，我想用 MV-Register（Multi-Value Register）保留所有并发写入的值。并发写入产生多个值，用户自己决定取哪个。Go 实现，写入时如果因果关系明确就覆盖，并发则保留所有值。merge 时按因果合并。go build 能编译。

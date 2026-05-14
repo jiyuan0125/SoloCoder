@@ -1,0 +1,9 @@
+帮我用 Go 写一个 Term（任期）管理器，这是 Raft 之类共识协议里的核心概念。Term 严格递增，用来标记逻辑时间。
+
+需要实现：
+- 维护当前 term 号，支持自增和查询
+- 节点通信时比较 term：如果发现别人的 term 更大，就更新自己的并退回 Follower
+- Candidate 发起选举时自增 term，Leader 向 Follower 发送心跳时携带 term
+- 模拟一个场景：旧 Leader 发现更高 term 后自动降级
+
+用 Go 标准库，go build 能跑。在终端打印 term 变化的时间线。

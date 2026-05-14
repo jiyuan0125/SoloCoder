@@ -1,0 +1,5 @@
+用 Rust 写一个 Protocol Buffers 编码器，把结构化数据编码成二进制格式。
+
+实现 protobuf 的 wire format 编码：varint（包括 zigzag 编码的 sint）、32/64-bit fixed、length-delimited（字符串、bytes、嵌套消息）。支持通过一个简单的 schema 描述（可以用 JSON 或简单的 DSL）来定义消息结构，然后按 schema 编码数据。也要支持不用 schema 直接构造消息（手动指定 field number 和类型）。
+
+Rust 实现，cargo build 通过。

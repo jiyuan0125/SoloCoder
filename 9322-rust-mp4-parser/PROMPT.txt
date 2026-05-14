@@ -1,0 +1,9 @@
+帮我写一个 MP4 容器格式解析器，能把 MP4/M4A 文件的 box 结构打印出来。
+
+解析内容：
+- 递归解析 MP4 的 box（也叫 atom）结构，每个 box 输出类型、偏移量和大小
+- 重点解析 ftyp（文件类型）、moov（电影头）、mvhd（电影头数据）、trak（轨道）等关键 box
+- 从 stbl box 中读取采样表信息（stts、stsc、stsz、stco），了解音视频帧的组织方式
+- 支持 container box 的递归展开（moov 下面有 mvhd、trak，trak 下面有 mdia 等）
+
+Rust 项目，cargo build 通过。`mp4-parser dump video.mp4` 输出 box 树状结构。

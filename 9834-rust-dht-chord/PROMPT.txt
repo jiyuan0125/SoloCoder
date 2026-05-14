@@ -1,0 +1,12 @@
+实现 Chord DHT 协议，用 Rust。
+
+Chord 是经典的分布式哈希表算法，节点和数据都映射到一个环形 ID 空间（0..2^m）。每个节点维护一个 finger table（路由表），查找只需要 O(log N) 跳。
+
+核心功能：
+- SHA-1 哈希把 node ID 和 key 映射到环上
+- Finger table：每个节点维护 m 个路由项，第 i 项指向 ID = node_id + 2^i 处的 successor
+- 查找：沿 finger table 逐步逼近目标，log(N) 跳定位
+- 节点加入：通知 successor 和 predecessor，更新 finger table
+- 稳定化：定期检查并修正 finger table 和 successor/predecessor
+
+cargo build 通过，模拟 16 节点 Chord 环测试查找正确性。

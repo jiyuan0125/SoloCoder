@@ -1,0 +1,1 @@
+ASS/SSA字幕格式比SRT复杂很多，支持样式和特效。写个Python解析器来处理ASS字幕文件，解析[Script Info]、[V4+ Styles]、[Events]这些段落。从Events里提取每条字幕的Layer、Start、End、Style、Text字段。Style定义也要解析，包括字体名、大小、颜色（&HBBGGRR&格式）、边框等属性。文本里的特效标签（\pos, \an之类）识别但不影响时间解析。python3运行。

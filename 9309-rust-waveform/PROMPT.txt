@@ -1,0 +1,9 @@
+帮我做一个音频波形数据生成工具，从音频文件中提取波形信息用于可视化。
+
+具体要求：
+- 读取 WAV 格式的 PCM 音频数据（16bit/24bit/32bit 整数和 32bit 浮点）
+- 将音频按固定时间窗口分段，计算每段的峰值（max/min）和 RMS 值
+- 输出 JSON 格式的波形数据，包含采样点数、每秒采样数、峰值数组、RMS 数组
+- 对大文件做流式处理，不要一次性加载全部 PCM 数据到内存
+
+用 Rust 写，cargo build 通过。`waveform gen audio.wav --samples-per-second 100 > wave.json`。

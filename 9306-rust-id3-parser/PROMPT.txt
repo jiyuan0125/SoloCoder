@@ -1,0 +1,9 @@
+我需要一个专门的 ID3 标签解析器，能深入解析 MP3 文件中的 ID3v2 标签的各种帧类型。
+
+要处理的内容：
+- 解析 ID3v2 标签头（版本、标志位、大小计算用 syncsafe integer）
+- 支持 TIT2（标题）、TPE1（艺术家）、TALB（专辑）、TRCK（曲目号）、TDRC（年份）等常见文本帧
+- 处理帧内容的编码标识（ISO-8859-1、UTF-8、UTF-16 BOM），正确解码多字节文本
+- 能识别 APIC（封面图）帧并提取图片类型和描述
+
+Rust，cargo build 通过。`id3-parser extract song.mp3` 列出所有 ID3 帧的内容。

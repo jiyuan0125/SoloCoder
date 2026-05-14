@@ -1,0 +1,10 @@
+写一个 WebP 图片格式解析工具，解析 WebP 文件的容器结构和编码数据。
+
+解析内容：
+- 验证 RIFF 容器和 WEBP 标识
+- 解析 VP8 有损格式：读取 VP8 位流头的宽度、高度、帧类型
+- 解析 VP8L 无损格式：读取签名、宽度、高度、alpha 标志
+- 解析 VP8X 扩展格式：读取 ICC、alpha、EXIF、动画、XMP 等功能标志位
+- 提取 RIFF chunk 列表（如 ICCP、EXIF、XMP）并报告其大小
+
+Rust 项目，cargo build 编译通过。`webp-parser info image.webp` 输出格式详情。

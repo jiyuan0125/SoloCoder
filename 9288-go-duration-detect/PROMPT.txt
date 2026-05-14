@@ -1,0 +1,12 @@
+写一个视频时长检测工具，Go 实现。
+
+做个简单工具专门获取视频时长：
+- 从 MP4 文件读取 mvhd 的 duration + timescale 计算时长
+- 从 MKV/WebM 文件的 Segment Info 读取 Duration + TimecodeScale
+- 从 FLV 文件的 metadata 的 duration 字段读取
+- 从 MPEG-TS 通过 PTS 范围估算时长
+- 从 WAV/MP3/AAC 通过文件大小和码率估算
+- 输出秒数和格式化时间（HH:MM:SS.mmm）
+- 支持批量，输出 CSV 或 JSON
+
+用法 dur-detect video.mp4，go build 编译通过。标准库。

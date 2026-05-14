@@ -1,0 +1,1 @@
+JPEG解码是个挺有意思的过程，想自己实现一遍。写个Python JPEG解码器，解析JFIF/EXIF头部、量化表（DQT）、霍夫曼表（DHT）、帧参数（SOF0）、扫描数据（SOS）。实现MCU解码流程：熵解码→反量化→IDCT→颜色空间转换（YCbCr→RGB）。支持baseline JPEG的8位精度、3通道彩色图像。不需要处理progressive JPEG。python3运行。

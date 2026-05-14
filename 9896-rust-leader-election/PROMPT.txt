@@ -1,0 +1,12 @@
+用 Rust 实现一个 Leader 选举机制。
+
+集群中多个节点需要选出一个 leader 来协调工作，leader 挂了要自动重新选举。类似 Raft 的选举部分或者 ZooKeeper 的 leader 选举。
+
+核心功能：
+- 模拟多个节点，每个节点有唯一 ID 和当前状态（follower / candidate / leader）
+- 选举流程：follower 超时后变成 candidate，向其他节点拉票，获得多数票后成为 leader
+- leader 定期发心跳，follower 收到心跳就重置超时计时器
+- leader 故障后，follower 超时触发新一轮选举
+- 能看到选举过程中的状态变化：谁在拉票、谁投了票、最终谁当选
+
+cargo run 能演示选举过程。内存模拟。

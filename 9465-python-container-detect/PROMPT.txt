@@ -1,0 +1,5 @@
+手上一堆多媒体文件想快速分类，需要知道每个文件是什么容器格式。写个 Python 工具，通过文件头的特征字节来识别音视频容器格式。
+
+支持识别：MP4（ftyp box）、FLV（FLV 签名）、MKV/WebM（EBML 头）、AVI（RIFF/AVI）、TS（0x47 同步字节）、RMVB（.RMF）等。只读文件前几 KB 就能判断，不用完整扫描。对于无法识别的格式给出提示。
+
+纯 Python，python container_detect.py /path/to/file 或者整个目录。输出文件名和识别到的容器类型。

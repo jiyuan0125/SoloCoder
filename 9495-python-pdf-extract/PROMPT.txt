@@ -1,0 +1,5 @@
+写一个 PDF 文本提取工具，从 PDF 文件中抽取纯文本内容。
+
+有一堆 PDF 报告需要做文本分析和搜索，得先把文本内容提取出来。工具需要解析 PDF 的内部结构（xref 表、对象流），处理不同的文本编码（PDFDocEncoding、UTF-16、ToUnicode CMap），正确拼接页面上的文本块，保持阅读顺序。
+
+python main.py extract document.pdf --output text.txt。也支持 python main.py extract document.pdf --page 3 只提取指定页。Python 实现，可以依赖 PyPDF2 或 pdfminer。能正确提取中文和英文混排的 PDF。

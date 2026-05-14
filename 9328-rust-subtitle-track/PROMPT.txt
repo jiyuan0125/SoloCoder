@@ -1,0 +1,9 @@
+写一个从视频容器中提取字幕轨道的工具。
+
+支持格式：
+- MP4：从 moov/trak/mdia/minf/stbl 中提取 tx3g 或 sbtl 类型的字幕数据
+- MKV：从 Matroska Segment 中提取 subtitle 类型的 track
+- 能识别字幕编码格式（S_TEXT/UTF8、S_TEXT/SSA、S_TEXT/WEBVTT 等）
+- 把提取到的字幕数据以原始格式输出到文件
+
+Rust 项目，cargo build 编译通过。`sub-extract video.mkv --track-id 3 -o subtitles.srt`。

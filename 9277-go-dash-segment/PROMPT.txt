@@ -1,0 +1,10 @@
+帮我写一个 DASH 分片工具，Go 实现。
+
+把一个视频文件切成 DASH 格式的分片：
+- 输入 MP4 文件，按指定时长切分成 fMP4（fragmented MP4）分片
+- 生成初始化分片（init segment）包含 moov box
+- 每个媒体分片包含 moof + mdat
+- 生成对应的 MPD 清单文件，包含 SegmentTemplate 或 SegmentList
+- 支持设置分片时长和输出目录
+
+用法 dash-segment -input video.mp4 -duration 4 -output ./dash_output/，生成 MPD 和分片文件。go build 通过。

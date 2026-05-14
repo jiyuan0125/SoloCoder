@@ -1,0 +1,5 @@
+写一个 Paxos Proposer 的 Rust 实现。
+
+Proposer 是 Paxos 中发起提案的角色，它需要先获得多数 Acceptor 的承诺，再提交提案值。实现 Proposer 的两阶段逻辑：Phase 1 (Prepare)——向所有 Acceptor 发送 Prepare(n) 消息，等待多数回复。如果回复中有已接受的值，必须用编号最大的那个值作为自己的提案值（这是 Paxos 安全性的关键）。Phase 2 (Accept)——向所有 Acceptor 发送 Accept(n, value)，等待多数回复确认。处理竞争——如果发现更大的提案编号，需要用更大的编号重试。支持多个 Proposer 并发提议。
+
+Rust 实现，cargo build 编译通过，模拟两个 Proposer 竞争的场景。

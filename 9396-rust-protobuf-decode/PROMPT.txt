@@ -1,0 +1,5 @@
+写一个 Rust 的 Protocol Buffers 解码工具，不需要 .proto 文件就能看数据。
+
+直接解析二进制的 protobuf 编码数据，按 wire format 逐字段解读：varint、64-bit、length-delimited、32-bit 这些类型。对 length-delimited 的字段尝试以 UTF-8 字符串和嵌套消息两种方式解读。输出每个字段的 field number、wire type、原始值和可能的解读结果。类似 protoc --decode_raw 的功能。
+
+Rust 实现，按 protobuf 编码规范解析二进制，cargo build 通过。

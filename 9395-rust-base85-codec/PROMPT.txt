@@ -1,0 +1,5 @@
+用 Rust 写一个 Base85 编解码工具。
+
+Base85（也叫 Ascii85）用在 PDF 和 PostScript 里，把 4 字节编码为 5 个 ASCII 字符。实现标准的 Ascii85 编解码，以及 ZeroMQ 使用的 Z85 变体。支持带 <~ 和 ~> 定界符的编码格式。处理特殊的全零压缩（z 字符表示四个零字节）。对二进制文件和字符串都能处理。
+
+Rust 实现，cargo build 通过。

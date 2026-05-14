@@ -1,0 +1,9 @@
+帮我做一个 WebM 容器的解析工具，WebM 底层也是 EBML/Matroska 结构但有简化。
+
+解析要求：
+- 解析 EBML 头，验证 DocType 为 "webm"
+- 提取 Segment 中的 Duration、Tracks 信息
+- 识别视频轨道（V_VP8/V_VP9）和音频轨道（A_VORBIS/A_OPUS）的编码格式
+- 解析 Cues Element，获取关键帧索引位置用于 seek
+
+Rust 项目，cargo build 通过。`webm-parser info clip.webm` 输出轨道和索引信息。

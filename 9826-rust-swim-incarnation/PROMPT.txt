@@ -1,0 +1,12 @@
+用 Rust 实现 SWIM 协议的 Incarnation 机制。
+
+SWIM 用 incarnation（代数）来解决被怀疑节点的自证问题。节点被怀疑后可以递增自己的 incarnation，广播 alive 消息来证明自己还活着。 incarnation 越大越新，类似 Vector Clock 的思想。
+
+需要实现：
+- 每个节点维护自己的 incarnation（单调递增的整数）
+- 被怀疑时主动递增 incarnation，广播 alive 消息
+- 其他节点收到 alive 消息时比较 incarnation，只接受更大的
+- incarnation 也用于解决网络分区恢复后的状态冲突
+- 支持查询任意成员的当前 incarnation
+
+cargo build 通过，测试被怀疑节点自证后恢复为 alive。

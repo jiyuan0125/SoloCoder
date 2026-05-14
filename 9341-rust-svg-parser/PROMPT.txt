@@ -1,0 +1,10 @@
+帮我做一个 SVG 文件解析工具，提取 SVG 中的基本图形元素和属性。
+
+解析范围：
+- 解析 XML 头和 SVG 根元素，读取 viewBox、width、height 属性
+- 提取基本图形元素：rect（矩形）、circle（圆形）、line（直线）、path（路径）、text（文本）
+- 读取每个元素的填充色（fill）、描边色（stroke）、描边宽度等样式属性
+- 支持 style 属性的内联 CSS 解析（简单的 key:value 对）
+- 对 path 元素解析 d 属性中的命令序列（M、L、C、Z 等）
+
+Rust 实现，cargo build 通过。`svg-parser info diagram.svg` 输出元素统计和属性列表。

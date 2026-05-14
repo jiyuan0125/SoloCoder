@@ -1,0 +1,5 @@
+写一个 MD5 哈希计算工具。
+
+日常用得很多，需要一个好用的命令行工具来计算文件的 MD5。支持单个文件和批量处理，能和参考值对比判断文件是否一致。大文件要分块读取不要一次性加载到内存。
+
+python main.py file.zip 输出 MD5 值；python main.py --dir ./backup/ 批量计算并输出 文件名+MD5 的列表；python main.py file.zip --verify d41d8cd98f00b204e9800998ecf8427e 对比校验。Python 标准库 hashlib 实现。

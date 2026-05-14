@@ -1,0 +1,10 @@
+多线程任务调度中，有些 worker 很闲有些很忙，想实现 work stealing 让空闲的 worker 从繁忙的 worker 那里偷任务过来执行。
+
+核心功能：
+- 每个 worker 维护自己的本地双端队列（deque），新任务从尾部入队
+- 自己从头部取任务执行，其他 worker 从尾部偷（steal）任务
+- 偷任务时要加锁，保证并发安全
+- 当本地队列为空时，主动去其他 worker 那里偷
+- 统计每个 worker 的任务执行数和偷取数，验证负载均衡效果
+
+Go 实现，go build 通过。创建 4 个 worker、提交 100 个不均匀分布的任务，展示 stealing 后各 worker 负载趋于均衡。

@@ -1,0 +1,11 @@
+帮我用 Go 写一个 HLS 封装工具。
+
+把一个 MPEG-TS 文件切片打包成 HLS 直播流：
+- 读取输入的 TS 文件，按照指定时长（如 10 秒）切分成多个 TS 分片
+- 生成 HLS m3u8 播放列表文件（主播放列表 + 媒体播放列表）
+- 支持 #EXTINF 标签标注每个分片时长
+- 支持 #EXT-X-TARGETDURATION、#EXT-X-MEDIA-SEQUENCE、#EXT-X-PLAYLIST-TYPE 等标签
+- 分片时要尽量在关键帧边界切割
+- 支持点播（VOD）和直播（LIVE）两种模式
+
+用法 hls-mux -input video.ts -duration 10 -mode vod -output ./hls_output/。go build 通过。

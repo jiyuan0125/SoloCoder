@@ -1,0 +1,9 @@
+用 Go 实现日志截断功能。在分布式共识中，当 Leader 发现 Follower 的日志和自己不一致时，需要截掉 Follower 冲突的部分，然后用正确的日志覆盖。
+
+具体要做：
+- 模拟 Follower 有一份包含冲突条目的日志
+- Leader 发来 AppendEntries 时，携带 prevLogIndex/prevLogTerm 做校验
+- 校验失败则从冲突点开始截断（truncate），然后追加正确的日志
+- 截断前后打印日志内容对比，验证最终一致性
+
+Go 标准库，go build 能编译通过。

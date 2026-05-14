@@ -1,0 +1,5 @@
+用 Rust 实现一个 HLS 播放列表生成器，用于直播场景。
+
+输入一堆 TS 分片文件和对应的时长信息，生成符合 HLS 规范的 M3U8 播放列表。支持 Live 和 VOD 两种模式：Live 模式不断追加新分片并维持滑动窗口（只保留最近 N 个分片），VOD 模式在末尾加上 #EXT-X-ENDLIST。生成时要正确处理 #EXT-X-MEDIA-SEQUENCE 和 #EXT-X-TARGETDURATION 标签。
+
+Rust 写，cargo build 编译通过，遵循 HLS RFC 8216 规范。

@@ -1,0 +1,12 @@
+写个 Rust 程序实现任务故障转移（Failover）。
+
+某个 worker 执行任务时挂了，它手里还没完成的任务要能被其他 worker 接手继续执行，不能丢任务。
+
+具体要实现：
+- 一个任务队列 + 多个 worker，worker 从队列取任务执行
+- 可以模拟某个 worker 宕机（标记为 dead），它正在执行的任务需要被检测到
+- 其他 worker 定期检查，发现宕机 worker 的未完成任务后，把这些任务重新放回队列
+- 任务要有状态标记：pending / running / completed / failed，转移时状态要正确切换
+- 整个过程输出日志，能看到任务的转移和恢复
+
+cargo build 编译通过，内存模拟。

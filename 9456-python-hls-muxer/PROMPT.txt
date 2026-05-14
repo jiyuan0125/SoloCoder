@@ -1,0 +1,5 @@
+我需要把一堆 H.264 裸流封装成 HLS 格式对外提供流媒体服务。用 Python 写个 HLS 封装器，把输入的视频流切分成 TS 分片并生成 m3u8 播放列表。
+
+核心功能：读取输入视频文件，按指定时长（默认 10 秒）切割成 TS 分片，生成标准的 HLS m3u8 索引文件。支持设置分片时长、输出目录。m3u8 要符合 HLS 规范，能用 VLC 直接播放。
+
+Python 3 实现，可以调用 ffmpeg 做实际的转封装工作，命令行：python hls_muxer.py input.mp4 --segment 10 --output ./hls_output/。

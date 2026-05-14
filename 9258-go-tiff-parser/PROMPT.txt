@@ -1,0 +1,10 @@
+写一个 TIFF 图片解析器，Go 实现，只用标准库。
+
+功能点：
+- 解析 TIFF 文件头，处理大小端字节序（Little/Big Endian）
+- 读取 IFD（Image File Directory）标签，解析常用标签：ImageWidth、ImageLength、BitsPerSample、Compression 等
+- 支持常见压缩方式：无压缩、LZW、PackBits、Deflate
+- 处理多页 TIFF，能列出每一页的信息
+- 支持 Strip 和 Tiled 两种数据组织方式
+
+用法 tiff-parse scan.tiff，输出页数、每页尺寸、压缩方式。go build 编译通过。

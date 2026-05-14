@@ -1,0 +1,5 @@
+帮我用 Go 实现 Raft 的 ReadIndex 读优化。直接读本地状态机可能读到旧数据（因为可能发生了 leader 切换），ReadIndex 让读操作也能保证线性一致性。
+
+流程是这样的：leader 收到读请求时先记录当前 commitIndex 作为 readIndex，然后向集群多数节点发一轮心跳确认自己还是合法 leader，确认后等状态机应用到 readIndex 再返回结果。这样读操作不用写日志也能保证一致性。
+
+写个 demo：客户端连续发读请求，中间触发一次 leader 切换，读结果始终是最新已提交的值。go build 通过。

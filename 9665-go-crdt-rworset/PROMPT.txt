@@ -1,0 +1,1 @@
+和 AWORSet 相反，我还需要一个 RWORSet（Remove-Wins OR-Set）。同一个元素并发 add 和 remove 时 remove 胜出。适合做黑名单这种场景——删了就别再加回来。Go 实现，接口和 AWORSet 一样，但语义相反。go build 能过。

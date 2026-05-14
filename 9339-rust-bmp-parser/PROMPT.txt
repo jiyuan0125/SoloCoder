@@ -1,0 +1,10 @@
+写一个 BMP 图片格式解析器，读取 BMP 文件结构并转换为原始像素数据。
+
+解析要求：
+- 读取 BMP 文件头（BM magic、文件大小）和 DIB 头（BITMAPINFOHEADER，40 字节版本）
+- 提取图像宽度、高度、位深（支持 24 位和 32 位）、压缩方式
+- 处理 BMP 特有的自底向上行存储顺序，翻转成正向
+- 处理每行的 4 字节对齐 padding
+- 24 位 BGR 转换为 RGB 输出
+
+用 Rust 写，cargo build 通过。`bmp-parser decode image.bmp -o output.ppm` 输出 PPM。

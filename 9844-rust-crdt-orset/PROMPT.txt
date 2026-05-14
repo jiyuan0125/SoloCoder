@@ -1,0 +1,12 @@
+用 Rust 实现 OR-Set（Observed-Remove Set）CRDT。
+
+G-Set 只能加不能删，太受限了。OR-Set 允许添加和删除，原理是每次 add 带唯一标记（tag），remove 只删除对应标记。如果同时有 add 和 remove，add 优先（因为 add 带了新 tag）。
+
+核心功能：
+- add(element)：给元素附加唯一 tag 后添加
+- remove(element)：删除该元素所有已知 tag
+- 如果节点 A add("x") 同时节点 B remove("x")，合并后 "x" 存在（add 的 tag 是新的）
+- merge(other)：合并两个 OR-Set 的 add-set 和 remove-set
+- 支持 contains 和 elements 查询
+
+cargo build 通过，测试并发 add-remove 冲突时 add 胜出。

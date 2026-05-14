@@ -1,0 +1,11 @@
+做一个通用的图片元数据查看器，Go 写的。
+
+想一个工具把所有元数据都看全了：
+- 解析 EXIF（拍摄参数、GPS、时间）
+- 解析 IPTC（新闻图片的标题、描述、关键词）
+- 解析 XMP（Adobe 系工具写的元数据）
+- 解析 PNG 文本块（tEXt、iTXt、zTXt）
+- 解析 GIF 的 Comment Extension
+- 输出统一格式：按类别分组显示，支持 JSON 输出
+
+用法 img-meta photo.jpg，把能找到的元数据全列出来。Go 标准库，go build 编译通过。

@@ -1,0 +1,5 @@
+用 Go 写一个 DHT 路由表的通用实现。不管是 Chord 还是 Kademlia，都得维护一个路由表来知道数据在哪个方向。
+
+设计一个通用的 RoutingTable 接口：支持 AddNode、RemoveNode、FindClosestNodes（找离目标最近的 N 个节点）。提供 Kademlia 风格的 k-bucket 实现：按与本地节点的距离分桶，每个桶有容量限制和 LRU 淘汰。桶不满时直接加入，满了就 ping 最老的节点决定是否替换。
+
+写个测试：往路由表插入 1000 个节点，查询离某个 key 最近的 10 个节点，验证返回的确实是 XOR 距离最近的。go build 通过。

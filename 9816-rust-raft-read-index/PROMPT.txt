@@ -1,0 +1,11 @@
+用 Rust 实现 Raft ReadIndex 读优化。
+
+直接从 Leader 读不安全——Leader 可能已经挂了但自己不知道。ReadIndex 机制让 Leader 在处理读请求时确认自己仍然是 Leader：先记录当前 commitIndex，然后向多数节点发心跳确认，确认后才返回数据。
+
+功能：
+- 客户端发起读请求，Leader 记录当前 commitIndex 作为 readIndex
+- Leader 向多数节点发送心跳确认自己还是 Leader
+- 收到多数确认后，等状态机 apply 到 readIndex 再返回
+- 支持批量处理多个读请求，共享一次确认
+
+cargo build 通过，测试验证读操作不会返回过期数据。

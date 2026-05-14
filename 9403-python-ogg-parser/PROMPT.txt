@@ -1,0 +1,1 @@
+最近在做音频相关的项目，需要解析OGG容器格式。写个Python工具来读取OGG文件结构，解析出page header里的版本号、序列号、页段数、granule位置这些字段。能跟踪多个logical stream，把属于同一个stream的page正确串联起来。遇到损坏的page能跳过并报告错误位置。python3直接运行，传OGG文件路径作为参数。

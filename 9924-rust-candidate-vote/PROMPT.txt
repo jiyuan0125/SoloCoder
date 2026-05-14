@@ -1,0 +1,14 @@
+用 Rust 实现一个候选者投票（candidate vote）流程模拟器。
+
+背景：Raft 选举过程中，follower 超时后变成 candidate，给自己投一票然后向其他节点拉票。拿到多数票后变成 leader。这个过程说起来简单，但边界情况很多——比如同时有多个 candidate、网络分区等。
+
+需要模拟：
+- 节点有三种角色：Follower、Candidate、Leader
+- election timeout：follower 在随机时间内没收到心跳就转为 candidate
+- candidate 递增 term，给自己投票，向其他节点发送 RequestVote RPC
+- 其他节点收到 RequestVote 后的投票规则：每个 term 只投一票，先到先得
+- 收到多数票后晋升为 leader，开始发送心跳
+- 如果在等票期间收到了更高 term 的心跳，退回 follower
+- 支持模拟多个 candidate 同时竞选的场景，验证只有最多一个能赢
+
+Rust 标准库，cargo build 通过。

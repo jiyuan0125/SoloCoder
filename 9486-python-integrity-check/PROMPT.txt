@@ -1,0 +1,5 @@
+写一个文件完整性校验工具，生成和验证校验清单。
+
+类似 md5sum/shasum 的命令行工具，但是做成一个更友好的 Python 版。生成一个校验清单文件（包含每个文件的路径和哈希值），之后可以用这个清单来验证文件是否被修改过。对发布软件包、备份数据验证很有用。
+
+python main.py generate /path/to/dir/ --output checksums.txt 生成清单；python main.py verify checksums.txt 验证所有文件。清单格式兼容 sha256sum。Python 标准库。

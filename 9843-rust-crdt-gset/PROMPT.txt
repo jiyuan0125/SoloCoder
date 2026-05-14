@@ -1,0 +1,12 @@
+实现 CRDT G-Set（只增集合），用 Rust。
+
+分布式场景下多个节点往同一个集合里添加元素，不用锁，最终合并后得到正确结果。G-Set 只有 add 没有 remove，合并就是取并集。
+
+功能要求：
+- add(element) 往集合中添加元素，已存在则忽略
+- contains(element) 检查元素是否存在
+- merge(other) 合并两个 G-Set，取并集
+- elements() 返回集合中所有元素
+- 合并满足交换律、结合律、幂等性
+
+cargo build 通过，测试两节点各添加不同元素后合并得到完整集合。

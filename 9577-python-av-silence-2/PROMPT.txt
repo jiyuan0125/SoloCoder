@@ -1,0 +1,3 @@
+检测音频中的静音片段。录播客的时候经常有很长的空白想剪掉。
+扫描音频文件，检测出所有静音片段的位置和时长。静音阈值（分贝）和最短静音时长可配置。输出每个静音段的时间戳列表。也可以自动生成 ffmpeg 的裁剪命令来去掉静音。
+Python 3 + ffmpeg silencedetect 滤镜。python silence.py podcast.wav --threshold -30dB --min-duration 2.0，输出：[00:01:23 - 00:01:28] 5.2s silence detected

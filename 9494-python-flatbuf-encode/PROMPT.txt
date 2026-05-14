@@ -1,0 +1,5 @@
+做一个 FlatBuffers 编码工具，把结构化数据编码成 FlatBuffers 二进制格式。
+
+给定 JSON 数据和 .fbs schema 定义，生成对应的 FlatBuffers 二进制文件。需要正确处理 vtable 生成、字段对齐、offset 计算这些 FlatBuffers 的核心机制。支持基础数据类型（整数、浮点、字符串）和嵌套对象。
+
+python main.py encode --schema message.fbs --root Message --input data.json --output data.bin。Python 标准库，自己实现 FlatBuffers 的编码逻辑。至少能处理简单的 schema 定义。

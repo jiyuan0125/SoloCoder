@@ -1,0 +1,11 @@
+写一个 HLS 播放列表解析器，Go 实现。
+
+需求：
+- 解析 HLS m3u8 文件（主播放列表和媒体播放列表都要支持）
+- 主播放列表：解析 #EXT-X-STREAM-INF，提取各码率变体的 URI、带宽、分辨率
+- 媒体播放列表：解析 #EXTINF、#EXT-X-TARGETDURATION、#EXT-X-MEDIA-SEQUENCE、#EXT-X-ENDLIST 等
+- 支持 #EXT-X-KEY 解析加密信息（method、uri、iv）
+- 支持 #EXT-X-MEDIA（音频、字幕多语言轨道）
+- 验证 m3u8 的基本合法性，检查标签是否冲突
+
+用法 hls-parse stream.m3u8，输出结构化的播放列表信息。Go 标准库，go build 通过。

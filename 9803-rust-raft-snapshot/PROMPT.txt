@@ -1,0 +1,11 @@
+写一个 Raft 快照机制，用 Rust 实现。
+
+背景：Raft 日志不能无限增长，需要定期把已提交的日志压缩成快照。快照包含最后包含的 Index 和 Term，以及状态机的当前状态。
+
+要实现的功能：
+- 能够将指定 Index 之前的日志截断并生成快照
+- 快照中保存 lastIncludedIndex、lastIncludedTerm 和状态机快照数据
+- 新节点可以通过 InstallSnapshot RPC 恢复状态
+- 从快照恢复后能正常继续追加新日志
+
+cargo build 通过，确保日志截断和恢复的逻辑正确。

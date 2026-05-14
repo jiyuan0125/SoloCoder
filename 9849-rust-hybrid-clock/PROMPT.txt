@@ -1,0 +1,12 @@
+实现混合逻辑时钟（Hybrid Logical Clock），用 Rust。
+
+物理时钟不可靠（有偏移、回拨），逻辑时钟（Lamport）不能反映真实时间。HLC 结合两者：用物理时间做主体，加上逻辑计数器处理同一毫秒内的多个事件。
+
+功能：
+- now()：返回当前混合时间戳，格式为 (physical_time, logical_counter, node_id)
+- event(remote_timestamp)：收到远程事件时，取本地和远程物理时间的最大值，逻辑计数器处理同毫秒
+- send_event()：发送事件时更新时间戳
+- 保证：如果事件 A happened-before B，则 HLC(A) < HLC(B)
+- HLC 时间戳接近物理时间（偏差不超过一个 RTT）
+
+cargo build 通过，测试时钟单调递增和因果一致性。

@@ -1,0 +1,1 @@
+AVI是老式的RIFF容器格式，但有些老视频文件还需要处理。写个Python解析器读取AVI文件的RIFF chunk结构，解析hdrl（主头部）里的avih信息如帧率、总帧数、宽高，以及strl（流头部）里的视频和音频流参数。能遍历movi块里的音视频数据chunk，报告每个chunk的类型和大小。Python3，不依赖外部库，命令行传AVI文件路径。

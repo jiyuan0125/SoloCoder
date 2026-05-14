@@ -1,0 +1,11 @@
+用 Rust 写一个 Raft 心跳管理模块。
+
+Leader 需要定期给 Follower 发心跳（空的 AppendEntries RPC）来维持自己的权威。如果 Follower 一段时间没收到心跳，就认为 Leader 挂了，触发重新选举。
+
+功能要求：
+- Leader 按固定间隔（如 50ms）向所有 Follower 广播心跳
+- Follower 收到合法心跳后重置选举超时
+- 心跳中携带 Leader 的 Term 和 commitIndex
+- Leader 自身不需要心跳，但需要维护心跳定时器
+
+cargo build 通过，验证心跳间隔稳定且超时触发正确。

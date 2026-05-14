@@ -1,0 +1,8 @@
+帮我做一个 MIDI 文件解析器，把标准 MIDI 文件（Format 0 和 Format 1）的音符事件提取出来。
+
+核心需求：
+- 解析 MIDI 文件头（MThd）和音轨块（MTrk），读取 delta-time（变长整数编码）
+- 识别主要事件类型：Note On/Off、Program Change、Control Change、Tempo（meta 0x51）、Time Signature
+- 把解析结果按时间线输出，能看到每个音符的开始/结束时刻和音高
+
+Rust 实现，cargo build 通过。`midi-parser parse song.mid` 显示所有轨道的事件列表。

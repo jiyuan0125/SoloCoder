@@ -1,0 +1,13 @@
+用 Rust 写一个墓碑清理（tombstone cleanup）模块。
+
+场景：分布式存储里删除一个 key 不是真的删除，而是写一条"墓碑"（tombstone）记录，标记这个 key 已删除。这样做的目的是让删除操作能同步到所有副本。但墓碑不能永远留着，得定期清理。
+
+要做的：
+- KV 存储中 delete 操作写入 tombstone（key + delete_marker + timestamp）
+- 读取时遇到 tombstone 返回 NotFound
+- GC 条件：tombstone 存在时间超过配置的保留期（比如 7 天），且所有副本都已同步该 tombstone
+- 清理时真的删除这条记录（释放存储空间）
+- 提供手动触发清理的接口
+- 统计：当前有多少 tombstone、已清理了多少、最老的 tombstone 是什么时候
+
+Rust 标准库，cargo build 通过。

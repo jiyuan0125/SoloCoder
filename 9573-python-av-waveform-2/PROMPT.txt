@@ -1,0 +1,4 @@
+音频波形可视化。想看看一段音频的波形图长什么样。
+读取音频文件，生成波形图（waveform）。横轴是时间，纵轴是振幅。支持生成整段音频的波形，也支持指定时间范围。波形颜色、背景色、图片尺寸可配置。输出 PNG 图片。
+Python 3，用 ffmpeg 或 wave 模块读取 PCM 数据，用 Pillow 或 matplotlib 画图。
+python waveform.py audio.mp3 -o waveform.png --color blue --width 1200 --height 200

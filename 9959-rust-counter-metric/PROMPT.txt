@@ -1,0 +1,5 @@
+帮我写一个 Rust 的 Counter 指标实现。
+
+Counter 是最基础的监控指标类型——只能单调递增，比如总请求数、总错误数、总处理字节数。实现一个线程安全的 Counter：支持增加指定量（inc_by），增加 1（inc），获取当前值（get），以及重置为 0（reset，重置时返回重置前的值，方便做差值计算速率）。支持给 Counter 打标签（labels），比如 "method=GET,status=200" 这样，相同名字不同标签的 Counter 是独立的。能用文本格式输出所有 Counter 的值。
+
+Rust 标准库，cargo build 编译通过，演示多个带标签的 Counter 并发递增。

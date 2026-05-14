@@ -1,0 +1,5 @@
+Ogg Vorbis 文件的注释标签挺特殊的，跟 ID3 不一样，想单独搞个工具来读写。
+
+能读取 Ogg Vorbis 文件里的 Vorbis Comment，解析出 vendor string 和所有 user comment 键值对（TITLE、ARTIST、ALBUM 之类的）。支持 UTF-8 编码，comment 值里有中文也不能乱码。
+
+Go 实现，go build 编译通过。

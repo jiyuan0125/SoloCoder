@@ -1,0 +1,11 @@
+用 Rust 写一个 Raft 客户端 SDK。
+
+客户端需要跟 Raft 集群交互：发请求到 Leader，遇到 Leader 变更时能自动重定向。集群地址列表可以配置，客户端需要维护谁是当前 Leader 的信息。
+
+核心功能：
+- 发送写请求到 Leader，成功返回确认
+- 读请求可以走 Leader 或 ReadIndex 模式
+- Leader 不可用时自动尝试其他节点，获取最新的 Leader 地址
+- 支持超时和重试机制
+
+cargo build 通过，模拟一个集群环境做集成测试。

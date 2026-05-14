@@ -1,0 +1,1 @@
+SVG是XML格式的矢量图，但解析起来也有不少细节。写个Python工具来解析SVG文件，提取图形元素信息：rect的坐标宽高、circle的圆心半径、line的端点、path的d属性、text的内容和位置。能读取viewBox、width/height、xmlns这些根属性。解析基本的transform（translate、scale、rotate）。用标准库的xml模块解析，不依赖外部包。python3运行，传SVG文件路径。

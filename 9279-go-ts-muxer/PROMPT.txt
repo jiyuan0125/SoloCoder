@@ -1,0 +1,12 @@
+写一个 MPEG-TS 封装器，Go 实现。
+
+把裸的 H.264 码流和 AAC 音频封装成标准的 TS 流：
+- 将 H.264 NAL 单元打包成 PES 包，再封装进 TS 包
+- 将 AAC 音频帧同样封装进 TS
+- 生成正确的 PAT 和 PMT 表
+- 处理 PCR 时钟插入
+- 每个 TS 包固定 188 字节
+- 支持设置 PAT/PMT 的插入间隔
+- 输出标准的 .ts 文件
+
+用法 ts-mux -video input.h264 -audio input.aac -output output.ts。go build 编译通过，标准库。

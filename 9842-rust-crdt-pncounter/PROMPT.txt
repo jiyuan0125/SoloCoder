@@ -1,0 +1,12 @@
+用 Rust 写一个 PN-Counter（正负计数器）CRDT。
+
+G-Counter 只能加不能减。PN-Counter 用两个 G-Counter 组合：一个记增量，一个记减量，最终值 = P - N。这样就能支持分布式计数器的加减操作了。
+
+要做：
+- 内部维护两个 G-Counter：P（正向）和 N（负向）
+- increment() 增加 P 中本节点的值
+- decrement() 增加 N 中本节点的值
+- value() = P.value() - N.value()
+- merge() 分别合并 P 和 N，合并规则与 G-Counter 一致
+
+cargo build 通过，测试多节点加减混合后合并结果正确。

@@ -1,0 +1,5 @@
+我需要一个更全面的文件类型检测工具，能识别各种文件的真实格式。
+
+之前那个魔数检测只能看文件头，有些格式需要看更多内容才能判断。比如 ZIP 和 JAR 和 DOCX 开头都一样都是 PK，需要进一步区分。这个工具要结合文件头部魔数、文件内部结构和文件尾特征综合判断。至少能区分 ZIP/JAR/DOCX/XLSX/APK/OpenDocument 这些 ZIP-based 格式。
+
+python main.py mystery.docx 输出 "DOCX (Microsoft Word Document)"。也支持输出 MIME 类型。Python 标准库。

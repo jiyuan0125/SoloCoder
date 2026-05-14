@@ -1,0 +1,5 @@
+WebM 在网页视频里用得很多，想搞清楚它的 Matroska 容器里具体有什么。
+
+解析 WebM 文件，识别 EBML 头部和 Segment 容器。解析 Tracks 元素获取视频和音频轨道的编码信息（VP8/VP9/AV1 视频，Opus/Vorbis 音频）。读取 Duration 获取总时长，解析 Cues 元素获取关键帧索引。
+
+Go 标准库实现，go build 通过。

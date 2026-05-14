@@ -1,0 +1,5 @@
+写一个 Base32 编解码工具。
+
+有些场景下 Base64 的字符集不合适（比如大小写敏感的系统），需要用 Base32。工具要支持标准 Base32（RFC 4648）和 hex-base32（Extended Hex）两种字母表。支持文件和字符串两种输入方式。
+
+python main.py encode --text "hello" 输出 Base32 编码；python main.py decode --text "NBSWY3DP" 解码；也支持 --input/--output 处理文件。加 --hex 参数使用 Extended Hex 字母表。Python 标准库 base64 模块。

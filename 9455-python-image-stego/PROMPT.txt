@@ -1,0 +1,5 @@
+最近在研究信息隐藏，想写个简单的图片隐写工具练手。用 Python 实现基于 LSB（最低有效位）的图片隐写，把一段文字藏到 PNG 图片像素里。
+
+两个核心功能：encode 把文本信息嵌入图片并保存，decode 从含隐写信息的图片中提取文本。嵌入后图片肉眼看不出变化。只支持 PNG（无损），不要用 JPEG 会破坏数据。
+
+Python 3 + Pillow，命令行操作：python stego.py encode cover.png "secret msg" output.png 和 python stego.py decode output.png。

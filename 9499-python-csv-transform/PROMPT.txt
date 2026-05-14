@@ -1,0 +1,5 @@
+写一个 CSV 数据转换工具，做常见的数据清洗和格式转换。
+
+数据分析师那边给的 CSV 经常格式不统一：有的分隔符是逗号有的是 Tab，有的有引号有的没有，编码还可能混着 GBK 和 UTF-8。工具要能自动检测分隔符和编码，支持列选择、列重命名、过滤行、数据类型转换（比如日期格式统一）。
+
+python main.py transform data.csv --output clean.csv --encoding utf-8 --delimiter comma --select name,age,score --filter "age>18"。Python 标准库 csv 模块实现，注意处理大文件要用流式处理。

@@ -1,0 +1,5 @@
+帮我做一个 CRC 校验工具，支持 CRC32 校验和的计算和验证。
+
+下载大文件后需要校验完整性，一般发布方会提供 CRC32 值。工具要能：计算单个文件的 CRC32、批量计算目录下所有文件的 CRC32、对比给定的校验值是否匹配。输出要和常用的 CRC 工具一致方便对比。
+
+用法：python main.py file.dat 计算 CRC32；python main.py file.dat --check ABCD1234 验证；python main.py --batch ./downloads/ 批量计算并生成校验报告。Python 标准库，用 zlib 或 binascii。

@@ -1,0 +1,10 @@
+写一个 DASH MPD 文件解析器，Go 语言实现。
+
+DASH 自适应流播放用的 MPD（Media Presentation Description）是 XML 格式，我需要解析它：
+- 解析 MPD XML 结构：Period、AdaptationSet、Representation、SegmentTemplate、SegmentList 等
+- 提取关键信息：总时长、码率列表、分辨率、编解码器类型
+- 解析 SegmentTemplate 计算每个分片的 URL（$Number$、$Time$、$Bandwidth$ 模板替换）
+- 支持 SegmentTimeline 的时间线描述
+- 支持静态（Static）和动态（Dynamic）MPD
+
+用法 dash-mpd manifest.mpd，输出结构化的 DASH 流信息。Go 标准库，go build 通过。

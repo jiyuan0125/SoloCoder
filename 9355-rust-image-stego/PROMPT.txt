@@ -1,0 +1,5 @@
+用 Rust 实现一个图片隐写术工具，把秘密信息藏在 PNG 图片的像素里。
+
+功能包括：将文本信息用 LSB（最低有效位）方式嵌入到 PNG 图片的 RGB 通道中，嵌入后图片视觉上无明显变化。也要能从隐写图片中提取出隐藏的文本。支持自定义嵌入位深度（1-4 bit），嵌入前加个简单的校验头标记数据长度。命令行用法类似 stego embed input.png output.png "secret" 和 stego extract output.png。
+
+Rust 实现，cargo build 能编译。

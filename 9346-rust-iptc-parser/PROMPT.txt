@@ -1,0 +1,10 @@
+做一个 IPTC 元数据解析工具，从 JPEG 文件中提取新闻图片标准的 IPTC/NAA 数据。
+
+解析内容：
+- 定位 JPEG 中的 APP13 段（Photoshop IRB 容器），识别 "Photoshop 3.0" 标识
+- 解析 IRB 中的 8BIM 资源块，找到 IPTC-NAA 记录（资源 ID 0x0404）
+- 读取常用 IPTC 标签：ObjectName（标题 2:05）、Keywords（关键词 2:25）、Caption（说明 2:120）
+- 读取分类信息：Category（类别 2:15）、SupplementalCategory（补充类别 2:20）
+- 处理 IPTC 的 tag-length-value 编码格式
+
+Rust 项目，cargo build 通过。`iptc-parser extract photo.jpg` 输出 IPTC 字段。

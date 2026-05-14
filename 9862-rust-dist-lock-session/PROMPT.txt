@@ -1,0 +1,12 @@
+帮我写个 Rust 程序，实现分布式锁的会话（session）机制。
+
+在很多分布式协调系统里（比如 ZooKeeper），锁是和 session 绑定的。session 活着锁就有效，session 断了锁就自动释放。
+
+功能要求：
+- 客户端连接时创建一个 session，有 session ID 和超时时间
+- 锁和 session 绑定，同一个 session 下可以持有多把锁
+- session 通过心跳维持活性，心跳超时则 session 失效，该 session 下所有锁自动释放
+- 模拟场景：客户端心跳超时 → session 过期 → 锁释放 → 其他等待的客户端获取到锁
+- 能输出 session 生命周期事件和锁状态变化
+
+cargo run 能演示这个过程。

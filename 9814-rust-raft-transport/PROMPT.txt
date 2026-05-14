@@ -1,0 +1,11 @@
+写一个 Raft 传输层抽象，Rust 实现。
+
+Raft 节点之间需要互相通信发 RPC（RequestVote、AppendEntries、InstallSnapshot）。需要一个可插拔的传输层接口，支持同步和异步调用，方便在测试中替换为内存通道，在生产中替换为 TCP/gRPC。
+
+要求：
+- 定义 Transport trait，包含 send_request_vote、send_append_entries、send_install_snapshot
+- 实现一个基于内存 channel 的 MemoryTransport，用于单元测试
+- 支持模拟网络延迟、丢包、分区
+- 异步发送，不阻塞调用方
+
+cargo build 通过，用 MemoryTransport 跑选举和复制测试。

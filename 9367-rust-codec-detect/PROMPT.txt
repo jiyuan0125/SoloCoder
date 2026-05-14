@@ -1,0 +1,5 @@
+帮我用 Rust 写一个音视频编解码器检测工具。
+
+分析媒体文件，识别出里面用的是什么编码格式。视频方面识别 H.264、H.265、VP8、VP9、AV1、MPEG-2 等编码，音频方面识别 AAC、MP3、Opus、Vorbis、FLAC、PCM 等。通过解析容器内的编码描述信息（MP4 的 stsd box、MKV 的 CodecID 等）来获取。输出每个流的编码格式名称和四字符代码（fourcc）。
+
+Rust 实现，cargo build 通过。

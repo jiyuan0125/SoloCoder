@@ -1,0 +1,1 @@
+向量时钟合并时只增不减，内存会越来越大。帮我实现 Dotted Version Vector，在原有基础上加一个 dot（单个事件标记），可以淘汰已经合并的旧版本，控制向量长度。Go 实现，increment/fork/merge/descends 四个操作。go build 通过。

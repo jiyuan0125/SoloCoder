@@ -1,0 +1,5 @@
+写一个 Protobuf 解码工具，能解析二进制 protobuf 数据并输出可读格式。
+
+调试微服务的时候经常收到一堆 protobuf 二进制数据，没有对应的 .proto 文件很难看懂内容。需要一个工具能在没有 schema 的情况下解析 protobuf 的 wire format，通过字段编号和 wire type 来推断基本结构。输出 JSON 格式，嵌套消息要能递归解析。
+
+python main.py decode --input data.bin --output data.json。如果能传入 .proto 文件则按 schema 解析（这个是加分项）。Python 标准库，自己解析 varint 和 wire format。

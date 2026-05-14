@@ -1,0 +1,3 @@
+经常遇到拍的照片要么太暗要么太亮。帮我写个自动曝光修正的小工具。
+分析图片的亮度直方图，判断是过曝还是欠曝，然后自动调整到合适的曝光水平。太暗的提亮，太亮的压暗，中间调尽量不动。支持批量处理一个目录下的所有图片。
+保留 EXIF 信息。Python 3 + Pillow，命令行：python exposure_fix.py photo.jpg -o fixed.jpg，也能 python exposure_fix.py ./photos/ --batch

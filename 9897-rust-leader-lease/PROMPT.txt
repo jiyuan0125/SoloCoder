@@ -1,0 +1,12 @@
+帮我写个 Rust 程序实现 Leader Lease 机制。
+
+选举出 leader 后给它一个租约，租约有效期内不需要重新选举。leader 通过续约保持身份。
+
+要做的：
+- leader 获取后带有一个租约（指定有效期），租约有效期间其他节点不能发起选举
+- leader 需要定期续约（发 heartbeat），续约失败则租约过期，其他节点可以竞争
+- 租约过期到新 leader 选出之间有个短暂的空白期（no-leader period）
+- 支持查看当前 leader、租约到期时间、续约历史
+- 模拟 leader 卡住（GC 暂停）导致续约失败的场景
+
+cargo build 通过，内存模拟。

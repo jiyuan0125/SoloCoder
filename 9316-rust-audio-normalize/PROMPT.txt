@@ -1,0 +1,9 @@
+帮我写一个音频音量标准化工具，把 WAV 文件的音量调整到目标响度级别。
+
+具体实现：
+- 读取 WAV PCM 数据，计算整个文件的平均 RMS 值（或峰值）
+- 根据用户指定的目标 dB 值（如 -3dB 或 0dB），计算需要乘的增益系数
+- 对所有采样点做线性缩放，16bit 数据要注意不要溢出（clamp）
+- 可选两种模式：峰值标准化（peak normalization）和 RMS 标准化
+
+用 Rust 写，cargo build 通过。`audio-normalize input.wav --mode rms --target -3 -o output.wav`。

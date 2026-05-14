@@ -1,0 +1,9 @@
+帮我写一个 JPEG 解码器，用 Go 标准库实现，不引入外部依赖。
+
+需要做的事情：
+- 解析 JPEG 的 SOI、SOF、SOS、DHT、DQT、EOI 等标记段
+- 实现 Huffman 解码和反量化
+- 支持 YCbCr 到 RGB 的色彩空间转换
+- 能处理 4:4:4 和 4:2:0 两种子采样格式
+
+用法 jpeg-decode photo.jpg，解析完输出图片尺寸、通道数、量化表信息。go build 通过即可。

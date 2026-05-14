@@ -1,0 +1,5 @@
+帮我用 Rust 实现一个 Base58 编解码工具，比特币地址用的那种编码。
+
+Base58 去掉了 Base64 中容易混淆的字符（0OIl），字母表是 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz。编码时要处理前导零字节（每个前导零映射为 1）。支持 Bitcoin 风格和 Flickr 风格（字母表顺序不同）。可以编码/解码文件和字符串。
+
+纯 Rust 实现，不依赖加密库，cargo build 通过。

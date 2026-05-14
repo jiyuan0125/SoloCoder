@@ -1,0 +1,5 @@
+从老 Mac 上导出了一些 AIFF 音频，Linux 下没什么好工具能快速查看信息，自己写一个。
+
+解析 AIFF 和 AIFF-C 格式文件，读取 COMM chunk 获取采样率、声道数、位深、采样帧数。SSND chunk 的偏移量也要解析出来。遇到压缩格式的 AIFF-C 要能识别压缩类型（如 ima4、ulaw 等）。
+
+Go 标准库搞定，go build 能过。

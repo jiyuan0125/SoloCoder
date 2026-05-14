@@ -1,0 +1,13 @@
+用 Rust 实现一个可观测性（observability）基础设施模块。
+
+背景：分布式系统没有可观测性就是盲人摸象。需要三大支柱：日志（Logs）、指标（Metrics）、链路追踪（Traces）。这个模块把三者在本地实现，模拟真实可观测性栈的核心逻辑。
+
+功能：
+- 结构化日志：支持不同级别（DEBUG/INFO/WARN/ERROR），每条日志带时间戳、级别、消息、上下文字段
+- 指标收集：支持 Counter（递增计数）、Gauge（可增可减）、Histogram（分布统计，带桶边界）
+- 链路追踪：每个请求一个 trace_id，每个操作一个 span_id，支持 span 嵌套
+- 关联能力：日志和 span 都带 trace_id，可以通过 trace_id 查询完整的请求链路
+- 查询接口：按 trace_id 查询所有日志和 span；按指标名查询最新值
+- 定期导出：模拟把数据刷到外部存储
+
+Rust 标准库，cargo build 通过。

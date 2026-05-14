@@ -1,0 +1,5 @@
+拿到一个 .ts 文件想看看里面的结构。写个 Python 工具来解析 MPEG-TS（传输流）的二进制格式。
+
+解析 TS 包头（4 字节同步字节 0x47、PID、自适应字段等），提取 PAT（PID 0x0000）和 PMT 表，从中找出视频和音频的 PID。统计总包数、各 PID 的包数和占比。输出解析结果包括：PAT 内容、PMT 内容、各流类型和 PID。
+
+纯 Python 3，直接操作二进制数据，不用第三方库。python ts_parser.py input.ts 命令行运行。

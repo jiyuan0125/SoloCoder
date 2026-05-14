@@ -1,0 +1,3 @@
+AIFF 文件写入器。音频处理完了想保存为 AIFF 格式给 Mac 上的工具用。
+把 PCM 音频数据（numpy 数组或者原始字节）写入 AIFF 文件格式。支持 16-bit 和 24-bit 位深，单声道和立体声，自定义采样率。正确写入 AIFF 文件头（FORM、COMM、SSND 块），也支持写入基本的 ID3 标签。
+Python 3 纯标准库 struct 模块写入二进制。python aiff_writer.py --input pcm.raw --output audio.aiff --sample-rate 44100 --channels 2 --bit-depth 24

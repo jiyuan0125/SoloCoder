@@ -1,0 +1,5 @@
+帮我实现 Paxos 的 Acceptor 角色，用 Rust 写。
+
+Paxos 是最经典的分布式共识算法，Acceptor 是投票者角色——它接收 Proposer 的提案，根据承诺规则决定是否接受。实现一个 Acceptor 模拟器：维护 promise 状态（已承诺的最大提案编号）和 accepted 状态（已接受的最大编号提案及值）。处理两种消息：Prepare(n)——如果 n 大于已承诺的编号，承诺不再接受更小编号的提案，返回已接受的提案信息；Accept(n, v)——如果 n 不小于已承诺的编号，接受这个提案。模拟多个 Acceptor，演示通过多数派达成共识的过程。
+
+Rust 标准库，cargo build 通过，演示 3 个 Acceptor 处理 Prepare/Accept 的完整流程。

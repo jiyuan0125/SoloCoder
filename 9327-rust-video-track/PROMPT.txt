@@ -1,0 +1,9 @@
+做一个从视频文件中提取视频轨道信息的工具，能分析视频流的技术参数。
+
+功能：
+- 从 MP4 文件的 stsd box 中解析视频编码信息（如 avc1/hev1 的编码参数）
+- 提取分辨率（宽高）、帧率（从 stts 和时间戳计算）、编码 profile/level
+- 统计总帧数、I帧/P帧/B帧的分布（如果 stss 同步帧表存在的话）
+- 计算视频轨道的平均码率（从 stsz 采样大小表）
+
+Rust，cargo build 通过。`video-track info movie.mp4 --track 1` 输出视频轨道详情。

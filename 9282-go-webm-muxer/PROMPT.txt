@@ -1,0 +1,11 @@
+帮我做一个 WebM 封装器，Go 实现。
+
+把 VP8/VP9 视频和 Opus/Vorbis 音频封装成 WebM：
+- 使用 EBML（Extensible Binary Meta Language）格式构建文件
+- 写入 WebM 文件头（EBML Header + Segment）
+- Segment 包含 SeekHead、Info（Duration、TimecodeScale）、Tracks
+- 视频 Track 使用 VP8/VP9 codec ID，音频用 A_OPUS 或 A_VORBIS
+- 数据以 Cluster + SimpleBlock/BlockGroup 组织
+- 每个 Cluster 包含一时间段的视频和音频帧
+
+用法 webm-mux -video input.webm -audio input.ogg -output output.webm，go build 通过。标准库。

@@ -1,0 +1,10 @@
+写一个 PNG 图片解码器，能从零解析 PNG 文件的二进制结构并还原像素数据。
+
+解码流程：
+- 验证 PNG 签名（8 字节 magic），解析 IHDR chunk（宽度、高度、位深、颜色类型、压缩/滤波/隔行方法）
+- 处理 IDAT chunk（可能有多个），拼接后做 zlib 解压
+- 对每行扫描线做滤波还原（None、Sub、Up、Average、Paeth 四种滤波器）
+- 支持 8bit 灰度、8bit RGB、8bit RGBA 三种颜色类型
+- 输出原始像素数据到文件（如 PPM 格式方便验证）
+
+用 Rust 写，cargo build 通过。`png-decoder decode image.png -o output.ppm`。

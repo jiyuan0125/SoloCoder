@@ -1,0 +1,12 @@
+帮我实现 SWIM 故障检测协议，用 Rust。
+
+SWIM（Scalable Weakly-consistent Infection-style Process Group Membership）是一种轻量级的故障检测协议。每个节点定期 ping 一个随机节点，如果没回应就间接 ping（让其他节点帮忙探测），最终判断节点是否故障。
+
+核心功能：
+- 每个节点维护一个成员列表和检测周期
+- 定期选一个随机成员发送直接 ping
+- ping 超时后发起间接探测（选 k 个中间节点转发 probe）
+- 根据直接/间接探测结果判断成员 alive 或 suspect
+- 成员状态变更通过 piggyback 附加在 ping 消息上传播
+
+cargo build 通过，模拟 10 节点测试故障检测和状态传播。

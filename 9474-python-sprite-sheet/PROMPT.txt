@@ -1,0 +1,5 @@
+帮我做一个视频雪碧图生成器，把视频帧拼成一张大的精灵图。
+
+视频网站做进度条预览的时候需要这种精灵图。工具需要等间隔抽取视频帧，然后按网格排列拼成一张大图，同时生成一个 WebVTT 文件记录每帧对应的时间戳。可以设置行数列数和每帧尺寸。
+
+python main.py video.mp4 --cols 5 --rows 10 --width 160 --output sprite.jpg，同时生成 sprite.vtt。Python 实现，用 Pillow 拼图。WebVTT 格式要正确。

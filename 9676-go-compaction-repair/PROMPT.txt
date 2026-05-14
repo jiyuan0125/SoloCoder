@@ -1,0 +1,1 @@
+SSTable 层的数据会有过期和删除标记堆积，compaction 时需要顺便修复不一致。帮我用 Go 实现 compaction 过程中的修复逻辑——合并多个 SSTable 时，对比同一 key 在不同副本的版本，取最新值写入新文件。模拟数据即可，不用真的写磁盘。go build 通过。

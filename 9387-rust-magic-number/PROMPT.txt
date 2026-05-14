@@ -1,0 +1,5 @@
+用 Rust 做一个 Magic Number 文件类型识别工具。
+
+通过读取文件头部的特征字节（magic number）来判断文件的实际类型，不依赖扩展名。内置一个特征数据库：PDF 是 %PDF、ZIP 是 PK\x03\x04、PNG 是 \x89PNG、JPEG 是 \xFF\x8D\xFF、GIF 是 GIF87a/GIF89a、EXE 是 MZ、ELF 是 \x7FELF 等等，至少支持 30 种常见格式。对于匹配到多种可能的情况，给出优先级排序。
+
+Rust 实现，cargo build 通过。

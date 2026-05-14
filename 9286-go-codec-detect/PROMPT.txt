@@ -1,0 +1,10 @@
+写一个视频编码格式检测工具，Go 写的。
+
+需要深入到视频流内部识别编码格式：
+- 从 MP4/FLV/MKV 等容器中提取视频轨的编码信息
+- 识别 H.264（读取 SPS 中的 profile/level）、H.265/HEVC、VP8、VP9、AV1
+- 通过解析编码器的配置记录获取详细参数（如 H.264 的 AVCDecoderConfigurationRecord）
+- 对裸码流也能检测：分析 NAL 单元头判断是否是 H.264/265
+- 显示编码格式名称、profile、level、bit depth、chroma subsampling
+
+用法 codec-detect video.mp4，输出视频编码的详细信息。Go 标准库，go build 编译通过。

@@ -1,0 +1,5 @@
+用 Go 搭一个完整的 Raft 集群管理框架。把选举、日志复制、快照这些组件串起来，做成一个可以真正跑起来的多节点集群。
+
+需要包含：节点的启动和初始化、节点间 RPC 通信（用 HTTP 或 gRPC 都行，别太复杂就行）、集群状态监控（能查看每个节点的角色、日志长度、commit index 等）。三个核心 RPC（RequestVote、AppendEntries、InstallSnapshot）都要实现。
+
+写一个启动脚本或 main 函数，一键拉起 3-5 个节点的集群，能看到选举和日志复制的完整流程。go build 通过。

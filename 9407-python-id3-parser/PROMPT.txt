@@ -1,0 +1,1 @@
+MP3文件的ID3标签格式挺复杂的，v2.3和v2.4还有区别。帮我写一个专门解析ID3标签的Python工具，能处理ID3v1（128字节尾部）和ID3v2.x（文件头部）两种格式。对v2要能解析frame header，识别TIT2、TPE1、TALB、TRCK、TDRC这些常用frame ID，正确处理同步安全整数和Unsynchronisation标志。非ASCII编码的文本也要能正确解码。python3运行。

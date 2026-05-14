@@ -1,0 +1,4 @@
+出去玩拍了好多张风景照，想合成一张全景图。能不能写个 Python 工具自动拼？
+输入一组有重叠区域的相邻照片，程序自动检测特征点匹配，估算变换矩阵，把多张图融合拼接成一张全景大图。至少支持 3-5 张图片的水平拼接。
+输出结果保存为 JPEG。Python 3 写，可以用 OpenCV 或者纯 Pillow 加手动算法都行，能拼出来就好。
+命令行调用：python panorama.py photo1.jpg photo2.jpg photo3.jpg -o pano.jpg

@@ -1,0 +1,13 @@
+用 Rust 实现一个指标聚合服务（metric aggregator）。
+
+背景：分布式系统里每个服务实例都在本地产生指标数据（CPU、内存、QPS、延迟等）。需要一个中心化的聚合器来收集、聚合、查询这些指标。
+
+功能：
+- 支持三种指标类型：Counter（只增）、Gauge（可增可减）、Histogram（带桶的分布）
+- 数据摄入接口：接收 (metric_name, labels, value, timestamp) 元组
+- 聚合：按时间窗口（1分钟/5分钟/1小时）聚合数据——Counter 求增量、Gauge 取最新/平均、Histogram 合并桶
+- 标签聚合：支持按标签组合分组查询，比如 http_requests_total{method="GET", path="/api"}
+- 查询接口：给定指标名和时间范围，返回聚合后的时序数据
+- 降采样：旧数据自动降低分辨率（比如 7 天前的数据只保留 1 小时粒度）
+
+Rust 标准库，cargo build 通过。

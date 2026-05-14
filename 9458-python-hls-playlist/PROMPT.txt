@@ -1,0 +1,5 @@
+我在搭建一个简单的视频点播服务，需要动态生成 HLS 播放列表。用 Python 写个 m3u8 播放列表生成器。
+
+功能：根据一组 TS 分片文件路径和对应的分片时长，生成符合 HLS 规范的 m3u8 文件。支持生成 Master Playlist 和 Media Playlist 两种。可以指定是否 LIVE 模式（带 EXT-X-ENDLIST 还是不带），设置目标分片时长。
+
+纯 Python，用标准库就行。python playlist_gen.py --type media --segments seg1.ts,seg2.ts --durations 10,9.5 --output playlist.m3u8。

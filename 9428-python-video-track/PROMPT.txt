@@ -1,0 +1,1 @@
+需要从视频容器里单独提取视频轨道信息。写个Python工具解析MP4/MKV文件的视频轨，读取编码类型（H.264/H.265/VP9等）、Profile/Level、分辨率、帧率、色彩空间、比特率等参数。对于H.264还要能解析AVCC/HEVCDecoderConfigurationRecord里的SPS/PPS信息。这些信息都嵌在容器的特定box/element里，需要按格式规范定位。python3实现。

@@ -1,0 +1,10 @@
+帮我写一个 XMP 元数据解析工具，从图片文件中提取 Adobe XMP 数据。
+
+提取能力：
+- 从 JPEG 文件中定位 APP1 段内的 XMP 数据（以 "http://ns.adobe.com/xap/1.0/" 开头）
+- 从 PNG 文件中搜索 iTXt chunk（keyword 为 "XML:com.adobe.xmp"）
+- 从 TIFF/WebP 文件中查找 XMP chunk/标签
+- 解析 XMP 的 RDF/XML 结构，提取 dc:title、dc:creator、dc:description、xmp:CreateDate、xmp:ModifyDate 等常用字段
+- 输出结构化的键值对列表
+
+用 Rust 写，cargo build 编译通过。`xmp-parser extract image.jpg` 输出 XMP 数据。

@@ -1,0 +1,9 @@
+写一个 AVI 容器格式解析器，能读取 AVI 文件的 RIFF 结构和索引信息。
+
+具体要做：
+- 解析 RIFF/AVI 头部结构，读取 avih（主 AVI 头）中的宽度、高度、帧率、总帧数
+- 解析 strl 列表中的 strh（流头）和 strf（流格式），识别视频流和音频流的编码参数
+- 读取 idx1 索引块，列出每个数据块的偏移量、大小和关键帧标志
+- 正确处理 RIFF 的 list 和 chunk 嵌套结构
+
+用 Rust 写，cargo build 通过。`avi-parser info video.avi` 打印流信息和索引摘要。

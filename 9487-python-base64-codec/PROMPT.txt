@@ -1,0 +1,5 @@
+写个 Base64 编解码的命令行工具，方便日常调试用。
+
+能编码和解码，支持标准 Base64 和 URL-safe 变体。编码模式：读入文件或 stdin 的内容，输出 Base64 字符串。解码模式：输入 Base64 字符串还原原始数据，写文件或输出到 stdout。要处理好中文和二进制数据。
+
+Python 3 标准库 base64 模块。命令行：python base64_codec.py encode input.bin 和 python base64_codec.py decode "SGVsbG8=" -o output.bin。

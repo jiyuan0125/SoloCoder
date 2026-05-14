@@ -1,0 +1,5 @@
+MKV 格式用 EBML 编码，结构比较特别，想写个工具把它的元素树打印出来。
+
+解析 MKV/WebM 文件的 EBML 元素结构，能识别 Segment、Info、Tracks、Cluster 这些顶层元素。解析 SeekHead 获取索引信息，读 Tracks 元素获取编码格式（如 H.264、VP9、AAC）。EBML 变长整数解析要正确处理。
+
+Go 标准库，go build 编译通过。
