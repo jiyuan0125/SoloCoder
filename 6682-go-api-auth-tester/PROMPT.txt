@@ -1,7 +1,5 @@
 JWT 过期了应该返回 401 但返回了 500，这种认证 bug 不好测。Go 工具验证 JWT、API Key、Basic Auth 等认证方式，检测 token 过期处理和权限控制。
 
 日志文件可能存在各种编码。
-解析完日志后自动触发告警检查。没有错误日志的时候不检查。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,8 +1,5 @@
 Gerrit 的 review 评论嵌在 commit message 里，手工提取太痛苦。从 Git log 中按 gerrit 或特定格式解析出 code review 评论，按文件和 reviewer 汇总。
 
 从 Git log 中提取 code review 评论（如果是 gerrit 或特定格式）。按文件和 reviewer 汇总。
-任务有多个阶段，每个阶段完成后自动进入下一个。
-任务有 等待、执行中、成功、失败、取消 几种状态。失败的可以重试。
-源文件修改后，之前基于旧文件生成的缓存要同步失效。已经在使用中的缓存可以继续。
 
 Go 标准库，命令行参数用 flag 包解析。

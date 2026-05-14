@@ -1,8 +1,5 @@
 终端里看覆盖率数字不直观，哪些行覆盖了哪些没覆盖，纯数字看不出来。把 coverage profile 转成 HTML，源码高亮标绿标红，浏览器打开一目了然。多个 profile 还能合并。
 
 把 Go coverage profile 转换为带源码高亮的 HTML 报告。每个文件显示覆盖率、覆盖和未覆盖的行。支持多个 profile 合并。输出可直接在浏览器查看。
-有可能一次导入上万条数据。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
-数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
 
 用 Go 标准库写，go run . 或 go build 都行。

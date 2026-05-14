@@ -1,7 +1,3 @@
 服务器上 TIME_WAIT 连接突然暴涨，要看看哪些进程占了连接。写个工具列出所有 TCP/UDP 连接及对应进程，能按状态过滤——LISTEN、ESTABLISHED、TIME_WAIT 这些。
 
-多个 worker 并发处理输入数据。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。
-管理分组和组内成员。成员操作基于分组进行。
-
 Go 标准库，命令行参数用 flag 包解析。

@@ -1,7 +1,5 @@
 浏览器导出的 cookies.txt 是 Netscape 格式，想快速查某个域名的 cookie 或者清理过期的。写个工具解析这个格式，按域名查询、过滤、删除，输出表格方便看。
 
 用 Go 标准库的 encoding/binary 包。
-扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
-命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 
 用 Go 标准库写，go run . 或 go build 都行。

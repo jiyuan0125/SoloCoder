@@ -1,7 +1,3 @@
 Istio 的 virtualservice 和 destinationrule 配错了，线上流量打到错误版本。手动验证 YAML 太慢了，Go CLI 工具检查路由规则、超时设置、重试策略。
 
-用 Go 标准库的 encoding/asn1 包。
-任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
-命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
-
 Go 实现，只用标准库，交叉编译友好。

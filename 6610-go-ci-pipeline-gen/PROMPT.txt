@@ -1,7 +1,5 @@
 每个新项目都要手写 CI 配置，Go/Java/Python 项目各一套模板。写个工具根据项目类型自动生成 GitHub Actions 或 GitLab CI 配置，自定义阶段和步骤。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
-数据源更新时自动刷新下游的聚合结果。已经导出的报表不重新生成。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

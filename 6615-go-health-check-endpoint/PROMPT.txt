@@ -1,7 +1,3 @@
 老项目都没加健康检查，K8s 探针全靠猜。写个工具分析 Go 源码识别框架类型，自动注入健康检查代码，输出 patch 文件直接 apply。
 
-用 Go 标准库的 html/template 包。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
-需要维护数据源和查询配置。查询配置引用数据源。
-
 用 Go 标准库写，go run . 或 go build 都行。

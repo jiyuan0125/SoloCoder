@@ -1,7 +1,5 @@
 HTTP 客户端的连接池大小和 Keep-Alive 设置对性能影响很大，但文档上给的参考值不一定适用。写个工具对比不同连接池大小、Keep-Alive 开关、压缩选项下的性能，输出对比报告。
 
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-任务经历 pending → running → completed 几个阶段。running 阶段失败可以重试。completed 之后可以重新发起。
-命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 
 用 Go 标准库写，go run . 或 go build 都行。

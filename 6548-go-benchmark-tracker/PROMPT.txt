@@ -1,8 +1,5 @@
 benchmark 数据需要持久化追踪，光看一次结果看不出趋势。每次记录到 SQLite 数据库，按函数名查历史趋势，输出表格或 CSV。
 
 追踪 Go benchmark 性能趋势。每次记录 benchmark 结果到 SQLite 数据库。支持按函数名查询历史趋势，输出表格或 CSV。
-用 Go 标准库的 archive/tar 包。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。
-配置变更后要重新计算所有受影响的规则。已经执行完的规则结果不变。
 
 Go 标准库，命令行参数用 flag 包解析。

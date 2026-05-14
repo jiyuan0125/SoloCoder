@@ -1,8 +1,5 @@
 gRPC 调试全靠写一次性客户端代码，.proto 文件还要先编译。通用客户端用 JSON 定义请求，通过 server reflection 自动获取服务定义，一元调用、服务端流、客户端流都能测。
 
 通用 gRPC 测试客户端。不依赖 .proto 文件，用 JSON 定义请求，通过 server reflection 获取服务定义。支持一元调用、服务端流、客户端流。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。
-主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。
-命令行参数支持 `tool verb resource --filter key=value` 格式，嵌套参数用斜杠分隔路径。
 
 用 Go 标准库写，go run . 或 go build 都行。

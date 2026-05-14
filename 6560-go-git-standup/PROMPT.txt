@@ -1,8 +1,5 @@
 每日站会不知道说什么，翻了半天 git log 才想起昨天做了什么。查询昨天到今天的 commit 记录，按项目汇总，自动生成做了什么、正在做什么、遇到什么问题。
 
 生成每日 standup 报告。查询昨天到今天的 commit 记录，按项目汇总。输出做了什么、正在做什么、遇到什么问题。
-用 Go 标准库的 html/template 包。
-数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

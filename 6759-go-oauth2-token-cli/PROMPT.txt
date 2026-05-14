@@ -1,6 +1,5 @@
 CI/CD 流水线需要拿 OAuth2 token 才能调 API。写个工具支持 client_credentials 和 authorization_code 两种流程，拿到的 token 缓存到本地文件，过期了自动刷新。
 
 工具在遍历目录时会加锁防止并发，但遇到嵌套子目录需要重新扫描同一个根目录。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
 
 用 Go 标准库写，go run . 或 go build 都行。

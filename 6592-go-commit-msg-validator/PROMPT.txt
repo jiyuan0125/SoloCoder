@@ -1,8 +1,5 @@
 commit message 写错 scope 上线受阻，CI 检查没拦住。自定义规则链——类型检查、scope 白名单、body 必填、引用 issue 编号，规则用 YAML 配置。
 
 高级 commit message 校验。支持自定义规则链：类型检查、scope 白名单、body 必填、引用 issue 编号。规则用 YAML 配置。
-有可能一次导入上万条数据。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。
-映射规则修改后，之前按旧规则转换的数据标记为需要重新处理。已经确认的数据不动。
 
 用 Go 标准库写，go run . 或 go build 都行。

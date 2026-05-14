@@ -1,7 +1,3 @@
 接口返回的内容格式不确定——可能是 JSON 也可能是 XML 或 HTML，手动判断再解析太容易出错。写个工具根据 Content-Type 自动识别格式化输出，JSON 就 pretty print、XML 就缩进，二进制给 hex dump。也支持注册自定义处理器。
 
-输入文件可能是空的或者只有 header 行。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
-工具管理配置模板和配置实例。实例基于模板生成。
-
 Go 标准库，命令行参数用 flag 包解析。

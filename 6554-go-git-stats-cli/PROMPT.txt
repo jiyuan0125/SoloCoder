@@ -2,7 +2,5 @@ git shortlog -sn 只给总数，看不出谁在哪个时段活跃。按作者统
 
 统计 Git 仓库的贡献数据。按作者统计 commit 数、代码行变更量、活跃时段。支持指定时间范围和作者过滤。输出表格。
 项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。
-管理分组和组内成员。成员操作基于分组进行。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

@@ -1,7 +1,5 @@
 没有装 GraphiQL 或者 Postman 的环境里要调 GraphQL 接口。写个命令行客户端，支持 query、mutation、变量和 fragment，返回格式化的 JSON。
 
 处理流程分好几步，上一步的输出是下一步的输入。
-命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。
-系统管理项目和任务。任务属于项目。可以添加、修改、删除任务。
 
 Go 标准库，命令行参数用 flag 包解析。

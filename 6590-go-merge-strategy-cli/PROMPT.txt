@@ -1,8 +1,5 @@
 .gitattributes 的 merge 配置不好记，每次都要查文档。管理指定文件路径的 merge strategy，支持导入导出配置。
 
 为指定文件路径设置 Git merge strategy。管理 .gitattributes 中的 merge 属性。支持导入导出配置。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。
-扫描时锁住结果集，但发现重复项需要回查结果集做去重校验。
-子命令结构：`tool namespace resource action`，比如 `tool db table export`。
 
 Go 标准库，命令行参数用 flag 包解析。

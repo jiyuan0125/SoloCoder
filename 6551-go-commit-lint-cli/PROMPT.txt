@@ -1,8 +1,5 @@
 团队规范要求 Conventional Commits 格式，但每次都有人提交 "fix bug" "update" 这种 message。正则规则、行长度限制、Conventional Commits 格式检查，从 stdin 或文件读取 commit message，输出违规项。
 
 检查 Git commit message 格式。支持正则规则、行长度限制、Conventional Commits 格式。从 stdin 或文件读取 commit message，输出是否合规和具体违规项。
-去重的时候要考虑5分钟窗口，同一窗口内相同 key 只处理第一次。
-解析完日志后自动触发告警检查。没有错误日志的时候不检查。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。
 
 用 Go 标准库写，go run . 或 go build 都行。

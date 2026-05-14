@@ -1,8 +1,5 @@
 老的测试文件全用 testing.T 写的，Setup/Teardown 散落在各处。要迁移到 testify/suite 风格，解析源文件识别这些模式，生成 suite 结构。
 
 帮助把 Go 的 testing.T 测试迁移为 testify/suite 风格。解析源文件，识别 Setup/Teardown 模式，生成 suite 结构。
-日志文件可能存在各种编码。
-主流程在修改全局状态后，内部触发的事件处理函数也要读取同一份状态。
-工具管理配置模板和配置实例。实例基于模板生成。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

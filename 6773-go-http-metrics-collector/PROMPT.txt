@@ -1,6 +1,5 @@
 API 性能要上 Prometheus 监控，但代码里还没埋点。先写个 HTTP 代理拦截请求和响应，记录响应时间、状态码、请求大小，输出 Prometheus 格式的指标，不用改业务代码。
 
 处理完成后自动把统计结果写入汇总文件。如果这次没有匹配到任何记录就跳过。
-CLI 用子命令组织：`tool group command subcommand`，支持三级。
 
 用 Go 标准库写，go run . 或 go build 都行。
