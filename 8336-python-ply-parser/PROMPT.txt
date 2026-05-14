@@ -1,3 +1,9 @@
-在学编译原理课程，老师要求用 PLY（Python Lex-Yacc）做实验，但我想从原理层面自己实现一个 PLY 风格的 lex+yacc 工具。词法部分支持用正则定义 token、状态切换和忽略规则。语法部分支持用装饰器声明产生式、算符优先级和结合性声明。
+编译原理课上教了 Lex 和 Yacc 的原理，但只用了现成的 PLY 库。想从零实现一个 PLY 风格的 lex+yacc 工具来真正理解 DFA 构建和 LALR 分析表生成。Python 实现。
 
-能检测移进-归约冲突并报告。最后附一个计算器示例，能处理四则运算、变量赋值和函数调用。纯 Python 实现，python 能跑。
+Lex 部分：用户用正则表达式定义 token 规则（每个规则是一个函数名以 t_ 开头，函数体是正则字符串或处理函数）。引擎把所有正则构建成 NFA，然后确定化为 DFA。支持 token 优先级（先定义的优先匹配）、忽略规则（t_ignore）、状态切换（开始条件）。生成的 lexer 从输入字符串产出 token 流。
+
+Yacc 部分：用户用装饰器或 docstring 定义产生式规则（def p_expr_plus(t): "expr : expr PLUS term"）。引擎构建 LALR(1) 分析表——先计算 First/Follow 集，然后构建 LR(0) 项目集闭包，再求 Lookahead 集得到 LALR(1) 表。支持算符优先级声明（%left、%right、%nonassoc）解决移进-归约冲突。
+
+检测并报告冲突：移进-归约冲突显示哪些 token 在哪些状态下有冲突，归约-归约冲突显示哪两条规则冲突。
+
+附带计算器示例：四则运算、括号、变量赋值、函数调用。python3 ply_parser.py calc_example.py。纯 Python 实现。

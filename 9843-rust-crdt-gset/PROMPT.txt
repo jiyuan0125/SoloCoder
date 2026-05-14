@@ -1,12 +1,11 @@
-实现 CRDT G-Set（只增集合），用 Rust。
+G-Set（Grow-only Set）是最简单的 CRDT 集合——只能往里加元素，不能删除。合并操作就是两个集合取并集。虽然功能简单，但 G-Set 是很多复杂 CRDT 的基础构件。用 Rust 来实现，同时展示它的局限性和变通方案。
 
-分布式场景下多个节点往同一个集合里添加元素，不用锁，最终合并后得到正确结果。G-Set 只有 add 没有 remove，合并就是取并集。
+G-Set 的实现：底层用一个 HashSet<T>（T 要求 Hash + Eq + Clone）。Add(element) 往 set 里插入，如果已存在则忽略（幂等）。Contains(element) 查询元素是否存在。Merge(other) 取并集。Value() 返回所有元素的集合。
 
-功能要求：
-- add(element) 往集合中添加元素，已存在则忽略
-- contains(element) 检查元素是否存在
-- merge(other) 合并两个 G-Set，取并集
-- elements() 返回集合中所有元素
-- 合并满足交换律、结合律、幂等性
+CRDT 性质的验证：合并是可交换的（A∪B == B∪A）、可结合的、幂等的（A∪A == A）。每个操作满足这些性质，所以 G-Set 是合法的 state-based CRDT。
 
-cargo build 通过，测试两节点各添加不同元素后合并得到完整集合。
+局限性：G-Set 不能删除元素。一旦加入就永远在里面。如果需要"移除"某个元素，只能用一个辅助的 tombstone 集合记录"被移除的元素"，查询时过滤掉 tombstone——这就是 2P-Set（Two-Phase Set）。
+
+模拟场景：3 个节点各自往 G-Set 里加不同的元素。节点 A 加 {a, b}，节点 B 加 {b, c}，节点 C 加 {c, d}。合并后应该是 {a, b, c, d}。验证合并的幂等性——合并两次和一次的结果相同。
+
+cargo build 通过。

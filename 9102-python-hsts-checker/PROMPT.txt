@@ -1,5 +1,7 @@
-我需要一个小工具检查网站有没有正确开启 HSTS。
+HSTS（HTTP Strict Transport Security）如果没有正确配置，用户访问 HTTP 版本的网站时不会被强制跳转到 HTTPS，中间人可以劫持。写个工具检查网站的 HSTS 配置是否安全。
 
-输入一个域名列表（文件或命令行参数），逐个检查 Strict-Transport-Security 响应头是否存在、max-age 值是否足够大（建议至少 31536000 秒）、有没有带 includeSubDomains 和 preload。缺少 HSTS 头或者 max-age 太短的都算不合规。
+Python 实现一个 HSTS 配置检查器。先发 HTTP 请求看是否 301/302 跳转到 HTTPS——如果不跳转就是第一个问题。再发 HTTPS 请求检查响应头中的 Strict-Transport-Security 字段：max-age 值是否足够大（推荐至少 31536000 秒即一年，低于这个值的标为警告）、是否包含 includeSubDomains 指令（保护子域名）、是否包含 preload 指令（加入浏览器的 HSTS 预加载列表）。
 
-最终输出一份简要报告，标出每个域名的 HSTS 状态和具体问题。纯 Python 3，用标准库的 http.client 或 requests 都行。python main.py example.com 直接跑。
+额外检查：HTTPS 证书是否有效（无效证书会让 HSTS 变成拒绝服务）、是否同时监听了 80 端口（应该监听但只做 HTTPS 重定向）、域名是否在 Chrome/Firefox 的 HSTS preload 列表中（可以查询 hstspreload.org 的 API）。
+
+输出每个检查项的结果——通过（绿色）/警告（黄色）/失败（红色），附具体配置值和改进建议。支持批量检查域名列表。python3 命令行工具，用 requests 库。

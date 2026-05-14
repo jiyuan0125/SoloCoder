@@ -1,1 +1,7 @@
-朋友给了我一堆FLAC无损音乐文件，我想看看里面的元数据和音频参数。帮我写个Python脚本来解析FLAC文件格式，读取FLAC header里的采样率、位深度、声道数、总采样数这些信息。还要能把Vorbis Comment块里的标签内容解析出来，比如标题、艺术家、专辑封面描述等。注意FLAC用变长整数编码，解析时要按规范处理。命令行传文件路径即可，python3能跑。
+FLAC 无损音频——音乐发烧友的最爱。文件结构比 WAV 清晰多了：fLaC magic number 开头，后面是一串 metadata block，每个 block 有类型和大小标记。Python 写一个 FLAC 结构查看器。
+
+文件头 4 字节 "fLaC"。每个 metadata block：1 字节标志位（最高位表示是否最后一个）+ 7 位类型 + 3 字节数据大小。STREAMINFO（类型 0）20 字节：最小/最大块大小、最小/最大帧大小、采样率（20 位）、声道数-1（3 位）、位深-1（5 位）、总采样数（36 位）、MD5（16 字节）。
+
+其他 block 类型——PADDING（1）、APPLICATION（2）、SEEKTABLE（3）、VORBIS_COMMENT（4）标签信息（UTF-8 编码的 key=value 对：TITLE=xxx、ARTIST=xxx、ALBUM=xxx 等）、CUESHEET（5）、PICTURE（6）封面图（图片类型、MIME、描述、宽高、色深、数据）。
+
+输出所有 metadata block 的类型、大小和关键参数。VORBIS_COMMENT 的标签列表。PICTURE 的封面图信息。用法 python flac_parser.py info music.flac。Python 3 直接解析二进制。

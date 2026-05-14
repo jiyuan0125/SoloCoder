@@ -1,5 +1,9 @@
-写一个密钥自动轮换工具，定期更换加密密钥并确保旧数据仍可解密。
+加密密钥不应该一直用同一个。PCI-DSS 要求密钥至少每年轮换一次，实际操作中轮换的难点在于旧数据用旧密钥加密的，轮换后还要能解密。写个工具管理密钥的整个生命周期。
 
-维护一个密钥版本列表：每个密钥有 ID、创建时间、状态（active/retired/deprecated）。加密时用当前 active 密钥，解密时根据密钥 ID 找到对应版本。轮换时生成新密钥、将旧密钥标记为 retired。
+Python 实现密钥轮换管理。密钥版本列表：每个密钥有 key_id（UUID）、创建时间、状态（active 正在使用的密钥、retired 已退役但数据还在用、deprecated 仅用于解密旧数据、destroyed 已销毁不可恢复）。
 
-支持配置轮换周期（天数）和保留旧密钥的数量上限。数据迁移时能用旧密钥解密再用新密钥重新加密（re-encrypt）。Python 3，密钥和版本信息存 JSON 文件。
+加密操作：始终使用当前唯一 active 状态的密钥，加密后的密文头部包含 key_id 标识用了哪个密钥版本。解密操作：从密文头部读取 key_id，在版本列表中查找对应密钥（必须是 active/retired/deprecated 状态），用该密钥解密。destroyed 状态的密钥无法解密。
+
+轮换流程：generate-new-key 生成新的随机密钥 → 当前 active 降级为 retired → 新密钥变为 active。re-encrypt 功能：用旧密钥解密数据 → 用新 active 密钥重新加密，用于批量迁移旧数据。
+
+配置：轮换周期（天数）、保留旧密钥数量上限（超过则最老的标记为 deprecated 或 destroyed）。密钥材料和版本元数据存 JSON 文件。python3 命令行工具。

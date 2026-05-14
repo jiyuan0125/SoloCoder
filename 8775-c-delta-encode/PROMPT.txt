@@ -1,4 +1,11 @@
-用 C 写一个 Delta Encoding（增量编码）模块。
-时序数据、版本号序列这类数据相邻值差距很小，存差值比存原值省空间多了。
-支持 encode(int array, len) 输出差值数组，decode(delta_array, len, base_value) 还原。再提供一个 zigzag 编码函数处理有符号整数。
-delta 编码后的数据可以配合 varint 进一步压缩。写个测试验证各种序列（递增、递减、随机）的正确性。gcc 编译。
+时序数据有个很明显的特征——相邻两个值通常差别很小。比如监控指标里的时间戳（每秒递增）、版本号（单调递增）、传感器读数（小幅波动）。存原始值每个都要 32 或 64 位，但如果只存和前一个值的差值，大部分差值只需要几个 bit 就能表示。配合 varint 编码进一步压缩，效果非常好。
+
+用 C 写一个 Delta Encoding 模块。输入一个 int32/int64 数组，输出每个元素和前一个元素的差值（delta 数组）。第一个元素原样保留作为基准值 base_value。
+
+核心函数：encode(input, len, output) 计算差值数组，output[0] = input[0]，output[i] = input[i] - input[i-1]；decode(delta, len, base_value, output) 从差值数组还原原始数据，output[0] = delta[0]，output[i] = output[i-1] + delta[i]。
+
+对于有符号整数的 delta 值，提供一个 zigzag 编码函数把有符号数映射成无符号数：zigzag(n) = (n << 1) ^ (n >> 31)，这样小绝对值的负数也能用少量字节表示。zigzag 解码是逆向操作。这个映射是 Protocol Buffers 里 varint 编码的标准前处理。
+
+delta 编码后的数据应该能直接传给 varint 编码器做进一步压缩。编码和解码都要处理边界情况：空数组、单元素数组、值为 0 的序列。
+
+写个测试验证各种序列的正确性：严格递增序列（delta 都是正数）、严格递减序列（delta 都是负数）、全相同序列（delta 全是 0）、随机序列。对每种序列验证 encode+decode 还原出原始数据。gcc 编译。

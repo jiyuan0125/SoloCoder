@@ -1,5 +1,5 @@
-需要把原始 H.264 视频和 AAC 音频打包成 MP4 容器。写个 Python 工具来生成最基本的 MP4 文件。
+1. MP4 是现代视频最常用的容器格式，底层是一层嵌一层的 box（atom）结构。把 H.264 视频帧和 AAC 音频帧打包成 MP4，需要手工构造这些 box 并填入正确的参数。理解 box 结构是写 MP4 封装器的前提。
 
-理解 MP4 的 box（atom）结构，按顺序写入 ftyp、moov（包含 mvhd、trak、stbl 等子 box）、mdat。把视频帧和音频帧按正确的时间戳排列到 chunk 里。生成的 MP4 至少要能被 ffplay 或 VLC 播放。
+2. 文件结构：ftyp box（文件类型声明，brand 为 isom）+ moov box（所有元数据）+ mdat box（实际的音视频数据）。moov 里面包含 mvhd（全局头：时间刻度 timescale、总时长 duration）、trak（每个轨道一个，视频一个音频一个）。每个 trak 里有 tkhd（轨道头）、mdia（媒体信息，包含 hdlr 和 minf→stbl）。stbl 里最重要的是 stsd（编码参数描述）、stts（时间戳到持续时间的映射）、stsz（每帧大小）、stco（每 chunk 的文件偏移）、stss（关键帧序号列表）。
 
-Python 3，纯手工构造二进制 box 结构。python mp4_muxer.py --video in.h264 --audio in.aac -o out.mp4。
+3. 封装流程：先收集所有帧和时间戳，计算好每个 chunk 的偏移量，然后按顺序写入 ftyp、moov、mdat。mdat 里按 chunk 交替存放音视频帧数据。写入 moov 时 stco 的偏移量指向 mdat 中对应位置。生成的文件至少能用 ffplay 或 VLC 播放。用法：python3 mp4_muxer.py mux --video in.h264 --audio in.aac -o out.mp4

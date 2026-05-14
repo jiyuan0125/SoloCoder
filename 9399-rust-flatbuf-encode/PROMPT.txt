@@ -1,5 +1,7 @@
-用 Rust 实现一个 FlatBuffers 编码工具，把数据序列化为 FlatBuffers 二进制格式。
+FlatBuffers 编码——把结构化数据编码成 FlatBuffers 二进制格式。关键是要正确处理 vtable 生成、字段对齐和 offset 计算。Rust 实现。
 
-根据给定的 schema 定义（简化版，可以用 JSON 描述表结构和字段类型），把结构化数据编码成 FlatBuffers 二进制。按照 FlatBuffers 规范：构建 vtable、写入字段偏移、字符串和 vector 放在 buffer 尾部、根表偏移写在 buffer 头部。确保输出的 buffer 可以被官方 FlatBuffers 库正确读取。
+编码策略——FlatBuffers 从后往前写。先写最深的嵌套对象，再写外层对象，最后写根偏移。每个对象写完后生成对应的 vtable。vtable 的生成——比较当前对象的字段布局和已有 vtable 是否匹配。如果匹配就复用同一个 vtable（减少冗余），否则新建一个。
 
-Rust 实现，cargo build 通过。
+字段对齐——不同类型有不同的对齐要求：bool/byte 对齐 1、short 对齐 2、int/float 对齐 4、long/double 对齐 8、字符串/对象对齐 4。写入字段前先插入 padding 字节（0x00）保证对齐。offset 计算——vtable 的 soffset = 对象位置 - vtable 位置（有符号，可以为负）。
+
+从 JSON + .fbs schema 编码——解析 schema 获取字段类型信息，按类型正确编码 JSON 数据。没有 schema 时尝试从 JSON 的数据类型推断：整数→int、浮点→float、字符串→string、对象→嵌套 table、数组→vector。用法 flatbuf-encode --schema message.fbs --root Message --input data.json --output data.bin。Rust 实现，cargo build 通过。

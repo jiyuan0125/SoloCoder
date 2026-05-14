@@ -1,1 +1,5 @@
-ASS/SSA字幕格式比SRT复杂很多，支持样式和特效。写个Python解析器来处理ASS字幕文件，解析[Script Info]、[V4+ Styles]、[Events]这些段落。从Events里提取每条字幕的Layer、Start、End、Style、Text字段。Style定义也要解析，包括字体名、大小、颜色（&HBBGGRR&格式）、边框等属性。文本里的特效标签（\pos, \an之类）识别但不影响时间解析。python3运行。
+ASS 字幕比 SRT 复杂一个数量级——它有样式系统、特效标签、多层结构。一个完整的 ASS 文件分好几段：[Script Info] 存全局信息（分辨率、播放时间），[V4+ Styles] 定义文字样式（字体、大小、颜色、边框、阴影、对齐方式），[Events] 存实际字幕条目，[Graphics] 和 [Fonts] 不常用。
+
+样式解析——Format 行定义字段顺序（Name、Fontname、Fontsize、PrimaryColour 等），紧接着的 Style 行按顺序对应。颜色格式是 &HBBGGRR&（注意是 BGR 不是 RGB），透明度在最高字节。边框宽度 BorderStyle 和 Outline 决定描边效果。这些都是渲染字幕时必须正确解读的参数。
+
+事件解析——每条 Dialogue 行包含 Layer、Start、End、Style、Name、MarginL、MarginR、MarginV、Effect、Text。时间格式 H:MM:SS.CC（百分之一秒）。文本里的特效标签用大括号包裹：\pos(x,y) 定位、\an 对齐、\fs 改大小、\c 改颜色。解析时识别这些标签但不影响时间轴提取。用法：python3 ass_parser.py parse subtitles.ass

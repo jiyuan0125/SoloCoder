@@ -1,11 +1,11 @@
-写一个 Raft 传输层抽象，Rust 实现。
+先设计传输层的抽象接口，再做内存模拟实现。Raft 的传输层不需要什么花哨的功能——只要能可靠地发送和接收消息就行。但抽象做得好，后面切换到真实的网络传输（TCP/gRPC）就很方便。用 Rust 的 trait 来定义这个接口。
 
-Raft 节点之间需要互相通信发 RPC（RequestVote、AppendEntries、InstallSnapshot）。需要一个可插拔的传输层接口，支持同步和异步调用，方便在测试中替换为内存通道，在生产中替换为 TCP/gRPC。
+Transport trait 的设计：trait RaftTransport { fn send(&self, target: NodeId, msg: RaftMessage) -> Result<()>; fn receive(&self) -> Option<(NodeId, RaftMessage)>; }。RaftMessage 是一个 enum，包含 RequestVote、AppendEntries、InstallSnapshot 等变体，每个变体带完整的 RPC 请求/响应字段。
 
-要求：
-- 定义 Transport trait，包含 send_request_vote、send_append_entries、send_install_snapshot
-- 实现一个基于内存 channel 的 MemoryTransport，用于单元测试
-- 支持模拟网络延迟、丢包、分区
-- 异步发送，不阻塞调用方
+内存模拟实现：InMemoryTransport 用 HashMap<NodeId, mpsc::Sender<RaftMessage>> 存每个节点的接收 channel。send 就是往目标的 channel 里发消息。receive 从自己的 channel 里取消息。模拟网络行为：可配置的消息延迟（随机 1-10ms）、可配置的丢包率（比如 5%）、可以模拟网络分区（某些节点之间的消息直接丢弃）。
 
-cargo build 通过，用 MemoryTransport 跑选举和复制测试。
+消息的序列化和反序列化：虽然内存模拟不需要真正的序列化，但为了测试序列化逻辑，每个消息类型都实现 Serialize/Deserialize（用 serde_json 或 bincode）。这样验证消息格式是否完整正确。
+
+用这个传输层跑一个简单的选举场景：5 个节点用 InMemoryTransport 通信，触发选举，验证消息传递正确。
+
+cargo build 通过。

@@ -1,8 +1,13 @@
-写个 HOTP 事件型验证码生成器，Go 实现。
+有些场景用 HOTP（基于计数器的验证码）而不是 TOTP（基于时间）——比如某些硬件令牌、离线认证设备。HOTP 的密钥和算法与 TOTP 一样，只是把时间步换成了计数器值。
 
-有些场景用 HOTP（基于计数器）而不是 TOTP（基于时间），比如一些硬件令牌。需要能根据计数器生成验证码。
+用 Go 写一个 HOTP 验证码生成器。gen 子命令：输入 Base32 密钥和计数器值。把 counter 转成 8 字节大端序字节。HMAC-SHA1(key, counter_bytes) 计算哈希。动态截取算法和 TOTP 完全一样——取 offset 位置开始的 4 字节，去掉最高位，取模 10^digits。
 
-功能：输入 Base32 密钥和计数器值，生成 HOTP 码；支持 6 位和 8 位模式；可以批量生成从某个计数器开始的连续多个验证码。
+支持 6 位和 8 位两种模式（-digits 参数）。验证码前面补零到指定位数。
 
-命令：hotp-generator gen -secret "JBSWY3DPEHPK3PXP" -counter 0、hotp-generator gen -secret "JBSWY3DPEHPK3PXP" -counter 0 -digits 8、hotp-generator range -secret "xxx" -start 0 -count 10
+range 子命令：批量生成从指定计数器开始的连续 N 个验证码。输出格式：counter=value code=XXXXXX。方便预生成一批验证码给测试用。
+
+resync 子命令：如果计数器不同步了，输入客户端提供的连续几个验证码，在当前计数器附近搜索匹配的位置，自动同步计数器。搜索范围默认 ±100。
+
+命令：hotp-generator gen -secret "JBSWY3DPEHPK3PXP" -counter 0、hotp-generator gen -secret "xxx" -counter 0 -digits 8、hotp-generator range -secret "xxx" -start 0 -count 10。
+
 Go 标准库实现，go build 通过。

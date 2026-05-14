@@ -1,1 +1,9 @@
-团队里配置文件经常写错字段类型或者漏填必选项，想搞个通用的配置校验工具。用 Go 写一个配置验证器，接受一个 schema 定义（描述每个字段的类型、是否必填、取值范围、正则约束），然后对 JSON/YAML 配置文件做校验。校验不过要报出具体哪个字段、什么问题。支持嵌套对象和数组类型的校验。纯 Go 标准库，go build 能过。
+团队里配置文件经常写错字段类型或者漏填必选项，线上事故出了两次了——一次是端口号写成字符串，一次是必填的数据库配置漏了。
+
+用 Go 写一个通用的配置校验工具。核心思路：先用一个 schema 文件描述配置的结构和约束，然后拿实际的配置文件来校验。schema 本身也用 JSON 写，支持这些约束类型：
+
+字段类型检查（string/integer/number/boolean/array/object）、必填检查（required: true）、取值范围（minimum/maximum 对数字、minLength/maxLength 对字符串）、枚举值约束（enum: ["dev","staging","prod"]）、正则约束（pattern: "^[a-z][a-z0-9]*$"）、数组元素约束（items 定义每个元素要满足的条件）、嵌套对象约束（properties 定义子字段）。自定义校验函数（通过插件注册）。
+
+校验不过要报出具体哪个字段、什么问题——"database.port: expected integer, got string '5432'"、"server.host: required field missing"。支持嵌套对象和数组类型的递归校验。
+
+支持 JSON 和 YAML 两种配置文件格式的校验。纯 Go 标准库，go build 能过。

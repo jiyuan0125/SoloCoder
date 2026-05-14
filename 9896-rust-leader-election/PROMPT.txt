@@ -1,12 +1,11 @@
-用 Rust 实现一个 Leader 选举机制。
+用 Rust 实现一个 Leader 选举模块。多个节点竞争成为集群中唯一的 Leader，选举基于 Raft 风格的投票机制——随机超时触发、多数投票当选、心跳维持权威。节点状态在 Follower/Candidate/Leader 之间切换。
 
-集群中多个节点需要选出一个 leader 来协调工作，leader 挂了要自动重新选举。类似 Raft 的选举部分或者 ZooKeeper 的 leader 选举。
+核心状态和转换：节点初始为 Follower，有随机选举超时（150-300ms）。超时后变 Candidate，自增 term，向所有节点发 RequestVote。收到多数票变 Leader。Leader 定期发心跳（50ms 间隔）。任何节点收到更高 term 的消息就退回 Follower。
 
-核心功能：
-- 模拟多个节点，每个节点有唯一 ID 和当前状态（follower / candidate / leader）
-- 选举流程：follower 超时后变成 candidate，向其他节点拉票，获得多数票后成为 leader
-- leader 定期发心跳，follower 收到心跳就重置超时计时器
-- leader 故障后，follower 超时触发新一轮选举
-- 能看到选举过程中的状态变化：谁在拉票、谁投了票、最终谁当选
+投票约束的严格实现：每个 term 只能投一票（先到先得）。投票前检查候选人的日志是否至少和自己一样新——先比较 lastLogTerm（大的更新），再比较 lastLogIndex（大的更新）。这个检查保证了选举出的 Leader 拥有所有已提交的日志。
 
-cargo run 能演示选举过程。内存模拟。
+选举过程中需要处理的特殊情况：两个 Candidate 同时竞选但都凑不够多数票（分裂投票），超时后各自递增 term 重新竞选，随机超时避免再次同时触发。网络分区时少数派那边的 Candidate 永远凑不够票，不会错误地选出 Leader。
+
+用 tokio channel 模拟网络通信，每个节点一个 task。模拟 5 个节点的集群，打印选举过程的事件日志——谁在什么 term 发起选举、谁投给谁、最终谁当选。还要演示一次 Leader 故障后重新选举的场景。
+
+cargo build 通过。

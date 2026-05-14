@@ -1,8 +1,11 @@
-写个 DNSSEC 验证工具，Go 实现。
+DNSSEC 给 DNS 响应加了签名防篡改，但验证过程比较复杂——从根域的信任锚开始，沿 DS → DNSKEY 建立信任链到目标域。想有个工具能可视化这个验证过程，告诉你哪一环出了问题。
 
-DNSSEC 给 DNS 响应加了签名防篡改，但验证链路比较复杂。想有个工具能从头到尾验证一个域名的 DNSSEC 是否配置正确。
+用 Go 写一个 DNSSEC 验证工具。validate 子命令：从根域开始验证信任链——查询根域的 DNSKEY（信任锚，硬编码根域的 KSK 公钥）。查询目标域的 DS 记录（在父域的 DNSKEY 签名下）。用 DS 记录验证目标域的 DNSKEY。用目标域的 DNSKEY 验证该域的 RRSIG（资源记录签名）。
 
-功能：从根域开始沿 DS → DNSKEY 链路验证信任链；检查 RRSIG 签名是否有效（未过期、算法正确）；报告链路中哪个环节有问题（缺 DS、签名过期、算法不匹配等）。
+检查项目：DS 记录是否存在（没有 DS 就没法验证）。RRSIG 签名是否有效（用对应 DNSKEY 验签）。签名是否过期（检查 RRSIG 的 inception 和 expiration 时间）。签名算法是否安全（拒绝 RSA/SHA-1，推荐 RSA/SHA-256 或 ECDSA）。NSEC/NSEC3 记录验证（证明不存在的记录确实不存在）。
 
-命令：dnssec-validator validate -domain example.com、dnssec-validator validate -domain example.com -verbose、dnssec-validator validate -domains list.txt -json
-Go 标准库 net 和 crypto，go build 通过。
+报告输出：信任链的每一步状态——根→TLD→目标域，哪一步通过哪一步失败。失败原因的具体描述。整体 DNSSEC 部署评分。
+
+命令：dnssec-validator validate -domain example.com、dnssec-validator validate -domain example.com -verbose、dnssec-validator validate -domains list.txt -json。
+
+Go 标准库 net 和 crypto（DNS 查询 + RSA/ECDSA 验签），go build 通过。

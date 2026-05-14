@@ -1,8 +1,13 @@
-做个 CSP 违规报告收集服务，Go 实现。
+配了 CSP 策略之后需要知道有没有误杀正常功能——浏览器检测到 CSP 违规会往 report-uri 发 POST 请求，需要一个服务来接收这些报告。收到报告后分析一下是真正的违规还是策略太严格需要调整。
 
-浏览器检测到 CSP 违规会往 report-uri 发 POST 请求，需要一个服务来接收和展示这些报告，方便调试 CSP 策略。
+用 Go 写一个 CSP 违规报告收集服务。serve 子命令：启动 HTTP 服务监听指定端口。/csp-report 端点接收 POST 请求（Content-Type: application/csp-report 或 application/json）。解析报告体中的 CSP violation report JSON——violated-directive（违反的指令）、document-uri（发生违规的页面 URL）、blocked-uri（被阻止的资源 URI）、original-policy（原始 CSP 策略）、referrer、status-code。
 
-功能：启动一个 HTTP 服务接收 CSP 违规报告（/csp-report 端点）；解析报告中的 violated-directive、document-uri、blocked-uri 等字段；在控制台实时打印报告摘要；支持把报告保存为 JSON 文件供后续分析。
+控制台实时打印报告摘要——时间戳 + 违反指令 + 被阻止的 URI + 来源页面。严重程度标注——script-src 违规（可能 XSS 攻击）标记为高，img-src/style-src 违规标记为中，其他为低。
 
-命令：csp-reporter serve -port 8080、csp-reporter serve -port 8080 -output reports.json、csp-reporter reports -file reports.json（查看已收集的报告）
+文件保存：可选把报告保存为 JSON Lines 文件（-output reports.json），每行一条记录。文件按日期滚动——reports-2024-01-15.json。
+
+reports 子命令：查看已收集的报告——按违反指令类型分组统计、按来源页面分组、Top 10 被阻止的 URI。支持过滤——按时间范围、按违反指令类型。
+
+命令：csp-reporter serve -port 8080、csp-reporter serve -port 8080 -output reports.json、csp-reporter reports -file reports.json。
+
 Go 标准库 net/http，go build 能编译通过。

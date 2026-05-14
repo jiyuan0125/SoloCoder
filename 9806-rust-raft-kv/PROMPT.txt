@@ -1,11 +1,13 @@
-用 Rust 实现一个基于 Raft 的分布式 KV 存储。
+之前用 Go 写过一个简单的 Raft KV，但性能一直上不去，锁竞争太严重了。这次想用 Rust 重写一遍，利用 Rust 的零成本抽象和无锁数据结构来优化。不过重点是先把功能做对——一个基于 Raft 共识的分布式 KV 存储。
 
-上层是简单的 key-value 操作，底层依赖 Raft 共识保证一致性。写操作必须经过 Raft 日志复制提交后才能应用到状态机，读操作可以从 Leader 直接返回。
+架构分层：底层是 Raft 共识模块（选举、日志复制、快照），上层是 KV 状态机。客户端请求经过 Raft 层序列化成日志，被提交后应用到状态机。状态机就是一个 HashMap<String, String>，支持 Put、Get、Delete 三种命令。
 
-功能要求：
-- 支持 put(key, value)、get(key)、delete(key) 三个操作
-- 写操作通过 Raft 提交后应用到内存 HashMap
-- Leader 节点处理所有写请求，Follower 转发到 Leader
-- 多个客户端并发写不丢数据
+Raft 节点的实现：每个节点是一个 struct，包含 Raft 状态（term、角色、日志、commitIndex 等）和一个 KV 状态机。节点间通过 tokio mpsc channel 通信（模拟网络）。写请求的处理链路：客户端 → Leader → 追加日志 → 复制到多数 Follower → 提交 → Apply 到状态机 → 返回客户端。
 
-cargo build 通过，模拟 3 节点集群跑测试验证线性一致性。
+读请求用 Lease Read 优化：Leader 持有租约期间（心跳确认自己是 Leader 后的一段时间内），可以直接读状态机而不用走 ReadIndex。租约过期后回退到 ReadIndex。
+
+快照的集成：日志超过 200 条时自动触发快照。快照就是序列化整个 HashMap。新节点加入时走快照 + 增量日志恢复。
+
+模拟 3 节点集群，命令行可以发送 Put/Get/Delete 请求，打印操作结果和 Raft 层的日志索引。
+
+cargo build 通过。

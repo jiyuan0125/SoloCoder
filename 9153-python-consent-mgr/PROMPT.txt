@@ -1,11 +1,7 @@
-用户同意管理工具，用于记录和查询用户对各项数据处理活动的授权状态。
+用户同意管理工具。我们的应用需要收集用户同意才能使用 Cookie、发送营销邮件、共享数据给第三方，而且用户随时可以撤回。之前同意记录散落在各个系统里，合规审计的时候查都查不全。写个集中管理的工具。
 
-场景是这样的：我们的应用需要收集用户同意才能使用 Cookie、发送营销邮件、共享数据给第三方，而且用户随时可以撤回。
+Python 写一个命令行工具。同意记录数据结构：用户 ID、处理目的（cookie_analytics/marketing_email/data_sharing/third_party 等）、同意状态（granted/denied）、时间戳、来源渠道（web_form/app_settings/customer_service）、记录版本号（每次变更递增）。
 
-用 Python 写一个命令行工具：
-- 记录用户对某一处理目的的同意或拒绝（用户ID、目的、时间戳、来源渠道）
-- 查询某用户当前对所有目的的同意状态，以表格形式输出
-- 支持撤回操作，撤回后标记历史记录状态变更
+操作：grant（记录同意）——用户 ID + 目的 + 来源渠道，自动填充时间戳。deny（记录拒绝）。revoke（撤回之前的同意）——找到该用户该目的的最新 granted 记录，新增一条 denied 记录。query（查询）——输入用户 ID，输出所有目的的当前同意状态表格，每个目的显示最新状态和变更历史。
 
-数据存在本地 JSON 文件就行。命令示例：python consent_mgr.py grant user_001 marketing_email --source web_form
-能跑起来，不依赖外部服务。
+数据存在本地 JSON 文件（每个用户一个文件或一个大文件），格式方便后续导入数据库。命令示例：python consent_mgr.py grant user_001 marketing_email --source web_form。python3 不依赖外部服务。

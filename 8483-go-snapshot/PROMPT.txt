@@ -1,12 +1,13 @@
 Go 实现 LSM-Tree 的 Snapshot 机制。
 
-Snapshot 让读取操作看到数据库在某个历史时刻的一致性视图，不受后续写入影响。RocksDB 和 LevelDB 都支持这个特性，对事务隔离很重要。
+Snapshot 让读取操作看到数据库在某个历史时刻的一致性视图，不受后续写入影响。RocksDB 和 LevelDB 都支持这个特性——对事务隔离和增量备份都很重要。核心思路是记录 sequence number，读取时只看到 seq ≤ snapshot 的数据。
 
 功能：
-- 创建 Snapshot：记录当前的 sequence number
-- Snapshot 读：Get/Scan 只看到 sequence number ≤ snapshot seq 的数据
-- 释放 Snapshot：Unref 后不再保留对应版本的数据
-- 多个 Snapshot 可以共存，Compaction 时不能清除被任何 Snapshot 引用的数据
-- 支持 Snapshot 的迭代器
+- 创建 Snapshot：记录当前的全局 sequence number，返回 snapshot handle
+- Snapshot 读：Get/Scan 只看到 sequence number ≤ snapshot seq 的数据，忽略更新的写入
+- 释放 Snapshot：Unref 后不再阻止旧数据被 compaction 清理
+- 多个 Snapshot 可以共存，Compaction 时不能清除被任何活跃 Snapshot 引用的旧版本数据
+- 支持 Snapshot 上的迭代器（绑定 snapshot seq，行为和普通迭代器一致）
+- SnapshotList 管理所有活跃 snapshot 的最小 sequence number
 
-Go 标准库，go build 通过。核心是在 Memtable 和 SSTable 的 entry 上做 sequence number 过滤。
+Go 标准库，go build 通过。Memtable 和 SSTable 的 entry 都带 sequence number，读取时做过滤。

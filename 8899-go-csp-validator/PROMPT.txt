@@ -1,8 +1,11 @@
-写个 CSP 策略验证工具，Go 实现。
+写完 CSP 头后需要验证它是否合法——语法有没有错误、有没有不安全的配置、防护力度够不够。像 Google 的 CSP Evaluator 那样给出具体的建议。
 
-写完 CSP 头后需要验证它是否合法、有没有语法错误、防护力度够不够。像 CSP Evaluator 那样给出建议。
+用 Go 写一个 CSP 策略验证工具。check 子命令：解析 CSP 头字符串——按分号分割成多条指令，每条指令按空格分割成指令名和值列表。检查语法正确性——指令名是否合法（script-src、style-src、img-src 等）。值格式是否正确（'self'、'none'、'unsafe-inline' 等要用引号；域名不要引号；scheme 如 https: 不要引号）。重复指令是否冲突。
 
-功能：解析 CSP 头字符串，检查语法正确性；检测不安全的指令值（如 'unsafe-inline'、'unsafe-eval'、*）；检查是否缺少必要的指令（如 default-src）；评估整体安全等级，给出改进建议。
+安全检查：检测不安全的值——'unsafe-inline'（允许内联脚本/样式，容易被 XSS 利用）、'unsafe-eval'（允许 eval()，代码注入风险）、*（通配符，允许任何来源）、data: URI（可能用于 XSS）。检查缺失的指令——缺少 default-src（兜底策略，非常重要）、缺少 script-src（如果没有 default-src）、缺少 style-src。评估整体安全等级——高（严格限制来源，无 unsafe-*）、中（有限制但有部分放宽）、低（大量 unsafe-* 或通配符）。
 
-命令：csp-validator check -header "default-src 'self'; script-src 'self' cdn.example.com"、csp-validator check -header @policy.txt、csp-validator check -url https://example.com（从响应中提取 CSP 验证）
+改进建议：对每个不安全配置给出具体替代方案——用 nonce- 或 hash- 代替 'unsafe-inline'。用 strict-dynamic 代替白名单。
+
+命令：csp-validator check -header "default-src 'self'; script-src 'self' cdn.example.com"、csp-validator check -header @policy.txt、csp-validator check -url https://example.com。
+
 Go 标准库，go build 编译通过。

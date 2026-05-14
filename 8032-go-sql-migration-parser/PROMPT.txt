@@ -1,3 +1,9 @@
-用 Go 实现数据库迁移脚本解析器。解析 CREATE TABLE、ALTER TABLE ADD/DROP/MODIFY COLUMN、CREATE INDEX、DROP TABLE 这些 DDL 语句。
-能把迁移脚本解析成操作列表，支持正向迁移和回滚迁移的生成。解析结果输出为 JSON。
+数据库迁移脚本是 DevOps 日常里最容易出事的环节——一个 ALTER TABLE 写错，整条流水线都卡住。
+
+用 Go 实现数据库迁移脚本解析器。解析常见的 DDL 语句：CREATE TABLE（完整表定义）、ALTER TABLE ADD/DROP/MODIFY/RENAME COLUMN（表结构变更）、CREATE INDEX / DROP INDEX（索引管理）、DROP TABLE（删表）、INSERT INTO ... VALUES（种子数据）。
+
+把迁移脚本解析成操作列表——每个操作包含类型（CreateTable/AddColumn/DropColumn/ModifyColumn/CreateIndex/DropTable/SeedData）、目标表名、具体参数（新增列的完整定义、要删除的列名等）。支持正向迁移和回滚迁移的生成——对每个正向操作自动生成对应的回滚操作（CREATE TABLE 的回滚是 DROP TABLE，ADD COLUMN 的回滚是 DROP COLUMN）。
+
+解析结果输出为 JSON，格式为 [{ "up": {...}, "down": {...} }, ...]。支持版本号标记（用注释 -- migration: 001 表示）。
+
 标准库，go build 编译通过。

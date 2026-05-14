@@ -1,12 +1,9 @@
-SBOM（软件物料清单）生成工具，扫描项目依赖生成标准化 SBOM 文件。
+SBOM（软件物料清单）生成工具。美国政府的安全指引要求软件供应链要有 SBOM——列出软件包含的所有组件和依赖。我们的产品需要生成 SBOM 文件，写个工具从项目依赖自动生成。
 
-客户要求我们交付软件时附带 SBOM，说明里面用了哪些第三方组件。需要自动从项目依赖中提取并生成标准格式。
+Python 实现 SBOM 生成器。支持解析多种依赖声明格式——Python 的 requirements.txt 和 pyproject.toml（提取 dependencies 段的包名和版本约束）、Node.js 的 package-lock.json（解析 dependencies 树提取所有包）、Go 的 go.sum（提取模块路径和版本）、Java 的 pom.xml（解析 dependencies 段）。
 
-Python 实现：
-- 扫描 Python（requirements.txt、Pipfile、pyproject.toml）和 Node.js（package.json）项目文件
-- 提取依赖名称、版本、来源信息
-- 生成 CycloneDX JSON 格式的 SBOM（包含组件列表、版本、哈希）
-- 支持添加自定义元数据（供应商名称、构建时间等）
+SBOM 内容：每个组件记录——名称、版本号、供应商/作者、许可证类型（从包元数据或本地缓存查询）、依赖关系（直接依赖还是传递依赖）。元数据：生成时间、工具名称和版本、项目名称。
 
-用法：python sbom_generator.py scan ./my-project --format cyclonedx --output sbom.json
-能解析常见依赖文件格式，输出的 SBOM 结构要合规。
+输出格式：支持 CycloneDX JSON（业界标准格式，包含 components 数组和 dependencies 图）和 SPDX JSON（另一种标准格式）。JSON 格式方便机器处理和对比。
+
+命令行：python sbom_gen.py --source ./project --format cyclonedx --output sbom.json。自动检测项目类型（根据存在哪个锁文件判断）。python3 命令行工具。

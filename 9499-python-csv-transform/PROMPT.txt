@@ -1,5 +1,5 @@
-写一个 CSV 数据转换工具，做常见的数据清洗和格式转换。
+数据分析师给过来的 CSV 经常格式不统一——有的分隔符是逗号有的是分号甚至 Tab，有的字段有引号有的没有，编码还可能混着 GBK 和 UTF-8。每次手动转换太烦了，写个工具自动检测并统一处理。
 
-数据分析师那边给的 CSV 经常格式不统一：有的分隔符是逗号有的是 Tab，有的有引号有的没有，编码还可能混着 GBK 和 UTF-8。工具要能自动检测分隔符和编码，支持列选择、列重命名、过滤行、数据类型转换（比如日期格式统一）。
+自动检测能力。编码检测：读文件前几 KB 用 UTF-8 解码，失败就尝试 GBK、Latin-1。分隔符检测：统计第一行中逗号、分号、Tab 的出现次数，取最多的那个。引号检测：如果字段内容包含分隔符或换行，用双引号包裹。
 
-python main.py transform data.csv --output clean.csv --encoding utf-8 --delimiter comma --select name,age,score --filter "age>18"。Python 标准库 csv 模块实现，注意处理大文件要用流式处理。
+支持的操作。列选择：--select name,age,score 只保留这三列。列重命名：--rename "old_name=new_name"。行过滤：--filter "age>18" 或 --filter "status=active"，支持等于、大于、小于、包含。数据类型转换：日期格式统一（如各种格式都转成 YYYY-MM-DD）、数字清理（去掉千分位逗号、统一小数点）。输出格式可选 CSV 或 JSON，编码统一为 UTF-8。大文件用流式处理逐行读写不爆内存。用法：python3 csv_transform.py transform data.csv --output clean.csv --select name,age,score --filter "age>18"

@@ -1,11 +1,13 @@
-写一个 Host 头注入防护工具，Go 实现。
+渗透测试发现虚拟主机配置没校验 Host 头，攻击者用恶意 Host 做了缓存投毒和密码重置钓鱼。具体来说就是用户点密码重置链接的时候，邮件里的链接域名是从请求的 Host header 取的，攻击者控制了 Host 就控制了重置链接。这类漏洞在反向代理后面特别容易出。
 
-背景：渗透测试发现我们的虚拟主机配置没校验 Host 头，攻击者可以用恶意 Host 做缓存投毒和密码重置钓鱼。
+用 Go 写一个 Host 头注入防护工具。校验函数 ValidateHost(host string, allowedHosts []string) error：从请求中提取 Host header（不含端口号），检查是否在允许的域名白名单中。
 
-需要做的：
-- 校验 HTTP 请求的 Host header：检查是否在允许的域名白名单中
-- 防护常见的 Host 头攻击：密码重置链接投毒、Web 缓存投毒、SSRF
-- 支持 Host 白名单配置：精确匹配 + 通配符匹配（*.example.com）
-- 提供 HTTP 中间件，自动拦截非法 Host 头请求并返回 400
+白名单匹配支持两种模式：精确匹配（example.com 直接比对）和通配符匹配（*.example.com 匹配所有子域名）。匹配时统一转小写，忽略尾部的端口号。
+
+防护常见的 Host 头攻击场景：密码重置链接投毒——检查重置邮件模板中生成链接时是否用了 Host header 的值；Web 缓存投毒——确保缓存 key 包含 Host 信息；SSRF——某些 SSRF 场景下 Host 头会被传递给上游服务。
+
+HTTP 中间件 HostWhitelist(allowedHosts []string) func(http.Handler) http.Handler：拦截所有请求，校验 Host header。不合法的直接返回 400 Bad Request。对合法请求把 Host 注入到 context 中方便下游使用。
+
+支持从配置文件加载白名单列表，也支持运行时动态更新。命令行模式：host-guard check --host "evil.com" --allow "example.com,*.example.com"。
 
 Go 标准库，go build 编译通过。

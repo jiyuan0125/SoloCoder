@@ -1,3 +1,9 @@
-经常需要给各种小语言写词法分析器，想做一个通用的词法分析器生成器。用 Python 实现一个 lexer 生成工具：用户定义一组 token 规则（名字 + 正则模式 + 优先级），工具生成对应的词法分析器函数。
+经常要给各种配置文件或小语言写词法分析器，每次都手写 token 切分太重复了。做一个通用的词法分析器生成器，用户定义规则就能自动产出 token 流。Python 实现。
 
-支持忽略空白、行号列号跟踪、字符串和注释的特殊处理、多行模式。生成的 lexer 接受字符串输入，返回 token 流。纯 Python 实现，python 能跑，附带一个示例规则文件。
+规则定义格式：一组 (token_name, regex_pattern, priority) 三元组。priority 决定多个规则都能匹配时谁优先（数字越大优先级越高）。特殊规则：IGNORE 表示跳过（比如空白字符），COMMENT 表示注释（从当前位置到行尾都跳过）。
+
+生成的 lexer 功能：输入字符串，逐个匹配 token。维护当前位置、行号和列号（换行时行号+1列号重置）。每返回一个 Token(name, value, line, col)。匹配策略：取所有规则中最长的匹配（maximal munch），长度相同时按优先级选。没有规则能匹配时报错并指出位置。
+
+额外特性：字符串字面量处理（双引号内的内容作为一个 STRING token，处理转义字符 \n\t\\\"）、多行注释（/* 到 */ 跨行）、行续行符（行尾 \ 连接下一行）、状态切换（用 push_state/pop_state 在不同状态下用不同的规则集）。
+
+附带一个示例：定义 JSON 的词法规则，生成 lexer 后对 JSON 字符串做 tokenization。python3 lexer_gen.py rules.json input.txt。纯 Python 实现。

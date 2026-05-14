@@ -1,5 +1,7 @@
-用 Rust 写一个 WebM 封装器，把 VP8/VP9 视频和 Opus/Vorbis 音频封装成 WebM 文件。
+WebM = MKV 子集 + VP8/VP9 + Opus/Vorbis。封装用 EBML 格式——变长 ID、变长 Size、嵌套元素。写一个 WebM 封装器需要处理 EBML 编码和 Cluster 组织。Rust 实现。
 
-WebM 底层是 Matroska (MKV) 容器的子集，按 EBML 格式写入。要生成 EBML Header、Segment、Info（包含时长）、Tracks（视频和音频轨道描述）、Clusters 和里面的 SimpleBlock/Block。每个 Cluster 里按时间戳写入音视频帧。输出的 .webm 能在 Chrome 里播放。
+EBML 编码规则——ID 用变长整数，第一个字节的最高位有 n 个连续 1 表示占 n 字节。Size 也类似但 1 字节时最大 126（127 即 0x7F 保留），2 字节以 0x40 开头。Segment 元素通常用不定大小（所有位为 1 后接全 0），简化偏移量计算。
 
-Rust 实现，按 Matroska 规范处理 EBML 二进制结构，cargo build 通过。
+文件结构：EBML Header（版本 1、DocType "webm"、DocTypeVersion 4）→ Segment → SeekHead（记录 Info 和 Tracks 的文件偏移）→ Info（TimecodeScale=1000000 纳秒、Duration 总时长）→ Tracks（视频 Track + 音频 Track）→ Clusters。
+
+每个 Cluster 包含一个时间段的音视频帧。Cluster 的 Timecode 元素是该 Cluster 内所有帧的基准时间戳（毫秒）。帧用 SimpleBlock 编码：EBML 编码的 track number + 2 字节相对时间戳 + 1 字节标志（bit 7=keyframe、bit 3=invisible、bit 1-0=lacing）+ 负载数据。视频关键帧要设置 keyframe 标志位。输出 .webm 要在 Chrome 可播放。用法 webm-mux -video input.webm -audio input.ogg -o output.webm。Rust 实现，cargo build 通过。

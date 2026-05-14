@@ -1,3 +1,22 @@
-Haskell 风格的解析器组合子写起来很优雅，想在 Python 里也这么干。实现一套解析器组合子库：提供基础组合子（char、string、regex、choice、sequence、many、many1、optional）、组合操作（map、bind、then、left/right）和错误处理（label、try_）。
+Haskell 的 Parsec 库展示了"解析器组合子"这种优雅的解析方式——不写文法规则，而是用小解析器组合成大解析器。想在 Python 里也试试这种风格。实现一套解析器组合子库。
 
-用这套组合子写一个能解析简单算术表达式和 JSON 的示例解析器。纯 Python 实现，python 能跑，代码风格要函数式一些。
+基础组合子：
+- char(c)：匹配单个字符 c
+- string(s)：匹配字符串 s
+- regex(pattern)：用正则匹配
+- satisfy(predicate)：匹配满足谓词的单个字符
+- eof()：匹配输入末尾
+
+组合操作：
+- p1 | p2（choice）：先尝试 p1，失败则尝试 p2
+- p1 + p2（sequence）：先匹配 p1 再匹配 p2，返回两个结果的元组
+- p.many()：匹配零或多次，返回列表
+- p.many1()：匹配一或多次
+- p.optional()：可选匹配，返回 Option 类型
+- p.map(f)：匹配成功后对结果应用函数 f
+- p.then(q)：匹配 p 后匹配 q，只保留 q 的结果
+- p.left(q)：只保留 p 的结果
+
+错误处理：label(p, "期望XX") 给解析器加错误描述，try_(p) 在失败时回溯（吞掉错误继续尝试其他选择）。ParseResult 类型：Success(value, remaining) 或 Failure(expected, position)。
+
+用这套组合子写两个示例：算术表达式解析器（支持四则运算和括号）、JSON 解析器（完整的 JSON 规范）。python3 combinator.py。纯 Python 实现，代码风格偏函数式。

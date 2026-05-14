@@ -1,12 +1,13 @@
-写一个 API Key 管理工具，Go 实现。
+微服务架构下各个服务之间用 API Key 做认证，现在这些 key 都存在 Excel 里，谁用过哪个 key、什么时候过期、有没有被泄露过完全不清楚。需要一个正经的 key 管理工具。
 
-微服务架构下各个服务之间用 API Key 做认证，现在 key 都是 Excel 管的，太乱了。
+用 Go 写一个 API Key 管理工具。Key 生成：GenerateKey(prefix string, length int) 生成安全的 API Key——用 crypto/rand 生成 32 字节随机数，Base62 编码（0-9a-zA-Z）得到字符串，前面加上自定义前缀（如 svc_a_）。最终格式类似 svc_a_dG9rZW5fZXhhbXBsZQ。
 
-功能需求：
-- 生成安全的 API Key：随机 32 字节 Base62 编码，支持自定义前缀（如 svc_a_xxx）
-- Key 状态管理：创建、激活、停用、吊销，每个 key 关联服务名和权限范围
-- Key 校验：验证 key 格式、查询状态、检查是否过期和权限范围
-- 本地文件存储（JSON 格式），支持导入导出
-- 命令行：`./apikey create --service=user-svc --scope=read,write`、`./apikey verify --key=xxx`
+Key 状态管理：每个 key 关联服务名、权限范围（read/write/admin）、创建时间、过期时间（可选）、状态（active/revoked）。支持创建、激活、停用、吊销操作。停用是临时禁用（可以重新激活），吊销是永久失效。
+
+Key 校验流程：VerifyKey(key string) (*KeyInfo, error)——验证 key 格式是否合法（前缀匹配已知服务、长度正确、Base62 字符集），查询 key 状态是否 active，检查是否过期，返回关联的权限范围。
+
+本地文件存储（JSON 格式），key 值存 SHA-256 哈希而不是明文。支持导入导出——export 输出所有 key 的元信息（不含哈希），import 从文件批量创建 key。
+
+命令行：apikey create --service=user-svc --scope=read,write --ttl=30d，apikey verify --key=svc_a_xxxx，apikey revoke --key=svc_a_xxxx，apikey list --service=user-svc。
 
 Go 标准库，go build 能通过。

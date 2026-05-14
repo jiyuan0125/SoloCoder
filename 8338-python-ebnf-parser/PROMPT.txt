@@ -1,3 +1,18 @@
-很多语言规范用 EBNF 描述文法，我需要一个能直接读 EBNF 然后解析的通用工具。用 Python 实现 EBNF 解析器（支持 ISO EBNF 标准：= 定义、| 选择、{} 重复、[] 可选、() 分组、; 结束、注释 (* *)）。
+很多语言规范用 EBNF（Extended Backus-Naur Form）描述语法规则——比如 SQL 标准、JSON 规范、W3C 的 CSS 语法。需要一个工具能直接读取 EBNF 定义然后生成解析器。Python 实现。
 
-解析 EBNF 后自动生成对应的递归下降解析器。附带两个示例：用 EBNF 描述一个简单表达式语言并用生成的解析器解析它。纯 Python，python 能跑。
+支持的 ISO EBNF 语法：
+- 规则定义：rule = expression ;
+- 选择：a | b
+- 序列：a, b
+- 重复：{a}（零或多次）、{a}-（零或多次但消除尾部分隔符）
+- 可选：[a]
+- 分组：(a | b)
+- 终结符："string" 或 'string'
+- 特殊序列：? ... ?
+- 注释：(* comment *)
+
+EBNF 本身也用 EBNF 定义，所以先手写一个最小的 EBNF 解析器来解析 EBNF 文法。然后把解析出来的文法转换成递归下降解析器的 Python 代码。转换规则：规则 → 函数，| → if/elif，{ } → while 循环，[ ] → 可选的 if 判断，序列 → 顺序调用。
+
+生成的解析器：每个非终结符对应一个函数，函数尝试按顺序匹配产生式的各个元素。匹配终结符时调用 lexer 获取 token。成功时构建 AST 节点返回。附带两个示例——一个算术表达式文法和一个简单的 JSON-like 数据描述语言。
+
+python3 ebnf_parser.py grammar.ebnf input.txt。纯 Python 实现。

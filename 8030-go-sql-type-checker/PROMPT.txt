@@ -1,2 +1,11 @@
-用 Go 做 SQL 类型检查。给定一个表结构定义（列名、类型、约束），对 SQL 语句做类型检查：WHERE 条件里的比较类型兼容不兼容、聚合函数参数类型对不对、SELECT 列表和 ORDER BY 类型匹不匹配。
-类型不匹配要给出明确的错误提示。schema 从 JSON 文件加载，go build 通过。
+"ERROR: column 'age' cannot be compared with string '25'"——这种运行时才发现的类型错误，能不能在提交 SQL 的时候就提前报出来？
+
+用 Go 做 SQL 静态类型检查。给定一个表结构定义（列名、类型 INT/VARCHAR/BOOLEAN/DATE/FLOAT、约束如 NOT NULL/PRIMARY KEY），对 SQL 语句做类型层面的校验。
+
+检查项包括：WHERE 条件里的比较类型是否兼容（INT 和 INT 可以比、INT 和 VARCHAR 不行）、聚合函数参数类型对不对（SUM/AVG 只接受数值类型、COUNT 接受任意类型）、SELECT 列表和 ORDER BY 列表的类型是否支持排序（BLOB 类型不能排序）、INSERT 的值类型是否匹配列类型、字符串和数字的隐式转换要不要允许（可配置）。
+
+类型不匹配要给出明确的错误提示——"WHERE age > '25': cannot compare INT with VARCHAR, did you mean age > 25?"。NULL 值的处理要特别注意，任何和 NULL 的比较结果都是 NULL。
+
+schema 从 JSON 文件加载，格式为 { "table_name": { "columns": { "name": "VARCHAR", "age": "INT" } } }。
+
+go build 通过。

@@ -1,5 +1,5 @@
-WebM 在网页视频里用得很多，想搞清楚它的 Matroska 容器里具体有什么。
+WebM 在网页视频里用得很多——YouTube 的默认格式、视频会议录像、网页动画——想搞清楚它的 Matroska 容器里具体封装了什么轨道和编码信息。
 
-解析 WebM 文件，识别 EBML 头部和 Segment 容器。解析 Tracks 元素获取视频和音频轨道的编码信息（VP8/VP9/AV1 视频，Opus/Vorbis 音频）。读取 Duration 获取总时长，解析 Cues 元素获取关键帧索引。
+解析 WebM 文件（Matroska 的子集，只允许 VP8/VP9/AV1 视频和 Opus/Vorbis 音频）。先读 EBML Header 确认 DocType 是 'webm'。然后进入 Segment 容器（大小可能是未知的，一直解析到文件末尾）。解析关键元素：SegmentInfo 里的 TimecodeScale（默认 1000000 即微秒级）和 Duration（换算成秒：duration × timecodeScale / 1000000000）。Tracks 里每个 TrackEntry 的 TrackNumber、TrackUID、TrackType（1=视频、2=音频）、CodecID、CodecPrivateData。视频轨道还要解析 Video 子元素中的 PixelWidth、PixelHeight、FrameRate。音频轨道解析 Audio 子元素中的 SamplingFrequency、Channels、BitDepth。Cues 元素解析关键帧索引：CuePoint 的 CueTime + CueTrackPositions，列出所有 seek 点。输出 JSON 格式。
 
-Go 标准库实现，go build 通过。
+Go 标准库实现，EBML 变长整数自己解码。go build 通过。

@@ -1,11 +1,13 @@
-写一个 Cookie 安全加固工具，Go 实现。
+代码审计发现项目里 Cookie 设置得特别随意——该设 HttpOnly 的没设、Secure 在 HTTP 环境下没有、SameSite 随便写了个 None 结果被浏览器拒了。还有的 Cookie 值直接存了用户 ID 没做签名，客户端一改就改了。
 
-发现好多项目的 Cookie 设置得特别随意，没有 HttpOnly、没有 Secure、SameSite 随便设，写个工具帮团队统一加固。
+用 Go 写一个 Cookie 安全加固工具。提供三个层面的功能：
 
-需要实现：
-- Cookie 安全配置检查：扫描 HTTP 响应中的 Set-Cookie header，检查安全属性是否齐全
-- 安全 Cookie 生成器：自动设置 HttpOnly、Secure、SameSite=Strict/Lax、Path、Domain
-- Cookie 加密签名：对敏感 Cookie 值用 HMAC-SHA256 签名，防止客户端篡改
-- 提供 HTTP 中间件自动为所有 Cookie 加上安全属性
+安全检查 ScanCookies(resp *http.Response) []CookieIssue：扫描 HTTP 响应中的所有 Set-Cookie header，逐个检查安全属性——缺少 HttpOnly 标记（JavaScript 可以通过 document.cookie 读取）、缺少 Secure 标记（HTTP 连接下 Cookie 会被明文传输）、SameSite 设为 None（第三方 Cookie，Chrome 默认拒绝）、Path 过于宽泛（设为 / 而不是具体的路径）、Domain 设置不当（过于宽泛的父域名）。
+
+安全 Cookie 生成器 NewSecureCookie(name, value string, options ...CookieOption) *http.Cookie：自动设置安全默认值——HttpOnly=true、Secure=true、SameSite=SameSiteLaxMode、Path 限制到具体路径、MaxAge 设合理值（而不是默认的 session 级）。用户可以通过 option 覆盖默认值。
+
+Cookie 签名和验签：SignCookie(value string, secret []byte) string 对 Cookie 值用 HMAC-SHA256 签名，格式 value.timestamp.signature。VerifyCookie(signed string, secret []byte) (string, error) 验证签名是否有效、时间戳是否在合理范围内。防止客户端篡改 Cookie 值。
+
+HTTP 中间件：CookieSecurityMiddleware 自动为所有响应 Cookie 加上安全属性。
 
 Go 标准库，go build 编译通过。

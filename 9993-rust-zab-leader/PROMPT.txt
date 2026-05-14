@@ -3,3 +3,7 @@
 Zab 是 Zookeeper 底层的原子广播协议，Leader 负责把客户端请求排序后广播给所有 Follower。实现 Zab Leader 的核心逻辑：接收客户端请求，为每个请求分配递增的 zxid，将请求包装成 Proposal 广播给所有 Follower，收集多数 Follower 的 ACK 后发送 COMMIT。维护一个未提交的 proposal 队列。处理 Follower 的连接和断开——新 Follower 连接时需要同步历史 proposal（DIFF/TRUNC/SNAP 三种同步方式）。Leader 选举完成后进入广播模式。
 
 Rust 标准库，cargo build 通过，模拟 Leader 处理一批客户端请求的全过程。
+
+这个工具的核心价值在于把zab leader的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
+
+ZAB Leader 负责所有写操作排序——客户端请求到 Leader，Leader 分配 zxid 广播给所有 Follower。集中式排序简化了协议但限制了写吞吐。

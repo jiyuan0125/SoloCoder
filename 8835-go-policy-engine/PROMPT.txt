@@ -1,12 +1,11 @@
-帮我实现一个通用策略引擎，Go 写的。
+OPA（Open Policy Agent）功能很全但太重了，大部分场景只需要一个轻量的内嵌式策略判断引擎。不想跑一个独立的 OPA 服务，只想在代码里直接调一个函数做权限判断，输入一组属性返回 allow 或 deny。
 
-像 OPA 那样的策略引擎太重了，我想要一个轻量的内嵌式策略判断引擎，能在代码里直接用。
+用 Go 写一个通用策略引擎。策略定义用简单的 DSL（JSON 格式），每条策略包含：name（策略名）、priority（优先级，数字越大越优先）、effect（allow 或 deny）、condition（条件表达式）。
 
-功能需求：
-- 策略定义语言：简单的 DSL，支持条件表达式（==、!=、>、<、in、contains）和逻辑运算（AND、OR、NOT）
-- 策略评估：输入一组属性（JSON），根据策略规则计算 allow 或 deny
-- 支持多条策略的优先级排序和冲突解决（deny 优先 或 按优先级）
-- 内置函数：time_range（时间范围）、ip_in_cidr（IP 网段判断）、regex_match
-- 策略热加载：从 JSON 文件加载，支持运行时更新
+条件表达式语法：比较操作——field == "value"、count > 10、ip in ["10.0.0.0/8"]。逻辑运算——AND（所有子条件都满足）、OR（任一子条件满足）、NOT（取反）。内置函数——time_range(start, end) 判断当前时间是否在范围内、ip_in_cidr(ip, cidr) 判断 IP 是否在网段内、regex_match(pattern, value) 正则匹配、contains(haystack, needle) 字符串包含。
+
+策略评估 Evaluate(attributes map[string]interface{}) Result：输入一组属性（JSON 可解析为 map），按优先级排序依次评估每条策略的条件。匹配策略的 effect 就是最终结果。Deny 优先模式——即使有更高优先级的 Allow，只要任何 Deny 策略匹配就拒绝。
+
+策略热加载：从 JSON 文件加载策略列表，运行时检测文件变化自动更新。支持 API 动态添加和删除策略。
 
 Go 标准库，go build 能通过。

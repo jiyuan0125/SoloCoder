@@ -1,9 +1,9 @@
-帮我用 Go 做一个快照应用工具。在日志复制的分布式系统里，新节点或落后太多的节点需要直接接收并应用快照，而不是逐条回放日志。
+新节点加入集群或者某台机器宕机太久再恢复，落后了几万条日志——逐条回放太慢了，直接给它一份快照让它从快照恢复，这才是正确做法。快照里包含状态机的完整状态和最后包含的日志索引，节点拿到快照后就能直接跳到最新的状态继续工作。
 
-功能点：
-- 定义一个快照格式：包含状态机的完整状态 + 最后包含的日志索引 (lastIncludedIndex)
-- 节点收到快照后，丢弃 lastIncludedIndex 之前的所有日志，用快照状态重建状态机
-- 支持快照版本比较：只有更新的快照才会被接受，旧快照忽略
-- 打印快照应用前后的状态变化
+这个 Go 程序要实现的快照应用流程包括以下几个部分。首先是快照格式定义：一个结构体，包含 state（状态机的序列化数据）、lastIncludedIndex（快照覆盖的最后一条日志索引）和 lastIncludedTerm（对应索引的 term）。
+
+应用快照时的处理逻辑：节点收到快照后先做版本比较——如果快照的 lastIncludedIndex <= 自己的 lastApplied，说明这是旧快照，直接忽略。如果是新快照，就丢弃 lastIncludedIndex 之前的所有日志条目，用快照中的状态数据重建状态机，更新 lastApplied = lastIncludedIndex，更新 commitIndex（如果需要的话）。
+
+需要验证的场景：空状态机接收快照后正确恢复、已有日志的节点收到更新的快照后丢弃旧日志、收到旧快照时正确拒绝。模拟一个落后节点从 index=0 跳到 index=100 的过程，打印前后对比："before: lastApplied=0, log entries=0; after: lastApplied=100, state recovered, old entries discarded"。
 
 Go 标准库实现，go build 通过。

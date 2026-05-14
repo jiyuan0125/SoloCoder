@@ -1,6 +1,9 @@
-帮我做一个 Unicode 感知的词法分析器。正确处理 UTF-8 多字节字符、Unicode 分类（字母、数字、空白符、标点）、Unicode 转义序列（\uXXXX, \UXXXXXXXX）。
+帮我做一个 Unicode 感知的词法分析器。默认的词法分析器假设输入是 ASCII，但现代编程语言都支持 Unicode——变量名可以用中文、表情符号、阿拉伯字母。解析器得正确处理这些多字节字符。
 
-支持 Unicode 标识符（非 ASCII 字母也能做变量名）。处理 NFC/NFD 规范化。
-命令：unicode-lexer input.txt
-输出每个 token 的类型、内容、起止位置（按 rune 偏移和字节偏移）。
+正确处理 UTF-8 多字节字符——Go 的 string 和 []rune 已经帮忙处理了编码，但需要确保位置追踪按 rune 而不是 byte 计算。Unicode 分类——用 unicode 包判断字符类型（字母 unicode.IsLetter、数字 unicode.IsDigit、空白 unicode.IsSpace、标点 unicode.IsPunct）。Unicode 转义序列——解析 \uXXXX（4 位十六进制）和 \UXXXXXXXX（8 位十六进制）转义，还原成实际的 Unicode 字符。
+
+支持 Unicode 标识符——非 ASCII 字母也能做变量名（如 变量名 = 42），符合 Unicode Identifier 规范。处理 NFC/NFD 规范化——同一字符可能有多种编码形式（如 é 可以是一个字符也可以是 e + 组合重音），统一处理。
+
+命令：unicode-lexer input.txt。输出每个 token 的类型、内容、起止位置（同时按 rune 偏移和字节偏移报告）。
+
 Go 标准库，go build 通过。

@@ -1,8 +1,9 @@
-做一个 Heartbleed 漏洞检测工具，Go 写的。
+Heartbleed（CVE-2014-0160）虽然是很老的漏洞了，但内网老系统偶尔还有。受影响的 OpenSSL 版本在处理 TLS Heartbeat 扩展时有缓冲区过度读取——客户端声称 payload 长度是 65535 字节但实际只发了 1 字节，服务端会把内存中该长度范围的数据全部返回，可能包含私钥、密码等敏感信息。
 
-虽然 Heartbleed（CVE-2014-0160）是很老的漏洞了，但内网老系统有时候还有。需要能快速批量检测。
+用 Go 写一个 Heartbleed 漏洞检测工具。check 子命令：构造 TLS ClientHello，包含 heartbeat 扩展（表示支持 heartbeat）。完成 TLS 握手（到 ServerHello Done）。发送恶意 Heartbeat 请求——HeartbeatMessage type=request，payload 长度字段设为一个大值（如 0x4000 = 16384），但实际 payload 只包含 1 字节。读取服务端返回的 Heartbeat 响应。如果响应数据长度明显大于发送的 payload（比如返回了上千字节），说明存在漏洞——服务端泄漏了内存中的数据。如果响应长度等于发送的 payload 长度或没有响应，说明不受影响。
 
-功能：构造 Heartbleed 探测包（TLS heartbeat extension）；发送到目标服务器的 443 端口；分析响应判断是否存在漏洞；支持批量扫描多个目标；输出结果显示是否有漏洞和泄漏的数据大小。
+批量扫描：从文件读取目标列表（host:port 格式），并发检测。输出每个目标的状态——安全/存在漏洞/无法连接，漏洞目标额外显示泄漏的字节数。
 
-命令：heartbleed check -host 192.168.1.1:443、heartbleed check -hosts targets.txt、heartbleed check -host example.com:443 -verbose
+命令：heartbleed check -host 192.168.1.1:443、heartbleed check -hosts targets.txt、heartbleed check -host example.com:443 -verbose。
+
 Go 标准库 net/crypto，go build 通过。

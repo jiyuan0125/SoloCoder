@@ -1,5 +1,10 @@
-写一个 Go 的契约测试工具。
+写一个 Go 的契约测试工具。微服务架构下，每个服务有自己的 API——服务 A 调用服务 B 的接口，怎么确保 B 没有偷偷改了接口？契约测试不直接调 B 服务，而是验证接口契约是否被满足。
 
-场景是微服务之间的接口测试——不直接调服务，而是验证接口契约。工具读入一个契约定义文件（JSON 格式，描述请求和响应的结构），然后对 HTTP API 发请求，验证返回值是否符合契约。检查字段类型、必填/可选、值范围、嵌套结构等。如果服务端改了接口没更新契约，测试就会失败。
+工具读入一个契约定义文件（JSON 格式），描述 HTTP 请求和期望响应的结构。契约格式示例：
+{ "request": { "method": "GET", "path": "/api/users/1" }, "response": { "status": 200, "headers": { "Content-Type": "application/json" }, "body": { "id": 1, "name": "string", "email": "string", "created_at": "string" } } }
 
-支持从 Go 测试代码中运行。Go 标准库 + net/http，go build 通过。
+验证项：HTTP 状态码匹配、响应头匹配、JSON body 结构匹配（字段名存在、类型匹配 int/string/bool/array/object）、必填字段检查、值范围检查（用 min/max 约束）、嵌套结构递归验证。
+
+对 HTTP API 发实际请求验证返回值是否符合契约。如果服务端改了接口没更新契约，测试就会失败。
+
+支持从 Go 测试代码中运行（testing.T）。Go 标准库 + net/http，go build 通过。

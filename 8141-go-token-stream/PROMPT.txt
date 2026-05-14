@@ -1,6 +1,9 @@
-实现一个 Token Stream 库，给解析器提供统一的 token 读取接口。支持 peek（看下一个但不消费）、next（消费一个）、putback（回退一个）、bookmark/rollback（标记位置和回滚到标记）。
+实现一个 Token Stream 库，给解析器提供统一的 token 读取接口。好的 token stream 抽象能让解析器代码更清晰——不用直接处理字符串和位置追踪，专注于语法逻辑。
 
-还能叠加过滤器：跳过空白、跳过注释、合并相邻字符串字面量等。
-示例：用这个库读 Go 源码的 token 流。
-命令：tokenstream demo.go
-Go 标准库，go build 通过。
+支持的操作：peek() 看下一个 token 但不消费、next() 消费一个 token 返回、putback(token) 回退一个 token 到流头部、bookmark() 标记当前位置、rollback() 回滚到最近的书签位置。可以嵌套书签——bookmark 多次后 rollback 按栈序回滚。
+
+还能叠加过滤器，在基础 token 流上包装中间处理层：跳过空白 token（WhitespaceFilter）、跳过注释 token（CommentFilter）、合并相邻的字符串字面量为一个（StringConcatFilter）、自动插入分号（ASI，像 JavaScript 那样根据换行规则判断是否需要插入分号）。
+
+Token 结构体包含：Type（token 类型枚举）、Value（字面值字符串）、Line（行号）、Column（列号）、Position（字节偏移）。
+
+示例：用这个库读 Go 源码的 token 流，展示过滤和书签功能。命令：tokenstream demo.go。Go 标准库，go build 通过。

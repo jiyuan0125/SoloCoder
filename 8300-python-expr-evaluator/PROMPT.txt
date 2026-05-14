@@ -1,5 +1,9 @@
-帮我用 Python 写一个数学表达式求值器，支持带变量的表达式计算。
+业务系统里有个需求让用户自定义计算公式，比如根据身高体重算 BMI、根据订单金额算折扣。硬编码不够灵活，需要一个表达式求值器。Python 实现。
 
-能解析 "3 + 5 * (x - 2)" 这种表达式，支持加减乘除、括号、幂运算（**），内置几个数学函数（sin、cos、sqrt、abs、log）。变量从字典里取值，没定义的变量给个清晰报错。运算符优先级要正确处理。
+支持的表达式语法：整数和浮点数（3、3.14）、变量名（x、user_age）、四则运算（+-*/）和幂运算（**）、括号嵌套、内置函数（sin、cos、sqrt、abs、log、max、min）。运算符优先级：函数调用 > 幂运算 > 乘除 > 加减，括号最高。
 
-不用 ANTLR 之类的东西，手写递归下降解析器。python3 evaluator.py "2**10 + sqrt(144)" 能直接算出结果。附带命令行交互模式更好。
+解析方案用手写递归下降——词法分析把字符串拆成 token（NUMBER、IDENT、OP、LPAREN、RPAREN、COMMA），然后按优先级从低到高写 parse_additive、parse_multiplicative、parse_power、parse_primary 四层函数。函数调用在 parse_primary 里处理：遇到标识符后跟左括号就当函数调用，参数用逗号分隔。
+
+求值阶段：传入一个变量字典 env，遇到变量名从 env 里查值，查不到抛出 NameError 并提示哪个变量没定义。函数调用从内置函数表里查找，参数个数不匹配报错。除零和负数开方也要处理。
+
+两种使用模式：命令行 python3 evaluator.py "2**10 + sqrt(144)" 直接输出结果；交互模式 python3 evaluator.py 进入 REPL，反复输入表达式求值，变量赋值保留在上下文中。纯 Python 标准库。

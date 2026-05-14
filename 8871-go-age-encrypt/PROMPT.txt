@@ -1,8 +1,13 @@
-写个 age 加密工具，Go 实现。
+age 是 Filippo Valsorda 设计的现代文件加密工具，比 GPG 简单很多——没有密钥服务器的概念，没有复杂的信任模型，就是公钥加密或者密码加密。想自己实现一个兼容 age 格式的加解密工具。
 
-age 是现代的文件加密工具，比 GPG 简单很多。想自己实现一个兼容 age 格式的加解密工具。
+用 Go 写一个 age 加密工具。keygen 子命令：用 crypto/curve25519 生成 X25519 密钥对。私钥输出为 age 格式（AGE-SECRET-KEY-... Base64 编码）。公钥从私钥派生（curve25519.X25519），输出为 age1... 格式（Bech32 编码）。
 
-功能：生成 age 密钥对（X25519）；用公钥加密文件或文本，输出 age 格式密文；用私钥解密还原。也支持用密码加密（scrypt 派生密钥）。
+encrypt 子命令（公钥加密模式）：生成随机的 file key（16 字节）。用接收方的 X25519 公钥和发送方临时生成的私钥做 Diffie-Helman 密钥交换得到共享密钥。用 ChaCha20-Poly1305 加密 file key 得到 recipient stanza。用 file key 派生 STREAM 密钥，加密文件内容（nonce 基于 chunk 序号，最后一个 chunk 的 nonce 不同标记结束）。输出 age 格式文件。
 
-命令：age-encrypt keygen > key.txt、age-encrypt encrypt -recipient "pubkey..." -in secret.txt -out secret.age、age-encrypt decrypt -identity key.txt -in secret.age -out recovered.txt
+encrypt 子命令（密码模式）：用 scrypt 从密码派生密钥，其余流程类似公钥模式。
+
+decrypt 子命令：读取 age 文件头，匹配自己的私钥或密码。解密 file key，然后用 STREAM 解密文件内容。
+
+命令：age-encrypt keygen > key.txt、age-encrypt encrypt -recipient "age1pubkey..." -in secret.txt -out secret.age、age-encrypt decrypt -identity key.txt -in secret.age -out recovered.txt。
+
 Go 标准库 crypto 库实现，go build 通过。

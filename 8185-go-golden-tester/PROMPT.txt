@@ -1,5 +1,9 @@
-写个 Go 的 golden file 测试工具。
+写个 Go 的 golden file 测试工具。Golden file 测试就是把期望输出保存在文件里（.golden 后缀），测试时拿实际输出和 golden file 对比。适合输出格式固定但内容复杂的场景——比如代码生成器的输出、Markdown 渲染结果、SQL 格式化输出。
 
-Golden file 测试就是把期望输出保存在文件里，测试时拿实际输出和 golden file 对比。工具提供框架：给定一个测试函数名和输入，自动在 testdata/ 目录下找对应的 .golden 文件，对比实际输出。如果不一致，生成 diff 文件方便查看。支持更新 golden 文件的 flag（-update）。
+工具提供框架：给定一个测试函数名和输入，自动在 testdata/ 目录下查找对应的 .golden 文件。对比逻辑：逐行比较实际输出和 golden file，不一致的地方生成 diff 文件（testdata/TestFuncName.diff）方便查看差异。
 
-要处理好编码问题（UTF-8）和换行符差异。Go 标准库实现，go build 通过。
+支持更新 golden 文件的 flag（-update）——如果确认新的输出是正确的，用 -update 重新生成 golden file。要处理好编码问题——统一 UTF-8，换行符差异自动标准化（\r\n 转 \n）。
+
+也支持 template 模式的 golden file——golden 文件里可以有 {{.Timestamp}} 这样的占位符，对比时动态替换。这样时间戳等动态字段不会导致测试失败。
+
+Go 标准库实现，go build 通过。

@@ -1,5 +1,5 @@
-写一个 PDF 文本提取工具，从 PDF 文件中抽取纯文本内容。
+有一堆 PDF 报告需要做文本分析和搜索——搜索引擎不认识 PDF 格式，得先把文本内容提取出来。PDF 的文本存储方式和普通文档完全不同，它不是按阅读顺序存的，而是按页面上绘制操作的顺序存的。文本块的位置、字体、编码都可能导致提取结果乱序或乱码。
 
-有一堆 PDF 报告需要做文本分析和搜索，得先把文本内容提取出来。工具需要解析 PDF 的内部结构（xref 表、对象流），处理不同的文本编码（PDFDocEncoding、UTF-16、ToUnicode CMap），正确拼接页面上的文本块，保持阅读顺序。
+工具要做的事。解析 PDF 的内部结构：从文件尾的 %%EOF 往前找到 xref 表（交叉引用表，记录每个对象在文件中的位置），通过 xref 定位到各个页面对象。每个页面引用了一个 Resources 字典（包含字体）和一个 Contents 流（包含绘制指令）。解析 Contents 流中的文本操作符：Tj（直接输出字符串）、TJ（输出字符串数组，数组中的数字是字间距调整）、BT/ET（文本块开始结束）。
 
-python main.py extract document.pdf --output text.txt。也支持 python main.py extract document.pdf --page 3 只提取指定页。Python 实现，可以依赖 PyPDF2 或 pdfminer。能正确提取中文和英文混排的 PDF。
+字体编码是最大难点。PDF 有自己的编码方式 PDFDocEncoding，还可能通过 ToUnicode CMap 映射到 Unicode。中文字体常用 CIDFont + Identity-H 编码，需要解析 CMap 才能正确映射字符。文本块按坐标排序尽量还原阅读顺序。支持提取全部页面或指定页面。用法：python3 pdf_extract.py extract document.pdf --output text.txt 或 python3 pdf_extract.py extract document.pdf --page 3

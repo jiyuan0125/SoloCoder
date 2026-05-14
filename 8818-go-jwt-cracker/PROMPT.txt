@@ -1,12 +1,15 @@
-写一个 JWT 弱密钥爆破工具，Go 实现。
+安全评估的时候经常遇到开发用弱密钥签 JWT，比如 "secret"、"password"、"123456" 这些。有了弱密钥就能伪造任何 JWT token，获取任意权限。想写个工具自动检测这个问题——给一个 JWT token，用字典暴力尝试密钥，找到了就说明这个 token 不安全。
 
-安全评估的时候经常遇到开发用弱密钥签 JWT，想写个工具自动检测这个问题。
+用 Go 写一个 JWT 弱密钥爆破工具。只针对 HMAC 系列算法（HS256/HS384/HS512），因为这类算法的签名是对 header+payload 做 HMAC，只要密钥对了就能验证通过。
 
-功能：
-- 常见弱密钥字典爆破：内置 top 1000 常见弱密钥，也支持加载自定义字典文件
-- 支持 HS256/HS384/HS512 算法的密钥爆破
-- 多线程并发尝试：利用多核加速爆破过程
-- 输出格式：找到密钥时输出密钥值、解码后的 payload，以及验证耗时
-- 命令行用法：`./jwt-cracker --token=xxx --wordlist=words.txt`
+流程：解析 JWT 的 header 和 payload，提取签名部分和 alg 字段。从字典文件逐行读取候选密钥，用每个候选密钥对 header.payload 计算 HMAC，和 token 中的签名比对。匹配了就找到了。
+
+并发加速：用 goroutine + channel 实现多线程爆破。生产者读取字典发送到 channel，N 个 worker goroutine 从 channel 取候选密钥尝试匹配。找到后通过 done channel 通知所有 worker 停止。并发数可配置，默认 runtime.NumCPU()。
+
+内置 top 1000 常见弱密钥列表（直接硬编码在程序里），也支持通过 --wordlist 参数加载自定义字典文件。
+
+输出格式：找到密钥时输出密钥值、解码后的 header 和 payload（JSON 格式），以及验证耗时。找不到时输出尝试的总次数和耗时。
+
+命令行：jwt-cracker --token=eyJxxx.eyyyy.zzzz --wordlist=words.txt --workers=8。
 
 Go 标准库，go build 能编译通过。

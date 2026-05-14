@@ -1,5 +1,7 @@
-做一个日志注入检测工具，防止攻击者通过用户输入污染日志内容。
+做一个日志注入检测工具。日志注入的危害不只是伪造日志内容——攻击者可以用 ANSI 转义序列在终端隐藏恶意操作，或者注入换行伪造看起来正常的日志行来混淆审计追踪。
 
-分析日志消息中的特殊字符和模式：换行符 \n \r（伪造新的日志行）、ANSI 转义序列（在终端输出中隐藏恶意内容）、JSON/XML 注入（破坏结构化日志的解析）、SQL 片段（让日志分析工具误判）。
+Python 实现。分析维度——换行符注入：日志消息中包含 \r 或 \n，在大多数日志系统中会创建新的日志行，攻击者可以伪造一条看起来正常的日志（如"用户 admin 登录成功"）来掩盖恶意行为。ANSI 转义序列：\x1b[ 开头的序列可以控制终端光标移动、删除行、改颜色，在终端查看日志时隐藏真实内容。JSON/XML 注入：如果日志是结构化格式，注入特殊字符可以破坏解析器。
 
-提供一个 sanitize 函数清理待写入日志的字符串，和一个检测函数分析已有日志文件中的可疑行。Python 3 标准库就行。python log_inj_check.py analyze app.log。
+提供两个函数。sanitize_for_log(message) → str：清理待写入的字符串，将 \r 和 \n 替换为空格或转义表示（\\n），剥离所有 ANSI 转义序列，对 JSON/XML 特殊字符做转义。detect_injection(log_file)：扫描已有日志文件，逐行检查是否包含可疑模式，输出有注入嫌疑的行号和具体问题。
+
+CLI：python log_inj_check.py sanitize "input string"、python log_inj_check.py analyze app.log。python3 标准库。

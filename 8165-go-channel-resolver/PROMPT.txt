@@ -1,5 +1,9 @@
-写一个 Go channel 解析器，分析代码中 channel 的使用模式。
+写一个 Go channel 解析器，分析代码中 channel 的使用模式。channel 是 Go 并发的核心原语——goroutine 之间通过 channel 通信。但 channel 用法多样且容易出错——没有消费者的 channel 会永久阻塞、重复关闭 channel 会 panic。
 
-输入 Go 源码，找出所有 channel 的创建（make(chan ...)）、发送（ch <- x）和接收（<-ch / x = <-ch）操作。分析每个 channel 的方向（双向、只发、只收）、缓冲区大小、在哪些 goroutine 之间传递。对没有消费者或没有生产者的 channel 要报警。
+输入 Go 源码，找出所有 channel 的创建（make(chan T)、make(chan T, N) 带缓冲区）、发送（ch <- x）和接收（<-ch、x = <-ch、x, ok := <-ch）操作。
 
-输出 channel 拓扑图和潜在问题清单。Go 标准库实现，go build 通过。
+分析每个 channel 的属性：方向（双向 chan T、只发 chan<- T、只收 <-chan T，从函数参数类型推导）、缓冲区大小（0=无缓冲同步 channel、N=缓冲 channel）。在哪些 goroutine 之间传递——channel 作为参数在函数间传递时追踪数据流。
+
+对没有消费者或没有生产者的 channel 要报警——"channel 'result' created at main.go:10 has no receivers"。输出 channel 拓扑图和潜在问题清单。
+
+Go 标准库实现，go build 通过。

@@ -1,9 +1,7 @@
-写一个 ASS/SSA 字幕文件解析工具，提取字幕样式和事件数据。
+ASS/SSA 字幕格式——动画字幕组的标配。比 SRT 复杂太多了：有样式定义、特效标签、覆盖定位。但如果只做基础解析（提取文本和时间轴）其实不难。Rust 写一个 ASS 解析器。
 
-解析内容：
-- 解析 [Script Info] 段：获取分辨率（PlayResX/Y）、时长、标题等脚本信息
-- 解析 [V4+ Styles] 段：读取每个样式定义（Fontname、Fontsize、PrimaryColour、Alignment 等）
-- 解析 [Events] 段：每条 Dialogue 的 Layer、Start、End、Style、Text，注意 {\pos} {\b} 等内联标签的保留
-- 输出结构化 JSON，包含样式列表和事件列表
+ASS 文件是分段的纯文本——[Script Info]、[V4+ Styles]、[Events]、[Fonts]、[Graphics] 等。Script Info 段包含 Title、Original Script、ScriptType（"v4.00+"）、PlayResX/Y（渲染分辨率）、Timer（定时器精度）。这些信息虽然不影响字幕内容解析但对正确渲染很重要。
 
-Rust 项目，cargo build 通过。`ass-parser parse subtitles.ass --json`。
+V4+ Styles 段的格式行以 "Format:" 开头定义字段顺序，后面是 "Style:" 行。标准字段顺序：Name、Fontname、Fontsize、PrimaryColour、SecondaryColour、OutlineColour、BackColour、Bold、Italic、Underline、StrikeOut、ScaleX、ScaleY、Spacing、Angle、BorderStyle、Outline、Shadow、Alignment（1-9 小键盘位置）、MarginL、MarginR、MarginV、Encoding。颜色格式是 &HAABBGGRR&（注意不是 RGB，是 BGR 反转的，AA 是 alpha）。
+
+Events 段类似——"Format:" 定义字段，"Dialogue:" 行是事件。Layer、Start（H:MM:SS.cc 格式，注意是百分之一秒不是毫秒）、End、Style、Name、MarginL、MarginV、MarginR、MarginV、Effect、Text。Text 里的覆盖标签如 {\pos(x,y)}、{\an8}、{\b1} 要保留不删除。用法 ass-parser parse subtitles.ass --json。Rust 实现，cargo build 通过。

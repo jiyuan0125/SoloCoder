@@ -1,9 +1,7 @@
-写一个 AVI 容器格式解析器，能读取 AVI 文件的 RIFF 结构和索引信息。
+AVI 格式虽然老了但有些老视频文件还在用——特别是一些监控录像和 2000 年代的视频素材。AVI 基于 RIFF 结构，嵌套层级比 MP4 简单但效率也低很多（没有索引就无法 seek）。Rust 写一个解析器。
 
-具体要做：
-- 解析 RIFF/AVI 头部结构，读取 avih（主 AVI 头）中的宽度、高度、帧率、总帧数
-- 解析 strl 列表中的 strh（流头）和 strf（流格式），识别视频流和音频流的编码参数
-- 读取 idx1 索引块，列出每个数据块的偏移量、大小和关键帧标志
-- 正确处理 RIFF 的 list 和 chunk 嵌套结构
+RIFF 结构：4 字节 "RIFF" + 4 字节总大小 + 4 字节 "AVI" + 子 chunk。子 chunk 有两种形式——简单 chunk（4 字节 ID + 4 字节大小 + 数据）和 LIST（"LIST" + 4 字节大小 + 4 字节列表类型 + 子元素）。主要 LIST 类型：hdrl（头部列表）、strl（流头部列表）、movi（数据列表）。
 
-用 Rust 写，cargo build 通过。`avi-parser info video.avi` 打印流信息和索引摘要。
+hdrl 里的 avih（主 AVI 头）：4 字节每帧微秒数（1000000/usPerFrame = 帧率）、4 字节每秒字节数（码率）、4 字节标志位（如 HASINDEX）、总帧数、初始帧数、流数、缓冲区大小、宽度、高度。
+
+strl 列表里每个流有 strh（流头——类型 'vids'/'auds'、编码 FourCC、采样大小、帧率）和 strf（流格式——视频是 BITMAPINFOHEADER 包含宽高位深压缩方式，音频是 WAVEFORMATEX 包含采样率声道数位深）。idx1 索引块里是 4 字节对齐的数据块位置表——每项 4 字节 chunk ID + 4 字节标志（0x10=keyframe）+ 4 字节偏移 + 4 字节大小。用法 avi-parser info video.avi。Rust 实现，cargo build 通过。

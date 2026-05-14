@@ -1,8 +1,9 @@
-做个 TLS 指纹识别工具，Go 写的。
+不同 TLS 客户端在 ClientHello 里的密码套件顺序、扩展、椭圆曲线选择都不一样。这种差异形成了"指纹"，可以用来识别客户端类型——是 Chrome 浏览器还是 curl、是 Python 脚本还是恶意工具。JA3 就是基于这个原理的指纹算法。
 
-不同的 TLS 客户端（浏览器、curl、Python）握手时 ClientHello 的扩展和密码套件顺序不同，可以用来识别客户端类型。类似 JA3/JA4 指纹。
+用 Go 写一个 TLS 指纹识别工具。serve 子命令：启动一个 TLS 服务端（可以自签证书），等待客户端连接。从 ClientHello 中提取字段——TLS 版本、密码套件列表（按顺序）、扩展列表、椭圆曲线列表、椭圆曲线点格式。计算 JA3 指纹——把以上字段用逗号连接后计算 MD5 哈希。在已知指纹库中查找匹配——内置常见的 JA3 指纹（Chrome、Firefox、Safari、curl、Python requests、Go net/http、恶意软件特征等）。
 
-功能：作为 TLS 服务端接收 ClientHello，提取密码套件列表、扩展、椭圆曲线等字段；计算 JA3 指纹哈希；匹配已知客户端指纹库识别客户端类型。
+analyze 子命令：从 pcap 文件中提取 ClientHello（解析 TLS Record 层，找 ContentType=22 Handshake，HandshakeType=1 ClientHello）。对每个 ClientHello 计算 JA3 指纹。输出统计——每个 JA3 指纹出现次数、对应的客户端类型。
 
-命令：fingerprint-tls serve -port 8443（启动 TLS 服务端，打印连入客户端指纹）、fingerprint-tls analyze -pcap capture.pcap（从抓包中提取 JA3）
+命令：fingerprint-tls serve -port 8443（启动 TLS 服务端，打印连入客户端指纹）、fingerprint-tls analyze -pcap capture.pcap（从抓包中提取 JA3）。
+
 Go 标准库 crypto/tls，go build 能编译。

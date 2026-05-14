@@ -1,9 +1,7 @@
-做一个 IPTC 元数据解析工具，Go 实现。
+新闻编辑室的同事给我反映了个问题——他们从图库下载的图片带有 IPTC 元数据（标题、关键词、版权），但上传到内容管理系统后这些信息全丢了。排查发现是系统在处理图片时把 APP13 段给去掉了。我需要先写一个 IPTC 解析工具，确认哪些图片有 IPTC 数据，内容是什么。
 
-新闻图片和商业图库经常把 IPTC 信息嵌在图片里，我需要：
-- 从 JPEG/TIFF 的 APP13 段中定位 IPTC-NAA 数据
-- 解析 IPTC Record 2 的各个标签：ObjectName、Caption、Keywords、Byline、Copyright、City、Country 等
-- 支持多个重复标签（比如多个 Keywords）
-- 把解析结果以可读格式或 JSON 输出
+IPTC 数据藏在哪里？JPEG 文件的 APP13 段里，以 "Photoshop 3.0" 标识开头，里面是 8BIM 资源块结构。找到资源 ID 为 0x0404 的块就是 IPTC-NAA 数据。IPTC 的编码格式是 tag-length-value：1 字节记录号（IPTC 的都是 2）+ 1 字节 dataset 号 + 2 字节数据长度 + 数据内容。
 
-用法 iptc-parse news_photo.jpg，打印所有 IPTC 字段。Go 标准库，go build 通过。
+常用的 dataset 有这些：ObjectName(2:05) 图片标题、EditStatus(2:07) 编辑状态、Category(2:15) 类别、SupplementalCategory(2:20) 补充分类、Keywords(2:25) 关键词——这个可以重复出现多次、Caption(2:120) 图片描述、Author(2:80) 作者、Copyright(2:116) 版权声明、DateCreated(2:55) 创建日期。文本类型的直接读字符串，日期类型的是 8 字节 YYYYMMDD 格式。
+
+解析结果输出为可读格式，也可以加 --json 输出 JSON。命令行 iptc-parse news_photo.jpg，Go 标准库实现，go build 通过。

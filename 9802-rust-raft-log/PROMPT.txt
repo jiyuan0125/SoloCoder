@@ -1,11 +1,11 @@
-帮我用 Rust 实现一个 Raft 日志复制模块。
+Raft 的日志复制模块是整个协议里最复杂的部分——不仅要保证日志的匹配性质（如果两条日志在某个 index 的 term 相同，之前的内容也都一样），还要处理 Follower 日志不一致时的回退和覆盖。用 Rust 把这个模块实现出来，类型安全会帮大忙。
 
-我们在做分布式共识，需要把客户端的操作记录持久化并且同步到大多数节点。日志条目要按 Index 严格有序，支持追加、截断和一致性检查。
+日志条目的数据结构：Entry { index: u64, term: u64, command: Vec<u8> }。Leader 的日志用一个 Vec<Entry> 存储，同时维护每个 Follower 的 nextIndex 和 matchIndex。nextIndex 初始值为 Leader 日志长度+1，matchIndex 初始值为 0。
 
-具体功能：
-- 日志条目结构包含 Term、Index、Command 数据
-- 支持从某个 Index 开始截断后续日志（用于解决冲突）
-- PrevLogIndex/PrevLogTerm 一致性检查，不匹配时拒绝追加
-- 能够按 Index 范围查询日志条目
+AppendEntries 的处理流程：Follower 收到 AppendEntries 后，先检查 prevLogIndex 处的 term 是否等于 prevLogTerm。不匹配就从冲突点截断日志。匹配则追加新条目（跳过已存在的条目）。最后如果 leaderCommit > commitIndex，更新 commitIndex 为 min(leaderCommit, 最新日志 index)。
 
-cargo build 能编译，附上基本的单元测试。
+Leader 端的复制逻辑：发送 AppendEntries 时携带 prevLogIndex = nextIndex[i] - 1 和 prevLogTerm。成功则更新 nextIndex 和 matchIndex。失败则回退 nextIndex 并重试。回退优化：不要一次退一格，可以一次退到上一个 term 的边界。
+
+模拟 5 个节点，预先给 Follower 塞一些不一致的日志，让 Leader 逐步修复它们。打印每次 AppendEntries 的结果和 Follower 日志的变化。
+
+cargo build 通过。

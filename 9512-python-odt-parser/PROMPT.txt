@@ -1,13 +1,9 @@
-做个 ODT 文件（LibreOffice Writer 格式）解析工具。
+政府部门和学校还在用 LibreOffice 导出的文档全是 .odt 格式。公司内部系统只认 .docx，每次转换都要打开 LibreOffice 再另存为，批量处理效率为零。需要一个解析工具直接提取内容。
 
-有些政府机构和学校还在用 LibreOffice，导出的文档是 .odt 格式。需要统一做内容提取和格式转换。
+ODT 本质是 ZIP 包——content.xml 存正文、styles.xml 存样式、meta.xml 存元数据。Python 3 解析器要做的事：解压 ODT 文件，解析 XML 结构，提取段落文本并识别标题层级（通过样式名判断 heading 级别），区分有序和无序列表，表格数据转成二维数组，嵌入图片从 ZIP 里直接提取保存。
 
-功能：
-- 解析 ODT 的 XML 结构，提取段落文本
-- 识别标题层级、列表（有序和无序）
-- 提取表格数据
-- 导出嵌入的图片资源
-- 读取文档元数据（标题、作者、关键词等）
-- 支持批量处理一个目录下的所有 odt 文件
+文档元数据（标题、作者、创建时间、修改时间、关键词）从 meta.xml 读取。整个解析结果输出为 JSON 格式，包含 metadata、sections（带层级）、tables、images 几个部分。
 
-Python 3，不依赖 LibreOffice 进程。
+支持批量处理——传入目录路径遍历所有 .odt 文件逐个解析。不用启动 LibreOffice 进程，纯 Python 解析 XML。python parse_odt.py document.odt -o result.json。
+
+ODT 里的变更追踪记录（修改历史）可以选择性提取，有时候能看出文档的编辑过程。支持输出 Markdown 格式作为 JSON 之外的备选。

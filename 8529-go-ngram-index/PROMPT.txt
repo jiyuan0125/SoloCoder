@@ -1,9 +1,13 @@
-用 Go 实现 N-Gram 索引。N-Gram 把文本切成长度为 n 的子串，在模糊搜索和拼写纠错里很常用。
+拼写纠错和模糊搜索有个很实用的技术——N-Gram 索引。把一个词切成若干长度为 n 的子串，然后统计两个词共享了多少个相同的 n-gram，用 Jaccard 系数衡量相似度。好处是建好索引后查询速度很快，不用对每个候选词都算编辑距离。
 
-功能：
-- 对输入文本生成 N-Gram 列表（支持 unigram、bigram、trigram，n 可配置）
-- 建立 N-Gram 倒排索引：每个 n-gram 对应包含它的文档/单词列表
-- 支持 N-Gram 相似度计算（Jaccard 系数）
-- 根据一个查询词，用 N-Gram 索引找到相似度最高的候选词
+实现步骤——
 
-Go 标准库，go build 通过。相似度计算要正确，别漏掉边界 n-gram 的处理。
+第一步，N-Gram 生成。对输入文本生成所有长度为 n 的子串。比如 "hello" 的 bigram（n=2）是 ["he", "el", "ll", "lo"]。支持 unigram（n=1）、bigram（n=2）、trigram（n=3），n 可配置。边界处理：文本长度小于 n 时，整个文本就是一个 gram。开头和结尾各加一个特殊字符（比如 "#"）作为 padding，这样 "#he" 和 "lo#" 也是有效 gram。
+
+第二步，建 N-Gram 倒排索引。每个 n-gram 对应包含它的词/文档列表。插入一个词时，生成它的所有 n-gram，对每个 gram 在索引中添加这个词。
+
+第三步，相似度计算。两个集合的 Jaccard 系数 = 交集大小 / 并集大小。给定查询词，生成它的 n-gram 集合，在索引中找到共享 n-gram 最多的候选词，计算 Jaccard 系数，返回相似度最高的 top-k 个。
+
+第四步，查询接口。FuzzySearch(query string, topK int) []ScoredWord。返回按相似度降序排列的候选词列表，每个带相似度分数。
+
+Go 标准库，go build 通过。Jaccard 系数的计算要正确处理空集（两个空集的 Jaccard 定义为 1）。

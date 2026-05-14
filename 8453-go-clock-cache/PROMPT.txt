@@ -1,11 +1,9 @@
-帮我实现一个 Clock（时钟）缓存算法，用 Go 写。
+Clock（时钟）缓存算法是 LRU 的一种近似实现，比严格 LRU 开销低很多——不需要双向链表的移动操作，只用环形缓冲区加引用位模拟时钟指针扫描。在操作系统页面置换里很常见（Linux 的 CLOCK-PRO）。Go 实现。
 
-Clock 是 LRU 的一种近似实现，比严格 LRU 开销低很多，用环形链表加引用位来模拟时钟指针扫描，在操作系统页面置换里很常见。
+环形缓冲区存储缓存条目，每个条目有一个 referenced 布尔标志。Get 时命中就标记 referenced=true。Put 插入新条目时如果缓冲区满，启动淘汰扫描。
 
-具体要做：
-- 环形缓冲区存储缓存条目，每个条目有一个 referenced 标志位
-- Get 时标记 referenced=true，淘汰时指针扫过把 referenced=false 的踢掉
-- 支持 Put/Get/Delete，设置最大容量
-- 淘汰时如果遇到 referenced=true 的就清零跳过，继续扫下一个
+淘汰过程：维护一个时钟指针（hand），顺时针扫描。遇到 referenced=false 的条目就淘汰（指针前进一格）。遇到 referenced=true 的就清零 referenced 并跳过（给"第二次机会"），继续扫下一个。如果所有条目都是 referenced=true，扫一圈后会再次遇到已清零的条目，此时淘汰。
 
-Go 标准库，go build 能过。考虑下并发场景加个读写锁。
+这样做的好处：不需要维护链表顺序（省掉指针操作），Get 只是置一个标志位（O(1)），淘汰时平摊每个条目只检查一次。缺点是淘汰精度不如严格 LRU——近似 LRU。
+
+支持 Put/Get/Delete，设置最大容量。Go 标准库，go build 能过。考虑并发场景加个读写锁。写个 main 演示扫描式和热点混合的访问模式下的命中率。

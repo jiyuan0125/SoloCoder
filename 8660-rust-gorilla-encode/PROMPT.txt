@@ -1,5 +1,11 @@
-监控系统的时序数据量太大了，Facebook 那篇 Gorilla 论文里的压缩方法看起来很适合。用 Rust 实现 Gorilla 时间序列压缩编码。
+监控系统的时序数据量爆炸——几千个 metric，每个每秒一个数据点，一天就是几亿条。Facebook 的 Gorilla 论文提出了一种高效压缩方法：时间戳做 delta-of-delta 编码，浮点值做 XOR 编码。对监控数据通常有 10 倍以上的压缩比。
 
-Gorilla 编码的核心思想是：时间戳做 delta-of-delta 编码，浮点值做 XOR 编码，遇到连续相似的数据压缩效果非常好。要能编码 (timestamp, float64) 的数据点序列，解码后完全还原原始数据。对监控场景的数据应该有 10 倍以上的压缩比。
+用 Rust 实现 Gorilla 时间序列压缩编码。
 
-提供编码器和解码器，支持从一个完整序列中流式处理。cargo build 通过。
+时间戳编码——第一个时间戳存原始值（64 bit）。第二个存 delta（有符号整数，varint 编码）。之后每个存 delta-of-delta（当前 delta 减前一个 delta）。如果 delta-of-delta 为 0，只写 1 bit 标记。非零则根据大小选 2/4/8/16 bit 前缀加对应值。
+
+浮点值编码——第一个值存原始 64 bit。之后每个存和前一个值的 XOR。如果 XOR 为 0，写 1 bit 标记。非零则编码 leading_zeros、trailing_zeros 和 significant_bits。如果 leading_zeros 和 trailing_zeros 范围和前一次相同，用短标记（只写 significant bits）。
+
+流式处理——编码器维护内部缓冲区（bit buffer），支持逐点写入。解码器也逐点读取。不需要一次性把整个序列加载到内存。
+
+对监控场景数据（周期性采集、相邻值变化小）应该有明显压缩效果。cargo build 通过。

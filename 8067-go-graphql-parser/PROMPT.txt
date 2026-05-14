@@ -1,1 +1,9 @@
-做一个 GraphQL 相关的工具，第一步得先把 GraphQL 查询语句解析成 AST。Go 实现，能解析 GraphQL 的 query、mutation、subscription 操作，支持字段选择、片段（Fragment）、变量定义、指令（@include @skip）、内联片段。解析后的 AST 要能方便地遍历和修改。遇到语法错误给出行号和上下文。纯 Go 标准库，go build 通过。
+做一个 GraphQL 网关，第一步得把客户端发来的查询字符串解析成 AST。GraphQL 的语法虽然不像 SQL 那么复杂，但也不简单——字段选择集、片段展开、指令、变量，都得正确处理。
+
+Go 实现一个 GraphQL 解析器，能处理查询语言和 Schema 定义语言（SDL）两种格式。查询端：解析 Query、Mutation、Subscription 操作，支持字段选择（可以带别名 alias: field）、参数（key: value，支持变量 $var）、片段（fragment Name on Type {...} 和 ...FragmentName 展开）、变量定义（$var: Type! = defaultValue）、指令（@include(if: $cond)、@skip）。
+
+Schema 端：解析 type、input、enum、interface、union、scalar 类型定义，支持字段参数、列表类型（[Type]）、非空类型（Type!）、描述字符串（三引号 """..."""）。
+
+解析后的 AST 要能方便地遍历和修改——每个节点有类型信息和子节点列表。实现 Visit 方法接受 visitor 函数做深度优先遍历。
+
+遇到语法错误给出行号、列号和上下文。纯 Go 标准库，go build 通过。

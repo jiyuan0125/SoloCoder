@@ -1,3 +1,7 @@
-K8s 集群里 NetworkPolicy 越来越多，互相冲突的情况时有发生。写一个 Go 工具来分析 Kubernetes NetworkPolicy 的集合，判断某个 Pod 能不能访问另一个 Pod。
+K8s 集群里的 NetworkPolicy 越来越多了，现在有四十多条，互相之间经常打架——你刚加了条 ingress 规则限制访问来源，另一个团队又写了条 egress 全放行的策略把你的限制给覆盖了。排障的时候根本搞不清楚某个 Pod 为什么能访问或者不能访问另一个 Pod。
 
-输入是一组 NetworkPolicy 的 YAML 定义和源/目标 Pod 标签，工具要能计算出最终的允许/拒绝结果。支持 ingress 和 egress 两个方向。输出要说明匹配了哪些 policy 规则导致的最终结论。纯标准库实现，go build 通过。
+写一个 Go 工具来分析 Kubernetes NetworkPolicy 的集合效果。给定一组 NetworkPolicy 的 YAML 定义（从目录读取或 stdin 传入），以及源 Pod 的标签和目标 Pod 的标签，工具要能算出这个访问请求最终是被允许还是被拒绝。
+
+实现思路：先把所有 NetworkPolicy 解析成内存中的规则对象，每个规则包含 podSelector、policyTypes（ingress/egress）、以及对应的 from/to 和 ports 定义。然后根据源和目标 Pod 的标签匹配相关的 policy（policy 的 podSelector 匹配目标 Pod 即为 applicable）。对于 ingress 方向，检查目标 Pod 上的所有相关 policy 是否允许来自源 Pod 的流量；对于 egress 方向则反过来。
+
+输出要说明最终结论（允许/拒绝/无策略覆盖默认拒绝），并列出所有匹配了的 policy 名称和具体匹配了哪条 ingress/egress 规则。支持同时查询多个源-目标对。纯 Go 标准库，go build 通过。

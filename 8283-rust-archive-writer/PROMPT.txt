@@ -1,5 +1,9 @@
-帮我用 Rust 写一个 ar 格式的静态库（archive）打包工具。
+ar 格式是 Unix 下静态库的标准格式——把一组 .o 文件打包成 .a，链接器可以按需从中提取需要的目标文件。用 Rust 写一个 ar 格式工具，能创建、列表、提取。
 
-能把多个目标文件（.o）打包成 .a 文件，也能列出 .a 文件里的内容。支持 GNU ar 的格式（magic "!\n"，60 字节 header）。能处理长文件名（使用 /ARFILENAMES/ 扩展）。提取时要能还原原始文件。
+ar 文件格式很简单：开头 8 字节魔数 "!\n"，然后是一系列文件条目。每个条目的 header 是 60 字节：文件名（16 字节）、修改时间（12 字节）、所有者 ID（6 字节）、组 ID（6 字节）、文件模式（8 字节）、文件大小（10 字节）、结束标记 "`\n"（2 字节）。header 后面紧跟文件内容，按 2 字节对齐（奇数大小后面补一个 \n）。
 
-命令行：cargo run -- cr libfoo.a a.o b.o c.o（创建），cargo run -- t libfoo.a（列出），cargo run -- x libfoo.a（提取）。cargo build 通过。
+长文件名（超过 15 字符）用 GNU 扩展：特殊成员 /ARFILENAMES/ 存储所有长文件名的字符串表，header 的文件名字段写成 /offset 指向字符串表中的位置。
+
+命令行接口：cargo run -- cr libfoo.a a.o b.o c.o 创建静态库；cargo run -- t libfoo.a 列出内容；cargo run -- x libfoo.a 提取所有成员到当前目录。提取时要还原原始文件名和时间戳。
+
+cargo test 创建一个 .a 再提取出来，验证和原始 .o 文件二进制一致。cargo build 通过。

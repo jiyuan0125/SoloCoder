@@ -1,11 +1,7 @@
-用 Rust 写一个 WAV 音频文件解析器。
+最近在做一个音频处理引擎，第一步就得把 WAV 文件的结构搞清楚。WAV 看着简单——就是个 RIFF 容器里套了几个 chunk——但实际处理时会碰到各种边缘情况：24bit 音频、浮点格式、多声道、chunk 顺序不标准等等。Rust 来实现。
 
-我最近在做音频处理相关的项目，需要深入理解 WAV 格式：
-- 解析 RIFF/WAVE 文件头，读取 fmt chunk（音频格式、声道数、采样率、位深）
-- 读取 data chunk 中的 PCM 采样数据
-- 支持常见的 WAV 子格式：PCM（format 1）、IEEE Float（format 3）
-- 处理额外的 chunk：LIST（元数据）、fact（压缩格式的事实信息）
-- 计算并显示音频时长、总采样数、数据速率
-- 支持导出采样数据为 CSV（方便分析波形）
+从 RIFF 头开始——4 字节 "RIFF"、4 字节文件总大小（减去前 8 字节）、4 字节 "WAVE"。然后遍历子 chunk，每个 chunk 是 4 字节 ID + 4 字节大小 + 数据（不足 2 字节倍数的有 1 字节 padding）。fmt chunk 是必须的——包含音频格式（1=PCM、3=IEEE Float、6=A-law、7=μ-law）、声道数、采样率、字节码率、块对齐、位深度。data chunk 包含实际的 PCM 采样数据。
 
-用法 wav-parser audio.wav，输出音频参数和基本信息。cargo build 和 cargo run 通过。标准库实现，不依赖外部 crate。
+8bit PCM 每个采样 1 字节无符号整数（0-255，中心值 128）。16bit PCM 是 2 字节有符号小端整数（-32768~32767）。24bit PCM 是 3 字节有符号小端整数——读取时左移 8 位扩展到 32 位。32bit 浮点每个采样 4 字节 IEEE 754，值域 -1.0~1.0。多声道数据是交错存储的——左右左右左右...。
+
+波形统计对调试很有帮助——计算所有采样的最大值、最小值、平均值和 RMS 响度（sqrt(Σx²/N)）。非标准的 chunk（LIST、cue、fact、bext）跳过但不报错。用法 wav-parser info audio.wav，输出格式信息和波形统计。Rust 实现，cargo build 通过。

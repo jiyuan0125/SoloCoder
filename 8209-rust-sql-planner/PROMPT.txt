@@ -1,10 +1,9 @@
-SQL 查询来了之后直接执行效率很低，需要一个查询计划器，把解析出来的 AST 转换成逻辑执行计划，确定数据访问路径。
+SQL 查询来了之后直接执行效率很低——全表扫描太慢、JOIN 顺序不对更慢。需要一个查询计划器，把解析出来的 AST 转换成逻辑执行计划，确定数据访问路径和算子组合方式。
 
-用 Rust 实现 SQL 查询计划器：
-- 接收 SQL AST 输入，生成逻辑查询计划
-- 支持全表扫描、索引扫描、嵌套循环等算子
-- 支持 Filter、Project、Join、Aggregate、Sort 等逻辑算子
-- 输出树状执行计划，可以 visualize 各个算子关系
-- 简单的场景：单表查询带 WHERE + JOIN 两表查询
+用 Rust 实现 SQL 查询计划器。接收 SQL AST 输入，生成逻辑查询计划（Logical Plan）。
 
-CLI：sql-planner "SELECT ..." --explain，输出逻辑执行计划。cargo build 编译通过。
+逻辑算子定义：Scan（全表扫描，指定表名和可选的列列表）、Filter（过滤条件，对输入行做筛选）、Project（投影，只保留需要的列）、Join（连接两个输入，指定连接类型和条件）、Aggregate（聚合，指定分组键和聚合函数）、Sort（排序，指定排序键和方向）。
+
+计划生成规则：FROM 子句生成 Scan 算子。WHERE 条件生成 Filter 算子（放在 Scan 之后）。JOIN 生成 Join 算子（嵌套循环策略）。GROUP BY 生成 Aggregate 算子。ORDER BY 生成 Sort 算子。SELECT 列表生成 Project 算子（放在最外层）。
+
+输出树状执行计划文本——每个算子一行，缩进表示层级关系。CLI：sql-planner "SELECT ..." --explain。cargo build 编译通过。

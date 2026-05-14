@@ -1,3 +1,9 @@
-业务侧经常要加各种风控规则，硬编码太麻烦了。帮我用 Python 写一个规则引擎，支持用类自然语言定义规则（比如 "when amount > 10000 and risk_score < 60 then reject"），能对输入的事实（fact）字典批量求值，返回匹配的规则列表和执行动作。
+风控系统每天都有新规则要上线，硬编码在 Python 里改一次发一次版，太慢了。做一个规则引擎，让运营在配置文件里写规则，引擎加载后对每笔交易自动匹配。Python 实现。
 
-规则之间支持 AND/OR/NOT 组合，优先级排序。遇到规则冲突要能检测出来。纯 Python，python 能跑。
+规则格式定义：每条规则有名字、优先级（整数，越大越先执行）、条件和动作。条件是一个布尔表达式，支持对 fact 字典的字段做比较——amount > 10000、risk_score < 60、city in ["北京", "上海"]。条件之间用 AND/OR/NOT 组合，支持括号分组。动作是字符串标识：approve、reject、review。
+
+事实（fact）是一个 Python 字典，比如 {"amount": 15000, "risk_score": 45, "city": "深圳"}。引擎对所有规则按优先级排序后逐条求值，返回所有匹配规则的动作列表。可以选择"首次匹配停止"或"匹配全部"两种模式。
+
+冲突检测：如果两条规则条件不同但可能对同一 fact 产生矛盾动作（一个 approve 一个 reject），在规则加载时静态分析并警告。不要求精确的冲突检测，但至少能发现完全相反的条件（amount > 10000 → reject 和 amount < 5000 → approve 不冲突，amount > 10000 → reject 和 amount > 10000 → approve 冲突）。
+
+规则从 JSON 文件加载。python3 rule_engine.py rules.json facts.json。纯 Python 标准库。

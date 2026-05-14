@@ -1,9 +1,14 @@
-帮我实现树状数组（Fenwick Tree / BIT），用在实时统计场景，比如统计某个分数区间内有多少学生。
+Fenwick Tree（也叫 Binary Indexed Tree）是线段树的简化版——只用一个一维数组就能实现前缀和的快速查询和单点更新。比线段树代码短很多但功能更受限。Go 实现。
 
-要求：
-- 支持单点更新和前缀求和查询，都是 O(log n)
-- 支持区间求和（利用前缀和差值）
-- 支持查找第 k 小的元素（二分查找优化）
-- 能从数组快速初始化，O(n) 建树
+核心思想：利用整数的二进制表示。数组 tree[i] 存储 [i - lowbit(i) + 1, i] 区间的和，lowbit(i) = i & (-i)（取最低位的 1）。比如 i=6(110)，lowbit=2(010)，tree[6] 存的是 arr[5] + arr[6]。
 
-写个 main 模拟一个在线评测系统的排名：动态插入成绩，查询某个排名区间内的成绩分布。纯 Go 标准库，go build 能编译。
+操作：
+- PrefixSum(i)：求 arr[1] 到 arr[i] 的前缀和。从 i 开始，每次减去 lowbit(i) 累加 tree 值。O(log n)
+- RangeSum(l, r)：PrefixSum(r) - PrefixSum(l-1)
+- Update(i, delta)：arr[i] 加上 delta。从 i 开始，每次加上 lowbit(i) 更新 tree 值。O(log n)
+
+数组索引从 1 开始（0 号位不用）。空间 O(n)，初始化 O(n log n) 或 O(n)（用前缀和一次构建）。
+
+和线段树对比：Fenwick 只支持单点更新+区间查询（或区间更新+单点查询），不支持区间更新+区间查询。但代码量小一半，常数因子更优。
+
+写个 main：处理 100 万次混合操作（随机选择 query 或 update），和暴力数组对比结果正确性和速度。go build 通过。

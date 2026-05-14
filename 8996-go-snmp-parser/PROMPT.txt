@@ -1,3 +1,7 @@
-监控网络设备需要解析 SNMP 协议。Go 写一个 SNMP 报文解析工具。
+监控网络设备时 SNMP 是最常用协议，但网管平台只展示最终结果，看不到原始通信内容。排查监控异常时需要看 SNMP GET 查了哪个 OID、返回了什么值、community string 是什么。
 
-解析 SNMP 报文（BER/DER 编码）：支持 SNMPv1/v2c 的 GET/GETNEXT/SET/RESPONSE/TRAP PDU；解析 PDU 字段（community string、request ID、error status、variable bindings）；解码常见 MIB 变量的 OID 和值（System、Interface、IP 统计等）；从 pcap 文件提取 UDP 161/162 端口数据包。Go 标准库，go build 编译通过。
+Go 写一个 SNMP 报文解析工具。从 pcap 提取 UDP 161（请求/响应）和 162（Trap）端口的数据包。
+
+SNMP 报文用 ASN.1 BER 编码，解析器处理几种基本类型：INTEGER（0x02）、OCTET STRING（0x04）、NULL（0x05）、OBJECT IDENTIFIER（0x06）、SEQUENCE（0x30）。BER 规则：Tag-Length-Value 结构，Length 最高位为 1 则是多字节编码。OID 编码特殊——前两个数字合并（第一个乘 40 加第二个），后续数字用七位一组变长编码。
+
+支持 SNMPv1 和 v2c：解析 Message 的 SEQUENCE，提取 version、community string、PDU。PDU 类型包括 GetRequest、GetNextRequest、SetRequest、GetResponse、Trap。从 PDU 提取 request-id、error-status、error-index、variable-bindings。每个 binding 是 OID-值 对，解码常见 MIB 变量如 sysDescr、sysUpTime、ifTable。Go 标准库，go build 通过。

@@ -1,4 +1,4 @@
-GraphQL 的查询语法和 Schema 定义语言（SDL）都有专门的解析需求。需要把 GraphQL 查询字符串解析成 AST，方便后续验证和执行。
+GraphQL 的查询语法和 Schema 定义语言（SDL）各有各的解析需求。前端发来的查询字符串需要先解析成 AST，才能做后续的验证、权限检查和执行计划生成。整个流程是：拿到查询文本 → 词法分析拆成 token → 按语法规则构建 AST → 在 AST 上做字段权限校验和变量类型检查。SDL 部分也需要解析 type、input、enum、interface 这些类型定义，生成内部的类型注册表。用 Rust 实现这个解析器，要求语法错误时能精确报告出错的行列位置，方便调试。
 
 用 Rust 实现 GraphQL 解析器：
 - 解析 Query、Mutation、Subscription 操作

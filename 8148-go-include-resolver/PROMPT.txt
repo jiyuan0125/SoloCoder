@@ -1,6 +1,9 @@
-写一个 #include 文件解析器。分析 C/C++ 源文件中的 #include 指令，递归解析所有引用的头文件，构建 include 依赖树。
+写一个 #include 文件解析器。C/C++ 项目的编译依赖关系主要通过 #include 体现——理解了 include 依赖树就理解了项目的文件组织结构。
 
-检测：循环 include、重复 include（缺 include guard）、缺失的头文件。
-输出依赖图（文本树形），支持 -dot 格式。
-用法：include-resolver -I /usr/include -I ./src main.c
-Go 标准库，go build 能编。
+分析 C/C++ 源文件中的 #include 指令（包括 #include <file> 系统头文件和 #include "file" 用户头文件两种），递归解析所有引用的头文件，构建完整的 include 依赖树。
+
+检测以下问题：循环 include——A 包含 B，B 又包含 A（虽然有 include guard 保护但说明结构有问题）。重复 include——同一个头文件被多次包含且缺少 include guard（会导致重复定义错误）。缺失的头文件——在所有搜索路径中都找不到被引用的头文件。不必要的 include——被包含的头文件里的内容在包含它的文件中完全没用到。
+
+输出依赖图——文本树形格式（缩进表示层级）和 dot 格式（用 Graphviz 渲染）。支持 -I 参数指定额外的搜索路径。
+
+用法：include-resolver -I /usr/include -I ./src main.c。Go 标准库，go build 能编。

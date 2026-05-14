@@ -1,5 +1,7 @@
-经常需要快速查看一个视频文件的基本信息，每次开 ffmpeg 太麻烦。写个 Python 命令行工具，解析视频文件的元数据。
+每次想看视频文件的基本信息都得装 ffmpeg 然后跑 ffprobe——太重了。写个轻量级工具直接读文件头就能拿到关键参数：容器格式、视频编码和分辨率和帧率、音频编码和采样率、总时长。支持 MP4 和 MKV 两种最常见的容器。
 
-支持 MP4 和 MKV 容器格式。提取的信息包括：容器格式、视频编码/分辨率/帧率/码率、音频编码/采样率/声道数、时长。直接读文件头和元数据 box，不需要 ffmpeg。
+MP4 怎么读？找到 moov box，从 mvhd 算总时长（duration/timescale），从 trak 里找 hdlr 确认轨道类型（vide 是视频 soun 是音频），再从 stsd 读编码参数。视频的 stsd 里有 avc1（H.264）或 hev1（H.265），后面跟着宽高和 avcC（包含 Profile/Level）。音频的 stsd 里有 mp4a（AAC），后面跟着采样率和通道数。帧率从 stts 里的时间戳分布推算。
 
-Python 3 实现，用 struct 模块解析二进制。python media_info.py video.mp4 输出易读的格式。
+MKV 怎么读？解析 EBML 元素找到 Segment → Info（时长 Duration，TimecodeScale）、Segment → Tracks → TrackEntry。视频轨（TrackType=1）里有 CodecID（V_MPEG4/ISO/AVC 是 H.264）、PixelWidth、PixelHeight。音频轨（TrackType=2）有 SamplingFrequency、Channels。
+
+输出格式清晰易读，每个参数一行。用法：python3 media_info.py show video.mp4

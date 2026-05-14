@@ -1,1 +1,7 @@
-我需要给公司的几个域名加上 HSTS 检测能力。写一个 Go 命令行工具，输入一组 URL，逐个检查它们的 HTTP 响应头里是否包含 Strict-Transport-Security，并解析出 max-age、includeSubDomains、preload 这些指令。输出时按合规/不合规分类显示，max-age 小于 31536000 秒的标记为不合规。用 Go 标准库实现，go build 能编译通过就行。
+给公司的几个域名加上 HSTS 检测能力。HSTS（HTTP Strict Transport Security）是强制浏览器只通过 HTTPS 访问网站的 HTTP 响应头，max-age 设得够长（至少一年）才安全。
+
+写一个 Go 命令行工具，输入一组 URL（从文件读取或命令行参数），逐个发 HTTPS 请求，检查响应头里是否包含 Strict-Transport-Security。如果存在，解析出 max-age 值（秒）、includeSubDomains 标志、preload 标志。
+
+输出按合规/不合规分类显示。合规标准：max-age >= 31536000（一年），有 includeSubDomains，有 preload。max-age 小于一年的标记为不合规并建议调整。缺少 HSTS 头的域名标记为不合规并给出添加建议（给出完整的 header 值示例）。
+
+支持从文件批量读取域名列表。输出支持文本和 JSON 格式。Go 标准库 net/http，go build 能编译通过就行。

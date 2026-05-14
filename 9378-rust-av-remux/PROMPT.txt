@@ -1,5 +1,7 @@
-写一个 Rust 的音视频重封装（remux）工具，只改容器不改编码。
+第一步确定源和目标格式。支持的转换路径：MP4↔MKV、FLV→MP4、TS→MP4、AVI→MP4、MKV→FLV。只改容器不改编码数据，所以速度快且无画质损失。
 
-有时候从 MKV 换到 MP4 或者从 FLV 换到 TS，视频和音频数据本身不变，只需要改容器格式。工具接收输入文件和目标格式，解析源容器的帧数据，然后按目标容器的规范重新打包。支持常见转换：MP4↔MKV、FLV→MP4、TS→MP4。重点保证时间戳连续、关键帧标记正确。
+第二步从源容器提取帧数据。每个帧携带的信息：时间戳（PTS/DTS）、是否关键帧、编码数据（H.264 NAL 单元或 AAC 帧的原始字节）。按时间戳排序存储在内存中的帧列表里。
 
-Rust 实现，cargo build 通过。
+第三步按目标容器规范写入。MP4 要构建完整的 moov box（ftyp + moov + mdat）。moov 里包含采样表——stts（时间戳）、stsz（帧大小）、stco（chunk 偏移）、stss（关键帧）、stsd（编码描述）。MKV 要构建 EBML 结构——Segment + Info + Tracks + Clusters（每个 Cluster 里用 SimpleBlock 写帧）。FLV 写 Tag 结构。
+
+第四步处理容器间的差异。编码标识映射：MKV 的 "V_MPEG4/ISO/AVC" → MP4 的 "avc1"，MKV 的 "A_OPUS" → MP4 暂不支持（需要转码容器不支持的编码）。时间基转换：MP4 用 timescale（如 24000），MKV 用 TimecodeScale（纳秒），FLV 用毫秒。关键帧标记必须正确传递。用法 av-remux -input video.flv -output video.mp4。Rust 实现，cargo build 通过。

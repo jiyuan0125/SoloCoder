@@ -1,3 +1,9 @@
-想学习 Lark 解析器的设计思路，用 Python 从零实现一个简化版的 Lark 风格解析器。用户用 EBNF 格式定义文法（支持 | 选择、* 重复、? 可选、+ 一或多次），解析器用 Earley 算法解析，支持歧义文法。
+Lark 是 Python 生态中设计很优雅的解析库——用 Earley 算法处理任意上下文无关文法，支持歧义解析，还能用 transformer 后处理 AST。想从原理层面自己实现一个简化版。Python 实现。
 
-能根据文法定义自动构建 AST，支持 transformer 对 AST 节点做后处理。纯 Python 实现，不用 Lark 库。python 能跑，内置一个 JSON 文法作为示例。
+文法定义格式（类似 EBNF）：非终结符用小写，终结符用大写或引号。支持 | 选择、* 重复、? 可选、+ 一或多次、() 分组。每条规则可以有别名（用 -> 标注），方便 transformer 处理。
+
+Earley 算法实现：对于输入的每个位置 i，维护一个 Earley 状态集合 S(i)。每个状态是 (rule, dot_position, start_position)。三种操作——Predict（遇到非终结符，把它的所有产生式加入集合）、Scan（遇到终结符，匹配输入后推进 dot）、Complete（dot 到达产生式末尾，回到 start_position 对应的集合推进 dot）。
+
+支持歧义文法：同一个非终结符在同一位置可能有多个 Complete 路径，都保留，构建共享 packed parse forest (SPPF)。提供两种遍历模式——取第一个解析结果（忽略歧义）和枚举所有解析结果。
+
+Transformer 接口：用户定义一个类，方法名对应规则别名，自动把 AST 节点传给对应方法做后处理。内置 JSON 文法作为示例。python3 lark_parser.py grammar.lark input.txt。纯 Python 不用 Lark 库。

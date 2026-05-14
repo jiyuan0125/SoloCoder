@@ -1,12 +1,13 @@
-写一个数据保留策略管理工具，Go 实现。
+等保要求不同类型的数据保留不同时间——操作日志 180 天、用户行为数据 90 天、会话记录 30 天。现在到期清理全靠人记得去做，经常漏掉，审计的时候被指出一堆过期的数据还在。
 
-等保要求不同类型的数据保留不同时间，到期要自动清理，现在都是人工操作经常遗漏。
+用 Go 写一个数据保留策略管理工具。策略定义（JSON 格式）：每条策略包含 data_type（数据类型标识）、retention_days（保留天数）、action（到期后的操作：delete 删除、archive 归档、flag 标记待人工处理）、exceptions（例外列表——某些数据因合规原因需要永久保留）。
 
-功能需求：
-- 定义数据保留策略：数据类型 + 保留期限（如操作日志保留180天、用户行为数据保留90天）
-- 过期数据扫描：根据策略配置检查哪些数据已经过了保留期
-- 执行数据清理：删除或归档过期数据，清理前生成清理报告供审计
-- 支持保留策略例外：某些数据因合规原因需要永久保留，标记后跳过清理
-- 命令行：`./retention-policy check --config=policies.json`、`./retention-policy execute --dry-run`
+过期扫描 CheckExpired(policies []Policy, dataSource DataSource) []ExpiredRecord：根据策略配置检查哪些数据已经过了保留期。扫描时跳过 exceptions 中标记的数据。输出即将过期（7天内）和已过期的数据列表。
+
+执行清理 ExecuteCleanup(expired []ExpiredRecord, dryRun bool) CleanupReport：dryRun 模式只生成报告不做实际操作。实际模式下执行 delete 或 archive 操作。清理前生成详细的清理报告——每条数据的 ID、类型、创建时间、过期天数、执行的操作。
+
+报告内容：扫描了多少条数据、发现多少条过期、清理了多少条、跳过了多少条（例外）、清理释放了多少存储空间（估算）。
+
+命令行：retention-policy check --config=policies.json 检查过期数据，retention-policy execute --dry-run 试运行，retention-policy execute 正式执行。
 
 Go 标准库，go build 编译通过。

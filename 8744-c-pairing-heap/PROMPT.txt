@@ -1,5 +1,12 @@
-写一个配对堆（Pairing Heap），结构简单但实际性能很好。合并操作是 O(1)。
+Fibonacci Heap 理论漂亮但代码复杂——级联剪切、度数标记、consolidate，调试困难。Pairing Heap 结构极其简单：每棵树是一个根加一堆子树，用左孩子右兄弟表示。实际性能测试中往往和 Fibonacci Heap 差不多快，常数因子甚至更小。代码量少一半以上。
 
-支持 insert、find_min、extract_min、merge、decrease_key。用左孩子右兄弟的表示法。extract_min 时把所有子树两两配对合并（two-pass merge）。decrease_key 直接切断子树挂到根列表。
+用 C 语言实现 Pairing Heap。
 
-C 语言，gcc 编译。测试：插入随机数据，extract_min 验证有序，decrease_key 后验证堆性质保持。
+第一步，基本操作。merge(h1, h2)：比较两个根节点，小的当父，大的作为左孩子插入（原来的左孩子变成新孩子的右兄弟）。insert：创建单节点然后 merge。find_min：返回根。这三个都是 O(1)。
+
+第二步，extract_min。删掉根节点，剩下一堆子树（从左到右排列）。two-pass merge：第一遍从左到右两两配对合并，第二遍从右到左依次合并到结果里。均摊 O(log n)。
+
+第三步，decrease_key。修改节点值后，把它从父节点切断（从兄弟链表中摘除），修改 key，然后和堆 merge。
+
+用 C 实现，支持泛型（void* key + 比较函数）。gcc 编译。验证 extract_min 输出有序。
+测试——插入 [5,3,8,1,7,2,9] 后 extract_min 应得到升序。decrease_key 把 8 改成 0 后堆顶应为 0。空堆操作返回错误。

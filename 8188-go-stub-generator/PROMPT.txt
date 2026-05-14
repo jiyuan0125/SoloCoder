@@ -1,5 +1,7 @@
-帮我写一个 Go 的 stub 代码生成器。
+帮我写一个 Go 的 stub 代码生成器。单元测试时需要替换外部依赖——数据库、HTTP 客户端、消息队列——但手写 stub 太麻烦了。工具读取 Go 接口定义，自动生成对应的 stub 实现。
 
-场景：单元测试时需要替换外部依赖，但手写 stub 太麻烦。工具读取 Go 接口定义，自动生成对应的 stub 实现。生成的 stub 结构体包含每个方法的函数字段，可以在测试里动态赋值。还要生成辅助方法来记录调用次数、参数、调用顺序。
+生成的 stub 结构体包含每个方法的函数字段——可以在测试里动态赋值。比如接口有 GetUser(id int) (*User, error) 方法，生成的 stub 就有 GetUserFunc func(int) (*User, error) 字段。默认实现返回零值，但测试里可以覆盖：stub.GetUserFunc = func(id int) (*User, error) { return &User{ID: id, Name: "test"}, nil }。
+
+还要生成辅助方法：记录调用次数（GetUserCalledCount int）、记录调用参数（GetUserCalledWith []int）、记录调用顺序（全局方法调用列表）。这些在验证 mock 行为时很有用。
 
 输出 .go 文件，带 //go:generate 注释方便集成。Go 标准库，go build 编译过。

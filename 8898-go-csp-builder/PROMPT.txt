@@ -1,8 +1,11 @@
-做个 CSP（Content-Security-Policy）构建工具，Go 写的。
+每次配 CSP（Content-Security-Policy）头都记不住指令怎么写——script-src、connect-src、img-src 这些指令老搞混，引号的规则也不一样（'self' 要引号，cdn.example.com 不要引号）。想有个交互式的工具帮忙生成。
 
-每次配 CSP 头都记不住指令怎么写，script-src、connect-src 这些指令老搞混。想有个交互式的工具帮忙生成 CSP 头。
+用 Go 写一个 CSP 构建工具。build 子命令：通过命令行参数组合各条指令——-scripts "'self' cdn.example.com"、-styles "'self'"、-images "'self' data:"、-connect "'self' api.example.com"、-fonts "fonts.googleapis.com"、-frame "'none'"。输出完整的 CSP 头字符串。
 
-功能：通过命令行参数组合各条指令（script-src、style-src、img-src 等）；支持预设模板（strict、moderate、development）；输出完整的 CSP 头字符串；检查指令之间是否有冲突。
+预设模板：strict 最高安全——default-src 'none'；script-src 'self'；style-src 'self'；img-src 'self'；connect-src 'self'。moderate 适度——default-src 'self'；允许 CDN 域名。development 开发——宽松，允许 'unsafe-inline' 和 'unsafe-eval'（仅用于开发环境）。
 
-用法：csp-builder build -scripts "'self' cdn.example.com" -styles "'self'" -images "'self' data:"、csp-builder template strict -report-uri "/csp-report"
+冲突检测：检查指令之间是否有矛盾——script-src 同时允许 'unsafe-inline' 和有 nonce- 或 strict-dynamic（后者会被前者覆盖）。default-src 'none' 但某指令没设置（会被默认拒绝，可能是有意也可能是遗漏）。script-src 用了 'unsafe-eval'（标记为安全风险）。
+
+命令：csp-builder build -scripts "'self' cdn.example.com" -styles "'self'" -images "'self' data:"、csp-builder template strict -report-uri "/csp-report"。
+
 Go 标准库实现，go build 能编译通过。

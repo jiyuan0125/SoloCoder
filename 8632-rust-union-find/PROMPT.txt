@@ -1,1 +1,13 @@
-实现一个并查集（Union-Find / Disjoint Set Union），用 Rust。主要用来做连通分量检测和动态合并集合。支持 find（带路径压缩）、union（按秩合并）、判断两个元素是否在同一集合。简单直接，但要保证路径压缩和按秩合并都实现到位，让均摊复杂度接近 O(α(n))。写个 main 测试一下：读入一堆合并和查询操作，打印结果。cargo run 能跑就行。
+连通分量检测、Kruskal 最小生成树、游戏里的组队系统——这些场景都离不开并查集（Union-Find / DSU）。操作很简单：合并两个集合、查询两个元素是否在同一集合。关键是要高效，否则大规模数据下会超时。
+
+用 Rust 实现并查集，支持路径压缩和按秩合并。
+
+数据结构——parent[i] 表示元素 i 的父节点（初始 parent[i] = i）。rank[i] 表示以 i 为根的树的高度（初始为 0）。用 Vec<usize> 存 parent 和 rank。
+
+Find 操作——find(x)：沿着 parent 链往上找根。路径压缩：在查找过程中把沿途的节点直接指向根（parent[x] = find(parent[x])）。递归或迭代实现。路径压缩后均摊接近 O(1)。
+
+Union 操作——union(x, y)：找到 x 和 y 的根 rx 和 ry。如果相同就不操作（已在同一集合）。按秩合并：如果 rank[rx] < rank[ry]，parent[rx] = ry。如果 rank[rx] > rank[ry]，parent[ry] = rx。如果相等，任选一个做根并把它的 rank 加一。
+
+判断连通——same(x, y)：find(x) == find(y)。
+
+写个 main 测试：读入一堆合并和查询操作，打印每步的连通状态。比如判断一个图里有没有环。cargo run 能跑就行。

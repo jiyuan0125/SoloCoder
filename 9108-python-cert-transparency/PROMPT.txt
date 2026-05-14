@@ -1,5 +1,7 @@
-做一个证书透明度（Certificate Transparency）检查工具。
+证书透明度（Certificate Transparency）日志是发现恶意证书签发的重要工具——如果有人在 CT 日志中发现你域名的证书但你没申请过，那就有问题了。写个工具查询 CT 日志。
 
-输入一个域名，查询 CT log 里该域名相关的所有证书签发记录（通过 crt.sh 的 API 或者直接查 CT log 服务器）。对比当前域名的证书和日志里的记录，找出异常签发：比如从未见过的 CA 签的证书、覆盖范围过广的通配符证书、过期时间异常的。
+Python 实现证书透明度查询工具。查询方式：通过 crt.sh 的 API（https://crt.sh/?q=domain.example.com&output=json）查询指定域名在 CT 日志中出现的所有证书。解析返回的 JSON，提取每张证书的 issuer_name、name_value（覆盖的域名列表）、not_before/not_after（有效期）、serial_number。
 
-输出列出所有发现的证书，标记可疑的。Python 3，用 requests 访问公开 API。
+分析功能：异常检测——签发者不是你的正常 CA（比如正常用 Let's Encrypt 但突然出现了 DigiCert 签发的证书）、证书覆盖的域名包含你不认识的子域名、有效期异常短（可能是有意规避检测）。对比分析：维护一份已知的正常证书基线，新出现的证书自动标记为需要审查。
+
+输出：按时间排序的证书列表，每张证书标注签发者、覆盖域名、有效期、状态（已知正常/新发现需审查/已过期）。也支持导出证书的 PEM 内容做进一步分析。python3 命令行工具。

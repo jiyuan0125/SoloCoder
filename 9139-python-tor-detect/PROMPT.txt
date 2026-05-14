@@ -1,5 +1,7 @@
-帮我做一个 Tor 出口节点检测工具，判断请求是否来自 Tor 网络。
+帮我做一个 Tor 出口节点检测工具。有些攻击是从 Tor 出口节点发起的，攻击者用 Tor 隐藏真实 IP。在 WAF 或登录接口前加一层 Tor 检测，来自出口节点的请求给个额外验证或直接拦截。
 
-维护一个 Tor 出口节点列表（从 Tor Bulk Exit List API 或 OnionOO 获取），提供两个功能：检查单个 IP 是否是出口节点、分析访问日志找出所有来自 Tor 的请求。列表支持定期自动更新和本地缓存。
+Python 实现。数据源：从 Tor 官方的 Bulk Exit List API（https://check.torproject.org/torbulkexitlist）获取当前所有出口节点的 IP 列表，也可以从 OnionOO API 获取更详细的出口节点信息（包括支持的端口、带宽、国家）。列表本地缓存到文件，定期自动更新（默认每 30 分钟刷新一次）。
 
-也支持检查某个端口上是否有 Tor 出口节点（有些出口节点只允许特定端口）。CLI 使用：tor_check 1.2.3.4、tor_check --logfile access.log --port 443。Python 3 + requests。
+两种使用模式——单 IP 检查：输入一个 IP 地址，返回是否是 Tor 出口节点。如果是，还显示它支持转发哪些端口（有些出口节点只允许 80/443）。日志分析模式：读入 nginx/apache 访问日志，逐行检查源 IP 是否来自 Tor，输出所有来自 Tor 的请求统计——请求数、访问的 URL、时间分布。
+
+端口过滤：可以指定目标端口，只检查在该端口上有出口策略的节点。CLI：tor_check 1.2.3.4、tor_check --logfile access.log --port 443。python3 + requests。

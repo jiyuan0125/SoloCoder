@@ -1,5 +1,5 @@
-最近在研究信息隐藏，想写个简单的图片隐写工具练手。用 Python 实现基于 LSB（最低有效位）的图片隐写，把一段文字藏到 PNG 图片像素里。
+LSB 隐写是最基础的图片信息隐藏技术——把秘密消息藏到像素值的最低位里，肉眼完全看不出图片有任何变化。一张 1000×1000 的 RGB 图片有 300 万个通道值，每个通道的最低位可以存 1 bit 信息，理论容量约 375KB。这个容量对于藏一段文字绑绑有余。
 
-两个核心功能：encode 把文本信息嵌入图片并保存，decode 从含隐写信息的图片中提取文本。嵌入后图片肉眼看不出变化。只支持 PNG（无损），不要用 JPEG 会破坏数据。
+编码过程：把秘密文本转成 UTF-8 字节流，前面加 4 字节长度头（表示消息有多少字节）。然后逐位取消息的每个 bit，替换到像素通道值的最低位。比如像素 RGB 是 (123, 200, 45)，最低位分别是 1, 0, 1。如果要嵌入的三个 bit 是 0, 1, 0，像素变成 (122, 201, 44)。变化幅度最多 ±1，人眼根本分辨不出来。
 
-Python 3 + Pillow，命令行操作：python stego.py encode cover.png "secret msg" output.png 和 python stego.py decode output.png。
+解码过程反过来：按顺序读取像素通道最低位，每 8 个 bit 组成一个字节。先读 4 字节得到消息长度，再读对应数量的字节，转回 UTF-8 字符串。只支持 PNG 格式——JPEG 的有损压缩会破坏 LSB 数据。用法：python3 stego.py encode cover.png "秘密消息" output.png 或 python3 stego.py decode output.png

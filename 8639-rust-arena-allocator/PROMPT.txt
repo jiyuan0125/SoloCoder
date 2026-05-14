@@ -1,1 +1,11 @@
-帮我实现一个 Arena（区域）分配器，Rust 版本。和 Bump 分配器类似但支持分代释放——可以一次释放某个 arena 区域内的所有对象而不影响其他区域。用 Vec<Vec<u8>> 或者类似的分层结构，每层是一个分配区域。支持 new_arena 创建新区域、在指定区域里分配、释放某个区域的所有对象。写个 demo 展示多区域分配和按区域回收。cargo run 能看到输出。
+Bump 分配器只能整块释放，但有时候需要更细粒度的控制——比如一个请求处理过程中的所有临时对象一起释放，但不同请求之间的对象互不影响。Arena 分配器支持这种分代释放：每个 arena 独立管理自己的内存，释放某个 arena 不影响其他 arena。
+
+用 Rust 实现 Arena 分配器。
+
+多 Arena 支持——ArenaAllocator 维护一组 Arena，每个 Arena 有自己的内存区域和 offset。new_arena() 创建新 Arena，返回 ArenaId。在指定 Arena 里分配：alloc(arena_id, nbytes)。释放某个 Arena 的所有对象：drop_arena(arena_id)。全局 reset 释放所有 Arena。
+
+实现方式——用 Vec<Vec<u8>> 或者类似的分层结构。每个 Arena 是一个 Vec<u8>，分配时移动 offset。Arena 之间互不干扰，释放一个不影响其他。ArenaId 可以是简单的 usize 索引。
+
+泛型支持——arena.alloc::<MyStruct>(arena_id) 分配一个 MyStruct 大小的空间并返回可变引用。用 std::alloc::Layout 处理大小和对齐。
+
+写个 demo 展示多 Arena 分配和按 Arena 回收——创建 3 个 Arena，每个 Arena 分配不同数量的对象，逐个 drop Arena，验证被 drop 的 Arena 的内存被回收而其他 Arena 不受影响。cargo run 能看到输出。

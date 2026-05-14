@@ -1,5 +1,5 @@
-写一个 Base32 编解码工具。
+为什么需要 Base32？有些系统对字符集有限制——大小写不敏感的系统（如 DNS）、不允许特殊字符的系统（如某些文件名规范）。Base64 的 +/= 在这些场景会出问题，Base32 只用 A-Z 和 2-7（32 个字符），完全避免这些困扰。
 
-有些场景下 Base64 的字符集不合适（比如大小写敏感的系统），需要用 Base32。工具要支持标准 Base32（RFC 4648）和 hex-base32（Extended Hex）两种字母表。支持文件和字符串两种输入方式。
+编解码工具。编码：输入文本或二进制文件，按 5 位一组切分，映射到 Base32 字母表。输出字符串默认无分隔符，加 --wrap 76 可以换行。解码：输入 Base32 字符串还原成原始数据。要处理好填充字符（=）和大小写不敏感的输入（统一转大写再解码）。
 
-python main.py encode --text "hello" 输出 Base32 编码；python main.py decode --text "NBSWY3DP" 解码；也支持 --input/--output 处理文件。加 --hex 参数使用 Extended Hex 字母表。Python 标准库 base64 模块。
+两种字母表。标准 Base32（RFC 4648）：ABCDEFGHIJKLMNOPQRSTUVWXYZ234567，填充用 =。Extended Hex（base32hex）：0123456789ABCDEFGHIJKLMNOPQRSTUV，适合需要保持排序一致的场景——标准 Base32 的编码结果排序和原始数据排序不一致，hex 变体一致。通过 --hex 参数切换。用法：python3 base32_codec.py encode --text "hello" 或 python3 base32_codec.py decode --text "NBSWY3DP" 或加 --hex 使用 hex 字母表

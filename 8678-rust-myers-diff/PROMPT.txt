@@ -1,5 +1,12 @@
-Git 用的 diff 算法是 Myers diff，它找的是最短编辑脚本（SES）。用 Rust 实现 Myers diff 算法。
+Git 的 diff 算法不是朴素的 LCS 动态规划——它用的是 Myers diff，在最坏情况下 O(MN) 但实际代码变更的编辑距离通常很小，这时候 Myers 的 O((M+N)D) 就快得多。D 是最小编辑距离，代码审查中每次改动就几行，D 很小，效率优势明显。
 
-Myers 算法的核心是在 edit graph 上用 BFS 找最短路径，时间复杂度 O((M+N)D)，D 是最小编辑距离。要输出最短编辑脚本（哪些行删、哪些行增），同时能生成 unified diff 格式的输出。对大文件要能控制性能。
+用 Rust 实现 Myers diff 算法。
 
-`myers-diff file_a.txt file_b.txt` 输出差异。cargo build 编译通过。
+核心思路——把两个序列画成二维网格。对角线移动免费（字符相等），向下是删除，向右是插入。用一维数组 V 记录每条对角线 k 上能到达的最远 x 坐标。BFS 逐层扩展，d 从 0 增长到 max(M,N)。
+
+- 每轮迭代 d，计算对角线范围 [-d, d]
+- V[k] = max(V[k-1]+1, V[k+1])，然后沿对角线贪心扩展
+- 当 x 到达 M 且 y 到达 N 时找到最短路径
+
+记录路径——保存每轮的 V 数组快照，最后反向追踪得到操作序列。输出最短编辑脚本（SES），生成 unified diff 格式。CLI：myers-diff a.txt b.txt。cargo build 通过。
+性能对比——准备三个测试用例：完全相同的文件、只有几行差异的文件、完全不同的文件。Myers diff 在前两种情况下远快于朴素 LCS，输出各用例的耗时。处理空文件和单行文件的边界情况。

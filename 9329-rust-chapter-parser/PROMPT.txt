@@ -1,9 +1,7 @@
-做一个视频章节信息解析器，读取视频文件中的章节标记数据。
+教学视频和电影经常带章节标记——但播放器不一定都支持显示，有时候需要自己提取出来做目录。不同容器的章节存储方式完全不同。Rust 实现一个统一的章节解析器。
 
-解析能力：
-- MP4 文件：解析 moov/udta/meta 中的 chapter 列表，或 trak 中的 chap 引用
-- MKV 文件：解析 Chapters Element 下的 EditionEntry 和 ChapterAtom，读取章节标题和起始时间码
-- 输出每章的标题、开始时间（转为 HH:MM:SS.mmm 格式）、结束时间
-- 支持嵌套章节（子章节）的展示
+MP4 的章节信息存放在两种位置。一种是 moov/udta/meta/hdlr 确认 handler 为 "mdta" 后，在 meta 的 ilst 里找 chapters 条目。另一种更常见的是 QuickTime 风格——用一个单独的 text track（trak 的 handler_type 为 "text"），里面的采样就是章节标题，采样时间对应章节时间点。还有一种方式是 Nero 格式的 chap atom。
 
-用 Rust 写，cargo build 通过。`chapter-parser info movie.mkv` 列出所有章节。
+MKV 的章节结构更丰富。Chapters 元素（0x1043A770）下面有 EditionEntry（可以有多个版本），每个 EditionEntry 有多个 ChapterAtom。ChapterAtom 包含 ChapterTimeStart（纳秒）、ChapterTimeEnd（可选）、ChapterDisplay（包含 ChapterString 标题和 ChapterLanguage 语言代码）。ChapterAtom 可以嵌套——子章节的 ChapterAtom 是父 ChapterAtom 的子元素。
+
+输出统一格式：每个章节的标题、开始时间（转成 HH:MM:SS.mmm）、结束时间、层级（顶层/嵌套）。嵌套章节用缩进表示。用法 chapter-parser info movie.mkv。Rust 实现，cargo build 通过。

@@ -3,3 +3,9 @@
 需求是这样的：在追踪系统中，一个请求会经过多个服务，每个服务处理阶段就是一个 span。实现一个 span builder，支持设置 span 的 trace_id、span_id、parent_span_id、操作名称、开始时间和标签（key-value 对）。span 之间可以嵌套，子 span 自动继承父 span 的 trace_id。支持将 span 树序列化输出为 JSON 格式，方便后续可视化分析。
 
 Rust 标准库就行，cargo build 通过，能跑个 demo 展示嵌套 span 的创建和 JSON 输出。
+
+这个工具的核心价值在于把span builder的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
+
+Span 是链路追踪的基本单元——代表一次操作。Builder 负责创建 span、记录时间、添加标签和事件，是追踪 API 的核心。
+
+程序要打印关键操作的详细信息，让使用者清楚看到每一步的效果。Rust 标准库实现，cargo build 通过。

@@ -1,1 +1,5 @@
-需要一个命令行音频格式转换工具。支持WAV、FLAC、AIFF等无损格式之间的互相转换。能读取源文件的PCM数据，按目标格式规范重新编码写入。转换时保持采样率和位深度不变（也可以指定重采样参数）。MP3这种有损格式先不考虑，专注于无损格式转换。处理好字节序、对齐等细节，转换后的文件能被其他播放器正常打开。Python3，不用重型框架。
+无损音频格式互转这个需求挺常见的——你有 WAV 文件想转成 AIFF，或者从 AIFF 拿到了原始 PCM 数据要封装成 WAV。不同格式本质上都是包裹同一份 PCM 数据，区别只在文件头结构和字节序。WAV 固定小端，AIFF 大端，裸 PCM 没有文件头。
+
+转换流程分三步。第一步读取源文件，解析文件头拿到采样率、位深、声道数、PCM 数据。WAV 的 44 字节标准头（RIFF + fmt + data chunk）或者 AIFF 的 AIFF + COMM + SSND chunk 都要能解析。第二步是字节序翻转——如果源和目标的字节序不同（比如 WAV 转 AIFF），每个采样值的多字节序列要反转。16bit 采样翻转 2 个字节，24bit 翻转 3 个字节。第三步按目标格式写入文件头和 PCM 数据。FLAC 涉及压缩编解码，太复杂先不做。支持位深转换：32bit float 转 16bit int 时归一化乘以 32767 并 clamp。
+
+注意：输出文件必须能被播放器正常打开，文件头各字段要填对。用法：python3 audio_convert.py to-pcm input.wav --bits 16，或 python3 audio_convert.py to-wav raw.pcm --rate 44100 --channels 2 --bits 16

@@ -1,5 +1,9 @@
-帮我写个工具分析 Go 代码里的 goroutine 使用情况。
+帮我写个工具分析 Go 代码里的 goroutine 使用情况。Go 的并发模型很强大，但 goroutine 泄露是最常见的生产问题——启动了协程但没有退出机制，内存会一直增长直到 OOM。
 
-扫描 Go 源码，找到所有 go 关键字启动的 goroutine 调用。分析每个 goroutine：它是怎么启动的（匿名函数还是具名函数）、捕获了哪些闭包变量、有没有传参、生命周期如何管理（是否通过 context 或 done channel 控制）。对没有退出机制的 goroutine 给出警告。
+扫描 Go 源码，找到所有 go 关键字启动的 goroutine 调用。对每个 goroutine 分析：
+
+启动方式——匿名函数（go func() { ... }()）还是具名函数（go process()）。捕获了哪些闭包变量——这些变量在 goroutine 执行期间可能被外部修改。有没有传参——参数化的 goroutine 比闭包捕获的更安全。生命周期管理——是否通过 context.Context 控制退出、是否有 done channel 信号、是否用 WaitGroup 等待完成。
+
+风险评级：安全（有 context 或 done channel 控制退出）、低风险（短生命周期的 goroutine 如 HTTP handler）、高风险（没有退出机制且可能是长生命周期的 goroutine）。
 
 输出 goroutine 清单和风险评级。Go 标准库，go build 编译通过。

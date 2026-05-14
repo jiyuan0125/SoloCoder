@@ -1,5 +1,5 @@
-帮我做一个 Protobuf 编码工具，从 JSON 或文本数据生成 protobuf 二进制。
+和 Protobuf 解码工具配对使用——给定一个 JSON 数据，生成对应的 protobuf 二进制文件。即使没有 .proto schema 文件，也能通过 JSON 的数据类型自动推断并编码。整数用 varint，浮点数用固定长度，字符串用 length-delimited。
 
-和那个解码工具配对使用。给定一个简单的 JSON 数据（可能还有 .proto schema），生成对应的 protobuf 二进制文件。即使没有 .proto 文件，也能通过 JSON 的数据类型自动推断并编码。整数用 varint，浮点数用固定长度，字符串用 length-delimited。
+编码规则。JSON 整数（包括正负）编码为 wire type 0 的 varint：每个字节的低 7 位存数据，最高位为 1 表示后面还有字节，为 0 表示结束。负数用补码转成无符号再编码（zigzag 编码可选）。JSON 浮点数编码为 wire type 1（64-bit double，8 字节小端序）。JSON 字符串编码为 wire type 2：先写 varint 长度，再写 UTF-8 字节。JSON 对象（嵌套）编码为 wire type 2：先递归编码成二进制，再包一层 varint 长度头。JSON 数组按 repeated 字段处理，每个元素单独写一个相同 field number 的 tag+value。
 
-python main.py encode --input data.json --output data.bin。如果提供了 --schema message.proto 则按 schema 编码。Python 标准库，自己实现 wire format 编码。
+Field number 从 JSON key 的顺序自动分配（1, 2, 3...），或者通过 --schema 参数指定 .proto 文件来精确定义字段编号和类型。用法：python3 protobuf_encode.py encode --input data.json --output data.bin

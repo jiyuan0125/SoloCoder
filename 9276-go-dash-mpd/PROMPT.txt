@@ -1,10 +1,7 @@
-写一个 DASH MPD 文件解析器，Go 语言实现。
+DASH 和 HLS 的思路差不多——都是把视频切成小片然后用一个清单文件描述怎么播放——但 DASH 用 XML 格式的 MPD 文件，层级结构比 m3u8 复杂得多。我在做一个 DASH 播放器的前端，后端需要先把 MPD 解析成结构化数据。
 
-DASH 自适应流播放用的 MPD（Media Presentation Description）是 XML 格式，我需要解析它：
-- 解析 MPD XML 结构：Period、AdaptationSet、Representation、SegmentTemplate、SegmentList 等
-- 提取关键信息：总时长、码率列表、分辨率、编解码器类型
-- 解析 SegmentTemplate 计算每个分片的 URL（$Number$、$Time$、$Bandwidth$ 模板替换）
-- 支持 SegmentTimeline 的时间线描述
-- 支持静态（Static）和动态（Dynamic）MPD
+MPD 的 XML 层级是这样的：MPD 根元素下面有若干 Period（时间段，通常视频就一个 Period），Period 下面有 AdaptationSet（自适应集——同一内容的不同编码版本），每个 AdaptationSet 有多个 Representation（具体的一种编码版本），每个 Representation 下面描述分片信息。
 
-用法 dash-mpd manifest.mpd，输出结构化的 DASH 流信息。Go 标准库，go build 通过。
+要解析的属性：MPD 的 type（static/dynamic）、mediaPresentationDuration（总时长）、minBufferTime。Period 的 duration。AdaptationSet 的 mimeType、contentType（video/audio/subtitle）、lang、segmentAlignment。Representation 的 id、bandwidth、width、height、codecs、frameRate、audioSamplingRate。
+
+分片描述方式有两种。SegmentTemplate 用模板 URL——如 $RepresentationID$/$Number$.m4s，通过 startNumber、duration 和 timescale 算出每个分片的 URL。SegmentTimeline 更精确，用 <S t="" d="" r=""/> 元素描述每个分片的时间偏移和时长，r 属性表示重复次数。工具要同时支持这两种。用法 dash-mpd manifest.mpd，Go 标准库 encoding/xml，go build 通过。

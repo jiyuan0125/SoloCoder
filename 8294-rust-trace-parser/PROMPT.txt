@@ -1,5 +1,9 @@
-我有一些分布式追踪系统的 trace 数据需要解析，用 Rust 实现一个 trace 解析器。
+微服务调用链路出了性能问题，排查的第一步是看 trace 数据——每个请求经过了哪些服务、每个 span 耗时多少。但 Jaeger 的 UI 太卡了，数据量一大就加载不出来。用 Rust 写一个离线 trace 数据解析器。
 
-解析简单的 JSON 格式 trace 数据：每个 span 有 trace_id、span_id、parent_span_id、operation_name、start_time、duration。构建完整的调用树，计算每个操作的耗时分布。找出耗时最长的 critical path。
+输入是 JSON 格式的 trace 数据。每个 span 包含这些字段：trace_id（一次请求的唯一 ID）、span_id（当前 span 的 ID）、parent_span_id（父 span，根 span 为空）、operation_name（操作名如 "HTTP GET /api/users"）、start_time（微秒时间戳）、duration（微秒）。一个 trace 由多个 span 组成。
 
-输入 trace JSON 文件，输出调用树和耗时统计。cargo test 用几个模拟的 trace 数据验证。不用对接真实的追踪系统，文件解析就行。
+解析后构建调用树——以 parent_span_id 为依据，把 span 组织成树结构。根 span 是 parent 为空的节点，其他 span 挂到对应的 parent 下面。计算每个操作的平均耗时、P50/P95/P99。
+
+找出 critical path：从根到最深叶子节点路径上耗时最长的链路。这通常是请求延迟的主要来源。还要检测异常 span——耗时超过平均值 3 倍的标红，duration 为 0 或 start_time 异常的标黄。
+
+输入文件解析器支持 JSON Lines（每行一个 span）和 JSON Array 两种格式。cargo test 用模拟 trace 数据验证。cargo build 通过。

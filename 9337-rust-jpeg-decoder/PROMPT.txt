@@ -1,10 +1,7 @@
-帮我做一个 JPEG 解码器，解析 JPEG 文件的内部结构。
+JPEG 解码——二进制协议里最经典的案例之一。从标记段到霍夫曼熵解码到 IDCT 到颜色空间转换，每一步都是不同的数学操作。Rust 实现一个 baseline JPEG 解码器。
 
-解码步骤：
-- 解析 JPEG SOI 标记和各段（marker segment）：APP0/JFIF、DQT（量化表）、SOF0（帧头）、DHT（霍夫曼表）、SOS（扫描头）
-- 从 SOF0 读取图像宽度、高度、颜色分量数（1=灰度，3=YCbCr）
-- 对 MCU 块做霍夫曼解码 → 反量化 → IDCT 变换，还原 8x8 像素块
-- YCbCr 转 RGB 颜色空间
-- 输出像素数据到 PPM 文件验证正确性
+标记段解析。从 SOI（FFD8）开始扫描。DQT（FFDB）定义量化表——1 字节精度+ID（高 4 位精度 0=8bit 1=16bit，低 4 位表 ID 0-3），然后是 64 个量化值按 zigzag 顺序排列。DHT（FFC4）定义霍夫曼表——1 字节类型+ID（高 4 位 0=DC 1=AC，低 4 位表 ID），16 字节的各码长符号数，然后是符号值列表。用这些信息构建霍夫曼查找表。
 
-Rust 项目，cargo build 编译通过。`jpeg-decoder decode photo.jpg -o output.ppm`。
+SOF0（FFC0）帧头——8 字节头（长度、精度、高度、宽度、分量数）+ 每分量 3 字节（ID、采样因子 H/V、量化表 ID）。SOS（FFDA）扫描头——分量选择和霍夫曼表映射，后面是压缩的熵编码数据。数据中的 0xFF 后跟 0x00 表示数据中的 0xFF（字节填充），0xFF 后跟非零是标记。
+
+MCU 解码流程：先从 DC 霍夫曼表读取 DC 系数的长度编码，再读对应位数得到 DC 差分值。AC 系数读 AC 霍夫曼表——符号的高 4 位是零游程长度，低 4 位是非零系数的长度。遇到 EOB（0x00）结束当前块。反量化：每个系数乘以量化表对应位置的值。IDCT：用公式 X(u,v) = ΣΣ x(i,j) × cos((2i+1)uπ/16) × cos((2j+1)vπ/16) / 4 计算空间域值。最后 YCbCr→RGB。用法 jpeg-decoder decode photo.jpg -o output.ppm。Rust 实现，cargo build 通过。

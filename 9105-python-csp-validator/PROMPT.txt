@@ -1,5 +1,9 @@
-帮我做一个 CSP 策略校验工具，输入一条 CSP 字符串，分析它的安全性。
+已有 CSP 策略但不确定写得对不对，想检查一下有没有安全漏洞。写个 CSP 验证工具，输入一个 CSP 头字符串，分析其中存在的安全问题。
 
-解析 Content-Security-Policy 头里各个 directive，检查有没有不安全的配置：script-src 里的 'unsafe-inline' 'unsafe-eval'、default-src 为 none 但没有补全其他指令、img-src 或 connect-src 配了 * 之类的问题。对每条指令给出安全等级和建议。
+Python 实现 CSP 策略验证器。解析 CSP 头字符串——按分号分割成多个 directive，每个 directive 按空格分割为名称和值列表。验证维度：
 
-如果传入一个 URL 而不是原始字符串，就自动去抓取那个页面的 CSP 头来分析。Python 3，依赖尽量少。
+安全性检查——script-src 或 default-src 包含 'unsafe-inline' 则存在 XSS 风险（应改用 nonce 或 hash）、包含 'unsafe-eval' 则允许 eval() 调用、包含 data: 或 blob: URI 可能被利用、object-src 未设为 'none' 允许加载 Flash/Java 插件。完整性检查——缺少 default-src 作为兜底策略、script-src 和 style-src 同时缺失可能导致 CSP 形同虚设、frame-ancestors 未设置则页面可以被 iframe 嵌入（clickjacking 风险）。
+
+语法检查——directive 名称拼写是否正确（常见错误如 script-source 应为 script-src）、值格式是否合法（域名必须带协议如 https://）、通配符 * 的使用是否安全。
+
+每条检查输出：严重等级（error/warning/info）、问题描述、修复建议。最后给 CSP 策略一个综合评分。python3 命令行工具。

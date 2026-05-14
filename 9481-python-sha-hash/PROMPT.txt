@@ -1,5 +1,5 @@
-我需要一个 SHA 哈希计算工具，支持 SHA-1、SHA-256、SHA-512。
+有些安全场景要求用 SHA-256 甚至 SHA-512 来校验文件完整性，MD5 的碰撞风险已经不被接受。写个 SHA 哈希工具，灵活支持 SHA-1、SHA-256、SHA-512 三种算法，默认用 SHA-256。
 
-有些场景要求用 SHA-256 甚至 SHA-512 来校验文件完整性，MD5 已经不够安全了。工具要灵活支持多种 SHA 算法，默认用 SHA-256。同样支持单文件、批量、校验三种模式，大文件流式处理。
+三种使用模式。单文件计算：给一个文件路径，算出指定算法的哈希值输出（十六进制小写）。目录批量：--dir 参数指定目录，递归扫描所有文件计算哈希，输出文件名和哈希值的列表，格式和 sha256sum 命令保持一致。验证模式：给文件路径和参考哈希值（--verify 参数），自动对比输出匹配或不匹配。
 
-python main.py file.iso --algo sha256 输出哈希；python main.py --dir ./isos/ --algo sha512 批量；加 --verify 参数可以对比校验。Python 标准库 hashlib。
+大文件必须分块处理——每次读 8KB 用 hashlib 的 update() 方法增量计算，不能把整个文件加载到内存。即使是几 GB 的 ISO 镜像也能正常处理。算法通过 --algo 参数选择（sha1/sha256/sha512）。用法：python3 sha_hash.py calc file.iso --algo sha256 或 python3 sha_hash.py calc --dir ./isos/ --algo sha512 或 python3 sha_hash.py verify file.iso --verify abc123 --algo sha256

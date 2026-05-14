@@ -1,3 +1,7 @@
 ASX 播放列表解析器。Windows Media Player 的 ASX 格式也需要支持。
 解析 ASX（Advanced Stream Redirector）XML 格式的播放列表。提取每个 entry 的 title、author、ref href（媒体路径）、copyright 等信息。ASX 有多种版本和写法，要尽量兼容。输出到终端或导出 JSON。
 Python 3 标准库 xml.etree.ElementTree。python asx_parser.py playlist.asx show，或 python asx_parser.py playlist.asx --json -o tracks.json
+
+另外要注意，处理异常情况也很重要——输入文件不存在或者格式完全不对（比如把 PNG 当 CSV 传），要给出友好的错误提示而不是 traceback。如果文件特别大（超过 100MB），需要分块或者流式处理避免内存爆炸。输出结果可以同时支持终端打印和 JSON 文件导出两种方式。最终输出要包含处理摘要：成功多少个、失败多少个、跳过多少个。
+
+接口设计要考虑易用性——新手看一眼 help 就能跑起来，高级用户有足够的参数可以调。输出格式统一用 JSON 方便后续脚本处理。如果处理过程中被中断（Ctrl+C），要把已处理的结果保存下来不要全部丢掉。

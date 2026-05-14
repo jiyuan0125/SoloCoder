@@ -1,12 +1,13 @@
-写一个用户同意管理工具，Go 实现。
+GDPR 要求收集用户数据前必须获得明确同意，而且用户可以随时撤回同意。不同用途的数据处理需要分开授权——比如用户同意用邮箱发营销邮件，但不代表同意把邮箱分享给第三方。需要一个同意记录管理系统。
 
-GDPR 要求收集用户数据前必须获得明确同意，而且用户可以随时撤回同意，需要一个同意记录管理系统。
+用 Go 写一个用户同意管理工具。同意记录结构：每条记录包含 user_id、purpose（数据处理目的：marketing、analytics、third_party_sharing 等）、status（granted/denied/pending）、granted_at（同意时间）、source（同意来源：web_form、mobile_app、api）、version（隐私政策版本号）。
 
-功能：
-- 同意记录：记录用户对每种数据处理的同意状态（同意/拒绝/待确认），附时间戳和同意来源
-- 同意版本管理：隐私政策更新时，追踪哪些用户需要重新授权
-- 同意状态查询：快速查询某用户对特定数据处理目的的当前同意状态
-- 同意撤回：用户撤回同意后自动标记，并触发后续数据清理流程
-- HTTP API：POST /consent 记录同意、GET /consent/:user 查询状态、DELETE /consent/:user 撤回
+同意版本管理：隐私政策更新时递增版本号，追踪哪些用户还停留在旧版本需要重新授权。GetStaleConsents(currentVersion int) []ConsentRecord 返回所有版本号低于当前版本的用户。
+
+同意状态查询：GetConsentStatus(userID, purpose string) ConsentStatus 快速返回当前状态。如果找不到记录返回 pending。HasConsent(userID, purpose string) bool 便捷判断。
+
+同意撤回：WithdrawConsent(userID, purpose string) 把 status 改为 denied，记录 withdrawn_at 时间戳。撤回后触发数据清理流程——调用 right-to-delete 工具清理该用途相关的数据。
+
+HTTP API：POST /consent 记录同意（JSON body: user_id, purpose, status），GET /consent/:user_id 查询用户的所有同意状态，DELETE /consent/:user_id/:purpose 撤回特定用途的同意。所有变更操作记录审计日志。
 
 Go 标准库，go build 通过。

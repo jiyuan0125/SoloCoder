@@ -1,5 +1,5 @@
-碰到一个 HLS 流地址需要分析它的 m3u8 结构。写个 Python 解析器，能解析 HLS 的 m3u8 播放列表文件。
+HLS 流媒体的索引文件是 m3u8 格式——本质上就是带特殊标签的文本文件。分两种：Master Playlist 列出所有可用的码率变体（不同分辨率、不同带宽），每个变体指向一个 Media Playlist；Media Playlist 列出具体的 TS 分片文件、每个分片的时长、加密信息等。解析器要能处理这两种。
 
-需要处理两种类型：Master Playlist（多码率列表）和 Media Playlist（分片列表）。解析出所有 TS 分片 URL、分片时长、总时长、带宽信息、加密信息（EXT-X-KEY）等。如果是 Master Playlist 还要列出所有变体流及其分辨率和带宽。
+Master Playlist 解析：读 #EXT-X-STREAM-INF 标签，里面跟着 BANDWIDTH（码率 bits/s）、RESOLUTION（分辨率如 1920x1080）、CODECS（编码格式字符串如 avc1.640028,mp4a.40.2）。每个标签下一行是对应的 Media Playlist URL。可能有多个变体，从低清到高清排列。
 
-纯 Python 3，不依赖 ffmpeg 或其他外部工具。python hls_parser.py http://example.com/playlist.m3u8 或者本地文件路径。
+Media Playlist 解析：读 #EXT-X-TARGETDURATION（最长分片时长）、#EXT-X-MEDIA-SEQUENCE（第一个分片的序号）、#EXTINF（每个分片的实际时长，秒）、#EXT-X-KEY（加密方式、密钥 URL、IV 向量）、#EXT-X-ENDLIST（VOD 点播标记，没有就是直播）。分片 URL 可能是相对路径也可能是绝对路径，要正确处理。支持本地文件和 HTTP URL。用法：python3 hls_parser.py parse playlist.m3u8

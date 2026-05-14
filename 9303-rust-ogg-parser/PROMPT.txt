@@ -1,8 +1,7 @@
-我需要解析 OGG 容器格式，了解里面封装的音频数据是怎么组织的。
+第一步理解 OGG 的页面结构。每个 OGG 页面以 "OggS" capture pattern 开头（4 字节），然后是版本号（0，1 字节）、header type（1 字节，bit0=continuation、bit1=BOS、bit2=EOS）、granule position（8 字节，取决于编解码器的位置信息）、serial number（4 字节，标识逻辑流）、page sequence number（4 字节）、CRC 校验和（4 字节）、number page segments（1 字节）、segment table（N 字节，每个字节表示一个 segment 的长度）。
 
-具体要做：
-- 解析 OGG 页面结构（capture pattern、版本、header type、granule position、serial number、page sequence）
-- 正确处理跨页的 segment 拼接（一个逻辑流的数据可能跨多个物理页）
-- 识别 BOS（beginning of stream）和 EOS（end of stream）标记
+第二步处理跨页 segment 拼接。OGG 的一个逻辑数据单元（比如一个 Vorbis 音频帧）可能跨多个物理页面。segment table 里值为 255 的 segment 表示数据延续到下一个 segment，值小于 255 表示当前数据单元结束。所以需要维护一个缓冲区——遇到 255 的 segment 就继续追加数据，遇到小于 255 的就把缓冲区里的完整数据交给上层处理。
 
-Rust 实现，cargo build 能过。运行 `ogg-parser dump audio.ogg` 打印每页的头部信息和 segment 概要。
+第三步识别流状态。BOS（Beginning of Stream）页面是该逻辑流的第一页，通常包含编解码器的初始化头部。EOS（End of Stream）页面是最后一页。一个 OGG 文件可能包含多个逻辑流（比如音频+视频），每个流有独立的 serial number。
+
+工具输出每一页的头部信息——页序号、granule position、header type 标志、segment 数量、总字节数。统计每个 serial number 的页数和数据量。用法 ogg-parser dump audio.ogg。Rust 实现，cargo build 通过。

@@ -1,8 +1,7 @@
-给我写一个 AIFF 音频文件格式的解析工具，主要处理未压缩的 AIFF 和 AIFF-C 压缩变种。
+谁还在用 AIFF 格式？苹果生态——Logic Pro、GarageBand 默认导出就是 AIFF。专业录音棚也在用。虽然日常少见但碰到的时候没个解析工具很尴尬。Rust 写一个。
 
-功能要求：
-- 解析 AIFF 容器的 chunk 结构（FORM、COMM、SSND、MARK、INST 等）
-- 从 COMM chunk 读出声道数、采样率、位深、采样帧数
-- 能处理 AIFF-C 中的压缩类型标识（如 NONE、fl32、FL32、alaw、ulaw）
+AIFF 的容器结构跟 WAV 类似都是 RIFF 系的，但 chunk 名字和内容不一样。文件头是 4 字节 "FORM" + 4 字节文件大小 + 4 字节 "AIFF"（或 "AIFC" 表示压缩变种）。然后遍历 chunk：COMM（Common chunk）里有声道数（2 字节）、采样帧数（4 字节）、位深度（2 字节）、采样率（10 字节——80 位 IEEE 754 扩展精度浮点数！这是 AIFF 最特殊的部分）。
 
-用 Rust 写，cargo build 编译通过。`aiff-parser info sound.aiff` 输出格式详情。
+80 位浮点数解码——1 位符号 + 15 位指数（偏移 16383）+ 64 位尾数。实际上整数采样率都是精确值，解码时把指数减去 16383 得到实际的位移量，尾数左移或右移对应的位数就得到采样率值。比如 44100Hz 编码为指数 16388（偏移 5），尾数 0xAC44 左移 5 = 44100。
+
+SSND（Sound Data）chunk 包含实际音频数据——4 字节偏移量 + 4 字节块大小 + PCM 采样数据。AIFF-C 的压缩类型标识在 COMM chunk 里——"NONE" 是无压缩，"fl32"/"FL32" 是 32 位浮点，"alaw" 是 A-law，"ulaw" 是 μ-law。MARK chunk 存标记点，INST chunk 存乐器参数。用法 aiff-parser info sound.aiff。Rust 实现，cargo build 通过。

@@ -1,3 +1,9 @@
-DHCP 服务异常，需要分析 DHCP 报文。Go 写一个 DHCP 协议解析工具。
+网络里突然出现一批设备获取到了错误的 IP 地址，怀疑 DHCP 服务被干扰了。要排查就得看 DHCP 报文的交互细节。
 
-解析 DHCP 报文：识别消息类型（Discover、Offer、Request、ACK、NAK、Release）；提取 Options 字段（租约时间、子网掩码、路由器、DNS 服务器、请求 IP 等）；统计 DHCP 交互流程，检查是否有异常（重复分配、租约冲突）。从 pcap 文件提取 UDP 67/68 端口的数据包解析。Go 标准库，go build 通过。
+Go 写一个 DHCP 协议解析工具。从 pcap 文件中过滤 UDP 67（服务端）和 68（客户端）端口的数据包，解析 DHCP 报文。
+
+DHCP 报文格式：操作码（1=BootRequest、2=BootReply）、硬件类型和地址长度、事务 ID（XID，匹配请求和响应）、客户端 IP、分配的 IP、服务器 IP、中继代理 IP、客户端 MAC。Options 字段从 magic cookie（99.130.83.99）开始，后面是 TLV 格式的选项。
+
+要提取的关键 Options：DHCP Message Type（53，Discover=1、Offer=2、Request=3、ACK=5、NAK=6、Release=7）、Requested IP Address（50）、Lease Time（51）、Subnet Mask（1）、Router（3）、DNS Servers（6）、Domain Name（15）、Server Identifier（54）。
+
+按 XID 把请求和响应配对，还原 DHCP 交互流程。统计：各类型报文数量、分配的 IP 地址列表、是否有重复分配（同一个 IP 同时分给两个不同 MAC）、是否有 NAK 及原因。Go 标准库，go build 通过。

@@ -1,11 +1,11 @@
-写个 Rust 程序实现消息队列的 Topic 路由功能。
+先设计 Topic 的数据结构，再实现消息的存储和分发。Topic 是消息队列的核心抽象——它把发布者和消费者解耦：发布者只管往 topic 写消息，不关心谁在消费；消费者订阅 topic，不关心谁在生产。用 Rust 实现一个完整的 Topic 管理器。
 
-比简单的 pub-sub 多了一点：支持 topic 通配符匹配。比如订阅 "sensor.*" 能收到 "sensor.temp" 和 "sensor.humidity" 的消息。
+Topic 的内部结构：每个 Topic 包含一个消息日志（append-only 的 Vec<Message>）、一个订阅者列表（HashMap<ConsumerId, SubscriberState>）、配置参数（最大消息数、消息过期时间等）。Message 包含 id（递增）、timestamp、payload。
 
-核心功能：
-- 定义 topic 的层级结构（用 / 或 . 分隔），支持 +（匹配一层）和 #（匹配多层）通配符
-- 发布者往具体 topic 发消息，系统根据订阅规则匹配并投递给对应的订阅者
-- 匹配算法要高效，不要每次都遍历所有订阅
-- 能列出所有订阅规则和匹配关系
+消息的写入流程：Publish(topic, payload) → 分配递增的 message_id → 追加到消息日志 → 通知所有订阅者有新消息（push 模式通过 channel，pull 模式设置一个 flag）。
 
-cargo build 能编译通过，标准库就好。
+订阅者的状态管理：每个订阅者记录 next_offset（下次要消费的消息 id）和 status（Active/Paused/Disconnected）。Active 的订阅者实时接收新消息。Paused 的订阅者不接收但保留订阅关系，恢复后从暂停位置继续。Disconnected 的订阅者超时后被清理。
+
+消息的清理策略：所有订阅者都已消费的消息可以安全删除。定期（比如每 30 秒）扫描一次，找到所有订阅者中 next_offset 的最小值 min_offset，删除 id < min_offset 的消息。打印清理报告——"cleaned 500 messages, 200 remaining"。
+
+cargo build 通过。

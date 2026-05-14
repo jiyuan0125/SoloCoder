@@ -1,10 +1,13 @@
-做一个语法分析器生成器。输入 BNF 风格的语法定义，输出能解析该语法的 Go 递归下降 parser 代码。
+做一个语法分析器生成器——类似 Yacc/Bison 但输出 Go 代码。输入 BNF 风格的语法定义，输出能解析该语法的 Go 递归下降 parser 代码。
 
-定义示例：
+定义文件示例：
 expr := term (('+' | '-') term)*
 term := factor (('*' | '/') factor)*
 factor := NUMBER | '(' expr ')'
+statement := 'let' IDENT '=' expr | 'if' expr 'then' statement 'else' statement | 'while' expr 'do' statement | '{' statement* '}'
 
-自动处理左递归检测和报错，生成的代码包含 AST 节点定义。
-用法：parser-gen grammar.txt -o parser.go
-Go 标准库，go build 能编。
+生成器处理流程：读取语法定义，构建产生式列表。自动检测左递归并报错（"rule 'expr' is left recursive: expr -> expr '+' term"）。为每个非终结符生成一个解析函数，函数内用 peek/next token 做预判选择分支。生成 AST 节点类型定义（struct 或 interface）和构建 AST 的代码。
+
+用法：parser-gen grammar.txt -o parser.go。输出的 Go 文件包含：AST 节点定义、Parse 函数入口、词法分析器接口（需要用户自己实现 NextToken）、每个规则的解析函数。
+
+生成的代码能独立 go build。Go 标准库，go build 能编。

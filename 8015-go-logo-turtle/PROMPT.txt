@@ -1,3 +1,11 @@
-用 Go 做一个 Logo 海龟画图解释器。支持基本画图命令：FORWARD、BACKWARD、LEFT、RIGHT、PENUP、PENDOWN，还有 REPEAT 重复和 TO 定义过程。
-海龟的轨迹用 SVG 输出，这样浏览器就能直接看画出来的图形。坐标系统以画布中心为原点，初始朝上。
-go build 通过，标准库。
+小时候在学校的 Apple II 上玩 Logo 画图，一只小海龟在屏幕上爬来爬去，特别有意思。现在能不能用 Go 复刻一个？
+
+用 Go 做一个 Logo 海龟画图解释器。支持基本画图命令：FORWARD N 前进 N 步（画线）、BACKWARD N 后退、LEFT N 左转 N 度、RIGHT N 右转、PENUP 抬笔（移动不画线）、PENDOWN 落笔、SETPENCOLOR color 设置画笔颜色（支持红绿蓝黑等基本色名）。
+
+控制结构：REPEAT N [...] 重复执行 N 次，TO name :param1 :param2 ... END 定义过程（支持参数），可以在过程里调用其他过程。SETXY x y 直接移动到指定坐标。
+
+海龟的轨迹用 SVG 输出——每条线段生成一个 SVG line 元素，最后包装在完整的 SVG 文件里。坐标系统以画布中心为原点，初始朝上（角度 0 指向北方）。画布默认 800x800 像素。
+
+支持 RGB 颜色设置，线宽用 SETWIDTH N 控制。HIDETURTLE 和 SHOWTURTLE 控制海龟图标显示。
+
+从 .logo 文件读取命令执行，输出 .svg 文件，浏览器打开就能看。go build 通过，标准库。

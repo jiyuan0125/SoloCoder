@@ -1,5 +1,7 @@
-写一个 Rust 的视频时长检测工具。
+获取视频时长——不同格式的时长存储位置完全不同，没有统一的方法。MP4 在 mvhd，MKV 在 Segment Info，FLV 在 onMetaData，TS 压根没有全局时长字段。写一个 Rust 工具统一处理这些格式。
 
-从媒体文件中快速获取总播放时长。对于 MP4，解析 mvhd 的 duration 和 timescale 计算；MKV 从 Segment Info 的 Duration 获取；FLV 从 onMetaData 的 duration 字段读取；TS 通过 PAT/PMT 定位后从最后的 PTS 减去起始 PTS 计算。输出以秒为单位的时长，也显示格式化的 HH:MM:SS.ms。
+各格式的时长获取策略。MP4：读 moov/mvhd 的 duration 和 timescale，时长 = duration/timescale 秒。如果 mvhd 的 duration 为 0（某些损坏文件），则从各 trak 的 mdhd 取最大值。MKV：读 Segment/Info 的 Duration（浮点数 EBML 元素），除以 TimecodeScale（纳秒）得到秒。FLV：读 onMetaData 对象的 duration 字段，单位直接是秒。TS：没有全局时长——读文件头部若干包获取起始 PTS，seek 到文件尾部若干包获取结束 PTS，差值除以 90000（TS 时钟频率）得到秒。
 
-Rust 实现，cargo build 通过。
+精度方面——MP4 和 MKV 可以精确到毫秒级，TS 估算精度在 0.1 秒级，FLV 的 duration 也精确到小数。纯音频文件（WAV/MP3）通过文件大小和字节码率估算时长。
+
+输出原始秒数（浮点）和格式化的 HH:MM:SS.mmm。批量模式输出 JSON 或 CSV。用法 dur-detect video.mp4。Rust 实现，cargo build 通过。

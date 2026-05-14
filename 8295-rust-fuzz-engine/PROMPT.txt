@@ -1,5 +1,11 @@
-用 Rust 写一个轻量的 fuzzing 引擎，能对命令行程序或纯函数做模糊测试。
+去年那个 JSON 解析器的边界 bug 找了一周才发现，如果有 fuzzer 可能几分钟就跑出来了。用 Rust 写一个轻量的 fuzzing 引擎。
 
-核心功能：基于覆盖率引导的变异策略（位翻转、字节插入删除、算术变异），追踪程序执行路径（用插桩或简单信号），优先探索新路径。检测 crash（段错误、超时、断言失败），记录触发 crash 的输入。
+引擎的核心循环：从种子语料库（用户提供的初始输入文件）读取种子，对种子做变异产生新的测试用例，喂给目标程序执行，收集执行路径反馈，选择有价值的用例加入语料库。
 
-命令行：cargo run -- --target ./test_program --input-dir seeds/ --output-dir crashes/ --max-time 60。先用一个有已知 bug 的小程序做演示。
+变异策略：位翻转（随机选一个字节翻转 1-8 个 bit）、字节插入/删除/替换、算术变异（对随机字节加减小整数）、基于字典的变异（用预定义的关键词替换）、splice（把两个语料的前后半段拼在一起）。
+
+执行追踪：用简单的信号机制检测 crash——fork 子进程执行目标程序，父进程 waitpid 检查是否收到 SIGSEGV/SIGABRT。超时用 alarm 信号处理。新路径检测暂时用简化版：对输入算个哈希作为"路径指纹"，如果之前没见过这个哈希就认为探索了新路径。
+
+检测到 crash 时把触发输入保存到 crashes/ 目录，文件名包含 crash 信号和时间戳。统计执行次数、crash 数、语料库大小。
+
+cargo run -- --target ./test_program --seeds seeds/ --crashes crashes/ --timeout 5 --max-time 60。先用一个有已知 buffer overflow 的小程序演示。cargo build 通过。

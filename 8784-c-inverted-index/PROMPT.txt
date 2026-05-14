@@ -1,4 +1,11 @@
-帮我写一个倒排索引（Inverted Index），C 实现。
-搜索引擎的核心数据结构：对一批文档建立倒排索引，term → 出现该 term 的文档 ID 列表。
-流程：分词（简单按空格/标点切割就行，转小写）、建索引、支持查询。查询支持单词查询 AND 和 OR 组合查询。
-命令行程序：index build docs.txt 生成索引文件，index query "hello AND world" 返回匹配的文档 ID。索引可以持久化到文件。gcc 编译。
+搜索引擎的核心就是倒排索引——把"文档 → 包含哪些词"的关系反转成"词 → 出现在哪些文档里"。建好索引之后，查询"同时包含 A 和 B 的文档"就只需要取两个 posting list 的交集，比扫描所有文档快几个数量级。
+
+用 C 实现一个倒排索引系统。先做分词：对输入文本按空格和标点符号切分成 token，转成小写，过滤掉太短的 token（长度 < 2）。可以用一个简单的停用词表过滤掉 the、is、at 这类无意义词。
+
+建索引：遍历所有文档，对每个 token 做 (token → doc_id) 的映射。内部用哈希表存 token 到 posting list 的映射，posting list 是一个有序的 doc_id 数组（用动态数组，初始容量 16，满了 2 倍扩容）。同一个 token 在同一个文档里出现多次只记一次 doc_id。
+
+查询支持三种：单词查询 "hello" 返回包含该词的所有文档 ID；AND 查询 "hello AND world" 返回同时包含两个词的文档（两个 posting list 做归并求交集）；OR 查询 "hello OR world" 返回包含任一词的文档（归并求并集）。
+
+索引持久化到文件：把哈希表序列化成一种紧凑的二进制格式——文件头存 term 数量和文档总数，然后是每个 term 的字符串、长度、posting list 长度、posting list 数据。加载时直接读文件重建哈希表。
+
+命令行：index build docs.txt -o index.bin 生成索引文件；index query "hello AND world" -i index.bin 查询。docs.txt 每行一个文档。gcc 编译。

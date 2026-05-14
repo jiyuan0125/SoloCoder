@@ -1,12 +1,12 @@
-帮我实现一个 Go 版的 Read-Through 缓存封装。
+Read-Through 缓存封装了"未命中时自动从数据源加载"的逻辑——调用者不需要写"先查缓存再查数据库"的模板代码。类似 Guava Cache 的 get(key, loader) 模式。Go 实现。
 
-就是缓存未命中时自动从数据源加载数据并写入缓存，上层调用者不需要先查缓存再查数据库这种模板代码。类似 Guava Cache 的 get(key, loader) 模式。
+Get(key) 流程：先查缓存，命中直接返回。未命中时调用注册的 loader 函数加载（loader 由用户通过构造函数注入）。加载成功后自动写回缓存并返回。loader 返回 error 时不缓存错误结果（下次访问会再次尝试加载）。
 
-具体要求：
-- Cache Get(key) 时如果命中直接返回，未命中调用注册的 loader 函数加载
-- loader 加载的结果自动写回缓存
-- 同一个 key 并发加载时只让一个请求去加载，其他请求等待结果（防缓存击穿）
-- 支持 TTL 过期和最大容量淘汰（LRU）
-- loader 返回 error 时不要缓存错误结果
+防缓存击穿（Thundering Herd）：同一个 key 并发加载时只让一个请求去加载，其他请求等待结果。用 sync.Map 或者 singleflight 模式——每个 key 一个 mutex 或 channel。第一个请求加锁后加载，完成后广播结果给等待者。其他请求直接拿到结果，不会重复调用 loader。
 
-只用 Go 标准库，go build 编译通过。singleflight 的语义是关键。
+支持配置：
+- 最大容量 + LRU 淘汰策略
+- TTL 过期：每个条目记录过期时间，Get 时检查是否过期
+- Loader 超时：loader 执行超过阈值就返回超时错误
+
+只需 Go 标准库，go build 编译通过。singleflight 的语义是关键——用 sync.Mutex + map[key]*call 实现，call 包含 done channel 和 result/error。

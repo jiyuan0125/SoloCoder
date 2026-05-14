@@ -1,12 +1,13 @@
 用 Go 写一个 LSM-Tree 的 Compaction Picker。
 
-Compaction Picker 决定什么时候触发 compaction 以及选哪些文件参与。好的选择能降低写放大和空间放大。LevelDB 用的是 level-based picker， RocksDB 有更复杂的选择策略。
+Compaction Picker 决定什么时候触发 compaction 以及选哪些文件参与。好的选择能降低写放大和空间放大，差的选择会导致 compaction 级联或空间回收不及时。LevelDB 用 level-based picker，RocksDB 有更复杂的选择策略。
 
 实现要求：
-- 维护每层的 SSTable 文件列表和大小统计
-- 触发条件：某层文件大小超过阈值（level-0 看文件数，其他层看总大小）
-- 选择策略：level-0 选所有文件，其他层选和上层输出有 key range 重叠的文件
-- 输出 compaction 任务：参与的文件列表、目标层、key range
-- 支持手动触发指定层的 compaction
+- 维护每层的 SSTable 文件列表和总大小统计（L0 看文件数量，L1+ 看总字节数）
+- 触发条件检测：某层文件大小/数量超过阈值时返回待执行 compaction 任务
+- 选择策略：L0 选所有文件（因为 key range 重叠），L1+ 选和上层 compaction 输出有 key range 重叠的文件
+- 输出 compaction 任务描述：参与的源层文件列表 + 目标层 + 预估输出大小 + key range
+- 支持手动触发 compaction（指定层或 key range）
+- 避免重复触发：正在 compaction 的文件不参与新 compaction
 
-Go 标准库，go build 通过。文件用结构体模拟（id, level, size, key range）就行。
+Go 标准库，go build 通过。文件用结构体模拟（id, level, size, smallestKey, largestKey）。

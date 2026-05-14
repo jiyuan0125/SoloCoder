@@ -1,5 +1,11 @@
-Rust 标准库的 sort 不够快，想试试 pdqsort 这个混合排序算法。帮我用 Rust 实现一个 pattern-defeating quicksort。
+Rust 标准库的 sort 不够快？pdqsort（pattern-defeating quicksort）是 Rust 不稳定排序的底层算法。它在快排基础上加了一堆模式检测——遇到已经有序的跳过、大量重复值用三路 partition、快排退化时切堆排序。
 
-pdqsort 的核心是在快速排序基础上，检测并处理一些特定模式（比如已经有序、完全逆序、只有少数元素不在位），遇到这些情况切换到插入排序或堆排序。要保证最坏情况 O(n log n)，最好情况接近 O(n)。
+用 Rust 实现一个泛型的 pdqsort。
 
-实现为一个泛型排序函数，可以接受自定义比较器。cargo build 编译通过。
+快排基础——选 pivot（三数取中），做 partition。partition 结果是 [ < pivot | == pivot | > pivot ]（三路 partition），中间的等于部分不需要再处理。
+
+模式检测——partition 前检查子数组是否已经有序（比较首尾各一个元素）。如果是就直接跳过。如果连续多次 pivot 选到极值（说明数据有很多等于 pivot 的元素），对当前子数组做三路 partition 处理重复值。
+
+退化保护——如果 partition 结果严重不平衡（一侧不到 1/16），增加 balance 惩罚。balance 归零时切换堆排序处理剩余部分。小范围（<24 个元素）切换到插入排序。
+
+泛型接口——pdqsort<T: Ord>(data: &mut [T])。也接受自定义比较器。cargo build 编译通过。

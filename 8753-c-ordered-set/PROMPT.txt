@@ -1,4 +1,11 @@
-写一个 C 语言的有序集合（Ordered Set），底层用跳表实现。
-我们要做一个排行榜系统，元素带一个分值，按分值排序，同时支持按 key 快速查找、删除、更新分值。
-接口：insert(key, score)、remove(key)、get_rank(key)、get_by_rank(n)、range(start, end)。
-跳表层数动态生长，查询 O(logn)。命令行交互，从 stdin 读取操作指令。make 能编译通过。
+排行榜系统有几个比较棘手的要求：元素带一个分值、按分值排序、同时要能按 key 快速查找和更新分值。红黑树能做但实现太复杂，跳表是个更实际的选择——代码量少、范围查询天然友好、查找也是 O(logn)。
+
+用 C 写一个有序集合（Ordered Set），底层用跳表实现。跳表最大层数设 32 层，层数按概率生成（每次插入时以 p=0.5 的概率决定是否往上一层放节点）。每个节点存 key（字符串）、score（double）和指向各层的指针。
+
+接口方面：insert(key, score) 插入或更新一个元素的分值；remove(key) 删除元素；get_rank(key) 返回 key 在排序中的名次（第几名）；get_by_rank(n) 返回第 n 名的元素；range(start, end) 返回指定排名区间内的所有元素，按分值从高到低排列。更新分值时先删后插，保持有序性。
+
+节点比较规则：先按 score 降序排列，score 相同时按 key 的字典序升序。这样排行榜展示的时候分高的在前，同分的按名字排。
+
+命令行交互程序从 stdin 读取操作指令——ADD key score 添加或更新、DEL key 删除、RANK key 查名次、TOP n 查前 n 名、RANGE from to 查区间。再跑个压力测试：插入 50 万个随机元素后做 10 万次查询，看看耗时。
+
+make 编译通过，只用标准库。

@@ -1,14 +1,7 @@
-Cargo.lock 解析器，解析 Rust 项目的锁文件提取依赖信息。
+Cargo.lock 解析器。Rust 项目的 Cargo.lock 文件记录了所有依赖 crate 的精确版本和校验和，是 SBOM 和安全审计的基础数据源。写个解析器提取结构化信息。
 
-Cargo.lock 是 TOML 格式，记录了 Rust 项目的精确依赖版本。需要能解析它来获取完整的依赖列表。
+Python 实现。Cargo.lock 文件格式是 TOML，有两种版本格式——v1（Rust 1.38 之前，没有 version 字段）和 v2（当前格式，有 version 字段）。解析 [[package]] 数组，每个 package 包含 name（crate 名称如 serde）、version（语义化版本如 1.0.152）、source（来源标识，如 registry+https://github.com/rust-lang/crates.io，或 git+https://...）、checksum（SHA-256 校验和）。
 
-Python 实现：
-- 解析 Cargo.lock TOML 格式，提取 [[package]] 中的 name、version、source、checksum
-- 识别依赖来源：crates.io（registry）、git 仓库、本地路径
-- 构建依赖关系图（根据 dependencies 字段）
-- 查询功能：按包名搜索、按来源类型过滤、查找某个包的所有依赖者
-- 输出依赖树或依赖列表
+解析 dependencies 字段：每个 package 的 dependencies 列表记录了它直接依赖的其他 crate（格式为 "crate_name version_key"），可以用来构建依赖图。从整个 lock 文件构建完整的依赖树——区分根 package（项目本身）和依赖 crate。
 
-用法：python cargo_lock_parser.py parse Cargo.lock
-python cargo_lock_parser.py deps Cargo.lock --package serde
-TOML 解析可以用标准库或 toml 包。source 字段格式是 "registry+https://github.com/..."。
+输出：所有 crate 的列表（名称、版本、来源）、依赖图（哪个 crate 依赖了哪些其他 crate）、统计信息（总 crate 数、来源分布如 crates.io vs git、重复名称不同版本的 crate）。也支持导出为 JSON 和 CycloneDX 格式。python3 命令行工具。

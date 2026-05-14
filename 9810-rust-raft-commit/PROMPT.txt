@@ -1,11 +1,9 @@
-用 Rust 实现 Raft 日志提交机制。
+提交（commit）是 Raft 里一个容易搞混的概念——日志被复制到多数节点不等于被提交，只有当前 Leader 确认的日志才算 committed。而且有个重要的安全规则：Leader 只能提交自己 term 的日志（不能通过计算前任的副本数来提交前任的日志——除非间接地通过提交自己 term 的一条日志来连带提交之前的）。用 Rust 把提交逻辑单独实现清楚。
 
-Raft 的日志只有被复制到大多数节点后才能被提交。提交后要通知状态机应用这些日志。提交进度只能前进不能后退。
+commitIndex 的推进规则：Leader 维护 commitIndex（初始为 0）。每次 AppendEntries 成功后，对每个 N（从日志末尾往前扫描），如果 log[N].term == currentTerm 且超过半数节点的 matchIndex >= N，就设置 commitIndex = N 并 break。注意只提交当前 term 的日志这条限制。
 
-具体要求：
-- 维护 commitIndex，每次复制更新后重新计算（取大多数节点的 matchIndex 中位数）
-- commitIndex 只增不减，保证提交语义
-- 已提交的日志通过 apply channel 通知上层状态机
-- 提交过程要和选举互不干扰
+前任日志的间接提交：假设 Leader 在 term=3，日志在 term=1 时有条目还没提交。Leader 不能直接数 term=1 条目的副本来提交它。但只要 Leader 在 term=3 提交了任何一条日志，之前所有已复制的日志也一并被提交了。
 
-cargo build 通过，测试验证提交进度在各种场景下的正确性。
+要模拟和验证的场景：正常提交当前 term 日志、前任未提交日志的间接提交、Leader 切换后 commitIndex 的回退（新 Leader 没有旧 Leader commit 的日志——实际上不会发生，Raft 保证了）。打印 commitIndex 的变化历史，解释每次推进的原因。
+
+cargo build 通过。

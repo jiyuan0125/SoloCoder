@@ -1,1 +1,15 @@
-实现一个树状数组（Fenwick Tree / Binary Indexed Tree），用 Rust。主要用途是快速做前缀求和和单点更新，O(log n) 的复杂度。支持初始化、单点加值、前缀和查询、区间和查询（用两次前缀和相减）。写个简单的命令行工具，从标准输入读一组数字，然后接受查询命令（比如 "sum 3 7" 表示查区间和），输出结果。cargo run 能正常工作就行。
+树状数组（Fenwick Tree / Binary Indexed Tree）是线段树的小表弟——只支持前缀查询和单点更新，但代码短得多，常数也更小。核心操作就一个 lowbit(x) = x & (-x)，用来决定每个位置管辖多长的区间。
+
+用 Rust 实现树状数组。
+
+数据结构——底层用一个数组 bit[1..n+1]（1-indexed）。bit[i] 管理区间 [i-lowbit(i)+1, i] 的和。比如 bit[6]（二进制 110，lowbit=2）管理 [5,6]；bit[8]（二进制 1000，lowbit=8）管理 [1,8]。
+
+单点更新——add(i, delta)：把位置 i 的值加 delta。从 i 开始，每步 i += lowbit(i)，更新沿途的 bit[i]。最多走 log₂n 步。
+
+前缀和查询——sum(i)：查询 [1, i] 的和。从 i 开始，每步 i -= lowbit(i)，累加沿途的 bit[i]。最多走 log₂n 步。
+
+区间和查询——range_sum(l, r) = sum(r) - sum(l-1)。两次前缀和相减。
+
+初始化——从数组构建树状数组。最简单的方法是一个个 add，但这是 O(n log n)。O(n) 的构建方法：先算前缀和 prefix，然后 bit[i] = prefix[i] - prefix[i-lowbit(i)]。
+
+区间更新（加分项）——用差分数组技巧支持给 [l, r] 同时加一个值。需要两个树状数组。

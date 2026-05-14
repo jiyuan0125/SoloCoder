@@ -1,12 +1,13 @@
 用 Go 实现一个简化版的 LSM-Tree 存储引擎。
 
-LSM-Tree 是写密集型数据库的核心数据结构，LevelDB 和 RocksDB 都基于它。写入先到 Memtable（内存），满了刷成 SSTable 文件，后台做 compaction 合并文件。
+LSM-Tree 是写密集型数据库的核心数据结构，LevelDB 和 RocksDB 都基于它。核心思想是把随机写变成顺序写——写入先到 Memtable（内存），满了刷成 SSTable 文件，后台做 compaction 合并文件。
 
 核心功能：
-- 写入路径：WAL → Memtable → Immutable Memtable → Flush SSTable
-- 读取路径：Memtable → Immutable Memtable → Level-0 SSTables → Level-1...
-- 多层 SSTable 文件管理，每层容量递增
-- Get/Put/Delete/Scan 基本接口
-- 简单的 size-tiered compaction
+- 写入路径：WAL（可选）→ Memtable → Immutable Memtable → Flush 到 SSTable 文件
+- 读取路径：Memtable → Immutable Memtable → Level-0 SSTables → Level-1 → ... 逐层查找
+- 多层 SSTable 文件管理，每层容量递增（L0 4MB、L1 40MB、L2 400MB...），放大倍数可配
+- Get/Put/Delete/Scan 基本接口，Delete 写入 tombstone 标记
+- 简单的 size-tiered compaction：某层文件数超阈值就合并到下一层
+- 内存中的 Memtable 用跳表实现，达到阈值切为 immutable 等待刷盘
 
-Go 标准库，go build 能编译通过。先不做并发 compaction，把基本流程跑通就行。注意 Delete 是写入一个 tombstone 标记。
+Go 标准库，go build 能编译通过。先不做并发 compaction，把基本流程跑通就行。

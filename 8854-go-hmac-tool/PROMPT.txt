@@ -1,8 +1,13 @@
-我需要一个 HMAC 计算工具，用 Go 写。
+调试 API 签名的时候经常要算 HMAC——AWS 签名 V4、微信支付签名、自定义 API 的认证头。每次手写 Go 代码太麻烦，想有个 CLI 工具直接算各种哈希算法的 HMAC。
 
-调试 API 的时候经常要算 HMAC 签名，比如 AWS 的签名 V4、微信支付的签名，每次手写很麻烦。想有个 CLI 直接算各种哈希算法的 HMAC。
+用 Go 写一个 HMAC 计算工具。支持三种哈希算法：SHA-256、SHA-384、SHA-512。输入来源支持两种：命令行参数 -msg "hello" 直接传入消息；文件 -file data.txt 从文件读取消息内容。
 
-功能：支持 SHA256、SHA384、SHA512 三种算法；可以从命令行参数读消息，也可以从文件读取；输出 hex 和 base64 两种编码格式。
+密钥输入：-key "mykey" 直接传入；-key-file key.txt 从文件读取密钥；-key-hex "0123456789abcdef" 以 hex 编码传入。
 
-命令示例：hmac-tool -algo sha256 -key "mykey" -msg "hello"、hmac-tool -algo sha512 -key "secret" -file data.txt -format base64
-只用 Go 标准库，go build 能编译。
+输出格式：-format hex（默认）输出 hex 编码的 HMAC 值；-format base64 输出 Base64 编码；-format raw 输出原始二进制到 stdout（可以 pipe 给其他工具）。同时显示输入的算法名和消息长度方便确认。
+
+额外功能：-verify 选项传入期望的 HMAC 值，工具计算后比对是否一致（用 hmac.Equal 做恒定时间比较）。HMAC streaming 模式——对大文件不一次性加载到内存，用 io.Copy 流式写入 hmac.Hash。
+
+命令示例：hmac-tool -algo sha256 -key "mykey" -msg "hello"、hmac-tool -algo sha512 -key "secret" -file data.txt -format base64、hmac-tool -algo sha256 -key "mykey" -msg "hello" -verify "expected_hex"。
+
+Go 标准库 crypto/hmac + crypto/sha256 等，go build 能编译。

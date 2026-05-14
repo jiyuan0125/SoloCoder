@@ -1,5 +1,7 @@
-帮我写个 RBAC 权限引擎，要在好几个项目里复用。
+帮我写个 RBAC 权限引擎。好几个项目的权限检查都是到处 if-else 硬编码的，改一个权限要改七八个文件，这种债不能再欠了。
 
-Python 实现一个基于角色的访问控制引擎。能定义用户、角色、权限三层关系，支持角色继承（比如管理员继承普通用户的所有权限）。提供检查接口：给定用户和操作，快速判断是否被允许。权限要支持资源级别的粒度，比如"编辑文章:123"这种。能从 JSON 配置文件加载权限策略。
+Python 实现基于角色的访问控制引擎。数据模型三层：用户（User）→ 角色（Role）→ 权限（Permission）。角色支持继承——定义角色时可以指定 parent，检查权限时沿继承链向上查找，比如 admin 继承 editor 继承 viewer。继承深度要检测循环引用，防止 admin → editor → admin 这种死循环。
 
-作为一个 Python 库提供，import 即用，python3。
+权限粒度到资源级别：一条权限由动作和资源组成，格式为 "action:resource"，比如 "edit:article"、"read:dashboard"。资源部分支持通配符——"edit:*" 表示能编辑所有资源，"*:article" 表示对 article 的所有操作。通配符只支持末尾一级，不允许 "edit:article:*:comment" 这种多层通配。
+
+策略加载：从 JSON 文件读取用户-角色映射和角色-权限映射，支持热重载。接口设计：check(user_id, action, resource) → bool，返回前把匹配过程记录到 debug 日志里方便排查。作为一个 Python 库提供，import 即用。

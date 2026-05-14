@@ -1,5 +1,15 @@
-用 Python 实现一个代码变更频率分析器（Code Churn Analyzer），从 git 历史中分析代码的变更热度。
+频繁改动的文件通常是最不稳定、bug 最多的地方——每次发布都在改的模块肯定有什么设计问题。Code Churn 度量代码的变更频率和幅度。Python 实现基于 git 历史的 churn 分析器。
 
-代码变更频率（churn）是预测缺陷的重要指标——频繁修改的文件更容易出 bug。解析 git log，统计每个文件的：总提交次数、修改行数、涉及的作者数。计算 churn 率（最近 N 次提交中被修改的频率）。按时间窗口分析，找出近期变更最活跃的模块。
+数据收集：用 subprocess 调用 git log --numstat --format="%H %at" 获取每个 commit 的文件修改统计（新增行数和删除行数）。按文件聚合所有 commit 的变更量。
 
-Python 3，用 subprocess 调用 git 命令。CLI：`python churn.py --since "6 months ago" --top 20`，输出变更最频繁的文件列表和统计数据。`python churn.py` 能直接跑。
+指标计算（每个文件）：
+- 变更次数（Commits）：文件被修改的 commit 总数
+- 变更行数（Churn）：所有 commit 的 (added + deleted) 行数总和
+- 变更幅度（Churn Rate）：Churn / 文件当前行数。比率高的文件要么经常被重构，要么设计不稳定
+- 最近活跃度：最近 30 天的变更次数，区分"频繁改"和"以前改过但现在稳定了"
+
+时间维度分析：按周/月聚合变更量，画出变更趋势（终端 ASCII 图）。找出变更高峰期对应的发布版本。
+
+关联分析：把 churn 数据和 bug 修复 commit 关联——如果一个文件经常在 bug fix commit 中出现，它是高风险文件。
+
+输出按变更频率排序的文件列表。python3 churn_analyzer.py /path/to/repo。纯 Python 3 + git 命令行。

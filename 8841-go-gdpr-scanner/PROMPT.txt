@@ -1,12 +1,11 @@
-帮我写一个 GDPR 合规扫描工具，Go 实现。
+面向欧洲市场的产品要做 GDPR 合规审查。法务团队给了一份几十页的检查清单，开发团队对着看代码看得头都大了。需要一个工具自动扫描代码中涉及个人数据处理的流程，至少把 PII 字段和数据流向找出来。
 
-我们面向欧洲市场的产品要做 GDPR 合规审查，需要扫描代码中的个人数据处理流程。
+用 Go 写一个 GDPR 合规扫描工具。扫描两个维度：
 
-功能：
-- 扫描代码中的个人数据字段：识别邮箱、电话、身份证、IP 地址、地理位置等 PII 字段
-- 检查数据处理合法性基础：是否有数据收集声明、用户同意记录、数据处理目的说明
-- 检查数据主体权利支持：是否有数据导出、删除、修改的接口
-- 生成 GDPR 合规报告：列出发现的 PII 处理点、合规风险和建议措施
-- 命令行：`./gdpr-scanner scan ./src --output=gdpr-report.json`
+PII 字段识别：扫描源码中的变量名、字段名、数据库列名，识别个人数据字段——邮箱（email、e-mail、mail）、电话（phone、mobile、telephone）、身份证（id_card、ssn、identity）、IP 地址（ip_address、client_ip、remote_addr）、地理位置（location、geo、latitude、longitude）、姓名（name、full_name、first_name、last_name）。匹配规则支持自定义扩展。
 
-Go 标准库，go build 编译通过。
+合规性检查：数据收集声明——扫描是否有 privacy-policy、consent-form 相关的代码引用。用户同意记录——搜索 consent、agree、opt-in 相关的代码和数据库表。数据主体权利支持——搜索 export、delete、erase、portability 相关的 API 路由和函数。数据处理目的——检查是否有 purpose、legal_basis 相关的配置。
+
+报告输出：JSON 格式的 GDPR 合规报告——列出的 PII 处理点（文件、行号、字段名、字段类型）、合规风险评估（高/中/低）、建议措施（添加同意收集机制、提供数据导出接口、实现删除功能等）。
+
+命令行：gdpr-scanner scan ./src --output=gdpr-report.json。Go 标准库，go build 编译通过。

@@ -1,5 +1,13 @@
-用 Python 实现一个 Rego 策略评估引擎，能解析和执行类似 OPA Rego 的策略规则。
+Kubernetes 的 OPA/Gatekeeper 用 Rego 语言写策略，但调试 Rego 很痛苦——语法不直觉，报错信息不友好。想用 Python 实现一个简化版的 Rego 策略引擎来理解原理，不依赖 OPA。
 
-Rego 是 Open Policy Agent 的策略语言，用于声明式地定义规则。实现一个简化版的 Rego 引擎：支持包声明、规则定义、条件表达式（等于、不等于、包含、正则匹配）、集合操作（in、intersection）、默认值、组合规则（OR/AND）。输入是 JSON 数据和 Rego 规则文件，输出评估结果（允许/拒绝 + 原因）。
+Rego 核心概念：策略以 package + rule 的形式定义。Rule 格式：rule_name[value] { condition }。条件表达式支持 ==、!=、>、<、contains、startswith 等比较。内置函数：count()、sum()、max()、min()。数据通过 input 变量传入（一个 JSON 对象）。
 
-Python 3 标准库，自己写解析器。CLI：`python rego_engine.py eval --policy rules.rego --input data.json`，输出每条规则的评估结果。`python rego_engine.py` 能直接运行。
+实现的功能：
+- 解析 Rego 策略文件：提取 package 名、import、rule 定义、条件表达式
+- 条件求值：对 input 数据求值条件表达式，支持嵌套字段访问（input.request.kind.name）
+- 规则匹配：按条件求值结果决定 rule 的输出值
+- 完全匹配（allow = true { ... }）和集合生成（violations[msg] { ... msg := sprintf("...") }）
+
+简化限制：不支持 with 关键字、不支持复杂的 rego 语法的默认值和 else 块、不支持递归规则。但支持基本的布尔逻辑和字符串操作。
+
+CLI：python3 rego.py evaluate --policy policy.rego --input input.json。也支持 REPL 模式交互测试。纯 Python 3 标准库。

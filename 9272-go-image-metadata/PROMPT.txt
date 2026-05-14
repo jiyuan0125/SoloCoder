@@ -1,11 +1,7 @@
-做一个通用的图片元数据查看器，Go 写的。
+之前写了好几个独立的元数据解析工具——EXIF、IPTC、XMP，用的时候得一个个跑，太麻烦了。需要一个统一的入口，丢进来一张图，把能找到的元数据全给你列出来。
 
-想一个工具把所有元数据都看全了：
-- 解析 EXIF（拍摄参数、GPS、时间）
-- 解析 IPTC（新闻图片的标题、描述、关键词）
-- 解析 XMP（Adobe 系工具写的元数据）
-- 解析 PNG 文本块（tEXt、iTXt、zTXt）
-- 解析 GIF 的 Comment Extension
-- 输出统一格式：按类别分组显示，支持 JSON 输出
+工具内部实际上是个调度器——先检测文件格式，然后按格式调用对应的解析器。JPEG 文件扫描所有 APP 段：APP1 检查是 EXIF 还是 XMP（根据前缀区分），APP13 解析 IPTC，还要查 DQT 段里的量化表信息。PNG 文件遍历所有 chunk：tEXt 和 iTXt 里可能藏了文本元数据（包括 XMP），zTXt 是压缩的文本块。GIF 的 Comment Extension 里有注释。TIFF 的 IFD 标签就是元数据本身。
 
-用法 img-meta photo.jpg，把能找到的元数据全列出来。Go 标准库，go build 编译通过。
+输出按类别分组展示。相机信息组：Make、Model、Software。拍摄参数组：DateTime、FNumber、ExposureTime、ISO、FocalLength、Flash。GPS 组：纬度、经度、海拔。版权信息组：Copyright、Artist、IPTC Caption、IPTC Keywords。颜色信息：ICC Profile 是否存在、颜色空间。加上 --json 参数可以输出 JSON 格式方便脚本处理。
+
+每种元数据解析失败不应该影响其他元数据的输出——某个 APP 段损坏就跳过，继续解析后面的。用法 img-meta photo.jpg。Go 标准库，go build 编译通过。

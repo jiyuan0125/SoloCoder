@@ -1,12 +1,11 @@
-帮我用 Rust 实现任务窃取（Work Stealing）调度器。
+先说清楚 work stealing 要解决什么问题——多个 worker 各有自己的任务队列，如果某个 worker 空了但它邻居还有很多任务，可以从邻居那里"偷"一些过来。这样比中心化调度更去中心化，延迟更低。用 Rust 实现 work stealing 的调度策略。
 
-在多线程/多 worker 场景下，每个 worker 有自己的本地任务队列。如果某个 worker 空了，可以从其他 worker 的队列末尾"偷"任务来执行，实现负载均衡。
+数据结构：每个 Worker 有一个本地 deque（双端队列）。Worker 自己从队列尾部取任务执行（LIFO，利用局部性）。其他空闲 Worker 从队列头部偷任务（FIFO，偷最旧的任务，减少竞争）。
 
-要做：
-- 实现多个 worker，每个 worker 有自己的 deque（双端队列）
-- worker 从自己队列头部取任务执行，没有任务时从其他 worker 的队列尾部偷
-- 偷任务时要处理好并发竞争（两个 worker 不能偷到同一个任务）
-- 统计每个 worker 自己完成的任务数和偷来的任务数
-- 能输出最终的任务分布情况，验证确实实现了负载均衡
+Work stealing 的流程：Worker 循环执行——如果本地队列有任务，从尾部取一个执行。如果本地队列空了，随机选一个其他 Worker，从它的队列头部偷一个任务。如果偷到了就执行，偷不到（别人也空了）就 sleep 一小段时间再试。
 
-cargo run 能看到窃取过程。
+偷取的策略：Random steal（随机选一个 Worker 偷）简单但可能偷到空队列。Steal-best-of-k（随机选 k 个 Worker，从任务最多的那个偷）更高效但开销稍大。程序实现两种策略，对比偷取成功率。
+
+负载均衡的效果：初始时所有任务都放在 Worker-0 的队列里。运行后观察任务如何通过 stealing 逐渐分布到所有 Worker 上。打印每个 Worker 的本地队列大小随时间的变化。
+
+实现用 crossbeam-deque 或自己用 Mutex<VecDeque> 简单实现。cargo build 通过。

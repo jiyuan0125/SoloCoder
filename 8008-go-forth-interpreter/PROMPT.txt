@@ -1,3 +1,11 @@
-写一个 Go 的 Forth 语言解释器。支持整数运算、栈操作（DUP SWAP DROP OVER ROT）、冒号定义新词、IF ELSE THEN 和 DO LOOP 控制结构。
-内存上模拟 Forth 的字典结构来存词定义。从文本文件加载代码执行，也支持交互式逐行输入。
-标准库实现，go build 编译通过。
+Forth 语言在嵌入式领域用了几十年了，代码小巧执行快，NASA 的航天器上都跑着它。想用 Go 模拟一个完整点的 Forth 环境。
+
+写一个 Go 的 Forth 语言解释器。数值方面支持整数运算（32位有符号），栈操作覆盖全部常用词：DUP 复制栈顶、DROP 丢弃栈顶、SWAP 交换栈顶两个、OVER 复制次栈顶、ROT 把第三个元素移到栈顶。
+
+冒号定义新词：: SQUARE DUP * ; 这种标准语法。定义的词存进字典，后续直接用。支持 DOES> 让词在运行时生成自定义行为。IF ELSE THEN 和 DO LOOP（含 ?DO 带条件的循环）、BEGIN UNTIL / BEGIN WHILE REPEAT 控制结构都要实现。
+
+内存方面模拟 Forth 的字典结构来存词定义——链表头插法，新词在链表头部。支持 CREATE 和 ALLOT 分配内存区域，@ 和 ! 读写内存单元格（用一个 []int 模拟内存空间）。
+
+变量用 VARIABLE name 定义，值用 name @ 读取、value name ! 写入。常量用 CONSTANT name 定义，引用时直接返回值。
+
+从文本文件加载代码批量执行，也支持交互式逐行输入（REPL 模式，输入一行立即执行并打印栈状态）。标准库实现，go build 编译通过。遇到未定义的词报经典 Forth 风格的 "? undefined word"。

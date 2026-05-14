@@ -1,6 +1,16 @@
-写一个带状态的词法分析器框架。Lexer 能在不同状态间切换：普通模式、字符串模式、注释模式、模板模式等。不同状态下 token 规则不同。
+写一个带状态的词法分析器框架。很多语言不是单一状态的——HTML 里嵌入了 JS 和 CSS，JS 里又有模板字符串和正则表达式。不同状态下 token 的识别规则完全不同。
 
-比如解析 HTML+JS 混合：遇到 <script> 切到 JS 模式，遇到 </script> 切回 HTML 模式。
-状态切换通过规则触发，用户用 DSL 定义规则。
-用法：lexer-state -rules htmljs.rules input.html
-Go 标准库实现，go build 编译通过。
+Lexer 能在不同状态间切换：普通模式、字符串模式（处理转义和插值）、注释模式（忽略内容直到注释结束）、模板模式（解析模板语法）。状态切换通过规则触发——比如遇到 <script> 切到 JS 模式，遇到 </script> 切回 HTML 模式。遇到 " 切到字符串模式，字符串内遇到 " 切回普通模式。
+
+用户用 DSL 定义状态规则：
+STATE html
+  TOKEN TAG_OPEN <\w+>
+  TOKEN TAG_CLOSE </\w+>>
+  ON "<script>" ENTER js
+STATE js
+  TOKEN KEYWORD function|var|let|const|if|else
+  ON "</script>" ENTER html
+
+不同状态下 token 类型不同，切换状态时 token 流不断。支持状态嵌套（模板字符串里的表达式里又有模板字符串）。
+
+用法：lexer-state -rules htmljs.rules input.html。Go 标准库实现，go build 编译通过。

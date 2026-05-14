@@ -1,5 +1,7 @@
-帮我用 Rust 写一个音视频编解码器检测工具。
+从媒体文件里识别编码格式——深入到视频流和音频流内部看编码参数。不是只看容器声明，而是解析编码器配置记录确认实际编码。Rust 实现。
 
-分析媒体文件，识别出里面用的是什么编码格式。视频方面识别 H.264、H.265、VP8、VP9、AV1、MPEG-2 等编码，音频方面识别 AAC、MP3、Opus、Vorbis、FLAC、PCM 等。通过解析容器内的编码描述信息（MP4 的 stsd box、MKV 的 CodecID 等）来获取。输出每个流的编码格式名称和四字符代码（fourcc）。
+视频编码识别——MP4 从 stsd 的 sample entry 类型判断：avc1=H.264、hev1/hvc1=H.265、vp09=VP9、av01=AV1。进一步读配置记录：H.264 的 AVCDecoderConfigurationRecord 包含 profile(66=Baseline/77=Main/100=High)、level(如 40=4.0, 41=4.1)、SPS 中的像素格式。MKV 从 CodecID 判断："V_MPEG4/ISO/AVC"=H.264、"V_MPEGH/ISO/HEVC"=H.265、"V_VP9"=VP9、"V_AV1"=AV1。CodecPrivate 内容和 MP4 的配置记录类似。
 
-Rust 实现，cargo build 通过。
+音频编码识别——MP4 的 mp4a sample entry 里读 AudioSpecificConfig：audioObjectType（2=AAC-LC、5=SBR/HE-AAC）、samplingFrequencyIndex、channelConfiguration。MKV 的 "A_AAC" → AAC、"A_OPUS" → Opus、"A_VORBIS" → Vorbis、"A_MPEG/L3" → MP3。FLV 从音频 Tag 标志位判断。
+
+输出每个流的编码名称、profile、level、fourcc。用法 codec-detect video.mp4，输出如 "Video: H.264 High@L4.1, Audio: AAC-LC 48kHz stereo"。Rust 实现，cargo build 通过。

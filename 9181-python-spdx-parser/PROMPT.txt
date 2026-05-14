@@ -1,14 +1,7 @@
-SPDX 许可证清单文件解析器，处理 SPDX 格式的软件物料清单。
+SPDX（Software Package Data Exchange）许可证清单文件解析器。SPDX 是另一种 SBOM 标准格式，有些工具生成的 SBOM 是 SPDX 格式。写个工具解析 SPDX JSON 和 tag-value 两种格式。
 
-SPDX 是 Linux 基金会推的 SBOM 标准，和 CycloneDX 齐名。有些客户要求 SPDX 格式，需要能解析处理。
+Python 实现 SPDX 解析器。格式支持：SPDX JSON 格式（解析 Document、Packages、Relationships 顶层对象）和 tag-value 格式（每行 key: value 对，如 PackageName: openssl）。解析 Packages 列表——每个包的 SPDXID、name、versionInfo、supplier、licenseConcluded、licenseDeclared、copyrightText、downloadLocation。
 
-Python 实现：
-- 解析 SPDX JSON 格式文件（tag-value 格式可选）
-- 提取包信息：包名、版本、SPDX ID、许可证声明、版权声明、文件列表
-- 检查许可证合规性：标记非标准许可证、未知许可证、无许可证的组件
-- 统计许可证使用分布，高亮有法律风险的许可证（如 GPL 系列用于闭源项目）
-- 导出为简洁的许可证报告
+关系解析：解析 Relationships 段构建依赖图（SPDXRef-PROJECT DEPENDS_ON SPDXRef-openssl）。许可证汇总：提取所有包的 licenseConcluded 和 licenseDeclared，统计许可证分布——MIT 多少个、Apache 多少个、GPL 多少个、Unknown 多少个。
 
-用法：python spdx_parser.py parse spdx.json --check-licenses
-python spdx_parser.py report spdx.json --format markdown
-重点是许可证识别要准确，SPDX License Identifier 要支持常见的。
+交叉引用：将 SPDX 的包名和版本转换为 purl（Package URL）格式，方便跟 CycloneDX SBOM 互相对比。命令行：parse（展示包列表）、license-summary（许可证汇总）、deps（依赖树）、compare（对比两个 SPDX 文件的差异）。python3。

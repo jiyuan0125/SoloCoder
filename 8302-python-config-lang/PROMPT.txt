@@ -1,3 +1,14 @@
-团队配置文件越来越多，YAML 和 JSON 写起来要么太啰嗦要么缺结构。我想搞一个自定义的配置语言，支持嵌套块、变量引用（比如 ${db.host}）、环境变量插值和简单的条件表达式（比如 debug ? "dev" : "prod"）。
+二十个微服务各有一坨 YAML 配置，互相引用的值散落在不同文件里，改一个配置要翻五个文件。设计一个自定义配置语言，把变量引用、条件逻辑和环境变量插值都集成进来。Python 解析器。
 
-写个解析器能把这种自定义配置格式转成 Python 字典，遇到语法错误要指出行号。纯 Python 实现，不用第三方库。命令行读 .conf 文件输出 JSON 就行。
+语法特性：
+- 键值对：key = value（支持字符串、整数、浮点、布尔、null）
+- 嵌套块用大括号：database { host = "localhost"; port = 5432 }
+- 变量引用：base_dir = "/opt/app"; log_dir = "${base_dir}/logs"
+- 环境变量插值：db_password = env("DB_PASSWORD")，不存在时用默认值 env("DB_PASSWORD", "default")
+- 条件表达式：log_level = env("ENV") == "production" ? "warn" : "debug"
+- 包含文件：include "base.conf"，把另一个配置文件的键值合并进来
+- 列表：servers = ["host1:8080", "host2:8080"]
+
+解析成 Python 字典。变量引用解析时先构建所有键值再替换引用——循环引用要检测并报错（A 引用 B，B 引用 A）。环境变量在运行时获取。include 递归深度限制 10 层。
+
+语法错误要指明行号和原因。命令行读 .conf 文件，python3 config_parser.py app.conf 输出 JSON。纯 Python 实现。

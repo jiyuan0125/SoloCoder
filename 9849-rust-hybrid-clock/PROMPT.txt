@@ -1,12 +1,11 @@
-实现混合逻辑时钟（Hybrid Logical Clock），用 Rust。
+先理解混合逻辑时钟（HLC）要解决的问题，再实现它。物理时钟不靠谱（NTP 有偏移），逻辑时钟不直观（counter 不对应真实时间）。HLC 把两者结合——使用物理时间戳作为主体，逻辑 counter 处理同一物理时间内的多次事件。用 Rust 实现 HLC，对比普通 Lamport 时钟。
 
-物理时钟不可靠（有偏移、回拨），逻辑时钟（Lamport）不能反映真实时间。HLC 结合两者：用物理时间做主体，加上逻辑计数器处理同一毫秒内的多个事件。
+HLC 的数据结构：HybridClock { physical_time: u64, logical_counter: u16 }。physical_time 是当前的物理时间戳（毫秒级），logical_counter 是逻辑计数器（同一毫秒内的事件用 counter 区分）。
 
-功能：
-- now()：返回当前混合时间戳，格式为 (physical_time, logical_counter, node_id)
-- event(remote_timestamp)：收到远程事件时，取本地和远程物理时间的最大值，逻辑计数器处理同毫秒
-- send_event()：发送事件时更新时间戳
-- 保证：如果事件 A happened-before B，则 HLC(A) < HLC(B)
-- HLC 时间戳接近物理时间（偏差不超过一个 RTT）
+事件处理的三个规则。本地事件或发送消息时：如果 now() > physical_time，更新 physical_time = now()，counter = 0。否则 counter++。接收消息时：取 max(physical_time, msg.physical_time, now()) 作为新的 physical_time。如果三者相等，counter = max(counter, msg.counter) + 1。如果 physical_time 是 max，counter = max(counter, msg.counter) + 1。如果 now() 是 max，counter = 0。
 
-cargo build 通过，测试时钟单调递增和因果一致性。
+HLC 的性质：和 Lamport 时钟一样保证因果有序（如果 A before B，则 HLC(A) < HLC(B)）。同时，HLC 的 physical_time 部分接近真实时间，最大偏差只有消息延迟。比纯 Lamport 时钟更容易理解事件的真实发生时间。
+
+模拟 3 个节点，故意给其中一个节点设置时钟偏移（快 100ms），用 HLC 和 Lamport 分别追踪同一组事件。打印两种时钟下的事件排序，对比 HLC 如何在保持因果序的同时更接近真实时间。
+
+cargo build 通过。

@@ -1,5 +1,7 @@
-写一个 TLS 会话重组工具，从 pcap 文件里提取 TLS 流并重新组装。
+分析 TLS 加密流量虽然看不到明文内容，但 TLS 握手阶段是明文的，可以从中提取证书、密码套件、SNI 等信息。写个工具专门解析和重组 TLS 会话。
 
-读取 pcap 文件，过滤出 TLS 流量，按 TCP 四元组分组，追踪每个流的消息序列。能识别 TLS 握手阶段（ClientHello、ServerHello、证书交换等）和应用数据阶段。对未加密的握手消息做详细解析，展示协议版本、密码套件、证书信息。
+Python 实现 TLS 会话解析器。从 pcap 中提取 TCP 443 端口（或指定端口）的流量，按 TCP 流重组后解析 TLS 记录层。每个 TLS 记录包含 ContentType（Handshake=22、ApplicationData=23、ChangeCipherSpec=20）、ProtocolVersion（TLS 1.0/1.1/1.2/1.3）、长度。
 
-输出每个 TLS 会话的摘要信息。Python 3，用 dpkt 或 scapy 解包。python tls_reassemble.py capture.pcap。
+握手消息解析：ClientHello——提取支持的 TLS 版本列表、密码套件列表、SNI（Server Name Indication，访问的域名）、签名算法列表。ServerHello——选定的 TLS 版本、选定的密码套件、服务端随机数。Certificate——解析证书链中每个证书的 DN 和有效期。ServerKeyExchange/ClientKeyExchange——密钥交换参数。
+
+TLS 1.3 差异：Hello Retry Request、Encrypted Extensions、Certificate 消息也是加密的（只有 ClientHello 和 ServerHello 是明文）。输出每个 TLS 会话的元数据——客户端 SNI、协商的密码套件、证书链摘要、会话恢复状态。python3 命令行工具。

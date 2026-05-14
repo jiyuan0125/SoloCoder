@@ -1,5 +1,7 @@
-帮我用 Rust 做一个 FLV 封装器，把音视频数据封装成 FLV 容器格式。
+RTMP 直播推流用的就是 FLV——虽然这格式早就停止更新了但直播领域它还是标配。FLV 封装器需要处理 Tag 结构、AVC 序列头、AAC 配置。Rust 实现。
 
-输入 H.264 视频帧和 AAC 音频帧，按照 FLV 规范写入 FLV 文件头和 Tag 结构。视频 Tag 要正确设置 codec ID、frame type、AVC packet type 和 composition time。音频 Tag 设置 sound format、sound rate、sound size 和 AAC packet type。脚本 Tag 写入 onMetaData 信息（时长、宽度、高度、码率等）。
+FLV 文件结构：9 字节文件头（"FLV" + 版本 1 + flags 0x05 音视频都有 + 数据偏移 9）+ 4 字节 PreviousTagSize0(0) + Tag 序列。每个 Tag：11 字节头（1 字节类型 8/9/18 + 3 字节数据长度 + 3 字节时间戳低 24 位 + 1 字节时间戳高 8 位 + 3 字节流 ID + 数据）+ 4 字节 PreviousTagSize。
 
-按 Adobe FLV 规范处理二进制格式，Rust 实现，cargo build 通过。
+视频 Tag 数据格式：1 字节标志（高 4 位帧类型 1=关键帧 2=中间帧，低 4 位编码 7=AVC）+ 1 字节 AVC 包类型（0=序列头含 SPS/PPS、1=NALU）+ 3 字节合成时间偏移 + 实际数据。音频 Tag：1 字节标志（高 2 位 10=AAC + 采样率 + 位深 + 声道）+ 1 字节 AAC 包类型（0=AudioSpecificConfig、1=raw data）+ 数据。
+
+Script Data Tag 放 onMetaData——用 AMF0 编码：字符串 "onMetaData" + ECMA 数组类型标记 + 数组长度 + 若干 key-value 对（duration、width、height、videodatarate、audiodatarate、framerate、videocodecid、audiocodecid）。用法 flv-mux -video input.h264 -audio input.aac -output output.flv。Rust 实现，cargo build 通过。

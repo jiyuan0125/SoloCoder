@@ -1,3 +1,9 @@
-需要从流量中提取 TLS 握手信息做安全审计。Go 写一个 TLS 握手解析工具。
+做安全审计的时候需要检查线上服务的 TLS 配置是否合规——有没有用了弱密码套件、证书是不是快过期了、有没有还在用 TLS 1.0 这种老版本。但光检查配置文件不够，必须从实际流量中验证协商结果。
 
-从 TCP 流或 pcap 中识别 TLS 记录层：解析 TLS Record 头（类型、版本、长度）；解析 ClientHello 和 ServerHello 消息（协议版本、 cipher suites、扩展）；提取证书链信息（从 Certificate 消息中解析 DER 编码的证书基本信息）；识别使用的密码套件和密钥交换方式。CLI 工具，Go 标准库，go build 通过。
+Go 写一个 TLS 握手解析工具。从 TCP 流或 pcap 文件中识别 TLS 流量，解析握手阶段的关键信息。
+
+解析从 TLS Record 层开始：每条 Record 以 5 字节的头开头——ContentType（22=Handshake、20=ChangeCipherSpec、23=Application Data、21=Alert）、ProtocolVersion、Length。
+
+然后解析 Handshake 消息。ClientHello：提取客户端支持的协议版本列表、密码套件列表（把数值编码翻译成可读名称如 TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384）、扩展字段（SNI 中的域名、supported_versions、signature_algorithms）。ServerHello：提取最终协商的协议版本和密码套件。Certificate 消息：从 DER 编码的证书链中提取每个证书的基本信息（主题、颁发者、有效期、SAN），不需要完整的 X.509 解析，简单提取关键字段即可。
+
+输出一份 TLS 会话摘要：客户端支持的套件、服务器选择的套件、证书链信息、安全评估（弱套件检测、证书过期检查、协议版本安全度）。CLI 工具，Go 标准库，go build 通过。

@@ -1,9 +1,11 @@
-写一个区间树（Interval Tree），Go 实现。场景是做日程冲突检测——给定大量时间区间，快速查出一个新区间和哪些已有区间重叠。
+日程管理里要查"某段时间有没有冲突的会议"——就是区间查询问题。区间树是一棵增强的 BST，每个节点存一个区间 [low, high]，用中点作为排序 key，同时维护子树中最大的 high 值。Go 实现。
 
-功能：
-- 插入区间 [start, end]，每个区间可以附带一个值（比如会议名称）
-- 查询：给定一个区间，返回所有与之重叠的已存储区间
-- 支持删除指定区间
-- 支持查询某一点所在的所有区间（点查询）
+节点结构：interval (low, high)、key（通常是区间中点）、max（以该节点为根的子树中最大的 high 值）、left/right 子节点。
 
-底层用增强的红黑树或者排序+二分都行，查询效率要优于 O(n)。写个 main 模拟日程管理，插入一堆会议后检测冲突。go build 编译通过。
+操作：
+- Insert(interval)：按 key（中点）插入 BST，插入后更新路径上所有节点的 max 值。max = max(self.high, left.max, right.max)
+- Query(point)：查找所有包含 point 的区间。如果 point > node.max（子树中最大的 high 都不到 point），整个子树跳过。否则先检查当前区间是否包含 point，然后递归查左右子树
+- Query(interval)：查找所有和 [low, high] 有重叠的区间。剪枝条件：如果 node.interval.low > query.high 或 node.max < query.low，跳过
+- Delete(interval)：按 BST 删除，更新 max 值
+
+写个 main 模拟日程系统：插入 1000 个会议区间，查询某个时间段是否有冲突。也测试区间重叠检测——找所有和 [10, 20] 重叠的会议。go build 通过。

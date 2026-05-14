@@ -1,3 +1,9 @@
-项目迁移的时候遇到大量 import 路径要改，还有循环依赖要排查。写一个 import 解析工具，能分析 Python 源文件中的所有 import 语句（包括 from x import y、import x.y、import x as z），解析实际指向的模块路径，检测模块是否存在。
+项目从一个 monolith 拆分成微服务，几百个 import 路径要更新，还有循环依赖要清理。手工排查根本搞不过来。写一个 import 解析和分析工具。Python 实现。
 
-对于相对导入要能正确解析到绝对路径。能生成 import 依赖列表。纯 Python 实现，用 ast 模块解析。python 能跑，命令行扫描目录输出 import 分析报告。
+解析能力：用 ast 模块扫描 .py 文件中的所有 import 语句——import x、import x.y.z、import x as a、from x import y、from x.y import z as w、from . import x、from ..x import y。每种 import 都解析出实际指向的模块路径。
+
+解析规则：标准库模块（sys、os、json 等）标记为 stdlib。第三方库（在 site-packages 中的）标记为 third-party。项目内部模块通过相对路径解析到绝对文件路径——from .foo import bar 解析为当前包目录下的 foo.py 或 foo/__init__.py。模块不存在的话标记为 missing。
+
+分析功能：生成每个文件的 import 列表（分 stdlib/third-party/local 三组）、检测循环 import（A import B，B import A，画成有向图找环）、检测未使用的 import（import 了但在文件中从未被引用）、检测重复 import（同一个模块被不同方式 import 了两次）。
+
+输出格式：JSON 报告或终端表格。python3 import_resolver.py src/。纯 Python 标准库。

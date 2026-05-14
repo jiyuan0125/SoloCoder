@@ -1,3 +1,7 @@
-抓了一大堆包，只想看感兴趣的流量。Go 写一个数据包过滤工具。
+Go 数据包过滤工具。从 pcap 文件中按条件筛选数据包，把命中的包写入新的 pcap 文件。
 
-从 pcap 文件读取数据包，按条件过滤后写入新的 pcap 文件。过滤条件：源/目的 IP 或网段、TCP/UDP 端口、协议类型、时间范围、包长度范围。支持多条件组合（AND/OR）。命令行指定过滤规则，比如 `pkt-filter -i input.pcap -o output.pcap --dst-port 80,443 --proto tcp`。Go 标准库，go build 通过。
+抓了一大堆流量但只关心其中一小部分——比如只要目标端口是 80 和 443 的 TCP 包、只要来自某个特定 IP 段的流量、或者只要某个时间窗口内的包。tcpdump 虽然能做，但每次都要查 BPF 语法很烦，而且有些组合条件用 BPF 表达起来很啰嗦。
+
+工具的工作方式：读取输入 pcap 文件，解析每个数据包的 IP header 和 TCP/UDP header，提取五元组（源 IP、源端口、目的 IP、目的端口、协议），然后逐包检查是否匹配过滤条件，匹配的包连同原始数据一起写入输出 pcap 文件。
+
+过滤条件通过命令行参数指定，支持多条件 AND 组合（默认行为）和 OR 组合（--mode=or）。可用的条件包括：--src-ip 和 --dst-ip（支持 CIDR 网段，如 192.168.1.0/24）、--src-port 和 --dst-port（支持逗号分隔的多个端口）、--proto（tcp、udp、icmp）、--time-start 和 --time-end（ISO 格式或 Unix 时间戳）、--min-len 和 --max-len（包长度范围）。输出 pcap 文件保持和输入相同的格式，过滤后的包数量和占比在终端打印。Go 标准库，go build 通过。

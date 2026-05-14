@@ -1,1 +1,9 @@
-我们站点的 CSP 策略越来越复杂，手动检查容易漏。做一个 Go 工具，读取 CSP 头内容（从 URL 获取或直接粘贴），解析所有指令（script-src、style-src、img-src 等），检测常见不安全配置：'unsafe-inline'、'unsafe-eval'、data: URI、过宽的域名通配符。输出每个指令的安全评分和改进建议。纯标准库实现，go build 能通过。
+站点 CSP 策略越来越复杂，手动检查容易漏。需要对 CSP 头做深度分析——不是简单地检查有没有，而是评估每条指令的安全等级和改进空间。
+
+做一个 Go 工具，读取 CSP 头内容（从 URL 获取或直接粘贴）。解析所有指令——对每条指令（script-src、style-src、img-src 等）列出其值。逐条评估：
+
+常见不安全配置检测：'unsafe-inline'（内联脚本/样式，XSS 风险）——建议用 nonce- 或 hash- 替代。'unsafe-eval'（允许 eval，代码注入风险）。data: URI（可能用于数据外泄或 XSS）。过宽的域名通配符——*.example.com 允许所有子域名，确认是否必要。http: 来源（HTTP 上的资源可能被中间人篡改）。
+
+每个指令给出安全评分（1-10）和改进建议。整体 CSP 安全等级——严格（8-10）、中等（5-7）、宽松（1-4）。
+
+纯标准库实现，go build 能通过。

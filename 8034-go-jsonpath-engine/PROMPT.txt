@@ -1,3 +1,9 @@
-用 Go 实现 JSONPath 查询引擎。支持标准 JSONPath 语法：$ 根节点、. 子节点、[] 数组索引、[*] 通配、.. 递归下降、[?()] 过滤表达式。
-输入 JSON 数据和 JSONPath 表达式，返回所有匹配到的值。过滤表达式支持比较运算符和逻辑组合。
-标准库，go build 通过。
+先拿到一个大 JSON（比如 API 返回的嵌套数据），然后从里面提取特定字段——JSONPath 就是做这个的，类似 XPath 之于 XML。
+
+用 Go 实现 JSONPath 查询引擎。支持标准 JSONPath 语法：$ 表示根节点、.child 表示子节点访问、[] 数组索引（支持负数索引从后取）、[*] 通配所有数组元素或对象值、.. 递归下降搜索所有层级、[?()] 过滤表达式、[start:end] 数组切片。
+
+过滤表达式支持比较运算符（== != > < >= <=）、逻辑组合（&& ||）、正则匹配（=~）、字符串函数（length、contains、starts-with）。过滤里用 @ 表示当前节点。
+
+输入 JSON 数据（从文件读取）和 JSONPath 表达式（命令行参数），返回所有匹配到的值。匹配结果以 JSON 数组格式输出。JSONPath 语法错误要给出清晰的提示，比如 "unexpected token ']' at position 5"。
+
+标准库，go build 通过。命令行：jsonpath '$.store.book[?(@.price < 10)].title' data.json。

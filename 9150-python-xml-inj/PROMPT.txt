@@ -1,5 +1,7 @@
-做一个 XML 外部实体注入（XXE）检测工具。
+做一个 XXE（XML 外部实体）注入检测工具。很多 Web 服务还接受 XML 格式的请求体（SOAP API、RSS/Atom feed、SVG 上传），如果 XML 解析器没禁用外部实体，攻击者就能读取服务器文件或做 SSRF。
 
-构造包含外部实体引用的 XML payload（读取 /etc/passwd、SSRF 到内网地址、DoS 攻击 billion laughs），发送到目标的 XML 解析接口，根据响应判断是否存在 XXE 漏洞。支持检测常规 XXE、Blind XXE（通过 OOB 带 out-of-band 数据）。
+Python 实现 XXE 检测器。构造三种类型的 XML payload：常规 XXE——用 <!DOCTYPE> 声明外部实体引用 file:///etc/passwd，发送后检查响应中是否包含文件内容。SSRF XXE——外部实体引用 http://169.254.169.254/latest/meta-data/（AWS 元数据），测试是否能通过 XXE 访问内网。Blind XXE——外部实体引用一个攻击者控制的 URL，如果目标尝试解析这个引用就会发 HTTP 请求到外部（可以用 RequestBin 之类的服务接收回调）。
 
-同时提供一个安全的 XML 解析封装函数，默认禁用外部实体和 DTD。CLI：python xxe_check.py http://target.com/api/xml --param data。Python 3，标准库 xml.etree 和 requests。
+也提供 DoS payload 检测——Billion Laughs 攻击（嵌套实体指数膨胀消耗内存）。安全的 XML 解析封装：safe_parse(xml_string) 函数，用 defusedxml 或手动配置 xml.etree.ElementTree 的解析器禁用外部实体和 DTD。
+
+CLI：python xxe_check.py http://target.com/api --param data --callback-url https://requestbin.example.com。python3 标准 库 + requests。

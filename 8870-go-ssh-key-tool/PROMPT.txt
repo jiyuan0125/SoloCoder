@@ -1,8 +1,13 @@
-写个 SSH 密钥管理工具，Go 实现。
+手上一堆 SSH 密钥，有 rsa 的有 ed25519 的有 ecdsa 的，哪个对应哪台服务器完全记不清了。想有个工具快速查看密钥信息、生成新密钥、转换格式。
 
-手上一堆 SSH 密钥，有 rsa 的有 ed25519 的，指纹也不记得了。想有个工具快速查看密钥信息、生成新密钥、转换格式。
+用 Go 写一个 SSH 密钥管理工具。info 子命令：解析 SSH 公钥（ssh-rsa/ssh-ed25519/ecdsa-sha2-nistp256 格式）或私钥。显示字段——密钥类型、密钥长度（RSA 的 bits 数）、指纹（SHA256 格式，和 ssh-keygen -l 输出一致）、注释（comment）。如果是私钥还显示是否加密。
 
-功能：解析 SSH 公钥和私钥，显示类型、长度、指纹（SHA256）；生成新的 SSH 密钥对（支持 rsa/ed25519/ecdsa）；公钥格式转换（PEM 转 SSH 格式或反过来）。
+gen 子命令：生成新的 SSH 密钥对。支持 rsa（4096 位）、ed25519、ecdsa（P-256/P-384/P-521）。输出 OpenSSH 格式的私钥和公钥文件。可指定注释（默认 user@hostname）。
 
-用法：ssh-key-tool info -file id_ed25519.pub、ssh-key-tool gen -type ed25519 -comment "user@host"、ssh-key-tool fingerprint -file id_rsa.pub
+fingerprint 子命令：计算 SSH 密钥指纹。支持 SHA256（Base64 编码，默认）和 MD5（hex 编码，旧格式）两种格式。输出和 ssh-keygen -lf 一致的格式。
+
+convert 子命令：格式转换——PEM 私钥转 OpenSSH 私钥格式，OpenSSH 公钥转 PEM 格式。
+
+命令：ssh-key-tool info -file id_ed25519.pub、ssh-key-tool gen -type ed25519 -comment "user@host" -out ~/.ssh/new_key、ssh-key-tool fingerprint -file id_rsa.pub。
+
 Go 标准库 crypto/ssh，go build 能编译。

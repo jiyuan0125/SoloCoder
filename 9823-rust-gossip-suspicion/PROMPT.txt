@@ -1,12 +1,11 @@
-实现 Gossip 故障检测中的 Suspicion 机制，Rust 编写。
+Gossip 协议里的故障检测不是非黑即白的——不是说一个节点没响应就立刻标记为 dead。而是有一个 suspicion 阶段：先怀疑它可能挂了，如果足够多的其他节点也这么认为，才最终确认 dead。这种间接检测机制能减少误判（比如只是网络抖动）。用 Rust 实现这个 suspicion 子协议。
 
-节点 A 没收到节点 B 的心跳，不能直接判定 B 挂了——可能是网络抖动。先标记 B 为 suspected，然后把怀疑信息广播给其他节点。如果其他节点确认 B 还活着，A 就取消怀疑；如果多数节点都怀疑 B，才标记为 dead。
+节点状态机：每个节点在其他节点的视角中有三种状态——Alive（正常）、Suspect（疑似故障）、Dead（确认故障）。状态转换：Alive → Suspect（超过心跳超时）、Suspect → Alive（收到该节点的反驳）、Suspect → Dead（超过怀疑超时且没有反驳）。
 
-功能点：
-- 心跳超时后标记对端为 suspected，而不是直接 dead
-- suspected 信息通过 Gossip 广播给其他节点
-- 收到来自被怀疑节点的直接心跳后取消怀疑
-- 达到确认阈值后（比如超过一半节点怀疑）才标记为 dead
-- 支持自定义超时时间和确认阈值
+反驳机制（refutation）：当节点 A 收到一条消息说"节点 A 被怀疑挂了"时，A 可以通过 Gossip 广播一个 Alive 消息来反驳。这个 Alive 消息带一个更高的 incarnation number（递增计数器），其他节点看到更高的 incarnation 就知道之前的 Suspect 是误判。
 
-cargo build 通过，测试网络抖动场景下不会误判 dead。
+incarnation 的作用：每个节点的状态信息带一个 incarnation number，初始为 0。正常 Alive 状态时不变，收到关于自己的 Suspect 指控时自增。其他节点比较状态信息时，incarnation 大的胜出（代表更新的信息）。
+
+模拟 10 个节点，故意让节点 5 的网络延迟增大（看起来像挂了但不完全断线），观察其他节点对它从 Alive → Suspect → Alive（反驳成功）的过程。也模拟一个真正挂掉的节点，观察 Alive → Suspect → Dead 的过程。
+
+cargo build 通过。

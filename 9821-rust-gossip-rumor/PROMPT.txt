@@ -1,12 +1,11 @@
-实现 Gossip Rumor-Mongering（传言传播）机制，Rust 编写。
+之前在一个消息系统里用过 rumor-mongering 风格的 Gossip——每条消息像一个"谣言"一样在节点间传播，传播够了轮次后就不再转发。这比全量交换更高效，因为旧消息不会一直占用带宽。用 Rust 实现这个 rumor spreading 算法。
 
-当集群中有一个热点消息需要快速传播时，rumor-mongering 比 anti-entropy 更快。消息标记为 rumor，节点在多个 round 中主动推送给随机邻居，达到一定条件后标记为 removed 停止传播。
+每条 rumor 的生命周期：产生后被标记为 "hot"（活跃状态），在每次 Gossip 交互中转发给随机邻居。每被一个新节点接收成功，计数器 +1。当接收成功次数达到阈值（比如 2*log(N)）后，rumor 变成 "cold"（冷却），不再主动转发。但对方主动 pull 时仍可以返回。
 
-功能：
-- 新消息标记为 rumor 状态，在多个 round 中主动推送
-- 每轮随机选 k 个邻居推送 rumor
-- 接收方如果已知该消息则返回 ACK，发送方收到 ACK 后减少计数
-- rumor 在被足够多节点确认（或超时）后标记为 removed
-- 支持配置最大 round 数和确认阈值
+数据结构：Rumor { id, payload, round_count, hot: bool }。每个节点维护一个 rumors: HashMap<RumorId, Rumor> 集合和 active_count（当前 hot rumor 的数量）。Gossip 交互时，节点只发送 hot rumor 给对端——cold rumor 只有在被 pull 时才返回。
 
-cargo build 通过，验证 rumor 在有限 round 内停止传播。
+ rumor 的淘汰：除了变 cold 之外，还有 TTL 机制——一条 rumor 存在超过一定时间（比如 60 秒）后自动删除，不管它是 hot 还是 cold。这防止了内存无限增长。
+
+模拟场景：10 个节点，节点 0 在 T=0 发出 5 条 rumor。每轮 Gossip 后打印每条 rumor 的传播情况——已经被多少节点收到、还是 hot 吗、当前轮次。观察 rumor 从 hot 变 cold 的过程。
+
+cargo build 通过。

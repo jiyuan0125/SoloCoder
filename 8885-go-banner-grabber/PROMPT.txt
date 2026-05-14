@@ -1,8 +1,13 @@
-做个 Banner 抓取工具，Go 写的。
+渗透测试前期收集信息的时候，很多服务连上去会主动发 banner（欢迎信息），从 banner 能知道软件名和版本号，然后去 CVE 数据库查有没有已知漏洞。这是最快最简单的信息收集手段之一。
 
-渗透测试前期收集信息时，很多服务连上去会主动发 banner，从 banner 能知道软件名和版本，用来找已知漏洞。
+用 Go 写一个 Banner 抓取工具。grab 子命令：对指定端口发起 TCP 连接。连接成功后立即开始计时，等待最多 timeout 秒（默认 5 秒）接收数据。如果服务不发 banner，可选发送一个换行符 "\n" 触发响应。记录接收到的所有数据作为 banner 文本。
 
-功能：连接目标端口，读取服务返回的 banner 文本；支持设置等待超时；对 banner 做基本的关键字匹配识别服务类型；批量抓取多个端口的 banner。
+Banner 分析：对抓到的 banner 做关键字匹配识别服务类型——"SSH" → SSH 服务、"220" → SMTP/FTP、"HTTP/1" → HTTP 服务、"MySQL" 或 MariaDB → 数据库。提取版本号——用正则匹配版本号模式（如 OpenSSH_8.9、nginx/1.21.0、Apache/2.4.51）。
 
-命令：banner-grabber grab -host 192.168.1.1 -ports 21,22,25,80,110,143,3306、banner-grabber grab -host 10.0.0.1 -ports 1-1024 -timeout 5s
+批量抓取：支持同时抓取多个端口——grab -host 192.168.1.1 -ports 21,22,25,80,110,143,3306,5432,6379,8080。也支持从文件读取多个主机的端口列表。
+
+输出格式：每个端口一行——IP:端口 服务类型 版本 Banner 前 200 字符。支持 JSON 格式输出。
+
+命令：banner-grabber grab -host 192.168.1.1 -ports 21,22,25,80,110,143,3306、banner-grabber grab -host 10.0.0.1 -ports 1-1024 -timeout 5s。
+
 Go 标准库 net，go build 通过。

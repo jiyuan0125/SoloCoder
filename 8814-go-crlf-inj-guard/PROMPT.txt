@@ -1,11 +1,11 @@
-写一个 CRLF 注入检测和防护工具，Go 语言。
+先说清楚 CRLF 注入是什么：HTTP 协议用 \r\n 分隔 header，如果用户输入里有 \r\n 被直接拼进了 header 值，攻击者就能注入任意的 HTTP header 甚至注入一整个响应体。渗透测试发现好几个接口都有这个问题——日志写入、URL 重定向、Cookie 设置，拼用户输入之前都没做清洗。
 
-前阵子做渗透测试发现好几个接口的 header 拼接都存在 CRLF 问题，能注入任意响应头。
+用 Go 写一个 CRLF 注入检测和防护工具。先做检测函数 DetectCRLF(input string) []Location：扫描字符串找 \r(0x0D) 和 \n(0x0A) 字符，以及各种编码变体——URL 编码的 %0d%0a、%0D%0A；双重 URL 编码的 %250d%250a；反斜杠转义变体 \\r\\n；UTF-8 overlong 编码（0xC0 0x8D 之类的非最短编码）。报告每个匹配的位置和变体类型。
 
-功能点：
-- 检测用户输入中的 CR(\r) 和 LF(\n) 字符，包括各种编码变体（%0d%0a、\\r\\n）
-- 提供通用输入清洗函数：移除或替换 CRLF 字符
-- 针对常见注入场景提供防护：HTTP header 设置、URL 重定向、日志写入、文件名拼接
-- 包含一个中间件，自动检查请求参数中的 CRLF 注入尝试并记录告警
+通用清洗函数 StripCRLF(input string) string：移除所有 \r 和 \n 字符。提供可选的替换模式——替换为空格、替换为下划线、或者转义为 \\r\\n 字面量。
+
+针对四个常见注入场景分别提供防护函数：SanitizeHeader(value string) 用于 HTTP header 设置前清洗；SanitizeURL(url string) 用于 URL 重定向前清洗；SanitizeLog(message string) 用于日志写入前清洗；SanitizeFilename(name string) 用于文件名拼接前清洗（CRLF 在文件操作里也可能造成问题）。
+
+提供 HTTP 中间件 CRLFShield：自动检查请求的 Query 参数、Header、Cookie 中的 CRLF 注入尝试，记录告警日志并返回 400。
 
 Go 标准库，go build 编译通过。

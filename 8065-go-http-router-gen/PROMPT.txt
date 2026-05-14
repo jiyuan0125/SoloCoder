@@ -1,1 +1,17 @@
-我想根据 OpenAPI spec 或者简单的路由配置文件自动生成 Go 的 HTTP 路由代码。写一个代码生成器，输入路由定义（路径、方法、handler 名称、中间件），输出一个 .go 文件，里面用标准库 net/http 注册好所有路由，每个 handler 写好函数签名和空实现。支持路径参数、查询参数的结构体绑定代码生成。go build 通过，生成的代码也能编译。
+每次新建 Go HTTP 服务都要写一堆路由注册代码——http.HandleFunc("/api/users", handleUsers)、http.HandleFunc("/api/users/:id", handleUserByID)... 太机械了，能不能从配置文件自动生成？
+
+写一个 Go HTTP 路由代码生成器。输入一个路由定义文件（YAML 或 JSON 格式），定义每条路由的路径、HTTP 方法、handler 函数名、中间件列表，输出一个完整的 .go 文件，里面用标准库 net/http 注册好所有路由。
+
+路由定义示例格式：
+routes:
+  - path: /api/users
+    method: GET
+    handler: ListUsers
+    middleware: [Auth, Log]
+  - path: /api/users/{id}
+    method: GET
+    handler: GetUser
+
+生成的代码包括：package 声明、import 列表、路由注册函数（func RegisterRoutes(mux *http.ServeMux)）、每个 handler 的函数签名和空实现（带 TODO 注释）。支持路径参数解析代码生成——{id} 参数自动从 URL 中提取到结构体。支持查询参数的结构体绑定代码生成（从 URL query 解析到 struct）。
+
+go build 通过，生成的代码也能编译。

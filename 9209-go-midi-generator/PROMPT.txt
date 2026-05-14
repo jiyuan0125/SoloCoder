@@ -1,5 +1,5 @@
-做音乐实验需要批量生成一些简单的 MIDI 文件，手动一个个弄太慢了。
+做音乐实验需要批量生成一些简单的 MIDI 文件——音阶练习、和弦进行、随机旋律片段之类的——手动一个个用 DAW 创建太慢了，写个命令行工具批量出活。
 
-写个 MIDI 文件生成器，能通过命令行参数指定 BPM、拍号，然后根据输入的音符序列（音高+时值）生成合法的 MIDI 文件。支持设置乐器（Program Change）和力度（velocity）。生成的文件要能被常见播放器正常打开。
+写个 MIDI 文件生成器，通过命令行参数控制：BPM（默认 120）、拍号 numerator/denominator（默认 4/4）、时间分辨率 ticks per quarter-note（默认 480）。音符序列从标准输入读取，每行一个音符，格式是音名+八度:时值，比如 C4:1 D4:0.5 E4:1 F#4:0.25，休止符用 R:1 表示。能通过 -instrument 参数设置乐器编号（Program Change，0 是钢琴，24 是吉他，73 是长笛，按 GM 标准来），-velocity 设置默认力度（1-127，默认 100）。输出的文件要符合 SMF format 0 规范：MThd 头 + 单个 MTrk chunk，里面依次是 tempo event、time signature event、program change event、音符序列、end of track event。变长整数编码和 running status 都按规范处理。生成的文件能在 Timidity、FluidSynth、GarageBand 这些播放器里正常打开。
 
-Go 标准库写二进制，go build 通过。
+Go 标准库写二进制，变长整数编码自己实现。go build 通过。

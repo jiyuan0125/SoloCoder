@@ -1,1 +1,13 @@
-用 Rust 写一个 Slab 分配器。场景是在高性能服务器里管理固定大小对象的内存池。初始化时分配一大块内存，然后分成多个相同大小的 slot，支持 allocate 分配一个 slot 和 deallocate 释放一个 slot 回收再用。用一个空闲链表或者 bitmap 跟踪哪些 slot 可用。用户可以指定 slot 大小和总数量。写个 demo 分配一批对象，释放几个，再分配，验证复用了之前释放的 slot。cargo run 能跑通。
+高性能服务器里频繁创建销毁固定大小的对象（比如连接对象、消息结构体）会产生大量内存碎片，GC 压力也大。Slab 分配器预先分配一大块内存分成固定大小的 slot，分配和回收都 O(1)，避免频繁调用系统分配器。
+
+用 Rust 写一个 Slab 分配器。
+
+初始化——分配一大块连续内存（用 Vec<u8> 或者 unsafe 的原始内存），按 slot 大小切分成 N 个 slot。用一个空闲链表（free list）或 bitmap 跟踪哪些 slot 可用。free list 可以是 Vec<usize>（空闲 slot 的索引栈）。
+
+allocate——从 free list 弹出一个空闲 slot 的索引，返回该 slot 的引用或指针。如果 free list 为空，可以扩容（分配新的 slab 块）或者返回错误。用户可以指定 slot 大小和总 slot 数量。
+
+deallocate——把释放的 slot 索引压回 free list。下次 allocate 时优先复用这个 slot。
+
+泛型支持——Slab<T> 泛型参数 T 是对象类型，slot 大小 = size_of::<T>()。用 UnsafeCell 或类似机制实现内部可变性。
+
+写个 demo 分配一批结构体对象，释放几个，再分配，验证复用了之前释放的 slot（地址相同）。cargo run 能跑通。

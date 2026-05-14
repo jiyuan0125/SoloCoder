@@ -1,5 +1,9 @@
-帮我做一个 Kubernetes NetworkPolicy 可视化和审计工具。
+K8s NetworkPolicy 的规则写得不严谨，有些命名空间的 Pod 可以互相访问不应该互通的服务。网络策略越来越多，没人能说清楚到底哪些 Pod 能访问哪些 Pod。写个工具分析 NetworkPolicy 的效果。
 
-解析 Kubernetes NetworkPolicy 的 YAML 定义，分析每个策略的入站和出站规则（from/to 的 podSelector、namespaceSelector、ipBlock）。判断某个 Pod 是否被正确隔离、有没有端口暴露到不应该访问的地方。
+Python 实现一个 NetworkPolicy 审计和查询工具。解析所有 NetworkPolicy 的 YAML 定义（遍历指定目录），为每个命名空间构建网络访问矩阵。分析每个策略的 spec——podSelector（策略应用的目标 Pod）、ingress 规则（from 的 podSelector/namespaceSelector/ipBlock 和 ports）、egress 规则（to 的选择器和端口）。
 
-支持两个模式：审计模式（检查策略是否合理）和查询模式（给定源 Pod 和目标 Pod，判断网络是否可达）。输出文本报告。Python 3 + PyYAML。
+审计模式：检查策略配置的合理性——是否有命名空间完全没有 NetworkPolicy（所有 Pod 可互通）、是否有策略允许所有来源（空的 from 相当于允许任意入站）、egress 规则是否限制出站目标（防止数据外泄）。
+
+查询模式：给定源 Pod（命名空间+标签选择器）和目标 Pod，判断网络是否可达。计算逻辑：目标 Pod 是否有匹配的 ingress 策略、源 Pod 是否在白名单中、端口是否允许。
+
+输出网络可达性矩阵和策略审计报告。python3 + PyYAML。

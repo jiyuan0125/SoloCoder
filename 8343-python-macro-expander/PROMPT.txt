@@ -1,3 +1,16 @@
-在做一个代码生成系统，需要支持自定义宏展开。用 Python 实现一个宏展开器，支持类似 C 的宏定义（#define、#undef）、带参数的宏、宏嵌套展开、条件编译（#ifdef/#ifndef/#else/#endif）和字符串化（#）与拼接（##）操作。
+代码生成系统需要支持宏展开——在编译之前先把宏替换掉，类似 C 预处理器但不需要完整的 C 编译器。Python 实现一个宏展开器。
 
-展开过程要处理递归展开和避免无限循环。纯 Python 实现，python 能跑，命令行读源文件输出展开后的结果。
+支持的指令：
+- #define NAME value：简单宏定义，后续出现 NAME 的地方替换为 value
+- #define NAME(params) body：带参数的宏，#define MAX(a,b) ((a)>(b)?(a):(b))，调用 MAX(x,y) 展开为 ((x)>(y)?(x):(y))
+- #undef NAME：取消宏定义
+- #ifdef NAME / #ifndef NAME / #else / #endif：条件编译，根据宏是否定义决定是否保留代码段
+- #if expr / #elif expr：条件编译支持表达式求值（宏值比较、逻辑运算）
+- # 操作符：字符串化——#param 把参数变成 "param"
+- ## 操作符：拼接——a##b 把两个 token 拼成一个
+
+展开算法：逐行扫描源文本，遇到 #define 就添加到宏表，遇到标识符就查宏表展开。展开后重新扫描（因为展开结果可能包含新的宏引用），但要防止无限递归——同一个宏在一次展开链中只展开一次。带参数的宏展开时做参数替换。
+
+嵌套宏：#define A B+1, #define B 2 → A 展开为 2+1。循环检测：#define A B, #define B A → 检测到循环，停止展开并警告。
+
+python3 macro_expander.py source.c。纯 Python 实现。

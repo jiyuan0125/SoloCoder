@@ -1,1 +1,9 @@
-做安全分析的时候需要看 Windows PE 文件的结构。Go 实现一个 PE 文件解析器，解析 DOS header、PE header、section table、import table、export table。不用 debug/pe 包，自己按 PE 规范解析。输出入口点、节区信息、导入的 DLL 和函数列表。能识别出常见的加壳特征。命令行工具，go build 能编。
+做安全分析的时候需要看 Windows PE 文件的结构——恶意软件分析、逆向工程、或者检查 DLL 的导出函数列表。不用 debug/pe 包，自己按 PE 规范一层层解析。
+
+Go 实现一个 PE 文件解析器。PE 文件以 DOS header 开头（魔数 MZ），DOS stub 后面跟着 PE signature（PE\0\0），然后是 COFF header 和 Optional header：
+
+COFF Header——机器类型、段数量、时间戳、可选 header 大小。Optional Header——入口点地址（AddressOfEntryPoint）、ImageBase、SectionAlignment、FileAlignment、子系统类型（GUI/CUI）。Section Table——每个节的名称（.text/.data/.rdata/.rsrc/.reloc）、虚拟地址、虚拟大小、文件偏移、原始大小、属性（可读/可写/可执行）。Import Table——导入的 DLL 名称列表和每个 DLL 导入的函数名列表。Export Table——导出的函数名列表和地址。
+
+能识别出常见的加壳特征——节名是 UPX0/UPX1 或者入口点不在 .text 节内时给出警告。
+
+命令行工具传入 PE 文件路径。go build 能编。

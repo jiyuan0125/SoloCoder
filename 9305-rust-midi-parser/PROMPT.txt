@@ -1,8 +1,7 @@
-帮我做一个 MIDI 文件解析器，把标准 MIDI 文件（Format 0 和 Format 1）的音符事件提取出来。
+上周帮一个做音乐教育的朋友分析 MIDI 乐谱的结构——他想把学生演奏的 MIDI 录音和标准乐谱做对比，自动标注弹错的地方。第一步得先把 MIDI 文件解析成结构化数据。Rust 来做。
 
-核心需求：
-- 解析 MIDI 文件头（MThd）和音轨块（MTrk），读取 delta-time（变长整数编码）
-- 识别主要事件类型：Note On/Off、Program Change、Control Change、Tempo（meta 0x51）、Time Signature
-- 把解析结果按时间线输出，能看到每个音符的开始/结束时刻和音高
+MIDI 文件由三部分组成。文件头（MThd chunk）：4 字节 "MThd"、4 字节长度（固定 6）、2 字节格式类型（0=单轨、1=多轨同步、2=多轨独立）、2 字节轨道数、2 字节时间单位（如果最高位为 0 则是 PPQN 每四分音符的 tick 数，最高位为 1 则是 SMPTE 时间码）。格式 1 最常见——第一个 track 通常是 tempo/time signature 等全局事件，后续 track 是各乐器的音符。
 
-Rust 实现，cargo build 通过。`midi-parser parse song.mid` 显示所有轨道的事件列表。
+每个轨道（MTrk chunk）：4 字节 "MTrk"、4 字节长度、若干事件。事件的第一个字段是 delta-time（变长整数编码——每个字节的最高位为 1 表示后面还有字节，最高位为 0 表示结束，有效数据是低 7 位）。然后是事件类型：Note On（0x9n，n=通道号，2 字节数据：音高 0-127、力度 0-127，力度 0 等同 Note Off）、Note Off（0x8n）、Control Change（0xBn）、Program Change（0xCn）、Pitch Bend（0xEn）。
+
+Meta 事件以 0xFF 开头——0x51 03 xx xx xx 是速度变化（微秒/四分音符）、0x58 04 nn dd cc bb 是拍号、0x2F 是轨道结束。解析后输出按时间线排列的所有音符事件——开始时间、结束时间、音高、力度、通道。用法 midi-parser parse song.mid。Rust 实现，cargo build 通过。

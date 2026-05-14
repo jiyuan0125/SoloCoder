@@ -1,5 +1,12 @@
-写个类似 GNU objcopy 的工具，用 Rust 实现，能对二进制文件做各种变换。
+嵌入式开发时经常需要把 ELF 转成裸二进制（raw binary）烧录到 Flash 里，或者去掉某些不需要的段。GNU objcopy 是干这个的标准工具，但依赖太多不好交叉编译。用 Rust 写一个简化版。
 
-支持的功能：删除指定 section（--remove-section）、只保留指定 section（--only-section）、设置 section 的 flags、添加新的 section、修改输出格式（ELF → binary flat）。先把基本的 section 操作做扎实，格式转换能做 ELF 到 raw binary 就行。
+功能清单：
+- --remove-section .comment：删除指定 section，从 section header table 中移除该条目，对应的文件数据也删掉
+- --only-section .text：只保留指定 section，其他全删（.bss 类型的保留虚拟空间但不保留数据）
+- --set-section-flags .data=alloc,load：修改 section 的 flags
+- --add-section .mydata=data.bin：添加新 section，数据从文件读取
+- -O binary：输出格式转换，ELF → raw binary。转换时按虚拟地址顺序排列所有 alloc 的 section，中间的空洞填零，输出一个连续的内存镜像
 
-cargo run -- --remove-section .comment input.o output.o 这种用法。cargo build 通过。
+实现思路：先解析输入 ELF 的所有 header 和 section 数据，在内存中执行删除/保留/添加/修改操作，然后重新计算所有偏移，写出新的 ELF 文件。格式转换则是把所有可加载 section 按地址排列输出。
+
+cargo run -- --remove-section .comment input.o output.o。cargo build 通过。用小型 ELF 文件测试。

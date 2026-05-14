@@ -1,11 +1,7 @@
-帮我写一个 FLV 封装器，Go 实现。
+为什么还有人在用 FLV 格式？因为 RTMP 直播推流用的就是 FLV 容器，各大直播平台的 OBS 推流本质上就是在发 FLV Tag。虽然 FLV 规范已经停止更新了，但直播场景下它仍然是主流。我需要一个 Go 写的 FLV 封装器。
 
-老项目要从 TS 转成 FLV 格式：
-- 构建 FLV 文件头（FLV signature + 版本 + flags）
-- 封装视频标签（Video Tag）：支持 H.264（AVC Sequence Header 和 NALU）
-- 封装音频标签（Audio Tag）：支持 AAC（AudioSpecificConfig + raw data）
-- 写入 Script Data Tag（onMetaData 信息）
-- 正确计算每个 Tag 的大小和 PreviousTagSize
-- 支持 FLV Version 1
+FLV 文件结构很简单——9 字节文件头（"FLV" + 版本号 1 + 标志位 0x05 表示音视频都有 + 4 字节头部长度 9）+ 4 字节 PreviousTagSize0（值为 0）+ 一系列 Tag。每个 Tag 由 11 字节 Tag 头 + 数据 + 4 字节 PreviousTagSize 组成。
 
-用法 flv-mux -video input.h264 -audio input.aac -output output.flv，go build 通过。标准库。
+Tag 头里：1 字节类型（8=音频、9=视频、18=脚本）、3 字节数据长度、3 字节时间戳（低 24 位）+ 1 字节时间戳扩展（高 8 位）、3 字节流 ID（固定 0）、数据。视频 Tag 的数据头：1 字节标志（高 4 位帧类型 1=关键帧 2=中间帧，低 4 位编码 ID 7=AVC）+ 1 字节 AVC 包类型（0=序列头 SPS/PPS，1=NALU）+ 3 字节合成时间偏移。音频 Tag：1 字节标志（高 2 位格式 10=AAC，中间 2 位采样率，第 5 位采样位深，第 4 位声道）+ 1 字节 AAC 包类型（0=AudioSpecificConfig，1=RAW 数据）。
+
+Script Data Tag 放 onMetaData——用 AMF 编码一个对象，包含 duration、width、height、videodatarate、audiodatarate 等字段。用法 flv-mux -video input.h264 -audio input.aac -output output.flv。Go 标准库，go build 通过。

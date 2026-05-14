@@ -1,1 +1,13 @@
-帮我用 Rust 实现一个简化版的 LSM-Tree 存储引擎。结构包括：Memtable（内存中的跳表或有序 Map）、WAL（写前日志）、SSTable 文件。写入流程：先写 WAL 再写 Memtable，Memtable 满了就刷成 SSTable。读取时先查 Memtable 再查各级 SSTable（从新到旧）。维护一个 Level 结构，每层有多个 SSTable。写个 demo 连续写入然后读取验证数据正确。cargo run 能看到读写结果。
+LSM-Tree 是 LevelDB、RocksDB 等高性能键值存储的核心数据结构。写入时不直接更新磁盘上的数据，而是追加到内存中的 Memtable，满了就刷成磁盘上的 SSTable。查询时从新到旧逐层查找。这种设计让写入极快（顺序写），但读取需要多路归并。
+
+用 Rust 实现一个简化版的 LSM-Tree 存储引擎。
+
+组件——Memtable（内存中的有序 Map，用 BTreeMap 或跳表）、WAL（写前日志）、SSTable 文件（只读有序文件）。Level 结构：L0 有多个 SSTable（可能有 key 重叠），L1 及以上每层最多一个有序 SSTable（key 不重叠）。
+
+写入流程——put(key, value)：先写 WAL（追加日志文件），再写 Memtable。Memtable 大小超过阈值（比如 64KB）就刷成 SSTable 文件放到 L0。
+
+读取流程——get(key)：先查 Memtable。没找到就从 L0 的 SSTable 开始查（从新到旧），再到 L1...一直查到最底层。每层 SSTable 的查找用之前实现的 SSTable 组件。
+
+delete——用 tombstone 标记删除，写入流程和 put 一样。查询时遇到 tombstone 返回 None。
+
+写个 demo 连续写入 100 个键值对，然后读取验证数据正确（包括中间删几个再查）。cargo run 能看到读写结果。

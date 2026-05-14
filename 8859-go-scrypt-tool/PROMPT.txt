@@ -1,8 +1,15 @@
-帮我做一个小工具，用 scrypt 算法做密码哈希，Go 写的。
+scrypt 比 PBKDF2 更抗 GPU 暴力破解——它不仅消耗 CPU 还消耗大量内存，GPU 的并行优势在内存密集型计算上被大大削弱。Litecoin 也在用 scrypt 作为挖矿算法。
 
-scrypt 比 PBKDF2 更抗 GPU 暴力破解， Litecoin 也在用它。需要一个命令行工具来生成和验证 scrypt 密码哈希。
+用 Go 写一个 scrypt 密码哈希工具。hash 子命令：调用 crypto/scrypt.Key(password, salt, N, r, p, keyLen) 计算哈希。参数默认值：N=32768（CPU/memory cost，必须是 2 的幂）、r=8（block size）、p=1（parallelism）、keyLen=32。用 crypto/rand 生成 16 字节随机 salt。
 
-功能：生成 scrypt 哈希，参数 N/r/p 可调，默认 N=32768 r=8 p=1；输出格式包含参数和 salt 方便存储；验证密码与哈希是否匹配。
+输出格式用一种自描述的编码——scrypt$N=32768$r=8$p=1$hex_salt$hex_hash。这样验证的时候可以直接从字符串中解析出所有参数，不同密码可以用不同强度的参数。
 
-用法：scrypt-tool hash -pass "secret123"、scrypt-tool hash -pass "secret123" -N 65536 -r 8 -p 2、scrypt-tool verify -pass "secret123" -hash "<encoded>"
+verify 子命令：解析存储的哈希字符串提取 N、r、p、salt。用相同的参数对输入密码重新计算 scrypt。恒定时间比较结果。
+
+参数调节：-N 指定 CPU/memory cost（2 的幂，越大越安全但越慢。32768 约 100ms，65536 约 200ms）；-r 指定 block size（影响内存使用量，内存 = N * r * p * 128 字节）；-p 指定并行度。
+
+benchmark 子命令：测试不同 N 值的计算耗时，帮用户选择合适的参数（目标 100~500ms 的计算时间）。
+
+用法：scrypt-tool hash -pass "secret123"、scrypt-tool hash -pass "secret123" -N 65536 -r 8 -p 2、scrypt-tool verify -pass "secret123" -hash "scrypt$N=32768$..."。
+
 Go 标准库 crypto/scrypt，go build 编译通过。

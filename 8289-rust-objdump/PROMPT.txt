@@ -1,5 +1,9 @@
-用 Rust 写一个简化版 objdump，能反汇编 ELF 文件并显示汇编码。
+二进制文件出了问题想看它编译出来的汇编长什么样，但系统上没装 binutils。用 Rust 写一个简化版的 objdump -d，能反汇编 ELF 文件显示汇编码。
 
-解析 ELF 的 .text section，做线性反汇编（从 section 起始到结束逐条解码）。显示每条指令的地址、机器码字节、汇编助记符。支持 x86_64 的常见指令即可（mov、push、pop、add、sub、call、ret、jmp、cmp、test、je/jne/jl/jg 等）。
+先解析 ELF 找到 .text section（用 section header 的 SHF_EXECINSTR 标志识别）。然后从 section 起始地址开始做线性反汇编——维护一个当前位置指针，每次尝试从当前位置解码一条指令，输出地址、机器码字节、汇编助记符，然后推进指针。
 
-cargo run -- -d binary-file 输出反汇编结果。不用做完美的完整反汇编器，常见指令能正确解码就行。
+x86_64 指令解码至少支持这些：mov（reg-reg、reg-imm、reg-mem）、push/pop、add/sub/and/or/xor/cmp/test、call/jmp/ret、je/jne/jl/jg/jle/jge、lea、nop、int3。每条指令的解码要处理 REX prefix（0x40-0x4F）、opcode（1-2 字节）、ModR/M+SIB。不需要覆盖整个 x86 指令集，常见指令正确解码就行。
+
+如果遇到无法识别的 opcode，输出 ??? 并跳过该字节继续。每个函数的入口可以用符号表信息标注函数名。
+
+cargo run -- -d binary-file 输出反汇编结果。cargo build 通过。

@@ -1,3 +1,11 @@
-项目配置要迁移到 TOML 格式，但我需要自己掌控解析逻辑。用 Python 写一个 TOML 解析器，支持 TOML v1.0 的主要特性：基本键值对、table（[section]）、嵌套 table（[a.b.c]）、数组、内联 table、多行字符串、日期时间类型和数组 of table（[[products]]）。
+TOML 看着简单——不就是 key = value 加上 [section] 吗？但实际上日期时间类型、内联 table、数组 of table、多行字符串这些细节处理起来很头疼。自己写一遍才能理解每个边界情况。Python 实现 TOML v1.0 解析器。
 
-解析到 Python 字典，遇到非法格式要报行号。不依赖 tomllib 或第三方库。python 直接跑，命令行读文件输出 JSON。
+支持的值类型：字符串（基础字符串 "..."、字面量字符串 '...'、多行 """...""" 和 '''...'''）、整数（十进制、十六进制 0x、八进制 0o、二进制 0b）、浮点数（含 inf 和 nan）、布尔（true/false）、日期时间（local date、local time、offset datetime RFC3339）、数组（类型必须一致）、内联 table（{key=val}）。
+
+Table 语法：[section] 定义顶层 table，[a.b.c] 定义嵌套 table，[[products]] 定义数组 of table（每次出现新增一个元素）。table 的定义顺序有严格要求——不能在定义 [a.b] 之后再定义 [a]（重复定义父级）。
+
+解析流程：逐行读取，忽略空行和注释（# 开头）。遇到 [table] 就切换当前 table 上下文。键值对按 key = value 格式解析，点号键（a.b = 1）等价于 [a] 下 b = 1。多行字符串追踪引号闭合。
+
+错误处理：缩进不影响语法（TOML 不靠缩进），但格式错误要报行号——未闭合的引号、无效的日期格式、混合类型的数组、重复的键。
+
+输出 Python 字典。python3 toml_parser.py config.toml 输出 JSON。纯 Python，不依赖 tomllib。

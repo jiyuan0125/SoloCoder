@@ -1,9 +1,9 @@
-写一个 Go 程序，模拟分布式系统中 Follower 节点转发客户端请求给 Leader 的过程。客户端不知道谁是 Leader，随便连一个节点，该节点负责把写请求转发过去。
+有一次排查线上问题时发现，客户端的请求被一个 Follower 节点接收了，但它不知道 Leader 是谁，直接返回了错误。后来才意识到这个节点刚加入集群，路由信息还没更新。这件事让我想自己实现一遍 Follower 转发的完整流程——客户端随便连集群里哪个节点都行，节点内部负责把请求送到正确的地方。
 
-功能点：
-- 模拟集群（1 Leader + 2+ Follower），每个节点暴露简单的接收请求接口
-- Follower 收到写请求后，识别出当前 Leader 并转发，读请求可以本地处理
-- 转发失败时返回错误，转发成功返回 Leader 的响应
-- 打印请求转发的完整路径日志
+程序模拟一个小型集群：1 个 Leader + 2 个 Follower，都在同一个进程里用 goroutine 运行。每个节点暴露一个接收请求的 channel，请求分为读和写两类。读请求（Get 操作）Follower 可以直接处理，因为读本地数据就行。写请求（Put/Delete 操作）必须转发给 Leader。
+
+转发逻辑：Follower 收到写请求后，查询当前 Leader 的地址（集群内部会同步 Leader 信息），通过 Leader 的 channel 把请求发过去。Leader 处理完后把响应通过回调 channel 返回给 Follower，Follower 再转回给客户端。如果 Leader 地址未知或者转发超时（比如 500ms），Follower 返回 503 错误。
+
+需要验证的场景：正常转发成功、Leader 切换后转发到新 Leader、Leader 暂时不可达导致转发失败。日志要显示完整的请求路径，比如 "client→follower-2→leader-1: Put(key=x, val=y) → OK"。
 
 纯 Go 标准库，go build 通过。

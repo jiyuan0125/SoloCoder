@@ -1,13 +1,9 @@
-Python Poetry 依赖安全审计，扫描 poetry.lock 文件检查已知漏洞。
+Python Poetry 依赖安全审计。Poetry 是 Python 新一代的包管理工具，poetry.lock 文件格式跟 pip 的不一样，需要一个专门的解析器来审计。
 
-团队新项目用 Poetry 管理依赖，poetry.lock 格式和 requirements.txt 不太一样，需要专门的解析。
+Python 实现。第一步解析 poetry.lock：读取 TOML 格式的锁文件，提取 [[package]] 段的每个包——name、version、category（main/dev）、optional（布尔）、dependencies（这个包的传递依赖列表）。也解析 poetry.toml 或 pyproject.toml 的 [tool.poetry.dependencies] 获取直接依赖列表。
 
-Python 实现：
-- 解析 poetry.lock TOML 文件，提取所有依赖的名称、版本、哈希
-- 解析 pyproject.toml 提取直接依赖声明（tool.poetry.dependencies 部分）
-- 对比漏洞数据库，检查已知安全问题
-- 区分 main dependencies 和 dev dependencies
-- 输出审计报告和升级建议
+第二步漏洞查询：用包名和版本号调用 OSV API（POST https://api.osv.dev/v1/query，ecosystem=PyPI）。也支持查本地 CVE 数据库。解析漏洞信息——漏洞编号（CVE 或 OSV ID）、严重等级、受影响版本范围、修复版本。
 
-示例：python poetry_audit.py check poetry.lock --db py_vulns.json
-poetry.lock 是 TOML 格式，每条记录在 [[package]] 下。版本可能包含 * 等通配符。
+第三步结果展示：终端表格——包名、当前版本、漏洞编号、CVSS 评分和严重等级、修复版本。默认只显示 category=main 的生产依赖，--include-dev 显示开发依赖。传递依赖追溯：显示有漏洞的传递依赖是通过哪个直接依赖引入的。
+
+命令行：python poetry_audit.py --lockfile poetry.lock。退出码逻辑：Critical/High 漏洞返回 1。python3 命令行工具。

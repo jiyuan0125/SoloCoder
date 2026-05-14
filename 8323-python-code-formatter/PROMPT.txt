@@ -1,3 +1,16 @@
-团队代码风格不统一，想做一个可配置的 Python 代码格式化工具。用 Python 实现一个 formatter，能解析源代码生成 AST 然后按规则重新输出。支持的格式化规则包括：缩进空格数、行最大宽度自动换行、import 排序分组、空行规范化、尾逗号、运算符周围空格。
+团队有 5 个开发者用 3 种 IDE，提交的代码风格各不相同——有人用 tab 有人用空格、import 顺序随机、空行随意添加。black 太激进（完全不可配置），autopep8 又不够。做一个可配置的 Python 代码格式化工具。
 
-通过配置文件自定义规则。不调用 black 或 autopep8，纯 Python 实现。python 能跑，命令行传入 .py 文件输出格式化后的代码。
+格式化流程：解析源文件为 AST（用 ast 模块），同时记录原始 token 流（用 tokenize 模块保留注释和空行信息）。然后按规则重新生成代码。
+
+可配置的规则（通过 .formaterrc JSON 文件）：
+- indent_size：缩进空格数（默认 4）
+- max_line_length：行最大宽度（默认 88），超过时在合适的位置（运算符前、逗号后）拆行
+- import_sorting：import 排序规则（标准库 → 第三方 → 本地，每组间空行）
+- blank_lines：类前 2 行、函数前 1 行（可配置）
+- trailing_comma：多行结构最后一项后加逗号
+- spaces_around_operators：运算符两侧加空格
+- remove_trailing_whitespace：删除行尾空白
+
+不调用 black 或 autopep8。处理过程中如果 AST 解析失败（语法错误的文件），报告错误行号而不是崩溃。
+
+python3 formatter.py source.py 输出格式化代码，加 --in-place 直接修改文件。纯 Python 实现。

@@ -1,5 +1,7 @@
-帮我做一个 CSRF token 生成和验证库，用在 Web 表单防伪造。
+CSRF token 生成和验证库，用在 Web 表单防伪造。Flask-WTF 之类的扩展功能太多，有时候只想用个轻量的 CSRF 防护。写个独立的库，不绑定特定框架但提供 Flask 集成。
 
-提供 generate_token(session_id) 生成一个不可预测的 token（HMAC-SHA256，密钥从配置读），validate_token(session_id, token) 验证 token 是否有效。Token 带时间戳，过期可配置（默认 1 小时）。
+Python 实现 CSRF token 管理。生成 token：用 HMAC-SHA256（密钥从环境变量或配置文件读取）对 session_id + 当前时间戳签名，token 格式为"时间戳.签名"。这样 token 自包含不需要服务端存储状态。验证 token：拆分时间戳和签名部分，重新计算 HMAC 比对签名（用 hmac.compare_digest 恒定时间比较防止计时攻击），然后检查时间戳是否在有效期内（默认 1 小时可配置）。
 
-也提供一个 Flask 中间件，自动给每个表单注入隐藏的 CSRF token 字段，POST 请求时自动校验。校验失败返回 403。Python 3，标准库 hmac + hashlib，Flask 部分用 Flask 的 before_request。
+接口：generate_token(session_id, max_age=3600) → str，validate_token(session_id, token) → bool。异常处理：签名不匹配抛 InvalidTokenError，token 过期抛 TokenExpiredError（附带过期时间）。
+
+Flask 中间件：用 before_request 钩子拦截所有 POST/PUT/DELETE 请求，从表单字段 csrf_token 或请求头 X-CSRF-Token 读取 token 验证。验证失败返回 403。GET 请求时自动注入 token 到模板上下文。python3 标准库 hmac + hashlib。

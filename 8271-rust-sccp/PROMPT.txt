@@ -1,5 +1,9 @@
-用 Rust 实现 SCCP（Sparse Conditional Constant Propagation）算法，比普通常量传播更强的优化 pass。
+上次写了个普通的常量折叠 pass，但遇到条件分支里的常量传播就束手无策了——一个分支可能永远不执行，里面的值理论上不会被传播。SCCP（Sparse Conditional Constant Propagation）正是解决这个问题的，它在传播常量的同时能识别不可达的分支，一步到位。Rust 实现。
 
-用格论框架：每个 SSA 值对应一个格元素（top/undefined, 常量值, bottom/非常量）。同时做常量传播和不可达代码消除——如果条件分支的判断值被推导为常量，标记不可达边。迭代到不动点为止。
+SCCP 用格论的框架。每个 SSA 值对应格上的一个元素：Top（还没访问，未知）、Const(v)（已知是常量 v）、Bottom（已知是非常量，即 OverDefined）。格的交汇操作——Top ∧ x = x，Bottom ∧ x = Bottom，Const(a) ∧ Const(a) = Const(a)，Const(a) ∧ Const(b) = Bottom。
 
-能处理循环中的归纳变量推导（比如 i 从 0 递增到 N）。cargo test 用含条件分支和循环的 IR 验证。
+工作列表驱动的迭代过程。初始时所有值都是 Top，把函数入口块加入块工作列表。处理每条指令时，根据操作数的格值计算结果的格值——如果所有操作数都是常量，直接计算；如果任何操作数是 Bottom，结果也是 Bottom；如果操作数有 Top，结果保持 Top。条件分支根据条件格值决定哪些后继可达——条件为常量则只把可达的后继加入工作列表，条件为 Bottom 则两个后继都加入。
+
+能推导循环中的归纳变量：比如 i 从 0 开始每次加 1 的循环，SCCP 能推出 i 在第一轮是 0、第二轮是 1……但由于是上升格，最终会 converge 到 Bottom（非常量）。
+
+cargo test 用含条件分支和循环的 IR 验证推导结果。cargo build 通过。

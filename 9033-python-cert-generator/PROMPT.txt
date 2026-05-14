@@ -1,5 +1,9 @@
-需要在测试环境快速生成自签名证书，不想每次都装 openssl 来搞。
+测试环境需要快速生成各种证书——TLS 服务端证书、客户端证书、中间 CA 证书。用 openssl 命令行太繁琐了，每次都要查参数。
 
-Python 写一个 X.509 证书生成工具。能生成自签名的根 CA 证书和由 CA 签发的终端证书。支持自定义：使用者信息（CN、O、OU等）、有效期、密钥类型和长度（RSA 2048/4096、ECDSA P-256/P-384）、SAN 扩展（支持多个域名和 IP）。生成的证书和私钥输出为 PEM 格式。也能生成 CSR（证书签名请求）。
+Python 写一个 X.509 证书生成工具，流程分三步。第一步生成 CA 证书：自签名根证书，自定义使用者信息（CN、O、OU、C 等），有效期默认 10 年，密钥类型可选 RSA 2048/4096 或 ECDSA P-256/P-384。CA 证书的 basicConstraints 设为 CA:TRUE，密钥用途包含 certificateSign 和 cRLSign。
 
-命令行使用，python3 实现。
+第二步签发终端证书：用 CA 的私钥签发，自动从 CA 证书继承链。终端证书支持自定义 SAN 扩展——多个域名（DNS:example.com, DNS:*.example.com）和 IP 地址（IP:192.168.1.1），密钥用途设为 digitalSignature 和 keyEncipherment。
+
+第三步可选生成 CSR：只生成证书签名请求（不签名），包含使用者信息和公钥，等待外部 CA 签发。
+
+生成的证书和私钥分别输出为 PEM 格式文件。命令行指定操作类型和参数，python3 实现。

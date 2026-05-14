@@ -1,1 +1,9 @@
-日志里经常看到来自 Tor 出口节点的可疑请求，想快速识别它们。写一个 Go 工具，定期从公开的 Tor 出口节点列表（如 https://check.torproject.org/torbulkexitlist）下载最新数据，缓存到本地。提供查询接口：输入 IP 判断是否为 Tor 出口节点。也支持离线模式，直接读取本地缓存文件。命令行支持单次查询和批量查询模式。go build 编译通过即可。
+日志里经常看到来自 Tor 出口节点的可疑请求。Tor 本身不是恶意的，但很多自动化攻击和匿名浏览确实走 Tor。需要能快速识别来自 Tor 的流量，单独标记和限制。
+
+用 Go 写一个 Tor 出口节点检测工具。数据源：定期从 Tor Project 的公开列表下载最新的出口节点——https://check.torproject.org/torbulkexitlist（纯文本，每行一个 IP）。缓存到本地文件（默认缓存 1 小时，避免频繁请求）。也支持离线模式——直接读取本地缓存文件不做网络请求。
+
+查询功能：check --ip 192.168.1.100 判断该 IP 是否为 Tor 出口节点。批量模式：batch --file ips.txt 从文件读取 IP 列表批量查询。输出每个 IP 是否为 Tor 节点、如果是的话显示对应的出口端口信息（如果有的话）。
+
+后台服务模式：serve --port 8080 启动一个 HTTP 服务提供查询 API——GET /check?ip=xxx 返回 JSON。后台 goroutine 自动定期刷新 Tor 列表。
+
+命令行也支持单次查询和批量查询模式。go build 编译通过即可。

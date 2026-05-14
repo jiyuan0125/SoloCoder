@@ -1,3 +1,7 @@
-想写一个轻量级的 YARA 规则引擎，能扫描文件内容匹配恶意特征。Go 实现。
+前两天拿到一批疑似恶意的样本文件，想用 YARA 规则扫描一下，但是手头的环境装不了 YARA（隔离网络，没法装系统依赖）。干脆自己写一个轻量级的 YARA 规则引擎，核心功能够用就行。
 
-支持 YARA 规则的核心语法：rule 名称、meta 段（description、author）、strings 段（文本字符串、十六进制字符串、正则表达式）、condition 段（基本的布尔表达式，支持 and/or/not/any of/all of）。扫描文件或目录，输出匹配的规则和对应位置。不需要完整实现 YARA 全部功能，核心子集即可。Go 标准库，go build 通过。
+用 Go 实现一个简化版的 YARA 规则匹配引擎。支持 YARA 规则的核心语法结构：rule 关键字和规则名称、meta 段里写 description、author 这些元数据、strings 段里定义三种字符串类型——文本字符串（用双引号包裹）、十六进制字符串（用大括号包裹）、正则表达式（用斜杠包裹）、condition 段写匹配条件。
+
+condition 支持基本的布尔表达式：and、or、not 运算符，any of $s（strings 段里定义的任意一个标识符匹配就行），all of $s（所有标识符都必须匹配），以及直接的标识符引用如 $s1。不需要实现 YARA 的完整功能，不用支持 loops、for 循环、模块调用这些高级特性。
+
+扫描目标可以是单个文件或整个目录。匹配结果输出规则名称、匹配的字符串标识符、在文件中的偏移位置。meta 段的 description 也会一并输出，方便理解规则含义。Go 标准库的 regexp 包做正则匹配，go build 通过。

@@ -1,5 +1,9 @@
-我需要给一个简单的论坛系统加一层 XSS 过滤。用户发帖的时候内容会带各种 HTML 标签，有些明显是恶意的。
+论坛系统上线前被渗透测试打了一波，XSS 问题出了七八个。与其一个个修，不如先搞个统一的清洗层把用户提交的内容过一遍。
 
-写个 Python 命令行工具，能对输入的 HTML 字符串做 XSS 清洗。要能处理 script 标签、事件处理器（onclick 之类的）、javascript 协议、data URI 注入、SVG 里的恶意代码这些。过滤后的 HTML 要保留安全的标签和属性，不能一股脑全删了。
+写个 Python 命令行工具，能对输入的 HTML 字符串做 XSS 清洗。要能处理 script 标签（包括各种变形写法）、事件处理器（onclick/onerror/onload 这些）、javascript: 协议、data:text/html 注入、SVG 里的恶意代码、CSS expression 和 url() 里的攻击载荷。过滤后的 HTML 要保留安全的标签和属性（比如 p、b、a 的 href），不能一股脑全删了。
 
-支持白名单模式，哪些标签和属性允许可以通过配置文件定义。python3 直接跑。
+1. 白名单模式：哪些标签和属性允许通过 JSON 配置文件定义，默认允许基本的排版标签
+2. 属性值检测：href 和 src 要检查协议，只允许 http/https/mailto，其他协议直接移除
+3. 编码归一化：先做 HTML entity 解码和 URL 解码再做检测，防止用编码绕过（比如 &#106;avascript）
+
+输出清洗后的 HTML 和被过滤掉的片段列表。python3 直接跑，不依赖第三方 HTML 解析库，用标准库 html.parser 实现。

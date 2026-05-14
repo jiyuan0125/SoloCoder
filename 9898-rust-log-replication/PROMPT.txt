@@ -1,12 +1,11 @@
-用 Rust 实现日志复制（Log Replication）。
+用 Rust 实现日志复制模块。Leader 接收写入请求后追加日志，然后并行发送 AppendEntries 给所有 Follower。收到多数确认后推进 commitIndex。Follower 日志不一致时 Leader 回退 nextIndex 修复。这是 Raft 协议中最核心也最复杂的部分。
 
-这是共识算法的核心部分：leader 把操作日志复制到所有 follower，保证多数节点确认后才提交。
+日志条目的结构：Entry { index: u64, term: u64, command: Vec<u8> }。Leader 维护每个 Follower 的 nextIndex（下次发送的起始索引）和 matchIndex（已确认的最大索引）。复制过程：从 nextIndex 开始打包日志条目发送，一次最多 50 条。
 
-功能：
-- leader 接收客户端写入请求，追加到自己的日志
-- 并行把日志条目发送给所有 follower，每个条目有 index 和 term
-- 收到多数节点确认后标记为 committed，通知客户端写入成功
-- follower 日志落后时，leader 需要找到一致的点，从那里开始补发（日志一致性检查）
-- 能看到每个节点的日志内容和 commit index
+Follower 端的 AppendEntries 处理：检查 prevLogIndex 处的 term 是否等于 prevLogTerm。匹配则追加新条目（跳过已存在的）。不匹配则返回 Reject，Leader 的 nextIndex 回退。回退优化不是一格一格退，而是跳到前一个 term 的边界。
 
-cargo run 能演示日志复制过程。内存模拟，不用真的走网络。
+commitIndex 的推进条件：存在某个 N 使得 N > commitIndex，且 log[N].term == currentTerm，且超过半数节点的 matchIndex >= N。满足这些条件才能推进。只有当前 term 的日志才能通过计数副本来提交——这是 Raft 的一个重要安全约束。
+
+模拟 5 个节点（1 Leader + 4 Follower），写入 50 条日志。其中一个 Follower 故意设置不一致的日志（中间有几条 term 不同）。打印每次 AppendEntries 的结果和 commitIndex 的推进过程。
+
+cargo build 通过。

@@ -1,11 +1,15 @@
-帮我写一个开放重定向检测和防护工具，用 Go。
+bug bounty 上有人通过我们的登录回调 URL 做了钓鱼攻击——用户点了一个看起来像我们域名的链接，实际跳转到了一个钓鱼页面。问题出在重定向接口没校验目标 URL，直接把用户传的 redirect_url 参数做了 302 跳转。
 
-之前 bug bounty 有人通过我们的登录回调 URL 做了钓鱼攻击，挺严重的。
+用 Go 写一个开放重定向检测和防护工具。检测函数 CheckRedirect(targetURL string, allowedHosts []string) error：
 
-需要实现：
-- 检测 URL 中的重定向目标是否合法：解析目标 URL 的 host，确认在允许的域名白名单内
-- 识别常见的绕过手法： //@evil.com、https://trusted.com@evil.com、反斜杠替代、URL 编码绕过
-- 提供 SafeRedirect 函数，接收目标 URL 和允许域名列表，返回清洗后的安全 URL 或拒绝
-- 支持配置允许的路径前缀白名单
+基础校验：用 net/url.Parse 解析目标 URL，提取 host 部分。检查 host 是否为空（可能是相对路径或者 //evil.com 这种协议省略写法）。
+
+绕过手法识别：检查 // @evil.com 和 https://trusted.com@evil.com 这种用 @ 分隔用户信息和 host 的写法；反斜杠替代（https:/\evil.com）；URL 编码绕过（%2F 替代 /，%40 替代 @）；协议省略（evil.com 没有 scheme，浏览器会自动补上）；data: 和 javascript: 协议注入。
+
+白名单校验：target 的 host 必须在 allowedHosts 中。支持精确匹配（example.com）和通配符匹配（*.example.com）。匹配时忽略大小写和末尾的端口号。
+
+路径前缀白名单：即使 host 合法，也可以限制只允许特定路径前缀的重定向（比如只允许 /callback/*）。
+
+SafeRedirect 函数接收目标 URL 和允许域名列表，返回清洗后的安全 URL（补全 scheme、规范化 host）或拒绝。
 
 Go 标准库，go build 编译通过。

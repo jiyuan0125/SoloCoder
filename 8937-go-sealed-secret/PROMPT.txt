@@ -1,1 +1,11 @@
-Kubernetes 环境下要用 Sealed Secret 机制保护配置。写一个 Go 工具实现简化版的加密 Secret：用 RSA 公钥加密敏感数据，生成一个加密后的 JSON 文件。解密时用对应的私钥还原。支持生成 RSA 密钥对、加密单个键值对、批量加密整个配置文件。加密文件中不包含明文，可以安全提交到 Git。命令行操作，go build 通过。
+K8s 环境下用 Sealed Secret 机制保护配置——用公钥加密敏感数据，生成一个加密后的 JSON 文件，可以安全提交到 Git。集群里的 controller 用私钥解密。
+
+用 Go 实现一个简化版的 Sealed Secret 工具。密钥对管理：keygen 生成 RSA 2048 密钥对（公钥 pub.pem 和私钥 priv.pem）。公钥给开发者加密用，私钥部署到集群。
+
+加密：seal --pubkey pub.pem --data "password123" --name "db-password"。用公钥 RSA-OAEP 加密数据。输出 JSON 格式：{"apiVersion": "v1", "kind": "SealedSecret", "metadata": {"name": "db-password"}, "encryptedData": "base64_encoded_ciphertext"}。
+
+批量加密：seal --pubkey pub.pem --file config.json。读取 JSON 配置文件，对每个值分别加密。输出整个配置的加密版本。
+
+解密：unseal --privkey priv.pem --sealed sealed.json。用私钥解密数据，还原明文。
+
+加密文件中不包含明文，可以安全提交到 Git。命令行操作，go build 通过。

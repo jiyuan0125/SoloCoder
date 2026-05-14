@@ -1,10 +1,7 @@
-写一个 TIFF 图片解析器，Go 实现，只用标准库。
+TIFF 是我见过最灵活也最令人头疼的图片格式——它支持大端小端、多页、多种压缩、Strip 和 Tile 两种数据组织方式、12 种以上的数据类型。医学影像、卫星遥感、专业摄影都还在大量使用 TIFF，所以写一个能解析基本 TIFF 结构的工具还是挺实用的。
 
-功能点：
-- 解析 TIFF 文件头，处理大小端字节序（Little/Big Endian）
-- 读取 IFD（Image File Directory）标签，解析常用标签：ImageWidth、ImageLength、BitsPerSample、Compression 等
-- 支持常见压缩方式：无压缩、LZW、PackBits、Deflate
-- 处理多页 TIFF，能列出每一页的信息
-- 支持 Strip 和 Tiled 两种数据组织方式
+字节序是第一个要处理的问题。文件头前两个字节要么是 II（0x49 0x49，小端）要么是 MM（0x4D 0x4D，大端），紧接着 2 字节魔数 42，再 4 字节指向第一个 IFD（Image File Directory）的偏移量。IFD 由 2 字节条目计数 + 若干 12 字节的条目组成，每个条目是：2 字节 tag ID + 2 字节数据类型 + 4 字节值的个数 + 4 字节值或值的偏移。如果值能塞进 4 字节就直接存，放不下就存一个偏移量指向实际数据位置。
 
-用法 tiff-parse scan.tiff，输出页数、每页尺寸、压缩方式。go build 编译通过。
+关键 tag 要认得这些——ImageWidth(256)、ImageLength(257)、BitsPerSample(258)、Compression(259)、PhotometricInterpretation(262)、StripOffsets(273)、StripByteCounts(279)、TileWidth(322)、TileLength(323)、TileOffsets(324)、TileByteCounts(325)。压缩方式至少处理 None(1)、LZW(5)、PackBits(32773) 和 Deflate(8)。IFD 的最后一个条目之后有 4 字节指向下一个 IFD——这就是 TIFF 多页的机制，遍历这个链表就能读取每一页的信息。
+
+命令行 tiff-parse scan.tiff，输出页数、每页尺寸、压缩方式、数据组织方式（Strip 或 Tile）。Go 标准库实现，go build 编译通过。

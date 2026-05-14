@@ -1,5 +1,7 @@
-用 Rust 写一个 Base32 编解码工具。
+Base32 编解码——和 Base64 类似但字母表不同：A-Z(0-25)、2-7(26-31)，没有大小写混淆的字符。RFC 4648 定义。Rust 实现。
 
-按 RFC 4648 实现 Base32 编码和解码。支持标准 Base32（字母表 A-Z2-7）和扩展 hex Base32（0-9A-V）两种字母表。处理 padding，编码时在末尾补 = 号。可以从文件读取编码，也可以解码 Base32 字符串输出原始字节。对无效字符要给出清晰的错误提示。
+编码原理——每 5 字节（40 位）分成 8 组 5 位，每组映射到一个字母。不足 5 字节的用 = 填充。编码后长度 = ceil(输入字节数 × 8 / 5)。输出默认大写，加 --lower 输出小写。解码时反向查表把字母映射回 5 位值，8 组 5 位拼成 5 字节。忽略空白、换行和 =。遇到非字母表字符报错。
 
-纯 Rust 实现，cargo build 通过。
+Extended Hex 变体（Base32hex）——字母表改为 0-9(0-9)、A-V(10-31)，更适合需要按字母排序的场景（因为数值大小和字母顺序一致）。加 --hex 参数切换到这个字母表。
+
+支持文件和字符串两种输入方式。用法 base32-codec encode --text "hello" 输出 NBSWY3DP，base32-codec decode --text "NBSWY3DP" 还原，base32-codec encode --input file.bin --output file.b32。Rust 实现，cargo build 通过。

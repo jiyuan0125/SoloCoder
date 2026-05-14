@@ -1,3 +1,11 @@
-要给项目做安全扫描，重点是找 XSS 和注入漏洞。用 Python 写一个污点分析工具，标记用户可控的输入源（request 参数、环境变量、数据库读取），然后追踪这些数据在代码中的传播（赋值、拼接、函数传参），检查是否未经过滤就到达了危险操作（HTML 输出、SQL 执行、命令执行）。
+Web 应用安全审计最关注的就是注入漏洞——用户输入没经过滤就进了 SQL、HTML 或者命令行。做自动化的污点分析来扫描这些风险。Python 实现。
 
-报告疑似漏洞的传播路径。纯 Python 实现，基于 AST 分析。python 能跑。
+污点标记（source）：request.args/get/post/data（Web 框架的请求参数）、input()（命令行输入）、os.environ（环境变量）、读取外部文件的数据。危险操作（sink）：HTML 输出（response.write、render_template_string）、SQL 执行（cursor.execute 的第一个参数拼接了变量）、命令执行（os.system、subprocess 的 shell=True 模式）、eval/exec。
+
+传播追踪基于 AST 遍历。维护一个 tainted 变量集合，遇到赋值 x = tainted_expr 就把 x 加入集合，遇到字符串拼接 x + y 其中 y 是 tainted 的则结果也 tainted。分支情况两条路径都追踪然后合并。循环体内变量可能被反复赋值，每次赋值都更新 taint 状态。
+
+净化函数：经过 html.escape()、int()、float()、参数化 SQL 的占位符替换后，变量变为 clean。
+
+输出报告：每个发现的疑似漏洞列出 source 位置（文件:行号:变量名）、传播路径（经过哪些赋值和函数传递）、sink 位置和危险操作类型。按严重程度排序（直接拼接 SQL > 命令注入 > XSS）。
+
+python3 taint_analyzer.py src/。纯 Python 基于 ast 模块。

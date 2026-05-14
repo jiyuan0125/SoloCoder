@@ -1,5 +1,9 @@
-帮我实现一个 Go 的 fake 实现生成器。
+帮我实现一个 Go 的 fake 实现生成器。fake 和 mock 的区别是——mock 验证调用行为，fake 是一个功能完整但数据在内存里的假实现。比如 UserRepository 接口的 fake 实现，内部用 map 存数据，支持真实的 CRUD 操作。
 
-和 mock 不同，fake 是一个功能完整但数据都在内存里的假实现。工具读取 Go 接口定义，生成一个基于内存 map 的 fake 实现。比如 UserRepository 接口，生成的 fake 实现内部用 map 存数据，支持 CRUD 操作、查询、分页。还支持预设数据和快照恢复（方便每个测试用例独立使用）。
+工具读取 Go 接口定义（从源码解析），生成基于内存 map 的 fake 实现。生成逻辑：对于 CRUD 类接口（Create/Read/Update/Delete 方法模式），自动识别实体类型，生成用 map[ID]Entity 存储的 fake。ID 生成可以用自增计数器。查询方法支持简单的过滤（按字段值匹配）。分页方法支持 offset/limit。
 
-输出 .go 文件到指定目录。Go 标准库，go build 编译过。
+对于非 CRUD 接口，生成方法骨架——每个方法返回零值和一个 "not implemented" 注释，用户手动补充逻辑。
+
+fake 实现还支持：预设数据——构造 fake 时传入初始数据列表。快照恢复——SaveSnapshot()/RestoreSnapshot() 方法保存和恢复内部状态，每个测试用例开始时恢复干净状态。数据变更记录——记录哪些数据被新增、修改、删除。
+
+输出 .go 文件。Go 标准库，go build 编译过。

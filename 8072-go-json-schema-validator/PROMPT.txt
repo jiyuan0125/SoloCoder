@@ -1,1 +1,9 @@
-前后端对接的时候需要验证 JSON 数据是否符合约定的格式。Go 实现一个 JSON Schema 验证器，支持 Draft-07 规范的核心特性：type、properties、required、items（数组元素）、enum、pattern、minLength/maxLength、minimum/maximum、$ref 引用。验证失败要给出 JSON Path 格式的错误位置。不要用第三方 schema 库，自己实现验证逻辑。go build 编译通过。
+前后端对接的时候，接口文档定义了 JSON 数据格式，但实际传过来的数据经常跟文档不一致——字段少了、类型错了、值超范围了。需要在校验层自动拦截这些不合规的数据。
+
+Go 实现一个 JSON Schema 验证器，支持 Draft-07 规范的核心特性。验证能力覆盖：
+
+类型检查（type: "string"/"number"/"integer"/"boolean"/"object"/"array"/"null"）、属性校验（properties 定义每个子字段的 schema）、必填检查（required: ["name", "age"]）、数组元素校验（items 定义元素 schema、minItems/maxItems 限制数组长度、uniqueItems 去重）、枚举值（enum: ["red", "green", "blue"]）、正则匹配（pattern: "^\\d{4}-\\d{2}-\\d{2}$"）、字符串长度（minLength/maxLength）、数值范围（minimum/maximum/exclusiveMinimum/exclusiveMaximum）、$ref 引用（引用其他 schema 定义，支持递归引用）。
+
+验证失败要给出 JSON Path 格式的错误位置——"$.users[2].email: expected string, got null"、"$.age: value 150 is greater than maximum 120"。不要用第三方 schema 库，自己实现验证逻辑。
+
+go build 编译通过。

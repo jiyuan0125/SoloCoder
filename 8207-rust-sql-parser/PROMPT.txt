@@ -1,10 +1,11 @@
-在做一个数据分析平台，需要把用户输入的 SQL 查询解析成结构化数据，方便后续优化和执行。不想依赖外部库，自己写一个。
+在做一个数据分析平台，需要把用户输入的 SQL 查询解析成结构化数据。不想依赖外部 SQL 解析库，自己写一个来理解 SQL 语法的复杂性。
 
-用 Rust 写一个 SQL 解析器：
-- 支持 SELECT / INSERT / UPDATE / DELETE 四种基本语句
-- 支持 WHERE、ORDER BY、GROUP BY、HAVING、LIMIT 子句
-- 支持 JOIN（INNER/LEFT/RIGHT）和子查询
-- 支持 UNION 和别名 AS
-- 解析失败报告具体是哪个 token 附近出错
+用 Rust 写一个 SQL 解析器，覆盖以下 SQL 语法：
 
-CLI：sql-parser "SELECT name, age FROM users WHERE age > 18 ORDER BY age"，输出 AST 的 JSON 表示。cargo build 编译通过。
+SELECT 语句——字段列表（支持 * 和具体列名）、FROM 子句（单表和多表 JOIN，支持 INNER/LEFT/RIGHT JOIN 带 ON 条件）、WHERE 条件（比较、AND/OR/NOT、IN、BETWEEN、LIKE、IS NULL）、GROUP BY 和 HAVING、ORDER BY（ASC/DESC）、LIMIT 和 OFFSET、子查询（WHERE 里和 FROM 里的派生表）。INSERT/UPDATE/DELETE 语句。UNION 查询。别名 AS。
+
+解析成 AST 后可以序列化为 JSON 输出——每个 AST 节点用 enum 表示（SelectStmt、InsertStmt 等），表达式用递归的 Expr enum。
+
+遇到语法错误报告具体位置——"error: expected keyword 'FROM' but found 'FORM' at line 1, column 15"。
+
+CLI：sql-parser "SELECT name, age FROM users WHERE age > 18 ORDER BY age"，输出 AST 的 JSON。cargo build 编译通过。

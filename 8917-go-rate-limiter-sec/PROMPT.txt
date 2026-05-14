@@ -1,1 +1,13 @@
-有个公开 API 被人疯狂调用，得加个限流。用 Go 写一个基于内存的限流器，支持固定窗口和滑动窗口两种算法。可以按 IP、按 API Key、按自定义标识符限流。配置项包括：时间窗口大小、窗口内最大请求数。提供 HTTP 中间件模式，集成到 net/http 的 Handler 链中，超限返回 429。也提供命令行测试工具来验证限流效果。go build 通过。
+有个公开 API 被人疯狂调用，后端服务快撑不住了。得加个限流器，每个 IP 每分钟最多调 60 次，超过就返回 429。但限流算法有好几种，要根据场景选择。
+
+用 Go 写一个基于内存的限流器，支持两种算法。固定窗口（Fixed Window）：每个时间窗口（比如 1 分钟）一个计数器。窗口内每次请求计数器 +1，超过阈值拒绝。窗口结束时计数器归零。简单但有突发问题——窗口边界时可能瞬间通过 2 倍的请求。
+
+滑动窗口（Sliding Window）：维护一个时间戳列表记录每次请求的时间。请求时先清理过期的记录（超出窗口的），然后检查剩余记录数是否超过阈值。更平滑但内存开销稍大。
+
+限流维度支持：按 IP 限流、按 API Key 限流、按自定义标识符限流（比如用户 ID）。
+
+HTTP 中间件集成：RateLimitMiddleware(limiter Limiter, keyFunc func(*http.Request) string) 包装 Handler。超限返回 429 Too Many Requests，响应头包含 X-RateLimit-Limit、X-RateLimit-Remaining、X-RateLimit-Reset。
+
+命令行测试工具：rate-limiter test --limit=60 --window=60s --requests=100 --workers=10 模拟并发请求验证限流效果。
+
+Go 标准库，go build 通过。

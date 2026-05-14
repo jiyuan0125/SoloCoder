@@ -1,1 +1,9 @@
-每次写 GraphQL 后端都要手写一堆 resolver 函数，太烦了。Go 实现一个 resolver 代码生成器，读入 GraphQL schema 文件，自动生成每个 Query 和 Mutation 的 resolver 函数骨架代码。生成的代码要有正确的函数签名、参数结构体、返回值结构体，handler 里写一个 TODO 注释。同时生成类型定义的 Go struct。go build 通过，生成的代码也能编。
+每次写 GraphQL 后端都要手写一堆 resolver 函数，大部分是样板代码——查数据库、转换格式、返回。能不能从 schema 自动生成这些骨架？
+
+Go 实现一个 GraphQL resolver 代码生成器。读入 GraphQL schema 文件（SDL 格式），自动生成每个 Query 和 Mutation 的 resolver 函数骨架代码。生成内容包括：
+
+每个 Query/Mutation 生成一个 Go 函数——函数签名包含 context.Context、参数结构体（从 schema 的参数类型自动映射：String->string, Int->int, Boolean->bool, [Type]->[]Type）、返回值结构体。参数和返回值结构体都生成对应的 Go struct，字段名按 GraphQL 的 camelCase 转 Go 的 PascalCase，JSON tag 保留原始名称。每个 resolver 函数体写一个 TODO 注释和 panic("not implemented") 占位。生成 RegisterResolvers 函数把所有 resolver 注册到一个 map 里。
+
+也生成自定义 scalar 类型的 marshal/unmarshal 方法。schema 里的 enum 生成 Go 的 const iota 定义。
+
+go build 通过，生成的代码也能编。

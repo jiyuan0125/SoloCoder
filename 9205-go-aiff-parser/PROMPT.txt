@@ -1,5 +1,5 @@
-从老 Mac 上导出了一些 AIFF 音频，Linux 下没什么好工具能快速查看信息，自己写一个。
+从老 Mac 上导出了一些 AIFF 音频，Linux 下没什么好工具能快速查看信息——file 命令只告诉你是个 AIFF，具体参数一概不说。自己写一个。
 
-解析 AIFF 和 AIFF-C 格式文件，读取 COMM chunk 获取采样率、声道数、位深、采样帧数。SSND chunk 的偏移量也要解析出来。遇到压缩格式的 AIFF-C 要能识别压缩类型（如 ima4、ulaw 等）。
+解析 AIFF 和 AIFF-C 格式文件，先验证 'FORM' 容器标识（4 字节）和类型标记（'AIFF' 或 'AIFC'，4 字节）。然后遍历 chunk：COMM chunk 是最重要的，里面塞了声道数（short）、采样帧数（unsigned long）、位深（short）、采样率（extended 80 位浮点——这是 Apple 的 IEEE 扩展精度格式，占 10 字节，sign + exponent 15bit + mantissa 64bit，解析起来比较坑）。SSND chunk 记录音频数据的偏移量和 block size，据此能定位 PCM 数据的起始位置。遇到 AIFF-C 的压缩类型标识（如 'ima4' IMA ADPCM、'ulaw' μ-law、'alaw' A-law、'fl32' IEEE 32-bit float）要识别出来并报告压缩比。MARK chunk 的标记点列表、INST chunk 的乐器参数（基频、延音、循环点）如果存在也一并解析。文件如果不符合规范——比如 COMM 缺失或者 chunk size 对不上——给出清晰的错误提示。
 
-Go 标准库搞定，go build 能过。
+Go 标准库搞定，80 位浮点自己写解析函数，不依赖 CGO。go build 能过。

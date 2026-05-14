@@ -1,3 +1,9 @@
-用 Go 构建一个 Markdown AST 库。定义清晰的 AST 节点类型：Document、Heading、Paragraph、Text、Emphasis、Strong、Code、Link、Image、List、ListItem、CodeBlock 等。
-提供 AST 的构建、遍历、修改接口。节点要记录行列位置信息，方便做源码映射。
+上次写 Markdown 编辑器，AST 结构没设计好，后面加功能处处受限。这次想从 AST 层开始，把节点类型设计得够通用。
+
+用 Go 构建一个 Markdown AST 库。定义清晰的 AST 节点类型——Document（根节点）、Heading（带 level 1-6）、Paragraph、Text（纯文本）、Emphasis（斜体）、Strong（粗体）、Code（行内代码）、Link（href 和 title）、Image（src、alt、title）、List（ordered/ordered 标志）、ListItem、CodeBlock（语言和内容）、BlockQuote、Table（ alignments 列表）、TableRow、TableCell、ThematicBreak（水平线）、HTMLBlock（原始 HTML）。
+
+每个节点有公共字段：Type 节点类型、Children 子节点列表、Position{Line, Col, Offset} 源码位置。节点实现 String() 方法输出调试信息。
+
+提供 AST 的构建接口（NewDocument、AddChild、ReplaceChild 等）、遍历接口（Walk 前序遍历、WalkReverse 后序遍历，传入 visitor 函数）、修改接口（RemoveChild、InsertBefore、InsertAfter）。支持从 Markdown 文本解析构建 AST，也支持编程方式手动构建。
+
 go build 编译通过，标准库。

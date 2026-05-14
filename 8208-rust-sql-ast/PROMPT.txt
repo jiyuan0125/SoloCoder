@@ -1,10 +1,9 @@
-项目里需要一个 SQL AST 模块，用来表示各种 SQL 语句的语法树。重点是把 AST 的数据结构设计清楚，方便后续做分析和转换。
+项目里需要一个 SQL AST 模块，用来表示各种 SQL 语句的语法树。重点是 AST 的类型系统设计——用 Rust 的 enum 和 struct 来精确表达 SQL 语法，
 
-用 Rust 设计一套完整的 SQL AST 类型系统：
-- 用 enum 和 struct 表达 SELECT、INSERT、UPDATE、DELETE 语句
-- 表达表达式（二元运算、函数调用、子查询、CASE WHEN）
-- 表达表引用（表名、别名、JOIN 关系）
-- 支持 AST 的序列化（输出 JSON）和反序列化
-- 实现 Display trait 让 AST 能格式化输出可读的 SQL
+用 Rust 设计一套完整的 SQL AST 类型系统。核心类型定义：
 
-CLI：sql-ast pretty-print query.sql，读取 SQL 文件并格式化输出。cargo build 通过。
+语句类型用 enum Statement { Select(SelectStmt), Insert(InsertStmt), Update(UpdateStmt), Delete(DeleteStmt) } 表示。SelectStmt 包含 fields、from、where_clause、group_by、having、order_by、limit 等字段。表达式用递归 enum Expr 表示，包含 Literal、Column、BinaryOp、UnaryOp、FunctionCall、SubQuery、Case 等变体。表引用支持 Table、Join 和 SubQueryAlias。
+
+实现 Display trait 让 AST 能格式化输出可读的 SQL（pretty-print）。支持 serde 的 Serialize/Deserialize，方便 JSON 序列化。
+
+CLI：sql-ast pretty-print query.sql，读取 SQL 文件格式化输出。cargo build 通过。

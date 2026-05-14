@@ -1,1 +1,7 @@
-需要一个简化版的密钥管理服务客户端。用 Go 写一个 KMS 模拟器：支持创建、轮换、禁用、删除密钥。每个密钥有唯一 ID、创建时间、状态、用途（加密/签名）。提供加密解密接口：输入明文和密钥 ID，返回密文；输入密文和密钥 ID，返回明文。密钥材料用 AES-GCM 保护存储在本地。所有操作通过命令行交互。go build 编译通过。
+需要一个简化版的密钥管理服务（KMS）——不需要分布式、不需要高可用，就是本地模拟 KMS 的核心接口：创建密钥、加密解密、轮换、禁用删除。
+
+用 Go 写一个 KMS 模拟器。密钥对象：每个密钥有唯一 ID（UUID 格式）、创建时间、状态（Active/Disabled/PendingDeletion）、用途（EncryptDecrypt/SignVerify）、密钥材料（AES-256 密钥，用 AES-GCM 加密存储在本地文件中）。
+
+操作接口（命令行）：create-key --usage encrypt 创建新密钥。encrypt --key-id xxx --plaintext "hello" 用指定密钥加密，返回 Base64 密文。decrypt --key-id xxx --ciphertext "base64..." 解密。schedule-deletion --key-id xxx --days 7 安排删除（7 天后执行）。cancel-deletion --key-id xxx 取消删除。disable-key --key-id xxx 禁用密钥（不允许加密解密）。enable-key --key-id xxx 重新启用。rotate-key --key-id xxx 轮换密钥（生成新的密钥材料，旧版本仍可解密）。list-keys 列出所有密钥及状态。
+
+密钥材料用 AES-GCM 保护存储在本地 JSON 文件中。所有操作通过命令行交互。go build 编译通过。

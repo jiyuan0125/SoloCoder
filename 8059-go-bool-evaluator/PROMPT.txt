@@ -1,1 +1,11 @@
-我需要一个布尔表达式求值器，用来判断一些条件规则是否满足。Go 实现，解析类似 (age > 18 && status == "active") || role == "admin" 这样的表达式。支持字符串、数字、布尔值的比较操作，in/not in 运算符检查值是否在集合里。传入一个上下文 map 就能求值，返回 true/false。错误的时候要告诉是哪个子表达式有问题。go build 通过。
+先定义表达式语法，再解析成 AST，最后绑定变量求值——一个布尔表达式求值器，专门用来做条件规则判断。
+
+我需要一个布尔表达式求值器，用来判断一些条件规则是否满足。Go 实现，解析类似 (age > 18 && status == "active") || role == "admin" 这样的表达式。
+
+表达式语法：比较运算（> >= < <= == !=）、逻辑运算（&& || !）、括号分组、in/not in 集合运算（status in ["active","pending"]）、字符串匹配（name =~ "^admin_"，正则匹配）、between 运算（age between 18 and 65）。操作数可以是数字字面量、字符串字面量（双引号）、布尔值（true/false）、变量引用（用花括号 ${var.name}）。
+
+传入一个上下文 map[string]interface{} 就能求值，返回 true/false。类型处理：数字比较用浮点数、字符串比较按字典序、布尔值只能做 == != 比较。in 后面接受数组，between 要求三个操作数都是数字。
+
+错误的时候要告诉是哪个子表达式有问题——比如 "cannot compare string ${name} > 18: type mismatch"。支持表达式预编译，适合高频求值场景。
+
+go build 通过。

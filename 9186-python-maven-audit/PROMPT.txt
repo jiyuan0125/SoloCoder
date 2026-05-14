@@ -1,14 +1,7 @@
-Maven 依赖安全审计，扫描 Java 项目的 pom.xml 和依赖树输出。
+Maven 依赖安全审计。Java 项目的依赖树通常很深——Spring Boot 一个起步依赖就拉进来几十个 jar，里面可能藏着有漏洞的老版本。写个工具扫描 pom.xml 和 Maven 依赖树输出。
 
-Java 项目的依赖树很深，一个 Spring Boot 项目可能有几百个传递依赖。需要检查这些依赖有没有安全问题。
+Python 实现。数据采集两种方式——解析 pom.xml（直接解析 XML 提取 dependencies 段的 groupId、artifactId、version，但只能拿到直接依赖），或者解析 mvn dependency:tree 的文本输出（能拿到完整的传递依赖树，格式如 org.springframework:spring-core:5.3.20:compile）。
 
-Python 实现：
-- 解析 Maven dependency:tree 的文本输出（或者直接解析 pom.xml 提取直接依赖）
-- 提取 groupId:artifactId:version 格式的坐标
-- 对比本地漏洞数据库（基于 groupId+artifactId 匹配）
-- 检测依赖冲突（同一 artifact 出现多个版本）
-- 输出安全审计报告和依赖冲突报告
+漏洞查询：对每个依赖用 groupId:artifactId:version 构建 CPE 查询条件，调 OSV API 或查本地 CVE 数据。Maven 坐标转 CPE 格式：groupId 替换点为短横线（org.apache.logging.log4j → apachelogging-log4j）。解析返回的漏洞列表，提取 CVE 编号、CVSS 评分、修复版本。
 
-示例：python maven_audit.py check pom.xml --db maven_vulns.json
-python maven_audit.py check --tree dep_tree.txt
-pom.xml 解析要处理 properties 变量替换（${spring.version}）。
+结果展示：按严重等级排序的漏洞列表——Maven 坐标、当前版本、漏洞编号、修复版本。传递依赖标注是从哪个直接依赖引入的（如"log4j-core 2.14.1 通过 spring-boot-starter-log4j2 引入"）。汇总统计。python3 命令行工具，用 xml.etree 解析 pom.xml。

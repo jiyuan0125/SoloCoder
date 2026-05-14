@@ -1,13 +1,9 @@
-CIRCL（CVE Search）平台客户端，从 CIRCL.lu 的 CVE 搜索服务获取漏洞信息。
+CIRCL（CVE Search）平台客户端。CIRCL.lu 提供了一个免费的 CVE 搜索服务，API 比 NVD 更简洁易用，适合做快速查询。写个客户端封装它的 API。
 
-CIRCL 提供了一套免费的 CVE 查询 API，比 NVD 的好用一些，但我们需要封装成命令行工具方便集成到 CI 流程里。
+Python 实现 CIRCL CVE Search 客户端。API 端点封装：GET /api/cve/{cve_id} 查询单个 CVE 详情、GET /api/search/{keyword} 关键词搜索、GET /api/browse/{vendor} 按供应商浏览、GET /api/cvefor/{cpe} 按 CPE 查询。
 
-Python 实现：
-- 调用 CIRCL CVE Search API（cve.circl.lu）查询 CVE 详情、关联的 CAPEC 和 CWE 信息
-- 按产品名和版本查询已知漏洞（如查询 nginx 1.18 的所有 CVE）
-- 本地缓存机制，减少重复网络请求
-- 输出结构化的漏洞报告（JSON格式）
+查询功能：精确查询——输入 CVE 编号获取完整信息（描述、CVSS 评分、影响产品、参考链接）。模糊搜索——输入产品名如 "nginx" 或 "openssl" 获取所有相关 CVE。供应商浏览——列出某个供应商（如 "apache"）的所有产品和漏洞。CPE 查询——传入完整的 CPE 字符串查找匹配的漏洞。
 
-示例：python circl_client.py cve CVE-2024-1234
-python circl_client.py product --name nginx --version 1.18
-API 返回 404 或超时时要有优雅的降级处理。
+响应解析：从 CIRCL 返回的 JSON 中提取关键字段——CVE ID、摘要、CVSS 评分、受影响的产品列表（从 vulnerable_configuration 中解析）、 CWE 分类、参考链接（区分 advisory 和 exploit 链接）。
+
+缓存：本地 JSON 文件缓存查询结果（TTL 6 小时）。批量查询：从文件读取 CVE 编号列表，逐个查询并汇总。python3 用 requests 库。

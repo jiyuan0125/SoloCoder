@@ -1,10 +1,7 @@
-我手上有大量数码相机拍的照片，想写个 Go 工具批量读取 EXIF 信息。
+第一步，从 JPEG 文件中找到 APP1 段。SOI（FFD8）之后紧跟的如果是 FFE1，那就是 APP1。读取长度字段后检查前 4 字节是否是 "Exif"，再后面是 TIFF 头——6 字节，包含字节序标记（II 或 MM）、魔数 42、第一个 IFD 的偏移。
 
-核心需求：
-- 从 JPEG/TIFF 文件中定位并解析 APP1 段的 EXIF 数据
-- 解析 IFD0（主图像）、EXIF IFD、GPS IFD 等不同 IFD 标签
-- 提取常用信息：拍摄时间、相机型号、焦距、光圈、快门速度、ISO、GPS 坐标
-- 正确处理 EXIF 的各种数据类型（ASCII、SHORT、LONG、RATIONAL、SRATIONAL）
-- 输出格式要可读，最好能输出 JSON
+第二步，遍历 IFD 条目。EXIF 数据通常包含三个主要 IFD——IFD0 存主图像信息（Make、Model、Orientation、DateTime 等），EXIF IFD 存拍摄参数（通过 IFD0 中 tag 34665 的偏移找到），GPS IFD 存定位数据（通过 tag 34853 找到）。每个 IFD 的结构和 TIFF 一样：2 字节计数 + N 个 12 字节条目 + 4 字节下一 IFD 偏移。
 
-用法 exif-read photo.jpg，打印所有 EXIF 标签和值。Go 标准库，go build 通过。
+第三步是读取具体 tag 值。EXIF 的数据类型有 BYTE(1)、ASCII(2)、SHORT(3)、LONG(4)、RATIONAL(5)、SBYTE(6)、UNDEFINED(7)、SSHORT(8)、SLONG(9)、SRATIONAL(10)、FLOAT(11)、DOUBLE(12)。RATIONAL 是两个 LONG 组成的分数（分子/分母），SRATIONAL 是两个 SLONG。光圈 FNumber 就是 RATIONAL 类型，分子除以分母就得到 f 值。GPS 坐标也是 RATIONAL——度分秒各一个 RATIONAL，用度+分/60+秒/3600 转成十进制度数。
+
+要读取的常用 tag 包括：DateTime(306)、Make(271)、Model(272)、FNumber(33437)、ExposureTime(33434)、ISO(34855)、FocalLength(37386)、GPSLatitude(2)、GPSLongitude(4)、GPSAltitude(6)。输出格式要可读，也可以加 --json 输出 JSON 格式。命令行 exif-read photo.jpg，Go 标准库，go build 通过。

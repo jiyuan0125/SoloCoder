@@ -1,5 +1,5 @@
-ASS 字幕的样式定义想批量修改，比如统一改字体大小、调颜色。
+ASS 字幕的样式定义想批量修改——换了个字体、统一字号、调整颜色——手动用 Aegisub 一个个改太慢了，尤其是改一整季的字幕的时候。
 
-ASS 字幕样式编辑工具，能读取 [V4+ Styles] 段落的所有样式定义，支持修改 Fontname、Fontsize、PrimaryColour、Outline 等属性。可以指定样式名精确匹配修改，也可以批量修改所有样式。输出修改后的完整 ASS 文件。
+ASS 字幕样式编辑工具。读取 ASS 文件的 [V4+ Styles] 段落，解析 Format 行确定字段顺序（Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding），然后解析每个 Style 行成结构体。修改操作通过命令行参数：--name Default --set Fontsize=24 修改指定样式的字号；--set-all PrimaryColour=&H00FFFFFF 批量修改所有样式的颜色。颜色格式注意 ASS 用 &HAABBGGRR（Alpha+Blue+Green+Red，不是 RGB 顺序）。修改后按原始 Format 字段顺序重新拼接 Style 行，输出完整 ASS 文件，其他段落（Script Info、Events、Fonts）原样保留。不存在的样式名要报错。
 
 Go 标准库，go build 编译通过。

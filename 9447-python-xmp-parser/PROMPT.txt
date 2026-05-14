@@ -1,1 +1,5 @@
-XMP是Adobe搞的元数据标准，基于RDF/XML，嵌在各种文件里。写个Python工具来解析XMP数据，从JPEG、PNG、TIFF文件中提取XMP段。解析RDF结构，读取dublin core标题/描述/作者、tiff宽高/分辨率、xmp创建/修改时间、iptc扩展信息等常用命名空间下的属性。处理好XML命名空间前缀。输出为key-value格式方便使用。Python3实现，标准库xml解析。
+XMP 是 Adobe 搞的元数据标准，基于 RDF/XML 格式，能嵌在 JPEG、PNG、TIFF 等各种文件里。和 EXIF/IPTC 不同，XMP 用 XML 结构化存储，理论上可以存任何元数据，扩展性很强。解析 XMP 的核心就是读懂 RDF 的 Description 元素和里面的属性。
+
+从文件中提取 XMP 数据：JPEG 里在 APP1 段（命名空间 http://ns.adobe.com/xap/1.0/），PNG 里在 iTXt chunk（关键字 XML:com.adobe.xmp），TIFF 里在 tag 700。拿到 XML 文本后解析 RDF 结构——根元素是 rdf:RDF，里面可能有多个 rdf:Description。
+
+常用命名空间：dc（Dublin Core）有 dc:title、dc:description、dc:creator、dc:subject；tiff 有 tiff:ImageWidth、tiff:ImageLength、tiff:XResolution；xmp 有 xmp:CreateDate、xmp:ModifyDate、xmp:CreatorTool；iptc4xmpExt 有扩展的 IPTC 信息。XML 命名空间前缀可能因文件而异，按 URI 识别而不是前缀名。输出 key-value 格式。用法：python3 xmp_parser.py parse image.jpg

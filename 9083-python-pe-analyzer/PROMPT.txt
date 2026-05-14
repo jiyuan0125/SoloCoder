@@ -1,1 +1,7 @@
-要分析一个可疑的 Windows PE 文件。用 Python 写一个 PE 文件分析器，解析 PE 文件格式：读取 DOS 头、PE 头、节区表（Section Table），提取导入表（Import Table）中的 DLL 和函数名，列出所有节区的名称和属性（可读/可写/可执行），检测是否有加壳特征（节区名异常、入口点在非标准节）。输出分析报告，命令行使用。
+拿到一个可疑的 Windows EXE 文件，想快速看看它的基本信息——什么时候编译的、导入了哪些 DLL、有没有数字签名——不用开 IDA 这么重的工具。写个 PE 文件分析器。
+
+Python 实现一个 PE（Portable Executable）文件解析器。解析 DOS Header（检查 MZ 签名）、PE Header（签名 PE\0\0）、COFF File Header（机器类型如 AMD64/i386、时间戳即编译时间、节区数量）、Optional Header（入口点地址、映像基地址、子系统类型如 GUI/CUI/EFI）。
+
+关键信息提取：导入表（从哪些 DLL 导入了哪些函数——关注 CreateRemoteThread、VirtualAllocEx、WriteProcessMemory 这类注入相关的 API）、导出表（DLL 导出的函数列表）、资源节（版本信息里的公司名、产品名、版权声明）、数字签名（如果有的话，提取签名者信息和证书链）。
+
+节区分析：列出所有 section 的名称（.text、.data、.rdata、.rsrc 等）、虚拟大小、原始大小、属性标志（可读/可写/可执行——同时具备可写和可执行的节区可疑）。检测异常：入口点不在 .text 节区内、有超过 10 个节区、节区名称是随机字符串（可能是加壳）。python3 命令行工具。

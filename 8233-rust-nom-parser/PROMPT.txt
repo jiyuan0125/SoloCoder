@@ -1,4 +1,4 @@
-nom 是 Rust 里最流行的解析库之一，基于组合子设计。想理解它的工作原理，自己实现核心功能。
+nom 是 Rust 生态里最流行的解析库之一，下载量数以百万计。它的核心思路是组合子设计——用 tag 匹配固定字符串、take 消耗指定字节、alpha1 匹配连续字母，然后通过 alt、many0、preceded、delimited 这些组合子把基础解析器串联起来。错误处理采用 IResult<I, O> 类型，区分 Error 和 Incomplete 两种失败状态。想自己实现 nom 的核心功能子集来理解它的工作原理：基础解析器、组合子、结果转换（map/flat_map）、错误累积。附一个 CSV 解析器示例验证库的可用性。
 
 用 Rust 实现一个 nom 风格的解析库：
 - 实现 IResult<I, O> 类型，支持 Ok、Err（Error/Incomplete）

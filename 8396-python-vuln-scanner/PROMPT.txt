@@ -1,5 +1,15 @@
-实现一个 Python 的漏洞扫描器，检测代码中的常见安全问题。
+OWASP Top 10 里的漏洞在 Python 代码里也很常见——SQL 注入、命令注入、XSS、不安全的反序列化。做一个静态漏洞扫描器来自动检测这些问题。Python 实现。
 
-不是扫描依赖漏洞，而是扫描源代码本身的安全隐患。检测：SQL 注入（字符串拼接 SQL）、命令注入（os.system / subprocess 用了用户输入）、硬编码密码和密钥、不安全的反序列化（pickle.loads 处理外部输入）、不安全的随机数（random 而非 secrets）、路径遍历（未过滤的文件路径）、弱哈希（md5/sha1 用于密码）。
+检测规则（基于 AST 模式匹配）：
+- SQL 注入：字符串拼接构建 SQL（f"SELECT * FROM users WHERE id={user_id}"），或 % 格式化。建议参数化查询
+- 命令注入：os.system()、subprocess.call(shell=True) 的参数包含用户输入。建议 subprocess.run(["cmd", arg], shell=False)
+- 反序列化：pickle.loads() 处理不可信数据。建议使用 json 或 msgpack
+- 路径遍历：open(user_input) 没有做路径验证。建议 os.path.realpath() + 白名单目录检查
+- 硬编码凭据：代码中出现类似 password="xxx"、api_key="xxx" 的字面量。建议从环境变量读取
+- 不安全的随机：random 模块用于安全场景（密码生成、token）。建议 secrets 模块
+- 不安全的 SSL：requests.get(url, verify=False) 禁用了证书验证
+- 信息泄露：异常处理中把完整堆栈暴露给用户（str(e) 可能包含敏感信息）
 
-Python 3，ast 模块 + 正则。CLI：`python vuln_scanner.py src/`，输出每个漏洞的类型、严重度（高/中/低）、位置和修复建议。`python vuln_scanner.py` 能直接运行。
+每条规则包含：规则 ID、OWASP 类别、严重级别（Critical/High/Medium/Low）、检测模式和修复建议。
+
+输出按严重级别排序的漏洞列表。python3 vuln_scanner.py src/。纯 Python 3 用 ast 模块。

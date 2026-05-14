@@ -3,3 +3,7 @@
 E-Paxos（Egalitarian Paxos）和经典 Paxos 的区别在于它不需要 leader，任何副本都能发起提案，但需要检测提案之间的冲突来判断是否可以并行提交。两个操作冲突 = 它们操作了相同的 key 且至少一个是写操作。实现一个 ConflictDetector：维护一个操作依赖图，节点是操作，边表示冲突关系。新操作到来时检查和已有操作是否有冲突，无冲突的 fast path 直接提交，有冲突的 slow path 需要经典 Paxos 协商。支持查询操作之间的依赖关系图，检测图中的环（死锁检测）。
 
 Rust 写，cargo build 通过，演示 fast path 和 slow path 两种场景。
+
+这个工具的核心价值在于把epaxos conflict的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
+
+EPaxos 核心创新：所有副本地位平等，没有固定 Leader。请求可被任何副本处理。冲突操作通过依赖排序解决。

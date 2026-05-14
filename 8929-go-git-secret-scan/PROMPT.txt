@@ -1,1 +1,7 @@
-Git 仓库历史里可能藏着泄露的密钥，光扫描当前文件不够。写一个 Go 工具，扫描 Git 仓库的所有提交历史（通过执行 git log 和 git diff 命令），在每个 commit 的 diff 中搜索敏感信息模式：API Key、Token、密码、私钥等。列出每次泄露的 commit hash、文件路径、行号。支持按作者、时间范围筛选。go build 编译通过。
+Git 仓库历史里可能藏着泄露的密钥——当前代码里已经删除了但历史 commit 里还有。光扫描当前文件不够，需要扫描整个 git 历史。
+
+用 Go 写一个 Git 历史秘密扫描工具。扫描流程：执行 git log 获取所有 commit hash。对每个 commit 执行 git diff 获取变更内容。在每个 diff 中搜索敏感信息模式——API Key、Token、密码、私钥（正则规则同 secret-scanner）。
+
+输出：每次泄露的 commit hash（截断到前 8 位）、文件路径、行号、泄露的内容片段（掩码后）。支持按作者筛选（--author）、按时间范围筛选（--since、--until）。统计：总扫描了多少 commit、发现多少次泄露、涉及哪些作者。
+
+注意：git 命令调用用 os/exec，不需要第三方 Git 库。go build 编译通过。

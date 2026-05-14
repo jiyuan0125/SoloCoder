@@ -1,12 +1,9 @@
-一个简易的 Rego 策略评估器，能执行 Open Policy Agent 风格的策略规则判断。
+Rego 策略评估器。Open Policy Agent（OPA）用 Rego 语言写策略，但部署完整的 OPA 服务有时候太重了——我们只需要在 Python 应用里评估几条简单的规则。写个简易的 Rego 子集解释器。
 
-OPA 用 Rego 语言写策略很强大，但引入完整 OPA 太重了。我们只需要一些简单的规则判断，比如"管理员可以访问所有资源"、"普通用户只能访问自己部门的"。
+Python 实现一个 Rego 子集评估器。支持的基本语法——包声明（package authz）、规则定义（allow { conditions }）、条件组合（and/or/not）、比较运算符（==、!=、>、<、>=、<=）、集合操作（in、contains）、字符串匹配（startswith、endswith、contains）。
 
-Python 实现：
-- 解析简化版 Rego 规则（支持 allow/deny、条件判断、=、!=、contains 等基本操作符）
-- 输入 JSON 格式的策略文件和查询上下文（用户信息、资源信息等）
-- 评估所有规则，输出最终决策（allow 或 deny）及匹配的规则列表
-- 支持默认策略（当没有任何规则匹配时的行为）
+输入数据：评估时传入一个 context 字典（类似 OPA 的 input），包含 subject、resource、action 等属性。规则引用 context 中的值做条件判断。如果所有条件满足则规则结果为 true。
 
-示例：python rego_evaluator.py eval --policy rules.rego --input context.json
-不需要实现完整的 Rego 语法，子集即可。
+内置函数：count（计数）、lower/upper（大小写转换）、split（字符串分割）、trim（去除空格）。不支持的高级特性：递归、部分策略、with 关键字。
+
+命令行接口：输入 Rego 规则文件和 JSON 格式的 context 数据，输出所有规则的评估结果（规则名 → true/false）。也提供 evaluate(rego_file, context_dict) → dict 的 Python API。python3 实现。

@@ -1,5 +1,7 @@
-写一个 Source Map 生成器。跟踪 JS/CSS 文件的编译过程，记录每个输出位置对应的原始文件位置。支持 VLQ 编码，生成标准 v3 格式的 source map JSON。
+写一个 Source Map 生成器。前端构建过程中 JS/CSS 文件被压缩、合并、转译，出错时的堆栈信息指向的是构建后的文件——Source Map 就是把构建后的位置映射回原始文件位置，让调试成为可能。
 
-用法：sourcemap -gen output.js --sources src/a.js,src/b.js
-也能解析已有的 .map 文件，还原原始位置：sourcemap -lookup output.js.map line:col
-Go 标准库实现，go build 能编译。
+跟踪编译过程，记录每个输出位置对应的原始文件位置。支持 VLQ（Variable-Length Quantity）编码——Source Map v3 格式用 VLQ 编码坐标差值来压缩映射数据。生成标准 v3 格式的 source map JSON 文件，包含 version、sources（原始文件列表）、names（变量名列表）、mappings（VLQ 编码的位置映射字符串）、file（输出文件名）。
+
+用法：sourcemap -gen output.js --sources src/a.js,src/b.js。也能解析已有的 .map 文件，还原原始位置——sourcemap -lookup output.js.map 10:25（查询第 10 行第 25 列对应的原始文件和位置）。输出格式："output.js:10:25 -> src/a.js:42:7"。
+
+支持 source map 的 index map 格式（多个 source map 合并）。Go 标准库实现，go build 能编译。

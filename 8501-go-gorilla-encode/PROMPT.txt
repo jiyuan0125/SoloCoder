@@ -1,8 +1,5 @@
-帮我用 Go 实现一个 Gorilla 时间序列编码器。Gorilla 编码是 Facebook 论文里那种对时序数据做高效压缩的方式，核心思路是用 delta-of-delta 编码时间戳，XOR 编码浮点值。
+上周值班时监控系统报警刷屏，查了一下发现时序数据库的存储把磁盘吃满了。有个同事提了一嘴 Facebook 那篇 Gorilla 论文，说他们用 delta-of-delta 编码时间戳加上 XOR 编码浮点值，能把监控数据压缩十几倍。我翻了一下论文觉得思路确实巧妙——相邻时间戳的差值的差值通常很小，相邻浮点值的 XOR 高位全是 0，这些都可以用很少的 bit 表示。
 
-需要支持：
-- 把一组时间戳+浮点值对编码成二进制流
-- 从二进制流完整解码还原原始数据
-- 处理边界情况：单条数据、全相同值、时间戳乱序等
+帮我用 Go 实现一个完整的 Gorilla 时间序列编解码器。输入是一组 (timestamp, float64) 数据点，把它们编码成紧凑的二进制流；反过来也能从二进制流完整解码还原每一对数据，不能丢精度。
 
-纯 Go 标准库实现，go build 能编译通过。编码结果要能无损还原，别丢精度。
+时间戳部分用 delta-of-delta 编码：第一个时间戳存原始值，第二个存 delta，之后每个存 delta-of-delta。如果 delta-of-delta 是 0 只写 1 个 bit 的标志位；非零的话根据大小选 2/4/8/16 位前缀加对应的值。浮点值用 XOR 编码：第一个值存原始 64 位，之后每个存和前一个值的 XOR。XOR 为 0 写 1 bit；非零的话提取 leading zero 和 trailing zero，如果和前一次的 leading/trailing zero 范围能复用就写短标记，否则写完整的 leading+trailing+significant bits。

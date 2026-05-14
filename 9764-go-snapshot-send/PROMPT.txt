@@ -1,9 +1,11 @@
-写一个 Go 程序模拟分布式快照传输。Leader 需要把快照发给落后的 Follower，这个过程和普通日志复制不同，是直接传整个状态。
+先想象一个场景：Follower 断线了好一阵子，等它重新上线时，Leader 那边的日志已经被截断了（因为做了快照压缩），Follower 需要的那些旧日志根本不存在了。这时候只能走另一条路——Leader 直接把快照整个发给 Follower，让 Follower 从快照恢复。这就是 InstallSnapshot 的过程。
 
-要实现：
-- Leader 端读取已保存的快照数据，通过模拟的 RPC 发送给目标 Follower
-- Follower 接收快照后，替换本地状态机状态，截断已有日志
-- 支持分块传输：大快照可以分成多个 chunk 依次发送，接收端拼装
-- 传输过程中打印进度和最终结果
+实现步骤：
+1. Leader 端维护一份已保存的快照数据（包含状态机完整状态和 lastIncludedIndex）。当检测到 Follower 的 nextIndex 已经小于等于快照的 lastIncludedIndex 时，就知道要发快照而不是发日志了
+2. 快照可能很大，所以需要支持分块传输。把快照数据切成固定大小的 chunk（比如 4KB），每个 chunk 带上 offset 信息依次发送
+3. Follower 端收到第一个 chunk 时创建一个临时缓冲区，持续接收后续 chunk 并拼装。收到最后一个 chunk 后（Leader 会标记 done=true），把完整数据反序列化为状态机状态，替换本地状态
+4. 替换完成后，Follower 截断 lastIncludedIndex 之前的日志，更新 lastApplied，然后告知 Leader 可以从 lastIncludedIndex+1 开始发送增量日志
+
+模拟 1 个 Leader + 1 个落后 Follower 的场景。Leader 的快照有 50KB 大小（用随机数据填充），分 13 个 chunk 发送。打印每个 chunk 的发送/接收进度条，最后验证 Follower 的状态机和 Leader 一致。
 
 Go 标准库，go build 通过。

@@ -1,5 +1,9 @@
-做一个 JS Tree Shaking 工具。分析 ES module 代码（import/export），构建依赖图，标记哪些 export 实际被用到了，把没用的 export 和只被死代码引用的函数删掉。
+做一个 JS Tree Shaking 工具——分析 ES module 代码，找出哪些 export 实际被用到了，把没用的 export 和只被死代码引用的函数删掉。打包体积能减少 30%-50%。
 
-用法：tree-shaker entry.js -o output.js
-基于 AST 分析，不是正则。能处理重导出（export { x } from './y'）。
-Go 标准库，go build 通过。
+分析流程：从入口文件开始解析 ES module 代码（import/export 语法）。构建模块依赖图——每个文件是一个节点，import 关系是边。标记阶段：入口文件标记为 live，被 import 的模块标记为 live，被 live 模块 import 的 export 标记为 live。递归传播直到稳定。
+
+Sweep 阶段：没有标记为 live 的 export 和只被 dead export 引用的函数都删掉。能处理重导出——export { x } from './y' 把 y 模块的 x 重新导出，如果最终没人用 x，y 模块里 x 的定义也可以删掉。
+
+基于 AST 分析（不是正则匹配），能正确识别各种 import 写法——import { x } from './y'、import x from './y'（default import）、import * as y from './y'（namespace import）。
+
+用法：tree-shaker entry.js -o output.js。Go 标准库，go build 通过。

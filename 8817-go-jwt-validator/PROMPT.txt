@@ -1,11 +1,11 @@
-帮我实现一个 JWT 校验器，Go 语言。
+在做 API 网关的时候需要严格校验上游服务颁发的 JWT token。市面上 JWT 库很多但我想从底层理解整个流程——header 怎么编码的、签名怎么算的、claims 里每个字段的含义、过期校验要注意什么时区问题。
 
-最近在做一个 API 网关，需要严格校验上游服务颁发的 JWT token，市面上库很多但我想从底层理解整个流程。
+用 Go 实现一个 JWT 校验器。解析函数 ParseJWT(tokenString string) (*JWT, error)：按 . 分割成 header、payload、signature 三部分，分别 Base64URL 解码。header 解析出 alg（算法）和 typ（类型）。payload 解析出 claims（标准声明和自定义声明）。
 
-功能需求：
-- 解析 JWT，校验签名（支持 HS256/HS384/HS512 和 RS256/RS384/RS512）
-- 校验标准声明：exp（过期时间）、nbf（生效时间）、iat（签发时间）、iss（签发者）、aud（受众）
-- 支持 JWKS 方式获取公钥进行 RS 系列算法校验
-- 命令行工具：`./jwt-validator verify --token=xxx --secret=xxx` 或 `./jwt-validator decode --token=xxx`
+签名校验支持两大类：HMAC 系列（HS256/HS384/HS512）——用密钥对 header.payload 计算 HMAC-SHA，结果和 token 中的 signature 比对（用 hmac.Equal 做恒定时间比较防时序攻击）；RSA 系列（RS256/RS384/RS512）——用公钥对 signature 做 RSA-PKCS1v15 验签。alg=none 必须拒绝。
 
-Go 标准库 + crypto 包，go build 编译通过。
+标准声明校验：exp（过期时间）——当前时间必须在 exp 之后校验失败，允许配置 clock skew 容忍几秒的时钟偏差；nbf（生效时间）——当前时间必须在 nbf 之后；iat（签发时间）——检查签发时间是否合理（不能在未来）；iss（签发者）——必须匹配预期的值；aud（受众）——必须匹配预期的值。
+
+JWKS 支持：从 JWKS endpoint 获取公钥，根据 header 中的 kid 选择对应的公钥做 RS 系列验证。
+
+命令行：jwt-validator verify --token=xxx --secret=xxx，jwt-validator decode --token=xxx（不解签只解码 payload）。Go 标准库 + crypto 包，go build 编译通过。

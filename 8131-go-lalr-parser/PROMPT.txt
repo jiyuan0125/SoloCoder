@@ -1,5 +1,9 @@
-实现 LALR(1) 解析器构造算法。比 SLR 更精确，用向前看符号传播算法计算每个项目的精确向前看集合。能处理 SLR 解决不了的冲突。
+实现 LALR(1) 解析器构造算法。LALR 是 LR(1) 的实用版本——它通过合并"同心"状态（核心项目相同但向前看符号不同的状态）来大幅缩小解析表。Yacc/Bison 用的就是 LALR 算法。
 
-从文法文件构建 LALR(1) 分析表，对输入做解析并生成 AST。展示项目集和分析表。
-用法：lalr-parser grammar.txt tokens.txt
-报告冲突类型（shift-reduce / reduce-reduce）。Go 标准库，go build 通过。
+从文法文件构建 LALR(1) 分析表的完整流程：构造 LR(1) 项集族——每个 item 包含产生式、点位置和一个向前看符号。实现状态合并算法——把核心相同的 LR(1) 状态合并为一个 LALR 状态，向前看符号取并集。构建压缩后的 LALR(1) 分析表——ACTION 表和 GOTO 表。
+
+检测并报告冲突：shift/reduce 冲突（同一个状态同一个输入符号既可以 shift 又可以 reduce）和 reduce/reduce 冲突（同一个状态同一个输入符号有两个不同的 reduce 动作）。报告时要列出冲突涉及的产生式和状态。
+
+解析输入并构建语法树。展示解析表大小对比 LR(1) 和 LALR(1)——"LR(1): 256 states, LALR(1): 42 states"。
+
+用法：lalr-parser grammar.txt tokens.txt。Go 标准库，go build 通过。

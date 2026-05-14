@@ -1,5 +1,5 @@
-我需要把一堆 H.264 裸流封装成 HLS 格式对外提供流媒体服务。用 Python 写个 HLS 封装器，把输入的视频流切分成 TS 分片并生成 m3u8 播放列表。
+把视频文件切成 HLS 分片对外提供流媒体服务——这是视频点播和直播的基础架构。HLS 的核心就是三样东西：TS 视频分片、m3u8 播放列表索引、HTTP 服务器。这个工具负责前两样——把输入视频按指定时长切割成 TS 分片并生成标准 m3u8 文件。
 
-核心功能：读取输入视频文件，按指定时长（默认 10 秒）切割成 TS 分片，生成标准的 HLS m3u8 索引文件。支持设置分片时长、输出目录。m3u8 要符合 HLS 规范，能用 VLC 直接播放。
+工具做的事情：读取输入视频文件（MP4 或 MKV），按指定分片时长（默认 10 秒，通过 --segment 参数调整）切割成多个 TS 文件。分片切割要在关键帧（I 帧）边界上进行，不然播放器无法解码起始帧。实际分片时长可能和指定时长不完全一致——因为关键帧间隔不是固定的，需要找到最近的关键帧位置切割。
 
-Python 3 实现，可以调用 ffmpeg 做实际的转封装工作，命令行：python hls_muxer.py input.mp4 --segment 10 --output ./hls_output/。
+生成的 m3u8 文件包含：#EXTM3U 头、#EXT-X-VERSION 标签（版本 3）、#EXT-X-TARGETDURATION（最长分片时长）、每个分片的 #EXTINF 时长和文件名、最后的 #EXT-X-ENDLIST（点播模式标记结束）。分片文件命名为 segment_0001.ts、segment_0002.ts 依次编号。用法：python3 hls_muxer.py mux input.mp4 --segment 10 --output ./hls_output/

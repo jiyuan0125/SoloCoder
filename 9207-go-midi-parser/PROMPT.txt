@@ -1,5 +1,5 @@
-有一堆 MIDI 文件想看看里面的音符和事件信息，搜了一圈没找到顺手的命令行工具。
+有一堆 MIDI 文件想看看里面的音符和事件信息，搜了一圈没找到顺手的命令行工具——timidity 能播放但看不到原始事件，Python 的 midi 库又要装依赖，不如自己写一个。
 
-解析 Standard MIDI File（SMF），读取文件头获取格式类型（0/1/2）、轨道数、时间分辨率。每个 track 里的 Note On/Off、Program Change、Control Change、Tempo 事件都要能解析出来。时间戳要换算成实际秒数。
+解析 Standard MIDI File（SMF），读取文件头（'MThd' + 6 字节）获取格式类型（0 单轨道 / 1 多轨道同步 / 2 多轨道异步）、轨道数、时间分辨率（如果是 ticks per quarter-note 就是个正整数，如果是 SMPTE 则用负数标记 fps 和 subframe）。每个 track chunk 以 'MTrk' 开头，里面的 delta-time 用变长整数编码（每个字节的最高位表示是否还有后续字节），然后解析事件：Note On / Off 提取通道、音符编号（0-127，可以换算成音名+八度）、力度；Program Change 拿到音色编号；Control Change 记录控制器号和值（64 是延音踏板，7 是音量之类的）；Meta Event 里 Tempo（微秒 per quarter-note，换算成 BPM）、Track Name、Time Signature、Key Signature、End of Track 都要处理。时间戳要根据 tempo 事件换算成实际秒数。输出按轨道分组，每个事件一行，格式清晰一点。
 
-Go 写，纯标准库，go build 通过。
+Go 写，纯标准库，变长整数自己解码。go build 通过。

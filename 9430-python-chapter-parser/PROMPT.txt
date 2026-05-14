@@ -1,1 +1,5 @@
-有些教学视频带有章节标记，想把这些章节信息提取出来做目录。写个Python工具来解析视频文件中的章节信息。支持MP4的chap atom格式和MKV的Chapters元素。提取每个章节的起始时间、标题（支持多语言），按时间顺序排列输出。时间精确到毫秒。如果章节有嵌套的子章节也要能处理。Python3实现，命令行传入视频文件路径即可。
+有些教学视频和演唱会录像带有章节标记，在播放器里能看到章节列表。想把这些章节信息提取出来做文字版目录或者跳转索引——手动抄太蠢了，让工具自动干。MP4 用 chap atom 存章节（一组 Chapter 原子，每个包含起始时间和标题），MKV 用 EditionEntry → ChapterAtom 的嵌套结构。
+
+解析器做的事：读取文件类型判断容器格式。MP4 路径：找到 moov → trak → tref → chap，然后在对应的 trak 里读 mdia → minf → stbl → stsd 里的章节信息，每个章节有起始时间（基于 trak 的时间刻度）和标题字符串。MKV 路径：找到 Segment → Chapters → EditionEntry，遍历 ChapterAtom，每个有 ChapterTimeStart（纳秒精度）和 ChapterDisplay（含标题和语言代码）。
+
+章节可能嵌套——大章下面有小节。MKV 的 ChapterAtom 可以包含子 ChapterAtom，输出的时候用缩进表示层级。MP4 的章节一般是扁平的。时间统一转换成 HH:MM:SS.mmm 格式输出。用法：python3 chapter_parser.py extract video.mp4

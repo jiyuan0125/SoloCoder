@@ -1,11 +1,11 @@
-帮我用 Rust 写一个消息队列的 offset 管理器。
+做消息队列消费端最怕的就是两个问题：重复消费和丢消息。消费成功后 offset 没提交就崩了，重启后重复消费。消费到一半崩了但 offset 先提交了，消息就丢了。offset 的管理策略直接决定了消费语义。用 Rust 实现不同的 offset 管理策略。
 
-消费者处理消息时需要记录自己消费到了哪条（offset），重启后能从上次的位置继续。这个工具就是管理这些 offset 的。
+Offset 的存储：每个 (consumer_group, topic, partition) 三元组对应一个 offset 值。存储在一个 KV 引擎中（内存 HashMap 模拟）。支持 Commit(group, topic, partition, offset) 提交和 Get(group, topic, partition) → offset 查询。
 
-功能：
-- 为每个 consumer group 维护每个 topic-partition 的消费 offset
-- 支持 commit offset（确认消费成功）、seek offset（跳到指定位置）、reset offset（重置到最早/最新）
-- offset 存储要持久化到本地文件，程序重启后能恢复
-- 能查看所有 consumer group 的 offset 状态，显示 lag（积压量 = 最新 offset - 消费 offset）
+三种 offset 提交策略的对比。At-most-once：消费者拉取消息后立即提交 offset，然后处理消息。如果处理失败，消息丢了。At-least-once：消费者处理完消息后再提交 offset。如果处理成功但提交失败（比如崩溃），重启后重新消费——消息可能重复。Exactly-once：消费者处理消息和提交 offset 在同一个事务中（需要和业务存储的分布式事务），保证不丢不重。
 
-命令行工具，cargo build 通过。
+消费进度监控：定期打印各 consumer group 的消费进度——当前 offset、最新 offset、落后条数。落后超过阈值时告警。
+
+模拟场景：消费者消费 10 条消息，在第 5 条时模拟崩溃。分别用三种策略重启后观察——at-most-once 从第 6 条开始（第 5 条丢了）、at-least-once 从第 5 条重新消费（可能重复）、exactly-once 从第 5 条继续且不重复。
+
+cargo build 通过。

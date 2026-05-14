@@ -1,5 +1,11 @@
-崩溃排查时经常需要把 PC 地址转成源码行号，帮我用 Rust 实现一个 addr2line 工具。
+线上服务 crash 了，coredump 里的调用栈全是十六进制地址，没有对应的源码位置信息，根本不知道是哪行代码出了问题。addr2line 就是把地址翻译成源码行号的工具，用 Rust 实现一个。
 
-读取 ELF 文件中的 DWARF 调试信息，建立地址到源码位置的查找表。输入一个地址，输出对应的函数名、源文件路径和行号。支持 .debug_line 和 .debug_info 段的解析。如果没有调试信息就给出友好提示。
+输入一个带调试信息的 ELF 文件和一个（或多个）十六进制地址。工具需要做两步查询：
 
-cargo run -- --exe binary 0x401234 这种用法。先用 rustc -g 编译一个小程序生成测试数据。cargo build 通过。
+第一步——地址到函数的映射。解析 .debug_info 段中的 DW_TAG_subprogram 条目，每个函数有 DW_AT_low_pc 和 DW_AT_high_pc 定义了地址范围。给定一个 PC 地址，找到包含它的函数（binary search 在按地址排序的区间列表上）。
+
+第二步——地址到源码行号的映射。解析 .debug_line 段中的行号程序（line number program）。行号程序是一个状态机——由标准 OPCODE 和 extended OPCODE 驱动，维护当前文件、行号、地址、列号等状态。执行完所有 opcode 后产出一组 (address, file, line) 三元组。给定地址，在三元组列表中找到小于等于该地址的最大地址对应的行号。
+
+输出格式："0x401234 at main.rs:42 in function process_request"。如果地址不在任何函数范围内，输出 "??:?"。
+
+cargo run -- --exe binary 0x401234。先用 rustc -g 编译一个小程序生成测试数据。cargo build 通过。

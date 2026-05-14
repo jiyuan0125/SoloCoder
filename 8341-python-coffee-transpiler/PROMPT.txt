@@ -1,3 +1,15 @@
-需要把遗留的 CoffeeScript 代码迁移到 JavaScript，但不想用 Node 生态的工具。用 Python 实现一个 CoffeeScript 到 JavaScript 的转译器，支持 CoffeeScript 的核心语法：缩进块、-> 和 => 函数、列表推导、解构赋值、字符串插值、存在操作符（?）、范围（[1..10]）。
+项目里有一堆 CoffeeScript 代码需要迁移到 ES6+ JavaScript，但不想引入 Node.js 工具链。用 Python 写一个 CoffeeScript → JavaScript 转译器，支持核心语法。
 
-转译输出格式化的 JavaScript 代码。不用外部编译器，纯 Python 实现。python 能跑，命令行读 .coffee 文件输出 .js。
+支持的 CoffeeScript 特性：
+- 函数：-> 箭头函数转 function() {}，=> 绑定 this 的箭头函数转 function() {}.bind(this)
+- 缩进块：用缩进代替花括号，转译时自动添加 { }
+- 列表推导：(x * 2 for x in arr when x > 3) 转 arr.filter(x => x > 3).map(x => x * 2)
+- 解构赋值：{a, b} = obj 转 const {a, b} = obj; [x, y] = arr 转 const [x, y] = arr
+- 字符串插值："Hello #{name}" 转 `Hello ${name}`
+- 存在操作符：x? 转 typeof x !== 'undefined' && x !== null
+- 范围：[1..5] 转 [1,2,3,4,5]（闭区间），[1...5] 转 [1,2,3,4]（开区间）
+- 类：class Dog extends Animal → class Dog extends Animal { constructor() { super(); } }
+
+解析用缩进感知的 tokenizer——记录每行的缩进级别，在缩进增加时插入 INDENT token，减少时插入 DEDENT token。然后递归下降构建 AST。
+
+转译输出格式化的 JavaScript（ES6 语法）。python3 coffee2js.py input.coffee。纯 Python 不依赖外部编译器。

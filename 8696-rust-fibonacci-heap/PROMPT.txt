@@ -1,5 +1,11 @@
-Dijkstra 算法用 Fibonacci Heap 理论复杂度最优，虽然实际工程中用得不多但了解一下也好。用 Rust 实现 Fibonacci Heap。
+Dijkstra 最短路径算法在稠密图上调用 decrease_key 次数远多于 extract_min——如果优先队列的 decrease_key 是 O(1) 而不是 O(log n)，整体复杂度能从 O((V+E)logV) 降到 O(E + VlogV)。Fibonacci Heap 正是为此设计的：insert、find_min、merge 都是 O(1) 均摊，decrease_key 也是 O(1) 均摊，只有 extract_min 是 O(log n) 均摊。
 
-支持 insert、find_min、extract_min、decrease_key、delete、merge 操作。insert、find_min、merge 是 O(1)，extract_min 是 O(log n) 均摊。用循环双向链表管理同一度的树，合并时做度数合并。decrease_key 要做级联剪切。
+用 Rust 实现 Fibonacci Heap。
 
-提供 Dijkstra 最短路径作为使用示例。cargo build 编译通过。
+树结构——每棵树满足最小堆性质。同度数的树用循环双向链表连接。度数相同的树在 extract_min 时合并（类似二项堆）。
+
+decrease_key——把节点的 key 减小后，如果违反了堆性质（小于父节点），直接切断这个节点并移到根链表。如果父节点已经失去过一个孩子，也切断父节点——这就是"级联剪切"，保证每棵树的度数不会太大。
+
+merge——直接把两个堆的根链表拼接，O(1)。insert 就是 merge 一个单节点堆。
+
+提供 Dijkstra 最短路径作为使用示例，展示 decrease_key 的性能优势。cargo build 通过。

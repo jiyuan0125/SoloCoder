@@ -1,8 +1,13 @@
-写个服务识别工具，Go 实现。
+扫到开放端口后还想知道上面跑的是什么服务、什么版本。像 nmap -sV 那样通过发送特定探测数据包、分析响应特征来识别服务。
 
-扫到开放端口后还想知道上面跑的是什么服务、什么版本。类似于 nmap 的服务检测功能。
+用 Go 写一个服务识别工具。detect 子命令：对指定端口发送探测数据。等待并读取响应。用内置的规则库匹配响应特征。
 
-功能：对开放端口发送探测数据；根据响应特征匹配服务类型（HTTP、SSH、FTP、MySQL、Redis 等）；展示检测到的服务名和可能的版本号；内置常见协议的探测规则。
+探测策略（按端口和服务类型选择）：HTTP 探测——发 "HEAD / HTTP/1.0\r\n\r\n"，检查响应中的 Server、X-Powered-By header。SSH 探测——直接连接读取 banner（SSH-2.0-OpenSSH_8.9 这种格式）。MySQL 探测——连接后读取握手包提取版本号。Redis 探测——发 "INFO\r\n"，检查响应中的 redis_version。FTP 探测——读取欢迎 banner。SMTP 探测——读取 220 banner。自定义探测——用户可以指定发送的数据和匹配规则。
 
-用法：service-detector detect -host 192.168.1.1 -ports 22,80,3306,6379、service-detector detect -host 10.0.0.1 -ports 1-1024 -timeout 5s
+识别结果：服务名称（HTTP/SSH/MySQL/Redis/FTP/SMTP 等）、可能的版本号、检测置信度（高/中/低）、匹配到的特征描述。
+
+批量模式：对多个主机的多个端口做服务检测。支持从文件读取 IP+端口列表。
+
+命令：service-detector detect -host 192.168.1.1 -ports 22,80,3306,6379、service-detector detect -host 10.0.0.1 -ports 1-1024 -timeout 5s。
+
 Go 标准库实现，go build 能编译。

@@ -1,9 +1,11 @@
-用 Go 实现日志截断功能。在分布式共识中，当 Leader 发现 Follower 的日志和自己不一致时，需要截掉 Follower 冲突的部分，然后用正确的日志覆盖。
+之前排查过一个诡异的数据不一致问题，根因是 Follower 的日志和 Leader 对不上——之前网络抖动期间 Follower 自己写了些不该写的条目，等 Leader 恢复后发现日志冲突了。这时候 Leader 只能把 Follower 的冲突部分截掉，用正确的日志覆盖。整个过程就是日志截断（log truncation），用 Go 来实现它。
 
-具体要做：
-- 模拟 Follower 有一份包含冲突条目的日志
-- Leader 发来 AppendEntries 时，携带 prevLogIndex/prevLogTerm 做校验
-- 校验失败则从冲突点开始截断（truncate），然后追加正确的日志
-- 截断前后打印日志内容对比，验证最终一致性
+场景是这样的：Follower 维护一个日志数组，每条记录 (term, index, data)。Leader 发 AppendEntries 时携带 prevLogIndex 和 prevLogTerm 两个参数做校验。Follower 检查自己 prevLogIndex 位置的 term 是否等于 prevLogTerm。
+
+校验失败时的处理流程：从 prevLogIndex+1 开始，把所有日志截掉（截到切片为空），然后把 Leader 发来的新条目追加进来。这意味着冲突位置之后的所有条目都被丢弃了，包括之前可能已经 apply 了的——不过没关系，只要还没 commit 就不会有副作用。
+
+校验成功时：正常追加新条目。追加后要打印日志内容，让用户能看到截断前后的对比。还需要一个功能：模拟 Leader 发来多条连续的日志（批量追加），Follower 要么全部接受，要么在冲突点截断后重新追加。
+
+构造两个测试 case：一个是日志完全一致直接追加，另一个是中间有冲突需要截断。截断场景打印出来应该是这样的："conflict at index=5 (local term=3, leader prevTerm=2), truncating 4 entries, appending 3 new entries"。
 
 Go 标准库，go build 能编译通过。

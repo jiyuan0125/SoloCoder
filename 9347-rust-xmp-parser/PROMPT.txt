@@ -1,10 +1,7 @@
-帮我写一个 XMP 元数据解析工具，从图片文件中提取 Adobe XMP 数据。
+XMP（Extensible Metadata Platform）是 Adobe 搞的通用元数据标准——用 RDF/XML 格式嵌入各种文件。JPEG 里在 APP1 段内（以 "http://ns.adobe.com/xap/1.0/" 开头区分 EXIF），PNG 里在 iTXt chunk 中，TIFF/WebP 里在各自的 XMP 标签/chunk 中。Rust 写一个 XMP 提取工具。
 
-提取能力：
-- 从 JPEG 文件中定位 APP1 段内的 XMP 数据（以 "http://ns.adobe.com/xap/1.0/" 开头）
-- 从 PNG 文件中搜索 iTXt chunk（keyword 为 "XML:com.adobe.xmp"）
-- 从 TIFF/WebP 文件中查找 XMP chunk/标签
-- 解析 XMP 的 RDF/XML 结构，提取 dc:title、dc:creator、dc:description、xmp:CreateDate、xmp:ModifyDate 等常用字段
-- 输出结构化的键值对列表
+数据定位——JPEG：遍历 APP 段，找到前缀为 "http://ns.adobe.com/xap/1.0/\x00" 的 APP1，后面就是 XMP XML。PNG：遍历 chunk 找到 iTXt，keyword 为 "XML:com.adobe.xmp" 的那个。TIFF：IFD 里的 tag 700。WebP：XMP chunk。不同来源拿到的是同一种 XML，统一进入 XML 解析流程。
 
-用 Rust 写，cargo build 编译通过。`xmp-parser extract image.jpg` 输出 XMP 数据。
+RDF/XML 结构——外层 <x:xmpmeta> → <rdf:RDF> → <rdf:Description>。Description 的属性用命名空间前缀：dc:title="照片标题"（简单属性）、dc:creator rdf:parseType="Resource"><rdf:Bag><rdf:li>张三</rdf:li>（数组属性）。常用命名空间：dc（Dublin Core）的 title/creator/description/subject/date/rights，xmp 的 CreateDate/ModifyDate/CreatorTool/Rating，tiff 的 ImageWidth/ImageHeight/ResolutionUnit，iptc 的 Creator/Title/Description。
+
+属性值类型——简单文本直接取内容，Bag 是无序集合（<rdf:li> 列表），Seq 是有序列表，Alt 是备选（通常按语言区分）。嵌套结构用 parseType="Resource" 或子 rdf:Description。输出为 key=value 列表。用法 xmp-parser extract image.jpg。Rust 实现，cargo build 通过。

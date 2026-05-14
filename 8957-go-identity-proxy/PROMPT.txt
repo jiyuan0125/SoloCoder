@@ -1,3 +1,7 @@
-内部服务调用需要统一身份传递，想做一个身份代理服务。Go 写一个 HTTP 反向代理，在转发请求前验证 JWT token，并把用户身份信息注入到上游请求的 header 里。
+内部服务之间的身份传递一直是个麻烦事。每个服务自己搞一套认证逻辑，有的验 session，有的验 cookie，还有的直接信任上游传过来的 user ID header——这明显不靠谱，任何人只要手动加个 X-User-Id header 就能伪造身份。
 
-要支持：JWT 验证（包括过期检查和签名验证）、从 token 提取 claims 写入 X-User-* headers、拒绝无效 token 并返回 401、可选的白名单路径（不需要鉴权的接口）。代理配置通过命令行参数传入。标准库实现，go build 通过。
+写一个 Go 的 HTTP 反向代理，专门解决内部服务间的统一身份传递问题。代理的职责很简单：接收客户端请求，验证 JWT token 的合法性，然后把用户的身份信息以标准化的 header 格式注入到发给上游的请求里，最后把上游响应原样返回。
+
+JWT 验证要做这几件事：检查签名是否正确（用预配置的公钥或 HMAC secret 验证）、检查 exp claim 确认没有过期、检查 iss 和 aud 确认 token 是发给本服务的。验证失败直接返回 401，body 里带上错误原因。验证通过后，从 token 的 claims 里提取 sub（用户ID）、name、email、roles 这些字段，写入 X-User-Id、X-User-Name、X-User-Email、X-User-Roles 这几个 header。
+
+支持白名单路径配置——某些接口比如 /healthz 和 /metrics 不需要鉴权，直接放行。代理的上游地址和 JWT 密钥通过命令行参数传入。Go 标准库的 net/http/httputil 做 reverse proxy，crypto 和 encoding 做 JWT 处理。go build 通过。

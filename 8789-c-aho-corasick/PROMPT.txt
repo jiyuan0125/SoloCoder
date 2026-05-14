@@ -1,5 +1,13 @@
-帮我实现 Aho-Corasick 多模式匹配算法，C 语言。
-一次扫描文本，同时匹配多个模式串。杀毒软件、敏感词过滤都在用。
-先构建 Trie，然后在 Trie 上跑 BFS 建立 fail 指针和 output 链。匹配时沿着 fail 链收集所有命中的模式。
-支持 add_pattern(pattern)、build()、search(text) 返回所有 (pattern, position) 匹配。
-命令行：加载模式文件（每行一个），然后扫描输入文本，输出所有匹配。gcc 编译通过。
+先往 Trie 里添加所有模式串，然后在 Trie 上跑 BFS 建立失败指针和输出链，最后一遍扫描主串就能找出所有匹配——这就是 Aho-Corasick 多模式匹配算法。杀毒软件用它同时扫描几千个病毒特征，敏感词过滤用它一次匹配全部敏感词，比逐个模式串做 KMP 快得多。
+
+用 C 实现 Aho-Corasick 算法。分三个阶段：
+
+第一步 build_trie()：把所有模式串插入 Trie。每个节点有 256 个子指针（按 ASCII 字符）、一个 fail 指针、一个 output 链表（记录经过该节点能匹配到的所有模式串 ID）。
+
+第二步 build_fail()：BFS 遍历 Trie。根节点的 fail 指向自己。对于非根节点 node，设其父节点为 p、从 p 到 node 的字符为 c：node->fail = p->fail 沿着 fail 链往上走，找到第一个有 c 子节点的祖先，那个子节点就是 node 的 fail。如果一直找到根都没有，node->fail 就是根。同时合并 output 链——node 的 output 包含自身匹配的模式加上 fail 节点的 output。
+
+第三步 search(text)：从根节点开始逐字符扫描 text。对每个字符 c：如果当前节点有 c 子节点就走过去；否则沿 fail 链回退直到找到有 c 子节点的节点或回到根。每到一个新节点就遍历它的 output 链收集所有匹配。
+
+接口：add_pattern(pattern_string, pattern_id)、build()（建 fail 指针，建完后 Trie 冻结不可修改）、search(text, callback) 对每个匹配调用 callback(pattern_id, position)。
+
+命令行：从文件加载模式（每行一个），然后扫描输入文本，输出所有匹配的位置和模式内容。gcc 编译通过。

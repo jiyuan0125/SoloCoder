@@ -1,5 +1,9 @@
-用 Rust 实现一个最简 JIT 编译器，能把简单的算术表达式编译成机器码直接执行。
+编译原理学了一堆理论，但从来没真的生成过机器码跑起来。这次用 Rust 写一个最简 JIT，把算术表达式直接编译成 x86_64 机器码执行，感受一下从代码到 CPU 指令的全过程。
 
-输入类似 "2*(3+4)-5" 的表达式，经过解析后用 mmap 分配可执行内存，生成 x86_64 机器码，然后直接跳过去跑。先支持整数四则运算，有括号优先级。生成的机器码要能在 Linux 上跑通。
+输入是字符串形式的表达式，比如 "2*(3+4)-5"。先用递归下降或者 Pratt parser 解析成 AST，支持整数、加减乘除、括号和一元负号。AST 节点类型：Number(i64)、BinOp(op, left, right)、UnaryMinus(expr)。
 
-只依赖 libc 做 mmap，其他自己实现。cargo run -- "2*(3+4)" 输出计算结果。需要 nightly 的 feature 不怕，文档里说明一下就行。
+代码生成阶段遍历 AST，输出 x86_64 机器码。最简单的方案是栈式：每个表达式求值结果 push 到栈上，二元操作 pop 两个操作数计算后 push 结果。涉及的指令——push imm8/imm32（6A xx 或 68 xxxxxxxx）、pop rax（58）、add/sub/imul（操作 rax 和栈顶）、cqo+idiv（RAX/RDX 处理除法）、neg rax（F7 D8）。函数入口 push rbp; mov rbp, rsp，结尾 mov rax, [rsp]; pop rbp; ret。
+
+用 mmap 分配一块可执行内存（PROT_READ|PROT_WRITE|PROT_EXEC），把机器码字节写进去，然后转型成函数指针直接调用。返回值是 i64。
+
+cargo run -- "2*(3+4)" 输出 14。需要 libc 做 mmap，nightly Rust 如果需要的话文档说明。cargo build 通过。

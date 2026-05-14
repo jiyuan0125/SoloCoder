@@ -1,5 +1,7 @@
-写一个密钥管理服务（KMS）的客户端库，模拟对接云厂商 KMS 的操作。
+云厂商的 KMS（Key Management Service）用起来有很多细节要注意——数据密钥的生成和生命周期管理、密钥轮换、访问控制。在本地开发和测试时不想真的连 AWS KMS，写个兼容 KMS 接口的本地模拟实现。
 
-提供 generate_data_key（生成数据密钥，返回明文和密文版本）、encrypt（用 KMS 密钥加密小块数据）、decrypt（解密）、create_key（创建主密钥）这些接口。本地用 AES 实现一个简易的 KMS 后端（不用真的连云）。
+Python 实现一个 KMS 客户端库，本地后端用 AES 模拟。接口对标 AWS KMS 的核心操作：create_key（创建一个主密钥，返回 key_id）、generate_data_key（生成数据密钥，返回明文和密文两个版本，密文用主密钥加密）、encrypt（直接用主密钥加密小块数据，4KB 以内）、decrypt（解密数据密钥或密文）。
 
-支持密钥的启用/禁用、自动轮换记录。所有密钥材料用文件存储。Python 3，面向接口编程，方便以后换真实后端。python kms_client.py demo 跑一个演示。
+密钥管理：每个主密钥有 ID（UUID 格式）、创建时间、状态（enabled/disabled）、描述。支持密钥的启用和禁用（禁用后 encrypt 和 generate_data_key 调用失败）。自动轮换记录：记录每次轮换的时间和新的密钥版本，解密时根据密钥版本号找到对应的密钥材料。
+
+所有密钥材料本地文件存储（加密存储，主密钥用密码派生的密钥保护）。接口面向抽象编程，方便以后换成真实的 AWS/GCP KMS 后端。python3 命令行和 SDK 两种使用方式。

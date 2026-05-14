@@ -1,1 +1,7 @@
-想对公司 Docker 镜像做安全扫描。用 Python 写一个 Docker 镜像安全扫描工具，解析 Docker 镜像的层信息，检查已知的安全问题：基础镜像版本是否过旧、是否包含已知漏洞的软件包（从本地 CVE 数据库查询）、是否以 root 用户运行、镜像中是否有敏感文件（.env、密钥文件）。输出安全报告和修复建议。纯 Python 实现。
+Docker 镜像安全问题一直没管过，线上跑的镜像好多都是好几个月前构建的，里面的包可能有已知漏洞。写个工具扫描 Docker 镜像里的安全风险。
+
+Python 写一个 Docker 镜像安全扫描器。分析镜像的层（layer）信息：用 docker save 导出镜像 tar 包，解析 manifest.json 获取层列表，逐层解压检查文件内容。检查项包括：操作系统包信息（从 /var/lib/dpkg/status 或 /var/lib/rpm/Packages 解析已安装包的名称和版本）、pip/ npm 包列表（从 site-packages 或 node_modules 提取）、配置文件安全（检查是否包含密码、密钥等敏感信息，扫描 /etc 和应用目录）。
+
+漏洞匹配：将检测到的包版本与已知 CVE 数据库比对（加载本地的 CVE JSON 文件或 NVD 数据），输出有漏洞的包列表——包名、安装版本、漏洞编号、CVE 描述、修复版本、严重等级（CVSS 评分）。
+
+也支持扫描 Dockerfile：检测 FROM 指令使用的基础镜像是否有过时标签、是否用 latest、RUN 指令是否安装了不必要的包。python3 命令行工具。

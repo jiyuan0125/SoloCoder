@@ -1,12 +1,11 @@
-实现 LWW-Register（最后写入胜寄存器）CRDT，用 Rust。
+LWW-Register（Last-Writer-Wins Register）是 CRDT 里最实用的数据类型之一——每个写操作带一个时间戳，合并时取时间戳最大的那个值。简单粗暴但有效，很多分布式数据库（比如 Cassandra、Riak）在背后用的就是这个。用 Rust 实现一个 LWW-Register，同时讨论它的问题。
 
-分布式系统中多个节点更新同一个值，用时间戳决定哪个是最终值——时间戳最大的赢。关键问题：如果时间戳相同，用节点 ID 做仲裁（tie-breaker）。
+数据结构：LWWReg<T> { value: T, timestamp: u64 }。每次 Write(value) 时带一个时间戳（可以用逻辑时钟或物理时钟）。Write 操作直接替换 value 和 timestamp。Read 返回当前的 value。
 
-功能：
-- set(value, timestamp)：写入新值和时间戳
-- get()：返回当前值和时间戳
-- merge(other)：比较时间戳，取更大的那个；时间戳相同取节点 ID 更大的
-- 初始值为 None（未设置状态）
-- 时间戳用毫秒级 Unix 时间戳
+合并逻辑：两个 LWW-Register 合并时，比较 timestamp，取较大的那个的 value。如果 timestamp 相等（两个操作同时发生），需要一个确定性的 tie-breaking 规则——比如按节点 ID 排序，取节点 ID 较大的那个值。
 
-cargo build 通过，测试两个节点同时 set 不同值，合并后时间戳大的胜出。
+时间戳的问题：如果用物理时钟（NTP），时钟偏移可能导致旧写入"赢过"新写入。如果用逻辑时钟（Lamport timestamp），能保证单调递增但失去了和真实时间的关联。程序支持两种模式，可以对比。
+
+模拟场景：3 个节点各自 Write 同一个 Register 不同次数。合并后打印最终值和时间戳。故意让节点 A 的时钟快了 100ms，观察它如何"不公平地"赢得冲突。这展示了 LWW 的一个根本问题——时钟不准就可能导致数据丢失。
+
+cargo build 通过。

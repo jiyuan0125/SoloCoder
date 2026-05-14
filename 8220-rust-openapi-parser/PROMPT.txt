@@ -1,4 +1,4 @@
-后端要对接各种三方 API，需要校验 OpenAPI/Swagger 文档的正确性，手动检查太容易遗漏。
+后端要对接十几个三方 API，每个 API 都有一份 OpenAPI/Swagger 文档。手动检查这些文档的正确性？几百个 endpoint、上千个参数定义，靠人眼排查迟早漏掉 $ref 引用失效、path 参数和 schema 类型不一致这种问题。有没有办法自动解析 OpenAPI 文档，把 paths、schemas、parameters、responses 都提取出来，然后自动校验引用完整性和类型一致性？用 Rust 写一个 OpenAPI 文档解析器，发现问题直接报告具体位置，省去人工 review 的麻烦。
 
 用 Rust 写一个 OpenAPI 文档解析器：
 - 解析 OpenAPI 3.0 的 JSON/YAML 格式文档

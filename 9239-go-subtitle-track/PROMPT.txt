@@ -1,5 +1,5 @@
-外挂字幕轨道的信息想单独查看，看看编码是什么、有几条字幕。
+外挂字幕轨道的信息想单独查看——视频文件里嵌了几条字幕、分别是什么语言、什么编码格式。做播放器开发的时候需要知道这些信息来做字幕选择和渲染。
 
-从视频容器中解析字幕轨道，识别字幕编码格式（SRT/ASS/SSA/WebVTT 等）。提取字幕轨道的语言标识、轨道 ID、轨道名称。列出容器里包含的所有字幕轨道概览。MKV 和 MP4 里的字幕轨道都要能处理。
+从视频容器中解析字幕轨道。MP4 容器：moov → trak（hdlr handler type='sbtl' 或 'text'），stsd 里的采样描述标识字幕格式——tx3g 是 MPEG-4 Timed Text、wvtt 是 WebVTT。MKV 容器：TrackEntry（TrackType=17 即 subtitle），CodecID 标识格式：S_TEXT/UTF8 是 SRT、S_TEXT/ASS 是 ASS/SSA、S_TEXT/WEBVTT 是 WebVTT、S_HDMV/PGS 是蓝光 PGS 图形字幕、S_VOBSUB 是 DVD VobSub。提取每个字幕轨道的 TrackNumber、TrackUID、Language（BCP 47 语言标签如 'eng'、'chi'）、TrackName（轨道名称如 'English'、'简体中文'）。列出容器里所有字幕轨道的概览表格：序号、格式、语言、名称、轨道ID。不解析具体的字幕文本内容，只做容器层的轨道信息提取。
 
 Go 标准库实现，go build 通过。

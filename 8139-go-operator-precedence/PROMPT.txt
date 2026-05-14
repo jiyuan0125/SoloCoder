@@ -1,9 +1,17 @@
-写一个算符优先解析器。根据运算符的优先级和结合性表来解析表达式，不需要完整的文法定义。
+写一个算符优先解析器。不需要完整的文法定义——只要一张运算符优先级和结合性表就能解析表达式。这是解析数学和逻辑表达式最实用的方法。
 
-优先级配置：
-*: 6, left
-+: 5, left
-^: 7, right
-支持自定义运算符和优先级。处理一元运算符（负号、逻辑非）。
-用法：op-parser -config operators.json "2 + 3 * 4 ^ 2"
-输出解析树和计算结果。Go 标准库，go build 通过。
+优先级配置用 JSON 文件描述：
+{"operators": [
+  {"token": "^", "precedence": 7, "associativity": "right"},
+  {"token": "*", "precedence": 6, "associativity": "left"},
+  {"token": "/", "precedence": 6, "associativity": "left"},
+  {"token": "==", "precedence": 3, "associativity": "left"},
+  {"token": "&&", "precedence": 2, "associativity": "left"},
+  {"token": "||", "precedence": 1, "associativity": "left"}
+]}
+
+支持自定义运算符和优先级——用户可以添加新的运算符到配置中。处理一元运算符（负号 -、逻辑非 !）——解析时根据上下文判断是前缀还是中缀。
+
+用法：op-parser -config operators.json "2 + 3 * 4 ^ 2"。输出解析树和计算结果。解析树用缩进文本或 JSON 格式显示。
+
+Go 标准库，go build 通过。

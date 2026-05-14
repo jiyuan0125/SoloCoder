@@ -1,3 +1,15 @@
-在学编译原理，想亲手写一个基于字节码的虚拟机。用 Python 实现一个小型字节码 VM：先设计一套字节码指令集（LOAD_CONST、STORE、BINARY_ADD、COMPARE、JUMP、CALL、RETURN 等），然后写一个简单表达式语言的前端（算术、变量、if/else、函数定义调用）编译到这套字节码，最后在 VM 上执行。
+编译原理课上讲了字节码虚拟机的原理——Java 的 JVM、Python 的 CPython、Lua 的 LuaVM，本质上都是一套指令集加一个执行引擎。想亲手实现一个来理解每个环节。Python 写一个小型字节码 VM。
 
-要能看到反汇编的字节码输出。纯 Python 实现，python 能跑。
+设计一套自定义字节码指令集（约 30 条指令）：
+- 常量和变量：LOAD_CONST idx、STORE_NAME name、LOAD_NAME name
+- 算术：BINARY_ADD/SUB/MUL/DIV/MOD（弹出栈顶两个操作数计算结果压回）
+- 比较：COMPARE_OP op（EQ/NE/LT/LE/GT/GE），结果压栈
+- 控制流：JUMP addr、JUMP_IF_FALSE addr、JUMP_IF_TRUE addr
+- 函数：CALL arg_count、RETURN
+- 栈操作：POP、DUP
+
+前端编译器把一个简单的表达式语言编译到这套字节码。语言支持：整数和浮点字面量、变量、四则运算、if/else 表达式、函数定义（def name(args): body）和函数调用。编译过程：词法分析 → AST → 递归遍历 AST 生成字节码指令列表。
+
+VM 的执行引擎维护：操作数栈、局部变量字典、指令指针（IP）、调用栈（保存返回地址和局部变量）。逐条取指令执行，遇到 RETURN 弹出调用栈恢复上下文。
+
+反汇编器：给定字节码列表，输出可读的助记符文本（带指令偏移量）。python3 vm.py program.txt。纯 Python 实现。

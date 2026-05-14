@@ -1,3 +1,9 @@
-对 TypeScript 那种类型系统很着迷，想用 Python 实现一个简化版的类型检查器。支持基本类型（int、str、bool、list、dict）、函数签名类型注解、泛型容器（list[int]、dict[str, int]）和 Union/Optional 类型。
+Python 动态类型灵活但不安全，线上出过好几次因为类型不匹配导致的运行时错误。想做一个简化版的静态类型检查器，能在不运行代码的情况下找到明显的类型问题。Python 实现。
 
-能对 Python 源码做静态分析，报告类型不匹配的地方（比如把 str 传给了期望 int 的参数）。不用运行代码，纯 AST 分析。纯 Python 实现，python 能跑。
+支持的类型系统：基本类型（int、str、bool、float、bytes、NoneType）、容器类型（list[T]、dict[K,V]、tuple[T1,T2]、set[T]）、Optional[T]（等价于 Union[T, None]）、Union[T1,T2,...]、函数签名 (int, str) -> bool。
+
+分析流程：遍历 AST 构建每个变量的类型环境（name → Type），从赋值语句推断变量类型（x = 1 → x: int），从函数参数的注解获取参数类型，追踪变量在后续使用中的类型一致性。遇到类型不匹配的报告错误——比如把 str 赋给了标注为 int 的变量、调用函数时参数类型和签名不匹配。
+
+类型推断：对于没有注解的变量，尝试从右值推断类型——字面量直接推断、函数调用根据返回值注解推断、二元运算根据操作数类型推断（int+int→int，int+str→TypeError）。推断不出来就标为 Unknown。
+
+不追求完备性（不处理泛型继承、协议、重载），但常见场景要能覆盖。python3 type_checker.py source.py。纯 Python 实现。

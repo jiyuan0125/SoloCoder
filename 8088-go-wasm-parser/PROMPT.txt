@@ -1,1 +1,9 @@
-WebAssembly 越来越火了，想自己解析一下 .wasm 文件的格式。Go 实现一个 WASM 二进制解析器，按照 WASM 规范解析各 section：type、function、table、memory、global、export、import、code、data。输出每个 section 的内容概要，特别是函数签名、导出名称、内存布局。解析不了的 section 用 raw bytes 展示。go build 通过。
+WebAssembly 越来越火了，浏览器、服务器端（WASI）、嵌入式都在用。想自己解析一下 .wasm 文件的二进制格式，理解模块的结构。
+
+Go 实现一个 WASM 二进制解析器，按照 WebAssembly 规范逐段解析。文件以 magic number \0asm 开头，版本号 1，然后是一系列 section：
+
+Type Section（id=1）——定义函数签名（参数类型列表和返回类型列表）。Function Section（id=3）——函数索引到类型索引的映射。Table Section（id=4）——间接调用用的表。Memory Section（id=5）——线性内存定义（初始页数和最大页数）。Global Section（id=6）——全局变量定义（类型、可变性、初始值表达式）。Export Section（id=7）——导出名称和对应的索引（函数/表/内存/全局变量）。Import Section（id=2）——从外部模块导入的函数/表/内存/全局变量。Code Section（id=10）——每个函数体的字节码指令。Data Section（id=11）——初始化内存的数据段。
+
+输出每个 section 的内容概要：函数签名列表、导出名称到索引映射、内存布局（初始和最大页数）。不认识的 section 用 raw bytes 展示。
+
+go build 通过。

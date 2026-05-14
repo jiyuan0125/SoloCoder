@@ -1,3 +1,7 @@
-写个 Markdown 渲染器，Go 实现。输入 Markdown AST，渲染成 HTML 输出。支持标题、段落、列表、代码块、表格、引用、链接、图片。
-HTML 输出要符合规范，代码块要有语言类型标注（class="language-xxx"），特殊字符要正确转义。
-命令行工具，从 .md 文件读入输出 .html。go build 能编译。
+有了 Markdown AST 还不够，最终要输出成 HTML 才能在浏览器里显示。不同的渲染需求——完整页面、片段、RSS——需要灵活的渲染器。
+
+写个 Markdown 渲染器，Go 实现。输入 Markdown AST（节点树），渲染成 HTML 输出。支持的 AST 节点渲染规则：标题渲染为 <h1>-<h6>，段落 <p>，粗体 <strong>，斜体 <em>，行内代码 <code>，代码块 <pre><code class="language-xxx">（语言类型标注），链接 <a href="..." title="...">，图片 <img src="..." alt="...">，列表 <ul>/<ol> + <li>，表格 <table> + <thead>/<tbody> + <tr>/<td>，引用 <blockquote>，水平线 <hr>。
+
+HTML 输出要符合规范——特殊字符正确转义（< 变 &lt;、> 变 &gt;、& 变 &amp;、引号变 &quot;）、自闭合标签用 />。支持渲染选项：是否生成完整 HTML 文档（<!DOCTYPE html><html>...）、自定义 CSS 类名前缀、是否给标题加 id 锚点（方便页内跳转）。
+
+命令行工具，从 .md 文件读入解析为 AST 再输出 .html。go build 能编译。

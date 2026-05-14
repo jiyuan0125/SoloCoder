@@ -1,14 +1,7 @@
-Go 模块依赖安全审计，扫描 go.sum 或 go.mod 文件检查已知漏洞。
+Go 模块依赖安全审计。Go 项目通过 go.mod 声明依赖，go.sum 记录校验和。写个工具扫描 Go 模块的已知漏洞。
 
-Go 项目的依赖管理用 go.mod + go.sum，虽然 govulncheck 官方工具不错，但有时候我们想在 CI 里用 Python 脚本统一处理。
+Python 实现。第一步解析依赖：读取 go.mod 文件，提取 require 段中的模块路径和版本号（区分直接依赖和 indirect 传递依赖）。也支持解析 go.sum（每行格式为 module_path version/go.mod hash，提取所有模块版本对）。
 
-Python 命令行工具：
-- 解析 go.mod 文件提取直接依赖（require 块中的模块路径和版本）
-- 解析 go.sum 文件提取完整依赖列表和哈希值
-- 对比漏洞数据库检查已知安全问题（基于模块路径+版本匹配）
-- 检测被替换的模块（replace 指令），标记可能有风险的替换
-- 输出漏洞报告和模块依赖清单
+第二步漏洞查询：Go 的 OSV 数据库（https://vuln.go.dev）提供了 Go 模块专用的漏洞数据。用模块路径和版本号查询——请求 https://vuln.golang.org/module/path@version 或调 OSV API（ecosystem=Go）。解析返回的漏洞信息——漏洞 ID（如 GO-2024-XXXX）、CVE 编号（如果有）、影响版本范围、修复版本、描述。
 
-用法：python go_audit.py check go.mod --db go_vulns.json
-python go_audit.py check --sum go.sum --strict
-go.mod 解析要处理 exclude、replace、retract 指令。
+第三步结果展示：终端表格——模块路径、当前版本、漏洞编号、严重等级（根据 CVSS 或 Go 团队的评估）、修复版本。标记是直接依赖还是间接依赖（间接依赖要通过哪个直接依赖引入的）。汇总：总模块数、有漏洞数、Critical/High/Medium/Low 分布。python3 命令行工具。

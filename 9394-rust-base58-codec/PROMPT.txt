@@ -1,5 +1,9 @@
-帮我用 Rust 实现一个 Base58 编解码工具，比特币地址用的那种编码。
+Base58——比特币的编码方案，去掉了 Base64 里容易混淆的字符：0/O、l/I/1、+/。结果全是字母和数字，URL 安全且人工可读。在区块链地址、短 URL、IPFS CID 里大量使用。Rust 实现。
 
-Base58 去掉了 Base64 中容易混淆的字符（0OIl），字母表是 123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz。编码时要处理前导零字节（每个前导零映射为 1）。支持 Bitcoin 风格和 Flickr 风格（字母表顺序不同）。可以编码/解码文件和字符串。
+两种字母表。Bitcoin（最常用）：123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz。Ripple：rpshnaf39wBUDNEGHJKLM4PQRST7VWXYZ2bcdeCg65jkm8oFqi1tuvAxy。区别就是字符排序不同。
 
-纯 Rust 实现，不依赖加密库，cargo build 通过。
+编码算法——把输入数据当作一个大整数（大端字节序），不断除以 58 取余数，余数映射到字母表字符。结果需要反转（因为先得到的是最低位）。前导零字节用字母表第一个字符表示（Bitcoin 是 '1'）。
+
+解码算法——把每个字符映射回 58 进制的一位数值，然后乘以 58 累加还原大整数。前导的字母表第一个字符还原为零字节。需要用大整数运算（输入可能超过 u64 范围），Rust 可以用 Vec<u8> 手动实现大整数乘法和加法。
+
+支持字符串和文件两种输入。用法 base58-codec encode --text "Hello World" 和 base58-codec decode --text "9Ajdvzr" 和 base58-codec encode --alphabet ripple。Rust 标准库，自己实现 Base58 逻辑，cargo build 通过。

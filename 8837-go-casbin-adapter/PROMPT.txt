@@ -1,12 +1,17 @@
-帮我写一个 Casbin 模型适配器，Go 实现。
+Casbin 是个很好的策略模型框架，但它本身不关心存储后端。想用 Casbin 的策略模型但不想依赖具体的数据库，写一个通用的适配层，上层用 Casbin 的模型语义做权限判断，下层存储可以灵活替换。
 
-想用 Casbin 的策略模型但不想依赖具体存储后端，写一个通用的适配层。
+用 Go 写一个 Casbin 模型适配器。实现几种经典模型：
 
-需要做的：
-- 实现几种经典 Casbin 模型：ACL、RBAC、RBAC with domains、ABAC
-- 策略的加载和存储：支持 JSON 文件格式，可扩展接口适配不同后端
-- 权限判断接口：Enforce(params...) bool，传入主体、资源、操作等参数
-- 策略管理：添加/删除策略、获取角色的所有权限、获取资源的所有授权用户
-- 内置一个简单的 RBAC 模型演示
+ACL（访问控制列表）：策略格式 (sub, obj, act) → alice, data1, read。Enforce(sub, obj, act) 直接查三元组是否匹配。支持通配符——alice, data*, read 匹配 data1、data2 等。
+
+RBAC（基于角色的访问控制）：策略格式 (sub, role) 和 (role, obj, act)。alice 拥有 admin 角色，admin 可以 write data1。Enforce 时先查角色的权限再查用户的角色。
+
+RBAC with domains：策略加一个 domain 维度——(sub, domain, role) 和 (role, domain, obj, act)。同一个用户在不同域（租户）下有不同角色。
+
+ABAC：策略格式支持属性条件——(sub.age > 18 && res.type == "public")。评估时解析条件表达式。
+
+统一接口 Enforce(params ...interface{}) bool：传入主体、资源、操作等参数，根据当前加载的模型自动判断。GetAllSubjects()、GetAllRoles()、GetPolicy() 查询接口。AddPolicy()、RemovePolicy() 管理接口。
+
+策略存储用 JSON 文件，可扩展 Storage 接口适配不同后端。内置 RBAC 演示。
 
 Go 标准库，go build 能编译。

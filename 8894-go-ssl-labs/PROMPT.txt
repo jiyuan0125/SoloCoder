@@ -1,8 +1,13 @@
-做个 SSL Labs 风格的 TLS 评估工具，Go 写的。
+想做一个类似 SSL Labs 在线检测但本地运行的 TLS 全面评估工具。SSL Labs 的评分体系比较全面，不只是看密码套件还要检查协议配置、证书质量、已知漏洞等多个维度。
 
-类似 SSL Labs 的在线检测但本地运行，对目标做全面的 TLS 安全评估。
+用 Go 写一个 SSL Labs 风格的 TLS 评估工具。grade 子命令：协议版本检测——测试 TLS 1.0/1.1/1.2/1.3 的支持情况。TLS 1.0 和 1.1 已被弃用（RFC 8996），支持的话扣分。
 
-功能：检测协议版本支持（TLS 1.0 到 1.3）；评估密码套件强度等级（强/中/弱）；检查证书链、OCSP stapling、HSTS；检测已知漏洞（如 POODLE、BEAST）；综合评分 A+ 到 F。
+密码套件评估：对每个套件打分——强（AES-GCM + ECDHE，前向保密）、中（AES-CBC + ECDHE）、弱（RC4、DES、无 ECDHE 的 RSA 密钥交换）。计算整体密码强度等级。
 
-命令：ssl-labs grade -host example.com:443、ssl-labs grade -host example.com:443 -verbose -json
+证书链检查：证书是否有效（过期、域名匹配）、OCSP stapling 是否启用、证书透明度 SCT 是否包含。HSTS 检查：响应头中是否有 Strict-Transport-Security。
+
+已知漏洞检测：POODLE（TLS 1.0 + CBC 套件）、BEAST（TLS 1.0 的 CBC 弱点）、Sweet32（64 位块密码如 3DES）、CRIME（TLS 压缩）。综合评分：A+（全部通过 + HSTS + 证书完美）、A/B/C/D/F 逐级递减。给出具体的改进建议。
+
+命令：ssl-labs grade -host example.com:443、ssl-labs grade -host example.com:443 -verbose -json。
+
 Go 标准库 crypto/tls 实现，go build 通过。

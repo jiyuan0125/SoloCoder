@@ -1,10 +1,9 @@
-手头项目配置文件越来越多，JSON 太啰嗦，TOML 表达力不够。打算做一个自己的配置语言，支持变量引用和简单的条件逻辑。
+手头项目配置文件越来越多，JSON 太啰嗦（每个字段都要加引号和逗号），TOML 表达力又不够（不支持条件逻辑和变量引用）。打算做一个自己的配置语言。
 
-用 Rust 实现一个配置语言解析器：
-- 支持 key = value 键值对，嵌套用缩进或大括号
-- 支持变量引用 ${db.host}，能解析嵌套路径
-- 支持 include "other.cfg" 引入其他配置文件
-- 支持 if-env("PRODUCTION") { ... } 这样的条件块
-- 解析失败给出准确的错误位置
+用 Rust 实现一个配置语言解析器，支持以下语法：key = value 键值对（value 可以是字符串、数字、布尔、null），嵌套用大括号 {} 表示（类似 JSON 但不用逗号），变量引用 ${db.host} 用点号路径访问嵌套值，include "other.cfg" 引入其他配置文件（递归解析，检测循环引用），if-env("PRODUCTION") { ... } 条件块（根据环境变量值决定是否包含该配置块）。
 
-CLI：config-lang parse app.cfg，输出合并后的配置 JSON。cargo build 能过。
+解析后的配置合并为统一的 Map 结构，支持序列化为 JSON 输出。变量引用可以跨文件——include 进来的文件里定义的变量也能被引用。if-env 检查环境变量是否存在且值非空，也支持 if-env-eq("ENV", "prod") 精确匹配。
+
+解析失败给出准确的错误位置——"error at line 5, column 12: undefined variable ${UNKNOWN}"。
+
+CLI：config-lang parse app.cfg，输出合并后的 JSON。cargo build 能过。

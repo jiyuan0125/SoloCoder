@@ -1,3 +1,9 @@
-分析 Linux 上的 ELF 二进制文件，需要个趁手的工具。Go 实现一个 ELF 格式分析器。
+上次做安全审计的时候要检查一批 Linux 服务器上的二进制文件，看看有没有编译安全保护措施缺失的情况——结果发现大量二进制没开 NX、没开 PIE、RELRO 也没开全，栈保护更是一个都没有。逐个用 readelf 查太慢了，需要一个能批量扫描并输出安全特性报告的工具。
 
-解析 ELF header（magic、类型、架构、入口点）；提取 program headers 和 section headers；列出动态链接依赖（.dynamic 段的 NEEDED 条目）；解析符号表（.symtab/.dynsym）；识别安全相关特性（NX、PIE、RELRO、Stack Canary）。输入 ELF 文件路径，输出分析报告。Go 标准库，go build 编译通过。
+用 Go 实现一个 ELF 格式分析器。输入是 ELF 文件路径，工具解析二进制结构后输出完整的分析报告。
+
+解析从 ELF header 开始：验证 magic number（\x7fELF）、读取 ELF 类型（可执行文件、共享库还是核心转储）、架构（32 位还是 64 位、字节序）、入口点地址。然后提取 program headers（段的类型、权限标志、虚拟地址）和 section headers（名称、类型、大小、偏移）。
+
+动态链接依赖：解析 .dynamic 段，找出所有 NEEDED 条目，列出这个二进制依赖哪些共享库。符号表：解析 .symtab 和 .dynsym，提取函数名和全局变量名。
+
+安全特性检测是重点：NX（GNU_STACK 段是否不可执行）、PIE（文件类型是否为 ET_DYN）、RELRO（是否有 PT_GNU_RELRO 段，以及是否绑定了 BIND_NOW 即 Full RELRO）、Stack Canary（符号表中是否有 __stack_chk_fail）。Go 标准库，go build 编译通过。

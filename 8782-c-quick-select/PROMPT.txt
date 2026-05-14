@@ -1,4 +1,11 @@
-帮我实现 Quick Select 算法，C 语言。
-在无序数组里找第 k 小（或第 k 大）的元素，不需要完全排序，期望时间 O(n)。
-用随机化 pivot 来避免最坏情况。再顺手实现 median_of_medians 的最坏 O(n) 版本也行。
-写个命令行程序：读一组整数，输入 k 值，输出第 k 小的元素。和排序后验证结果一致。测一下极端情况（k=1 最小、k=n 最大、全相同）。gcc 编译。
+找第 k 小的元素，最直觉的做法是先排序再取第 k 个，O(n logn)。但 quick select 只需 O(n) 期望时间——和快排类似地选 pivot 做分区，但每次只需要递归进入包含第 k 个元素的那一半，另一半直接丢弃。这在求数组中位数、Top-K 选择这类场景下非常实用。
+
+用 C 实现 Quick Select 算法。核心操作 partition(array, left, right, pivot_index)：把 pivot 交换到末尾，然后用双指针从两端扫描，把小于 pivot 的放左边、大于 pivot 的放右边，最后把 pivot 放回正确位置，返回它的最终下标。
+
+quickselect(array, left, right, k) 的递归流程：随机选一个 pivot（用 rand() 选 left 到 right 之间的下标），做 partition 得到 pivot 的最终位置 p。如果 p == k 就找到了；如果 k < p 就递归左半边；如果 k > p 就递归右半边。期望时间 O(n)，最坏 O(n²)。
+
+为了避免最坏情况（比如数组已经有序且总是选第一个元素当 pivot），用随机化 pivot。每次调用前 srand 一次就行。如果想更保险，可以实现 median-of-three：取 left、mid、right 三者的中位数当 pivot。
+
+写个命令行程序：读一组整数，输入 k 值（1-indexed），输出第 k 小的元素。和排序后取第 k 个的结果对比验证一致性。
+
+测一下极端情况：k=1（最小值）、k=n（最大值）、全相同值、已经有序的数组、逆序数组。每种跑 1000 次，统计平均耗时。gcc 编译。

@@ -1,5 +1,13 @@
-实现一个 Python 的 LCOM（Lack of Cohesion of Methods）度量工具，检测设计不良的类。
+继承了一个老项目，有些类上千行，十几个方法各访问不同的属性——典型的 God Object。需要一个工具量化类的内聚度来辅助拆分。Python 实现 LCOM 度量工具。
 
-Chidamber-Kemerer 的 LCOM 定义：如果类的方法访问的属性集合两两交集为空，则 LCOM = P - Q（P 是不共享属性的方法对数，Q 是共享属性的方法对数）。如果 Q > P，LCOM = 0。扩展实现 LCOM4（考虑方法的连通图）。解析 Python AST，提取类的属性和方法间的访问关系。
+数据提取：解析 ClassDef 节点，遍历类中的每个方法（FunctionDef），提取方法体内通过 self.xxx 引用的实例属性集合。忽略静态方法和类方法（没有 self）。构造方法 __init__ 也单独计算。
 
-Python 3，ast 模块。用法：`python lcom.py package/`，输出每个类的 LCOM 值、方法-属性访问关系图、建议拆分的大类。`python lcom.py` 能直接运行。
+四种 LCOM 计算：
+- LCOM1：对每对方法 (m_i, m_j)，如果它们访问的属性集合交集为空，就计 1。最终值是没有共享属性的方法对总数
+- LCOM2：LCOM2 = |P| - |Q|，其中 P 是方法-属性矩阵中每个属性被访问的方法数之和，Q 是方法间共享属性的对数
+- LCOM3 (Henderson-Sellers)：LCOM3 = (m - sum(a_i / A)) / (m - 1)，m 是方法数，a_i 是方法 i 访问的属性数，A 是类的总属性数
+- LCOM4：考虑方法调用关系——方法 A 调用方法 B 时，A 间接访问了 B 的属性。构建方法调用图，连通分量数越少内聚越好
+
+输出每个类的四种 LCOM 值、方法-属性访问矩阵（ASCII 表格）、内聚度评级。LCOM > 0.8 的类建议拆分——输出推荐的方法分组（把访问相同属性的方法归为一组）。
+
+python3 lcom.py source.py。纯 Python 3 用 ast 模块。

@@ -1,3 +1,11 @@
-帮我用 Go 写一个 Markdown 解析器。支持 CommonMark 的核心语法：标题(#)、段落、粗体(**text**)、斜体(*text*)、代码(`code`)、链接、图片、无序列表、有序列表、代码块(缩进或围栏)。
-把 Markdown 文本解析成 AST 结构，AST 可以遍历和检查。不要求 100% 兼容 CommonMark 边缘情况。
+写技术博客的时候 Markdown 用得最多，但每次想对 Markdown 做点定制处理就发现没个好用的解析器——要么太重要么扩展性差。干脆自己写一个。
+
+帮我用 Go 写一个 Markdown 解析器。支持 CommonMark 的核心语法：ATX 标题（# 到 ######）、段落（空行分隔）、粗体（**text** 或 __text__）、斜体（*text* 或 _text_）、行内代码（`code`）、链接（[text](url)）、图片（![alt](src)）、无序列表（- 或 * 开头）、有序列表（数字加点）、代码块（缩进 4 空格或三个反引号围栏、支持语言标注）。
+
+额外支持：表格（| 分隔列，--- 分隔表头）、引用块（> 开头）、水平线（--- 或 ***）、转义字符（\ 开头）。HTML 行内标签原样保留。
+
+把 Markdown 文本解析成 AST 结构——AST 节点类型有 Document、Heading(level)、Paragraph、Emphasis、Strong、Code、CodeBlock(lang)、Link(href)、Image(src,alt)、List(ordered)、ListItem、BlockQuote、Table、TableRow、TableCell、ThematicBreak。
+
+AST 可以遍历、检查和修改。不要求 100% 兼容 CommonMark 边缘情况，但日常用法不能有 bug。
+
 go build 能过，纯标准库。

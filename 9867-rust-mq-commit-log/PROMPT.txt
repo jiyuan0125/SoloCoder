@@ -1,11 +1,13 @@
-用 Rust 实现一个提交日志（Commit Log）存储引擎。
+Kafka 的核心设计就是一个 append-only 的 commit log——消息只追加，不修改不删除。所有消费行为都通过读取这个 log 来实现。这种设计让写入吞吐量极高（顺序写磁盘很快），但也带来了数据管理的问题——log 不能无限增长。用 Rust 实现一个 commit log 存储引擎。
 
-消息队列的核心就是一个 append-only 的日志文件，消息只能追加不能修改。这个工具就是实现这个底层存储。
+日志的物理结构：CommitLog 由多个 segment 文件组成。每个 segment 有大小上限（默认 1GB）。当前活跃 segment 追加写入，满了就滚动到新 segment。Segment 文件名是起始 offset（20 位数字左填充）。
 
-要做：
-- 实现 append-only 日志文件，支持写入消息（byte array）和按 offset 读取
-- 日志文件要分 segment 存储，单个 segment 达到大小上限后自动切换到新文件
-- 每个 segment 有对应的索引文件，加速按 offset 查找（类似 Kafka 的稀疏索引）
-- 支持日志清理：根据 retention policy（按时间或按大小）删除旧的 segment
+写入流程：Append(message) → 写入当前活跃 segment → 分配递增 offset → 返回 offset。每条消息的磁盘格式：[offset:8字节][message_size:4字节][crc:4字节][timestamp:8字节][payload:N字节]。
 
-cargo build 通过，实际操作本地文件。
+读取流程：Read(offset, max_bytes) → 根据 offset 定位到哪个 segment → 在 segment 内二分查找 offset 的物理位置 → 读取消息。segment 内部维护一个稀疏索引（每隔 N 条消息记录一个 offset→position 的映射），加速查找。
+
+日志保留策略：基于时间（保留最近 7 天）、基于大小（总大小不超过 10GB）、基于 compact（同一 key 只保留最新值）。超出策略的旧 segment 被删除。
+
+模拟写入 10000 条消息，观察 segment 滚动和索引构建。读取几条消息验证正确性。
+
+cargo build 通过。

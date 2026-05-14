@@ -1,12 +1,11 @@
-用 Rust 写一个 PN-Counter（正负计数器）CRDT。
+G-Counter 只能加不能减，但实际场景经常需要加减（比如库存的增加和减少）。PN-Counter（Positive-Negative Counter）用两个 G-Counter 来实现——一个记增加量 P，一个记减少量 N，最终值 = P - N。用 Rust 实现。
 
-G-Counter 只能加不能减。PN-Counter 用两个 G-Counter 组合：一个记增量，一个记减量，最终值 = P - N。这样就能支持分布式计数器的加减操作了。
+数据结构：PNCounter { p: GCounter, n: GCounter }。Increment(n) 时 p.increment(n)，Decrement(n) 时 n.increment(n)。注意 n 本身也是只增不减的——减操作被转化成了"减量计数器的增加"。
 
-要做：
-- 内部维护两个 G-Counter：P（正向）和 N（负向）
-- increment() 增加 P 中本节点的值
-- decrement() 增加 N 中本节点的值
-- value() = P.value() - N.value()
-- merge() 分别合并 P 和 N，合并规则与 G-Counter 一致
+值 = p.value() - n.value()。合并操作就是分别合并 p 和 n 两个 G-Counter。因为底层 G-Counter 满足 CRDT 性质（可交换、可结合、幂等），PN-Counter 也自动满足。
 
-cargo build 通过，测试多节点加减混合后合并结果正确。
+需要注意的边界情况：减太多会导致值为负数。取决于业务需求，可以允许负数（比如银行余额可以为负）或限制最小值为 0（比如库存不能为负，需要在 Decrement 前检查）。
+
+模拟场景：3 个节点操作同一个 PN-Counter。节点 A 做了 +50、-20，节点 B 做了 +30、-10，节点 C 只做了 +5。三个节点合并后，总值应该是 50-20+30-10+5 = 55。打印每个节点的本地状态和合并后的最终结果。
+
+cargo build 通过。

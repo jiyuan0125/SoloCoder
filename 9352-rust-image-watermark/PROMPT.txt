@@ -1,5 +1,7 @@
-用 Rust 做一个给图片加水印的工具，主要是保护我发到网上的摄影作品。
+给摄影作品加水印——不是什么高级需求但必须得有。文字水印或图片水印，支持半透明和位置控制。Rust 实现。
 
-需要支持文字水印和图片水印两种模式。文字水印可以调字体大小、颜色、透明度和位置（左上/右下/居中/平铺）。图片水印就是叠一个 logo 上去，也要能调透明度。输入一张原图和一张带水印的图，输出合成后的 JPEG。批量模式下给整个文件夹加。
+文字水印参数：内容字符串、字体大小（像素）、颜色（RGB）、透明度（0.0-1.0，1.0 完全不透明）、位置。位置用九宫格：top-left/center/right、middle-left/center/right、bottom-left/center/right。文字渲染先画到一个临时缓冲区，然后用 alpha blending 叠加到原图上。alpha blending 公式：result = original × (1 - α) + watermark × α，每个通道独立计算。平铺模式按固定间距重复绘制覆盖整张图。
 
-Rust 实现，cargo build 能过，不要用 FFmpeg。
+图片水印——读取一个 PNG logo（带 alpha 通道），按指定位置叠加。alpha 值取 logo 原始 alpha 和用户指定的整体透明度中较小的一个。如果 logo 尺寸大于目标图，等比缩小到合适的尺寸。
+
+输入输出支持 JPEG 和 PNG。批量处理目录时输出到指定目录，文件名保持不变。JPEG 输出保留原始 EXIF 信息。用法：watermark -text "© 2024" -size 24 -opacity 0.5 -position bottom-right photo.jpg -o out.jpg。Rust 实现，cargo build 通过，不用 FFmpeg。

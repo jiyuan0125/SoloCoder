@@ -1,5 +1,7 @@
-帮我写一个 Markdown 渲染工具，把 Markdown 转成 HTML。
+1. 写文档习惯用 Markdown，但发布到网页需要 HTML。写个渲染工具把 Markdown 文本转成 HTML，支持 CommonMark 的核心语法。
 
-写文档习惯用 Markdown，但发布到网页需要 HTML。工具要支持 CommonMark 的核心语法：标题、段落、粗体斜体、链接、图片、代码块、列表（有序和无序）、引用、表格。输出的 HTML 要结构干净，可以嵌入到现有网页中。
+2. 支持的语法。标题（# 到 ######）转 <h1> 到 <h6>。段落（空行分隔的连续文本）转 <p>。粗体（**text**）转 <strong>，斜体（*text*）转 <em>。行内代码（`code`）转 <code>。链接（[text](url)）转 <a href="url">text</a>。图片（![alt](url)）转 <img src="url" alt="alt">。有序列表和无序列表转 <ol>/<ul> 和 <li>。引用块（> 开头）转 <blockquote>。代码围栏（```lang ... ```）转 <pre><code>。表格转 <table> 结构。
 
-python main.py render readme.md --output readme.html。加 --full-page 参数生成完整的 HTML 文档（包含 head/body 和基础样式）。Python 实现，可以依赖 markdown 或 mistune 库，也可以自己写解析器。能跑就行。
+3. 输出模式。默认只输出 HTML 片段（body 内容），方便嵌入到现有网页模板中。加 --full-page 参数生成完整的 HTML 文档：包含 <!DOCTYPE html>、<html>、<head>（带基础样式表）、<body>。
+
+4. 解析策略可以用状态机逐行处理，也可以用 markdown/mistune 库。用法：python3 markdown_render.py render readme.md --output readme.html 或 python3 markdown_render.py render readme.md --full-page --output page.html

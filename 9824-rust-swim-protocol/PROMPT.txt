@@ -1,12 +1,11 @@
-帮我实现 SWIM 故障检测协议，用 Rust。
+先理解 SWIM 和 Gossip 的区别，再用 Rust 实现完整的 SWIM 协议。SWIM（Scalable Weakly-consistent Infection-style Process Group Membership）和 Gossip 成员管理的目标一样——维护集群的成员视图。但 SWIM 有个巧妙的优化：把故障检测和成员信息传播合并到同一个协议里，不需要额外的 Gossip 层。
 
-SWIM（Scalable Weakly-consistent Infection-style Process Group Membership）是一种轻量级的故障检测协议。每个节点定期 ping 一个随机节点，如果没回应就间接 ping（让其他节点帮忙探测），最终判断节点是否故障。
+SWIM 的三个核心机制。第一个是间接探测（indirect probing）：节点 A 怀疑节点 B 挂了，不直接下结论，而是找 K 个其他节点分别去探测 B。如果任何间接探测成功（有人能联系到 B），A 撤销怀疑。如果所有间接探测都失败，A 才标记 B 为 Suspect。
 
-核心功能：
-- 每个节点维护一个成员列表和检测周期
-- 定期选一个随机成员发送直接 ping
-- ping 超时后发起间接探测（选 k 个中间节点转发 probe）
-- 根据直接/间接探测结果判断成员 alive 或 suspect
-- 成员状态变更通过 piggyback 附加在 ping 消息上传播
+第二个是故障检测的协议层：每个节点维护一个协议周期（protocol round），每轮选一个随机目标发 ping。ping 成功则 OK。失败则发起间接探测（选 K 个中间节点转发 ping）。间接探测也全部失败则标记目标为 Suspect。
 
-cargo build 通过，模拟 10 节点测试故障检测和状态传播。
+第三个是感染式传播（piggyback）：成员变更信息（Suspect、Alive、Dead）不单独发消息，而是附带在正常的 ping/ack 消息里传播。这样故障检测和成员传播共用同一份带宽。
+
+模拟 8 个节点运行 SWIM 协议。观察一个节点挂掉后的完整检测过程——ping 失败 → 间接探测 → Suspect → 确认 Dead → 传播给所有节点。
+
+cargo build 通过。

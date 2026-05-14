@@ -1,3 +1,11 @@
-实现一个 Go 的文本模板引擎，类似 text/template 但自己从零写。支持 {{.Field}} 变量替换、{{if}}/{{else}}/{{end}} 条件、{{range}} 循环、管道操作 func1 | func2。
-模板编译阶段要检查语法正确性。支持模板嵌套 {{template "name"}}，支持自定义函数注册。
+第一步定义模板语法，第二步编译检查，第三步渲染输出——一个完整的文本模板引擎需要这三个阶段。
+
+实现一个 Go 的文本模板引擎，类似 text/template 但自己从零写。模板语法支持：{{.Field}} 变量替换（用反射访问 struct 字段和 map 键）、{{if condition}}...{{else if condition}}...{{else}}...{{end}} 条件判断、{{range .list}}...{{end}} 循环（循环内 {{.}} 代表当前元素，{{$index}} 和 {{$value}} 可用）、管道操作 {{.name | func1 | func2}}、注释 {{/* comment */}}。
+
+模板编译阶段要检查语法正确性——未闭合的块（{{if}} 没有 {{end}}）、无效的表达式、未注册的函数名。编译后的模板可以被多次执行，每次传入不同数据。
+
+支持模板嵌套 {{template "name" .}} 和定义 {{define "name"}}...{{end}}。支持自定义函数注册（RegisterFunc(name, fn)），函数参数数量不匹配时在编译期报错。
+
+支持上下文感知的自动转义——在 HTML 属性里自动转义引号，在 <script> 标签里转义 </ 为 <\/。
+
 go build 编译通过，纯标准库。

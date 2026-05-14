@@ -1,12 +1,15 @@
-帮我写一个 ReBAC（关系型访问控制）引擎，Go 语言。
+看了 Google Zanzibar 论文觉得很有意思。它的核心思路是用"关系元组"来做授权——user:alice#member@group:eng 表示 alice 是 eng 组的 member，group:eng#member@group:all-eng 表示 eng 组是 all-eng 的 member，那么 alice 自动也是 all-eng 的 member。关系可以嵌套传递。
 
-看了 Google Zanzibar 论文觉得很有意思，想实现一个简化版的关系权限模型，用"用户-关系-资源"三元组来做授权。
+用 Go 写一个 ReBAC（关系型访问控制）引擎。数据模型：
 
-核心功能：
-- 定义关系元组（tuple）：user:alice#member@group:eng 表示 alice 是 eng 组的 member
-- 关系查询：检查某用户是否通过直接或间接关系拥有对某资源的某权限
-- 关系推导：支持嵌套关系传递，比如 group:eng 的 member 也是 group:all-eng 的 member
-- Write 和 Read 接口：写入关系元组、查询用户权限、检查特定关系是否存在
-- 内存存储，支持从 JSON 文件加载初始关系数据
+关系元组（Relation Tuple）：{subject: "user:alice", relation: "member", object: "group:eng"}。存储在内存中，支持从 JSON 文件加载初始数据。
+
+写入接口 Write(tuple Tuple) 和 Delete(tuple Tuple)：添加或删除关系元组。写入时检查不会形成循环引用。
+
+查询接口 Check(subject, relation, object string) bool：检查 subject 是否对 object 拥有 relation 关系。直接查元组集——如果有精确匹配直接返回 true。间接推导——如果定义了 group:eng#member@group:all-eng，那 check(user:alice, member, group:all-eng) 要沿着关系链推导：alice → eng 的 member → eng 是 all-eng 的 member → 所以 alice 是 all-eng 的 member。
+
+ListObjects(subject, relation string) []string：查询 subject 通过 relation 关系可以访问的所有 object。ListSubjects(relation, object string) []string：查询对 object 拥有 relation 关系的所有 subject。
+
+关系推导的深度限制：防止无限递归（比如 a→b→c→a 的循环），设置最大递归深度（比如 10 层）。
 
 Go 标准库，go build 能编译。

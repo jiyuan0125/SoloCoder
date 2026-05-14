@@ -1,11 +1,11 @@
-写一个 Raft 日志复制引擎，Rust 实现。
+先把日志复制的完整链路捋清楚，再用 Rust 实现。Leader 接收客户端命令后追加到本地日志，然后并行发送 AppendEntries 给所有 Follower。Follower 确认后 Leader 更新 matchIndex，当某个 index 被多数节点确认后就推进 commitIndex。这条链路是 Raft 的核心数据通路，性能和正确性都很关键。
 
-Leader 需要把日志条目高效地复制到所有 Follower。每个 Follower 维护独立的 nextIndex 和 matchIndex，复制失败时回退 nextIndex 重试。
+Leader 端的复制状态：维护每个 Follower 的 nextIndex（下一个要发送的日志索引）和 matchIndex（已确认的最大索引）。初始时 nextIndex = 日志末尾+1，matchIndex = 0。复制是异步的——Leader 收到客户端写入后不阻塞等待，后台 replication task 持续推进。
 
-功能：
-- Leader 为每个 Follower 维护复制进度（nextIndex、matchIndex）
-- 正常情况下批量发送日志条目，减少网络开销
-- Follower 日志不一致时逐步回退 nextIndex 找到一致点
-- 根据所有 Follower 的 matchIndex 计算已提交的 log index
+AppendEntries 的发送逻辑：对每个 Follower，从 nextIndex 开始打包日志条目发送（一次最多 50 条）。成功则 nextIndex 和 matchIndex 往前推。失败（日志不一致）则 nextIndex 回退到冲突 term 的起点，重试。
 
-cargo build 能过，用模拟节点测试复制流程的快路径和回退路径。
+commitIndex 的推进：Leader 每次收到成功的 AppendEntries 响应后，检查是否有新的 index 可以 commit。条件：存在 N 使得 N > commitIndex，且超过半数节点的 matchIndex >= N，且 log[N].term == currentTerm。满足则推进 commitIndex = N，然后通知 apply task。
+
+模拟 1 Leader + 4 Follower，写入 100 条日志，观察 commitIndex 的推进过程和每个 Follower 的追赶速度。其中一个 Follower 故意延迟大，观察它如何落后和追上。
+
+cargo build 通过。

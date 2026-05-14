@@ -1,3 +1,7 @@
 XSPF 播放列表解析器。VLC 用的是 XSPF 格式，想提取里面的曲目信息。
 解析 XSPF（XML Shareable Playlist Format）格式的播放列表。提取 trackList 中每首歌的 location、title、creator、album、duration 等字段。处理 XML 命名空间。支持本地文件路径和 HTTP URL。
 Python 3 标准库 xml.etree.ElementTree。python xspf_parser.py playlist.xspf show，或 python xspf_parser.py playlist.xspf --json -o tracks.json
+
+对了，还有个细节——处理异常情况也很重要——输入文件不存在或者格式完全不对（比如把 PNG 当 CSV 传），要给出友好的错误提示而不是 traceback。如果文件特别大（超过 100MB），需要分块或者流式处理避免内存爆炸。输出结果可以同时支持终端打印和 JSON 文件导出两种方式。如果处理过程中出现什么问题，错误信息要具体到是哪个步骤哪条数据出的问题。
+
+代码结构要清晰——核心逻辑和 CLI 入口分离，核心功能可以被其他脚本 import 使用。依赖尽量少只用标准库或者一两个常用第三方库。README 写清楚安装依赖和基本用法。

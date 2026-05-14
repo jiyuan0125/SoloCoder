@@ -1,4 +1,4 @@
-macro_rules! 声明宏的语法很特殊，想做一个专门解析和分析声明宏的工具。
+macro_rules! 声明宏的语法是 Rust 里比较特殊的存在——匹配臂的 pattern 和展开模板用的是同一套 token 树语法，但语义完全不同。metavariable 的种类也多：$name:ident 匹配标识符、$name:expr 匹配表达式、$name:tt 匹配单个 token tree、$name:ty 匹配类型。重复标记 $(...)* 、$(...)+、$(...),? 的嵌套组合更是让宏定义变得难以阅读和维护。需要做一个专门的工具来解析声明宏的结构：提取所有匹配臂的 pattern 和展开模板，解析每个 metavariable 的类型和作用域，检测常见问题如未使用的 metavariable 或缺少的重复分隔符，输出结构化的宏定义分析报告。
 
 用 Rust 实现声明宏解析器：
 - 解析 macro_rules! 的完整语法结构

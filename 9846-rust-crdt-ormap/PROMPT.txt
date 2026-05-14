@@ -1,13 +1,11 @@
-用 Rust 写一个 OR-Map（Observed-Remove Map）CRDT。
+之前用 CRDT 做协作编辑的时候需要一个"多人同时编辑同一个 JSON 对象"的场景——A 在改 name 字段，B 在改 age 字段，C 在删 address 字段，三人的编辑不能互相覆盖。OR-Map（Observed-Remove Map）就是为此设计的——每个 key 独立管理自己的 CRDT，删除和更新互不干扰。用 Rust 来实现。
 
-OR-Map 是一个 key-value 映射，每个 key 对应一个 OR-Set 的 value。支持对单个 key 的值做 add/remove 操作，不同 key 之间的操作互不影响。适合分布式配置、购物车等场景。
+OR-Map 的核心思路：把 Map 的每个 key 映射到一个独立的 CRDT 实例（可以是 Register、Counter、Set 等）。对 key 的操作只影响那个 key 对应的 CRDT，不影响其他 key。删除 key 时用 OR-Set 的"观察后删除"机制——只能删除当前已知的 key 版本。
 
-实现内容：
-- put(key, value)：给 key 添加一个值（一个 key 可以有多个值）
-- remove(key)：删除该 key 的所有值
-- remove_value(key, value)：删除 key 的某个特定值
-- get(key)：获取 key 的所有当前值
-- merge(other)：递归合并每个 key 对应的 OR-Set
-- key 的添加和删除遵循 OR-Set 的 observed-remove 语义
+数据结构：ORMap<K, V> 内部维护一个 HashMap<K, (unique_tag, V)> 和一个 tombstone 集合。Put(k, v) 时生成新 tag，替换 k 的旧值。Remove(k) 时把 k 当前的 tag 加入 tombstone。Get(k) 查询 k 是否存在（tag 不在 tombstone 中）。
 
-cargo build 通过，测试两个节点对同一 key 并发操作后合并正确。
+合并操作：对每个 key，合并两边的 (tag, value) 和 tombstone。如果 tag 被 tombstone 覆盖了，key 不存在。否则取 tag 较大的 value。
+
+模拟场景：3 个节点同时操作同一个 OR-Map。A set name="alice"，B set age=30，C remove name。合并后 age=30 存在但 name 被删了。然后 A 又 set name="bob"，合并后 name="bob" 出现。验证这个 add-remove-re-add 的完整流程。
+
+cargo build 通过。

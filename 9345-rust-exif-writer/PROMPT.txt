@@ -1,10 +1,7 @@
-我需要一个 EXIF 数据写入工具，能往 JPEG 文件中写入或修改 EXIF 元数据。
+照片发布到网上之前最好把 GPS 信息清掉保护隐私，同时添加版权声明。读 EXIF 的工具有了，现在需要一个写入工具——能添加、修改、删除 EXIF 字段。写入比读取复杂得多，因为要自己构造 IFD 二进制结构。Rust 实现。
 
-写入功能：
-- 如果 JPEG 已有 APP1/EXIF 段，定位并替换；如果没有，在 SOI 后插入新的 APP1 段
-- 支持写入基本标签：DateTime、ImageDescription、Artist、Copyright
-- 支持写入拍摄参数：FNumber、ExposureTime、ISO、FocalLength
-- 写入时正确构建 TIFF 头 + IFD 结构，处理字节序和偏移量计算
-- 写入后 JPEG 的其他段（DQT、SOF、DHT、SOS）不受影响
+写入场景判断——JPEG 的 SOI 后面是 APP1 还是其他标记？如果 FFE1 存在且内容是 EXIF，则更新已有 EXIF。否则在 SOI 后插入新的 APP1 段。已有 EXIF 时最安全的做法是完整读取原来的 IFD 结构，修改目标 tag 后重新序列化，替换整个 APP1 段。
 
-Rust，cargo build 通过。`exif-writer write photo.jpg --artist "张三" --datetime "2025:01:15 14:30:00" -o output.jpg`。
+IFD 构造——所有 tag 按 ID 升序排列。每个 tag 12 字节：ID(2) + 类型(2) + 数量(4) + 值/偏移(4)。SHORT 类型值直接存 4 字节里。RATIONAL（如 FNumber）占 8 字节，要放到 IFD 后面的数据区，tag 里存偏移量。偏移量的基准点是从 TIFF 头开始计算。写入 tag：DateTime(306) ASCII 类型、Artist(315) ASCII、Copyright(33432) ASCII、FNumber(33437) RATIONAL、ExposureTime(33434) RATIONAL。
+
+GPS 清除——如果 GPS IFD 存在，把 tag 34853 的值改为 0（偏移量置零表示不存在 GPS IFD），同时可以不保留 GPS IFD 的数据区来减小文件大小。JPEG 完整性——写入只影响 APP1 段，其他段（DQT、SOF、DHT、SOS）和像素数据完全不动。用法 exif-writer write photo.jpg --artist "张三" --datetime "2025:01:15 14:30:00" --clear-gps -o output.jpg。Rust 实现，cargo build 通过。

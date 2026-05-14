@@ -1,11 +1,13 @@
-我需要一个 XSS 过滤器，Go 写的命令行工具。
+论坛系统上线没多久就被安全测试打了个 XSS——有用户在评论里插了 script 标签，虽然没造成什么实际损害但合规审计过不了。事后排查发现根本没做输入清洗。这次要把过滤器写扎实。
 
-场景：论坛系统里用户提交的内容经常被注入恶意脚本，我们需要在入库前做一轮清洗。
+用 Go 写一个 XSS 过滤器命令行工具。处理逻辑分两层：
 
-它能做这些事：
-- 过滤常见的 XSS 向量：<script> 标签、javascript: 协议、onXXX 事件属性（onclick、onerror 等）
-- 支持白名单模式：只保留允许的 HTML 标签（b、i、a、p、br），其余全部转义
-- 提供两种输出：纯文本剥离所有标签，或者安全 HTML 保留白名单标签
-- 命令行用法：`./xss-filter -mode=safe -input="用户输入内容"`
+第一层是黑名单过滤：识别并移除常见的 XSS 攻击向量。script 标签（包括大小写变体、标签内嵌空格等绕过手法）、javascript: 和 vbscript: 协议、onXXX 事件属性（onclick、onerror、onload、onmouseover 等全部覆盖）、expression() CSS 表达式、data:text/html 协议、iframe/embed/object 标签。
 
-Go 标准库实现，go build 能跑就行。
+第二层是白名单模式：只保留允许的安全标签（b、i、a、p、br、ul、ol、li、code、pre），其余标签全部转义成 &lt; &gt;。对 a 标签的 href 属性做特殊处理——只允许 http/https/mailto 协议，禁止 javascript:。属性值里的特殊字符做 HTML entity 编码。
+
+提供两种输出模式：纯文本模式（striptags）剥离所有 HTML 标签只留文字内容；安全 HTML 模式（safehtml）保留白名单标签并清洗属性。
+
+命令行：xss-filter -mode=safe -input="用户输入内容"、xss-filter -mode=striptags -file=input.html。也支持从 stdin 管道读取。
+
+Go 标准库实现（strings、regexp、html），go build 能跑就行。

@@ -1,3 +1,10 @@
-要做代码审查自动化，需要一个可扩展的 lint 引擎。用 Python 实现一个 lint 框架，支持用插件方式注册检查规则（每个规则有 ID、描述、严重级别），框架负责解析代码、遍历 AST 并调用各规则。
+代码审查花了太多时间在低级问题上——未使用的变量、过深的嵌套、== 比较 None。做一个可扩展的 lint 引擎把这些自动化掉。Python 实现。
 
-内置十来个示例规则：检测未使用变量、过长的函数、嵌套过深、未处理的异常、== 比较 None 等。输出类似 ESLint 格式的报告。纯 Python，python 能跑，命令行扫描 .py 文件输出报告。
+框架设计：Rule 是一个抽象基类，每个规则子类实现 check(node) 方法，返回 Issue 列表。Issue 包含文件名、行号、列号、规则 ID、严重级别（error/warning/info）和描述文字。LintEngine 负责 parse 源文件、遍历 AST 并调用所有注册的 Rule。
+
+内置 12 个示例规则：
+E001 未使用变量（赋值后从未被引用的变量）、E002 过长函数（超过 50 行）、W001 嵌套过深（超过 4 层 if/for 嵌套）、W002 裸 except（except: 没有指定异常类型）、W003 == None（应该用 is None）、W004 未使用的 import、W005 可变默认参数（def f(x=[])）、W006 过长的参数列表（超过 7 个参数）、I001 missing docstring、I002 todo 注释残留、E003 重复的字典键、W007 print 语句残留
+
+输出格式兼容 ESLint 的 JSON 格式，方便集成到编辑器插件中。也支持终端彩色文本输出。
+
+python3 linter.py src/ 扫描目录下所有 .py 文件。纯 Python 标准库。

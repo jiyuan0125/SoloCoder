@@ -1,10 +1,17 @@
-帮我实现一个词法分析器生成器。输入一个 token 定义文件（正则表达式描述每种 token），输出 Go 源码的 lexer 实现。
+帮我实现一个词法分析器生成器——类似 flex 但输出 Go 代码。输入一个 token 定义文件（用正则表达式描述每种 token 的模式），输出一个可以直接编译运行的 Go lexer 实现。
 
-定义文件格式：
+定义文件格式示例：
 TOKEN IDENTIFIER [a-zA-Z_][a-zA-Z0-9_]*
-TOKEN NUMBER [0-9]+
+TOKEN NUMBER [0-9]+(\.[0-9]+)?
+TOKEN STRING "[^"]*"
+TOKEN OPERATOR [+\\-*/=<>!]=?
 SKIP WHITESPACE [ \t\n]+
+SKIP COMMENT //.*
 
-支持正则的基本操作：字符类、量词、分组、选择。
-生成的 Go 代码能直接 go build。
+支持的规则类型：TOKEN（命名的 token，匹配时返回 token 对象）、SKIP（匹配后丢弃，用于空白和注释）、KEYWORD（特殊的 TOKEN，优先级高于标识符——如 if/else/while 同时匹配 IDENTIFIER 规则时优先匹配 KEYWORD）。
+
+处理规则的优先级——同位置的匹配，规则定义在前的优先；长度更长的匹配优先（maximal munch）。支持正则的基本操作：字符类 [...]、量词 * + ?、分组 ()、选择 |。
+
+生成的 Go 代码包含 NextToken() 方法返回 token 类型、字面值、位置信息。代码能直接 go build。
+
 Go 标准库，go build 通过。

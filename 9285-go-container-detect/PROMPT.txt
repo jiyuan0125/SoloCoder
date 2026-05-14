@@ -1,11 +1,7 @@
-帮我写一个媒体容器格式检测工具，Go 实现。
+用户上传文件时后缀名能信吗？.png 实际是 JPEG，.avi 实际是 MKV——这种情况比想象中多得多。内容审核系统需要根据文件实际内容而非后缀名来判断格式，否则后续处理流程会出错。
 
-场景是用户上传文件时不一定带正确后缀，需要根据内容判断：
-- 读取文件头部魔数（magic bytes）判断实际格式
-- 支持检测：MP4（ftyp）、FLV、AVI、MKV/WebM、MPEG-TS、Ogg、WAV、AIFF、FLAC、MP3（ID3/sync word）、AAC（ADTS）
-- 有些格式魔数在文件头部固定位置，有些需要更深的解析
-- 返回格式名称、MIME 类型、可能的文件扩展名
-- 支持批量检测目录下所有文件
-- 对无法识别的文件给出最佳猜测
+检测逻辑主要依赖文件头部的特征字节。前 4-12 字节就能判断大多数格式：MP4 在偏移 4 处有 "ftyp"，FLV 前 3 字节 "FLV"，AVI 前 4 字节 "RIFF" + 偏移 8 处 "AVI"，MKV/WebM 前 4 字节是 EBML 头（0x1A45DFA3），MPEG-TS 第 0、188、376 字节都是 0x47，Ogg 前 4 字节 "OggS"，WAV 前 4 字节 "RIFF" + 偏移 8 "WAVE"，AIFF 前 4 字节 "FORM" + 偏移 8 "AIFF"，FLAC 前 4 字节 "fLaC"，MP3 看 "ID3" 或 0xFFF 同步字，AAC ADTS 看 0xFFF。
 
-用法 container-detect mystery_file.dat，输出实际格式。Go 标准库，go build 通过。
+复杂一点的判断：ZIP 开头是 PK\x03\x04，但 DOCX/XLSX/APK/JAR 也都是 ZIP 容器——需要进一步读 ZIP 里的文件列表来区分（DOCX 有 [Content_Types].xml 和 word/ 目录，APK 有 AndroidManifest.xml）。RMVB 前 4 字节 ".RMF"。无法识别的文件给出最佳猜测和建议。
+
+返回信息：格式名称、MIME 类型、可能的扩展名列表。批量模式扫描目录。用法 container-detect mystery_file.dat。Go 标准库，go build 通过。

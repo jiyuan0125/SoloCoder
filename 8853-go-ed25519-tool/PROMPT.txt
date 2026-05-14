@@ -1,8 +1,11 @@
-做个 Ed25519 签名工具，Go 写的命令行程序。
+Ed25519 在现代协议里用得越来越多了——SSH 密钥、Signal 协议、区块链签名很多都是它。相比 RSA 和 ECDSA 签名速度快、密钥短、安全侧信道攻击。需要一个能快速生成 Ed25519 密钥、签名消息、验证签名的小工具。
 
-Ed25519 在现代协议里用得越来越多了，SSH 密钥、区块链签名很多都是它。需要一个能快速生成 Ed25519 密钥、签名消息、验证签名的小工具。
+用 Go 写一个 Ed25519 签名工具。generate 子命令：调用 crypto/ed25519.GenerateKey(nil) 生成密钥对。私钥 64 字节（前 32 字节是种子，后 32 字节是公钥），公钥 32 字节。用 PKCS#8 格式编码私钥（crypto/x509.MarshalPKCS8PrivateKey）输出 PEM，公钥用 PKIX 格式输出 PEM。
 
-要求：生成 Ed25519 密钥对并保存为 PEM；对任意文本或文件内容签名；验证签名，返回通过或不通过。密钥用 PKCS8 格式编码。
+sign 子命令：加载私钥 PEM（PKCS#8 格式解析）。对输入数据直接调用 ed25519.Sign() 签名——Ed25519 不需要单独做哈希，签名函数内部处理。输出 64 字节的签名，hex 编码显示。
 
-用法：ed25519-tool generate、ed25519-tool sign -key priv.pem -msg "hello"、ed25519-tool verify -key pub.pem -msg "hello" -sig <hex>
-Go 标准库就够了，go build 编译通过。
+verify 子命令：加载公钥 PEM，输入原始数据和签名 hex。调用 ed25519.Verify() 验证。输出 VALID 或 INVALID。
+
+用法：ed25519-tool generate（生成密钥对，输出 ed25519_priv.pem 和 ed25519_pub.pem）、ed25519-tool sign -key ed25519_priv.pem -msg "hello"、ed25519-tool verify -key ed25519_pub.pem -msg "hello" -sig <hex>。
+
+Go 标准库 crypto/ed25519 + crypto/x509，go build 编译通过。

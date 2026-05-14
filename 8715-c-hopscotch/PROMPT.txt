@@ -1,5 +1,13 @@
-帮我实现 Hopscotch Hashing 的哈希表。每个 key 只能在它原始位置周围一个固定范围（neighborhood，比如 32 个 slot）内放置，保证查找最多只看这么多位置。
+线性探测的聚集问题有没有办法根治？Hopscotch Hashing 的思路是限制每个元素只能在原始哈希位置附近一个固定范围（neighborhood）内——比如 32 个 slot。这样查找最多只看 32 个位置，最坏情况是常数级的，不像普通线性探测可能退化到 O(n)。
 
-插入时如果目标范围内没空位，要往后找空位然后通过交换把空位"搬"到范围内。支持 lookup、insert、erase。删除直接清空标记即可。
+用 C 语言实现 Hopscotch 哈希表。
 
-C 语言，gcc 编译。测试高负载下的表现，验证查找确实只扫描固定范围。
+每个 slot 怎么标记 neighborhood？用一个 bitmap——第 i 位表示距离 i 的位置是否有属于这个 bucket 的元素。查找时只检查 bitmap 中标记的位置。
+
+插入时 neighborhood 满了怎么办？往后找一个空 slot，然后通过交换把空位"搬"到 neighborhood 范围内。具体做法：如果空位在 neighborhood 外面，找它前面属于同一个 bucket 的元素，和它交换，空位就往前挪了一步。重复直到空位进入 neighborhood。
+
+查找——看目标 bucket 的 bitmap，检查标记位置的 key 是否匹配。最多看 H 个位置（H 是 neighborhood 大小）。
+
+删除——直接清空 slot，更新 bitmap。
+
+gcc 编译。测试高负载下的表现，验证查找确实只扫描固定范围。

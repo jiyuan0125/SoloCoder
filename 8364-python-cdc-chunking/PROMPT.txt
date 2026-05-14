@@ -1,5 +1,16 @@
-实现一个 Python 的内容定义分块（Content-Defined Chunking）工具，用于去重备份场景。
+备份系统用固定大小分块有个致命问题——文件开头插入一个字节后面所有块的边界都偏移了，去重率暴跌。CDC（Content-Defined Chunking）用内容的哈希值决定块的边界，相同内容总是切成相同的块。Python 实现。
 
-固定大小分块的问题是插入一个字节后面全乱。CDC 用滚动哈希找内容边界，相同内容总是切成相同的块。实现 Gear 和 Rabin 两种哈希方法，支持配置目标块大小、最小/最大块大小。对输入文件分块后输出每块的偏移、长度、SHA256 哈希。两个相似的文件应该有大量相同的块。
+分块算法：
+- Gear Hash：维护一个滑动窗口（默认 48 字节），窗口内的每个字节查一个预计算的哈希表得到一个值，所有值相加。如果和的低 N 位等于一个目标值（target），就切一个块。N 决定平均块大小——N=12 对应平均 4KB
+- Rabin Fingerprint：用多项式哈希计算窗口的指纹，指纹满足特定条件时切块。需要选择一个不可约多项式
 
-Python 3 标准库。CLI：`python cdc.py chunk --algo gear --target 4096 largefile.iso`，输出块列表。`python cdc.py dedup file1 file2` 统计两个文件的重复块比例。`python cdc.py` 能跑。
+参数配置：
+- min_size：最小块大小（默认 2KB），避免切出太碎的块
+- max_size：最大块大小（默认 64KB），避免块过大
+- target_size：目标平均块大小（默认 8KB）
+
+工作流程：读取输入文件，维护滑动窗口。每次窗口滑动时检查哈希条件——满足条件且当前块 ≥ min_size 就切块，或者当前块达到 max_size 就强制切。输出每个块的 (offset, length, sha256_hash) 元组。
+
+去重验证：两个相似的文件（比如只改了一行）分块后，应该有 90% 以上的块哈希相同。
+
+CLI：python3 cdc.py chunk file.dat 输出块列表。python3 cdc.py dedup file1.dat file2.dat 显示去重率。纯 Python 3 标准库。

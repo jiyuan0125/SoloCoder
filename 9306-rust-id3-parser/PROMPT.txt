@@ -1,9 +1,7 @@
-我需要一个专门的 ID3 标签解析器，能深入解析 MP3 文件中的 ID3v2 标签的各种帧类型。
+MP3 文件的 ID3v2 标签解析——看着是个简单的事，但版本差异和编码问题能把人逼疯。v2.3 和 v2.4 的大小字段编码方式不一样（普通整数 vs syncsafe integer），文本编码从 ISO-8859-1 到 UTF-16 到 UTF-8 都有，有些帧还有压缩和加密标志。Rust 来实现一个健壮的解析器。
 
-要处理的内容：
-- 解析 ID3v2 标签头（版本、标志位、大小计算用 syncsafe integer）
-- 支持 TIT2（标题）、TPE1（艺术家）、TALB（专辑）、TRCK（曲目号）、TDRC（年份）等常见文本帧
-- 处理帧内容的编码标识（ISO-8859-1、UTF-8、UTF-16 BOM），正确解码多字节文本
-- 能识别 APIC（封面图）帧并提取图片类型和描述
+标签头读取——前 3 字节 "ID3"、版本主.次（如 2.4.0）、1 字节标志（bit 7=unsynchronisation、bit 6=extended header、bit 5=experimental、bit 4=footer present）、4 字节标签体大小。大小用 syncsafe integer 编码：每个字节只用低 7 位，4 字节共 28 位。所以 ID3v2 标签最大约 256MB。
 
-Rust，cargo build 通过。`id3-parser extract song.mp3` 列出所有 ID3 帧的内容。
+帧结构（v2.4 为例）：4 字节帧 ID（A-Z, 0-9）、4 字节大小（syncsafe！v2.3 是普通整数）、2 字节标志（bit 15=tag alter preserve、bit 14=file alter preserve、bit 13=read only、bit 7=compressed、bit 6=encrypted、bit 5=grouping、bit 3=unsynchronisation、bit 2=data length indicator）。常用帧 ID：TIT2 标题、TPE1 艺术家、TALB 专辑、TRCK 曲目号、TDRC 年份、TCON 流派、APIC 封面图。
+
+文本帧的编码——首字节 0=ISO-8859-1、1=UTF-16（带 BOM）、2=UTF-16BE、3=UTF-8。APIC 帧的格式：1 字节编码 + MIME 类型（ASCII 零终止）+ 1 字节图片类型（0=其他、3=前封面、4=后封面）+ 描述 + 图片二进制数据。工具要能容错——遇到不认识的帧 ID 跳过，遇到损坏的大小字段尽量恢复。用法 id3-parser extract song.mp3。Rust 实现，cargo build 通过。

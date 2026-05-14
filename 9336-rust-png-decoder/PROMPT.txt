@@ -1,10 +1,7 @@
-写一个 PNG 图片解码器，能从零解析 PNG 文件的二进制结构并还原像素数据。
+PNG 解码器的难点在哪？在滤波还原和 zlib 解压。IDAT 里的数据是压缩过的，解压后的扫描线还经过了滤波（为了提高压缩率）。两步都要正确处理才能得到原始像素。Rust 从二进制层面实现。
 
-解码流程：
-- 验证 PNG 签名（8 字节 magic），解析 IHDR chunk（宽度、高度、位深、颜色类型、压缩/滤波/隔行方法）
-- 处理 IDAT chunk（可能有多个），拼接后做 zlib 解压
-- 对每行扫描线做滤波还原（None、Sub、Up、Average、Paeth 四种滤波器）
-- 支持 8bit 灰度、8bit RGB、8bit RGBA 三种颜色类型
-- 输出原始像素数据到文件（如 PPM 格式方便验证）
+验证 PNG 签名——8 字节：137 80 78 71 13 10 26 10。然后读 chunk：4 字节长度 + 4 字节类型 + 数据 + 4 字节 CRC。IHDR 是第一个 chunk——宽度（4 字节大端）、高度、位深度（1/2/4/8/16）、颜色类型（0=灰度、2=RGB、3=索引、4=灰度+alpha、6=RGBA）、压缩方法（必须 0）、滤波方法（必须 0）、隔行模式（0=无、1=Adam7）。
 
-用 Rust 写，cargo build 通过。`png-decoder decode image.png -o output.ppm`。
+收集所有 IDAT chunk 的数据拼接后做 zlib 解压——Rust 标准库的 flate2 或手写 inflate。解压后的数据按扫描线排列——每行前面 1 字节是滤波器类型。滤波还原：None(0) 不变，Sub(1) Raw(x) += Raw(x-bpp)，Up(2) Raw(x) += Prior(x)，Average(3) Raw(x) += floor((Raw(x-bpp)+Prior(x))/2)，Paeth(4) 用 Paeth 预测器选择左边、上边或左上的像素。bpp = 位深 × 通道数 / 8（向上取整）。
+
+Adam7 隔行——7 个 pass，每个 pass 只处理一部分像素。pass 1 处理第 0 行第 0 列（8×8 网格的左上角），pass 2 处理第 0 行第 4 列，以此类推。每个 pass 单独做滤波还原。支持 8bit 灰度、RGB、RGBA。输出 PPM 格式方便验证。用法 png-decoder decode image.png -o output.ppm。Rust 实现，cargo build 通过。

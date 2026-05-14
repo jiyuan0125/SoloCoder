@@ -1,12 +1,13 @@
-帮我写一个"被遗忘权"执行工具，Go 语言。
+GDPR 的被遗忘权——用户可以要求企业删除自己的所有个人数据。听起来简单，但实际操作很复杂：用户数据散落在十几个系统的数据库、日志文件、缓存、备份里，怎么保证全部删干净？还需要生成删除证明给合规审计。
 
-GDPR 的被遗忘权要求用户可以要求删除自己的所有个人数据，需要能追踪并彻底清除某个用户的所有数据痕迹。
+用 Go 写一个"被遗忘权"执行工具。用户数据清单系统配置（JSON 格式）：列出每个系统的连接方式（数据库连接串或文件路径）、存储的数据类型（profile、orders、logs、cache）、包含用户数据的表/集合/目录、标识用户的字段名（user_id、customer_id）。
 
-要实现：
-- 用户数据清单：维护每个用户的数据分布图（哪些系统存了哪些数据）
-- 执行数据删除：按清单逐一删除用户在各系统中的数据记录
-- 删除验证：删除后重新扫描确认没有残留
-- 生成删除证明：记录删除请求、执行时间、删除的数据项清单，用于合规审计
-- 命令行：`./right-to-delete execute --user-id=123 --config=systems.json`
+执行数据删除 RightToDelete(userID string, config SystemsConfig) DeleteReport：按清单逐一连接各系统执行删除。支持的系统类型——SQLite 数据库（DELETE FROM table WHERE user_id = ?）、JSON 文件（读取、过滤、重写）、日志文件（grep 排除含用户 ID 的行）。删除前先做数据备份（写入临时文件），万一出错可以回滚。
+
+删除验证 Verify(userID string, config SystemsConfig) []Residual：删除后重新扫描所有系统，确认没有残留。如果发现残留数据，记录所在系统和具体位置。
+
+删除证明 GenerateCertificate(userID string, report DeleteReport) string：生成一份删除证明文档（JSON 格式），包含——删除请求时间、执行时间、删除的数据项清单（系统名、数据类型、删除条数）、验证结果（是否有残留）、操作者签名。用于合规审计。
+
+命令行：right-to-delete execute --user-id=123 --config=systems.json。
 
 Go 标准库，go build 能编译。

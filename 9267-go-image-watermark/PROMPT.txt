@@ -1,10 +1,7 @@
-写一个给图片加水印的 Go 工具。
+摄影作品发到网上经常被盗用，需要一个加水印的工具来保护版权。需求来自摄影协会的反馈——他们希望批量给作品加上半透明的版权文字或 logo，位置可选但默认放在不影响主体观赏的角落。Go 来实现。
 
-需求：
-- 支持文字水印：指定文字内容、字体大小、颜色、透明度、位置（九宫格定位）
-- 支持图片水印：把一个 logo 图片叠加到目标图片上，支持透明度
-- 水印可以平铺（整张图重复排列）或只放一个
-- 输出为 JPEG 或 PNG
-- 处理 JPEG 时能保留原始 EXIF 信息
+文字水印的参数：内容字符串、字体大小（默认 24px）、颜色（十六进制 RGB）、透明度（0-255，默认 128 即半透明）、位置。位置用九宫格方式指定——top-left、top-center、top-right、center-left、center、center-right、bottom-left、bottom-center、bottom-right。绘制时在目标坐标上用 alpha 混合公式：result = src * (255-alpha)/255 + watermark * alpha/255。平铺模式按固定间距重复绘制文字覆盖整张图。
 
-用法 watermark -text "© 2024" -size 24 -color "#ffffff" -opacity 50 -position bottom-right photo.jpg，go build 编译通过。标准库。
+图片水印——读取一个 logo PNG（带 alpha 通道），按指定位置叠加到目标图上。alpha 值取 logo 原始 alpha 和用户指定透明度的最小值。两种水印都支持批量处理目录。
+
+一个细节：处理 JPEG 时要保留原始 EXIF 信息。JPEG 的文件结构是 SOI + APP1(EXIF) + 其他段 + 图像数据，水印只改像素数据不改前面的段。输出格式根据输出文件扩展名决定——.jpg 输出 JPEG，.png 输出 PNG。用法 watermark -text "© 2024" -size 24 -opacity 128 -position bottom-right photo.jpg，Go 标准库，go build 通过。

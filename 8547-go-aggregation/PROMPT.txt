@@ -1,10 +1,13 @@
-帮我用 Go 写一个搜索聚合（Aggregation）框架。类似 Elasticsearch 的聚合功能，能对搜索结果做各种统计分析。
+Elasticsearch 最受欢迎的功能之一就是聚合（Aggregation）——搜完文档后对结果做各种统计分析，类似 SQL 的 GROUP BY 和聚合函数。搜索引擎如果只有搜索没有聚合，那跟 grep 没区别。
 
-要支持的聚合类型：
-- Terms 聚合：按字段值分组统计数量
-- Stats 聚合：计算数值字段的 min、max、avg、sum
-- Histogram 聚合：按固定间隔分桶统计
-- Date 聚合：按日期间隔（天、周、月）分组
-- 聚合可以嵌套：先按分类聚合，每个分类下再按价格区间聚合
+1. Terms 聚合。按字段值分组统计数量。比如按 category 字段分组，返回 {electronics: 150, clothing: 89, food: 34}。底层就是 Term Facet。支持按数量排序和按字段值排序，返回 Top-N。
 
-Go 标准库，go build 通过。聚合框架要可扩展，加新的聚合类型不用改核心代码。
+2. Stats 聚合。对数值字段计算统计指标：min、max、avg、sum、count。单次遍历同时计算所有指标。返回一个 StatsResult{Min, Max, Avg, Sum, Count} 结构体。
+
+3. Histogram 聚合。对数值字段按固定间隔分桶。比如价格间隔 1000：0-999、1000-1999、2000-2999...每个桶统计落入的文档数。间隔通过参数指定。
+
+4. Date 聚合。按日期间隔分桶：天、周、月、年。日期字段存为 time.Time，按指定间隔截断后分组。比如按月聚合：2024-01 有 50 篇、2024-02 有 43 篇。
+
+5. 嵌套聚合。先按分类聚合，每个分类桶内再做价格区间聚合。返回树状结构。聚合框架要支持这种嵌套定义。
+
+聚合框架可扩展——加新聚合类型只要实现 Aggregator 接口（Aggregate(docs) Result），不用改核心代码。Go 标准库，go build 通过。

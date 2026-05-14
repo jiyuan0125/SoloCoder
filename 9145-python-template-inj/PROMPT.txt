@@ -1,5 +1,7 @@
-写一个服务端模板注入（SSTI）检测和防御工具。
+服务端模板注入（SSTI）是 Web 安全中容易被忽略的漏洞。如果用户输入被直接拼到模板里渲染，攻击者注入 {{7*7}} 就能看到 49，进一步可以利用模板引擎执行任意代码。写个检测和防御工具。
 
-检测功能：对用户输入点发送 SSTI 测试 payload（如 {{7*7}}、${7*7}、<%= 7*7 %>），根据响应判断是否执行了表达式。支持检测 Jinja2、Mako、Django Template、Twig、Freemarker 等模板引擎。
+Python 实现。检测功能：对目标 URL 的参数注入 SSTI 测试 payload——Jinja2/Twig 的 {{7*7}}、Mako 的 ${7*7}、ERB 的 <%= 7*7 %>、Freemarker 的 ${7*7?c}、Velocity 的 #set($x=7*7)$x、Django 的 {% widthratio 1 1 7 %}。发送请求后检查响应体是否包含计算结果（49、"49"）。如果包含，确认存在 SSTI，再进一步探测是哪种模板引擎。
 
-防御功能：提供一个模板渲染的安全封装，自动转义危险语法。CLI 工具：ssti_check http://target.com --param name。Python 3，用 requests 发测试请求。
+引擎识别：不同引擎对错误 payload 的响应不同——Jinja2 对 {{7*'7'}} 返回 7777777（字符串乘法），Twig 返回 49（类型转换）。根据这些差异推断引擎类型。
+
+防御功能：提供模板渲染的安全封装函数 safe_render(template_string, context_dict)，自动转义 {{ }} 和 ${ } 语法，或使用沙箱环境限制可调用的对象。CLI：ssti_check http://target.com --param name。python3 用 requests。

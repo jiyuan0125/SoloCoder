@@ -1,5 +1,5 @@
-做一个 FlatBuffers 编码工具，把结构化数据编码成 FlatBuffers 二进制格式。
+FlatBuffers 编码比 Protobuf 复杂——它是从后往前构建的，先写数据再写 vtable，因为偏移量要往前指。给定 JSON 数据和基本类型定义，生成 FlatBuffers 二进制文件。正确处理 vtable 生成、字段对齐和 offset 计算是核心难点。
 
-给定 JSON 数据和 .fbs schema 定义，生成对应的 FlatBuffers 二进制文件。需要正确处理 vtable 生成、字段对齐、offset 计算这些 FlatBuffers 的核心机制。支持基础数据类型（整数、浮点、字符串）和嵌套对象。
+编码流程。第一步：把 JSON 数据序列化成连续的二进制数据块，字符串和嵌套对象先编码并记录偏移。第二步：生成 vtable——遍历所有字段，记录每个字段在对象数据中的偏移位置（0 表示字段缺失）。第三步：把 vtable 写到数据前面（或者在文件末尾，通过根偏移指向），对象数据中指向 vtable 的偏移量是负数（向前指）。所有数据必须按 FlatBuffers 规范对齐——int 对齐 4 字节，long/double 对齐 8 字节。
 
-python main.py encode --schema message.fbs --root Message --input data.json --output data.bin。Python 标准库，自己实现 FlatBuffers 的编码逻辑。至少能处理简单的 schema 定义。
+支持基础数据类型：整数（byte/short/int/long）、浮点数（float/double）、字符串（UTF-8）、嵌套对象。向量（数组）先写 4 字节长度再逐个写元素。根对象通过文件末尾 4 字节的偏移量定位。用法：python3 flatbuf_encode.py encode --input data.json --output data.bin

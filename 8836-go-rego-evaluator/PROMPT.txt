@@ -1,12 +1,13 @@
-写一个 Rego 策略评估器，Go 实现。
+Rego 是 OPA 的策略语言，语法独特但表达力很强。想写一个简化版的 Rego 解释器来理解它的工作原理——不需要完整实现 Rego 的所有特性，核心子集就够了。
 
-在学 OPA/Rego 策略语言，想写一个简易版的 Rego 解释器来理解它的工作原理。
+用 Go 实现一个 Rego 策略评估器。解析简化的 Rego 语法：package 声明——package authz，定义策略所属的命名空间；import 声明——import data.roles，引入外部数据；rule 定义——allow { input.method == "GET"; input.path == ["articles"] }，条件满足时 allow 为 true。也支持 default allow = false 默认值。
 
-要实现：
-- 解析简化的 Rego 策略语法：package、import、rule（allow/deny）、基本条件表达式
-- 支持基本的 Rego 特性：= 赋值、== 比较、集合操作、some 量词
-- 输入 JSON 数据作为查询上下文，评估策略规则返回 true/false
-- 支持内置函数：count、contains、startswith、endswith、lower、upper
-- 命令行：`./rego-eval --policy=auth.rego --data=input.json --query="data.authz.allow"`
+条件表达式支持：= 赋值和 == 比较。!=、>、<、>=、<= 比较操作。集合操作——in 关键字检查元素是否在集合中。some 量词——some x in ["a", "b"] 遍历集合。and 和 or 逻辑（分号分隔条件表示 AND）。
+
+评估流程：Parse(policyText) 解析 Rego 文本为 AST。Evaluate(ast, inputData map[string]interface{}, query string) (interface{}, error)。inputData 是查询上下文（对应 Rego 的 input 变量）。query 是要查询的规则名（如 data.authz.allow）。
+
+内置函数：count(collection) 返回集合或字符串长度。contains(string, substring) 字符串包含。startswith(s, prefix) 和 endswith(s, suffix)。lower(s) 和 upper(s) 大小写转换。
+
+命令行：rego-eval --policy=auth.rego --data=input.json --query="data.authz.allow"。input.json 包含 input 对象。
 
 Go 标准库，go build 编译通过。

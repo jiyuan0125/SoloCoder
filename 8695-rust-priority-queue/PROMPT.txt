@@ -1,5 +1,12 @@
-在做一个任务调度器，需要按优先级取出任务。用 Rust 实现一个优先队列（Priority Queue）。
+操作系统进程调度、网络数据包按优先级转发、A* 搜索的 open set——这些场景都需要一个"总是给你最重要元素"的数据结构。优先队列底层是二叉堆：insert 和 extract_max 都是 O(log n)，peek 看堆顶只要 O(1)。比每次排序再取快得多。
 
-基于二叉堆实现，支持 insert 和 extract_max（或 extract_min）操作，都是 O(log n)。要能在创建时指定大顶堆还是小顶堆。支持从一个数组原地建堆（heapify，O(n) 时间）。提供 peek 操作看堆顶但不移除。
+用 Rust 实现基于二叉堆的优先队列。
 
-支持泛型，只要元素实现了 Ord trait 就能用。cargo build 编译通过。
+堆的性质——大顶堆每个节点 >= 子节点，小顶堆反过来。数组表示：节点 i 的左孩子在 2i+1，右孩子在 2i+2，父节点在 (i-1)/2。
+
+insert 怎么做？新元素加到数组末尾，然后上浮（sift up）——和父节点比较，更大就交换，直到满足堆性质。extract_max？把堆顶和最后一个元素交换，弹出末尾，新堆顶下沉（sift down）到正确位置。
+
+从数组原地建堆（heapify）——从最后一个非叶节点往前，每个做 sift down。O(n) 时间，比逐个 insert 的 O(n log n) 更优。
+
+支持大顶堆和小顶堆，通过泛型 + Ord trait 实现。CLI：演示 push/pop 操作序列。cargo build 通过。
+测试——insert [5,3,8,1,7,2,9] 后 extract_max 应依次得到 9,8,7,5,3,2,1（降序）。原地建堆和逐个 insert 结果一致。堆为空时 peek 返回 None，extract_max 返回 None。用自定义 struct 实现 Ord 测试泛型能力。

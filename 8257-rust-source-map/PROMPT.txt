@@ -1,5 +1,9 @@
-前端打包之后代码都被压缩了，出 bug 时根本看不懂调用栈。用 Rust 写一个 source map 解析器，能还原压缩代码到原始源码的映射。
+前端打包后报了一个错误在 main.a1b2c3.js 第 5 行第 200 列，但这个文件是压缩过的，根本找不到对应的源码在哪。Source Map 就是解决这个映射问题的。用 Rust 写一个 Source Map v3 解析器。
 
-解析 Source Map v3 格式的 JSON，支持 VLQ 编码的 mapping 数据解码。给定生成的行号和列号，能查到原始文件名、行号、列号。处理多个 source map 文件时性能不能太差。
+Source Map v3 是一个 JSON 文件，关键字段：version（固定 3）、sources（原始文件名数组）、names（标识符数组）、mappings（VLQ 编码的位置映射字符串）、file（生成的文件名）。
 
-cargo run -- sourcemap.json 1:50 这种用法，输出对应的原始位置。测试数据可以用 webpack 或 terser 生成的真实 source map。
+重点在 mappings 的解码。mappings 用分号分隔生成的每一行，逗号分隔同一行的每个段。每个段由 1-4 个 VLQ 编码的数字组成：生成列偏移、源文件索引偏移、原始行偏移、原始列偏移，第 5 个 VLQ 值是名称索引偏移。VLQ 编码是 base64 变体，每个字符 6 bit，最高位是 continuation flag，最低位是符号位。段内的值都是相对于前一个段的增量，需要累加还原。
+
+解析完后提供查询接口：给定生成的行号和列号，二分查找找到对应的原始文件名、行号、列号。查询性能要好，毕竟一个 source map 可能有几万个段。
+
+cargo run -- sourcemap.json 5:200 输出 "src/app.ts:42:15" 这样的结果。cargo build 通过。测试数据可以用 terser 生成的真实 source map。

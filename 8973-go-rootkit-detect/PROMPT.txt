@@ -1,3 +1,11 @@
-怀疑服务器被装了 rootkit，需要个检测工具。Go 写一个 rootkit 检测器，检查 Linux 系统上的常见 rootkit 痕迹。
+Go 的 rootkit 检测工具，检查 Linux 系统上的常见 rootkit 痕迹。不需要内核模块，纯用户态检测。
 
-检测项：/etc/ld.so.preload 是否存在可疑条目、检查已知 rootkit 特征文件路径、/proc 目录下异常的隐藏进程、内核模块列表中的可疑模块、系统调用表完整性检查（对比 /proc/kallsyms）。内置一个 rootkit 特征库（YAML/JSON 格式）。CLI 工具，输出检测报告，go build 通过。
+检测逻辑分几个模块，每个模块检查一种类型的 rootkit 特征。
+
+LD_PRELOAD 劫持检测：检查 /etc/ld.so.preload 文件是否存在，如果存在就逐行读取里面的共享库路径，和系统白名单对比——正常的 ld.so.preload 应该是空的或者只有已知的库，出现可疑的 .so 文件就是被 hook 了。同时检查环境变量 LD_PRELOAD 是否被设置了异常值。
+
+特征文件检测：内置一个 rootkit 特征库（JSON 格式），包含已知 rootkit 的特征文件路径、可疑内核模块名称、异常的隐藏目录名称。遍历这些路径，存在就标记为可疑。特征库可以通过 --db 参数指定外部文件来更新。
+
+隐藏进程检测：读取 /proc 目录下所有数字命名的子目录（每个对应一个进程），然后对比 /proc 目录的 readdir 结果和直接按 PID 遍历的结果——如果某个 PID 的进程目录存在但没出现在 readdir 结果里，说明可能被内核级 rootkit 隐藏了。
+
+内核模块检查：读取 /proc/modules 列出已加载模块，匹配特征库中的可疑模块名。CLI 工具，输出结构化检测报告，标注每个检测项的结果和风险等级。Go 标准库，go build 通过。

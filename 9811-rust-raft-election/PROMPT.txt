@@ -1,11 +1,11 @@
-实现一个 Raft 选举超时管理器，Rust 编写。
+之前做 Raft 实现时发现，选举模块看起来简单但边界条件特别多——投票约束、日志完整性检查、随机超时、网络分区的处理。这次用 Rust 单独把选举抽出来做一个完善的实现，方便以后复用。
 
-Raft 节点需要精确的超时控制：Follower 等不到心跳就发起选举，Candidate 等不到多数票就重新选举。超时时间要加随机抖动避免同时竞选。
+节点的三种状态用 enum NodeRole { Follower, Candidate, Leader } 表示。状态转换的驱动靠消息：收到 RequestVote、收到 AppendEntries 心跳、选举超时、获得多数票。每个状态转换都打印详细日志。
 
-要做的事情：
-- 为每个节点设置随机化的选举超时（比如 150-300ms）
-- 超时触发时自动转为 Candidate 并发起投票
-- 收到合法 Leader 的心跳时重置超时
-- Candidate 选举超时后递增 Term 重新投票
+投票约束的严格实现：一个节点在一个 term 内最多投一票（votedFor 字段控制）。投票时还要检查日志完整性——候选人的日志不能比自己的旧（比较 lastLogTerm 和 lastLogIndex）。如果候选人的 lastLogTerm < 自己的，拒绝投票。如果 lastLogTerm 相同但 lastLogIndex < 自己的，也拒绝。
 
-cargo build 通过，用模拟时钟测试超时触发和重置逻辑。
+选举超时的设计：Follower 有一个随机化的 election timeout（150-300ms）。每次收到 Leader 心跳就重置。超时后转 Candidate，自增 term，投自己一票，并行向其他节点发 RequestVote。Candidate 也有超时——如果超时内没凑够票，term++ 重新选（新的随机超时）。
+
+用 tokio 实现异步模拟：每个节点一个 task，通过 mpsc channel 收发消息。模拟网络分区（随机丢弃部分节点间的消息），验证分区期间不会出现双主。打印每个投票决策的理由——"node-3 rejected vote for node-1 term=5: log not up-to-date (candidate lastLog=(term=2,idx=5), mine=(term=3,idx=8))"。
+
+cargo build 通过。

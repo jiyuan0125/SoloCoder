@@ -1,1 +1,7 @@
-WebVTT是网页视频的标准字幕格式。写个解析器来处理VTT文件，解析WEBVTT文件头、可选的元数据头、时间轴（HH:MM:SS.mmm --> HH:MM:SS.mmm）、字幕文本。支持VTT特有的特性：cue identifier、定位标签（position/line/align）、<b><i><u>等内联标签、以及NOTE注释块。时间戳里小时部分可以省略。python3实现，传VTT文件路径就能解析。
+1. WebVTT 是网页视频的标准字幕格式，比 SRT 多了不少特性。文件以 WEBVTT 开头（可选后面跟换行和元数据头），然后是空行分隔的 cue 块。每个 cue 块可能有可选的 cue identifier（一行非时间轴的字符串），然后是时间轴，最后是字幕文本。
+
+2. 时间轴格式：HH:MM:SS.mmm --> HH:MM:SS.mmm，小时部分可以省略（变成 MM:SS.mmm）。箭头后面可以跟定位标签：position:50% line:80% align:center，控制字幕在视频上的显示位置。这些标签要解析出来但不能影响时间的提取。
+
+3. 字幕文本支持内联标签：<b>粗体</b>、<i>斜体</i>、<u>下划线</u>、<c.class>CSS 类名</c>。还有 <ruby>注音标签。这些标签解析时保留原样，不做 HTML 转义。NOTE 块是注释，以 NOTE 关键字开头，解析时跳过。
+
+4. 输出结构化的 cue 列表：标识符（有则输出）、开始时间、结束时间、定位参数（如有）、文本内容。用法：python3 vtt_parser.py parse subtitles.vtt

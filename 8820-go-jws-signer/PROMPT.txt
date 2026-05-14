@@ -1,12 +1,11 @@
-写一个 JWS（JSON Web Signature）签名工具，Go 实现。
+给一批 API 接口加请求签名，选了 JWS（JSON Web Signature）规范。需求很明确——请求方用密钥签名，接收方验签，不需要引入第三方 JWT 库，自己实现 JWS Compact Serialization 格式就够了。
 
-需要给一批 API 接口加上请求签名，选了 JWS 规范，但不想依赖第三方库。
+用 Go 实现一个 JWS 签名和验证工具。签名流程：构造 header JSON（{"alg":"HS256","typ":"JWT"}）→ Base64URL 编码得到 encoded_header；构造 payload JSON → Base64URL 编码得到 encoded_payload；拼接 signing_input = encoded_header + "." + encoded_payload；用指定算法对 signing_input 计算签名 → Base64URL 编码得到 encoded_signature；最终 JWS token = encoded_header + "." + encoded_payload + "." + encoded_signature。
 
-功能：
-- 实现 JWS Compact Serialization 格式的签名和验证
-- 支持的算法：HS256、HS384、HS512（HMAC）和 RS256、RS384、RS512（RSA）
-- 签名流程：Base64URL(header) + "." + Base64URL(payload) + "." + Base64URL(signature)
-- 验证流程：解析 JWS token，根据 header 中的 alg 选择验证方式
-- 命令行：`./jws-signer sign --data=payload.json --key=secret --alg=HS256` 和 `./jws-signer verify --token=xxx`
+验证流程：按 . 分割 token 成三部分。Base64URL 解码 header 得到 alg 字段。根据 alg 选择验证方式：HMAC 系列——用密钥对前两部分计算 HMAC，和第三部分比对；RSA 系列——用公钥对第三部分做 RSA 验签。也验证 typ 字段（可选）。
+
+支持的算法：HS256、HS384、HS512（HMAC-SHA）和 RS256、RS384、RS512（RSA-PKCS1v15 + SHA）。算法必须通过 header 中的 alg 字段指定，不允许 none。
+
+命令行：jws-signer sign --data=payload.json --key=secret --alg=HS256 生成 JWS token，jws-signer verify --token=xxx --key=secret 验签。也支持从文件读取 RSA 密钥（PEM 格式）。
 
 Go 标准库，go build 编译通过。

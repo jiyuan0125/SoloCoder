@@ -1,5 +1,9 @@
-我需要一个 Rust 实现的 strip 工具，把 ELF 文件里的调试信息和符号表去掉，减小文件体积。
+Rust 编译出来的二进制动辄几十 MB，其中大部分是调试信息和符号表。部署到嵌入式设备或者容器镜像里太浪费空间了。写一个 Rust 版的 strip 工具来精简二进制。
 
-能删除 .debug_* 段、.symtab 段、.strtab 段。保留 .dynsym 和 .dynstr（动态链接需要的不能删）。删除后要更新 ELF header 里的 section header 数量，文件还能正常执行。
+要删除的 section：.debug_info、.debug_abbrev、.debug_line、.debug_str、.debug_loc、.debug_ranges（所有 DWARF 调试段）、.symtab（静态符号表）、.strtab（静态字符串表）。
 
-cargo run -- input-binary -o stripped-binary。先拿自己编译的 Rust 或 C 二进制做测试。cargo build 通过。
+不能删的：.dynsym、.dynstr（动态链接符号表，运行时加载器要用的）、.dynamic、.got、.plt（动态链接机制相关）。
+
+删除操作：遍历 section header table，匹配到要删除的 section 名字后，把该 section 的类型改成 SHT_NULL，数据清零。或者更简单粗暴——直接从 section header table 中移除条目，把文件中的对应数据区域也删掉。更新 ELF header 的 e_shnum（section 数量）和 e_shoff（section header table 偏移）。section header string table 的引用也要更新。
+
+cargo run -- input-binary -o stripped-binary。先拿自己编译的 Rust 或 C 程序做测试，strip 后用 file 命令验证文件还能被识别为 ELF，运行一下确认还能执行。cargo build 通过。

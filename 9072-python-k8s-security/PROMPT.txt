@@ -1,1 +1,9 @@
-K8s 集群的安全配置需要定期检查。用 Python 写一个 Kubernetes 安全审计工具，解析 K8s YAML 清单文件（Pod、Deployment、Service 等），检查安全配置：是否设置了 securityContext（runAsNonRoot、readOnlyRootFilesystem）、是否有资源限制（limits/requests）、是否使用了 hostNetwork/hostPID、ServiceAccount 是否自动挂载 token。输出合规报告，命令行使用。
+Kubernetes 集群的安全配置问题也不少，Pod 安全策略没设好、Service Account 权限过大、secret 没加密存储。写个工具扫描 K8s 的 YAML 清单文件。
+
+Python 实现 K8s 安全扫描。扫描目标：解析 K8s 的 YAML 清单文件（Pod、Deployment、Service、ConfigMap、Secret、ServiceAccount、Role/RoleBinding 等资源类型）。分步检查。
+
+第一步 Pod 安全：是否设置了 runAsNonRoot（防止容器以 root 运行）、是否设置了 readOnlyRootFilesystem（防止运行时修改文件系统）、是否设置了 drop ALL capabilities 再按需添加、privileged 字段是否为 true（不应该）。第二步网络策略：是否有 NetworkPolicy 限制 Pod 间通信（默认 K8s 允许所有 Pod 互通）。第三步 RBAC：ServiceAccount 是否绑定了 cluster-admin 角色（太宽了）、RoleBinding 的权限范围是否最小化。
+
+第四步 Secret：是否在 YAML 中明文存储了敏感数据（应该用 SealedSecret 或外部密钥管理）。第五步镜像：是否用了 latest 标签、是否指定了镜像拉取策略为 Always。
+
+每个问题标注严重等级和修复建议。python3 命令行工具，输入清单文件或目录。

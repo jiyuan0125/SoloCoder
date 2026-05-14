@@ -1,8 +1,11 @@
-写个 TLS 安全扫描工具，Go 实现。
+检查 HTTPS 服务的 TLS 配置是否安全——协议版本过时了吗、密码套件强度够吗、证书有问题吗。类似 sslscan 的功能但不需要装 OpenSSL。
 
-检查 HTTPS 服务的 TLS 配置是否安全，比如协议版本、密码套件强度、证书问题。类似 sslscan 的功能。
+用 Go 写一个 TLS 安全扫描工具。scan 子命令：连接目标服务器的指定端口（默认 443）。枚举支持的 TLS 版本——分别用 TLS 1.0、1.1、1.2、1.3 尝试连接，记录哪些版本成功。列出服务器支持的密码套件——用自定义的 ClientHello（逐个指定密码套件）测试哪些被接受。标记弱套件——RC4、DES、3DES、MD5 MAC、密钥长度 < 128 位的套件。
 
-功能：连接目标服务器，获取支持的 TLS 版本（TLS1.0/1.1/1.2/1.3）；列出服务器支持的密码套件，标记弱套件；检查证书是否有效（过期、域名匹配、链路完整）；给出安全等级评分。
+证书检查：是否过期、域名是否匹配、证书链是否完整、是否自签名。检查 HSTS header（Strict-Transport-Security）是否存在。
 
-命令：tls-scanner scan -host example.com:443、tls-scanner scan -host example.com:443 -verbose、tls-scanner scan -hosts hosts.txt -json
+安全评分：根据检查结果给出评级——A+（TLS 1.3 only + 强密码套件 + HSTS）、A（TLS 1.2+1.3 + 强密码套件）、B（支持 TLS 1.1 但无弱套件）、C（有弱套件或 TLS 1.0）、F（严重问题如证书过期或 RC4）。
+
+命令：tls-scanner scan -host example.com:443、tls-scanner scan -host example.com:443 -verbose、tls-scanner scan -hosts hosts.txt -json。
+
 Go 标准库 crypto/tls，go build 能编译。

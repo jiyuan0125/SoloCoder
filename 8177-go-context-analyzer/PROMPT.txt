@@ -1,5 +1,7 @@
-写个工具分析 Go 代码中 context.Context 的传播情况。
+写个工具分析 Go 代码中 context.Context 的传播情况。context 是 Go 控制并发生命周期的标准方式——从 HTTP 请求入口传入 context，一路传到数据库查询和下游调用。如果中间断了传播，超时和取消就无法生效。
 
-扫描 Go 源码，追踪 context.Context 从入口（HTTP handler、main 等）到各个函数调用的传播链。检测这些常见问题：context 没有传递给下游调用、创建了新的 background context 忽略了父 context、context 的 value 被滥用来传业务数据而非请求级别的元数据、超时 context 设置不合理。
+扫描 Go 源码，追踪 context.Context 从入口到各个函数调用的传播链。入口点包括 HTTP handler（r.Context()）、gRPC handler、main 函数（context.Background()）等。
+
+检测这些常见问题：context 没有传递给下游调用——函数接收了 ctx 但调用子函数时没传 ctx 参数（子函数可能用了 context.Background()）。创建了新的 background context——函数内部用 context.Background() 创建新 context 忽略了父 context（应该用 ctx 派生子 context）。context value 被滥用——用 context 传业务数据而非请求级别的元数据（request ID、trace ID 是合理的，但用户 ID、数据库连接不应该通过 context 传）。超时设置不合理——context.WithTimeout 设置的超时时间比父 context 的剩余时间还长。
 
 输出 context 传播树和问题清单。Go 标准库实现，go build 通过。

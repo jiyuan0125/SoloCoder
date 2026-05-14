@@ -1,12 +1,15 @@
-帮我写一个 SAML 断言解析器，Go 实现。
+对接企业客户的 SSO 时需要解析他们 IdP 发过来的 SAML Response。SAML 的 XML 格式复杂得让人头大——嵌套的 XML Signature、Base64 编码的断言、压缩的请求参数。每次调试都要对着 spec 翻来翻去。
 
-对接企业客户的 SSO 时需要解析他们 IdP 发过来的 SAML Response，但 SAML 的 XML 格式实在太复杂了。
+用 Go 写一个 SAML 2.0 断言解析器。核心功能：
 
-功能：
-- 解析 SAML 2.0 Response：提取 Assertion 中的 NameID、AttributeStatement、Conditions
-- 验证 SAML 签名：使用 XML-DSIG 验证 Response/Assertion 的签名（支持 SHA256）
-- 校验 Conditions：检查 NotBefore、NotOnOrAfter 时间有效性，校验 Audience 限制
-- 处理 SAML 重定向绑定：从 URL 参数中解压（inflate）SAMLRequest/SAMLResponse
-- 命令行：`./saml-parser parse response.xml` 和 `./saml-parser verify response.xml --cert=idp.pem`
+解析 SAML Response：从 XML 解析出 Response 元素，提取 Assertion。从 Assertion 中提取 NameID（用户标识）、AttributeStatement（属性声明，包含用户的各种属性如邮箱、部门、角色）、Conditions（条件限制）。
+
+验证 SAML 签名：使用 XML-DSIG 验证 Response 或 Assertion 的签名。从 SignedInfo 元素中提取签名方法和规范化方法，对规范化后的 XML 计算 SHA-256 摘要，用 IdP 的公钥（从 X.509 证书）验证签名值（RSA-SHA256）。Go 标准库的 crypto/rsa 和 crypto/sha256 可以直接用。
+
+校验 Conditions：检查 NotBefore 和 NotOnOrAfter 时间窗口，当前时间必须在这个范围内（允许配置 clock skew）。校验 AudienceRestriction——Audience 必须匹配我们自己的 SP entity ID。
+
+处理 SAML 重定向绑定：从 URL 的 SAMLRequest 或 SAMLResponse 参数中取出 Base64 编码+DEFLATE 压缩的数据，解压后得到原始 XML。
+
+命令行：saml-parser parse response.xml 解析展示，saml-parser verify response.xml --cert=idp.pem 验签。
 
 Go 标准库，go build 编译通过。

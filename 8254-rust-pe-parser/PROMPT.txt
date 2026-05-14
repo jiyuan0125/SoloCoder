@@ -1,5 +1,9 @@
-写个 PE 文件格式解析器，Rust 实现，能分析 Windows exe 和 dll 的结构。
+拿到一个可疑的 Windows PE 文件，需要快速看它的导入表和节信息来判断是不是加了壳。用 Rust 写一个 PE 格式解析器。
 
-提取 DOS header、PE header、section table，能显示每个节的名称、虚拟地址、原始大小。顺便把导入表里的 DLL 名字和函数名列出来。支持 PE32+（64位）格式，PE32 能兼容最好。
+先读 DOS header，确认 MZ 签名后拿到 e_lfanew 找到 PE header 的偏移。PE signature 是 PE\0\0，接着是 COFF header（Machine、NumberOfSections、TimeDateStamp）和 Optional header。Optional header 里有 AddressOfEntryPoint、ImageBase、SectionAlignment 这些关键字段，PE32+ 的 Magic 是 0x20b。
 
-cargo run -- file.exe 这样用，解析出错时告诉我具体哪一步挂的。
+然后遍历 Section Table，每个 IMAGE_SECTION_HEADER 包含 Name（8字节不一定是 null-terminated）、VirtualAddress、SizeOfRawData、PointerToRawData、Characteristics（读/写/执行权限）。把节的名称、RVA 范围、文件偏移、属性标志打印出来。
+
+导入表是重点：Optional header 的 DataDirectory[1] 指向 IMAGE_IMPORT_DESCRIPTOR 数组，每个描述符包含 Name RVA（DLL 名字）、OriginalFirstThunk（INT，指向 IMAGE_THUNK_DATA 数组）、FirstThunk（IAT）。通过 RVA 转文件偏移后读取 DLL 名和导入的函数名。
+
+支持 PE32+（64位），PE32 兼容更好但不强求。cargo run -- file.exe 打印节信息和导入表。cargo build 通过。

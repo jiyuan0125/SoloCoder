@@ -1,9 +1,14 @@
-路由匹配场景需要一棵基数树（Radix Tree / Patricia Trie），比如 "/api/user/:id/profile" 这种路径。用 Go 实现一个支持路径参数的 Radix Tree。
+普通 Trie 的空间浪费严重——"hello" 和 "help" 共享 "hel" 前缀但每个字符都占一个节点。Radix Tree（也叫 Patricia Trie）合并只有一个子节点的链，压缩公共前缀。Go 实现。
 
-要做的事：
-- Insert 插入路径和对应的 handler
-- Lookup 根据请求路径找到匹配的 handler，同时提取路径参数（如 :id → 实际值）
-- 支持通配符 * 匹配剩余路径
-- 查找时遇到公共前缀要正确拆分节点
+节点结构：每个节点存储一个字符串片段（不是单个字符），子节点 map[string]*Node，以及可选的 value（非叶子节点也可以有 value）。插入时需要比较公共前缀来决定如何分裂或合并。
 
-写个 main 注册一组路由规则，然后测试各种 URL 的匹配结果，把提取到的参数打印出来。go build 通过，只用标准库。
+Insert 流程：从根开始，比较 key 和当前节点的前缀。三种情况：
+- key 完全匹配节点前缀：继续到子节点处理剩余部分
+- 部分匹配：在公共前缀处分裂节点，公共部分变成新节点，不匹配部分变成两个子节点
+- key 是节点前缀的子串：在 key 结束处分割节点
+
+操作：Get(key)、Put(key, value)、Delete(key)、HasPrefix(prefix)、Walk(prefix, callback)。Walk 遍历以 prefix 为前缀的所有 key-value 对。
+
+应用场景演示：实现一个简单的 HTTP 路由器。路径 "/api/users/:id" 和 "/api/posts/:id" 共享 "/api/" 前缀，用 Radix Tree 存储路由匹配时很快。
+
+写个 main 插入一组 URL 路径，测试精确匹配和前缀匹配。go build 通过。

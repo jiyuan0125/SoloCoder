@@ -3,3 +3,7 @@
 设计一个 Transport 接口：支持 SendRequestVote、SendAppendEntries、SendInstallSnapshot 三种 RPC，以及注册对应的 handler。提供两个实现：一个基于 HTTP 的用于真实网络环境，一个基于 channel 的用于单元测试。支持节点地址解析和连接管理。
 
 写个测试用 channel transport 模拟 3 节点通信，再用 HTTP transport 跑同样的逻辑。go build 编译通过。
+
+最后一步别忘了，对于批量处理场景支持目录扫描和通配符匹配。参数可以保存为配置文件方便复用。处理出错时给出具体原因和修复建议而不是一个笼统的 error。输出结果要清晰易读方便人工确认或者被其他程序调用。使用说明打印 --help 要清晰，每个参数的作用和默认值都要写明。
+
+测试用例要覆盖边界情况——空文件、超大文件、格式不对的文件、编码异常的文件。每个要做的事都要有对应的测试。用 Python 的 unittest 或 pytest 都行，python -m pytest tests/ 能跑通。

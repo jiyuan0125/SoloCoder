@@ -1,1 +1,7 @@
-抓到的 TCP 流里想还原 HTTP 请求和响应。用 Python 写一个 HTTP 流重组工具，从重组后的 TCP 流数据中解析 HTTP 请求（方法、URL、头部、Body）和响应（状态码、头部、Body），支持 HTTP/1.1 的分块传输编码和 Content-Length。能正确处理一个 TCP 连接中的多个 HTTP 请求（pipeline），输出格式化的 HTTP 会话内容。命令行工具。
+从 pcap 中提取 HTTP 明文流量，把请求和响应还原成可读的格式。排查 Web 应用问题或分析恶意流量时很有用。
+
+Python 实现 HTTP 流量重组器。先做 TCP 流重组（复用或实现基本的按序列号拼接），然后在重组后的字节流上解析 HTTP。请求解析：从流中识别 HTTP 请求行（GET /path HTTP/1.1\r\n）、请求头部字段、请求体（Content-Length 或 chunked 编码）。响应解析：状态行（HTTP/1.1 200 OK\r\n）、响应头、响应体。
+
+处理 HTTP 持久连接（Connection: keep-alive）——一个 TCP 连接上可能有多个请求响应对，需要在流中正确定位边界。分块传输编码（Transfer-Encoding: chunked）也要正确解码。
+
+输出每个 HTTP 事务：请求方法+URL+协议版本、请求头（关键头部如 Host、User-Agent、Cookie、Content-Type）、请求体摘要；响应状态码+原因短语、响应头、响应体长度和类型、Content-Type。如果响应体是 HTML 或 JSON，显示前 500 字符方便查看。可疑检测：请求中包含 SQL 注入或 XSS 特征的标黄提示。python3 命令行工具。

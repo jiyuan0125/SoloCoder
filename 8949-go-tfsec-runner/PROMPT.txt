@@ -1,1 +1,7 @@
-Terraform 代码的安全审查太费时间。用 Go 写一个 Tfsec 风格的扫描器，解析 Terraform HCL 文件（简化版解析，识别 resource 和关键属性）。内置检测规则：S3 Bucket 未开启版本控制、RDS 未启用加密、安全组入站规则过于宽松、IAM 策略过宽、未启用日志。规则支持启用/禁用配置。输出每个问题的 resource 地址、严重程度和修复建议。go build 通过。
+Terraform 代码安全审查的流程一般是这样的：先拿到待审查的 .tf 文件集合，然后用工具逐文件扫描，最后汇总输出问题清单。现在需要一个 Tfsec 风格的扫描器来替代人工审查。
+
+工具的实现分几步。第一步是解析：读取 .tf 文件内容，识别 resource 块的类型（aws_instance、aws_security_group、aws_db_instance 这些）和关键属性值（比如 ingress.cidr_blocks、encrypted 字段）。不需要完整的 HCL 语法树，正则匹配 resource 类型和属性赋值即可。
+
+第二步是规则匹配。内置的检测规则要覆盖这些场景：S3 Bucket 没有开 versioning、没有启用 server-side encryption；RDS 实例的 storage_encrypted 设为 false；安全组 ingress 规则的 cidr 包含 0.0.0.0/0；IAM policy 的 Resource 或 Action 用了 * 通配符；没有配置 CloudWatch 日志或 S3 访问日志。每条规则有唯一 ID（比如 AWS001）、严重程度和修复说明。
+
+第三步是输出。对每个发现的问题，报告对应的 resource 地址（如 aws_security_group.web）、违反的规则 ID、严重程度和修复建议。规则支持通过配置文件启用/禁用，方便不同项目定制。命令行接受目录路径参数，递归扫描所有 .tf 文件。Go 标准库实现，go build 通过。

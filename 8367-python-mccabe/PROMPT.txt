@@ -1,5 +1,24 @@
-帮我实现一个 McCabe 复杂度分析器，对 Python 代码做静态分析。
+McCabe 复杂度和圈复杂度本质上一样，但 McCabe 的原始论文给出了更具体的阈值定义和报告格式。这个工具要更贴近原始论文，输出更实用的报告。Python 实现。
 
-McCabe 复杂度和圈复杂度本质上一样，但这个工具要更贴近 McCabe 原始论文的定义，并且输出更友好的报告。解析 Python AST，计算每个函数/方法的决策点数量。额外功能：按模块汇总、生成阈值报警（比如 >5 建议重构、>10 必须重构）、支持忽略特定装饰器的函数（如 `@property`）。
+计算方法：遍历 Python AST，对每个函数体统计决策点——if/elif/for/while/and/or/except/with/assert/列表推导if/三元if。每个决策点复杂度加 1，基础值 1。
 
-Python 3 标准库，基于 ast 模块。用法：`python mccabe.py --threshold 5 myproject/`，只显示超过阈值的函数。输出包含函数全限定名、起止行号、复杂度值。`python mccabe.py` 能运行。
+报告格式（每个文件）：
+```
+source.py:
+  F1 (complexity=2)  line 10  process_data
+  F2 (complexity=15) line 45  handle_request  *** HIGH ***
+  F3 (complexity=4)  line 100 format_output
+
+Summary: 3 functions, avg complexity=7.0
+Blocks: 2 OK, 1 > 10 (needs review)
+```
+
+额外功能：
+- 模块汇总：多文件扫描后按模块输出平均复杂度和最大复杂度
+- 阈值报警：可配置三个级别（比如 >5 警告、>10 需审查、>20 必须重构）
+- 装饰器忽略：用 @property、@cached_property 等装饰器的函数可以选择排除（getter 通常简单）
+- 趋势对比：两次扫描结果对比，找出复杂度增长最快的函数
+
+输出格式支持终端彩色文本和 JSON。CI 集成模式：超过阈值返回非零退出码。
+
+python3 mccabe.py src/ --threshold 10。纯 Python 3 用 ast 模块。

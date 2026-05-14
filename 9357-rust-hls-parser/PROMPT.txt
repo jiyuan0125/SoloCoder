@@ -1,5 +1,7 @@
-帮我用 Rust 写一个 HLS M3U8 播放列表解析器。
+HLS m3u8 文件解析——Master Playlist 和 Media Playlist 两种类型，标签语义各不相同。Rust 实现。
 
-解析 M3U8 文件内容，提取出所有分片信息：分片 URL、每个分片的 EXTINF 时长、#EXT-X-STREAM-INF 的码率/分辨率/带宽等属性。支持 Master Playlist 和 Media Playlist 两种类型。解析结果以结构化方式输出，比如打印每个分片的序号、时长和 URL。要能处理相对路径和绝对路径的分片 URL。
+类型判断——文件中出现 #EXT-X-STREAM-INF 就是 Master Playlist（包含多个码率变体），否则是 Media Playlist（包含分片列表）。Master 的解析：#EXT-X-STREAM-INF 行后面跟的属性串解析——BANDWIDTH=800000,RESOLUTION=1920x1080,CODECS="avc1.640028,mp4a.40.2",FRAME-RATE=30。属性用逗号分隔，引号内的逗号不算。下一行是变体的 URI。
 
-纯 Rust 实现，不需要外部依赖也行，cargo build 通过。
+Media Playlist 的标签解析。#EXTINF:<duration>,[,<title>]——分片时长（秒，可带小数）和可选标题。#EXT-X-TARGETDURATION:<s>——最大分片时长。#EXT-X-MEDIA-SEQUENCE:<number>——第一个分片的序号。#EXT-X-ENDLIST——VOD 结束标记。#EXT-X-KEY:METHOD=AES-128,URI="key.bin",IV=0x1234——加密信息。#EXT-X-DISCONTINUITY——编码不连续标记。#EXT-X-PROGRAM-DATE-TIME:2024-01-15T10:30:00Z——分片的绝对时间。
+
+URL 处理——分片 URL 可能是相对路径（相对于 m3u8 文件的目录）或绝对路径。需要根据输入路径（文件路径或 HTTP URL）正确解析。输出结构化的播放列表信息：类型、分片数量、总时长、各分片详情。用法 hls-parser stream.m3u8。Rust 实现，cargo build 通过。

@@ -1,14 +1,9 @@
-JWS（JSON Web Signature）签名和验证工具，实现 RFC 7515 核心Signing流程。
+JWS（JSON Web Signature）签名和验证工具。我们的微服务之间用 JWT 做认证，但有时候需要对非 token 格式的数据也做签名验证——比如 API 请求的 body、配置文件、事件消息。JWS 就是标准的签名封装格式。
 
-需要在服务间通信时对消息做签名保证完整性，用 JWS 标准格式。
+Python 实现 JWS 的 Compact Serialization 格式（三段式：header.payload.signature）。签名算法支持——HS256/HS384/HS512（HMAC，对称密钥）、RS256/RS384/RS512（RSA-PSS，非对称）、ES256/ES384/ES512（ECDSA，非对称）、EdDSA（Ed25519）。
 
-Python 命令行工具：
-- 用 HMAC-SHA256（HS256）对 JSON payload 进行签名，输出 Compact Serialization 格式的 JWS
-- 验证 JWS 签名是否有效
-- 支持 RS256（RSA签名）—— 用内置 RSA 密钥对演示
-- 解析 JWS token，提取 header 和 payload（不验证签名）
+签名流程：构造 header（包含 alg 和 typ 字段）→ Base64url 编码 → 用 Base64url 编码 payload → 拼接 header.payload → 用指定算法计算签名 → Base64url 编码签名 → 拼接成完整 JWS。
 
-用法：
-python jws_signer.py sign --payload '{"sub":"user123"}' --key secret123 --alg HS256
-python jws_signer.py verify --jws <token> --key secret123 --alg HS256
-核心用 hmac/rsa 模块，base64 编解码要正确处理 padding。
+验证流程：拆分三段 → 解码 header 获取 alg → 用 alg 对应的密钥验证签名（用 hmac.compare_digest 或 cryptography 库做恒定时间比较）→ 返回验证结果和 payload 内容。安全检查：alg 必须在白名单中（防止 alg:none 攻击）、验证 header 中的 alg 和实际使用的算法一致（防止算法混淆）。
+
+命令行：sign、verify、decode（只解码不验证）。python3 用 cryptography 库。

@@ -1,11 +1,15 @@
-写一个 SSRF 防护工具，Go 实现。
+我们的服务有个 URL 预览功能——用户填一个 URL，服务端抓取网页内容生成预览卡片。安全团队做渗透测试的时候用这个功能读到了内网服务的响应，SSRF 漏洞一击即中。修复的时候才发现防御 SSRF 不只是检查 IP 那么简单，DNS rebinding、302 跳转绕过、IPv6 映射地址各种花样。
 
-背景：我们的服务有个 URL 预览功能，用户填一个 URL 服务端去抓取内容，结果被安全团队打了个 SSRF 漏洞。
+用 Go 写一个 SSRF 防护工具。校验流程分四步：
 
-功能需求：
-- URL 校验：解析用户输入的 URL，检查 scheme（只允许 http/https）、检查 host 格式
-- DNS 解析后检查 IP：防止通过域名指向内网 IP（127.0.0.1、10.x、172.16-31.x、192.168.x、0.0.0.0 等）
-- 支持 IP 黑名单和网段配置
-- 包装 http.Client 的 CheckRedirect，防止通过 302 跳转到内网地址
+URL 解析和基础校验：用 net/url.Parse 解析用户输入，只允许 http 和 https scheme。检查 host 是否为空或非法格式。拒绝非标准端口（只允许 80 和 443）。
 
-只用 Go 标准库，go build 能通过。
+DNS 解析后 IP 检查：解析 host 的 IP 地址后检查是否为内网或保留地址——127.0.0.0/8、10.0.0.0/8、172.16.0.0/12、192.168.0.0/16、0.0.0.0/8、169.254.0.0/16、[::1]、fc00::/7、IPv4-mapped IPv6 地址（::ffff:127.0.0.1）。用 net.IP 的 IsLoopback、IsPrivate、IsLinkLocalUnicast 等方法检查。
+
+302 跳转防护：包装 http.Client 的 CheckRedirect 函数，每次重定向都对新的 URL 重新执行完整的校验流程（包括 DNS 解析和 IP 检查），防止通过跳转绕过。
+
+IP 黑名单和网段配置：支持从配置文件加载额外的 IP 段黑名单（CIDR 格式），用 net.ContainsCIDR 检查。
+
+命令行：ssrf-guard check --url "http://example.com" 校验 URL 是否安全，ssrf-guard serve --port 8080 启动一个安全的 URL 代理服务。
+
+Go 标准库，go build 能通过。

@@ -1,1 +1,11 @@
-给我的 WAF 引擎配套一套规则库。用 Go 写一个规则管理工具，内置常见的 Web 攻击检测规则：SQL 注入（union select、or 1=1 等模式）、XSS（script 标签、事件处理器）、路径穿越（../）、命令注入（分号管道符）。规则分高/中/低三个等级，支持启用禁用。命令行能列出所有规则、按类别筛选、导出为 JSON 格式。go build 编译通过。
+WAF 引擎写好了但规则库是空的。需要一套可以直接使用的检测规则——涵盖常见的 Web 攻击模式，规则质量直接决定 WAF 的检出率和误报率。
+
+用 Go 写一个 WAF 规则管理工具。内置规则按攻击类别分组：
+
+SQL 注入检测（15+ 条规则）：union select、or 1=1、' or '、sleep()、benchmark()、information_schema、extractvalue()、updatexml()。XSS 检测（10+ 条规则）：<script>、javascript:、onerror=、onload=、onmouseover=、alert()、prompt()、document.cookie。路径穿越（5+ 条规则）：../、..%2f、..%5c、/etc/passwd、/proc/self。命令注入（10+ 条规则）：; | &&、$()、反引号、/bin/sh、/bin/bash、wget、curl。RFI（远程文件包含）：php://input、data://text/plain、http:// in include 参数。Scanner 检测：常见扫描器 User-Agent（nikto、sqlmap、nmap）。
+
+每条规则有：id、name、category（sqli/xss/traversal/cmdi/rfi/scanner）、severity（high/medium/low）、pattern（正则表达式）、description、false_positive_risk（低/中/高）。规则支持启用/禁用（enabled: true/false）。
+
+命令行：waf-rules list（列出所有规则）、waf-rules list --category=sqli（按类别筛选）、waf-rules export --format=json（导出为 JSON 供 WAF 引擎加载）、waf-rules stats（规则统计）。
+
+go build 编译通过。

@@ -1,1 +1,5 @@
-WebP是Google推的图片格式，基于RIFF容器。写个Python解析器来读取WebP文件，解析RIFF头部、VP8/VP8L/VP8X chunk。对于有损WebP（VP8）解析位流头部获取宽高；对于无损WebP（VP8L）解析transform和像素信息；对于扩展格式（VP8X）解析动画、Alpha、ICC profile等标志。还能读取EXIF和XMP元数据chunk。Python3实现，命令行传文件路径。
+WebP 是 Google 推出的图片格式，底层用 RIFF 容器包装——和 AVI 用的同一个容器规范。文件头 4 字节 RIFF、4 字节文件大小、4 字节 WEBP 签名，然后是一连串 chunk。关键在于区分三种 WebP 变体。
+
+简单有损 WebP（VP8 chunk）——位流头部包含宽高、是否有关键帧、量化参数等。解析这个头部就能拿到图像尺寸和基本编码信息。无损 WebP（VP8L chunk）——头部有宽高和一个 alpha 位标志，后面的数据是 ARGB 像素的变换编码，包括预测变换、颜色变换、减绿色变换和像素束排序。扩展格式（VP8X chunk）——一个标志字节表示这个文件是否包含动画（ANIM/ANMF chunk）、Alpha 通道（ALPH chunk）、ICC 色彩配置（ICCP chunk）。
+
+除了图像数据，WebP 还能嵌入 EXIF 元数据（EXIF chunk）和 XMP 元数据（XMP chunk），位置在图像 chunk 之后。解析器把所有 chunk 的类型、大小、关键信息都打印出来。用法：python3 webp_parser.py parse image.webp

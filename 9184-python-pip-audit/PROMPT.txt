@@ -1,13 +1,9 @@
-pip 依赖安全审计工具，检查 Python requirements 文件中的已知漏洞。
+pip 依赖安全审计工具。Python 项目的 requirements.txt 里可能引用了有漏洞的包版本。官方的 pip-audit 工具虽然好用，但有时候我们想在 CI 里自定义审计逻辑，写个简化版。
 
-Python 项目的依赖经常有安全问题，手动一个一个查 CVE 太费劲。需要一个工具自动扫描。
+Python 实现。第一步解析依赖声明：读取 requirements.txt（逐行解析，处理 ==、>=、~=、!= 等版本操作符，跳过 -r include 指令和注释行）、Pipfile.lock（提取 default 和 develop 包的精确版本）、pyproject.toml（解析 project.dependencies 列表）。
 
-Python 命令行工具：
-- 解析 requirements.txt、requirements-dev.txt、Pipfile.lock 格式
-- 对每个依赖包及版本，查询本地漏洞数据库（JSON 文件，包含包名、受影响版本范围、CVE ID、修复版本）
-- 版本范围匹配要支持 >=、<=、==、~=、!= 等操作符
-- 按严重度排序输出，标红有已知漏洞的包
-- 给出升级建议：当前版本 → 安全版本
+第二步漏洞查询：对每个依赖，用包名+版本号查询本地 CVE 数据库（从 NVD/OSV 下载的 JSON 数据）或调用 OSV API（POST https://api.osv.dev/v1/query）。匹配逻辑：检查版本号是否落在 CVE 的受影响版本区间内。
 
-示例：python pip_audit.py check requirements.txt --db vuln_db.json
-数据库内置几十条常见包的漏洞记录就行，关键是版本比较逻辑要对。
+第三步结果展示：终端表格输出——包名、当前版本、漏洞编号（CVE-YYYY-NNNNN 或 OSV-XXXX）、CVSS 评分和严重等级、修复版本（升级到这个版本就安全了）。JSON 输出方便 CI 集成。退出码：有 Critical/High 漏洞返回 1（阻断 CI），只有 Medium/Low 返回 0（仅告警）。
+
+也支持生成 requirements.txt 的修复版本（把有漏洞的包版本自动替换为安全版本）。python3 命令行工具。

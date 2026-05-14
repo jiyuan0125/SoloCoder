@@ -1,5 +1,17 @@
-帮我写一个 Python 的代码 Token 计数器，统计源码的 token 粒度信息。
+代码行数（SLOC）受编码风格影响太大——有人喜欢一行写完有人喜欢拆多行。Token 计数是更客观的代码量度量。Python 实现一个 token 粒度的代码统计工具。
 
-LOC 统计太粗糙，token 计数更能准确反映代码量。用 Python 的 tokenize 模块解析源码，统计各种 token 类型的数量：关键字、标识符、运算符、数字、字符串、注释、换行等。区分代码 token 和注释 token，计算有效代码 token 占比。支持单文件和目录扫描。
+统计维度：
+- Token 类别计数：NAME（标识符）、NUMBER、STRING、OP（运算符和分隔符）、NEWLINE、INDENT/DEDENT、COMMENT、ENCODING
+- 关键字频率：统计每个 Python 关键字出现的次数（if、for、def、class、return、import 等）
+- 运算符频率：+、-、*、/、==、!=、<、>、and、or、not 等
+- 标点符号频率：(、)、[、]、{、}、,、:、. 等
 
-Python 3 标准库。CLI：`python token_counter.py file.py`，输出 token 类型分布表；`python token_counter.py src/ --top 10` 输出 token 数最多的前 10 个文件。`python token_counter.py` 能直接跑。
+工具用 tokenize 模块精确分析每个 token。对每个源文件产出统计报告，然后按目录聚合。
+
+聚合分析：
+- 平均 token 密度：token 数 / 有效代码行数，反映代码的紧凑程度
+- 标识符唯一率：不同标识符数 / 总标识符数，反映变量名的复用程度
+- 函数签名复杂度：函数定义中参数 token 的数量分布
+- 字符串占比：STRING token 数量 / 总 token 数量
+
+输出终端表格和可选的 JSON 格式。python3 token_counter.py source.py。纯 Python 3 标准库。

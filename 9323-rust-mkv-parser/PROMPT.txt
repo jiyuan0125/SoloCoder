@@ -1,9 +1,7 @@
-做一个 MKV（Matroska）容器格式的解析工具，解析 MKV 文件的 EBML 结构。
+第一步解析 EBML 头部。EBML（Extensible Binary Meta Language）是 Matroska/WebM 的底层编码格式。每个元素由 ID + Size + Data 组成。ID 和 Size 都用变长整数——第一个字节的最高位开始有几个连续的 1 就表示占几个字节（ID 是 1+X 字节，Size 是 VINT 编码）。EBML 头里包含版本号、读写版本号、最大 ID 长度、最大 Size 长度、DocType（"matroska" 表示 MKV，"webm" 表示 WebM）。
 
-功能：
-- 解析 EBML 头部（EBML version、read version、max ID/size length）
-- 递归解析 Matroska Segment 下的关键 Element：Info（Duration、TimecodeScale）、Tracks（TrackEntry、CodecID）、Cues
-- 读取 TrackEntry 中的轨道类型（video/audio/subtitle）、编码格式、采样率等属性
-- 正确处理 EBML 的变长整数编码（VINT）和不定长 Element 的 size
+第二步递归解析 Segment 下的关键 Element。Segment 是顶级容器元素（ID 0x18538067），通常用不定大小。Info 元素（0x1549A966）包含 TimecodeScale（默认 1000000 纳秒）和 Duration（浮点数，乘以 TimecodeScale 得到纳秒）。Tracks 元素（0x1654AE6B）包含多个 TrackEntry——每个 Track 有 TrackNumber、TrackUID、TrackType（1=video、2=audio、17=subtitle）、CodecID（如 "V_MPEG4/ISO/AVC"、A_OPUS"）、CodecPrivate。
 
-Rust 实现，cargo build 编译通过。`mkv-parser info movie.mkv` 输出文件结构和轨道信息。
+第三步处理变长整数。VINT 的编码：第一个字节的最高位是 0，后面的有效位组成数值。比如 1 字节 VINT 范围 0-127（0x80 位为 0），2 字节 VINT 的模式是 1X XXXXXX X XXXXXX（有效位 14 位），3 字节有效位 21 位，以此类推。不定长（Size 为全 1 后接全 0）表示元素延续到容器末尾。
+
+Cues 元素提供关键帧索引——CuePoint 包含 CueTime 和 CueTrackPositions（track 号 + cluster 位置 + 相对位置）。用法 mkv-parser info movie.mkv。Rust 实现，cargo build 通过。

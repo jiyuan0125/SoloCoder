@@ -1,5 +1,7 @@
-调试二进制协议的时候经常需要看十六进制数据。写个 Python 的十六进制编解码工具。
+1. 调试二进制协议、分析文件结构、查看网络数据包的时候经常需要看十六进制数据。写个 Python 的十六进制编解码工具，既能做 hexdump 显示也能做编解码转换。
 
-功能：把二进制文件转成十六进制字符串显示（类似 hexdump），也支持把十六进制字符串还原成二进制数据。输出格式每行 16 字节，左侧偏移量，中间十六进制，右侧 ASCII 可见字符。支持大文件流式处理。
+2. Dump 模式：读入二进制文件，按 hexdump 格式输出。每行 16 字节——左侧是偏移量（8 位十六进制），中间是十六进制值（每两个字节一组，组间空格分隔），右侧是 ASCII 可见字符（不可见字符显示为点号）。这种格式和 xxd、hexdump 命令的输出一致。
 
-Python 3 标准库，python hex_codec.py dump binary_file 输出 hexdump 格式，python hex_codec.py encode "hello" 输出十六进制字符串，python hex_codec.py decode "68656c6c6f" 还原文本。
+3. 编码模式：输入文本或二进制文件，输出纯十六进制字符串（每个字节对应两位十六进制数，连续排列无分隔符）。解码模式：输入十六进制字符串，还原成原始字节数据写入文件或输出。
+
+4. 大文件用流式处理——每次读 16 字节输出一行，不会把整个文件加载到内存。偏移量按实际读取的字节累加。用法：python3 hex_codec.py dump binary_file 或 python3 hex_codec.py encode --text "hello" 或 python3 hex_codec.py decode "68656c6c6f" -o output.bin

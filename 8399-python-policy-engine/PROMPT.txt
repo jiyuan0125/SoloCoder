@@ -1,5 +1,24 @@
-写一个 Python 的策略引擎，用声明式规则检查代码是否符合团队规范。
+团队有 30 条编码规范——函数不超过 50 行、必须有类型注解、不能用 print 调试、import 要按标准库/第三方/本地排序...但每次 code review 都要人工检查这些。做一个声明式的策略引擎来自动化。Python 实现。
 
-团队有很多编码规范，但人工 review 容易遗漏。做一个可配置的策略引擎：规则用 YAML 定义（条件表达式 + 动作），引擎扫描代码 AST 或文本，对每个规则求值，通过/不通过。内置规则模板：函数命名必须是 snake_case、类名必须是 CamelCase、行宽不超过 120、禁止使用某些模块。用户可以扩展自定义规则。
+策略定义格式（YAML 或 JSON）：每条策略有 ID、描述、严重级别、检查条件和自动修复动作。
 
-Python 3 标准库。CLI：`python policy_engine.py --rules policies.yaml src/`，输出每个规则的检查结果和违规项。`python policy_engine.py` 能跑。
+检查条件类型：
+- ast_pattern：匹配 AST 节点模式，如 "FunctionDef with body.length > 50"
+- regex：正则匹配源码文本，如 "print\\("
+- metric：代码度量阈值，如 "cyclomatic_complexity > 10"
+- naming：命名规范，如 "function_name matches snake_case"
+
+内置策略模板：
+- POL001 函数长度：body > 50 行
+- POL002 类型注解：函数参数和返回值必须有注解
+- POL003 import 排序：标准库 → 第三方 → 本地
+- POL004 print 禁用：不允许 print() 调用
+- POL005 异常处理：不能裸 except
+- POL006 文档字符串：public 函数必须有 docstring
+
+自动修复动作（部分策略支持）：
+- import 排序：自动重新排列 import 语句
+- 移除尾部分号：自动删除行尾分号
+- 类型注解占位：给没有注解的参数加 -> Any 和 : Any
+
+CLI：python3 policy.py check src/ --policies policies.yaml。python3 policy.py fix src/ --policies policies.yaml（自动修复支持的部分）。纯 Python 3 用 ast 模块。

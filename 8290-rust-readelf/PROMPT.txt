@@ -1,5 +1,15 @@
-写个 Rust 版 readelf，详细展示 ELF 文件的结构信息。
+readelf 是分析 ELF 文件最全面的工具，能看所有内部结构。但它的源码太复杂了，我只需要几个核心功能。用 Rust 写一个精简版 readelf。
 
-支持 -h（ELF header）、-l（program headers）、-S（section headers）、-s（symbol table）、-r（relocations）这些选项。每个选项都要把对应结构体的字段完整打印出来，格式参考 GNU readelf。支持 ELF 64 位。
+支持的选项和对应的输出：
 
-cargo run -- -hS /bin/ls 这样组合选项也行。不用支持所有 readelf 选项，这几个核心的做好就行。
+-h（ELF header）：打印魔数、class（ELF32/64）、data（大端/小端）、OS/ABI、类型（ET_EXEC/ET_DYN/...）、机器架构、入口地址、program header 和 section header 的数量和偏移。
+
+-l（program headers）：遍历所有 program header，打印类型（PT_LOAD/PT_INTERP/...）、offset、virtaddr、physaddr、filesiz、memsz、flags（R/W/X）、align。
+
+-S（section headers）：遍历所有 section，打印编号、名字、类型、地址、offset、size、entsize、flags（A/W/X/M）、link 和 info。
+
+-s（symbol table）：解析 .symtab 和 .dynsym，打印每个符号的编号、地址、size、类型（NOTYPE/OBJECT/FUNC/SECTION/FILE）、绑定（LOCAL/GLOBAL/WEAK）、可见性、section 索引、名字。
+
+-r（relocations）：解析 .rela.dyn 和 .rela.plt，打印偏移、类型、符号值、符号名、加数。
+
+选项可以组合使用：cargo run -- -hS /bin/ls。cargo build 通过。

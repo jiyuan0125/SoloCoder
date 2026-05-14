@@ -1,12 +1,9 @@
-权限矩阵管理工具，用二维矩阵来定义和检查"谁能做什么"。
+权限矩阵管理工具。RBAC 有时候不够灵活——同一个角色在不同资源上可能有不同权限，用矩阵来表示更直观。行是用户或角色，列是资源或操作，交叉点标记允许或拒绝。
 
-我们的后台系统有十几个角色、几十个操作，需要一种直观的方式管理和查询权限。RBAC 那套角色继承搞太复杂了，用简单的矩阵就行。
+Python 实现权限矩阵引擎。矩阵数据结构：用二维字典存储，键为（subject, resource）→ action 集合。subject 可以是用户 ID 或角色名，resource 是资源标识（支持通配符 * 代表所有资源），action 是操作类型（read/write/delete/admin 等自定义值）。
 
-Python 实现：
-- 从 YAML 配置文件加载权限矩阵（行是角色，列是操作，值为 allow/deny）
-- 检查某个角色是否拥有某项操作的权限，支持多角色取并集
-- 查询某角色拥有的所有权限，或某操作允许的所有角色
-- 权限变更时输出 diff（新增了什么、删除了什么）
+操作接口：grant(subject, resource, action) 授予权限、revoke(subject, resource, action) 撤销权限、check(subject, resource, action) → bool 检查是否有权限。check 支持通配符匹配——subject 是 admin 角色且 resource 为 * 则拥有所有权限。
 
-示例：python permission_matrix.py check --role editor --action article:publish --config perms.yaml
-能运行，YAML 配置用 PyYAML 或手写解析都行。
+矩阵导出：导出为 CSV 格式（第一列 subject，其余列为 resource，值是允许的操作列表）方便在电子表格中查看和编辑。导入：从 CSV 加载矩阵。可视化：终端输出矩阵的热力图——有权限的格子显示 ✓，无权限的显示 ·，管理员权限显示 ★。
+
+冲突处理：直接权限优先于角色继承的权限，显式 deny 优先于 grant。python3 库形式。

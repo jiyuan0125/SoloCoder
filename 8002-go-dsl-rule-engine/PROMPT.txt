@@ -1,3 +1,12 @@
-我需要一个用 Go 实现的 DSL 规则引擎。用户可以用简单的自定义语法定义条件规则，比如 "when age > 18 AND score >= 60 THEN pass"。
-引擎从文本文件加载规则，输入一个 JSON 数据，逐条匹配规则并执行对应动作。支持 AND/OR/NOT 逻辑组合，数值和字符串比较都要有。
-go build 能过，标准库就够了。
+每次上线新活动都要改代码加判断逻辑，发布流程又长又容易出错。能不能让运营自己配规则？
+
+我需要一个用 Go 实现的 DSL 规则引擎。用户可以用简单的自定义语法定义条件规则，比如 "when age > 18 AND score >= 60 THEN pass"、"when region IN ["east","south"] AND vip == true THEN discount(0.8)"。引擎从文本文件批量加载规则，输入一个 JSON 数据，逐条匹配规则并执行对应动作。
+
+1. 支持的逻辑运算：AND、OR、NOT 自由组合，可以嵌套括号改变优先级
+2. 比较运算：> >= < <= == != 针对数值，== != 针对字符串，还有 IN 和 NOT IN 判断集合包含
+3. 动作类型：pass（标记通过）、reject（标记拒绝）、set(field, value)（设置字段值）、tag(name)（打标签）
+4. JSON 输入里嵌套对象的访问用点号路径，比如 user.profile.level
+
+规则匹配支持优先级排序——优先级数字越小越先匹配，第一条匹配成功后默认停止（可配置为继续匹配）。匹配结果以 JSON 输出，包含匹配的规则 ID、执行的动作列表、最终的标签集合。
+
+引擎本身不依赖外部服务，go build 能过，标准库就够了。命令行：rule-engine rules.txt --input data.json。

@@ -1,1 +1,7 @@
-网站被爬虫搞得头疼，需要一个爬虫/机器人检测工具。用 Python 实现，分析 HTTP 请求头中的 User-Agent、Accept-Language 等特征，结合请求频率模式（短时间大量相同路径请求），判断是否为自动化机器人。内置常见爬虫 UA 库（Googlebot、Scrapy、python-requests 等），输出检测结果和置信度。纯 Python，不依赖 Web 框架。
+网站被爬虫搞得头疼，真实的用户访问量只有爬虫的十分之一。CDN 那边的防爬配置太粗了，误杀严重，想自己在应用层做更精细的检测。
+
+用 Python 实现一个爬虫和机器人检测工具。多维度分析：User-Agent 分析——与已知爬虫 UA 库比对（Googlebot、Bingbot、Scrapy、python-requests、curl、HeadlessChrome 标志），也检测 UA 是否伪造（声称是 Chrome 但行为不像浏览器）。请求频率模式——统计同一 IP 在滑动时间窗口内的请求次数，短时间大量相同路径请求是爬虫特征。
+
+行为特征：正常浏览器会先请求 HTML 再请求 CSS/JS/图片等静态资源，爬虫往往只请求 HTML 或 API 端点。请求头完整性——浏览器的请求头包含 Accept、Accept-Language、Accept-Encoding 等多个头部，而简单脚本通常只有 User-Agent 和 Host。
+
+内置常见爬虫 UA 正则库，输出检测结果——是否为机器人、匹配到的特征列表、置信度（高/中/低）。支持从 Nginx/Apache 访问日志批量分析，输出被识别为爬虫的 IP 列表和统计。纯 Python，不依赖 Web 框架。

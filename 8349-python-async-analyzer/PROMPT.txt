@@ -1,3 +1,11 @@
-async/await 代码的执行顺序很难推理，需要工具帮助理解。用 Python 实现一个 async 分析器，能静态分析 Python 源码中的 async def、await、async for、async with 的使用。检测 await 遗漏（调用了 async 函数但没有 await）、在非 async 函数中使用 await、事件循环阻塞风险（async 函数里跑 CPU 密集计算）。
+async/await 代码的执行流程不像同步代码那样线性——一个 await 就可能让出控制权，多个协程交错执行。手动推理太容易出错了。Python 实现一个 async 代码静态分析器。
 
-报告所有 async 相关的潜在问题。纯 Python，用 ast 模块，python 能跑。
+分析能力：
+1. await 遗漏检测：调用 async 函数时没有 await，结果是一个 coroutine 对象而不是实际返回值。最常见的 bug。在 AST 中找 Call 节点，检查被调用函数是否是 async def 定义，如果是则要求 Call 的父节点是 Await 或者赋值给了 async 变量
+2. 在非 async 函数中使用 await：普通 def 函数体内出现 await 表达式，运行时会报 SyntaxError
+3. 事件循环阻塞风险：async 函数体内有 CPU 密集操作（大量循环、复杂计算、同步 I/O 调用如 time.sleep、requests.get），会阻塞事件循环。启发式检测——for/while 循环体超过 10 行、调用已知的同步阻塞函数
+4. async for / async with 误用：用在非异步迭代器/上下文管理器上
+
+额外分析：async 函数调用图——哪些 async 函数调用了哪些 async 函数，最长 await 链有多深。并发模式识别——asyncio.gather（并行等待）、asyncio.create_task（后台启动）。
+
+输出所有检测到的问题，按严重程度排序（SyntaxError > Bug > Performance > Style）。python3 async_analyzer.py source.py。纯 Python 用 ast 模块。

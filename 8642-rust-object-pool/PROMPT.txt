@@ -1,1 +1,13 @@
-用 Rust 写一个通用对象池（Object Pool）。场景是游戏引擎或者高并发服务里复用对象，减少频繁创建销毁的开销。预先创建一批对象放在池里，用的时候从池里取，用完归还。支持 preallocate 预创建、acquire 获取、release 归还。对象类型用泛型参数，对象归还时调用 reset 方法清理状态。如果池空了可以自动扩展或返回错误。写个 demo 复用一些结构体，打印命中池的次数。cargo run 能跑。
+游戏引擎每帧要创建和销毁大量子弹、粒子、敌人对象，频繁的 new/drop 会触发大量内存分配和释放。对象池（Object Pool）预先创建一批对象放在池里，需要时从池里取，用完归还，避免频繁创建销毁的开销。
+
+用 Rust 写一个通用对象池。
+
+预创建——preallocate(n)：预先创建 n 个对象放入池中。对象的创建用闭包 Factory::new() 完成或者用 Default trait。
+
+获取——acquire()：从池中取出一个可用对象。如果池空了可以自动扩展（创建新对象加到池里）或者返回错误。返回的用 Option 或者自定义的 Pooled<T> 包装器，包装器 Drop 时自动归还到池里。
+
+归还——release(obj)：把对象放回池中。对象归还时调用 reset 方法清理状态（trait Reset { fn reset(&mut self); }），避免残留上一个使用者的数据。
+
+泛型——ObjectPool<T: Default + Reset> 泛型参数 T 是对象类型。用 Vec<Option<T>> 或者 Vec<T> + Vec<usize>（空闲索引列表）管理。
+
+写个 demo 复用一些结构体，打印命中池的次数（从池里取到 vs 新创建）。cargo run 能跑。

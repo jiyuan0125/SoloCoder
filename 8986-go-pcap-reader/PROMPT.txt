@@ -1,3 +1,9 @@
-分析网络流量时需要读 pcap 文件。Go 写一个 pcap 文件读取工具。
+做网络流量分析的时候，第一步永远是读 pcap 文件。虽然 tcpdump 和 tshark 能做很多事情，但有时候需要在自己的工具链里直接解析 pcap 格式，比如要把包数据喂给自定义的检测引擎，或者按特定规则过滤后导出。
 
-解析 pcap 和 pcapng 文件格式：读取文件头（magic、版本、snaplen、链路类型）；逐个解析数据包记录（时间戳、捕获长度、原始长度、数据内容）；支持按 BPF 风格的过滤表达式过滤数据包（简单的协议/端口过滤即可）；输出包摘要（编号、时间、长度、协议类型）。CLI 工具，Go 标准库，go build 通过。
+Go 写一个 pcap 文件读取工具。支持两种格式：传统的 pcap 格式（magic number 0xa1b2c3d4 或 0xd4c3b2a1）和下一代 pcapng 格式。
+
+pcap 格式的解析：先读 24 字节的文件全局头——magic number 确认格式和字节序、major/minor 版本号、snaplen（最大捕获长度）、链路类型（Ethernet、Loopback 等）。然后逐个读数据包记录：16 字节的包头包含时间戳（秒和微秒）、捕获长度、原始长度，后面跟着捕获的数据内容。
+
+pcapng 格式的基本支持：识别 Section Header Block 和 Interface Description Block，解析 Enhanced Packet Block 提取数据包。
+
+过滤功能：实现简化版的 BPF 风格过滤。支持按协议类型（tcp、udp、icmp）、端口号、源/目的 IP 地址过滤。不需要实现完整的 BPF 虚拟机，用简单的条件判断组合就行。输出包摘要信息：包编号、时间戳、长度、识别出的协议类型。CLI 工具，Go 标准库实现，go build 通过。

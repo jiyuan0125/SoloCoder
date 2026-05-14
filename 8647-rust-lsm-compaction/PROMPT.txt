@@ -1,1 +1,11 @@
-用 Rust 实现 LSM-Tree 的 Compaction（压缩合并）策略。包括 Size-Tiered 和 Leveled 两种。Size-Tiered：同一层 SSTable 数量达到阈值就合并成一个新的更大的 SSTable 放到下一层。Leveled：每层维护一个有序的 SSTable 集合，用 L0 到 Ln 分层，越往下数据量越大。合并时读入多个 SSTable 做多路归并，输出新的 SSTable，去掉被覆盖和删除的旧数据。写个 demo 模拟几轮 compaction。cargo run 能看到层级变化。
+LSM-Tree 写多了之后 SSTable 文件越积越多，查询时要查的文件也越来越多，读取性能下降。Compaction（压缩合并）就是解决这个问题——定期把多个 SSTable 合并成新的更大的 SSTable，同时去掉被覆盖和删除的旧数据。
+
+用 Rust 实现 LSM-Tree 的 Compaction 策略。
+
+Size-Tiered Compaction——同一层的 SSTable 数量达到阈值（比如 4 个）就触发合并：读入这 4 个 SSTable 做多路归并，输出一个新的更大的 SSTable 放到下一层。简单但有空间放大问题（同一时间存在新旧两份数据）。
+
+Leveled Compaction——L0 到 Ln 分层，越往下数据量越大（每层是上一层的 10 倍）。每层维护一个全局有序的 SSTable 集合（key 不重叠）。L0 的 SSTable 和 L1 做合并，产生的输出替换 L1 中有重叠的 SSTable。如果 L1 也太大了就和 L2 合并，以此类推。
+
+合并过程——读入多个 SSTable 做多路归并。遇到重复 key 保留最新的（从新到旧）。遇到 tombstone 可以直接丢弃（如果确定没有更老的版本了）。输出新的 SSTable，删除旧的。
+
+写个 demo 模拟几轮 compaction——不断写入数据触发刷盘，然后触发 compaction，打印每层 SSTable 的数量和大小变化。cargo run 能看到层级变化。

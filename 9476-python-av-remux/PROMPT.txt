@@ -1,5 +1,5 @@
-帮我写个音视频转封装工具，把文件从一种容器格式换到另一种，不重新编码。
+把视频从 MKV 容器转到 MP4 容器、从 FLV 转到 MP4、从 TS 转到 FLV——这些操作叫转封装（remux）。和转码不同，转封装只改容器外壳，视频和音频的编码数据完全不动，所以速度极快，画质无损。写个工具至少支持 MP4、FLV、MKV、TS 之间的互转。
 
-需求很简单：比如把 MKV 转成 MP4、FLV 转成 MP4、TS 转成 FLV 这些常见转换。只改容器，视频和音频编码保持原样，所以速度很快。要处理容器间的编码标识映射，确保转完能正常播放。
+转封装的核心工作。读取源容器：解析文件结构，提取视频轨和音频轨的编码参数和帧数据。写入目标容器：用目标格式的规范重新封装帧数据。编码参数要正确映射——比如 MP4 里 H.264 用 avc1 + avcC 描述，FLV 里用 AVC_SEQUENCE_HEADER + AVC_NALU，MKV 里用 CodecPrivate。同样一份数据在不同容器里的包装方式不一样，但内容不变。
 
-python main.py input.mkv --output-format mp4 -o output.mp4。至少支持 MP4、FLV、MKV、TS 之间的互转。纯 Python 标准库，自己处理二进制格式解析和封装。
+难点在于不同容器的时间戳体系不同。MP4 用 timescale+duration 的整数对，FLV 用毫秒时间戳，TS 用 90kHz 的 PTS/DTS。转换时要正确换算。生成的文件必须能正常播放。用法：python3 av_remux.py remux input.mkv --output-format mp4 -o output.mp4

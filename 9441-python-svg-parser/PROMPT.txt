@@ -1,1 +1,5 @@
-SVG是XML格式的矢量图，但解析起来也有不少细节。写个Python工具来解析SVG文件，提取图形元素信息：rect的坐标宽高、circle的圆心半径、line的端点、path的d属性、text的内容和位置。能读取viewBox、width/height、xmlns这些根属性。解析基本的transform（translate、scale、rotate）。用标准库的xml模块解析，不依赖外部包。python3运行，传SVG文件路径。
+SVG 看起来就是一段 XML，但真要完整解析里面的图形元素还是挺有讲究的。根元素 svg 有 viewBox（定义坐标系范围）、width/height（显示尺寸）、xmlns（命名空间）。图形元素种类不少：rect 有 x、y、width、height、rx、ry；circle 有 cx、cy、r；line 有 x1、y1、x2、y2；path 的 d 属性是一串指令字母加数字（M 移动、L 直线、C 贝塞尔曲线、Z 闭合）；text 有文本内容和 x、y 定位。还有 g 元素做分组、polygon/polyline 画多边形。
+
+transform 属性也需要解析。常见三种变换：translate(dx, dy) 平移、scale(sx, sy) 缩放、rotate(angle, cx, cy) 旋转。变换可以组合——一个 g 上有 translate，里面的 rect 上有 rotate，实际渲染时变换要按层次叠加。解析时用栈结构处理嵌套的变换。
+
+用标准库的 xml.etree.ElementTree 解析 XML 结构，不依赖外部包。遍历所有元素节点，提取图形属性和变换信息。输出每个图形元素的类型、位置参数、所属层级的变换链。用法：python3 svg_parser.py parse drawing.svg

@@ -1,3 +1,9 @@
-做一个代码生成器需要把修改过的 Python AST 转回源代码。Python 自带的 ast.unparse 不够用，想自己实现一个更可控的 AST 反解析器。能处理所有常见节点：函数、类、import、赋值、表达式、装饰器、async、类型注解和 f-string。
+Python 3.9+ 自带的 ast.unparse 能把 AST 转回代码，但格式化结果不太理想——缩进风格和原始代码可能不一样，注释全部丢失，f-string 的格式也会变。写一个更可控的 AST 反解析器。Python 实现。
 
-格式化输出要遵循 PEP 8 缩进和空格规范。能保留注释（通过特殊标记节点）就更好了。纯 Python 实现，python 能跑。
+处理所有常见节点类型：Module、FunctionDef/AsyncFunctionDef（参数、默认值、装饰器、返回类型注解）、ClassDef（基类、装饰器）、Import/ImportFrom、Assign/AugAssign/AnnAssign、表达式（BinOp、UnaryOp、Compare、BoolOp、IfExp、Lambda、Call、Subscript、Attribute、Starred）、Comprehension（list/dict/set）、Try/Except、With、Raise、Assert、Delete、Global/Nonlocal。
+
+格式化规则遵循 PEP 8：缩进 4 空格、类和函数之间两个空行、运算符两侧空格、逗号后空格、行长度控制（超长自动续行加括号）。
+
+注释处理：ast 模块本身不保留注释，所以需要一个预处理步骤——在 parse 之前扫描源码记录每行的注释位置，然后在 AST 节点上附加注释标记节点（Comment 节点）。unparse 时遇到 Comment 节点就输出对应的注释文本。
+
+python3 ast_unparse.py source.py 输出重新格式化的代码。纯 Python 标准库。

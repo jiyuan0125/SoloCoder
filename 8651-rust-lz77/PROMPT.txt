@@ -1,5 +1,11 @@
-我最近在做一个嵌入式项目，需要对配置文件做轻量级压缩，不想引入太重的依赖。帮我用 Rust 实现一个 LZ77 压缩算法的命令行工具。
+嵌入式项目的配置文件需要轻量级压缩，不想引入 zlib 这种重型依赖。LZ77 是最经典的基于字典的压缩算法——用 (offset, length) 引用之前出现过的重复内容，没出现过的 literal 直接存储。虽然压缩率不如 deflate，但实现简单、解压快。
 
-主要功能：支持对输入文件进行 LZ77 压缩和解压，滑动窗口大小可配置，能处理文本和二进制数据。命令行用法类似 `lz77 compress input.txt output.lz77` 和 `lz77 decompress output.lz77 restored.txt`。
+用 Rust 实现 LZ77 压缩算法。
 
-压缩后的文件应该能正确还原，解压结果和原始文件一模一样。用 cargo build 能编译通过，cargo run 测试压缩解压流程。
+滑动窗口——维护一个固定大小的滑动窗口（默认 32KB），在窗口内搜索最长匹配。窗口大小可配置。搜索用暴力匹配（简单但慢）或哈希链（快但复杂，先用暴力）。
+
+编码格式——输出三种 token：Literal(byte)：原样输出一个字节。Copy(offset, length)：从输出缓冲区的 offset 位置开始复制 length 个字节（offset 是从当前位置往回算的距离）。offset 用 2 字节，length 用 1 字节（最大 255）。EndMarker：标记结束。
+
+压缩——对输入的每个位置，在滑动窗口中找最长的匹配。如果匹配长度 >= 3（太短的匹配不值得用 Copy 编码），输出 Copy(offset, length)。否则输出 Literal，前进一个字节。
+
+解压——逐个读取 token。Literal 直接写入输出。Copy 从已解压数据的 offset 位置开始复制 length 字节到当前位置。注意 copy 可能和当前位置重叠（比如 offset=1, length=10 就是重复最后一个字符 10 次）。

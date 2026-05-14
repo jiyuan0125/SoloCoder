@@ -1,11 +1,7 @@
-帮我做一个 HLS 播放列表生成器，Go 写的。
+有了 TS 分片文件，怎么快速生成一个合规的 m3u8 播放列表？听起来就是拼接文本的事情，但实际做到"合规"没那么简单——每个分片的实际时长要从 TS 流里读出来，不能瞎写。HLS 规范对各种标签的格式要求很严格。
 
-不是简单的切片，而是从已有的 TS 分片文件生成合规的 m3u8：
-- 扫描指定目录下的 .ts 文件，按文件名或修改时间排序
-- 自动探测每个 TS 分片的实际时长（解析 PAT/PMT 和 PTS）
-- 生成标准合规的 HLS m3u8 媒体播放列表
-- 支持设置各种参数：目标分片时长、版本号（HLS 版本 3/4/5/6）
-- 支持 #EXT-X-DISCONTINUITY 标记不连续点
-- 可选生成多码率主播放列表
+工具接收一个目录路径，扫描里面的 .ts 文件，按文件名自然排序（seg_001.ts、seg_002.ts 这种要排对，不能按字符串排成 seg_1、seg_10、seg_2）。对每个 TS 文件解析 PAT/PMT 找到视频 PID，然后读 PES 头的 PTS——第一个包的 PTS 就是该分片的起始时间，最后一个包的 PTS 减去起始时间就是时长。如果文件很短没有足够的包，就用目标时长作为估计值。
 
-用法 hls-playlist -dir ./segments/ -target 6 -version 3，go build 编译通过。标准库。
+生成的 m3u8 头部：#EXTM3U、#EXT-X-VERSION（用户指定，默认 3）、#EXT-X-TARGETDURATION（所有分片时长的天花板取整）。每个分片：#EXTINF:<duration>，下一行是文件名。VOD 模式末尾加 #EXT-X-ENDLIST。如果有不连续的编码参数变化，在对应分片前加 #EXT-X-DISCONTINUITY。
+
+多码率主播放列表是可选功能——用 --multi-codec 参数时额外生成 master.m3u8。用法 hls-playlist -dir ./segments/ -target 6 -version 3。Go 标准库实现，go build 编译通过。

@@ -1,10 +1,9 @@
-想做一个轻量级的脚本语言，用来嵌入到 Rust 应用里做插件扩展。语法风格类似 Lua，简单易学。
+想做一个轻量级的脚本语言，用来嵌入到 Rust 应用里做插件扩展。语法风格类似 Lua，简单易学——游戏引擎和嵌入式系统都在用 Lua，说明这种轻量级脚本语言很有实用价值。
+Rust 的性能优势在这里很明显。
 
-用 Rust 写一个脚本语言解释器，功能包括：
-- 支持 number、string、bool、nil 四种基本类型
-- 支持函数定义和递归调用
-- 支持 table（类似字典）数据结构
-- 支持循环（while/for）和条件分支
-- 解析或运行出错时报告具体行号和原因
+用 Rust 写一个脚本语言解释器，功能包括：四种基本类型——number（f64 统一用浮点数）、string（双引号字符串，支持转义）、bool（true/false）、nil（空值）。函数定义和递归调用——用 fn 关键字定义函数，支持参数和返回值，函数是一等公民可以赋值给变量。table 数据结构——类似 Lua 的 table，本质是 HashMap，可以用数字或字符串做 key，支持嵌套。循环（while 和 for-in 遍历 table）和条件分支（if/elseif/else）。
 
-运行方式：script-lang example.script，读文件执行。cargo build 通过。
+环境用 Rc<RefCell<Env>> 实现作用域链，闭包捕获外部变量。垃圾回收用 Rc 的引用计数自动管理。
+
+这个工具在日常开发中能省不少重复劳动。
+解析或运行出错时报告具体行号和原因。运行方式：script-lang example.script，从文件读入脚本执行。cargo build 通过。

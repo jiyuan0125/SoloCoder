@@ -1,5 +1,7 @@
-用 Rust 写一个 CRC 校验工具，支持多种 CRC 变体。
+CRC 校验在二进制协议和文件格式里无处不在——PNG chunk 有 CRC32、ZIP 文件有 CRC32、Modbus 用 CRC16。每种 CRC 变体的多项式和初始值可能不同。写一个支持多种 CRC 变体的 Rust 工具。
 
-我在处理一些二进制协议需要验证 CRC 校验和。支持 CRC-8、CRC-16、CRC-32（常用那种）、CRC-64，每种都可以指定多项式、初始值、是否反转输入输出。对文件或标准输入计算 CRC 值，输出十六进制结果。还能校验给定数据和预期 CRC 是否匹配。常用预设直接用名称（CRC-32/ISO-HDLC 等）。
+支持的 CRC 类型：CRC-8（8 位结果，多项式 0x07 或自定义）、CRC-16（如 CRC-16-CCITT 多项式 0x1021）、CRC-32（最常用，ISO-HDLC 多项式 0x04C11DB7，初始值 0xFFFFFFFF，输入输出反转）、CRC-64（多项式 0x42F0E1EBA9EA3693）。每种都可以通过参数覆盖多项式（--polynomial）、初始值（--init）、是否反转输入（--refin）、是否反转输出（--refout）、最终异或值（--xorout）。
 
-纯 Rust 实现，不依赖系统库，cargo build 通过。
+常用预设直接用名称——CRC-32/ISO-HDLC（标准 CRC32）、CRC-32/BZIP2（初始值不同）、CRC-16/CCITT、CRC-16/MODBUS、CRC-8/SMBUS。预设名自动填充所有参数。
+
+计算逻辑——查表法加速：预计算 256 项的 CRC 表，每个字节查表一次。输入来源：文件或 stdin。大文件分块读取（4KB 块），不一次性加载。输出十六进制结果（0x 开头）。校验模式：给定预期 CRC 值，计算后对比，输出 MATCH 或 MISMATCH。用法 crc-check file.bin --preset CRC-32/ISO-HDLC。Rust 实现，cargo build 通过。

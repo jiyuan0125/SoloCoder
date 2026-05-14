@@ -1,5 +1,5 @@
-需要分析一些 AAC 裸流文件的编码参数，ADTS header 的结构想搞明白。
+需要分析一些 AAC 裸流文件的编码参数——手上有几段从 MP4 容器里提取出来的 AAC 裸流，ADTS header 的结构想搞明白，也方便后续做转码。
 
-写个工具解析 AAC 文件的 ADTS 帧，提取每一帧的 profile（LC/HE 等）、采样率索引、声道配置、帧长度。能统计整个文件的总帧数和总时长。对于损坏的帧要能跳过继续解析后面的。
+写个工具逐帧解析 AAC 文件的 ADTS 头。每个 ADTS 帧以 12 bit syncword（0xFFF）开头，后面跟着 ID（MPEG-4 / MPEG-2）、layer、protection absent flag。然后是 profile（00 Main / 01 LC / 02 SSR / 03 reserved，对应 MPEG-4 Audio Object Type 减一）、采样率索引（4 bit，查表得到 96000/88200/64000/48000/44100/... 等频率）、私有 bit、声道配置（3 bit，0 表示由 SBR 隐式指定）、帧长度（13 bit，包含头部和数据）、buffer fullness、帧数（2 bit，每个 ADTS 帧包含的 AAC 原始帧数减一）。逐帧扫描整个文件，统计总帧数、推算总时长、输出编码参数汇总。对于损坏的帧——syncword 不对或者帧长度字段异常——跳过并记录异常位置，继续往后找下一个 0xFFF 同步字。大文件用 bufio 做缓冲读取，不要 mmap。
 
-Go 实现，二进制解析，go build 编译通过。
+Go 实现，二进制解析，bufio.Scanner 或者手动 buffered reader。go build 编译通过。

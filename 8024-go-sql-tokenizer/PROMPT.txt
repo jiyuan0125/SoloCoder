@@ -1,3 +1,9 @@
-实现一个 SQL 词法分析器，Go 语言。把 SQL 文本拆成 token 流：关键字（SELECT FROM WHERE 等）、标识符、数字、字符串、运算符、标点符号。
-要处理 SQL 里的单行注释(--)和多行注释(/* */)，字符串里要有转义处理。提供 NextToken() 接口和命令行工具输出 token 列表。
+先拿到 SQL 文本，第一步就得把它拆成 token——关键字、标识符、数字、字符串、运算符、标点，这些是后续语法分析的基础。
+
+实现一个 SQL 词法分析器，Go 语言。输入 SQL 文本字符串，输出 token 流。Token 类型包括：关键字（SELECT FROM WHERE INSERT INTO VALUES UPDATE SET DELETE JOIN ON GROUP BY ORDER BY HAVING LIMIT OFFSET AND OR NOT IN LIKE BETWEEN AS DISTINCT 等）、标识符（用户定义的表名列名）、数字字面量（整数和浮点，支持科学计数法）、字符串字面量（单引号包裹，内部单引号用两个单引号转义）、运算符（= <> != < > <= >= + - * / ||）、标点符号（逗号、括号、分号、点号）。
+
+要正确处理 SQL 里的单行注释（-- 到行尾）和多行注释（/* 到 */，支持嵌套）。字符串字面量里的内容不能被误识别为关键字或运算符。标识符用反引号包裹时可以包含任意字符。
+
+提供 NextToken() 接口逐个返回 token，每个 token 包含类型、字面值、起止位置（行号列号）。同时提供 TokenizeAll() 一次性返回全部 token 列表。命令行工具输出格式化的 token 列表。
+
 标准库，go build 能编译。

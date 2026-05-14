@@ -1,6 +1,7 @@
-写一个递归下降解析器生成库。不用分析表，直接用递归函数调用来解析。输入 EBNF 语法定义，生成手写风格的递归下降 Go 代码。
+写一个递归下降解析器生成库。LR/LALR 解析器虽然理论优雅，但实际工程中大部分语言的 parser 都是手写递归下降——Go、Rust、TypeScript、C# 都是。因为递归下降代码可读性好、错误信息友好、容易扩展。
 
-支持：可选（if peek）、重复（for loop）、选择（if-else chain）、预判（lookahead）。
-生成的代码可读性好，像人手写的 parser 一样。
-命令：rd-gen grammar.ebnf -o parser.go
-Go 标准库实现，go build 能编。
+输入 EBNF 语法定义，生成手写风格的递归下降 Go 代码。生成策略：可选（[expr]）用 if peek == first(expr) { parseExpr() } 实现。重复（{expr}）用 for peek in first(expr) { parseExpr() } 实现。选择（expr1 | expr2）用 if-else chain 按 first 集分支。预判（lookahead）——需要预读 1-2 个 token 才能决定分支的场景，生成 peek/peek2 调用。
+
+生成的代码特点：可读性好——像人手写的 parser 一样，每个函数对应一个语法规则，有清晰的注释标注对应的产生式。性能好——没有分析表查找的开销，直接函数调用。错误恢复——遇到错误时可以跳到下一个同步点（分号、右括号等）继续解析，找出更多错误。
+
+命令：rd-gen grammar.ebnf -o parser.go。Go 标准库实现，go build 能编。

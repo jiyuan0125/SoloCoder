@@ -1,5 +1,13 @@
-有一堆文档想做关键词提取和相似度计算，TF-IDF 是最基础的方法了。用 Rust 实现一个 TF-IDF 计算工具。
+关键词提取和文档相似度计算最基础的方法就是 TF-IDF。TF（词频）衡量词在一篇文档中的重要性，IDF（逆文档频率）衡量词在整个文档集中的区分度。两者相乘就是 TF-IDF 分数。
 
-能从一组文档中构建词频表和逆文档频率表。对单个文档计算每个词的 TF-IDF 分数，用于关键词提取。支持计算两个文档之间的余弦相似度。文档集合可以增量添加新文档，IDF 值要实时更新。
+用 Rust 实现 TF-IDF 计算工具。
 
-`tfidf build ./docs` 建索引，`tfidf keywords doc.txt --top 10` 提取关键词，`tfidf similar doc.txt` 找相似文档。cargo build 通过。
+构建索引——从一组文档中构建词频表（每个文档中每个词出现的次数）和逆文档频率表（每个词出现在多少篇文档中）。TF = count(word, doc) / total_words(doc)。IDF = ln(N / df(word))。
+
+关键词提取——对单个文档计算每个词的 TF-IDF 分数，按分数排序取 Top-K。CLI：tfidf keywords doc.txt --top 10。
+
+文档相似度——两个文档的 TF-IDF 向量做余弦相似度。先把文档表示为 TF-IDF 向量（稀疏表示），然后 cosine(A, B) = (A·B) / (|A|×|B|)。CLI：tfidf similar doc.txt --path ./docs。
+
+增量添加——文档集合可以动态添加新文档，IDF 值要实时更新（重新统计文档频率）。
+
+tfidf build ./docs 建索引。cargo build 通过。

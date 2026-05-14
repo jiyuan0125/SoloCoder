@@ -1,5 +1,11 @@
-写一个 Python 的序列化/反序列化引擎，支持多种格式之间的互转。
+五个微服务的配置文件用了四种格式——JSON、YAML、TOML、INI。互相转换要写各种脚本，太碎片了。做一个统一的序列化引擎，任意格式读入、任意格式输出。Python 实现。
 
-工作中经常要在 JSON、YAML、TOML、INI、CSV 这些格式之间转换配置文件。做一个统一的引擎，能读取任意一种格式，转换成另一种格式输出。核心是内部用 Python 字典作为中间表示，每种格式一个 codec：json_codec、yaml_codec、toml_codec 等。处理嵌套结构、列表、特殊类型（日期时间、null）。
+核心设计：所有格式统一转成 Python 字典（中间表示 IR），每种格式实现一个 Codec trait（read 和 write 两个方法）。JSON codec 直接用 json 标准库。YAML codec 如果有 PyYAML 就用，没有就自己写一个简化解析器（支持基本键值对和列表）。TOML codec 同理。INI 用 configparser。CSV 特殊处理——扁平的二维表，嵌套结构展平为 dot notation key（user.name → user.name）。
 
-Python 3，只用标准库（json、csv 模块直接用，yaml/toml 如果没有就优雅降级）。命令行：`python serde.py --from json --to toml config.json`，输出转换后的内容。格式不兼容时（比如 TOML 不支持 null）给出明确提示。`python serde.py` 能运行。
+格式间转换的兼容性问题：
+- TOML 不支持 null 值，转成 TOML 时 null 要么跳过要么用空字符串替代
+- INI 所有值都是字符串，数字和布尔需要推断
+- CSV 不支持嵌套，深嵌套结构要展平或报错
+- 日期时间类型在 JSON 里没有原生表示，用 ISO 8601 字符串
+
+CLI：python3 serde.py --from json --to toml config.json 输出转换后的内容。加 --check 验证转换后的文件是否能在目标格式中正确解析回来（round-trip 测试）。python3 serde.py 能运行。纯 Python 3 尽量用标准库。

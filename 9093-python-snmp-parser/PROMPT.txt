@@ -1,1 +1,9 @@
-网络设备用的是 SNMP 协议，想分析 SNMP 流量。用 Python 写一个 SNMP 协议解析器，解析 SNMP v1/v2c/v3 的报文（BER 编码），提取 PDU 类型（Get/GetNext/Set/Response/Trap）、community string、OID 和绑定的值。能处理基本的 BER 编解码（INTEGER、OCTET STRING、OID、SEQUENCE、NULL）。输出解析后的结构化信息，命令行工具。
+网络设备监控用了 SNMP，但有时候抓到的 SNMP 包不太好分析，尤其是 Trap 消息。写个工具解析 SNMP 报文，排查监控问题。
+
+Python 实现 SNMP 报文解析器。SNMP 使用 BER（Basic Encoding Rules）编码，写一个 BER 解码器解析 TLV（Tag-Length-Value）结构。支持 SNMPv1、v2c 和 v3 的基本解析。
+
+SNMPv1/v2c 报文结构：版本号、Community String（相当于密码，明文传输）、PDU 类型（GetRequest/GetNextRequest/GetResponse/SetRequest/Trap/GetBulk）。PDU 内容：Request ID、Error Status、Error Index、Variable Bindings。每个 varbind 是 OID + Value 对。
+
+OID 解析：从 BER 编码中提取 OID，把数字形式的 OID 转换为点分表示（如 1.3.6.1.2.1.1.1.0 = sysDescr.0），内置常见 OID 的名称映射表。Value 类型：Integer、Octet String、Null、Object Identifier、IpAddress、Counter、Gauge、TimeTicks。
+
+SNMPv3 额外解析：消息头部的 msgAuthoritativeEngineID、msgAuthenticationParameters 等。python3 命令行工具，输入 pcap 或 hex 字符串。

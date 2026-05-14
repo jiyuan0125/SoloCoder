@@ -1,5 +1,5 @@
-MOV 和 MP4 格式很相似但有些区别，想写个专门处理 MOV 的解析器。
+MOV 和 MP4 格式很相似（都基于 QuickTime 的 atom 结构）但有些细节区别——比如 MOV 的媒体数据引用方式、某些 atom 的类型标识不同。想写个专门处理 MOV 的解析器，别跟通用的 MP4 工具混淆了。
 
-解析 QuickTime MOV 文件的 atom 结构，重点解析 mvhd（电影头部）、tkhd（轨道头部）、stbl（采样表）这些 atom。提取视频的宽高、帧率、编码格式信息。能处理 moov 在文件末尾的情况。
+解析 QuickTime MOV 文件的 atom 结构。先验证文件开头是 'ftyp' 或 'moov' atom（有些 MOV 文件没有 ftyp）。递归遍历 atom 树：moov 容器下有 mvhd（电影头部：创建/修改时间、timescale、duration 换算秒、速率、音量、矩阵）、trak 容器（每个轨道一个）、udta 用户数据。每个 trak 里解析 tkhd（轨道 ID、创建时间、时长、宽高）、mdia 下的 mdhd（轨道的 timescale 和 duration）、hdlr（处理器类型 'vide'/'soun'/'text' 区分轨道类型）、minf 下的 stbl 采样表（stts 时间戳、stsc chunk映射、stsz 采样大小、stco/co64 chunk偏移）。从采样表数据能推算帧率和关键帧间隔。能处理 moov atom 在文件末尾的情况（需要先跳到末尾读取）。
 
 Go 标准库，go build 能编。

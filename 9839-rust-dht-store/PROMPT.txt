@@ -1,12 +1,13 @@
-实现 DHT 数据存储层，Rust 编写。
+先定义 DHT 的存储接口，再实现数据的 put/get 和副本管理。在 Kademlia 里，数据 (key, value) 被存放在距离 key 最近的 k 个节点上。查找时也是找最近的 k 个节点然后取值。用 Rust 实现 DHT 的存储层。
 
-DHT 节点不仅要路由，还要实际存储数据。每个 key-value 对有 TTL，过期自动清理。存储的数据会被复制到距离 key 最近的多个节点上。
+数据记录的格式：Record { key: Vec<u8>, value: Vec<u8>, timestamp: u64, ttl: u64 }。key 和 value 都是字节序列，timestamp 记录存储时间，ttl 是过期时间。记录存储在距离 hash(key) 最近的 k 个节点上。
 
-具体要求：
-- 本地存储：HashMap 存 key-value，每个条目带过期时间戳
-- PUT 操作：存储数据并标记 TTL（默认 24 小时）
-- GET 操作：查找本地存储，过期数据自动跳过
-- 定期清理：后台任务扫描并删除过期条目
-- 复制因子：PUT 时把数据发到距离 key 最近的 k 个节点
+Put 操作：计算 key_hash = hash(key)。通过 DHT 查找找到距离 key_hash 最近的 k 个节点。向这 k 个节点并行发送 STORE 请求，每个节点把记录存到本地存储中。不需要所有 k 个都成功——只要多数（比如 k/2+1）成功就认为 put 完成。返回实际存储成功的节点数。
 
-cargo build 通过，测试数据过期清理和复制因子生效。
+Get 操作：计算 key_hash，查找最近的 k 个节点，向它们发 FIND_VALUE 请求。任何一个节点有数据就返回（最快的那个）。如果多个节点都返回了，取 timestamp 最新的。如果都没有，返回 NotFound。
+
+副本一致性：没有强一致保证——put 是往多个节点写，但可能有部分失败。get 取最新的那个。定期通过 republish 机制刷新副本——原始发布者每隔 ttl/2 时间重新发布一次，确保副本不会过期丢失。
+
+模拟 20 个节点的 DHT，put 50 个 key，观察每个 key 的副本分布。然后故意关掉 2 个节点，验证 get 仍能成功。
+
+cargo build 通过。

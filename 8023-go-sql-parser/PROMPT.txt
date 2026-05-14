@@ -1,3 +1,9 @@
-用 Go 写一个 SQL 解析器。能解析基本的 SELECT/FROM/WHERE/GROUP BY/ORDER BY/LIMIT 语句，支持 JOIN、子查询、聚合函数 COUNT/SUM/AVG/MAX/MIN。
-把 SQL 文本解析成 AST，可以输出 AST 的字符串表示。遇到语法错误要报告具体位置。
-不用接真实数据库，只做解析，go build 通过。
+做一个数据查询中间件，用户传 SQL 过来要先解析再转发，不可能直接把原始 SQL 丢给数据库——注入风险不说，还得校验权限、改写查询。
+
+用 Go 写一个 SQL 解析器。能解析基本的 SELECT/FROM/WHERE/GROUP BY/HAVING/ORDER BY/LIMIT 语句，支持 JOIN（INNER JOIN、LEFT JOIN、RIGHT JOIN，带 ON 条件）、子查询（WHERE 里嵌套 SELECT、FROM 子句里的派生表）、聚合函数 COUNT/SUM/AVG/MAX/MIN、DISTINCT 关键字。
+
+把 SQL 文本解析成 AST——AST 节点类型包括 SelectStmt（含字段列表、表引用、WHERE 条件、分组、排序、限制）、JoinClause（类型、表、条件）、Expression（二元运算、函数调用、子查询、字面量、列引用）、SubQuery。每个节点实现 String() 方法，可以还原成格式化的 SQL。
+
+遇到语法错误要报告具体位置——"line 1, col 15: unexpected token 'FORM', expected 'FROM'" 这种级别。支持 SELECT/INSERT/UPDATE/DELETE 四种语句的基础解析。
+
+不用接真实数据库，只做纯解析。go build 通过。

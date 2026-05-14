@@ -1,1 +1,7 @@
-手上有几个AIFF格式的音频文件需要处理。写个Python解析器来读取AIFF/AIFF-C文件的chunk结构，解析COMM chunk里的声道数、采样点数、位深度、采样率，以及SSND chunk里的音频数据偏移。AIFF的采样率用80位浮点数表示，要正确解码。支持遍历文件中所有chunk并打印类型和大小。python3直接跑，命令行传文件路径。
+谁还用 AIFF？苹果生态——Logic Pro、GarageBand 默认导出格式。碰到的时候没个解析工具挺尴尬的。Python 写一个。
+
+AIFF 是 RIFF 系的容器。文件头 4 字节 "FORM" + 4 字节大小 + 4 字节 "AIFF"（或 "AIFC" 压缩变种）。遍历 chunk：COMM（Common）有声道数（2B）、采样帧数（4B）、位深（2B）、采样率（10B——80 位 IEEE 754 扩展精度浮点数！）。这是 AIFF 最特殊的部分。
+
+80 位浮点数解码——1 位符号 + 15 位指数（偏移 16383）+ 64 位尾数。整数采样率的解码：指数减 16383 得到位移量，尾数移位得到实际值。比如 44100Hz = 尾数 0xAC44 左移 5 位。
+
+SSND（Sound Data）chunk 包含实际 PCM 数据——4 字节偏移 + 4 字节块大小 + 采样数据。AIFF-C 压缩类型标识：NONE=无压缩、fl32/FL32=32 位浮点、alaw=A-law、ulaw=μ-law。遍历文件所有 chunk 并打印类型和大小。用法 python aiff_parser.py info sound.aiff。Python 3 直接跑。

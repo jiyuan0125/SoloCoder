@@ -1,10 +1,7 @@
-写一个 BMP 图片格式解析器，读取 BMP 文件结构并转换为原始像素数据。
+BMP——Windows 位图格式，1980 年代的东西了。为什么还要解析它？因为 Windows 系统截图默认就是 BMP，老系统的图标和资源文件也是 BMP。格式本身不复杂，但有几个坑：行是从下往上存的、有 4 字节对齐 padding、颜色表和位深度的组合很多。Rust 实现。
 
-解析要求：
-- 读取 BMP 文件头（BM magic、文件大小）和 DIB 头（BITMAPINFOHEADER，40 字节版本）
-- 提取图像宽度、高度、位深（支持 24 位和 32 位）、压缩方式
-- 处理 BMP 特有的自底向上行存储顺序，翻转成正向
-- 处理每行的 4 字节对齐 padding
-- 24 位 BGR 转换为 RGB 输出
+文件头 14 字节：BM 签名（0x42 0x4D）、文件总大小、保留两个 2 字节、像素数据偏移量。DIB 头从第 15 字节开始——BITMAPINFOHEADER 是 40 字节版本：头大小（40）、宽度（有符号，负数表示行序从上到下）、高度（有符号，正值表示从下到上）、颜色平面数（1）、位深度（1/4/8/16/24/32）、压缩方式（0=无、1=RLE8、2=RLE4）。
 
-用 Rust 写，cargo build 通过。`bmp-parser decode image.bmp -o output.ppm` 输出 PPM。
+像素数据的处理——每行的字节数 = ceil(宽 × 位深 / 8)，然后向上对齐到 4 的倍数。24 位 BMP 的像素是 BGR 顺序，每像素 3 字节，输出时转成 RGB。行存储是自底向上的——第一行数据对应图片的最下面一行，需要翻转。32 位 BMP 多一个 alpha 通道（BGRA）。
+
+输出 PPM 格式验证——P6 头 + 宽高 + 最大值 255 + RGB 像素数据。用法 bmp-parser decode image.bmp -o output.ppm。Rust 实现，cargo build 通过。

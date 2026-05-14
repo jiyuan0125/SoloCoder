@@ -1,1 +1,9 @@
-程序 core dump 了需要分析。用 Python 写一个 core dump 分析工具，解析 ELF core 文件格式：读取 ELF 头和 Program Header，提取 NOTE 段中的寄存器状态（NT_PRSTATUS）、线程信息（NT_PRPSINFO）、以及内存映射（NT_AUXV）。输出崩溃线程的寄存器值、信号类型、以及加载的共享库列表。纯 Python 解析 ELF 二进制格式。
+程序崩溃产生了 core dump 文件，但每次用 GDB 加载分析太麻烦了。写个工具快速查看 core dump 的基本信息，快速判断崩溃原因再决定要不要用 GDB 深入分析。
+
+Python 实现一个 core dump 快速分析器。文件格式：支持 ELF 格式的 core dump（检查 ELF 头的 type 字段为 ET_CORE）。解析 NOTE 段（NT_PRSTATUS 类型）提取寄存器状态——通用的指令指针寄存器（x86-64 的 rip、ARM 的 pc）指向崩溃时的执行地址，栈指针寄存器指向栈顶。
+
+提取关键信息：崩溃时的信号（NT_PRPSINFO 或 NT_SIGINFO，如 SIGSEGV=段错误、SIGABRT=abort、SIGBUS=总线错误）、进程 PID 和 UID、命令行参数（崩溃的程序名和参数）、崩溃线程的寄存器快照。
+
+加载段信息：解析 PT_LOAD 段，列出进程的内存映射（地址范围、权限、对应的文件映射）。线程列表：遍历所有 NT_PRSTATUS 类型的 note 段，列出每个线程的指令指针地址和栈指针。
+
+如果系统上有 addr2line 工具，自动调用将崩溃地址转换为函数名和源码位置。输出摘要——崩溃程序名、信号类型、崩溃地址、崩溃函数名、所有线程的 PC 地址。python3 命令行工具。

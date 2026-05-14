@@ -1,5 +1,7 @@
-我需要一个 Go 安全审计工具。扫描源码找常见安全问题：SQL 注入风险（字符串拼接 SQL）、硬编码密钥/密码、不安全的 random（用 math/rand 而非 crypto/rand）、文件路径拼接没做清洗、HTTP 请求没设超时。
+我需要一个 Go 安全审计工具。安全漏洞不像 bug 那样经常触发，但一旦触发就是大事故——SQL 注入、密钥泄露、命令注入。代码审查时安全相关的代码尤其需要仔细检查。
 
-按 OWASP 分类，每个发现给严重级别和修复建议。
-命令：sec-linter ./src
-纯 Go 标准库，go build 能编译。
+扫描源码找常见安全问题，按 OWASP 分类组织检查规则：
+
+注入风险——SQL 字符串拼接（fmt.Sprintf("SELECT * FROM users WHERE id = %s", id) 应该用参数化查询）、命令注入（exec.Command 的参数来自用户输入）。敏感数据泄露——硬编码密钥/密码/Token（字符串字面量里包含 password/secret/key/api_key 等关键词）、日志中打印了敏感信息。不安全的随机数——用 math/rand 生成安全敏感的随机值（应该用 crypto/rand）。路径遍历——文件路径拼接没做清洗（直接把用户输入拼到文件路径里）。不安全的 HTTP——请求没设超时（http.Client 没有 Timeout 字段）、TLS 配置不安全。
+
+每个发现给严重级别（Critical/High/Medium/Low）和修复建议。命令：sec-linter ./src。纯 Go 标准库，go build 能编译。

@@ -1,1 +1,11 @@
-需要一个灵活的时间段解析器，除了 Go 自带的 time.ParseDuration 之外还想支持更自然的写法。Go 实现，能解析 "1h30m"、"2天3小时"、"3d 5h 30m"、"P1DT2H3M"（ISO 8601 duration 格式）等各种时间段格式，统一转换成秒或者 time.Duration。解析不了的格式要报错说支持哪些格式。命令行工具，go build 编过。
+Go 的 time.ParseDuration 只支持 "1h30m" 这种格式，但用户输入的时间段花样太多了——"3天5小时"、"2w 3d"、"P1DT2H3M"（ISO 8601 duration）。得搞个万能解析器。
+
+Go 实现一个灵活的时间段解析器。支持的格式：
+
+标准 Go 格式：1h30m、2h45m30s（跟 time.ParseDuration 兼容）。友好格式：1天2小时、3分钟（中文单位）、2d5h30m（英文缩写 d=天 h=小时 m=分钟 s=秒 w=周）。ISO 8601 duration：P1Y2M3DT4H5M6S（P 开头，T 分隔日期和时间部分，Y=年 M=月 D=天 H=小时 M=分钟 S=秒）。混合格式：各种格式都能识别，自动检测输入风格。
+
+统一转换成秒数（int64）或者 time.Duration。年和月按近似值计算（1年=365天，1月=30天）。解析不了的格式要报错说支持哪些格式——"unsupported format '2 fortnights', supported: Go duration, Chinese units, English abbreviations, ISO 8601"。
+
+也支持反向转换——输入秒数输出人类可读的字符串（format(3661) -> "1h1m1s"）。
+
+命令行工具，go build 编过。

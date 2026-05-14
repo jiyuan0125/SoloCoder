@@ -1,3 +1,11 @@
-帮我用 Go 写一个管道风格的文本处理语言。类似 shell 管道，每一步是一个处理函数，用 | 连接：比如 "input.txt | split(',') | filter(#2 > 100) | sort(#1) | output"。
-支持 map、filter、sort、uniq、head、tail 这些基本操作。从 stdin 读数据，处理完写到 stdout。
-go build 通过即可。
+Linux 管道用多了就老想，能不能搞个更强大点的数据处理管道语言？awk 和 sed 组合虽然能干活，但写出来的东西自己三天后都看不懂。
+
+帮我用 Go 写一个管道风格的文本处理语言。类似 shell 管道但是功能更强，每一步是一个处理函数，用 | 连接。比如 "input.txt | split(',') | filter(#2 > 100) | sort(#1) | unique | output"。
+
+支持的管道操作符：map(表达式) 对每行变换、filter(条件) 过滤、sort(字段, asc/desc) 排序、unique 去重、head(N) 取前 N 行、tail(N) 取后 N 行、count 统计行数、join(分隔符) 合并行、split(分隔符) 拆分行。字段引用用 #1 #2 #3 表示第几个列，也支持列名引用 #name。
+
+数据模型是行列表，每行是一个字段数组。管道操作之间传递的是这个行列表，最终 output 写到 stdout。支持 from("file.csv") 从文件读、to("output.csv") 写到文件，不指定就从 stdin 读写到 stdout。
+
+语法上支持管道中间插注释（用 // 开头到行尾），方便理解长管道。错误处理要到位——文件不存在、列索引越界、类型不匹配（对字符串做大于小于比较）都得有明确报错，指出是管道的哪一步出了问题。
+
+go build 通过即可，标准库实现。

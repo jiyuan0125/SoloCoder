@@ -1,1 +1,9 @@
-拿到一个 OpenAPI spec 文件后，想自动检查里面有没有自相矛盾或者不合规的地方。Go 写一个 OpenAPI 验证器：检查 path 参数和 query 参数有没有重复定义、response 是否每个 status code 都有 schema、$ref 引用的目标是否存在、deprecated 的定义有没有被其他地方引用、命名是否符合规范（camelCase 等）。输出完整的校验报告。go build 通过。
+拿到一个 OpenAPI spec 文件后，怎么知道它写得对不对？前后端约定好的接口文档，如果有自相矛盾的地方，开发阶段就应该发现，不能等到联调时才暴露问题。
+
+Go 写一个 OpenAPI 文档验证器。读入 OpenAPI 3.0 的 JSON 或 YAML 文件，做以下检查：
+
+Path 参数检查——同一个 path 下不同方法的 operationId 是否重复、path 参数（{id} 风格）是否在 parameters 里定义了。Response 完整性——每个操作是否都定义了成功响应（2xx）和错误响应（4xx/5xx）、每个响应是否有 schema 或 $ref。引用完整性——$ref 引用的目标是否存在（包括内部引用和外部文件引用）、循环引用检测。命名规范——path 用 kebab-case、operationId 用 camelCase（可配置）、schema 属性名用 camelCase。Deprecated 检查——deprecated 的操作是否还被其他地方引用、deprecated 的 schema 是否还被使用。
+
+输出完整的校验报告，按严重级别分类（error/warning/info）。支持 --strict 模式把 warning 也视为 error（CI 流水线用）。
+
+go build 通过。

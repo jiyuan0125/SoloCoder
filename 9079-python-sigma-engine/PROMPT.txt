@@ -1,1 +1,7 @@
-日志里要检测的攻击模式太多了，想用 Sigma 规则来管理。用 Python 写一个 Sigma 规则引擎的简化版，能解析 Sigma YAML 规则文件，将规则中的检测条件（selection、condition、detection 部分）转换为对日志数据的匹配操作。支持基本的逻辑运算符（AND、OR、NOT）和字段匹配，对输入的日志（JSON 格式）做检测并输出告警。命令行工具。
+Sigma 是安全日志检测规则的标准格式，能跨不同的 SIEM 系统使用。但我们的日志分析流程还没有 SIEM，只是简单地把日志导出来用脚本分析。写个工具直接用 Sigma 规则扫描日志文件。
+
+Python 实现一个 Sigma 规则引擎。解析 Sigma 规则文件（YAML 格式），提取检测条件：logsource（日志来源，如 windows security、linux auth）、detection 段的 selection 条件（字段名和匹配值，支持通配符和修饰符 contains|startswith|endswith）、condition 表达式（selection1 and not selection2 这种逻辑组合）。
+
+匹配流程：加载 Sigma 规则集，读入日志文件（支持 JSON 格式的结构化日志和纯文本 syslog），对每条日志逐规则匹配。字段映射：Sigma 规则里的字段名（EventID、Image、CommandLine）需要映射到实际日志字段——通过 field mapping 配置文件定义映射关系。
+
+匹配到规则的日志输出：规则标题、严重等级（level 字段）、匹配到的日志原文、命中的具体条件。汇总统计：每条规则触发次数、按严重等级分布。python3 命令行工具，输入日志文件和 Sigma 规则目录。

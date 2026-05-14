@@ -1,11 +1,11 @@
-用 Rust 在分布式 KV 上实现 lease（租约）机制。
+分布式 KV 里的 lease（租约）和 Leader 选举里的 lease 不太一样——这里是给 key-value 对设置一个过期时间，类似 Redis 的 EXPIRE 命令。过期后 key 自动消失。这在实现分布式锁、session 管理、限流等场景下很有用。用 Rust 实现 KV 的 lease 功能。
 
-lease 就是给 key 设置一个过期时间，到期自动删除。在分布式环境里还要保证各节点对租约状态的一致判断。
+Lease 的数据结构：每个 key 可以关联一个 lease（或者没有 lease）。Lease 包含 lease_id（唯一标识）、ttl（有效期）、expires_at（过期时间戳）。同一个 lease 可以关联多个 key——这样就能实现"一组 key 同时过期"（比如用户 session 相关的所有缓存一起失效）。
 
-需要做的：
-- put 的时候可以指定 TTL（比如 10 秒后过期）
-- 后台有个检查线程定期清理过期的 key
-- 客户端可以续租（keep-alive），延长 TTL
-- 模拟多节点场景：主节点授予 lease，其他节点通过心跳确认 lease 仍然有效；如果主节点挂了，lease 到期后自动释放
+Put 操作的扩展：put(key, value, lease_id) 把 key 和 lease 关联。如果 lease 已经过期，操作失败。如果 lease 不存在，自动创建一个默认 TTL 的 lease。Get 操作不受影响——正常返回数据，但如果 key 的 lease 已过期，返回 NotFound 并删除数据。
 
-标准库实现，cargo run 能跑。
+Lease 的后台管理：一个定时器每秒检查一次所有 lease，移除过期的 lease 及其关联的 key。支持 Renew(lease_id) 续约——延长 expires_at。支持 Revoke(lease_id) 主动撤销——立即删除关联的所有 key。
+
+使用场景的模拟：分布式锁——客户端 put("lock:x", client_id, lease_id=TTL_10s)，10 秒内必须续约，否则锁自动释放。Session 管理——用户登录后创建 lease，所有 session 数据绑定到这个 lease，用户退出时 revoke lease。
+
+cargo build 通过。

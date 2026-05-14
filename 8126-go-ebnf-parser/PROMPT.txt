@@ -1,5 +1,7 @@
-写一个 EBNF（扩展巴科斯范式）解析器。能解析 Wirth 风格的 EBNF 语法：支持 [] 可选、{} 重复、() 分组、| 选择、"终结符" 和非终结符引用。
+写一个 EBNF（扩展巴科斯范式）解析器。EBNF 是描述语法的标准表示法，很多语言规范都用它来定义语法。能解析 EBNF 文本是做语法分析工具的基础。
 
-用法：ebnf-parser syntax.ebnf
-验证文法是否合法，输出每个产生式的结构。能检测未定义的非终结符和无法到达的规则。
+解析 Wirth 风格的 EBNF 语法。支持的语法元素：产生式——Identifier "=" Expression "."，每个产生式定义一个非终结符的规则。选择——Expression "|" Expression，匹配左边的或右边的。序列——Expression "," Expression，先匹配左边再匹配右边。可选——"[" Expression "]"，Expression 可以出现零次或一次。重复——"{" Expression "}"，Expression 可以出现零次或多次。分组——"(" Expression ")"，改变优先级。终结符——'"' character '"' 或 "'" character "'"，表示字面量。非终结符——Identifier，引用其他产生式。
+
+用法：ebnf-parser syntax.ebnf。验证文法是否合法，输出每个产生式的结构（用缩进树形格式显示）。能检测未定义的非终结符（被引用但没有定义）和无法到达的规则（定义了但从未被引用）。
+
 Go 标准库实现，go build 编译通过。

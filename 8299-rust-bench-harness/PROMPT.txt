@@ -1,5 +1,21 @@
-我需要一个 Rust 的 benchmark harness，方便对比不同实现的性能。
+优化了排序算法想量化提升幅度，但手写计时代码太繁琐，每次都要处理预热、多次运行取平均。Rust 写一个 benchmark harness，定义 benchmark 像写测试一样简单。
 
-提供宏来定义 benchmark：bench!("name", || { /* code */ })。自动跑多轮预热 + 计时，统计平均耗时、标准差、最快/最慢时间。支持参数化的 benchmark（比如不同输入大小）。输出格式化的表格，方便在命令行对比。
+接口设计：bench!("sort_1k", || { let mut v: Vec<i32> = generate_random_vec(1000); v.sort(); })。宏展开后生成一个 benchmark 函数，cargo run 时自动执行。
 
-不用达到 criterion 级别的精度，但要能稳定地测出微秒级差异。cargo run 跑几个示例 benchmark（字符串拼接、排序算法、哈希计算等）展示结果。
+执行策略：
+1. 预热阶段：跑 N 次（默认 10 次）让 CPU 缓存和分支预测器热起来
+2. 正式测量：跑 M 次（默认 100 次），每次用 std::time::Instant 精确计时
+3. 统计：计算平均耗时、标准差、最小值、最大值、中位数
+4. 检测异常值：如果某次测量偏离平均值超过 3 倍标准差，标记为 outlier 并剔除后重新统计
+
+参数化 benchmark：bench_group!("sort", |size: usize| { ... }, params: [100, 1000, 10000, 100000])。对每个参数值分别运行，输出对比表格。
+
+输出格式化的终端表格：
+```
+name             avg      min      max    stddev
+sort_100       2.3μs    1.8μs    4.1μs    0.4μs
+sort_1000     31.5μs   28.9μs   45.2μs    3.1μs
+sort_10000   420.8μs  395.1μs  512.3μs   22.7μs
+```
+
+cargo run 跑几个示例 benchmark 展示效果。cargo build 通过。

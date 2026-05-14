@@ -1,5 +1,17 @@
-写个代码发射器，用 Rust 把选好的机器指令编码成真正的二进制字节。
+指令选择器产出了抽象的机器指令，但 CPU 不认抽象结构，只认字节。代码发射器的工作就是把指令+操作数编码成真正的 x86_64 机器码字节流。Rust 实现。
 
-支持 x86_64 的常用指令编码：mov、add、sub、imul、cmp、jmp、ret，以及寄存器和立即数寻址。处理 REX prefix、ModR/M、SIB 字段的编码。输入是指令+操作数的结构体，输出是字节序列。
+x86_64 的指令编码是变长的，一条指令可能由这几个部分组成（从前往后）：Legacy prefix、REX prefix（0x40-0x4F，用于扩展寄存器和 64 位操作）、Opcode（1-3 字节）、ModR/M（寻址模式+寄存器）、SIB（辅助寻址）、Displacement（偏移量）、Immediate（立即数）。
 
-不要求覆盖全部 x86 指令集，够跑简单函数就行。cargo test 验证每条指令的编码结果和预期字节一致。
+需要支持的指令和寻址模式：
+- mov reg, imm64（REX.W + B8+rd + imm64）——加载 64 位立即数
+- mov reg, reg（0x89 或 0x8B + ModR/M）——寄存器间传送
+- add/sub/cmp reg, reg（opcode + ModR/M）
+- add/sub reg, imm32（opcode + ModR/M + imm32）
+- imul reg, reg（0x0F 0xAF + ModR/M）
+- shl/shr reg, imm8（opcode + ModR/M + imm8）
+- jmp rel32（E9 + 4 字节相对偏移）
+- ret（C3）
+
+ModR/M 的编码规则：mod 字段（2 bit）表示寻址模式，reg 字段（3 bit）是寄存器操作数，rm 字段（3 bit）是另一个操作数。SIB 在 rm=4 且 mod≠3 时出现。输入是指令结构体，输出字节序列。
+
+cargo test 验证每条指令的编码和预期字节完全一致。cargo build 通过。

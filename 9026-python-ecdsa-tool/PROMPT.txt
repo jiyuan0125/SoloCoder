@@ -1,5 +1,7 @@
-我在一个项目里需要用到 ECDSA 签名，想先写个工具把签名验证流程跑通。
+项目里要对接一个用 ECDSA 签名的第三方服务，但我们对签名验证流程不太熟，想先写个工具把签名生成和验证的完整流程跑通，确认理解没问题再写业务代码。
 
-用 Python 实现一个 ECDSA 工具。支持 NIST P-256、P-384 和 secp256k1 三条曲线。能生成密钥对、签名、验签。签名输出 DER 编码和原始 r||s 两种格式。密钥支持 PEM 导入导出。能从签名中恢复公钥。提供命令行接口做各种操作。
+用 Python 实现一个 ECDSA 工具。密钥管理：支持 NIST P-256、P-384 和 secp256k1 三条曲线，生成密钥对后导出为 PEM 格式（SEC 1 / EC PRIVATE KEY 格式），也能从 PEM 文件导入。签名操作：对输入消息先做 SHA-256 哈希，再用私钥签名。签名输出支持两种编码——DER 格式（ASN.1 结构，标准兼容性好）和原始 r||s 拼接格式（64 或 96 字节，某些区块链场景用）。
 
-python3 实现，尽量少装外部包。
+验签操作：输入消息、签名和公钥，输出"签名有效"或"签名无效"。公钥恢复：从签名和原始消息中恢复出候选公钥（每条签名可恢复出 1-2 个候选公钥），适用于无法提前获取公钥的场景。
+
+命令行接口：ecdsatool genkey --curve P-256、ecdsatool sign --key priv.pem --msg "hello" --format der、ecdsatool verify --pub pub.pem --msg "hello" --sig sig.der。python3 实现，用 cryptography 库，尽量少装外部包。

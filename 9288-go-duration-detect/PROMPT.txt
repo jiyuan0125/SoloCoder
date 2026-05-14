@@ -1,12 +1,7 @@
-写一个视频时长检测工具，Go 实现。
+获取视频时长——看起来是个一句话就能搞定的事，实际上不同容器格式存时长的位置和计算方式完全不同。我需要一个统一的工具，不管输入什么格式都能准确返回时长。Go 写。
 
-做个简单工具专门获取视频时长：
-- 从 MP4 文件读取 mvhd 的 duration + timescale 计算时长
-- 从 MKV/WebM 文件的 Segment Info 读取 Duration + TimecodeScale
-- 从 FLV 文件的 metadata 的 duration 字段读取
-- 从 MPEG-TS 通过 PTS 范围估算时长
-- 从 WAV/MP3/AAC 通过文件大小和码率估算
-- 输出秒数和格式化时间（HH:MM:SS.mmm）
-- 支持批量，输出 CSV 或 JSON
+各格式的时长获取方式：MP4 读 moov/mvhd 的 duration 和 timescale 两个字段，时长 = duration/timescale（秒）。如果 mvhd 的 duration 为 0（某些坏文件），则从各 track 的 mdhd 里取最大值。MKV 从 Segment/Info 的 Duration 元素读取，除以 TimecodeScale（默认 1000000 纳秒）得到秒数。FLV 从 onMetaData 对象的 duration 字段读，单位就是秒。
 
-用法 dur-detect video.mp4，go build 编译通过。标准库。
+MPEG-TS 没有全局时长字段——只能通过扫描所有 PTS 值，用最大 PTS 减最小 PTS 来估算。但全量扫描太慢，优化方案是读文件头部若干包获取起始 PTS，seek 到文件尾部若干包获取结束 PTS，相减再除以 90000（TS 时钟频率）。纯音频文件（WAV/MP3/AAC）的时长通过文件大小减去头部大小，除以字节码率得到。MP3 的字节码率从帧头读取（VBR 需要读 Xing/VBRI 头获取总帧数）。
+
+输出格式：原始秒数（浮点，精确到毫秒）和 HH:MM:SS.mmm 格式。批量模式输出 CSV 或 JSON。用法 dur-detect video.mp4。Go 标准库，go build 通过。

@@ -1,5 +1,11 @@
-我需要解析 ELF 文件格式的工具，用 Rust 实现。手写二进制解析，不要用 elf 这个 crate。
+线上排查一个段错误，需要看 ELF 文件里段的布局和符号表，readelf 输出太冗长了，想自己写一个按需提取的工具。用 Rust 手写二进制解析，不要依赖 elf crate。
 
-能读取 ELF header、Program headers、Section headers，打印出文件类型、架构、入口地址这些基本信息。支持 64 位 ELF 就行，32 位可以不管。碰到格式不对的文件要有合理的错误处理。
+先解析 ELF header：前 16 字节是 e_ident（魔数、class、data 编码、OS/ABI），然后读 e_type 判断是可执行文件还是共享库，e_machine 区分 x86_64 还是 ARM，e_entry 拿到入口地址。所有字段用结构体定义，大小端根据 EI_DATA 判断来读。
 
-cargo run -- input-elf-file 这种用法，拿 /bin/ls 或者其他系统二进制做测试。cargo build 要能过。
+1. ELF header 解析后打印文件类型（ET_EXEC/ET_DYN 等）、架构、入口点
+2. Program headers 遍历，每个 segment 的类型（LOAD/INTERP/DYNAMIC）、文件偏移、虚拟地址、文件大小和内存大小、权限标志，重点关注 PT_LOAD 段，这些是运行时加载器实际映射到内存的区域
+3. Section headers 遍历，通过 e_shstrndx 找到字符串表来解析节名，输出 .text、.data、.bss、.rodata 等节的偏移和大小
+
+只支持 ELF64（EI_CLASS == ELFCLASS2），32 位的可以忽略。格式不合法的字段返回具体错误：比如魔数不匹配、header 长度不够、section 数量溢出。
+
+cargo run -- /bin/ls 打印结构化信息。cargo build 通过。

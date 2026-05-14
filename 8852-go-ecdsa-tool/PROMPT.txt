@@ -1,8 +1,11 @@
-写个 ECDSA 椭圆曲线签名的命令行工具，Go 实现。
+项目里经常碰到 JWT 签名用 ES256（ECDSA + P-256 + SHA-256）的情况，调试的时候需要手动验证签名或者生成测试用的签名。每次都写测试代码太麻烦，需要个独立的命令行小工具。
 
-现在项目里经常碰到 JWT 签名用 ES256 的情况，想有个独立小工具能生成 ECC 密钥、做签名和验证，不用每次都写测试代码。
+用 Go 实现一个 ECDSA 椭圆曲线签名工具。keygen 子命令：支持三条曲线生成密钥对——P-256（也叫 secp256r1，用于 ES256）、P-384（ES384）、P-521（ES512）。私钥输出 PKCS#8 DER 再 Base64 编码的 PEM，公钥输出 PKIX DER 的 PEM。打印曲线名称和公钥坐标方便确认。
 
-功能要求：支持 P-256/P-384/P-521 三条曲线生成密钥对，导出 PEM；对文件或字符串做签名（输出 base64）；验证签名是否有效。
+sign 子命令：加载私钥 PEM 文件，对输入数据（命令行参数或文件）计算 SHA 哈希（P-256 用 SHA256，P-384 用 SHA384，P-521 用 SHA512），用 ECDSA 签名。输出签名的 r 和 s 值拼接的 Base64 字符串（IEEE P1363 格式，固定长度——P-256 是 64 字节，P-384 是 96 字节，P-521 是 132 字节）。
 
-命令格式：ecdsa-tool keygen -curve P256、ecdsa-tool sign -key priv.pem -data "test"、ecdsa-tool verify -key pub.pem -data "test" -sig <base64>
-只依赖 Go 标准库，go build 通过即可。
+verify 子命令：加载公钥 PEM，输入原始数据和签名 Base64。解码签名拆分 r 和 s，用 ECDSA 验证。输出 VALID 或 INVALID。
+
+命令：ecdsa-tool keygen -curve P256 -out key.pem、ecdsa-tool sign -key key.pem -data "test"、ecdsa-tool verify -key pub.pem -data "test" -sig <base64>。
+
+Go 标准库 crypto/ecdsa + crypto/elliptic，go build 通过。

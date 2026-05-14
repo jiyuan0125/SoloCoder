@@ -1,1 +1,9 @@
-帮我写个 Git 仓库的敏感信息扫描工具。用 Python 实现，遍历 Git 仓库的所有 commit 历史，检查每个 commit 的 diff 内容，查找是否包含密码、API Key、Token 等敏感字符串。支持指定扫描深度（最近 N 个 commit 或全部），输出泄露的 commit hash、文件名、行号和敏感内容摘要。能处理大仓库不卡死就行，命令行工具。
+代码推到 GitHub 之后才发现 config.py 里有数据库密码，赶紧删了重新提交，但 git 历史里还是能看到。写个工具专门扫描 git 仓库的历史提交记录，把所有曾经提交过的敏感信息都找出来。
+
+Python 实现 git 历史密钥扫描。扫描方式：遍历 git 仓库的所有 commit，对每个 commit 的 diff 内容做敏感信息扫描（只看新增和修改的行，忽略删除的行）。用 git log 和 git diff 命令（通过 subprocess 调用）获取提交历史。
+
+检测模式：跟常规代码扫描一样的正则规则——AWS Key、GitHub Token、私钥、数据库连接串、JWT Secret、API Key 等。额外检测 commit message 中的敏感词（密码、secret、credential），可能提示哪些 commit 包含密钥变更。
+
+输出格式：按 commit 分组，每个发现列出 commit hash、作者、时间、文件路径、行号、匹配类型、原文片段（遮蔽显示）。支持指定扫描范围——所有历史、最近 N 个 commit、指定时间段（--since --until）。
+
+去重：同一个密钥如果在多个 commit 中出现，只报告首次出现。python3 命令行工具，需要目标目录是 git 仓库。

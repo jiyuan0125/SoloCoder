@@ -1,5 +1,5 @@
-拿到一个 .ts 文件想看看里面的结构。写个 Python 工具来解析 MPEG-TS（传输流）的二进制格式。
+MPEG-TS（传输流）是流媒体领域最基础的容器格式之一，HLS 用的就是 TS 分片。TS 的设计目标是在不可靠的网络上传输——每个包固定 188 字节，丢了任何包都能从下一个同步字节重新对齐。解析 TS 流是理解流媒体技术的第一步。
 
-解析 TS 包头（4 字节同步字节 0x47、PID、自适应字段等），提取 PAT（PID 0x0000）和 PMT 表，从中找出视频和音频的 PID。统计总包数、各 PID 的包数和占比。输出解析结果包括：PAT 内容、PMT 内容、各流类型和 PID。
+TS 包结构：前 4 字节是包头——同步字节 0x47（固定值，用于在字节流中定位包边界）、1 bit 传输错误标志、1 bit 负载单元起始标志、1 bit 传输优先级、13 bit PID（包标识符，决定这个包属于哪个流）、2 bit 加密控制、4 bit 连续计数器。后面是自适应字段（可选）和负载数据。
 
-纯 Python 3，直接操作二进制数据，不用第三方库。python ts_parser.py input.ts 命令行运行。
+解析器首先要找 PAT（Program Association Table，PID 固定为 0x0000）。PAT 里列出所有节目的 PMT 的 PID。然后读 PMT（Program Map Table），里面列出这个节目包含的所有流——视频流 PID、音频流 PID、字幕流 PID，以及每个流的类型（如 0x1B 是 H.264、0x24 是 H.265、0x0F 是 AAC）。统计每个 PID 出现的包数量和占比。用法：python3 ts_parser.py parse input.ts

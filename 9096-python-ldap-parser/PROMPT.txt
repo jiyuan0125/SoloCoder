@@ -1,1 +1,9 @@
-LDAP 查询流量也需要做安全审计。用 Python 写一个 LDAP 协议解析器，解析 LDAP 消息的 BER 编码格式，识别操作类型（BindRequest、SearchRequest、SearchResponse、ModifyRequest 等），提取关键信息（绑定 DN、搜索过滤条件、搜索范围、返回的属性值）。输出解析后的 LDAP 操作摘要，命令行工具。
+域环境里 LDAP 是目录查询的核心协议，用户信息、组策略、服务配置都在 LDAP 里。分析 LDAP 流量有助于理解域结构和排查认证问题。
+
+Python 实现 LDAP 报文解析器。LDAP 使用 BER 编码（跟 Kerberos 一样），报文结构是 SEQUENCE 包含 messageID + 协议操作。支持解析这些操作：
+
+BindRequest/BindResponse：认证请求，解析版本号、用户名（DN 格式如 CN=admin,DC=corp,DC=com）、认证方式和凭据。SearchRequest/SearchResponse：目录查询，解析 base DN（搜索起始位置）、scope（baseObject/singleLevel/wholeSubtree）、filter（AND/OR/NOT/equalityMatch 等过滤条件）、attributes（请求返回的属性列表）。SearchResponse 中的 SearchResultEntry 包含匹配对象的 DN 和属性值对。
+
+ModifyRequest：修改操作，解析要修改的对象 DN 和修改内容。AddRequest/DeleteRequest：新增和删除目录对象。
+
+从 pcap 中提取 TCP 389 端口的流量，TCP 流重组后逐 LDAP 消息解析。输出每个操作的类型、关键参数（DN、filter、属性列表），对 SearchResponse 展示返回的对象数量和关键属性。python3 命令行工具。

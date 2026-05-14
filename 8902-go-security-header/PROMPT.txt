@@ -1,1 +1,7 @@
-最近在做安全加固，需要批量扫描线上服务的安全响应头。写个 Go CLI 工具，接收一个域名列表文件，对每个域名发 HTTPS 请求，检查常见安全头（X-Content-Type-Options、X-XSS-Protection、Content-Security-Policy、Referrer-Policy 等）是否存在。输出一份简单的报告，列出每个域名缺失了哪些头。用 Go 标准库，go build 编译通过。
+最近在做安全加固，需要批量扫描线上服务的安全响应头。很多安全问题其实不是代码漏洞而是配置遗漏——缺个 CSP 头就可能被 XSS，缺个 X-Frame-Options 就可能被点击劫持。
+
+写个 Go CLI 工具，接收一个域名列表文件，对每个域名发 HTTPS 请求。检查以下常见安全头的存在性：X-Content-Type-Options（应为 nosniff 防止 MIME 嗅探）、X-XSS-Protection（应为 1; mode=block）、Content-Security-Policy、Referrer-Policy（推荐 strict-origin-when-cross-origin）、Permissions-Policy（限制浏览器 API 使用）、X-Frame-Options（应为 DENY 或 SAMEORIGIN）、Strict-Transport-Security。
+
+输出一份简单的报告：每个域名列出缺失了哪些头、已有但配置不当的头（比如 X-XSS-Protection 设了 0 就是禁用了保护）。最后给出汇总——多少域名全部通过、多少有缺失、最常见的缺失头是什么。
+
+Go 标准库，go build 编译通过。

@@ -1,3 +1,15 @@
-后台页面需要生成邮件和通知文案，写一个轻量模板引擎。支持变量插值 {{ name }}、条件块 {% if score > 90 %}优秀{% endif %}、循环 {% for item in list %}、模板继承（{% extends "base.html" %} 和 {% block content %}）和自定义过滤器（{{ date | format_date }}）。
+后台系统要发各种通知邮件——注册确认、密码重置、订单状态变更。每封邮件格式不同但结构类似，硬编码 HTML 字符串太痛苦了。做一个轻量模板引擎，运营自己改模板文件就行。Python 实现。
 
-模板语法错误要指明行号和原因。纯 Python 实现，不用 Jinja2。python 能跑起来，命令行传入模板文件和数据 JSON 输出渲染结果。
+模板语法：
+- 变量输出：{{ name }}、{{ user.email }}（支持点号属性访问）
+- 条件块：{% if score > 90 %}优秀{% elif score > 60 %}及格{% else %}不及格{% endif %}
+- 循环：{% for item in items %}{{ item.name }}{% endfor %}
+- 过滤器：{{ date | format_date }}、{{ price | round(2) }}、{{ text | truncate(50) }}
+- 模板继承：{% extends "base.html" %} 子模板 + {% block content %}...{% endblock %} 在父模板中定义插槽
+- 安全转义：{{ html | safe }} 不转义，默认自动 HTML 转义
+
+解析过程：先把模板文本按 {{、{%、}}、%} 分割成文本段、表达式段和标签段。然后用递归下降构建 AST——TextNode、ExprNode、IfNode、ForNode、BlockNode、ExtendsNode。循环变量在 for 块内部创建子作用域。
+
+渲染时传入 context 字典，表达式求值支持简单的比较运算和属性访问。模板继承的实现——遇到 extends 标签时先加载父模板解析，然后用子模板的 block 内容覆盖父模板的同名 block。
+
+模板语法错误要指明行号："Unclosed tag at line 5: {% if %}"。python3 template.py template.html data.json。纯 Python 不用 Jinja2。

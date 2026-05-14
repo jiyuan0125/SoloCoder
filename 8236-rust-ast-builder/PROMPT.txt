@@ -1,4 +1,4 @@
-手写 AST 数据结构太繁琐了，需要一个 AST Builder，给定语言规范自动生成 AST 的 Rust 类型定义。
+手写 AST 数据结构是编译器开发里最枯燥的环节之一。一个中等规模的语言有几十种节点类型，每种节点又有不同的子节点组合——BinaryExpr 有左右操作数和运算符、FunctionDecl 有参数列表、返回类型和函数体、IfStmt 有条件、then 分支和 else 分支。这些 enum 和 struct 定义写起来既机械又容易遗漏字段。如果有一个工具能根据语言规范描述文件自动生成所有 AST 类型的 Rust 定义就好了：输入一个 YAML 或 TOML 格式的节点描述文件，自动输出完整的 enum/struct 定义，包括 Option、Vec、Box 等包装类型，自动 derive Debug、Clone、PartialEq，可选生成 visitor trait。
 
 用 Rust 实现一个 AST Builder 工具：
 - 输入语言描述文件（定义有哪些节点类型和子节点）

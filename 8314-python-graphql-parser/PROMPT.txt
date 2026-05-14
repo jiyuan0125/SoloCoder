@@ -1,3 +1,16 @@
-要给内部 GraphQL 网关做一个查询验证和审计工具，首先得能解析 GraphQL。用 Python 实现一个 GraphQL 解析器，支持 Query、Mutation、Fragment、变量（$var）、指令（@include/@skip）、嵌套字段选择和参数。
+GraphQL 网关上线后需要审计所有查询——哪些字段被频繁查询、有没有过于复杂的嵌套查询（可能导致 N+1 问题）。第一步是解析 GraphQL 查询语言。Python 实现。
 
-解析成 AST 后能输出格式化的查询字符串，也能提取查询里涉及的所有字段和类型。纯 Python 实现，python 能跑，命令行读 .graphql 文件解析并打印 AST。
+支持的 GraphQL 语法：
+- Operation：query、mutation、subscription（带可选名字和变量定义）
+- 字段选择：{ user(id: 1) { name, email, posts { title } } }
+- 参数：字段可以带参数 (id: 1, limit: 10)，参数值支持变量 ($userId)
+- Fragment：fragment userFields on User { name, email }，引用 ...userFields
+- 内联 Fragment：... on Admin { role }
+- 指令：@include(if: $show)、@skip(if: $hide)
+- 枚举和输入类型：status: ACTIVE, input: {key: "val"}
+
+解析成 AST 后提供几种分析能力：提取查询涉及的所有字段名和类型名（做字段使用统计）、计算查询深度（嵌套层数，限制过深的查询）、计算复杂度分数（字段数量加权，防 DoS）、格式化输出（pretty print）。
+
+词法分析处理 GraphQL 的 token：名字、整数、浮点、字符串、标点符号（{}()[]:!@$...）。语法错误报告行号和位置。
+
+python3 graphql_parser.py query.graphql。纯 Python 实现。

@@ -1,11 +1,11 @@
-用 Rust 写一个 Raft 心跳管理模块。
+心跳是 Raft Leader 维持权威的核心机制——Leader 定期发心跳告诉所有 Follower "我还活着"，Follower 收到心跳就安心做 Follower，收不到就开始选举。心跳的实现看起来就几行代码，但要处理好各种边界情况（网络延迟、心跳丢失、Leader 切换）。用 Rust 做一个独立的心跳管理模块。
 
-Leader 需要定期给 Follower 发心跳（空的 AppendEntries RPC）来维持自己的权威。如果 Follower 一段时间没收到心跳，就认为 Leader 挂了，触发重新选举。
+心跳的发送端（Leader）：维护一个定时器（tokio::time::interval），每隔 heartbeat_interval（默认 50ms）触发一次。触发时向所有 Follower 并行发送 AppendEntries 请求（entries 为空，就是心跳）。不关心响应——心跳失败不影响 Leader 的角色（只有选举才会替换 Leader）。
 
-功能要求：
-- Leader 按固定间隔（如 50ms）向所有 Follower 广播心跳
-- Follower 收到合法心跳后重置选举超时
-- 心跳中携带 Leader 的 Term 和 commitIndex
-- Leader 自身不需要心跳，但需要维护心跳定时器
+心跳的接收端（Follower）：每次收到 Leader 的心跳后重置自己的 election_timeout 定时器。election_timeout 从 [min_timeout, max_timeout] 范围内随机选择（150-300ms）。超时没收到心跳则认为 Leader 故障，发起选举。
 
-cargo build 通过，验证心跳间隔稳定且超时触发正确。
+需要处理的特殊情况：收到旧 term 的心跳（term < currentTerm），拒绝并回复自己的 term 让对方更新。收到新 term 的心跳（term > currentTerm），立即更新 term 并退回 Follower。Candidate 收到心跳时的处理——如果心跳的 term >= 自己的 term，退回 Follower。
+
+模拟场景：正常心跳维持、Leader 暂停心跳（模拟故障）触发选举、网络抖动导致偶尔心跳丢失但不触发选举（因为不是连续丢失）。
+
+cargo build 通过。

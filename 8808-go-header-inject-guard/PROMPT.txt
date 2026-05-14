@@ -1,11 +1,9 @@
-写一个 HTTP 头注入防护库，Go 语言。
+最近审计代码发现好多地方直接把用户输入塞进 HTTP header——User-Agent 写进日志 header、Referer 原样放到响应的 Link header 里、X-Forwarded-For 不做清洗就信任。如果用户输入里有 \r\n，就能注入任意响应头，配合 Content-Length 还能做响应拆分（HTTP Response Splitting）。
 
-最近审计代码发现好多地方直接把用户输入塞进 HTTP header，可能导致 CRLF 注入和响应拆分。
+用 Go 写一个 HTTP 头注入防护库。核心函数 SanitizeHeaderValue(value string) string：遍历字符串，遇到 CR(\r=0x0D) 和 LF(\n=0x0A) 字符直接移除。也处理 \0（空字节）和 \x1b（ESC，ANSI 转义序列的开始）。
 
-要实现的功能：
-- 检测并过滤 header 值中的 CR(\r) 和 LF(\n) 字符，防止响应拆分攻击
-- 校验常见的用户可控 header：Host、Referer、X-Forwarded-For、Location 等
-- 对 Cookie 值进行安全编码，防止通过 Cookie 注入
-- 提供一个 HTTP 中间件，自动清洗所有响应 header 中的危险字符
+针对高风险 header 的专门校验：Host header 校验——只允许合法的 host 格式（域名或 IP:端口），禁止包含路径、查询参数和特殊字符；Location header 校验——确保是合法 URL，不允许包含 CRLF；Set-Cookie 值校验——对 cookie 值做编码，防止通过 cookie 注入额外属性（HttpOnly、Secure 等）；X-Forwarded-For 校验——只保留 IP 地址格式的内容，移除其他字符。
+
+提供 HTTP 中间件 HeaderSanitizer：拦截所有请求，清洗 Request 的 Host、Referer、X-Forwarded-For 等 header 中的危险字符后传递给下游 Handler。同时对 ResponseWriter 做包装，确保写入的 header 值也被清洗。
 
 Go 标准库，go build 通过。

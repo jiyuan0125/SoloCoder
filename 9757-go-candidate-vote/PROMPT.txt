@@ -1,10 +1,9 @@
-用 Go 实现分布式选举中的投票环节。当 Candidate 发起选举时，需要向其他节点拉票，获得多数票才能成为 Leader。
+投票是共识协议里最关键的环节之一，但实现起来比想的容易出 bug——比如一个节点在同一个 term 里投了两票，或者 Candidate 没等到多数票就开始下一轮了。我想用 Go 把投票过程单独拎出来实现，搞清楚每个状态转换的细节。
 
-具体要做的：
-- 节点有三种角色：Follower、Candidate、Leader
-- Candidate 自增 term，向所有其他节点发送 RequestVote RPC（模拟即可）
-- 每个节点在一个 term 内只能投一票，先到先得
-- 获得超过半数票的 Candidate 晋升为 Leader
-- 打印投票过程：谁发起、谁投给谁、最终结果
+这个程序聚焦在 Candidate 发起选举到投票结果的完整流程。节点有三种角色（Follower/Candidate/Leader），投票规则遵循 Raft 的基本约束：每个节点在同一个 term 内只能投一票，先到先得。一旦投了票就把 votedFor 记下来，后续同 term 的请求一律拒绝。
+
+Candidate 发起选举时做的事情：自增 term，切换到 Candidate 状态，投自己一票，然后并行向所有其他节点发送 RequestVote（包含 candidateId、term、lastLogIndex、lastLogTerm）。收集响应时实时统计票数，一旦获得 ceil((N+1)/2) 张票就晋升为 Leader。如果选举超时（比如 300ms）还没凑够票，就放弃这一轮，等下一轮超时再试。
+
+要模拟和验证的情况：5 节点正常选举、网络分区导致两个 Candidate 竞争（一个拿到 3 票胜出，另一个只有 2 票失败）、节点恢复后加入新一轮选举。每个 RequestVote 和投票响应都要打印日志，最终汇总谁在哪个 term 当选。
 
 Go 标准库实现，go build 编译通过。

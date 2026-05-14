@@ -1,12 +1,13 @@
 帮我用 Go 实现 LSM-Tree 的 Column Family 支持。
 
-Column Family 类似数据库的表，多个 Column Family 共享 WAL 但各自独立的 Memtable 和 SSTable 文件。RocksDB 用这种方式在同一个实例里隔离不同类型的数据。
+Column Family 类似数据库的表，多个 Column Family 共享 WAL 但各自有独立的 Memtable 和 SSTable 文件。RocksDB 用这种方式在同一个实例里隔离不同类型的数据——比如一个 CF 存元数据，另一个存用户数据，compaction 独立不影响。
 
 要实现：
-- ColumnFamily 管理：创建、删除、列出所有 CF
-- 每个 CF 独立的 Memtable 和 SSTable 文件集合、独立 compaction
-- 共享 WAL：写操作记录 CF ID + key + value 到同一个 WAL
+- ColumnFamily 管理：CreateCF(name, options)、DropCF(name)、ListCF() 返回所有 CF 名称
+- 每个 CF 独立的 Memtable 和 SSTable 文件集合、独立 compaction 触发和执行
+- 共享 WAL：写操作记录 CF ID + key + value 到同一个 WAL 文件（批量写组提交）
 - 恢复时按 CF ID 分发 WAL 记录到对应 CF 的 Memtable
-- 全局操作：FlushAll、CloseAll（优雅关闭所有 CF）
+- 全局操作：FlushAll（所有 CF 刷盘）、CloseAll（优雅关闭所有 CF，先刷 WAL 再释放资源）
+- 默认有个 "default" CF，不需要显式创建就可用
 
-Go 标准库，go build 通过。默认有个 "default" CF，新建的 CF 需要显式创建。
+Go 标准库，go build 通过。CF ID 用 uint32 自增分配，CF 名称到 ID 的映射要并发安全。

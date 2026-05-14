@@ -1,5 +1,16 @@
-实现一个 Python 的反模式检测器，识别代码中常见的反模式写法。
+有些代码写法看起来能跑但暗藏隐患——循环里频繁创建对象、用列表当全局变量、异常当流程控制。这些都是经典反模式。Python 实现反模式检测器。
 
-反模式是看似合理但实际有害的编码习惯。检测以下常见反模式：裸 except（`except:` 吞掉所有异常）、可变默认参数（`def f(x=[])`）、在循环中用 `+` 拼接字符串、用 `is` 比较整数/字符串、`import *` 污染名字空间、不必要的 lambda（`map(lambda x: f(x), lst)` 应该用列表推导）、在 `__init__` 外定义实例属性。
+检测的反模式：
+- 异常控制流：在 except 里做业务逻辑判断（不是真正的异常处理），或者在循环里用 try/except 代替 if 判断
+- 全局可变状态：在模块级别定义 list/dict 并在函数里修改它（应该用函数参数或类）
+- 循环内重复计算：循环体内有不变的表达式（应该提到循环外）
+- 字符串拼接循环：for 循环里 s += x（应该用 ''.join()）
+- 裸 except：except: 不指定异常类型，会吞掉 KeyboardInterrupt 和 SystemExit
+- 可变默认参数：def f(x=[]) 或 def f(x={})——默认值在函数定义时创建，多次调用共享同一个对象
+- == 比较布尔值：if flag == True 应该用 if flag
+- 类型检查用 isinstance 代替 hasattr：检查鸭子类型应该用 hasattr/LBYL 而不是 isinstance
+- 在 for 循环中修改被迭代的列表
+- 用 list.index() 检查元素存在：应该用 in 操作符或 set
+- 多层嵌套字典手动初始化：应该用 defaultdict 或 setdefault
 
-Python 3，ast 模块。CLI：`python anti_pattern.py src/`，输出每个反模式的实例位置和解释。`python anti_pattern.py` 能直接跑。
+每个反模式报告位置、类型、风险说明和建议改法。python3 anti_pattern.py source.py。纯 Python 3 用 ast 模块。

@@ -1,1 +1,5 @@
-有些照片的EXIF信息需要修改或添加，比如GPS隐私保护要清除位置信息。写个Python EXIF写入工具，能往JPEG文件里添加、修改、删除EXIF字段。保留原有EXIF数据不被破坏，只更新指定的tag。支持写入常用字段：DateTime、Artist、Copyright、ImageDescription，以及清除整个GPS IFD。修改后的图片还能正常查看。Python3实现，命令行操作。
+发照片到社交媒体之前想抹掉 GPS 定位信息保护隐私，或者给老照片补上拍摄日期和版权声明。这些都涉及修改 JPEG 文件里的 EXIF 数据。写个工具能添加、修改、删除指定的 EXIF 字段，同时确保其他字段和 JPEG 文件结构不受影响。
+
+EXIF 数据存在 JPEG 的 APP1 段里。修改策略：先解析整个 JPEG 的标记段序列（SOI、APP0、APP1、DQT、DHT、SOS...），定位到 APP1/EXIF 段。在内存中修改 EXIF 的 IFD 结构——添加新 tag 要在 IFD 里插入条目并分配数据空间（值超过 4 字节的要放到 IFD 后面的数据区）；修改已有 tag 直接覆写值；删除 tag 把条目标记为空。
+
+支持的写入字段：DateTime（拍摄时间，格式 YYYY:MM:DD HH:MM:SS）、Artist（作者）、Copyright（版权声明）、ImageDescription（描述）。以及一键清除整个 GPS IFD——把 GPSInfo 指针设为 0 并释放对应数据空间。修改后的图片能在任何查看器里正常打开。用法：python3 exif_writer.py set photo.jpg --artist "张三" --clear-gps

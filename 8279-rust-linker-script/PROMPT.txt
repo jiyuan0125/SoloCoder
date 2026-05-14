@@ -1,5 +1,11 @@
-我需要解析 GNU ld 风格的 linker script，用 Rust 实现。
+嵌入式开发时经常需要精确控制每个段的内存地址——内核代码放在 0x80000000、启动代码放在 0xFFFF0000、设备驱动段对齐到 4K。手写 linker script 容易出语法错误但很难排查。用 Rust 写一个 linker script 解析器。
 
-能解析基本的 SECTIONS 命令，理解 .text、.data、.bss 等段的地址分配、对齐、文件匹配规则。支持 ENTRY、MEMORY 命令。解析后输出一个结构化的内存布局描述——每个段放在哪个地址区间。
+GNU ld 的 linker script 是一种声明式语言，核心命令包括：
 
-不用真的做链接，只做 linker script 的解析和验证。cargo run -- script.ld 打印解析结果。给几个典型 linker script 文件做测试。
+ENTRY(symbol) 指定程序入口。MEMORY 命令定义内存区域（名字、起始地址、长度、属性 R/W/X）。SECTIONS 命令是最重要的——描述段的布局。段定义格式：.text 0x80000000 : { *(.text) }，大括号里是文件匹配规则，* 是通配符。支持 ALIGN(n) 对齐、. = . + 0x1000 设置当前位置、PROVIDE 定义弱符号。
+
+语法解析用递归下降或者手写的 tokenizer + parser。Token 类型：标识符、数字（支持十六进制 0x 和十进制）、字符串、运算符（= += = 等）、特殊符号（. 表示当前地址计数器）、大括号和分号。
+
+解析后输出结构化的内存布局描述——一个 Segment 数组，每个段包含名称、起始地址、对齐要求、包含的文件匹配规则列表。额外的有 MEMORY 区域定义和 ENTRY 符号名。
+
+cargo run -- script.ld 打印解析结果的 JSON 或表格。附几个典型的 linker script 测试文件。cargo build 通过。

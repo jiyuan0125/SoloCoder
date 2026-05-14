@@ -1,1 +1,11 @@
-做 API 网关需要解析 OpenAPI（Swagger）3.0 的 spec 文件。Go 实现一个 OpenAPI 解析器，能处理 JSON 和 YAML 格式的 spec，解析 paths、components（schemas、responses、parameters）、security 定义。支持 $ref 引用解析（包括外部文件引用）。解析结果能方便地查询某个 path+method 的完整请求参数和响应定义。go build 通过。
+做 API 网关需要解析 OpenAPI（Swagger）3.0 的 spec 文件——读出每个接口的请求参数、响应格式、认证要求，然后自动做路由注册、参数校验、文档生成。
+
+Go 实现一个 OpenAPI 解析器。能处理 JSON 和 YAML 格式的 spec 文件（自动检测格式）。解析的核心结构：
+
+Paths——每个 path 下按 HTTP 方法（get/post/put/delete/patch）定义操作，操作包含 summary、parameters（path/query/header/cookie 四种位置的参数）、requestBody、responses（按状态码列出响应 schema）。Components——schemas（数据模型定义，支持 allOf/anyOf/oneOf/nullable）、responses（可复用的响应模板）、parameters（可复用的参数定义）、securitySchemes（认证方式：bearer/http/apiKey/oauth2）。
+
+支持 $ref 引用解析——包括内部引用（#/components/schemas/User）和外部文件引用（./models.yaml#/User）。外部引用递归解析，检测循环引用。
+
+解析结果能方便地查询——给定 path+method 返回完整的请求参数列表（合并 path 级和 operation 级的参数）和响应定义。
+
+go build 通过。

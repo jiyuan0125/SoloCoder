@@ -1,3 +1,11 @@
-处理 API 返回的复杂嵌套 JSON 时提取字段太痛苦了，我想实现一个 JSONPath 查询引擎。支持标准 JSONPath 语法：$（根）、.（子节点）、..（递归下降）、[]（数组索引/切片）、*（通配）、?()（过滤器表达式）。
+后端返回的 JSON 嵌套五六层，手动用 Python 字典一层层取值写了一大堆 get 和 try/except。JSONPath 就是用路径表达式直接从 JSON 里提取数据，类似 XPath 之于 XML。Python 实现一个 JSONPath 查询引擎。
 
-给一个 JSON 字符串和 JSONPath 表达式，返回所有匹配的值和路径。纯 Python 实现，不依赖 jsonpath 第三方库。python 跑起来，命令行传入 JSON 文件和路径表达式。
+支持的语法：$ 根节点引用、.child 或 ['child'] 子节点访问、.. 递归下降（搜索所有层级）、[n] 数组索引、[start:end] 切片、[*] 通配符（所有子元素）、[?(@.price < 10)] 过滤器表达式、[a,b,c] 多索引/多键选取。
+
+解析过程：先把 JSONPath 字符串解析成一组路径段（Segment），每段是索引、键、通配、递归下降或过滤器之一。然后用递归遍历 JSON 对象，按路径段逐段匹配。递归下降要 BFS 避免栈溢出。
+
+过滤器表达式支持简单的比较：@.field > value、@.field == "str"、@.field，字段引用用 @ 表示当前节点。正则匹配用 =~ 操作符。
+
+返回所有匹配结果的列表，每个结果包含值和完整路径。路径用点号表示法：$.store.book[2].title。
+
+命令行：python3 jsonpath.py data.json '$.store.book[?(@.price < 10)].title'。纯 Python，不依赖 jsonpath 第三方库。

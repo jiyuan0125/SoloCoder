@@ -1,11 +1,7 @@
-写一个 MP4 封装器，Go 标准库实现。
+把 H.264 视频和 AAC 音频封装成 MP4——这事我之前一直依赖 ffmpeg，直到线上环境装不了 ffmpeg 才被迫自己实现。MP4 的 box 结构虽然文档很多，但实际构造起来各种偏移量计算和采样表的关联很容易出错。Go 标准库来写。
 
-需求是把 H.264 + AAC 封装成 MP4 容器：
-- 构建 ftyp box（文件类型）和 moov box（电影元数据）
-- moov 里包含 mvhd、trak（视频轨和音频轨各一个）、udta
-- 每个 trak 里包含 tkhd、mdhd、hdlr、minf（vmhd/smhd、dinf、stbl）
-- stbl 里写好 stsd、stts、stss、stsc、stsz、stco 等采样表
-- 把实际数据写进 mdat box
-- 视频关键帧要在 stss 中标记
+MP4 文件由一系列 box（也叫 atom）组成。写入顺序：ftyp → moov → mdat。ftyp 简单——4 字节大小 + "ftyp" + major brand "isom" + minor version 0 + compatible brands。mdat 也不难——4 字节大小 + "mdat" + 所有音视频帧数据拼接。难的是 moov。
 
-用法 mp4-mux -video input.h264 -audio input.aac -output output.mp4，go build 编译通过。
+moov 里面嵌套了很多子 box：mvhd（电影头——创建时间、修改时间、timescale、duration）、两个 trak（视频轨和音频轨各一个）。每个 trak 包含 tkhd（轨道头——track ID、duration、宽高）、mdhd（媒体头——timescale、duration）、hdlr（处理器类型——vide 或 soun）、minf（媒体信息）。minf 下面有 vmhd（视频）或 smhd（音频）、dinf/dref（数据引用）和 stbl（采样表）。
+
+stbl 是最关键的部分——stsd（采样描述，视频是 avc1 内嵌 AVCDecoderConfigurationRecord，音频是 mp4a）、stts（时间-采样数表）、stss（同步帧表，只有视频轨有，记录关键帧序号）、stsc（采样-chunk 映射）、stsz（每个采样的字节大小）、stco（chunk 偏移表——每个 chunk 在文件中的起始位置）。mdat 的偏移量要等所有帧数据写完才能确定，所以 stco 需要最后回填。用法 mp4-mux -video input.h264 -audio input.aac -output output.mp4，go build 编译通过。

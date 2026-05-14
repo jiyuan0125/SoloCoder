@@ -1,12 +1,9 @@
-我想做一个基于有限状态机的嵌入式 KV 存储，用 Rust 写。
+用 Rust 实现一个基于有限状态机的 KV 存储。把 KV 操作建模成状态机转换——Put 是状态变更，Get 是状态查询，Delete 是状态清除。所有操作以日志驱动，状态机按序执行。支持快照保存和恢复，保证数据在崩溃后不丢失。
 
-背景：需要一个轻量级的本地 KV 引擎，它内部用状态机来管理每个 key 的生命周期——比如 UNINIT→ACTIVE→DELETING→TOMBSTONE→GC 这些状态。不同状态下对 get/put/delete 操作的响应不同。
+KV 的内部实现：一个 HashMap<String, (String, u64)>，value 带版本号用于追踪变更。Put(key, value) 写入并 version++，返回旧值（如果有）。Get(key) 返回 value 和 version。Delete(key) 移除 key，返回被删除的值。命令序列化为 JSON 格式，每条命令追加到操作日志（带递增 index）。
 
-具体要做的：
-- 支持 set/get/delete 操作，每个 key 有自己的状态机跟踪
-- set 把 key 从 UNINIT 或 TOMBSTONE 状态迁移到 ACTIVE
-- delete 先进入 DELETING，标记为 TOMBSTONE，之后可以回收
-- get 遇到非 ACTIVE 状态的 key 返回合适的错误码（NotFound / Deleted）
-- 支持手动触发 GC，清理所有 TOMBSTONE 状态的 key
+快照机制：把整个 HashMap 序列化保存（用 serde_json 或手动 JSON 编码）。保存时记录当前的 lastApplied index 和总操作数。恢复时反序列化 HashMap，清空旧日志，设置 lastApplied 到快照记录的位置，然后可以从日志的后续位置继续 apply。
 
-Rust 标准库，cargo build 通过，不用外部依赖。
+命令行交互：put key value 执行写入、get key 查询、delete key 删除、snapshot 创建快照、restore 从最新快照恢复、status 显示当前状态（总 key 数、总操作数、lastApplied）。每次操作打印结果。
+
+cargo build 通过。

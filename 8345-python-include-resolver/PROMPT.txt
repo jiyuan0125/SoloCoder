@@ -1,3 +1,14 @@
-项目里到处是 #include，需要分析包含关系来理清依赖。写一个 include 解析工具，能扫描 C/C++ 风格的 #include 指令（尖括号和引号两种形式），递归解析所有被包含的文件，构建包含依赖图。
+C/C++ 项目编译慢，想分析头文件包含关系找出冗余 include。写一个 include 解析和依赖分析工具。Python 实现。
 
-能检测循环包含、重复包含，生成 include guard 建议和依赖拓扑图。纯 Python 实现，python 能跑，命令行传入目录和 include 路径。
+扫描指定目录下所有 .h/.hpp/.c/.cpp 文件，用正则匹配 #include <...> 和 #include "..." 指令。尖括号形式在 include 路径列表中搜索，引号形式先在源文件所在目录搜索再搜索 include 路径。
+
+构建包含依赖图：每个文件是节点，#include 关系是边。递归解析——被包含的文件也扫描其中的 #include。系统头文件（stdio.h 等）标记为 external 不继续展开。
+
+分析功能：
+- 循环包含检测：有向图 DFS 找环（A→B→C→A），报告环上的文件链。C/C++ 里循环 include 通常由 include guard 避免重复展开，但说明设计上有问题
+- 重复包含：同一个头文件被多次 include（没有 guard 的情况）
+- include guard 建议：没有 #ifndef/#define 保护的头文件列表
+- 依赖拓扑排序：计算 include 的层级关系，画出哪些是基础头文件、哪些依赖其他头文件
+- 影响范围：修改某个头文件会影响哪些 .c/.cpp 文件（找出所有间接包含它的源文件）
+
+输出 DOT 格式的依赖图（可用 Graphviz 渲染）和文本报告。python3 include_resolver.py src/ -I include/。纯 Python 实现。

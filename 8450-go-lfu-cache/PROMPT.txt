@@ -1,10 +1,12 @@
-LRU 只考虑最近使用时间，不考虑访问频率。LFU（Least Frequently Used）会淘汰访问次数最少的。用 Go 实现一个并发安全的 LFU 缓存。
+LRU 只考虑最近使用时间，不考虑访问频率。有些数据虽然很久没被访问但之前被频繁使用，按 LRU 被淘汰就不太合理。LFU（Least Frequently Used）会淘汰访问次数最少的。用 Go 实现一个并发安全的 LFU 缓存。
 
-功能：
-- Get(key) 获取值，访问频率 +1
-- Put(key, value) 添加/更新，淘汰时选频率最低的（同频率下选最久没用的）
-- O(1) 时间复杂度的 Get 和 Put
-- 支持设置最大容量
-- 底层用频率索引 + 双向链表 + 哈希表
+数据结构：三层嵌套——freq HashMap（频率 → 该频率下的 key 双向链表）+ key HashMap（key → 节点指针）+ minFreq 追踪当前最小频率。每个节点记录 key、value、freq。
 
-写个 main 演示：插入若干 key，反复访问其中几个 key，触发淘汰后检查被淘汰的是否确实是访问频率最低的。并发场景下也要正确。go build 通过。
+操作：
+- Get(key)：命中后 freq++，从旧频率链表移到新频率链表。如果旧频率链表空了且 oldFreq == minFreq，minFreq++。O(1)
+- Put(key, value)：新 key 插入 freq=1 的链表头部，minFreq=1。超过容量时从 minFreq 链表尾部淘汰。已有 key 更新 value 并执行 Get 的逻辑。O(1)
+- 淘汰策略：同频率下选最久没用的（链表尾部），满足 LFU 的"频率最低 + 时间最久"双重条件
+
+并发安全：sync.RWMutex。统计命中率和驱逐次数用于调优。
+
+写个 main 演示：插入 20 个 key，反复访问其中 5 个（频率提升），触发淘汰后检查被淘汰的确实是访问频率最低的。并发场景下也要正确。go build 通过。

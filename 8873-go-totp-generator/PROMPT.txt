@@ -1,8 +1,11 @@
-写个 TOTP 验证码生成器，Go 实现。
+做双因素认证开发调试的时候需要看 TOTP 验证码对不对——每次掏手机看 authenticator app 很不方便，特别是自动化测试的时候根本没法手动输入。需要一个命令行工具直接算出当前的 TOTP 码。
 
-做双因素认证开发调试的时候需要看 TOTP 验证码是不是对的，每次掏手机看 authenticator app 很不方便。
+用 Go 写一个 TOTP 验证码生成器。gen 子命令：输入 Base32 编码的密钥（和 authenticator app 用的格式一致，比如 JBSWY3DPEHPK3PXP）。计算当前时间步——time_step = floor(unix_time / period)，period 默认 30 秒。把 time_step 转成 8 字节大端序字节。用 HMAC-SHA1(密钥, time_step_bytes) 计算哈希。动态截取——offset = hash[19] & 0x0F，code = (hash[offset] & 0x7F) << 24 | hash[offset+1] << 16 | hash[offset+2] << 8 | hash[offset+3]，取 code % 10^digits 得到验证码。
 
-功能：输入 Base32 编码的密钥，生成当前时间窗口的 6 位 TOTP 码；支持自定义时间步长（默认 30 秒）和位数（6 或 8）；显示剩余有效秒数；支持连续模式每秒刷新显示。
+参数配置：-period 指定时间步长（默认 30 秒）；-digits 指定验证码位数（6 或 8，默认 6）；-algorithm 指定哈希算法（SHA1/SHA256/SHA512，默认 SHA1）。
 
-命令：totp-generator gen -secret "JBSWY3DPEHPK3PXP"、totp-generator gen -secret "JBSWY3DPEHPK3PXP" -period 30 -digits 6 -watch（持续刷新）
+watch 模式：持续运行每秒刷新显示——当前验证码、剩余有效秒数（倒计时）、下一步的验证码预览。
+
+命令：totp-generator gen -secret "JBSWY3DPEHPK3PXP"、totp-generator gen -secret "JBSWY3DPEHPK3PXP" -period 30 -digits 6 -watch。
+
 Go 标准库 crypto/hmac，go build 能编译。

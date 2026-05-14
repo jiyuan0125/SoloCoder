@@ -1,1 +1,11 @@
-实现一个 LFU（最不经常使用）缓存淘汰策略，用 Rust。和 LRU 不同的是它根据访问频率淘汰，频率最低的先被踢出去。支持 get 和 put，get 时增加该 key 的访问计数，put 超容量时删掉频率最低的。同频率的要按时间顺序淘汰（最早进来的先走）。复杂度尽量做到 O(1)。写个 demo 模拟一系列缓存操作，打印淘汰了哪些 key。cargo run 能看到过程。
+LRU 有个毛病——偶尔一次扫描会把你精心保留的热数据全部挤出去。LFU（最不经常使用）根据访问频率淘汰，频率最低的先走，对工作集更稳定。但实现比 LRU 复杂——要维护频率到 key 列表的映射。
+
+用 Rust 实现 LFU Cache。
+
+数据结构——三层嵌套结构：key → (value, freq) 的 HashMap；freq → 双向链表（存该频率的所有 key，按访问时间排序）的 HashMap；min_freq 变量记录当前最小频率。
+
+get 操作——查 key 是否存在。不存在返回 None。存在则：频率从 freq 加一到 freq+1，从 freq 链表中删除该 key，加入 freq+1 链表尾部。如果 freq 链表空了且 freq == min_freq，min_freq++。返回 value。
+
+put 操作——key 存在就更新 value 并走 get 的逻辑。key 不存在：如果容量满了，淘汰 min_freq 链表头部的 key（最早进入该频率组的）。新 key 频率初始化为 1，min_freq = 1。同频率的按时间淘汰——链表头部是最早的。
+
+get 和 put 都要尽量做到 O(1)。写个 demo 模拟一系列缓存操作，打印淘汰了哪些 key。cargo run 能看到过程。

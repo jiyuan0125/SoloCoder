@@ -1,3 +1,9 @@
-TCP 流重组后还需要还原 HTTP 请求和响应的内容。Go 写一个 HTTP 会话还原工具。
+TCP 流重组之后得到了原始的字节流，但要做安全分析还需要进一步还原成 HTTP 协议的内容——看到一段原始的 HTTP 请求和响应，想知道请求了什么 URL、返回了什么状态码、请求体和响应体里有什么内容。靠肉眼看十六进制不现实。
 
-从重组后的 TCP 流数据中解析 HTTP 协议：识别请求行和响应行；解析 HTTP headers；提取消息体（处理 Content-Length 和 chunked 传输编码）；将请求和响应配对；输出完整的 HTTP 会话内容（URL、方法、状态码、请求体、响应体摘要）。输入是 TCP 流数据文件，Go 标准库，go build 通过。
+Go 写一个 HTTP 会话还原工具。输入是重组后的 TCP 流数据文件（前面一个工具的输出），工具解析其中的 HTTP 协议内容。
+
+解析请求：识别请求行（方法 + URL + HTTP 版本），解析请求 headers（Host、Content-Type、Content-Length、User-Agent、Cookie 等关键字段），根据 Content-Length 或 chunked 传输编码提取请求体。解析响应：识别状态行（HTTP 版本 + 状态码 + 原因短语），解析响应 headers，处理两种消息体编码方式——Content-Length 直接读取指定长度，Transfer-Encoding: chunked 逐块读取直到遇到零长度的终止块。
+
+请求和响应的配对：按时间顺序交替出现的请求和响应组成一个 HTTP 会话。输出每条会话的完整信息：请求方法和 URL、响应状态码、请求头中的关键信息（如 Cookie、Authorization）、请求体摘要（如果是表单数据就显示参数，如果是 JSON 就显示格式化后的内容）、响应体摘要（截取前 N 个字节，显示 Content-Type 和长度）。
+
+Go 标准库实现，go build 通过。

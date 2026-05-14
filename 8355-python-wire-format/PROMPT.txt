@@ -1,5 +1,15 @@
-用 Python 实现一个 wire format 编解码引擎，能处理常见的二进制序列化格式。
+物联网设备资源有限，JSON 这种文本协议太浪费带宽了。设备之间用紧凑的二进制格式通信，需要一个灵活的编解码引擎。Python 实现一个 wire format 引擎。
 
-背景是物联网和嵌入式场景中，设备之间用紧凑的二进制格式通信。支持变长整数（varint）、zigzag 编码、定长整数、浮点数、长度前缀字符串、TLV（Type-Length-Value）结构。用户定义消息 schema（JSON 格式），引擎根据 schema 编码 Python 字典为字节流，或解码字节流回 Python 对象。
+编码类型：
+- Varint：变长整数，每字节低 7 位是数据、最高位是 continuation flag。小数用 1 字节，大数最多 10 字节
+- ZigZag：把有符号数映射到无符号数（0→0, -1→1, 1→2, -2→3...），编码为 (n << 1) ^ (n >> 31)
+- 定长整数：int32/uint32/int64/uint64，按字节序存储
+- 浮点：float(IEEE 754 单精度)、double(双精度)
+- 长度前缀字符串：varint 长度 + UTF-8 字节
+- TLV（Type-Length-Value）：varint 类型 + varint 长度 + 数据字节
 
-纯 Python 3 实现。CLI：`python wire_format.py encode --schema msg.json --data '{"id":1,"name":"test"}'` 输出十六进制字节；`python wire_format.py decode --schema msg.json hex_bytes` 输出 JSON。编解码都要有错误报告。`python wire_format.py` 能跑。
+用户用 JSON 定义消息 schema：每个字段有名字、类型和字段编号。引擎根据 schema 编码 Python 字典为字节流，或解码字节流回 Python 对象。嵌套消息类型也支持——一个字段的类型可以是另一个消息的名称。
+
+编码示例：{"id": 1, "name": "test"} → 字段1(varint 1) + 字段2(length-prefixed "test")。解码时按字段编号查 schema 确定类型，按类型读取数据。
+
+CLI：python3 wire_format.py encode --schema msg.json --data '{"id":1,"name":"test"}'。python3 wire_format.py decode --schema msg.json hex_bytes。纯 Python 3 标准库。

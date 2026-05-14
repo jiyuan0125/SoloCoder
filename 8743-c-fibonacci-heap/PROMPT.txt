@@ -1,5 +1,13 @@
-实现一个斐波那契堆（Fibonacci Heap），理论上 extract_min 是 O(log n) 均摊，其他操作都是 O(1) 均摊。用在 Dijkstra 优化等场景。
+Dijkstra 在稠密图上调用 decrease_key 次数远多于 extract_min——如果优先队列的 decrease_key 是 O(1) 均摊而不是 O(log n)，整体复杂度能大幅降低。Fibonacci Heap 正是为此设计的理论最优结构：insert、find_min、merge、decrease_key 均 O(1) 均摊，extract_min O(log n) 均摊。
 
-支持 insert、find_min、extract_min、decrease_key、merge。用双循环链表连接兄弟节点，用 mark 标记是否失去过孩子。extract_min 时合并同度数的树。delete 可以通过 decrease_key + extract_min 实现。
+用 C 语言实现 Fibonacci Heap。
 
-C 语言，gcc 编译。测试 insert 和 extract_min 的正确性，验证提取顺序是从大到小。
+树结构——多棵树满足最小堆性质，根用循环双向链表连接。每个节点有 mark 标志——是否失去过孩子。
+
+- insert：创建单节点，加入根链表。O(1)
+- find_min：维护 min 指针。O(1)
+- merge：拼接两个堆的根链表。O(1)
+- extract_min：删掉 min 节点，子树加入根链表，然后 consolidate——合并同度数的树直到没有同度
+- decrease_key：减小值后如果违反堆性质就切断节点加入根链表，级联剪切被标记的父节点
+
+delete 可以通过 decrease_key 到负无穷 + extract_min 实现。gcc 编译。验证 extract_min 输出有序。

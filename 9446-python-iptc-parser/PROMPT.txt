@@ -1,1 +1,5 @@
-新闻图片常用IPTC标准来记录图片描述和版权信息，嵌在JPEG的APP13段里。写个Python工具来解析IPTC-IIM数据，读取常见的tag：标题（2:05）、描述（2:120）、关键词（2:25）、作者（2:80）、版权（2:116）、拍摄时间（2:55）等。IPTC用tag record号+dataset号来标识字段，数据类型有文本、数字、日期。处理好重复的tag（比如多个关键词）。python3运行。
+新闻图片和库存照片里经常用 IPTC 标准记录图片描述、关键词、作者、版权这些元数据。这些数据嵌在 JPEG 文件的 APP13 段里，格式叫 IPTC-NAA IIM（Information Interchange Model）。和 EXIF 不同，IPTC 主要是给编辑和归档用的，不是给相机自动记录的。
+
+解析规则。APP13 段以 "Photoshop 3.0\x00" 开头，里面嵌套 8BIM 资源块。找到 IPTC 数据块后按 tag 逐条读取——每个 tag 由 2 字节 record 号 + 2 字节 dataset 号标识，后面是数据长度和数据值。常见 tag：2:05 物体标题、2:25 关键词（可以重复出现多次，每个关键词一个 tag 实例）、2:80 图片作者、2:116 版权声明、2:120 图片描述、2:55 创建日期。
+
+数据类型包括文本字符串（大多数 tag）、数字、日期（格式 YYYYMMDD）。关键词出现多次的要收集成一个列表。输出每个 tag 的可读名称和值。用法：python3 iptc_parser.py parse news_photo.jpg

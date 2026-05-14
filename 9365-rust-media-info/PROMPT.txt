@@ -1,5 +1,5 @@
-做一个 Rust 命令行工具，快速查看音视频文件的媒体信息，类似 mediainfo 的简化版。
+每天要看几十个视频文件的参数——编码、分辨率、码率、时长。ffmpeg -i 太慢又太啰嗦。写一个 Rust 工具直接读文件头提取关键参数，只做二进制解析不做解码，速度要快。
 
-传入一个媒体文件路径，自动识别格式（MP4/MKV/AVI/FLV/TS/WebM），解析容器结构提取出：视频编码格式、分辨率、帧率、码率；音频编码格式、采样率、声道数、码率；总时长。输出格式化的文本信息，包含容器类型和各流的具体参数。
+格式自动识别通过文件头 magic bytes——前几个 KB 就够。MP4 读 moov box 提取：mvhd 的 duration/timescale 算时长，trak 的 stsd 读编码类型和分辨率，stts 计算帧率，stsz 统计码率。MKV 读 EBML Segment 的 Info（Duration + TimecodeScale 算时长）和 Tracks（CodecID 判断编码，Video 元素读分辨率，Audio 元素读采样率声道数）。FLV 读 onMetaData 的 duration/width/height 和首个 Video/Audio Tag 的编码标志。AVI 读 RIFF hdrl 的 avih 和 strl。TS 解析 PAT/PMT 梳理流映射。
 
-Rust 实现，手动解析二进制头和容器结构，cargo build 通过。
+输出格式化的媒体报告——容器格式、文件大小、总时长（秒 + HH:MM:SS 格式）、视频轨（编码名、profile/level、分辨率、帧率、码率估算 kbps）、音频轨（编码名、采样率、声道数、码率估算 kbps）。加 --json 输出 JSON。损坏文件不崩溃，给部分信息加 WARNING 标记。用法 media-info movie.mkv。Rust 实现，手动解析二进制，cargo build 通过。

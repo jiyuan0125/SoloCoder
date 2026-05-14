@@ -1,5 +1,7 @@
-帮我做一个 DNSSEC 验证工具，检查一个域名的 DNSSEC 部署情况。
+DNSSEC 能防止 DNS 响应被篡改，但配置和验证都比较复杂。写个工具检查域名的 DNSSEC 部署状态，验证签名链是否完整。
 
-查询目标域名的 DNSKEY、DS、RRSIG 记录，验证签名链是否完整（从根信任锚往下追）。报告哪个环节有问题：缺少 DNSKEY、DS 记录不匹配、签名过期、算法太弱等。
+Python 实现 DNSSEC 验证器。验证流程：查询域名的 DS 记录（Delegation Signer，在父区域中）——如果不存在说明域名没有启用 DNSSEC。如果存在 DS 记录，获取其摘要类型和摘要值，然后查询域名的 DNSKEY 记录。验证 DS 记录的摘要是否与 DNSKEY 的摘要匹配（支持 SHA-256 和 SHA-384 摘要算法）。
 
-支持递归检查（从顶级域开始逐步往下验证）。输出清晰展示验证链路和每步的结果。Python 3，用 dnspython 库。python dnssec_check.py example.com。
+接下来查询域名的 RRSIG 记录（资源记录签名），验证签名是否由 DNSKEY 签发——用 DNSKEY 中的公钥验证 RRSIG 中的签名值。检查签名的有效期（inception 和 expiration 时间戳），过期的签名无效。沿着信任链向上验证——域名 DNSKEY → 父区域 DS → 父区域 DNSKEY → ... → 根区域的信任锚点。
+
+输出验证结果：DNSSEC 是否启用、签名算法类型（RSASHA256、ECDSAP256SHA256 等）、签名有效期、信任链验证状态（valid/invalid/broken）。也检测常见的配置错误——KSK/ZSK 轮换后旧的 DS 记录未更新。python3 实现。

@@ -3,3 +3,5 @@
 Follower 是 Zab 中跟随 Leader 的角色，它接收 Leader 的 Proposal、ACK、COMMIT 消息。实现 Follower 的核心逻辑：与 Leader 建立 TCP 连接（模拟），发送 FOLLOWERINFO 消息（携带自己的 epoch 和最后处理的 zxid），等待 Leader 的 DIFF/TRUNC/SNAP 同步消息，同步完成后进入正常广播模式。正常模式下：收到 Proposal 写入本地日志并发送 ACK，收到 COMMIT 从日志中取出对应的 proposal 提交到状态机。处理 Leader 断连——发现 Leader 不可用后进入选举模式。
 
 纯 Rust，cargo build 通过，模拟一个 Follower 从连接 Leader 到正常工作的流程。
+
+这个工具的核心价值在于把zab follower的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。

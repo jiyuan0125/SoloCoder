@@ -1,5 +1,12 @@
-实现一个 Python 的认知复杂度（Cognitive Complexity）计算器，度量代码被人理解的难易程度。
+圈复杂度把每个 if 都同等对待，但人的认知负担不是线性的——嵌套三层 if 比三个平行的 if 难理解得多。SonarSource 的认知复杂度用嵌套加权和 else if 不累积嵌套的规则更贴近人类感受。Python 实现。
 
-SonarSource 的认知复杂度不同于圈复杂度——它更关注人类阅读代码时的心理负担。规则：嵌套结构加基础分+嵌套层级奖励（if 嵌套 if 额外加 1 分），连续的 else if 只加 1 分不累计嵌套，逻辑运算符每个加 1 分。递归调用加分。用 Python ast 模块遍历语法树，按函数计算。
+计算规则：
+- 基础增量（+1）：if、elif、else、for、while、except、三元表达式、逻辑运算符（and/or）
+- 嵌套增量（+嵌套深度）：结构化的控制流（if/for/while/try/with）每增加一层嵌套额外加嵌套深度的分。比如 if 内的 if 内的 for：外层 if +1，内层 if +2（1基础+1嵌套），for +3（1基础+2嵌套）
+- else if 特殊规则：elif 和 else 不增加嵌套深度，它们和对应的 if 在同一层
+- 递归加分：函数内调用自己 +1（每次出现都加，不按嵌套）
+- 不加分的结构：else（已经在 if 时加过了）、方法调用链、lambda
 
-Python 3 标准库。用法：`python cognitive.py source.py`，输出每个函数的认知复杂度值，超过 15 的标记为需要简化。`python cognitive.py` 能跑起来。
+遍历 AST 时维护一个嵌套深度计数器：进入 if/for/while/try/with 时 depth+1，离开时 depth-1。遇到 elif/else 时不改变 depth。
+
+按函数输出认知复杂度值。SonarSource 建议阈值：15 以下可接受。python3 cognitive_complexity.py source.py。纯 Python 3 用 ast 模块。

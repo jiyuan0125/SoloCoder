@@ -1,12 +1,15 @@
-帮我写一个服务端 Session 存储引擎，Go 实现。
+不想为了 session 管理跑一个 Redis 服务。需要一个轻量的、纯 Go 实现的本地 session 存储引擎——内存模式快但重启丢数据，文件模式慢但持久化。两种模式都支持，让使用者按需选择。
 
-不想用 Redis 跑额外服务了，需要一个轻量的本地 session 管理方案。
+用 Go 写一个服务端 Session 存储引擎。Session 结构：每个 session 有唯一 ID（crypto/rand 生成的 32 字节 hex 字符串）、关联的用户数据（map[string]interface{}）、创建时间、最后访问时间、过期时间（TTL）。
 
-功能：
-- Session CRUD：创建、读取、更新、删除 session，每个 session 有唯一 ID 和关联数据
-- 过期自动清理：后台 goroutine 定期扫描并移除过期 session
-- 支持 Cookie 和 Header 两种 session 传递方式
-- 数据存储支持内存模式（快速）和文件模式（持久化）
-- 提供 HTTP 中间件，自动从请求提取 session、注入到 context
+CRUD 接口：Create(data map[string]interface{}) *Session 创建新 session，返回 session 对象。Get(id string) (*Session, error) 按 ID 查找，不存在返回 error。Update(id string, data map[string]interface{}) error 更新数据。Delete(id string) error 删除 session。
+
+过期清理：后台 goroutine 每分钟扫描一次，移除过期的 session。session 的 TTL 在创建时指定，默认 30 分钟。每次 Get 操作刷新最后访问时间（滑动过期）。
+
+传递方式支持两种：Cookie 模式——Set-Cookie: session_id=xxx; HttpOnly; Secure; SameSite=Lax；Header 模式——Authorization: Bearer session_id=xxx。
+
+存储后端：内存模式用 sync.Map（并发安全）。文件模式用 JSON 文件存储，每次修改后异步写入磁盘（启动时从文件加载恢复）。
+
+HTTP 中间件：SessionMiddleware(store Store) 包装 Handler，自动从请求提取 session ID，查询 store，把 session 对象注入到 request context。
 
 Go 标准库，go build 通过。

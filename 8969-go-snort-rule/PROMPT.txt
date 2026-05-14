@@ -1,3 +1,7 @@
-Snort 规则维护太混乱了，需要个工具来统一管理。Go 实现一个 Snort 规则解析和管理 CLI。
+Snort 规则的维护流程一般是这样的：从各个来源收集规则文件，导入到统一目录下，然后定期清理重复的、过时的、冲突的规则。但这套流程如果没有工具支撑就全靠人肉操作，很容易出错。
 
-能做的事：解析 Snort 规则的各个字段（action、proto、src_ip、src_port、direction、dst_ip、dst_port、options）；验证规则的语法正确性；按 sid、类别、rev 排序和查重；统计规则分布（按协议、按动作类型）；支持从文件批量导入并去重。标准库实现，go build 通过。
+用 Go 写一个 Snort 规则解析和管理的 CLI 工具。解析部分要能拆解 Snort 规则的每个字段：action（alert、log、pass、drop 等）、protocol（tcp、udp、icmp、ip 等）、源地址和端口、方向（单向 -> 或双向 <>）、目标地址和端口、以及 options 段里的键值对（msg、sid、rev、gid、classtype、priority、content、nocase、offset、distance、within、pcre 等）。
+
+验证功能检查规则语法是否正确——必要的字段有没有缺失、sid 和 rev 是否有效、地址端口格式是否合法、options 的键值对格式是否规范。
+
+管理功能包括：按 sid 查找规则、按 classtype 过滤、检测 sid 重复（同一个 sid 出现多次就是重复规则）、规则去重（相同 sid 保留 rev 最大的版本）、按 action 或 protocol 统计规则分布。支持从文件批量导入规则，导入时自动做去重和格式检查。输出可以是终端格式或者导出成清洗后的规则文件。Go 标准库实现，go build 通过。

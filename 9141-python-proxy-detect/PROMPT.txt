@@ -1,5 +1,7 @@
-做一个代理服务器检测工具，判断请求是否经过代理。
+做一个代理服务器检测工具，判断请求是否经过代理。有些场景下需要知道用户是不是通过代理访问的——比如限制代理注册、检测刷量行为、确认合规审计中的真实来源。
 
-检测方法：检查 HTTP 头里的 Via、X-Forwarded-For、X-Proxy-Id 等代理特征头；分析 IP 的反向 DNS 是否包含 proxy/vpn/tunnel 关键词；用外部服务获取 IP 的真实地理位置和时区，对比请求头里的时区信息；TCP 指纹分析（TTL 值异常）。
+Python 实现多维度代理检测。HTTP 头检查：分析请求头中的 Via、X-Forwarded-For（XFF 链中有多个 IP 说明经过多层代理）、X-Proxy-Id、X-Real-IP 是否存在。如果 XFF 的第一个 IP 跟请求来源 IP 不同，说明至少经过了一层代理。
 
-给一个 IP 或分析一条 HTTP 请求，返回是否疑似代理及置信度。Python 3，用 requests 做外部查询。python proxy_detect.py check 1.2.3.4。
+DNS 反向解析：对 IP 做反向 DNS 查询，检查主机名是否包含 proxy、vpn、tor、tunnel、cache、squid、nginx 等关键词。外部服务查询：调用 IP 信誉 API 检查 IP 是否被标记为代理或 VPN 出口。时区对比：从 IP 地理位置推断时区，对比请求头中 Accept-Language 或 Cookie 里的时区信息，不匹配可能说明用了远程代理。
+
+TCP 层分析：检查 IP 包的 TTL 值——经过代理后 TTL 会递减，如果 TTL 异常低（如不到 50）可能经过了多跳。综合评分：每个维度独立打分，加权平均后输出置信度（高/中/低）和判断依据。python3 用 requests 做外部查询，标准库做 DNS 解析。

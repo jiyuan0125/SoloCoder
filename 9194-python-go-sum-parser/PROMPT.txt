@@ -1,14 +1,7 @@
-Go go.sum 解析器，解析 Go 模块校验和文件。
+Go go.sum 文件解析器。go.sum 记录了 Go 模块依赖的校验和，是 Go 模块完整性和来源验证的关键文件。写个工具解析 go.sum 提取依赖信息，方便做 SBOM 和安全审计。
 
-go.sum 记录了 Go 项目所有依赖模块的哈希值，用来验证完整性。需要解析它来获取依赖清单和校验信息。
+Python 实现。go.sum 文件格式：每行包含三个字段——module_path（如 github.com/gin-gonic/gin）、version（如 v1.9.0 或 v1.9.0/go.mod）、hash（h1:开头的 SHA-256 校验和 Base64 编码值）。同一个模块可能有多行——模块本身和它的 go.mod 文件各一行。
 
-Python 实现：
-- 解析 go.sum 格式：每行 module_path version/go.mod h1:hash
-- 区分模块哈希和 go.mod 哈希（两条记录分别对应）
-- 提取模块路径、版本、哈希算法和哈希值
-- 检测异常：同一个模块+版本出现不同的哈希值（可能被篡改）
-- 统计功能：模块总数、去重后数量、版本重复情况
+解析功能：逐行解析提取模块路径、版本号和哈希值。版本号中可以区分伪版本（v0.0.0-20230101120000-abcd1234abcd，来自没有打 tag 的 commit）和正式版本（v1.2.3，来自 git tag）。模块路径中提取域名（如 github.com、golang.org、google.golang.org）做来源统计。
 
-示例：python go_sum_parser.py parse go.sum
-python go_sum_parser.py verify go.sum
-哈希值是 base64 编码的 SHA-256，格式要正确解析。
+分析功能：统计依赖总数、按域名分组（github.com 多少个、golang.org 多少个）、检测重复模块（不同版本号的同一个模块路径）、校验和验证（可选下载模块重新计算哈希对比）。输出依赖列表和统计报告，也支持 JSON 格式导出。python3 命令行工具。

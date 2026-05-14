@@ -11,3 +11,5 @@
 - 统计：当前有多少 tombstone、已清理了多少、最老的 tombstone 是什么时候
 
 Rust 标准库，cargo build 通过。
+
+这个工具的核心价值在于把tombstone clean的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。

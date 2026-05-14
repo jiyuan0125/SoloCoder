@@ -1,11 +1,11 @@
-实现 Raft 持久化层，Rust 编写。
+Raft 协议要求几个关键状态必须持久化到稳定存储——currentTerm、votedFor、日志条目。如果节点重启后丢掉了这些信息，可能会违反协议的安全性（比如一个 term 内投了两票）。用 Rust 实现一个持久化层，保证这些状态在崩溃后不丢失。
 
-Raft 节点重启后必须恢复到崩溃前的状态。需要把 currentTerm、votedFor 和日志安全地持久化到磁盘。考虑到性能，日志写入用 append-only 方式。
+需要持久化的数据：currentTerm (u64)——最后一次看到的 term；votedFor (Option<NodeId>)——当前 term 里投给了谁；log entries (Vec<Entry>)——所有日志条目。持久化方式用文件系统（简单可靠）：一个 meta.json 文件存 term 和 votedFor，一个 log.wal 文件存日志条目（二进制格式）。
 
-需要做的：
-- 持久化当前 Term、投票对象和完整日志到本地文件
-- 启动时从文件恢复状态，保证数据完整不丢失
-- 日志追加写（append only），避免频繁全量写入
-- 支持日志截断后重新持久化
+持久化接口设计：trait RaftPersistence { fn save_term(&mut self, term: u64, voted_for: Option<NodeId>) -> Result<()>; fn save_entries(&mut self, entries: &[Entry]) -> Result<()>; fn load(&self) -> Result<(u64, Option<NodeId>, Vec<Entry>)> }。保存时先写临时文件再 rename，保证原子性。每次更新 term 或 votedFor 时都要同步刷盘（fsync）。
 
-cargo build 通过，模拟崩溃重启测试数据不丢失。
+日志文件的格式：每个 Entry 序列化为 [len:u32][term:u64][index:u64][crc:u32][command:bytes]。CRC 覆盖 term + index + command。读取时按顺序解码，遇到 CRC 错误停止（尾部不完整写入）。
+
+模拟崩溃恢复场景：写入一些数据后调用 save_term 和 save_entries，然后创建一个新的 persistence 实例从文件加载，验证数据一致。
+
+cargo build 通过，标准库实现。

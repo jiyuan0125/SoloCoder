@@ -1,12 +1,13 @@
-写个 Rust 程序实现一个简易的任务调度器。
+任务调度是分布式系统的基本功——把一批任务分配到多个 worker 上执行，要求负载均衡、容错、可观测。简单的轮询调度谁都会写，但加上任务依赖、优先级、超时这些就不那么简单了。用 Rust 实现一个功能完整的任务调度器。
 
-类似 crontab 但是更灵活，能在内存中管理定时任务的执行。
+任务的数据模型：Task { id, command, priority, dependencies: Vec<TaskId>, timeout, max_retries, state: Pending/Running/Completed/Failed/Timeout }。任务提交到调度器后先进入 Pending 队列。
 
-要做的事：
-- 支持一次性定时任务（指定时间执行）和周期性任务（每隔 N 秒执行，或 cron 表达式）
-- 任务注册时指定任务名称和执行动作（回调函数或者打印一条日志就行）
-- 支持查看所有已注册任务的状态（待执行、执行中、已完成、失败）
-- 支持取消任务、暂停/恢复任务
-- 调度器要高效，不要每秒遍历所有任务来判断是否该执行
+调度的核心逻辑：从 Pending 队列中选出可以执行的任务——条件是所有 dependencies 都已经 Completed。多个可执行任务按 priority 排序（优先级高的先执行）。选出的任务分配给空闲的 worker。
 
-cargo run 能演示多个定时任务的调度过程。
+Worker 的管理：N 个 worker（goroutine...不对，是 tokio task），每个 worker 一次只执行一个任务。任务执行完后 worker 回报结果——成功则标记 Completed，失败则重试（retry_count += 1，超过 max_retries 标记为 Failed）。超时处理——如果任务执行时间超过 timeout，强制取消并标记 Timeout。
+
+调度器的运行方式：主循环每 100ms 检查一次 Pending 队列，看看有没有新任务可以调度。同时检查 Running 中的任务是否超时。
+
+模拟 50 个任务，有些有依赖关系（DAG），不同优先级。观察调度顺序——高优先级的优先、有依赖的前置任务完成后才开始。打印任务执行的甘特图（文本形式）。
+
+cargo build 通过。

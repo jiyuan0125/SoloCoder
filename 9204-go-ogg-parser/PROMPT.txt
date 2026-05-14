@@ -1,5 +1,5 @@
-Ogg 容器格式在网上资料不多，想自己写个工具搞清楚它的内部结构。
+Ogg 容器格式在网上资料不多，RFC 3533 写得又太学术，想自己写个工具搞清楚 Ogg 文件的内部结构。手上有一些 .ogg 和 .ogv 文件，想看看它们到底封装了哪些流。
 
-解析 Ogg 文件的页面结构，能识别每个 page 的版本号、序列号、页面序号、granule position 这些字段。把逻辑流的分段信息也梳理出来，能看出哪些 page 属于同一个逻辑流。支持多流 Ogg 文件的分析。
+解析 Ogg 文件的页面结构：每个 page 以 'OggS' capture pattern 开头（4 字节），后面跟着 stream structure version（当前只有 0）、header type flag 的三个 bit（continuation / beginning of stream / end of stream）、granule position（8 字节，含义取决于编解码器）、serial number（4 字节，区分逻辑流）、page sequence number、CRC32 校验值、segment table（描述本页内各 segment 的长度）。把这些字段逐页解析并以可读格式打印出来。关键是把逻辑流的分段信息梳理清楚——通过 serial number 区分不同的逻辑流，标注每个流的起始页、结束页、总页数、总数据量。支持多流 Ogg 文件的分析，比如同时包含 Theora 视频和 Vorbis 音频的 .ogv。对于截断或损坏的 page，报告具体哪个字段异常（CRC 不匹配、segment 长度越界等），尽量继续解析后续内容。
 
-Go 标准库，go build 通过就行。
+Go 标准库，手写二进制解析，go build 通过就行。

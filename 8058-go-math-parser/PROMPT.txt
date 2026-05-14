@@ -1,1 +1,9 @@
-搞个数学表达式解析器，能把字符串形式的数学公式解析并计算。Go 写，支持加减乘除、幂运算、括号嵌套、常见数学函数（sin cos sqrt log 等），支持科学计数法。用递归下降或者 Pratt Parser 都行，解析过程要有 AST 中间表示。解析错误要精确定位到出错字符位置。go build 能编过。
+搞个数学表达式解析器，能把字符串形式的数学公式解析并计算。这个需求在科学计算、财务系统、教育软件里到处都有。
+
+Go 写，支持完整数学表达式语法：加减乘除、幂运算（^ 或 **）、取模（%）、括号嵌套（无限层级）、一元负号（-3 + 5）、常见数学函数（sin cos tan asin acos atan sqrt log log10 log2 abs ceil floor round）、常量（PI、E）。支持科学计数法（1.5e-3）。
+
+解析过程要有 AST 中间表示——AST 节点类型包括 NumberLiteral、BinaryOp（左右子树）、UnaryOp、FunctionCall（函数名加参数列表）、Variable（变量引用）。解析器用 Pratt Parser 实现——每个 token 有 binding power，通过 precedence climbing 处理运算符优先级和结合性。幂运算右结合，乘除左结合。
+
+表达式可以先解析成 AST（Parse），然后对 AST 求值（Evaluate）。也可以传入变量绑定 map[string]float64 对变量求值。AST 要能序列化——输出后缀表达式（逆波兰表示）和原始字符串。
+
+解析错误要精确定位到出错字符位置。go build 能编过。

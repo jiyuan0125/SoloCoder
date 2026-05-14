@@ -1,8 +1,9 @@
-帮我写个 PKCS#7 消息解析工具，Go 实现。
+处理签名邮件、S/MIME 或者银行加解密对接时会遇到 PKCS#7 格式（也叫 CMS，Cryptographic Message Syntax）。它把签名、证书、数据封装在一个结构里。需要能看看里面到底包含了什么。
 
-处理签名邮件、S/MIME 或者一些银行的加解密对接时会遇到 PKCS#7 格式。需要能看看里面包含什么内容。
+用 Go 写一个 PKCS#7 消息解析工具。parse 子命令：读取 DER 或 PEM（Base64 包装的 DER）格式文件。解析 ASN.1 结构——识别 contentType（signedData/envelopedData/digestedData/encryptedData）。对 signedData 类型：提取签名者的证书列表、签名算法（SHA256withRSA 等）、签名值。对 envelopedData 类型：识别加密算法和收件人信息。展示外层结构——版本号、内容类型、包含的证书数量和签名者数量。
 
-功能：解析 DER 或 PEM 格式的 PKCS#7 消息；识别消息类型（signedData、envelopedData 等）；提取签名证书列表；展示签名信息和摘要算法。
+certs 子命令：专门提取 PKCS#7 消息中嵌入的 X.509 证书。解析 certificates 字段，逐一输出 PEM 格式的证书文件。方便从 S/MIME 签名邮件或 Java keystore 导出的文件中提取证书。
 
-命令：pkcs7-parser parse -file message.p7b、pkcs7-parser certs -file message.p7b（提取里面嵌套的证书）
-可以参考 Go 标准库，go build 编译通过。
+命令：pkcs7-parser parse -file message.p7b、pkcs7-parser certs -file message.p7b -output-dir ./extracted-certs。
+
+Go 标准库 encoding/asn1 + crypto/x509 做 ASN.1 解析，go build 编译通过。

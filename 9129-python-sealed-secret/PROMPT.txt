@@ -1,5 +1,7 @@
-做一个 Sealed Secrets 的实现，类似 Bitnami 的 sealed-secrets 方案。
+GitOps 流程里 K8s Secret 不能直接提交到 Git——因为里面有明文的密码和证书。Bitnami 的 Sealed Secrets 方案很好但安装 controller 比较麻烦，写个简化版：本地用公钥加密 Secret，加密后的 SealedSecret 可以安全提交到 Git，用私钥解密还原。
 
-公钥加密、私钥解密。流程：用户在本地用公钥加密一个 Secret → 得到 SealedSecret（可以安全提交到 Git）→ 控制器用私钥解密还原出原始 Secret。我只需要本地命令行版本。
+Python 实现。两个命令——seal 和 unseal。seal：读入 Kubernetes Secret 的 YAML 文件，解析 data 字段中的每个 key-value（Base64 编码的值先解码），用 RSA-4096 公钥加密每个值（OAEP 填充 + SHA-256），重新编码为 Base64 后写入 SealedSecret YAML（包含加密的值和元数据如加密时间、密钥指纹）。
 
-工具分两个命令：seal（读 Kubernetes Secret YAML，用公钥加密输出 SealedSecret YAML）和 unseal（用私钥解密还原）。密钥对用 RSA-4096 生成。Python 3，用 cryptography 库做加密。
+unseal：读入 SealedSecret YAML，用 RSA-4096 私钥解密每个值，还原为原始 Secret YAML。密钥管理：keygen 命令生成 RSA-4096 密钥对，公钥可以分发给团队成员（用于加密），私钥只在部署时使用（解密）。私钥文件权限自动设为 600。
+
+安全考虑：每次加密的 OAEP padding 不同，同样的明文加密后密文不同（语义安全）。python3 用 cryptography 库。

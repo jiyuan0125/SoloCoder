@@ -1,5 +1,7 @@
-用 Rust 实现一个 Base64 编解码工具，支持标准 Base64 和 URL-safe 变体。
+Base64 编解码——日常调试最常用的工具之一。把二进制数据编码成 ASCII 安全的字符串，或者反过来解码。支持标准 Base64 和 URL-safe 变体。Rust 实现。
 
-把二进制数据编码成 Base64 字符串，也支持反向解码。处理带 padding（=）和不带 padding 的格式。支持标准字母表（+/）和 URL-safe 字母表（-_）。可以从文件读取二进制数据编码，也可以从 Base64 字符串解码写入文件。注意处理换行（MIME 格式的 76 字符换行）。
+标准 Base64 字母表：A-Z(0-25)、a-z(26-51)、0-9(52-61)、+(62)、/(63)，填充字符 =。URL-safe 变体把 + 和 / 替换成 - 和 _。编码原理：每 3 字节（24 位）分成 4 组 6 位，每组映射到一个字母。不足 3 字节的用 = 填充。MIME 格式在 76 字符处插入换行。
 
-纯 Rust 实现，cargo build 通过。
+编码实现——从输入读取 3 字节一组，用位操作拆分成 4 个 6 位索引值，查表得到输出字符。最后一组不足 3 字节：1 字节补 2 个 =，2 字节补 1 个 =。解码实现：反向查表把字符映射回 6 位值，4 个 6 位拼成 3 字节。忽略空白字符和换行。
+
+命令行支持两种输入方式：--input file.bin 从文件读取二进制数据编码，--text "string" 编码字符串。解码输出到 --output file.bin 或 stdout。用法 base64-codec encode --input binary.bin 和 base64-codec decode --text "SGVsbG8=" -o output.bin。Rust 实现，cargo build 通过。

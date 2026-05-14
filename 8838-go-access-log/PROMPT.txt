@@ -1,12 +1,13 @@
-写一个访问日志记录器，Go 实现。
+安全审计要求所有 API 请求都要记录访问日志——谁在什么时间从哪访问了什么接口、返回了什么状态码。没有标准化日志组件的话，各服务自己格式化输出，审计的时候根本没法统一分析。
 
-安全审计要求所有 API 请求都要记录访问日志，包括谁在什么时间访问了什么，需要一个标准化的日志组件。
+用 Go 写一个标准化的访问日志记录器。每次请求记录这些字段：timestamp（ISO 8601 格式）、client_ip（X-Forwarded-For 或 RemoteAddr）、user_id（从 JWT 或 session 提取）、request_method、request_path、request_query（敏感参数自动脱敏）、response_status、response_time_ms（处理耗时）、user_agent。
 
-功能：
-- 记录每次请求：时间戳、客户端 IP、用户 ID、请求方法、请求路径、响应状态码、处理耗时
-- 支持多种输出：标准输出（JSON 格式）、文件输出（按日期轮转）
-- 敏感字段自动脱敏：密码、token、身份证号等字段在日志中用 *** 替代
-- 提供 HTTP 中间件，自动捕获请求信息并记录
-- 日志查询：按时间范围、用户、路径过滤日志
+输出方式：标准输出（JSON Lines 格式，每行一个 JSON 对象，方便 grep 和 jq 处理）；文件输出（按日期轮转，文件名 access-2024-01-15.log，每天一个文件）。
+
+敏感字段脱敏：自动检测并替换 password、token、secret、api_key、credit_card、ssn 等参数名对应的值为 ***。URL 中的 query 参数按名字匹配脱敏规则。
+
+HTTP 中间件 AccessLogMiddleware(logger *AccessLogger) func(http.Handler) http.Handler：包装 Handler，请求前记录开始时间，请求后记录所有字段并写入日志。用 response writer wrapper 捕获状态码。
+
+日志查询：LoadLogs(filePath string, filter LogFilter) []LogEntry——按时间范围（from/to）、用户 ID、请求路径、状态码范围过滤。命令行 access-log query --file=access.log --from=2024-01-15 --user=alice。
 
 Go 标准库，go build 通过。

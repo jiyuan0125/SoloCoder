@@ -1,1 +1,9 @@
-需要在程序运行时解析 .proto 文件而不是编译期。Go 实现一个 protobuf 定义文件解析器，能解析 syntax、package、message、enum、service 定义，支持字段类型（scalar、repeated、map、oneof）、字段编号、选项注解。解析结果输出为结构化的 Go 对象，方便后续做代码生成或文档生成。解析错误精确定位到行号。go build 能编译。
+有个需求是运行时动态读取 .proto 文件做代码生成，不想依赖 protoc 编译器。得自己写一个 protobuf 定义文件的解析器。
+
+Go 实现一个 protobuf 定义文件解析器，能解析 .proto 文件的完整语法结构。需要处理的定义类型：
+
+syntax 声明（syntax = "proto3";）、package 声明、import 语句（支持 public 和 weak 修饰符）、message 定义（嵌套 message 也支持）、enum 定义（枚举值必须从 0 开始）、service 定义（rpc 方法声明，包含请求和响应消息类型）。字段修饰符：proto3 的 singular/repeated/map/optional、字段类型（scalar types 如 int32/string/bool、repeated、map<key,value>、oneof）、字段编号、options 注解（如 [deprecated = true, json_name = "myField"]）。
+
+解析结果输出为结构化的 Go 对象——ProtoFile 包含 Syntax、Package、Messages、Enums、Services 列表。每个 Message 包含 Fields 列表、NestedMessages、Oneofs、Maps、Reserved 范围。
+
+解析错误精确定位到行号——"line 15: field number 1 is already used by 'id'"。go build 能编译。

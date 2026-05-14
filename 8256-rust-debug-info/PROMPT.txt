@@ -1,5 +1,9 @@
-帮我用 Rust 做一个调试信息提取工具，从 ELF 二进制里读出 DWARF 调试数据，然后转换成人能读的格式。
+上周排查一个 segfault，gdb 输出的调用栈里全是 ??，因为生产环境没有部署 debug 二进制。回来就想做个工具，把 DWARF 调试信息从 ELF 文件里提取出来，生成一份可查阅的映射表。Rust 实现。
 
-输入一个带 -g 编译的 ELF 文件，输出每个源文件对应的函数列表、行号表映射、局部变量信息。核心是能建立"地址 → 源码位置"的映射关系，这样给定一个 PC 值就能查到对应哪一行代码。
+输入是一个带 -g 编译的 ELF 文件，工具需要做这几件事：先定位 .debug_info 和 .debug_line 段，从 .debug_info 中解析出每个编译单元的函数列表——函数名（DW_AT_name）、地址范围（DW_AT_low_pc 到 DW_AT_high_pc）。然后从 .debug_line 段建立行号表，行号表本质上是一个状态机，按操作码序列执行后产出"地址 → 文件:行号"的映射。
 
-命令行：cargo run -- --file binary --lookup 0x400500。没有真实调试文件的话，用二进制字节模拟 .debug_line 段做测试也行。
+最终给定一个 PC 值，能查到对应的源文件路径和行号。这个查询接口设计成 O(log n)：把所有地址范围排序后二分查找。
+
+除了行号映射，顺便把局部变量信息也提取一下：DW_TAG_variable 的 DW_AT_name 和 DW_AT_location。location expression 支持 DW_OP_addr 和 DW_OP_reg0..31 就行。
+
+命令行用法：cargo run -- --file binary --lookup 0x400500。没有真文件时用字节序列模拟 .debug_line 做测试。cargo build 通过。

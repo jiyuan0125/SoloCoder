@@ -1,5 +1,16 @@
-帮我用 Rust 写一个 size 工具，显示 ELF 文件各 section 的大小汇总。
+磁盘空间紧张的嵌入式设备上，每个字节都要精打细算。size 工具能快速告诉你一个二进制的 text/data/bss 各占多少空间。用 Rust 写一个。
 
-输出 text段、data段、bss段的大小（十进制和十六进制），以及总大小（total）。加 -A 显示每个 section 的详细信息（名称、地址、大小）。支持 ELF 64 位格式。
+解析 ELF 文件，遍历 section headers，把每个 section 按类型归类：
+- text：所有 SHF_EXECINSTR 的 section（.text、.plt、.init 等）
+- data：SHF_WRITE 且不是 SHT_NOBITS 的 section（.data、.got 等）
+- bss：SHT_NOBITS 的 section（.bss），不占文件空间但运行时占内存
 
-cargo run -- /bin/ls 或其他二进制文件测试。输出格式参考 GNU size。代码简洁就好，cargo build 通过。
+计算每个类别的总大小（十进制和十六进制显示），以及三者之和 total。加 -A 选项显示每个 section 的详细信息——名字、地址、大小、标志。支持 ELF 64 位格式，32 位可以忽略。
+
+输出格式对齐成表格：
+```
+   text    data     bss     dec     hex filename
+   4096     256      64    4416    1140 /bin/ls
+```
+
+cargo run -- /bin/ls 或其他系统二进制测试。cargo build 通过。

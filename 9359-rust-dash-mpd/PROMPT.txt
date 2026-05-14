@@ -1,5 +1,7 @@
-写一个 Rust 工具来解析 DASH 的 MPD（Media Presentation Description）文件。
+DASH 比 HLS 复杂在清单文件上——HLS 用纯文本 m3u8，DASH 用 XML 格式的 MPD，层级嵌套深，属性多。Rust 写一个 MPD 解析器。
 
-解析 MPD 的 XML 格式，提取出 Period、AdaptationSet、Representation 的层级关系，每个 Representation 的编码信息（codec、bandwidth、width、height）和 SegmentList/SegmentTemplate 的分片信息。支持静态 MPD（static）和动态 MPD（dynamic）。输出结构化的媒体描述信息，方便后续拉流用。
+MPD 的 XML 层级：MPD 根元素 → Period → AdaptationSet → Representation → SegmentTemplate/SegmentList/SegmentBase。解析用标准库的 XML 解析器。MPD 根属性：type（static/dynamic）、mediaPresentationDuration（ISO 8601 时长格式如 PT1H30M）、minBufferTime、profiles。Period 的 duration 和 start 属性。
 
-Rust 实现，cargo build 通过，按 ISO/IEC 23009-1 规范解析。
+AdaptationSet 属性：mimeType、contentType（video/audio/subtitle）、lang、segmentAlignment、subsegmentAlignment。Representation 的 id、bandwidth（bps）、width、height、codecs、frameRate、audioSamplingRate。这些属性是选择合适码率版本的依据。
+
+分片描述的解析。SegmentTemplate：media 属性是 URL 模板（$RepresentationID$、$Number$、$Time$、$Bandwidth$ 是占位符），timescale、duration、startNumber。通过这些参数计算每个分片的 URL 和时间。SegmentTimeline：一系列 <S t="" d="" r=""/> 元素——t 是起始时间、d 是时长、r 是重复次数（默认 0 表示不重复，-1 表示重复到下一个 S 或 Period 结束）。用法 dash-mpd manifest.mpd。Rust 实现，cargo build 通过。

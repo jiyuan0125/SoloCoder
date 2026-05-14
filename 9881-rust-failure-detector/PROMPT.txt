@@ -1,12 +1,13 @@
-帮我用 Rust 写一个故障检测器，结合多种检测策略。
+上周有个同事问"为什么 Cassandra 的故障检测比我们自研的准那么多"，答案就是 Phi Accrual。这个项目把完整的故障检测器实现出来——包括心跳收集、phi 计算、状态判断、回调通知。用 Rust 做一个可嵌入的故障检测模块。
 
-光靠心跳不够可靠，综合多种信号来判断节点是否故障：心跳超时、应用层探活（模拟请求超时率）、Phi 值。
+故障检测器的接口设计：trait FailureDetector { fn heartbeat(&mut self, node_id: &str); fn is_available(&self, node_id: &str) -> bool; fn phi(&self, node_id: &str) -> f64; }。外部定期调用 heartbeat() 报告节点存活。查询时调用 is_available() 获取节点是否可用，内部通过 phi() 计算。
 
-要实现的：
-- 同时维护心跳检测和 Phi Accrual 计算
-- 额外追踪"应用层探活"的成功率，比如最近 10 次请求失败了几次
-- 综合判断：心跳正常但探活全失败 → suspect；心跳超时 → dead
-- 检测结果有三种状态：healthy / suspect / confirmed_dead
-- 可以注入故障（让某个节点停止心跳或探活失败），观察状态转换过程
+每个被监控节点的状态：HeartbeatState { last_heartbeat: Instant, intervals: Vec<Duration>, max_samples: usize }。每次收到心跳时，计算与上一次的间隔并追加到 intervals（超过 max_samples 就淘汰最旧的）。根据 intervals 计算均值和方差，用于 phi 计算。
 
-cargo build 通过，模拟运行。
+phi 的计算细节：phi = -log10(1 - Fx(t))，其中 Fx 是正态分布的 CDF，t 是自上次心跳以来的时间。实现时用标准正态分布的近似公式（避免引入外部统计库）。边界处理：如果 intervals 样本太少（<2），回退到固定阈值模式。
+
+回调通知：当某个节点的 phi 首次超过阈值时触发 onSuspect 回调。phi 降到阈值以下时触发 onRestore 回调。回调通过 channel 异步通知。
+
+模拟监控 5 个节点，其中一个在第 10 秒停止心跳。打印各节点的 phi 值和状态变化时间线。
+
+cargo build 通过。

@@ -1,5 +1,5 @@
-写一个 LESS 到 CSS 编译器。支持变量（@color）、嵌套规则、mixin、运算、函数（lighten/darken/rgba）、@import。
+写一个 LESS 到 CSS 编译器。LESS 比 SASS 简单一些——不需要缩进语法，完全兼容 CSS 语法加上变量和 mixin 功能。老项目迁移的时候经常需要把 LESS 编译成 CSS。
 
-命令：less-compiler main.less -o main.css
-处理完输出标准 CSS。遇到语法错误给出行号和原因。
-Go 标准库，go build 能编译。
+支持的特性：变量（@primary-color: #333; 用 @primary-color 引用，变量可以存储颜色、数字、字符串）、嵌套规则（.header { .nav { ... } } 编译为 .header .nav { ... }）、mixin（.border-radius(@radius) { border-radius: @radius; } 定义，.border-radius(5px) 调用）、运算（@width: 100px; .class { width: @width * 2; }）、函数（lighten(@color, 10%)、darken(@color, 10%)、rgba(@color, 0.5)、extract(@list, @index)）、@import（引入其他 LESS 文件，输出时合并为单个 CSS）。
+
+命令：less-compiler main.less -o main.css。处理完输出标准 CSS。遇到语法错误给出行号和原因——"main.less:15:3 missing closing } for .nav rule"。Go 标准库，go build 能编译。

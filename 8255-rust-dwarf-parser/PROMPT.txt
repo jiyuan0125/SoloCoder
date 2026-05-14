@@ -1,5 +1,9 @@
-我手上有一些带调试信息的二进制文件，想用 Rust 解析里面的 DWARF 格式调试数据。
+你有没有遇到过这种情况——线上 crash 了，coredump 里的调用栈全是问号，因为符号信息和调试数据没有对应上？DWARF 格式就是解决这个问题的，它在编译后的二进制里存储了变量、函数、行号这些调试信息。用 Rust 写一个 DWARF 解析器。
 
-能从 .debug_info 段读出编译单元、函数定义、变量位置这些信息。先支持 DWARF v4，基本的 DIE 解析和属性读取能跑通。不要求完整覆盖所有 tag，但常见的 DW_TAG_subprogram、DW_TAG_variable 要能处理。
+先从 .debug_info 段开始。DWARF v4 的 .debug_info 由一系列 compilation unit 组成，每个 unit 开头是 unit header（unit_length、version、abbrev_offset、address_size），然后是一棵 DIE 树。DIE 的结构是 abbreviation code + 属性值列表——abbreviation table 在 .debug_abbrev 段里，定义了每个 code 对应的 tag 和属性列表。
 
-cargo build 能编译，附带测试用的 .debug_info 数据（可以手构造二进制字节序列）。
+属性值的编码方式取决于 form：DW_FORM_addr 是 address_size 长度的地址，DW_FORM_data1/2/4/8 是固定长度的整数，DW_FORM_string 是 null-terminated 字符串，DW_FORM_ref4 是同 unit 内的偏移。把常见的属性值解码出来。
+
+重点关注 DW_TAG_subprogram（函数定义，包含 DW_AT_name、DW_AT_low_pc、DW_AT_high_pc）和 DW_TAG_variable（全局或局部变量，DW_AT_name、DW_AT_location）。location expression 先支持 DW_OP_addr 和 DW_OP_fbreg 这两种就够了。
+
+不要求覆盖所有 tag 和 form，但解析过程中遇到未知的 tag 要能跳过而不是崩掉。cargo build 通过，附带用二进制字节构造的 .debug_info 测试数据。

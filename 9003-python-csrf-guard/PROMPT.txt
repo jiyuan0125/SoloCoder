@@ -1,5 +1,7 @@
-最近在搞 Web 安全加固，想做一个 CSRF 防护的命令行验证工具。
+为什么自己造 CSRF 防护轮子？因为现有框架的 CSRF 中间件要么太重，要么跟我们特殊的 API 网关架构对不上，索性写个独立的验证工具。
 
-用 Python 实现，能检查 HTTP 请求中是否包含有效的 CSRF 防护令牌。功能包括：生成加密安全的 CSRF token、验证 token 的有效性和过期时间、支持 SameSite cookie 策略检查、能校验 Referer 和 Origin 头。还要能批量分析一组请求头，输出哪些请求缺少 CSRF 防护。
+用 Python 实现 CSRF token 的完整生命周期管理。生成环节：用 secrets.token_hex 产生 256 位加密安全的随机 token，绑定到会话 ID 做 HMAC-SHA256 签名防止篡改，token 格式为"随机值.签名"。验证环节：先验证签名完整性，再比对 token 值，最后检查时间戳（默认 3600 秒过期）。
 
-命令行用起来方便点，python3 运行。
+还要能检查 HTTP 请求头里的防护标志——Referer 和 Origin 头是否在白名单域名内，SameSite cookie 属性是否设成了 Strict 或 Lax。对于缺少 SameSite 属性的 cookie 给出明确警告。
+
+提供两种工作模式——单条验证：传入 token、会话 ID、时间戳返回有效/无效及原因；批量审计：读入一组 HTTP 请求头（JSON 格式），输出每个请求的 CSRF 防护状态评分。过期 token 要明确标注"已过期"而不是简单的"无效"，方便区分是超时还是伪造。python3 标准库，命令行工具。

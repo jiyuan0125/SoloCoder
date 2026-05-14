@@ -1,3 +1,9 @@
-写个 Go 版的 Liquid 模板引擎（Shopify 用的那个）。支持 {{ variable }} 输出、{% if %} / {% for %} 控制流、{% assign %} 变量赋值、过滤器和 capture 标签。
-内置常用过滤器：upcase、downcase、strip、join、first、last、size。输出内容要正确 HTML 转义。
+Shopify 的 Liquid 模板引擎在前端圈用得很多，Jekyll 静态博客就是基于它。想用 Go 实现一个 Liquid 引擎，这样后端渲染博客页面就不用依赖 Ruby 了。
+
+写个 Go 版的 Liquid 模板引擎。标签语法：{{ variable }} 输出变量值（默认 HTML 转义）、{% if condition %} ... {% elsif condition %} ... {% else %} ... {% endif %} 条件、{% for item in collection %} ... {% endfor %} 循环（循环体内 forloop.index 从 1 开始、forloop.first、forloop.last 可用）、{% assign var = value %} 变量赋值、{% capture var %}...{% endcapture %} 捕获内容到变量。
+
+内置过滤器链式调用：upcase 转大写、downcase 转小写、strip 去首尾空白、truncate 50 截断、join "," 数组拼接、first/last 取首尾元素、size 返回长度、sort 排序、map "field" 提取数组中对象的某个字段、default "fallback" 空值时的默认值。
+
+输出内容要正确 HTML 转义（<>&" 四个字符），除非用 {{ variable }} 外面包三个花括号。支持从文件加载模板（指定模板目录），支持 include 引用子模板。
+
 go build 通过，标准库实现。

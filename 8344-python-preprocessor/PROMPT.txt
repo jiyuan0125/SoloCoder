@@ -1,3 +1,15 @@
-有些遗留配置文件用了自定义预处理器指令，需要一个通用的预处理器。用 Python 实现一个文件预处理器，支持 #include 文件包含（支持搜索路径）、#define/#undef 宏定义替换、条件编译（#if/#elif/#else/#endif，支持表达式求值）和 #error 指令。
+遗留系统有一套自定义的预处理器指令嵌入在配置文件和模板里。需要一个通用的预处理器来处理文件包含、宏替换和条件编译。Python 实现。
 
-能处理循环包含检测。纯 Python 实现，python 能跑，命令行传入主文件和 include 路径，输出预处理后的文本。
+指令支持：
+- #include "filename" 或 #include <filename>：插入被包含文件的内容。引号形式先在当前目录搜索，尖括号形式在指定的 include 路径列表中搜索。递归包含——被包含的文件里也可能有 #include。循环包含检测：维护一个当前包含栈，如果 #include 的文件已经在栈中就报错
+- #define NAME value / #define NAME：定义文本替换宏（只支持无参数的简单替换）
+- #undef NAME：取消定义
+- #if expr / #elif expr / #else / #endif：条件编译。表达式支持 defined(NAME) 检查、整数比较和逻辑运算（&& || !）。嵌套条件编译最多 32 层
+- #error message：输出错误信息并停止处理
+- #line N "filename"：修改后续报错的行号和文件名映射
+
+处理流程：逐行读取源文件，遇到指令行就执行对应操作，非指令行做宏替换后输出。#include 时递归处理被包含文件。条件编译维护一个条件栈，栈顶为 false 时跳过所有非指令行和嵌套指令。
+
+输出纯净的文本（所有指令已处理），附带行号映射（原始文件第几行 → 输出第几行），方便后续工具报错时定位到原始位置。
+
+python3 preprocessor.py main.conf -I include_dir/ -o output.conf。纯 Python 实现。

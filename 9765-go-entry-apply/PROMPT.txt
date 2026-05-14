@@ -1,9 +1,9 @@
-用 Go 实现日志条目的状态机应用过程。在 Raft 里，日志被提交后要按顺序应用到状态机上，这个顺序不能乱。
+你有没有想过，Raft 里的日志被提交（committed）和被应用（applied）其实是两回事？提交是说"多数节点同意了这条日志"，应用才是"真正执行这条日志里的命令去改状态机"。而且 apply 必须严格按照 index 顺序来，不能跳着执行——乱序 apply 会导致状态机不一致。这个 Go 程序就把 apply 这个环节拆开来仔细实现。
 
-功能：
-- 定义一个简单的状态机接口（Apply(command) -> result）
-- 日志条目按 index 顺序逐条应用到状态机，记录 lastApplied 位置
-- 只有 committed 的条目才能被 apply，不能跳过中间的条目
-- 模拟一个场景：并发提交多条日志，按序 apply 后验证状态机结果正确
+状态机接口设计得很简单：Apply(command []byte) 返回一个 result。命令可以是任意格式，程序用 JSON 编解码就行。状态机维护一个 lastApplied 指针，记录最后一条被 apply 的日志索引。
 
-Go 标准库，go build 编译通过。打印 apply 过程和最终状态。
+关键的顺序保证机制：只有 index == lastApplied + 1 的条目才能被 apply。如果收到的条目 index 更大（比如跳过了中间的），就得等前面的条目先到。这在并发场景下特别重要——多个 goroutine 可能同时在提交不同 index 的日志，但 apply 必须串行、按序进行。
+
+要模拟的场景：先按序提交 10 条日志，全部 apply，验证状态机结果正确。然后模拟并发提交——启动多个 goroutine 同时往日志里追加条目，但 apply 仍然按 index 1, 2, 3... 的顺序执行。最终验证并发 apply 的结果和串行 apply 完全一致。打印每个 apply 操作的日志："apply index=7 term=2 command=SetX→42, lastApplied=7"。
+
+Go 标准库，go build 编译通过。

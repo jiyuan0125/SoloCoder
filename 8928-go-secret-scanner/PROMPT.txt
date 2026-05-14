@@ -1,1 +1,7 @@
-代码仓库里可能不小心提交了 API Key 和密码之类的敏感信息。用 Go 写一个秘密扫描工具，递归扫描指定目录下的所有文本文件，用正则匹配常见敏感信息模式：AWS Access Key、GitHub Token、私钥头（BEGIN RSA PRIVATE KEY）、数据库连接串、硬编码密码（password=xxx）。输出文件路径、行号和匹配到的内容。支持 .gitignore 式的排除规则。go build 通过。
+代码仓库里可能不小心提交了 API Key、密码、私钥之类的敏感信息。等到被别人 clone 了才发现就晚了。需要一个工具自动扫描整个代码库。
+
+用 Go 写一个秘密扫描工具。递归扫描指定目录下所有文本文件（自动跳过 .git 目录和二进制文件）。用正则匹配常见的敏感信息模式：
+
+AWS 凭证——AKIA[0-9A-Z]{16}（Access Key ID）、aws_secret_access_key = ... GitHub Token——ghp_[a-zA-Z0-9]{36}、gho_[a-zA-Z0-9]{36}。私钥——BEGIN RSA PRIVATE KEY、BEGIN EC PRIVATE KEY、BEGIN OPENSSH PRIVATE KEY。数据库连接串——mysql://user:password@host、postgres://user:password@host。硬编码密码——password\s*=\s*['"][^'"]+['"]、passwd\s*=\s*['"][^'"]+['"]。API Key——api_key\s*=\s*['"][^'"]+['"]、apikey\s*=\s*['"][^'"]+['"]。JWT Token——eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*。
+
+输出：每个发现标注文件路径、行号、匹配到的内容（部分掩码保护）、匹配的规则名。支持 .gitignore 式的排除规则（--exclude-pattern）。go build 通过。

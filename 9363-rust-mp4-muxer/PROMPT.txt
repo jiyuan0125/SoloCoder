@@ -1,5 +1,7 @@
-写一个 Rust 的 MP4 封装器，将 H.264 视频和 AAC 音频封装进 MP4 容器。
+第一步构建 ftyp box。4 字节大小 + "ftyp" + major brand "isom" + minor version 0 + compatible brands "isom"、"iso2"、"avc1"、"mp41"。总大小约 24 字节。
 
-按照 ISO 14496-12 (ISOBMFF) 规范，构建 ftyp、moov、mdat 这些 box。moov 里包含 mvhd、tkhd、mdhd、stbl（stsd/stts/stss/stsz/stco）等子 box。视频 track 用 avc1 sample entry，音频用 mp4a。关键帧要在 stss 里标记出来。输出的 mp4 文件要能在 VLC 和浏览器里正常播放。
+第二步解析输入数据。H.264 文件读取 NAL 单元，提取 SPS/PPS 用于构造 AVCDecoderConfigurationRecord（1 字节版本 + 1 字节 profile + 1 字节 compat + 1 字节 level + 0xFF + 0xE1 + SPS（2 字节长度+NAL 数据）+ 1 + PPS（2 字节长度+NAL 数据））。AAC 文件读取帧数据，从 ADTS 头或用户参数获取 AudioSpecificConfig。
 
-Rust 实现，cargo build 能编译通过。
+第三步写 mdat box。先写 4 字节占位 + "mdat"，然后按时间戳交错写入视频帧和音频帧数据。记录每个帧的字节大小和写入偏移。mdat 大小最后回填。
+
+第四步构造 moov box。mvhd（timescale=1000、duration=总时长ms、rate=0x00010000、volume=0x0100、matrix 单位矩阵）。视频 trak：tkhd + mdhd（timescale=帧率×1000）+ hdlr("vide") + minf(stbl 含 stsd(avc1+AVCConfig)、stts、stss、stsc、stsz、stco)。音频 trak 类似但 stsd 是 mp4a+ESDS，没有 stss。stco 的偏移量需要加上 ftyp 和 moov 的总大小。用法 mp4-mux -video in.h264 -audio in.aac -o out.mp4。Rust 实现，cargo build 通过。

@@ -1,3 +1,9 @@
-管理好几百条 Suricata 规则文件，需要个工具帮忙整理和检查。用 Go 写一个 Suricata 规则管理工具。
+Go 工具，Suricata 规则的解析、检查和管理。
 
-功能：解析 Suricata 规则语法（action、protocol、src/dst、选项字段）；检查规则语法错误；按类别/严重性/协议过滤规则；检测重复或冲突的规则；支持规则启用/禁用切换（注释/取消注释）；输出规则统计信息。读规则文件或目录，纯标准库，go build 编译通过。
+管理几百条 Suricata 规则文件，纯手工维护很容易出问题——规则之间互相冲突、语法写错了部署后直接报错、有些规则该禁用的没禁用。需要一个工具来统一处理。
+
+解析 Suricata 规则语法的各个部分：action 字段（alert、drop、pass、reject）、protocol（tcp、udp、icmp、http 等）、源和目标地址端口（支持 IP、CIDR、端口范围、any、negation 用 ! 开头）、direction（→ 或 <>）、以及 options 段里的各种关键字（msg、sid、rev、classtype、priority、content、pcre、nocase、offset、depth 等）。
+
+检查功能：验证规则语法错误（缺少必要字段、options 格式不对、sid 缺失或重复）。冲突检测：如果两条规则的协议、源/目标地址端口完全相同但 action 不同（一条 alert 一条 drop），标记为冲突。重复检测：sid 相同的规则标记出来。
+
+管理功能：按类别（classtype）、严重性（priority）、协议类型过滤显示规则。启用/禁用切换——在规则行首加 # 注释掉就是禁用，去掉 # 就是启用。统计信息：总规则数、按 action 分布、按 protocol 分布、按 classtype 分布。支持从单个文件或整个目录加载规则。Go 标准库实现，go build 编译通过。

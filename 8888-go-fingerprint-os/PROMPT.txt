@@ -1,8 +1,11 @@
-写个操作系统指纹识别工具，Go 实现。
+做网络资产梳理想知道目标机器跑的是什么操作系统。通过 TCP/IP 协议栈实现的差异来推断——不同 OS 的初始 TTL 值、TCP 窗口大小、DF 位设置、IP ID 序列模式都不一样。类似 nmap -O 的功能。
 
-做网络资产梳理时想知道目标机器跑的是什么系统。通过 TCP/IP 协议栈的差异来猜测，类似 nmap -O。
+用 Go 写一个操作系统指纹识别工具。detect 子命令：对目标发送多种探测包——TCP SYN 到开放端口、TCP SYN 到关闭端口、TCP ACK 到开放端口、ICMP Echo Request。分析响应特征——TTL 初始值（Linux 通常 64、Windows 通常 128、macOS 通常 64 但某些版本 255）、TCP 窗口大小（Linux 通常 5840 或 29200、Windows 通常 8192 或 65535）、DF 位（Linux 几乎总是设置、Windows 也是、有些嵌入式设备不设）。
 
-功能：发送精心构造的 TCP/ICMP 探测包；分析 TTL 初始值、TCP 窗口大小、DF 位、IP ID 模式等特征；根据特征组合判断操作系统类型（Linux/Windows/macOS）及大致版本。
+IP ID 模式分析：连续发包看 IP ID 的变化模式——递增（大多数 Linux/Windows）、固定为 0（某些配置）、随机（OpenBSD）。TCP 选项特征——不同 OS 支持和排列的 TCP 选项不同（MSS、Window Scale、SACK、Timestamp）。
 
-命令：fingerprint-os detect -host 192.168.1.1、fingerprint-os detect -host 10.0.0.1 -verbose
-Go 标准库 net 加部分 syscall，go build 通过。需要适当权限。
+特征库：内置常见 OS 的指纹特征组合。输出最可能的 OS 类型和大致版本——Linux 2.6/3.x/4.x/5.x、Windows 7/10/Server 2016+、macOS 10.x/11.x、FreeBSD、OpenBSD。
+
+命令：fingerprint-os detect -host 192.168.1.1、fingerprint-os detect -host 10.0.0.1 -verbose。
+
+Go 标准库 net 加部分 syscall，go build 通过。

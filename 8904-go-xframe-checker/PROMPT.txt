@@ -1,1 +1,7 @@
-有些老站点还在用 iframe 嵌入别的页面，安全审计要求确认 X-Frame-Options 头配置正确。写一个 Go 命令行工具，接收一个 URL 列表，逐个检查响应头里的 X-Frame-Options 值。判断是 DENY、SAMEORIGIN 还是 ALLOW-FROM，对缺失或配置不当的（比如 ALLOW-FROM 后面没跟具体域名）给出警告。同时检查 CSP 里的 frame-ancestors 指令作为补充。go build 编译通过即可。
+安全审计要求确认所有 Web 应用的 X-Frame-Options 头配置正确，防止点击劫持攻击。有些老站点还在用 iframe 嵌入别的页面，需要逐个检查。
+
+写一个 Go 命令行工具，接收一个 URL 列表。对每个 URL 发请求检查 X-Frame-Options 头的值。判断是 DENY（完全禁止嵌入）、SAMEORIGIN（只允许同源嵌入）还是 ALLOW-FROM uri（只允许指定来源）。对缺失或配置不当的给出警告——比如 ALLOW-FROM 后面没跟具体域名、值不是这三个之一。
+
+同时检查 CSP 里的 frame-ancestors 指令作为补充——frame-ancestors 是 X-Frame-Options 的现代替代方案，如果两个都存在浏览器优先使用 frame-ancestors。
+
+输出报告：每个 URL 的 X-Frame-Options 值和 frame-ancestors 值，以及整体安全评估。Go 标准 标准库，go build 编译通过即可。

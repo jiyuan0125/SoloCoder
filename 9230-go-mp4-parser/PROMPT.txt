@@ -1,5 +1,5 @@
-想看看视频文件的内部结构，MP4 容器里 box 嵌套层级挺复杂的。
+想看看视频文件的内部结构，MP4 容器里 box 嵌套层级挺复杂的——做个视频分析工具之前得先搞清楚容器格式。
 
-解析 MP4 文件的 box 结构（也叫 atom），递归遍历所有 box，输出每个 box 的类型、偏移量、大小。对 ftyp、moov、mvhd、tkhd、stts、stsc、stsz、stco 这些常见 box 要解析内部字段。能处理嵌套 container box（如 moov 下的子 box）。
+解析 MP4 文件的 box 结构（ISO 14496-12 定义的 ISOBMFF）。每个 box 都是 4 字节大小 + 4 字节类型（ASCII）+ 可选的 8 字节扩展大小（如果 size==1）+ 内容。递归遍历所有 box，输出每个 box 的类型、文件偏移量、大小。对常见 box 解析内部字段：ftyp（brand、version、compatible brands 列表）、moov 容器下的 mvhd（创建时间、修改时间、timescale、duration 换算成秒）、tkhd（track ID、时长、宽高）、mdhd（track 的 timescale 和 duration）、stts/stsc/stsz/stco 这四个 sample table box（时间偏移、sample 到 chunk 映射、sample 大小、chunk 偏移量，能算出每个 sample 在文件中的精确位置）。container box（moov、trak、mdia、minf、stbl、dinf 等）要递归进去解析子 box。遇到不认识的 box 类型跳过并报告偏移和大小。
 
-Go 标准库，二进制解析，go build 通过。
+Go 标准库，二进制解析 encoding/binary 大端序。go build 通过。

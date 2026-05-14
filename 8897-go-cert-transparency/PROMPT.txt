@@ -1,8 +1,11 @@
-写个证书透明度（Certificate Transparency）日志查询工具，Go 实现。
+证书透明度（Certificate Transparency）日志记录了所有公开信任的 TLS 证书签发记录。可以用来监控有没有人为你的域名签发了未授权的证书——比如有人偷了 CA 的信任或者利用了不安全的签发流程。
 
-CT 日志里记录了所有公开信任的 TLS 证书签发记录，可以用来监控有没有人为你的域名签发了未授权的证书。
+用 Go 写一个 CT 日志查询工具。search 子命令：查询指定域名在 CT 日志中的所有证书记录。通过公开的 CT API（如 crt.sh）查询——HTTP GET https://crt.sh/?q=example.com&output=json。解析返回的 JSON，每条记录包含——签发时间、颁发者名称、证书序列号、是否过期、not_before/not_after 时间。
 
-功能：查询指定域名在 CT 日志中的所有证书记录；展示证书签发时间、颁发者、是否过期；检测可疑证书（非预期的颁发者）；支持按时间范围过滤。
+可疑证书检测：标记非预期颁发者签发的证书——用户提供预期 CA 列表（如 Let's Encrypt），不在列表中的颁发者标记为可疑。标记已过期但曾经有效的证书——可能表示历史上有未授权签发。标记泛域名证书——*.example.com 这种。
 
-命令：cert-transparency search -domain example.com、cert-transparency search -domain example.com -issuer "Let's Encrypt" -json、cert-transparency search -domain example.com -after 2024-01-01
-通过公开 CT API 查询，Go 标准库 net/http，go build 通过。
+支持按时间范围过滤（-after 2024-01-01，-before 2024-12-31）。输出每个证书的摘要信息。
+
+命令：cert-transparency search -domain example.com、cert-transparency search -domain example.com -issuer "Let's Encrypt" -json、cert-transparency search -domain example.com -after 2024-01-01。
+
+通过公开 CT API 查询，Go 标准库 net/http + encoding/json，go build 通过。

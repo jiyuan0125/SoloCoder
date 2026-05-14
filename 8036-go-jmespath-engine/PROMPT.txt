@@ -1,3 +1,9 @@
-用 Go 实现 JMESPath 查询引擎。JMESPath 是 AWS 用的 JSON 查询语言，支持投影(projections)、管道(pipe)、多选(multi-select)、函数调用(length/contains/starts_with 等)。
-输入 JSON 和 JMESPath 表达式，输出查询结果。表达式解析错误要有清晰的报错。
+AWS CLI 输出一大坨 JSON，用 --query 参数就能精确提取想要的字段——这个查询语言叫 JMESPath。觉得挺有用，想自己实现一个。
+
+用 Go 实现 JMESPath 查询引擎。JMESPath 支持这些操作：基本表达式（foo.bar 取嵌套字段、foo[0] 取数组元素）、投影（projections，对数组每个元素应用子表达式，如 people[*].name）、管道（pipe |，把前一步的结果当作新输入）、多选（multi-select，[expr1, expr2] 创建数组、{key: expr} 创建对象）、函数调用（length/contains/starts_with/ends_with/join/reverse/sort/sort_by/max/min/max_by/min_by/sum/avg/keys/values/abs/ceil/floor/to_string/to_number）。
+
+表达式解析器要支持字面量（数字、字符串用双引号、布尔 true/false、null）、比较运算（== != < <= > >=）、逻辑运算（&& || !）、管道操作符 |。过滤器表达式用 [?expr] 语法。
+
+输入 JSON 和 JMESPath 表达式，输出查询结果。表达式解析错误要有清晰的报错——"unexpected token ']' at column 15"。
+
 标准库实现，go build 编译通过。

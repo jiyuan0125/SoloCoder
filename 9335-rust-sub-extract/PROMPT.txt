@@ -1,9 +1,9 @@
-我需要一个从视频文件中自动提取内嵌字幕的工具。
+同事从网上下载了一部纪录片 MKV 文件，里面嵌了中英日三条字幕轨。他只需要中文字幕，问怎么提取出来。手动用播放器导出太慢了，需要一个命令行工具批量提取。Rust 写。
 
-提取能力：
-- 从 MKV 文件提取字幕轨道，支持 S_TEXT/UTF8（输出 .srt）和 S_TEXT/ASS（输出 .ass）
-- 从 MP4 文件提取 tx3g 字幕轨道并转换为 SRT 格式
-- 列出所有可用的字幕轨道（编号、语言、编码格式），让用户选择要提取的
-- 自动检测字幕轨道的语言标识（如 eng、chi）
+从 MKV 提取的流程：先解析 Segment/Tracks 元素，列出所有 TrackType 为 17 (subtitle) 的 Track。每个 Track 有 TrackNumber、TrackUID、Name（轨道名称）、Language（语言代码如 eng、chi、jpn）、CodecID（编码格式）。用户先 --list 看有哪些字幕轨，然后选择 --track 指定要提取的轨道编号。
 
-Rust 项目，cargo build 编译通过。`sub-extract movie.mkv --list` 列出轨道，`sub-extract movie.mkv --track 3 -o sub.srt` 提取。
+字幕数据的提取——遍历 Segment 下的 Cluster，从每个 Cluster 的 Block 中筛选出指定 TrackNumber 的数据块。时间戳 = Cluster Timecode + Block relative timecode，单位是 TimecodeScale（纳秒）。按时间排序后写出字幕文件。CodecID 决定输出格式："S_TEXT/UTF8" 输出 SRT，"S_TEXT/SSA" 输出 ASS，"S_TEXT/WEBVTT" 输出 VTT。
+
+从 MP4 提取 tx3g 字幕——找到 handler_type 为 "sbtl" 的 trak，读取 stbl 中的采样数据和时间信息。每个 tx3g sample 的前 2 字节是文本长度，后面是 UTF-8 文本。转换为 SRT 格式输出。
+
+PGS/VOBSUB 图形字幕给出暂不支持文本提取的提示，但可以导出原始数据。用法：sub-extract movie.mkv --list，sub-extract movie.mkv --track 3 -o sub.srt。Rust 实现，cargo build 通过。

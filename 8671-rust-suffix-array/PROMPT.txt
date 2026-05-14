@@ -1,5 +1,11 @@
-在实现一个后缀数组来做高效的子串搜索和去重。用 Rust 实现后缀数组的构建和查询。
+后缀数组是字符串算法里最实用的数据结构之一——构建完之后可以 O(m log n) 做子串搜索、O(n) 找最长重复子串、O(1) 计算任意两个后缀的 LCP。
 
-用 SA-IS 算法或 DC3 算法在线性时间 O(n) 内构建后缀数组。构建完之后要支持：子串搜索（二分查找，O(m log n)）、最长重复子串查找、两个后缀的 LCP（最长公共前缀）计算。最好同时构建 LCP 数组。
+用 Rust 实现后缀数组的构建和查询。
 
-输入一个字符串，输出排序后的后缀位置数组。`suffix-array build "abracadabra"`。cargo build 编译通过。
+SA-IS 算法——线性时间 O(n) 构建后缀数组。把字符分成 S-type 和 L-type，找 LMS 子串，递归对 LMS 后缀排序，然后用排好序的 LMS 后缀推导完整后缀数组。实现比较复杂但性能最优。也可以用更简单的倍增法 O(n log² n)。
+
+子串搜索——在排序后的后缀数组上做二分查找。比较时取 suffix[sa[mid]] 和 pattern 做字典序比较。找到第一个 >= pattern 的位置，然后线性扫描所有以 pattern 为前缀的后缀。返回所有出现位置。
+
+LCP 数组——用 Kasai 算法 O(n) 构建。LCP[i] = suffix[sa[i]] 和 suffix[sa[i-1]] 的最长公共前缀长度。有了 LCP 数组可以加速搜索（不用逐字符比较），也可以用 RMQ 做 O(1) 的任意两个后缀的 LCP 查询。
+
+CLI：suffix-array build "abracadabra"。cargo build 编译通过。

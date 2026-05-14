@@ -1,12 +1,13 @@
 Go 实现 SSTable 迭代器的合并迭代器（Merging Iterator）。
 
-LSM-Tree 读取时可能需要同时遍历 Memtable + 多个 SSTable 的数据，合并迭代器把它们封装成一个全局有序的迭代器。内部用最小堆管理多个子迭代器的当前位置。
+LSM-Tree 读取时可能需要同时遍历 Memtable + 多个 SSTable 的数据，合并迭代器把它们封装成一个全局有序的迭代器。内部用最小堆管理多个子迭代器的当前位置——每次弹出 key 最小的那个，就是归并排序的经典做法。
 
 要求：
-- 包装多个子 Iterator（memtable iter、多个 sstable iter）
-- 内部用最小堆，每次从所有子 iter 中取最小的 key
-- 同一个 key 有多个版本时，返回最新版本（sequence number 最大的）
-- 支持 Seek(key) 定位、Next()、Prev()、Valid()
-- Tombstone 的 key 跳过不输出
+- 包装多个子 Iterator（memtable iter + 多个 sstable iter），对外提供统一迭代接口
+- 内部用最小堆（container/heap），每次从所有子 iter 中取当前最小的 key
+- 同一个 key 有多个版本时，返回最新版本（sequence number 最大的），跳过旧版本
+- 支持 Seek(key) 定位到 ≥ key 的第一条记录、Next() 前进、Valid() 检查有效性
+- Tombstone 的 key 跳过不输出给上层——内部检测到 tombstone 就继续 Next
+- 堆中子迭代器相同时用来源优先级打破平局（Memtable 优先于 SSTable）
 
-Go 标准库，go build 编译通过。子迭代器接口要统一：Seek/Next/Key/Value/Valid。堆用 container/heap。
+Go 标准库，go build 编译通过。子迭代器接口统一：Seek/Next/Key/Value/Valid。

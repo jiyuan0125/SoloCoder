@@ -1,3 +1,9 @@
-帮我用 Go 写一个 XPath 查询引擎。支持常用的 XPath 1.0 子集：节点路径(/a/b/c)、轴(child/descendant/parent/attribute)、谓词([1]、[@attr='val'])、函数(text()/contains/starts-with)。
-输入 XML 文档和 XPath 表达式，返回匹配的节点列表。XML 解析用标准库的 encoding/xml。
-go build 能过。
+XML 格式虽然老旧但在企业系统里到处都是，解析 XML 不难，但要从 XML 里精确提取特定节点，没有 XPath 寸步难行。
+
+帮我用 Go 写一个 XPath 查询引擎。支持 XPath 1.0 的常用子集：
+
+节点路径——绝对路径 /root/child/grandchild、相对路径 child/grandchild。轴——child（默认，可以省略）、descendant（所有后代）、parent（..）、attribute（@attr）、self（.）。谓词——位置谓词 [1] 取第一个、[last()] 取最后一个、条件谓词 [@attr='value'] 按属性筛选、[price > 10] 按子节点值筛选。函数——text() 取文本内容、contains(str1, str2)、starts-with(str1, str2)、string-length()、name() 取节点名、count() 计数。
+
+输入 XML 文档（从文件读取，用标准库 encoding/xml 解析成 DOM 树）和 XPath 表达式（命令行参数），返回匹配的节点列表。每个节点输出类型（元素/属性/文本）、名称、值、完整路径。
+
+XPath 语法错误要报告位置。go build 能过，标准库。

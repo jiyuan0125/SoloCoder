@@ -1,12 +1,13 @@
-帮我写一个 JWE（JSON Web Encryption）加密工具，Go 实现。
+微服务之间传递敏感数据（身份证号、银行卡号），明文在日志和网络里裸奔不合规。用 JWE（JSON Web Encryption）规范做内容加密——密文即使被截获也无法解密，而且 JWE 是标准格式，任何语言的 JWE 库都能解。
 
-需要在微服务之间传递敏感数据（比如用户身份证号），用 JWE 规范做内容加密。
+用 Go 实现 JWE Compact Serialization 的加密和解密。加密流程：生成随机的 Content Encryption Key（CEK，32 字节）。用接收方的 RSA 公钥加密 CEK（RSA-OAEP），Base64URL 编码得到 encrypted_key。生成随机 IV（12 字节）。用 CEK + IV + AES-256-GCM 加密明文，得到密文和 auth tag。构造 header（{"alg":"RSA-OAEP","enc":"A256GCM"}）→ Base64URL 编码。最终 JWE token = header.encrypted_key.iv.ciphertext.tag（五段用 . 连接）。
 
-功能要求：
-- 实现 JWE Compact Serialization：支持 RSA-OAEP（密钥加密）+ A256GCM（内容加密）的组合
-- 加密流程：生成随机 CEK → 用公钥加密 CEK → 用 CEK 加密明文 → 拼装 JWE token
-- 解密流程：解析 JWE token → 用私钥解密 CEK → 用 CEK 解密密文
-- 也支持 AES-GCM 对称加密方式（A256KW + A256GCM）
-- 命令行：`./jwe-encrypt encrypt --data=hello --pubkey=pub.pem` 和 `./jwe-encrypt decrypt --token=xxx --privkey=priv.pem`
+解密流程：分割 token 五段。解码 header 得到 alg 和 enc。用私钥解密 encrypted_key 得到 CEK。用 CEK + IV 解密 ciphertext，验证 auth tag。
+
+也支持对称加密模式（A256KW + A256GCM）：用预共享密钥包装 CEK（AES Key Wrap），其余流程一样。
+
+密钥管理：支持从 PEM 文件加载 RSA 密钥对和 AES 密钥。PEM 密码支持可选。
+
+命令行：jwe-encrypt encrypt --data=hello --pubkey=pub.pem 生成 JWE token，jwe-encrypt decrypt --token=xxx --privkey=priv.pem 解密还原。
 
 Go 标准库 crypto 包，go build 能通过。

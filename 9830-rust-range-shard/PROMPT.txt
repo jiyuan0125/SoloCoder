@@ -1,12 +1,13 @@
-用 Rust 实现范围分片（Range Sharding）。
+范围分片（range sharding）和哈希分片是两种不同的数据分片策略。哈希分片把 key 哈希到均匀分布的位置，范围分片则按 key 的自然顺序切割——比如 [a-m] 在分片 1，[n-z] 在分片 2。范围分片的优势是支持高效的范围查询，劣势是可能出现热点（某些 key 范围访问特别频繁）。用 Rust 实现一个范围分片管理器。
 
-数据按 key 的范围切分成多个分片，每个分片覆盖一个连续的 key 区间。适合时间序列数据、有序键值存储等场景。分片边界可以动态调整。
+分片的数据结构：RangeShard { shard_id, start_key（inclusive）, end_key（exclusive）, data: BTreeMap<String, Vec<u8>> }。使用 BTreeMap 是因为它天然按 key 有序，范围查询效率高。
 
-要做的：
-- 定义 Shard 结构：包含范围 [start, end) 和对应节点信息
-- ShardMap 维护所有分片的有序列表
-- 给定 key 能快速找到所属分片（二分查找）
-- 支持分裂分片（某个分片数据量过大时一分为二）
-- 支持合并相邻分片
+分片路由：给定一个 key，找到 start_key <= key < end_key 的分片。用一个 BTreeMap<String, ShardId> 做路由表——key 是每个分片的 start_key，value 是 shard_id。查找时 upper_bound 找到第一个 start_key > key 的位置，然后回退一步就是目标分片。
 
-cargo build 通过，测试分片分裂和合并后路由正确。
+分片的分裂：当某个分片的数据量超过阈值（比如 10000 个 key）时，自动从中间点分裂成两个。中间点的选择：找到分片数据的中位 key（BTreeMap 里直接取中间位置的 key）。分裂后更新路由表。
+
+范围查询的实现：给定 [start, end) 范围，先确定涉及哪些分片（可能跨多个），然后从每个分片收集对应范围的数据。
+
+模拟：初始 1 个分片覆盖全部 key 范围，逐步插入数据触发自动分裂，观察分片数量和每个分片的大小变化。
+
+cargo build 通过。

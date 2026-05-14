@@ -1,9 +1,7 @@
-帮写一个 SVG 文件解析工具，Go 语言，不依赖外部库。
+前端团队提了个需求——他们有一套设计系统，产出大量 SVG 图标，现在要做自动化审查：检查 viewBox 是否统一、path 数据是否合法、有没有用不规范的属性。市面上没有现成的 SVG 静态分析工具，得自己搞一个。Go 的 encoding/xml 可以解析 SVG 结构，但要理解 SVG 的几何语义还得额外处理。
 
-要做的事：
-- 解析 SVG XML 结构，提取 viewBox、width、height 等基本属性
-- 识别常见图形元素：rect、circle、ellipse、line、polyline、polygon、path
-- 解析 path 的 d 属性里各种指令（M L C Q A Z 等）
-- 支持 transform 属性（translate、rotate、scale、matrix）
+先说解析层面。SVG 是 XML，但不是普通的 XML——它的属性值有特殊的格式。viewBox 是四个空格分隔的数字，transform 可以是 translate(10,20) rotate(45) scale(2) matrix(1,0,0,1,5,5) 这样的复合变换串。path 的 d 属性更复杂，指令字母后面跟着的数字参数个数不固定——M 后面跟 2 个数，C 后面跟 6 个，S 跟 4 个，A 跟 7 个，Z 不跟任何参数。大写字母是绝对坐标，小写是相对坐标。连续的多组参数可以省略重复的指令字母。
 
-命令行 svg-parse logo.svg，输出画布尺寸、元素数量、各元素类型统计。go build 编译通过。
+图形元素要识别这些：rect（x y width height rx ry）、circle（cx cy r）、ellipse（cx cy rx ry）、line（x1 y1 x2 y2）、polyline 和 polygon（points 属性）、path（d 属性）、text（内容和 x y 坐标）。样式属性主要关注 fill、stroke、stroke-width、opacity 这几个，它们可能出现在元素的 style 属性里，也可能继承自父级 g 元素。
+
+统计输出：画布尺寸、元素总数、按类型分别统计数量、path 指令分布情况。命令行 svg-parse logo.svg，Go 标准库 encoding/xml 解析，go build 编译通过。

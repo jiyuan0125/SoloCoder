@@ -1,5 +1,7 @@
-对接第三方系统的时候需要解析 SAML 断言，想写个工具来解析和验证 SAML XML。
+对接第三方系统要解析 SAML 断言，但 SAML 的 XML 结构又臭又长，每次手动扒节点很痛苦。写个工具自动化这个过程，顺带做安全校验。
 
-Python 实现，能解析 SAML 2.0 的 Response 和 Assertion XML。要能提取 NameID、属性声明、认证上下文等信息。支持 XML 签名验证（检查 Signature 节点的引用完整性）。能检测常见的 SAML 攻击：XML 外部实体注入、签名包装攻击、注释注入。输出解析后的结构化信息。
+Python 实现 SAML 2.0 Response 和 Assertion 解析器。输入一个 SAML XML 文件（或从 stdin 读取），解析后输出结构化信息：Issuer（签发方 ID）、NameID（用户标识）、AttributeStatement 里的所有属性键值对、AuthnStatement 的认证时间和上下文、Conditions 的生效时间和 Audience 限制。
 
-命令行工具，输入 SAML XML 文件，python3 运行。
+安全验证要做这些：XML 签名验证——检查 Signature 节点的 SignedInfo 引用是否覆盖了整个 Assertion，签名值用 X509 证书公钥验证；XXE 防护——解析 XML 时禁用外部实体加载；签名包装攻击检测——检查签名引用的元素是否就是我们要信任的那个 Assertion（防止攻击者插入第二个未签名的 Assertion）；注释注入检测——XML 注释可能被某些解析器忽略但影响签名验证。
+
+命令行工具，输入 SAML XML 文件路径，输出解析结果和验证状态。python3 运行。

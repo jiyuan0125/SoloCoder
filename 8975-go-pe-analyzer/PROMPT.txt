@@ -1,3 +1,9 @@
-拿到一个可疑的 PE 文件，想快速分析它的基本信息。用 Go 写一个 PE（Windows 可执行文件）格式分析器。
+拿到一个可疑的 PE 文件，想快速看看它是不是恶意的——调了哪些系统 API、有几个节区、有没有异常的导入——但每次都要打开 IDA 或者 PE 工具太重了，很多时候只需要一个快速的基本信息概览就够了。
 
-解析 PE header：DOS header、PE signature、COFF header、Optional header；提取节区（sections）信息（名称、大小、属性）；解析导入表（Import Table）看它调用了哪些 DLL 和函数；解析导出表（Export Table）。输入是 PE 文件路径，输出结构化分析报告。Go 标准库，go build 通过。
+用 Go 写一个 PE（Windows 可执行文件）格式分析器。输入是 PE 文件的路径，工具解析二进制结构，输出结构化的分析报告。
+
+解析从文件头开始：先读 DOS header 确认 MZ 签名，然后通过 e_lfanew 字段定位到 PE header，确认 PE\0\0 签名。接着解析 COFF header（Machine、NumberOfSections、TimeDateStamp、Characteristics 这些字段）和 Optional header（Magic 判断 PE32 还是 PE32+、入口点地址、镜像大小、子系统类型）。
+
+节区解析：遍历所有 section header，输出每个节区的名称（.text、.data、.rdata、.rsrc 这些）、虚拟大小、原始数据大小、虚拟地址和节区属性（可读/可写/可执行标志）。标记可疑的节区属性组合——比如同时具备可写和可执行权限的节区。
+
+导入表和导出表：解析 Import Directory，列出所有导入的 DLL 名称和对应的函数名。恶意软件经常调用的组合（VirtualAlloc + WriteProcessMemory + CreateRemoteThread）可以标记为可疑。如果文件有导出表，也一并解析输出。Go 标准库，go build 通过。

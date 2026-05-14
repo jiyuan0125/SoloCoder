@@ -1,1 +1,7 @@
-需要分析 ICMP 流量来做网络诊断。用 Python 写一个 ICMP 协议解析器，从 pcap 文件或原始二进制数据中解析 ICMP 报文：识别 ICMP 类型（Echo Request/Reply、Destination Unreachable、Time Exceeded、Redirect 等），提取类型、代码、校验和、以及各类型特定的字段（如 ping 的 ID 和序列号）。输出格式化的解析结果，纯 Python 解析二进制。
+ICMP 协议不只有 ping，还有目标不可达、重定向、时间戳这些类型，排查网络问题时需要看到底是哪种 ICMP 消息。写个解析器。
+
+Python 实现 ICMP 报文解析器。ICMP 报文格式：Type（1 字节）+ Code（1 字节）+ Checksum（2 字节）+ 变长的数据部分。解析以下消息类型：
+
+查询类——Echo Request/Reply（Type 0/8，解析 Identifier 和 Sequence Number，提取 payload 数据用于匹配 ping 请求和响应）、Timestamp（Type 13/14，解析三个时间戳）、Address Mask（Type 17/18）。差错类——Destination Unreachable（Type 3，Code 区分网络不可达/主机不可达/端口不可达/需要分片等）、Redirect（Type 5，解析目标网关地址）、Time Exceeded（Type 11，TTL 为 0）、Parameter Problem（Type 12，指针指向出错字节）。
+
+差错报文的数据部分包含触发差错的原始 IP 头部 + 前 8 字节传输层数据，也要解析出来方便定位问题连接。输入来源：从 pcap 提取 ICMP 包或从 hex 字符串解析。输出每个 ICMP 报文的类型名称、Code 含义、关键字段值。python3 命令行工具。

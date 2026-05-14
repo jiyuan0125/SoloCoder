@@ -1,1 +1,9 @@
-AD 域环境下的 Kerberos 认证需要分析。用 Python 写一个 Kerberos 协议解析器，解析 Kerberos 消息的 ASN.1 编码格式，识别消息类型（AS-REQ、AS-REP、TGS-REQ、TGS-REP、AP-REQ、AP-REP），提取关键字段（realm、cname/sname、etype 加密类型列表、ticket 结构）。输出格式化的解析结果，命令行工具，自己实现基本的 ASN.1 DER 解码。
+Kerberos 是域环境的核心认证协议，理解 Kerberos 报文对排查域认证问题和分析攻击手法（如黄金票据、白银票据、Kerberoasting）很有帮助。
+
+Python 实现 Kerberos 报文解析器。Kerberos 使用 ASN.1 DER 编码，先写一个基本的 DER 解码器（Tag-Length-Value）。支持的消息类型：
+
+AS-REQ（认证请求）：解析 pvno、msg-type、req-body 中的 realm（域名）、sname（请求的服务）、cname（用户名）、etype（支持的加密类型列表）。AS-REP（认证响应）：解析 ticket（TGT 票据，包含加密的服务部分）和 enc-part（用用户密码加密的会话密钥）。
+
+TGS-REQ/TGS-REP（票据授予）：解析请求的目标服务 sname 和响应中的 service ticket。AP-REQ/AP-REP（应用认证）：客户端向服务出示票据时的消息。
+
+加密类型映射：将 etype 数字映射为算法名称（1=des-cbc-crc、17=aes128-cts-hmac-sha1-96、18=aes256-cts-hmac-sha1-96、23=rc4-hmac）。从 pcap 中提取 TCP/UDP 88 端口的流量解析。输出结构化的 Kerberos 消息内容。python3 命令行工具。

@@ -1,12 +1,11 @@
-帮我写个 Rust 程序实现 Leader Lease 机制。
+基于租约的 Leader 选举和普通心跳选举的区别在于——租约有明确的过期时间戳。Leader 在租约有效期内有绝对权威，租约一到期就自动让位。这让状态判断更精确，不依赖心跳超时的模糊判断。用 Rust 实现租约选举。
 
-选举出 leader 后给它一个租约，租约有效期内不需要重新选举。leader 通过续约保持身份。
+租约的数据结构：Lease { holder: NodeId, expires_at: Instant, term: u64 }。Leader 获取租约后，必须在 expires_at 之前续约。续约就是把 expires_at 往后推 lease_duration（比如 5 秒）。其他节点监控租约——如果当前时间超过 expires_at，认为租约过期，开始抢注新租约。
 
-要做的：
-- leader 获取后带有一个租约（指定有效期），租约有效期间其他节点不能发起选举
-- leader 需要定期续约（发 heartbeat），续约失败则租约过期，其他节点可以竞争
-- 租约过期到新 leader 选出之间有个短暂的空白期（no-leader period）
-- 支持查看当前 leader、租约到期时间、续约历史
-- 模拟 leader 卡住（GC 暂停）导致续约失败的场景
+抢注的并发控制：用 CAS（Compare-And-Swap）模拟——节点尝试写入新租约，只有当前租约确实过期了才能成功。第一个成功的节点成为新 Leader。多个节点同时抢注时只有一个能成功（用 Mutex 保证原子性）。
 
-cargo build 通过，内存模拟。
+要模拟的三个场景。正常续约：Leader 每 lease_duration/3 续约一次，租约永不过期。续约失败：模拟网络丢包（20% 概率丢续约消息），观察租约偶尔过期后重新选举。旧 Leader 恢复：原来的 Leader 续约恢复后发现自己不再是 Leader（别人的 term 更高），自动降级为 Follower。
+
+打印完整的租约生命周期时间线——"T=0ms node-1 acquired lease (expires T=5000ms)"、"T=1666ms node-1 renewed (expires T=6666ms)"、"T=7000ms lease expired, node-3 won new lease"。
+
+cargo build 通过。

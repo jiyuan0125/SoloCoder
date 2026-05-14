@@ -1,8 +1,11 @@
-做个 FIDO2 挑战-响应测试工具，Go 写的。
+开发 FIDO2 相关功能时需要模拟服务器端的挑战生成和响应验证流程。前端需要知道服务器期望什么格式的数据，后端需要验证前端返回的数据是否合法。联调的时候有个工具把两边的格式都搞清楚会省很多时间。
 
-开发 FIDO2 相关功能时需要模拟服务器端的挑战生成和响应验证流程，方便前后端联调。
+用 Go 写一个 FIDO2 挑战-响应测试工具。register-challenge 子命令：生成 FIDO2 注册挑战。输出 PublicKeyCredentialCreationOptions 的 JSON——rp（relying party 信息：name 和 id）、user（id、name、displayName）、challenge（Base64URL 编码的 32 字节随机数）、pubKeyCredParams（支持的算法列表：ES256、RS256）、timeout、authenticatorSelection（authenticatorAttachment=cross-platform、userVerification=preferred）。
 
-功能：生成 FIDO2 注册和认证的 challenge（随机 nonce）；构造 PublicKeyCredentialCreationOptions 和 RequestOptions 的 JSON；验证 authenticator 返回的签名是否匹配 challenge。
+auth-challenge 子命令：生成 FIDO2 认证挑战。输出 PublicKeyCredentialRequestOptions 的 JSON——rpId、challenge、allowCredentials（可选，指定允许的 credential ID）、timeout、userVerification。
 
-命令：fido2-challenge register-challenge -rp "example.com" -user "testuser"、fido2-challenge auth-challenge -credid <base64>、fido2-challenge verify -type register -challenge <base64> -response <json>
+verify 子命令：验证 FIDO2 响应。根据 type（register 或 auth）选择不同的验证流程。注册验证——检查 attestation 格式、验证签名、提取 credential ID 和公钥。认证验证——检查 clientData 类型、challenge 匹配、用 credential 公钥验证签名。输出验证结果（成功/失败）和提取的数据。
+
+命令：fido2-challenge register-challenge -rp "example.com" -user "testuser"、fido2-challenge auth-challenge -credid <base64>、fido2-challenge verify -type register -challenge <base64> -response <json>。
+
 Go 标准库，go build 编译通过。

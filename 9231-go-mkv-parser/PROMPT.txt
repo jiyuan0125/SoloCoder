@@ -1,5 +1,5 @@
-MKV 格式用 EBML 编码，结构比较特别，想写个工具把它的元素树打印出来。
+MKV 格式用 EBML 编码，结构比较特别——元素 ID 和大小都用变长整数表示，跟 protobuf 的 varint 类似但不完全一样。想写个工具把 MKV 文件的元素树完整打印出来，搞清楚每个元素里面装了什么。
 
-解析 MKV/WebM 文件的 EBML 元素结构，能识别 Segment、Info、Tracks、Cluster 这些顶层元素。解析 SeekHead 获取索引信息，读 Tracks 元素获取编码格式（如 H.264、VP9、AAC）。EBML 变长整数解析要正确处理。
+解析 MKV/WebM 文件的 EBML 元素结构。EBML 变长整数解析是核心：元素 ID 用 1-4 字节编码（第一个字节的前导零位数决定长度），元素大小也用类似的变长编码（但保留 "未知大小" 的特殊值 0xFF...FF 用于 Segment 这种流式容器）。识别顶层元素：EBML Header（版本、文档类型）、Segment（容器）、SegmentInfo（包含 Duration、TimecodeScale、MuxingApp）、Tracks（轨道列表）、Clusters（实际媒体数据）。Tracks 里解析 TrackEntry 获取编码格式：Video 轨道的 CodecID（V_MPEG4/ISO/AVC 即 H.264、V_VP9）、分辨率（PixelWidth/Height）；Audio 轨道的 CodecID（A_AAC、A_VORBIS）、SamplingFrequency、Channels。SeekHead 元素解析出索引位置映射。输出用缩进表示层级关系的树状结构。
 
-Go 标准库，go build 编译通过。
+Go 标准库，手写 EBML 变长整数解析，go build 编译通过。

@@ -1,3 +1,11 @@
-分析 LDAP 查询行为，看看谁在查什么目录信息。Go 实现 LDAP 协议解析器。
+分析 LDAP 查询行为——域控服务器上查了什么、谁在查敏感信息、有没有异常的大批量查询。LDAP 审计日志不是每个环境都开了，但网络流量里一定有完整数据。
 
-解析 LDAP 报文（ASN.1 BER 编码）：识别操作类型（BindRequest、SearchRequest、SearchResult、ModifyRequest 等）；从 SearchRequest 提取 base DN、过滤条件、请求属性；从 SearchResult 提取返回的条目和属性值。从 pcap 提取 TCP 389 端口流解析，输出查询摘要统计。Go 标准库，go build 通过。
+Go 实现 LDAP 协议解析器。从 pcap 提取 TCP 389 端口的流数据，解析 LDAP 报文。LDAP 用 ASN.1 BER 编码，Tag-Length-Value 结构。
+
+解析 LDAPMessage 的 SEQUENCE：messageID（INTEGER）加操作类型（由 tag 区分）——BindRequest(0)、BindResponse(1)、SearchRequest(3)、SearchResultEntry(4)、SearchResultDone(5)、ModifyRequest(6)、AddRequest(8)、DelRequest(10)。
+
+SearchRequest 解析：baseObject（搜索起始 DN）、scope（base=0/singleLevel=1/wholeSubtree=2）、sizeLimit、timeLimit、filter（解析 LDAP 过滤表达式——AND、OR、NOT、equalityMatch、substring、present）、attributes（请求返回的字段列表）。
+
+SearchResultEntry 解析：objectName（匹配的 DN）和 attributes（属性值列表）。
+
+输出查询摘要：哪些 DN 被查最多、哪些客户端发起查询最多、有没有查询敏感容器（如 CN=Users,DC=domain 下的全量搜索）。Go 标准库，go build 通过。

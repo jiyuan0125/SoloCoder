@@ -1,11 +1,11 @@
-实现 Raft Lease Read 机制，用 Rust。
+ReadIndex 每次读都要发一轮心跳确认，延迟比较高。Lease Read 是一个优化方案——Leader 在获得多数派确认后持有一段时间的"租约"，租约内的读请求直接返回，不用再发心跳。能省掉一轮 RPC，但实现起来有一个关键前提：时钟不能漂移太多。用 Rust 实现看看效果差异。
 
-ReadIndex 需要发网络请求确认 Leader 身份，性能不够好。Lease Read 基于 Leader 在收到多数心跳响应后获得一个租约，租约内可以直接读，不需要再发网络请求。
+租约机制：Leader 每次成功收到多数 Follower 的心跳响应后，设置一个 lease_expiry = now() + lease_duration（比如 1 秒）。在 lease_expiry 之前的所有读请求，直接读状态机返回，不走 ReadIndex。租约到期后，重新发心跳续约，然后才能继续服务读请求。
 
-核心逻辑：
-- Leader 每次收到多数 Follower 的心跳响应后，刷新租约时间（如 2 倍心跳间隔）
-- 租约内的读请求直接返回，无需网络通信
-- 租约过期后降级为 ReadIndex 模式
-- 时钟漂移是已知风险，文档中要说明
+时钟漂移的处理：lease_duration 不能设太大（漂移时间不可控），也不能太小（续约太频繁浪费带宽）。这个程序假设时钟基本准确，lease_duration 设为 election_timeout 的 0.8 倍。
 
-cargo build 通过，测试验证租约内读性能提升和过期后降级。
+租约的安全性论证：只要 lease_duration < min_election_timeout（Follower 最短的选举超时），在租约内就不可能有新的 Leader 被选出来。因为 Follower 在收到 Leader 心跳后至少等 min_election_timeout 才会超时，而 Leader 的租约比这短，所以租约到期前不可能有新 Leader。
+
+对比测试：同样的读写负载，分别用 ReadIndex 和 Lease Read，统计读请求的平均延迟。Lease Read 应该快很多。
+
+cargo build 通过。

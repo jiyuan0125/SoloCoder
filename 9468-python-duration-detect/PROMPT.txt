@@ -1,5 +1,9 @@
-帮我写个检测视频时长的工具。
+1. 检测视频文件的总时长，看起来简单但不同容器格式存时长的方式完全不一样。需要针对每种格式写不同的读取逻辑，不依赖 ffprobe，直接从二进制结构中提取。
 
-需求很简单：给一个视频文件，返回它的总时长（秒）。但要做到不依赖 ffprobe，自己从文件结构中读取。支持 MP4、FLV、TS 三种格式。MP4 从 mvhd 或 track 的 duration 读，FLV 从 metadata 的 duration 读，TS 从 PCR 或 PTS 计算。
+2. MP4 格式：从 moov → mvhd 读取 duration 和 timescale，时长（秒）= duration / timescale。如果 moov 在文件末尾（moov 后置的情况，网络下载常见），需要从文件尾往前搜索 moov 的位置。也可以从 trak → mdia → mdhd 里读轨道级别的时长。
 
-python main.py video.mp4 输出 "Duration: 125.34 seconds"。纯 Python 标准库，处理二进制解析。
+3. FLV 格式：找 Script Data Tag 里的 onMetaData 对象，里面有 duration 字段（秒，浮点数）。如果没有 onMetaData 就只能从最后一个 Video Tag 的时间戳来估算。
+
+4. TS 格式最麻烦——TS 没有全局的时长字段。需要从 PCR（Program Clock Reference）或者 PTS（Presentation Time Stamp）计算：找到第一个和最后一个 PCR/PTS 值，差值除以 90kHz 就是秒数。如果 PCR 不可用就用 PTS 的范围。
+
+5. 输出格式统一为秒（保留两位小数）。用法：python3 duration_detect.py detect video.mp4

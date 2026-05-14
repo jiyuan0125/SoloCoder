@@ -1,11 +1,13 @@
-用 Rust 实现分布式锁的 Fencing Token 机制。
+之前遇到过一个线上事故——分布式锁过期后客户端还在操作存储，两个客户端同时写了同一个文件。事后分析发现是因为锁的 TTL 设置得太短，GC 停顿导致续约没及时发出。Fencing Token 方案能从根本上解决这类问题，不依赖锁的 TTL 是否准确。用 Rust 把它实现出来。
 
-问题是这样的：分布式锁不是绝对可靠的，客户端 A 拿到锁后可能因为 GC 暂停或网络问题"假死"，锁超时被释放，客户端 B 获取了锁。这时候 A 醒过来还在写入，就会和 B 的写入冲突。Fencing Token 就是用来解决这个问题的。
+Fencing Token 的原理：锁服务每次授权都分配一个严格递增的 token（单调递增的 u64）。客户端获取锁时拿到 token，后续所有对受保护资源的操作都必须带这个 token。资源服务端维护"见过的最大 token"，拒绝 token <= 最大值的请求。
 
-要做的事：
-- 每次获取锁时返回一个单调递增的 fencing token
-- 存储层在执行写入时检查 token，只有 token 比之前的大才允许写入
-- 模拟上面的场景：A 拿到 token=1，A 假死后 B 拿到 token=2，A 恢复后用 token=1 写入被拒绝
-- 输出每次写入操作及其 token 的判定结果
+具体流程：客户端 A 获取锁，拿到 token=5。A 操作存储，带上 token=5。存储记录 max_token=5。A 的锁过期了，客户端 B 获取锁拿到 token=6。B 操作存储带 token=6，存储更新 max_token=6。此时 A 还在尝试用 token=5 操作——存储拒绝，因为 5 <= 6。
 
-cargo build 通过，内存模拟。
+Token 的生成：锁服务维护一个全局递增计数器。每次 TryLock 成功时 counter++，返回当前 counter 作为 fencing token。即使同一个锁被反复获取释放，token 也是递增的。
+
+不需要改锁的 TTL——即使锁提前过期了，旧的 token 也不会被接受。这是 fencing 的核心优势：安全性不依赖超时机制。
+
+模拟场景：客户端 A 获取锁 token=3，然后 GC 停顿。锁过期，B 获取锁 token=4。A 恢复后尝试写入——存储拒绝（token=3 < max_token=4）。打印完整的 token 时间线。
+
+cargo build 通过。

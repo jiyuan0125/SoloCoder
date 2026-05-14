@@ -1,5 +1,7 @@
-我想要一个 CSP（Content-Security-Policy）策略生成器。
+CSP（Content Security Policy）是防 XSS 的最后一道防线，但手写 CSP 策略很容易出错——directive 名字拼错、值写法不对、漏了哪个指令。写个工具帮助生成正确的 CSP 策略。
 
-用户通过命令行参数或配置文件指定自己网站用到的资源来源：比如脚本只从 self 和 cdn.example.com 加载、图片允许 data: 和 https:、样式允许 inline style 等。工具根据这些输入生成一条完整的 CSP 头字符串，同时给出对应的 meta 标签版本。
+Python 实现一个 CSP 策略构建工具。交互式构建：逐步引导用户配置每个 CSP directive——default-src（默认策略）、script-src（JS 来源，处理 unsafe-inline 和 unsafe-eval 的安全影响）、style-src（CSS 来源）、img-src（图片来源）、connect-src（AJAX/WebSocket 来源）、font-src、media-src、frame-src、object-src（应该设为 none 防止 Flash/Java 插件）。
 
-最好能支持几个预设模板（strict、moderate、legacy），让用户在模板基础上微调。Python 3，标准库就行。python csp_builder.py --template strict --add-script cdn.example.com 这样用。
+每个 directive 支持的值类型：'none'（完全禁止）、'self'（同源）、域名列表（如 https://cdn.example.com）、nonce 格式（'nonce-{随机值}'，配合服务端生成）、hash 格式（'sha256-{base64}'，针对固定的内联脚本）。自动生成 nonce 和 hash 值。
+
+验证功能：构建完成后自动检查策略的合理性——default-src 没设则警告、script-src 包含 unsafe-inline 则警告 XSS 风险、object-src 不是 none 则提醒。输出完整的 CSP 头字符串，可直接用于 Nginx/Apache 配置。python3 命令行工具。

@@ -1,9 +1,7 @@
-我想分析音频的频谱特征，需要一个工具对 WAV 音频做频谱分析并输出结果。
+做音频分类的时候经常需要看频谱——不同乐器和人声在不同频段有特征性的能量分布。FFT（快速傅里叶变换）是频谱分析的基础工具，把时域信号变到频域。Rust 实现一个音频频谱分析工具。
 
-要做的事：
-- 读取 WAV PCM 数据，将音频切成短时帧（frame size 可配置，如 1024 或 2048 采样点）
-- 对每帧做 FFT 变换，计算各频率 bin 的幅度值（magnitude）
-- 输出每帧的频谱数据，标注对应的频率范围（根据采样率计算实际 Hz 值）
-- 支持汉宁窗（Hanning window）减少频谱泄漏
+流程分几步。读取 WAV PCM 数据，如果是立体声取左声道或合并为单声道。将音频切成短时帧——帧大小可配置（256/512/1024/2048），帧之间有 50% 重叠。对每帧先做加窗处理——乘以汉宁窗（Hanning window：w(n) = 0.5 × (1 - cos(2πn/(N-1)))）来减少频谱泄漏（帧边界的不连续会在频域产生虚假的频率分量）。
 
-Rust 项目，cargo build 编译通过。`spectrum analyze audio.wav --frame-size 2048 > spectrum.json`。
+然后对加窗后的数据做 FFT。简化版可以用 DFT 直接算——对每个频率 bin k，计算 X(k) = Σ x(n) × e^(-j2πkn/N)。幅度谱是 |X(k)| = sqrt(Re² + Im²)。如果追求性能可以用 Cooley-Tukey FFT 算法（基 2，要求数据长度是 2 的幂）。
+
+频率 bin 对应的实际频率 = bin 序号 × 采样率 / 帧大小。比如帧大小 2048、采样率 44100，bin 0 对应 0Hz，bin 1 对应 21.5Hz，bin 1024 对应 22050Hz（奈奎斯特频率）。输出每帧的频谱数据。用法 spectrum analyze audio.wav --frame-size 2048 > spectrum.json。Rust 实现，cargo build 通过。

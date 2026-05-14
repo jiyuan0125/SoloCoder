@@ -1,1 +1,9 @@
-想用 OSV 的思路做开源漏洞扫描。用 Go 写一个 OSV 风格的扫描器：解析项目的 lock 文件或依赖清单（支持 go.sum、package-lock.json 的简化解析），提取包名和版本号。用内置的本地漏洞数据（JSON 格式，模拟 OSV 数据结构）匹配受影响的包。输出漏洞报告，包含包名、版本、漏洞 ID、严重程度、修复建议。go build 编译通过。
+OSV（Open Source Vulnerabilities）是一个开源漏洞数据库聚合器。想用它的思路做本地扫描——解析项目依赖文件，匹配本地漏洞数据。
+
+用 Go 写一个 OSV 风格的扫描器。解析项目的依赖清单（简化版）：go.sum——提取 module@version 格式。package-lock.json（简化解析）——提取 name 和 version 字段。
+
+漏洞数据用 JSON 格式存储，模拟 OSV 数据结构：每条记录包含——id（OSV-XXXX-XXXX）、summary（漏洞摘要）、affected（包名 + 版本范围数组）、database_specific（severity、fixed_version 等）。
+
+匹配逻辑：提取项目的所有依赖。对每个依赖在漏洞数据中查找——包名匹配且版本在 affected 范围内。输出漏洞报告——包名、版本、漏洞 ID、严重程度、修复建议（升级到 fixed_version）。
+
+命令：osv-scanner scan ./project、osv-scanner scan --db osv-data.json ./project。go build 编译通过。

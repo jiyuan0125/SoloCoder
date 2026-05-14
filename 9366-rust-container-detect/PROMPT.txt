@@ -1,5 +1,5 @@
-用 Rust 写一个媒体容器格式检测工具。
+不依赖文件扩展名判断媒体容器格式——只看内容特征字节。有些文件扩展名被故意改了，有些是下载时丢了后缀。Rust 写一个快速检测工具。
 
-不需要完整解析文件，只通过文件头部的 magic number 和特征字节来判断格式。支持的格式包括 MP4（ftyp box）、MKV/WebM（EBML header）、AVI（RIFF）、FLV（FLV signature）、TS（0x47 sync byte）、RMVB、MOV 等。对于 MP4 还要识别具体的 brand（isom/mp42/avc1 等）。输出格式名称和版本信息，对未知格式给出提示。
+检测策略——只读文件前 1-2KB 数据。MP4：偏移 4-7 字节是 "ftyp"，major brand 后面跟着兼容 brand 列表（isom、mp42、avc1、M4V、M4A 等）。MKV/WebM：前 4 字节是 EBML 头 0x1A45DFA3，读 DocType 区分 "matroska" 和 "webm"。AVI：前 4 字节 "RIFF"，偏移 8-11 是 "AVI"。FLV：前 3 字节 "FLV"，版本号第 4 字节。TS：检查偏移 0、188、376 是否都是 0x47。RMVB：前 4 字节 ".RMF"。OGG：前 4 字节 "OggS"。
 
-纯 Rust 实现，读取前几 KB 即可判断，cargo build 通过。
+输出格式名称、MIME 类型（如 video/mp4、video/x-matroska、video/x-flv）、可能的扩展名列表。MP4 的 brand 信息额外输出（如 "MP4 brand: isom, compatible: mp42,avc1"）。未知格式给出建议。批量模式扫描目录。用法 container-detect mystery_file.dat。Rust 实现，cargo build 通过。

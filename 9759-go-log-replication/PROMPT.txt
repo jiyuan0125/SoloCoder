@@ -1,9 +1,11 @@
-用 Go 实现分布式日志复制的核心逻辑。Leader 接收客户端写入的日志条目，然后复制到所有 Follower，确保大多数节点确认后才提交。
+先从 Leader 接收客户端写入开始，再把日志一条条同步到 Follower，最后等多数节点确认了才告诉客户端"写入成功"——这就是日志复制的完整流程。说起来简单，但实现时有很多细节要处理。
 
-功能：
-- Leader 维护一个日志数组，客户端写入时追加新条目
-- Leader 向所有 Follower 发送 AppendEntries（模拟），携带日志内容
-- 收到多数确认后标记该条目为 committed，通知客户端写入成功
-- Follower 日志不一致时，Leader 需要回退到一致位置重新发送
+第一步是日志结构：每条日志条目包含 term（写入时的任期号）、index（在日志中的位置，从 1 开始）和 command（实际的操作数据）。Leader 维护一个 nextIndex 数组，记录每个 Follower 下一条该发送的日志索引。
 
-Go 标准库，go build 通过。模拟多节点通信打印复制过程日志。
+第二步是复制过程：Leader 收到客户端写入请求后，先追加到自己的日志，然后并行向所有 Follower 发送 AppendEntries 请求（携带日志条目和 prevLogIndex/prevLogTerm 用于一致性检查）。Follower 收到后校验 prevLogIndex 位置的 term 是否匹配 prevLogTerm——匹配则追加日志并返回成功，不匹配则返回失败，Leader 需要回退 nextIndex 重试。
+
+第三步是提交：Leader 统计成功确认的 Follower 数量，一旦某条日志被多数节点（含自身）确认，就标记该条目为 committed，更新 commitIndex。提交成功后通知客户端。
+
+模拟 5 个节点（1 Leader + 4 Follower），其中 1 个 Follower 故意让它日志不一致（之前宕机错过了几条），演示回退重试和最终追上的过程。每一步都打印日志索引、确认数和提交状态。
+
+Go 标准库，go build 通过。

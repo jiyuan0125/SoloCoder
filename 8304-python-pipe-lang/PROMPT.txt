@@ -1,3 +1,17 @@
-数据清洗的时候老是要写一堆临时脚本，我想做一个管道式的小语言，像 shell pipe 那样串起来。比如 "read csv users.csv | filter age > 18 | select name, email | sort by name | write json out.json"。
+数据清洗的日常就是读 CSV、过滤行、选列、排序、去重、输出 JSON——每次写 Python 脚本都要重复 open/read/transform/write 的模板代码。想做个管道式小语言，像 shell 的 pipe 一样把操作串起来。Python 实现。
 
-支持常见的管道操作符：filter、map、select、sort、uniq、limit。每个阶段处理完传给下一阶段。纯 Python 实现，python 直接跑，命令行传入管道表达式和数据文件就行。
+管道表达式语法：stage1 | stage2 | stage3 | ...，每个 stage 是一个操作符加参数。
+
+操作符列表：
+- read csv/json/lines filename：读入数据源，输出行列表
+- filter expr：保留满足条件的行，expr 支持 field > value、field == "str"、field in [a,b] 语法
+- map expr：对每行做变换，expr 可以是 Python 表达式
+- select field1, field2, ...：只保留指定字段
+- sort by field [asc/desc]：按字段排序
+- uniq [field]：按字段（或整行）去重
+- limit N：只取前 N 行
+- write csv/json filename：输出到文件
+
+数据在管道中以行为单位流动，每行是一个字典（字段名→值）。filter 和 map 的表达式用简单的解析器处理，不需要支持完整的 Python 表达式——字段引用用 $field 语法，数值比较和字符串相等就行。
+
+命令行：python3 pipe.py "read csv users.csv | filter age > 18 | select name, email | sort by name | write json out.json"。纯 Python 标准库。

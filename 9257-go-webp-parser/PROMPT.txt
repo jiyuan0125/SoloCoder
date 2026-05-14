@@ -1,10 +1,7 @@
-现在 WebP 格式越来越普及了，我需要一个纯 Go 的 WebP 解析器。
+WebP 比 PNG 小 30%，比 JPEG 小 25%，为什么到现在还有服务没法正确处理它？因为 WebP 的编码格式比较复杂——有损用 VP8 位流，无损用 VP8L，扩展用 VP8X，三种格式各自的头部结构完全不同。我需要写一个纯 Go 的 WebP 解析器来搞清楚这些格式。
 
-需要支持：
-- 解析 RIFF 容器格式，读取 VP8/VP8L chunk
-- 处理有损压缩（VP8 bitstream）的宏块解码
-- 处理无损压缩（VP8L）的变换和色彩编码
-- 解析 ALPHA chunk，支持带透明通道的 WebP
-- 输出图片宽高、是否透明、压缩类型
+容器层用的是 RIFF 结构——4 字节 "RIFF" + 4 字节文件总大小 + 4 字节 "WEBP"，后面跟着一系列 chunk。最基本的有损格式是 VP8 chunk：前面 10 字节是位流头部——帧类型（key frame 或 non-key frame）、3 字节的 VP8 签名、宽度和高度（各 14 位，带 2 位 scale 参数）。无损格式是 VP8L chunk：1 字节签名（0x2F）、14 位宽度减一、14 位高度减一、1 位 alpha 标志、4 位版本号。VP8X 扩展格式用于动画或带 alpha 的图片，头部有各种标志位——是否含 alpha、是否是动画、是否有 EXIF/XMP/ICC 数据。
 
-用法 webp-parse image.webp，打印图片信息和 chunk 列表。Go 标准库，go build 能过。
+chunk 的遍历也很重要——除了 VP8/VP8L/VP8X 之外，ALPH chunk 存 alpha 通道数据，ICCP chunk 存 ICC 颜色配置文件，EXIF chunk 存 EXIF 元数据，XMP chunk 存 XMP 元数据，ANIM/ANMF chunk 存动画参数。每个 chunk 的结构是 4 字节 FourCC + 4 字节大小 + 数据。
+
+解析完要输出：图片宽高、是否含 alpha、编码类型（有损/无损/扩展）、chunk 列表。命令行 webp-parse image.webp，Go 标准库实现，go build 通过。

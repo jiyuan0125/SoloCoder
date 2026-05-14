@@ -1,5 +1,7 @@
-用 Rust 实现一个视频分辨率检测工具，从媒体文件中提取画面的宽高信息。
+第一步从容器读声明的分辨率。MP4 从 tkhd box 读 width/height（32.16 固定点格式——除以 65536 得到像素值），或者从 stsd 的 avc1 读 width/height。MKV 从 TrackEntry 的 Video 子元素读 PixelWidth/PixelHeight。FLV 从 onMetaData 的 width/height 读。
 
-支持解析 MP4（tkhd box）、MKV（VideoTrack 的 PixelWidth/PixelHeight）、FLV（onMetaData）等常见容器。除了像素分辨率外，还要能检测 SAR（采样宽高比）并计算出 DAR（显示宽高比）。输出原始宽高、SAR 和 DAR，以及常见分辨率名称（如 1080p、4K）。
+第二步（可选）从编码器获取实际编码分辨率。H.264 的 SPS 里有 frame_width 和 frame_height——有时候容器声明的是对齐后的值（如 1920x1088），但 SPS 里的实际值是 1920x1080。工具同时输出两个值如果它们不一致。
 
-Rust 实现，二进制解析提取元数据，cargo build 通过。
+第三步计算显示宽高比。如果有 SAR（采样宽高比）信息，DAR = (宽度/高度) × (SAR_num/SAR_den)。MP4 的 pasp box 存 SAR，MKV 的 DisplayWidth/DisplayHeight 存 DAR。常见分辨率名称：480p(SD)、720p(HD)、1080p(Full HD)、1440p(QHD)、2160p(4K/UHD)。隔行扫描检测：H.264 SPS 的 mb_adaptive_frame_field_flag。
+
+输出原始宽高、SAR、DAR、分辨率名称。批量扫描目录。用法 res-detect video.mp4。Rust 实现，cargo build 通过。

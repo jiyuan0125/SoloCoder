@@ -1,5 +1,11 @@
-Leftist Heap 是另一种可合并堆，实现简单，merge 是 O(log n)。用 Rust 实现左偏堆。
+左偏堆（Leftist Heap）和二项堆一样支持高效 merge，但实现更简单——不需要维护度数约束，只需要一个"null path length"（npl）属性保证左子树永远不比右子树浅。这样 merge 操作沿着右路径递归，深度保证 O(log n)。
 
-每个节点维护一个 npl（null path length，到最近空节点的距离），左子树的 npl 不小于右子树。merge 操作沿右路径递归合并，保证左偏性质。insert 就是 merge 一个单节点堆。extract_min 删除根后 merge 左右子树。
+用 Rust 实现左偏堆。
 
-支持 merge、insert、extract_min、find_min 操作。用指针或 Box 实现树结构。cargo build 编译通过。
+第一步，定义节点结构。每个节点有 value、left 子节点、right 子节点、npl 值。npl 是从该节点到最近空节点的最短路径长度。空节点 npl=0，叶节点 npl=1。关键约束：左子树 npl >= 右子树 npl，违反就交换左右。
+
+第二步，merge 操作。比较两个堆的根，小的当新根。新根的右子树和另一个堆递归 merge。merge 完后检查左右 npl，保证左 >= 右。更新根的 npl = 右子树 npl + 1。
+
+第三步，其他操作。insert 就是 merge 一个单节点堆。extract_min 删掉根，左右子树 merge。find_min 返回根的值。decrease_key：修改值后可能违反堆性质，从该节点到根路径上检查交换。
+
+用 Box<Node<T>> 实现树结构，泛型支持 Ord。cargo build 通过。

@@ -1,9 +1,9 @@
-帮我用 Go 写一个通用的分布式状态机框架。不同的业务可以插入不同的状态机实现，框架负责管理日志 apply 的顺序和持久化。
+上周组内 code review 讨论到状态机抽象的问题——不同业务（计数器、KV、队列）都有各自的 apply 逻辑，但日志管理、顺序保证、快照恢复这些是通用的，应该抽成一个框架。于是我想用 Go 做一个通用的分布式状态机框架，业务逻辑可以插拔。
 
-需要做的：
-- 定义 StateMachine 接口：Apply(command []byte)、Snapshot()、Restore(snapshot []byte)
-- 实现一个示例状态机：计数器，支持 Incr/Get/Decr 操作
-- 框架层保证命令按日志顺序 apply，并提供查询当前状态的接口
-- 命令行可以提交操作并查看结果
+框架定义一个 StateMachine 接口，三个方法：Apply(command []byte) ([]byte, error) 执行命令并返回结果，Snapshot() ([]byte, error) 把当前状态序列化，Restore(data []byte) error 从快照恢复状态。框架层负责管理日志追加、按序 apply、快照触发这些流程。
+
+作为示例实现一个计数器状态机：命令格式用 JSON，支持三种操作——{"op":"incr","value":5}、{"op":"decr","value":3}、{"op":"get"}。状态就是一个 int64 值。框架层保证命令按日志顺序 apply，并提供查询当前状态的接口。
+
+命令行交互方式：输入 apply Incr(5) 就追加一条日志并 apply，输入 snapshot 就创建快照并打印大小，输入 restore 就从最新快照恢复状态并清空旧日志。输入 status 显示当前计数器值和 lastApplied。整个过程中日志和快照的管理对使用者透明。
 
 Go 标准库实现，go build 能编译通过。

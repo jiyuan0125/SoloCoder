@@ -1,11 +1,11 @@
-写一个 Refresh Token 轮转实现，Go 语言。
+OAuth2 的 refresh_token 如果被偷了，攻击者就能持续获取新的 access_token，而且用户完全无感知。轮转机制（Rotation）是解决方案——每次用 refresh_token 换新 token 时，旧的 refresh_token 立即失效。如果有人用过期的 refresh_token 来刷新，说明 token 泄露了，立刻吊销整条 token 链。
 
-OAuth2 里 refresh_token 如果被偷了就麻烦了，想做轮转机制：每次用 refresh_token 换新 token 时，旧的就作废。
+用 Go 实现 Refresh Token 轮转机制。核心数据结构：TokenFamily 记录一个 token 的派生关系——每个 refresh_token 有 ID、创建时间、过期时间、关联用户、父 token ID、状态（active/used/revoked）。
 
-需要做到：
-- Refresh Token 轮转：每次刷新时生成新的 refresh_token，旧的立即失效
-- 重放检测：如果有人用过期的 refresh_token 来刷新，说明 token 泄露，自动吊销该用户所有 token
-- Token 家族追踪：记录 token 派生关系，一旦检测到重放，整条链全部作废
-- 本地存储 token 记录，包含创建时间、过期时间、关联用户、父 token 等信息
+轮转流程：客户端用 refresh_token A 请求刷新。验证 A 的合法性（签名、过期时间）。签发新的 access_token 和 refresh_token B。标记 A 为 used。记录 B.parent_id = A.id。返回新 token。
+
+重放检测：如果有人用已经 used 的 A 再次请求刷新，说明 A 被泄露了（只有合法客户端和窃取者两个地方有 A，合法客户端已经换成了 B）。此时立即吊销以 A 为根的整条 token 链——从 A 往上找到链头，标记链上所有 token 为 revoked。用户的 refresh_token 全部失效，需要重新登录。
+
+本地存储 token 记录到 JSON 文件，包含 token ID、用户 ID、创建时间、过期时间、父 token ID、状态。
 
 Go 标准库，go build 能编译。

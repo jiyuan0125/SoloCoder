@@ -1,12 +1,13 @@
 Go 实现 WAL 日志读取器，配合 WAL Writer 使用。
 
-能正确解析 WAL 文件格式，处理跨 block 的大记录拼接，校验 CRC32，输出有序的日志记录流。崩溃恢复的第一步就是读取 WAL。
+能正确解析 WAL 文件格式，处理跨 block 的大记录拼接，校验 CRC32，输出有序的日志记录流。崩溃恢复的第一步就是读取 WAL 重建内存状态。
 
 功能：
-- 按 block 读取日志文件，解析 record header（checksum/length/type）
-- 支持 full/first/middle/last 四种 record type 的拼接
-- 每条记录校验 CRC32，校验失败报错跳过或返回错误
-- 提供迭代器接口：Next() (record, error)
-- 遇到文件末尾或截断的 block 时正常结束
+- 按 block（默认 32KB）读取日志文件，解析 record header（checksum 4B + length 2B + type 1B）
+- 支持 full/first/middle/last 四种 record type 的拼接逻辑——first 开始新记录，middle/last 追加到当前记录
+- 每条完整记录校验 CRC32，校验失败报错跳过或返回错误（调用方决定忽略还是中止）
+- 提供迭代器接口：Next() (key, value, opType, error)
+- 遇到文件末尾（EOF）或截断的 block（全零 header）时正常结束迭代
+- block 尾部 padding 的 zero 字节不算有效记录
 
-Go 标准库，go build 通过。能正确读取前面 WAL Writer 写出的文件。block size 默认 32KB。
+Go 标准库，go build 通过。能正确读取前面 WAL Writer 写出的文件。读取用 bufio.Reader 做缓冲。

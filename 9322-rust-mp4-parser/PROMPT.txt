@@ -1,9 +1,7 @@
-帮我写一个 MP4 容器格式解析器，能把 MP4/M4A 文件的 box 结构打印出来。
+MP4 文件是 ISO Base Media File Format (ISOBMFF) 的实现——一个层层嵌套的 box 结构，理解了这个结构就理解了大部分现代视频容器。写一个 Rust 解析器来递归遍历 MP4 的 box 树。
 
-解析内容：
-- 递归解析 MP4 的 box（也叫 atom）结构，每个 box 输出类型、偏移量和大小
-- 重点解析 ftyp（文件类型）、moov（电影头）、mvhd（电影头数据）、trak（轨道）等关键 box
-- 从 stbl box 中读取采样表信息（stts、stsc、stsz、stco），了解音视频帧的组织方式
-- 支持 container box 的递归展开（moov 下面有 mvhd、trak，trak 下面有 mdia 等）
+Box 的通用结构：4 字节大小（包含自身和所有子 box）+ 4 字节类型（ASCII 四字符代码如 "ftyp"、"moov"、"mdat"）+ 数据。如果大小为 1，后面还有 8 字节扩展大小。如果大小为 0，box 延伸到文件末尾。关键在于区分 container box（包含子 box，如 moov、trak、mdia、minf、stbl）和 leaf box（包含数据，如 mvhd、stts、stsd）。
 
-Rust 项目，cargo build 通过。`mp4-parser dump video.mp4` 输出 box 树状结构。
+递归解析逻辑：读 box 头，判断类型。已知 container 类型就递归进去解析子 box，直到数据消耗完毕。已知 leaf 类型就读取特定字段。ftyp 里有 major_brand、minor_version、compatible_brands。mvhd 里有创建时间、修改时间、timescale、duration、rate、volume、matrix。tkhd 里有 track_ID、duration、宽度、高度。
+
+stbl 里的采样表是重点：stsd（采样描述，里面是编码格式信息）、stts（时间-采样数表，每项是 (count, delta)）、stsc（采样-chunk 映射）、stsz（每个采样的字节大小）、stco（chunk 的文件偏移）、stss（同步帧序号）。输出树状结构，每个 box 显示类型、偏移量、大小。用法 mp4-parser dump video.mp4。Rust 实现，cargo build 通过。

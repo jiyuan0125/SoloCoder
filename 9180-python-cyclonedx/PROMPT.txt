@@ -1,14 +1,9 @@
-CycloneDX SBOM 文件处理工具，解析和操作 CycloneDX 格式的软件物料清单。
+CycloneDX SBOM 文件处理工具。拿到的 SBOM 文件（CycloneDX 格式）需要分析和操作——查看里面有什么组件、检查有没有已知漏洞的组件、对比两个版本的 SBOM 看差异。
 
-收到供应商的 CycloneDX SBOM 文件后，需要验证完整性、提取组件信息、和漏洞数据库做对比。
+Python 实现 CycloneDX JSON 格式的解析和操作。解析功能：读取 CycloneDX JSON 文件，提取 bomFormat 和 specVersion 验证格式版本。解析 components 数组——每个组件的 name、version、group（如 org.apache.logging）、type（library/framework/application）、purl（Package URL，标准化的包标识符）、licenses 列表。
 
-Python 实现：
-- 解析 CycloneDX JSON 和 XML 两种格式的 SBOM 文件
-- 提取所有组件信息：名称、版本、purl（包URL）、许可证、哈希
-- SBOM 对比：比较两个版本的 SBOM，找出新增、删除、变更的组件
-- 验证 SBOM 完整性：必填字段检查、组件哈希验证
-- 统计组件许可证分布
+分析功能：组件统计——总组件数、按类型分布（library/framework）、按许可证分布（MIT/Apache/GPL/Unknown）。漏洞查询：将组件的 purl 和版本号与本地 CVE 数据库比对，输出有漏洞的组件列表。许可证合规检查：标记强 copyleft 许可证（GPL/AGPL）和未知许可证的组件。
 
-示例：python cyclonedx.py parse sbom.json --list-components
-python cyclonedx.py diff old_sbom.json new_sbom.json
-能正确解析标准 CycloneDX 格式。
+对比功能：输入两个 SBOM 文件，输出差异——新增的组件、删除的组件、版本变更的组件（从 v1.0.0 升级到 v1.1.0）。方便追踪每次发布的依赖变化。
+
+命令行操作：parse（展示组件列表）、diff（对比两个 SBOM）、search（按名称搜索组件）、stats（统计信息）。python3 命令行工具。

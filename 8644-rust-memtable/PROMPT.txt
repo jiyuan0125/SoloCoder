@@ -1,1 +1,11 @@
-用 Rust 实现一个 Memtable（内存表），这是 LSM-Tree 存储引擎的核心组件。用跳表或者红黑树在内存中维护有序的键值对，支持 put、get、delete（用 tombstone 标记删除）、scan 范围查询、获取全部数据的有序迭代器。超过一定大小后能刷盘（这里就是输出到一个文件）。键值都是字节数组。写个 demo 往里插一批数据做范围查询，打印结果。cargo run 能正常输出。
+LSM-Tree 存储引擎的写入路径是：先写 WAL，再写 Memtable（内存表），Memtable 满了刷成 SSTable。Memtable 是核心组件——在内存中维护有序的键值对，支持快速写入和范围查询。底层通常用跳表或红黑树。
+
+用 Rust 实现 Memtable。
+
+数据结构——用跳表（SkipList）或 BTreeMap 在内存中维护有序键值对。键和值都是 Vec<u8>（字节数组）。
+
+操作——put(key, value)：插入键值对，O(log n)。get(key)：查找 key 对应的 value。不存在返回 None。delete(key)：用 tombstone 标记删除——插入一条 value 为特殊标记（空字节或 DELETE_MARKER）的记录。查询时遇到 tombstone 当作不存在。scan(start, end)：范围查询，返回 [start, end) 范围内所有键值对，有序。iter()：获取全部数据的有序迭代器。
+
+刷盘——当 Memtable 大小超过阈值（比如 1MB），把所有数据有序写入一个 SSTable 文件。刷盘后 Memtable 清空，可以继续接收新的写入。刷盘期间新的写入可以写到一个新的 Memtable。
+
+写个 demo 往 Memtable 插一批数据，做范围查询，然后刷盘到文件，打印结果。cargo run 能正常输出。

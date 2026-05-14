@@ -1,1 +1,9 @@
-配置文件里明文存密码是个大隐患。写一个 Go 工具扫描常见配置文件格式（YAML、JSON、TOML、INI、Properties），识别键名包含敏感语义的条目：password、secret、token、key、credential 等。检查对应的值是否为明文（非引用、非环境变量占位符）。输出文件名、键路径和风险等级。支持递归扫描目录。标准库实现，go build 通过。
+配置文件里明文存密码是最大的安全隐患之一。不同项目用不同的配置格式——YAML、JSON、TOML、INI、Properties，需要全部覆盖。
+
+用 Go 写一个配置文件敏感信息扫描工具。支持的格式：YAML（按层级解析键值对）、JSON（递归遍历所有字段）、TOML（解析键值对）、INI（section + key = value）、Properties（key=value）。
+
+检测逻辑：键名语义分析——检查键名是否包含敏感关键词：password、passwd、pwd、secret、token、apikey、api_key、access_key、private_key、credential、auth、certificate。值内容分析——检查值是否为明文（不是环境变量引用 ${VAR}、不是占位符 <xxx>、不是空值）。
+
+输出每个发现：文件名、键路径（如 database.connection.password）、键名、值的类型（明文/引用/占位符）、风险等级（高/中/低）。高风险是明文密码和密钥，中风险是连接串含凭据，低风险是疑似但需要确认。
+
+支持递归扫描目录。Go 标准库实现，go build 通过。

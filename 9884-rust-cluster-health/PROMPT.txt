@@ -1,12 +1,13 @@
-用 Rust 实现集群健康检查工具。
+集群健康检查是运维的眼睛——能够回答"集群现在状态怎么样"这个问题。不是简单地看节点是否在线，而是从多个维度评估：节点状态、磁盘使用率、请求延迟、错误率、leader 分布是否均匀等。用 Rust 实现一个集群健康评估工具。
 
-定期检查集群中每个节点的健康状况，汇总后给出整体状态。类似一个简易的监控面板。
+健康检查的维度设计。节点健康：每个节点是 Alive/Suspect/Dead（通过心跳检测）。磁盘健康：使用率超过 80% 为 warning，超过 95% 为 critical。请求延迟：P99 超过 500ms 为 warning，超过 2s 为 critical。错误率：5 分钟内错误率超过 1% 为 warning，超过 5% 为 critical。Leader 分布：如果某个节点上的 Leader 数量超过平均值的 2 倍，标记为 unbalanced。
 
-核心功能：
-- 检查每个节点的多个维度：进程是否存活（模拟）、响应延迟是否正常、磁盘/内存使用率（模拟数据）
-- 定义健康状态：healthy / warning / critical / unknown
-- 支持告警规则：比如"连续 3 次检查 critical 则触发告警"、"延迟超过 500ms 为 warning"
-- 定时执行检查，结果输出到终端（表格形式）
-- 能模拟节点状态变化，观察告警触发过程
+健康状态的汇总：每个维度的状态是 OK/Warning/Critical。整体集群状态取最差的那个维度。比如如果磁盘是 critical，整个集群就是 critical。
 
-命令行工具，cargo run 能跑。数据都是模拟的。
+报告的生成：定期（每 10 秒）输出一份文本报告。包括每个节点的状态、每个维度的值和状态、整体的集群状态、建议操作（比如 "node-3 disk 95%: consider adding capacity or migrating shards"）。
+
+告警规则：状态从 OK 变为 Warning 或 Critical 时打印告警。从 Critical 恢复为 OK 时打印恢复通知。
+
+模拟 5 个节点，逐步让其中一个节点的磁盘使用率升高、延迟增大，观察健康状态从 OK → Warning → Critical 的变化。
+
+cargo build 通过。

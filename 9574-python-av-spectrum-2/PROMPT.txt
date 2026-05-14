@@ -2,3 +2,7 @@
 读取音频文件，做 FFT 频谱分析，生成频谱图。支持生成静态频谱快照（某一时刻的频率分布），也支持生成随时间变化的频谱瀑布图（spectrogram）。频率范围和分辨率可调。
 输出 PNG 图片。Python 3，用 scipy 或 numpy 做 FFT，matplotlib 或 Pillow 画图。
 python spectrum.py song.wav -o spectrum.png --type spectrogram --freq-max 20000
+
+最后一步别忘了，音频质量不能因为处理明显下降——处理前后可以做频谱对比确认没有引入额外噪声。支持常见的采样率（44100、48000、96000）和位深（16-bit、24-bit）。批量处理时如果某个文件格式不支持跳过并记录到日志里。使用说明打印 --help 要清晰，每个参数的作用和默认值都要写明。
+
+测试用例要覆盖边界情况——空文件、超大文件、格式不对的文件、编码异常的文件。每个主要功能都要有对应的测试。用 Python 的 unittest 或 pytest 都行，python -m pytest tests/ 能跑通。

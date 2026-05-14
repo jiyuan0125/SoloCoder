@@ -1,8 +1,13 @@
-做个 X.509 证书规范检查工具（类似 zlint），Go 写的。
+CA 签发的证书经常有一些小问题不符合 RFC 5280 或者 CA/Browser Forum 的基线要求。这些问题浏览器可能不报错但安全审计会扣分。需要自动检查证书是否符合规范。
 
-CA 签发的证书经常有一些小问题不符合 RFC 5280 或者 CA/Browser Forum 的基线要求，需要自动检查。
+用 Go 写一个 X.509 证书规范检查工具（类似 zlint 的简化版）。内置检查规则按严重程度分级：
 
-检查项：证书版本号、序列号是否够长、签名算法是否过时（如 SHA1）、有效期是否超 398 天、SAN 是否包含 CN、密钥长度是否达标、基本约束和密钥用法是否正确设置。
+Error 级（必须修复）：证书版本不是 v3、序列号短于 20 位（entropy 不够）、签名算法是 SHA-1 或 MD5、密钥长度不达标（RSA < 2048、ECDSA < P-256）、基本约束缺失或设置错误（非 CA 证书的 IsCA 不为 false）。
 
-命令：x509-lint check -file server.crt、x509-lint check -file server.crt -format json（JSON 格式输出结果）
-按严重程度分级报告：error/warn/info。Go 标准库实现，go build 通过。
+Warn 级（建议修复）：有效期超过 398 天（CA/Browser Forum 要求）、SAN 不包含 CN 的值、缺少 CRL Distribution Points、缺少 Authority Information Access（OCSP URL）、KeyUsage 和 ExtKeyUsage 不匹配。
+
+Info 级（仅供参考）：Subject 中包含过多字段、证书透明度 SCT 缺失、使用了不常见的扩展。
+
+命令：x509-lint check -file server.crt、x509-lint check -file server.crt -format json（JSON 格式输出结果）、x509-lint check -dir ./certs/（批量检查目录下所有 .crt 文件）。
+
+按严重程度分级报告，通过/警告/错误统计。Go 标准库实现，go build 通过。

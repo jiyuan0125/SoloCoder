@@ -1,1 +1,7 @@
-威胁情报数据很多是 STIX 格式的，需要一个解析工具。用 Python 写一个 STIX 2.x 格式解析器，能解析 STIX JSON 包，提取其中的 Indicator（指标）、Malware（恶意软件）、Attack-Pattern（攻击模式）、Threat-Actor（威胁行为者）对象，并展示它们之间的关联关系。支持从文件读取 STIX bundle，输出结构化的摘要信息。纯 Python，命令行使用。
+威胁情报平台输出的数据是 STIX 2.1 格式，JSON 结构嵌套很深，手动解析很不方便。写个工具把 STIX 数据提取成好用的格式。
+
+Python 实现 STIX 2.1 解析器。第一步解析 STIX Bundle：读取 JSON 格式的 STIX 文件，解析 type 为 bundle 的根对象，遍历 objects 数组中的每个 STIX 对象。支持的对象类型：Indicator（攻击指标，包含 pattern 和 valid_from）、Malware（恶意软件名称和类型）、Attack Pattern（攻击手法，引用 MITRE ATT&CK 的 ID）、Threat Actor（威胁行为者）、Tool（使用的工具）、Relationship（对象间关系）。
+
+第二步提取关键信息：从 Indicator 中提取 pattern（STIX Patterning Language 的表达式，解析出 IOC 值），从 Relationship 中构建对象间的关联图（谁使用了什么恶意软件、攻击了谁）。MITRE ATT&CK ID 映射：从 Attack Pattern 的 external_references 中提取 ATT&CK 技术编号。
+
+第三步输出：按类型分组的摘要视图、对象关系图（文本形式的邻接表）、导出为 CSV 格式（方便导入电子表格）或简化的 JSON。python3 命令行工具。

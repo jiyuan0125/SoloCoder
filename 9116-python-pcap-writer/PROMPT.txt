@@ -1,5 +1,7 @@
-帮我写一个 PCAP 文件生成库，能程序化构造网络抓包文件。
+网络安全测试中经常需要构造特定格式的网络数据包来验证检测规则。之前都是手动拼 hex 字符串然后用 tcpreplay 发，效率太低。写个工具能方便地构造数据包并写入 pcap 文件。
 
-提供 API 让用户创建以太网帧、IP 包、TCP/UDP 段、ICMP 包、DNS 查询这些常见协议的数据包，然后写入标准 pcap 文件格式。支持自定义各层字段的值（MAC 地址、IP、端口、payload 等）。
+Python 实现 pcap 构造和写入工具。pcap 文件格式：写入全局头（magic number 0xa1b2c3d4、版本号 2.4、时区偏移、精度、snaplen、链路类型），然后逐个写入数据包头（时间戳秒+微秒、捕获长度、原始长度）和数据内容。
 
-附几个示例：构造一个 TCP 三次握手的 pcap、构造一个 HTTP 请求响应的 pcap。生成的文件能用 tcpdump 或 Wireshark 打开。Python 3 标准库 struct 打包二进制。
+数据包构造：用 scapy 构造数据包——支持从模板创建（如 TCP SYN 包、HTTP GET 请求、DNS 查询、ICMP Echo），也可以手动指定每一层的字段值。构造完成后序列化为字节写入 pcap。支持修改已有 pcap 文件中的数据包（如修改源 IP、替换 payload）然后重新写入。
+
+批量构造：从 CSV 文件读取参数列表，批量生成不同参数的数据包集。比如生成 100 个不同源 IP 的 TCP SYN 包用于测试 IDS 规则。输出 pcap 文件可以直接用 tcpdump、Wireshark 或 tcpreplay 处理。python3 命令行工具，可选依赖 scapy。

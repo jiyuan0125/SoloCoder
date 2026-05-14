@@ -1,3 +1,17 @@
-要给团队搭一个 API 文档治理平台，第一步需要能解析 OpenAPI 3.0 规范文档。用 Python 实现一个 OpenAPI 解析器，能从 YAML/JSON 格式的 OpenAPI 3.0 文档中提取 paths、schemas、parameters、responses 和 security 定义。
+团队有 30 多个微服务，每个都有自己的 OpenAPI 文档，但格式五花八门——有的缺必填字段、有的 $ref 指向不存在的定义、有的 schema 类型和 example 不匹配。做一个 OpenAPI 3.0 文档解析和校验工具。Python 实现。
 
-解析完要能做基本的校验：引用完整性检查、必填字段缺失检测、schema 类型一致性验证。报告校验错误列表。纯 Python 实现，python 能跑，命令行传入 OpenAPI 文件输出校验报告。
+解析能力：读入 YAML 或 JSON 格式的 OpenAPI 3.0 文档，解析以下核心结构：
+- info：标题、版本、描述
+- paths：API 路径和方法（GET/POST/PUT/DELETE），每个操作的 parameters、requestBody、responses
+- components/schemas：数据模型定义（object/array/string/integer/boolean + properties）
+- security：安全方案定义（API Key、OAuth2、Bearer）
+
+$ref 引用解析：遇到 $ref: "#/components/schemas/User" 要能正确找到对应的 schema 定义。外部文件引用暂不支持。
+
+校验规则：
+1. 引用完整性：所有 $ref 指向的目标必须存在
+2. 必填字段：paths 必须有至少一个路径，每个操作必须有 responses
+3. Schema 一致性：type: object 的 schema 必须有 properties，type: array 必须有 items
+4. 参数重复：同一路径和方法的参数不能有同名
+
+输出校验报告：通过项、警告项、错误项，每项带位置信息。python3 openapi_parser.py spec.yaml。纯 Python 实现。

@@ -1,1 +1,5 @@
-MKV文件里内嵌了字幕，想提取出来单独保存。写个Python工具从Matroska文件中提取字幕轨道，支持SRT、ASS/SSA、VTT等文本字幕格式。能列出文件中所有字幕轨的信息（语言、编码、名称），然后按轨道号提取保存为独立文件。对于PGS等图形字幕给出提示暂不支持。能正确处理MKV中字幕的Block和CodecPrivate数据。Python3实现。
+下载了一个 MKV 文件，里面有中文和英文两条字幕轨。想把中文字幕提取出来单独保存成 SRT 文件，方便在别的播放器或者做翻译对照的时候用。播放器能显示但没法导出——需要一个从 MKV 里提取字幕的工具。
+
+工具做的事。先列出 MKV 文件中所有字幕轨的信息：轨道编号、编码格式（S_TEXT/UTF8、S_TEXT/SSA、S_TEXT/ASS 等）、语言代码、轨道名称。用户看了列表之后指定要提取的轨道编号。然后遍历 MKV 的 Cluster 数据，把指定轨道的 Block 和 CodecPrivate 读出来。
+
+文本字幕直接按格式组装输出——S_TEXT/UTF8 输出成 .srt 文件，S_TEXT/SSA 和 S_TEXT/ASS 输出成 .ass 文件。从 Block 的时间戳和 duration 还原出每条字幕的起止时间。PGS、VobSub 这类图形字幕暂不支持提取，给出提示。用法：python3 sub_extract.py list video.mkv 然后 python3 sub_extract.py extract video.mkv --track 3 -o subtitles.srt

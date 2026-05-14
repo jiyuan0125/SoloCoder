@@ -1,2 +1,9 @@
-Go 实现一个 SQL 语法验证器。检查 SQL 语句是否符合语法规范：关键字顺序对不对、括号匹不匹配、GROUP BY 里的列有没有在 SELECT 中出现、HAVING 有没有跟 GROUP BY 一起用。
-验证结果输出具体哪些地方有问题。支持 SELECT/INSERT/UPDATE/DELETE。go build 能编译。
+先拿到 SQL，第一步不是执行，而是验证它写得对不对。语法层面的、逻辑层面的，都要检查。
+
+Go 实现一个 SQL 语法验证器。检查 SQL 语句是否符合语法规范，覆盖以下检查项：
+
+关键字顺序——SELECT 必须在 FROM 前面、WHERE 在 FROM 后面、GROUP BY 在 WHERE 后面、HAVING 必须跟 GROUP BY 一起用、ORDER BY 在 GROUP BY 后面、LIMIT 在最后。括号匹配——所有括号（圆括号、子查询）都要正确配对。GROUP BY 里的列有没有在 SELECT 中出现（或者 SELECT 里的非聚合列是否都在 GROUP BY 中）。HAVING 有没有跟 GROUP BY 一起用（单独的 HAVING 是非法的）。INSERT 的列数和 VALUES 的值数是否一致。UPDATE 有没有 WHERE 条件（没有 WHERE 的 UPDATE 太危险了，给个警告）。
+
+验证结果输出具体哪些地方有问题——每个错误标注 SQL 中的位置和违反的规则名称。不遇到第一个错误就停，尽量检查出所有问题。
+
+支持 SELECT/INSERT/UPDATE/DELETE 四种语句。go build 能编译。

@@ -1,4 +1,9 @@
-用 C 实现 Roaring Bitmap，一种压缩位图数据结构。
-普通位图存 40 亿个 bit 要 512MB，Roaring Bitmap 把 32 位整数空间分成 65536 个 chunk，每个 chunk 内按密度选择用数组还是位图存储，很省内存。
-支持 add、remove、contains、and、or、xor、andnot 操作，以及迭代遍历所有设置的位。
-add 和 contains 要快。写个程序测试集合运算的正确性，再和普通位图对比一下内存占用。gcc 编译。
+普通位图存 40 亿个 bit（覆盖 uint32 范围）要 512MB，对于稀疏数据集太浪费了。Roaring Bitmap 是个很聪明的优化——把 32 位整数空间按高 16 位分成 65536 个 chunk，每个 chunk 管低 16 位。chunk 内部根据数据密度选择存储方式：数据少（< 4096 个）用有序数组存，数据多（≥ 4096 个）用 65536 bit 的位图存。这样稀疏集合占内存少，密集集合查询快。
+
+用 C 实现 Roaring Bitmap。对外是一个 uint32 集合，支持这些操作：add(value) 插入一个 32 位整数；remove(value) 删除；contains(value) 查询是否存在（O(1) 或 O(log n) 取决于 chunk 类型）；and(other) 两个 Roaring Bitmap 做交集——逐个 chunk 对应做运算（位图和位图做 AND、数组和数组做归并、混合的话先把数组转位图）；or(other) 做并集；xor(other) 做异或；andnot(other) 做差集。
+
+每个 chunk 用一个 container 结构体表示，内部有个 type 字段标识当前是数组还是位图。数组类型（array container）存一个有序的 uint16 数组，最多 4096 个元素。位图类型（bitmap container）存一个 uint64 数组（1024 个 uint64 = 8192 字节）。add 操作时如果数组超过 4096 个元素就自动转换成位图。remove 操作后如果位图里的元素少于 4096 个就转回数组。
+
+迭代遍历：iter_init() / iter_next() 遍历所有设置的位，按升序输出 uint32 值。
+
+写个程序测试集合运算的正确性——用小数据集和大数据集各跑一遍，和用普通数组模拟的结果做对比。再和普通位图对比 100 万个稀疏整数场景下的内存占用。gcc 编译。

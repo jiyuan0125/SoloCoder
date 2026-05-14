@@ -1,8 +1,15 @@
-做一个密钥派生工具，Go 实现，对比几种 KDF 的输出。
+做密码学开发的时候经常需要比较不同 KDF（密钥派生函数）的输出和参数效果——HKDF、PBKDF2、scrypt 各有什么特点、同样的输入出来的密钥有什么不同、参数怎么选。
 
-做密码学相关开发时经常要比较 HKDF、PBKDF2、scrypt 这些密钥派生函数的效果和参数。想有个工具能方便地用不同算法从同一个密码派生出密钥。
+用 Go 实现一个密钥派生对比工具，支持三种 KDF：
 
-功能：支持 HKDF-SHA256、PBKDF2-SHA256、scrypt 三种 KDF；可以指定 salt、迭代次数、输出长度；打印出派生密钥的 hex 值和耗时。
+HKDF-SHA256（HMAC-based Extract-and-Expand Key Derivation Function）：两步流程——Extract 阶段用 HMAC-SHA256 从 input_key_material 和 salt 提取固定长度的伪随机密钥；Expand 阶段用这个密钥和 info 参数派生出指定长度的输出密钥。适合从共享密钥或 ECDH 协商结果派生会话密钥。
 
-用法：key-derive hkdf -secret "password" -salt "nacl" -len 32、key-derive pbkdf2 -secret "password" -iter 100000 -len 32、key-derive scrypt -secret "password" -N 32768 -len 32
+PBKDF2-SHA256（Password-Based Key Derivation Function 2）：迭代次数可配置（默认 100000）。输入密码和 salt，迭代应用 HMAC-SHA256。适合从用户密码派生加密密钥。
+
+scrypt：参数 N（CPU/memory cost，默认 32768）、r（block size，默认 8）、p（parallelism，默认 1）。内存使用量 = N * r * p * 128 字节。适合从密码派生密钥，比 PBKDF2 更抗 GPU/ASIC 暴力破解。
+
+每种 KDF 的命令：key-derive hkdf -secret "password" -salt "nacl" -info "context" -len 32、key-derive pbkdf2 -secret "password" -salt "nacl" -iter 100000 -len 32、key-derive scrypt -secret "password" -salt "nacl" -N 32768 -r 8 -p 1 -len 32。
+
+输出派生密钥的 hex 值和耗时（毫秒）。
+
 Go 标准库实现，go build 能过。

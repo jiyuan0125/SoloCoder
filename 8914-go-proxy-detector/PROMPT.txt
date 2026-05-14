@@ -1,1 +1,13 @@
-想识别通过代理访问的用户，防止刷量作弊。用 Go 写一个代理检测工具，综合多种方式判断请求是否经过代理：检查 X-Forwarded-For、Via 等代理特征头，比对客户端 IP 与已知代理 IP 段，检测不一致的 IP 信息。输出检测结果和判断依据。支持 HTTP API 模式和命令行模式。标准库实现，go build 编译通过。
+想识别通过代理访问的用户来防止刷量作弊。代理检测不像 VPN 那样有明确的 IP 段列表，需要综合多种方式判断。
+
+用 Go 写一个代理检测工具。检测方式：
+
+Header 检查：检查请求中的代理特征 header——X-Forwarded-For（如果有值说明经过了代理）、Via（RFC 7230 规定的代理标识 header）、X-Real-IP（反向代理设置的真实 IP）。如果 X-Forwarded-For 的第一个 IP 和连接 IP 不一致，说明经过了代理。
+
+已知代理 IP 段：维护一个公开代理服务器的 IP 段列表（JSON 格式），包含常见的 open proxy 和 web proxy 的 IP 段。定期从公开来源更新。
+
+DNS 反向检测：对 IP 做反向 DNS 查询，如果 hostname 包含 proxy、cache、cdn、gateway 等关键词，标记为疑似代理。
+
+多 IP 检测：比较连接 IP、X-Forwarded-For、X-Real-IP 等多个 IP 字段，如果不一致标记为代理访问。
+
+输出检测结果和判断依据。支持 HTTP API 模式和命令行模式。Go 标准库实现，go build 编译通过。

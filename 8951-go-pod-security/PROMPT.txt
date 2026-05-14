@@ -1,3 +1,9 @@
-最近容器安全审计太烦了，每次都要手动检查 Pod 配置。帮我写个 Go 命令行工具，扫描 Kubernetes Pod 的 YAML 或 JSON 定义，检测常见的安全问题：有没有跑 root、有没有 privilege escalation、hostPath 挂载有没有风险、端口暴露情况等。
+上个星期生产环境有个 Pod 因为配置了 privileged 模式，被人利用逃逸到了宿主机，折腾了一整天才处理完。从那以后安全组要求每个 Pod 的 YAML 配置都要过一遍安全检查，但人工逐条看几百个 manifest 实在看不过来。
 
-工具要能输出一份清晰的检查报告，按严重程度分级（高/中/低）。支持递归扫描一个目录下所有 YAML 文件。用标准库就行，go build 能编译通过。
+写一个 Go 命令行工具，专门扫描 Kubernetes Pod 的安全配置。输入是 YAML 或 JSON 格式的 Pod 定义文件，工具自动解析 spec.containers 和 spec.initContainers 里的安全相关字段，然后对每一项做检查。
+
+要检查的内容包括：securityContext.runAsUser 是否为 0（root 用户运行）、runAsNonRoot 是否缺失或为 false、allowPrivilegeEscalation 是否为 true、capabilities 是否添加了危险的 Linux capabilities（如 NET_ADMIN、SYS_ADMIN）、hostPath 挂载的路径是否指向宿主机敏感目录、hostNetwork、hostPID、hostIPC 是否被开启、容器端口是否暴露了不应该暴露的范围。
+
+结果按严重程度分为三级——高风险是 root 运行、特权模式、挂载 Docker socket 这类可以直接被利用的；中风险是缺少资源限制、没有设置 readOnlyRootFilesystem；低风险是标签不规范、镜像用了 latest 标签。
+
+输出一份清晰的报告，支持递归扫描目录下所有 YAML 文件，也支持只扫描指定文件。Go 标准库实现，go build 编译通过就行，不要引入外部依赖。

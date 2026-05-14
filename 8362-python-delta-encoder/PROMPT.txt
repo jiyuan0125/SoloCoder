@@ -1,5 +1,13 @@
-用 Python 实现一个增量编码引擎，对比两个二进制文件生成差量数据。
+软件更新包太大，用户抱怨下载慢。增量更新只传输变化的部分——比如一个 100MB 的文件改了几十 KB，差量只有几十 KB。Python 实现增量编码引擎。
 
-软件更新场景下，只传输变化的部分能节省大量带宽。实现两种增量编码方式：字节级差异（记录插入、删除、替换操作）和块级差异（用滚动哈希找相同块，只传输变化的块）。生成的 delta 文件体积要远小于原始文件。同时实现反向操作——用旧文件和 delta 还原出新文件。
+两种增量编码方式：
 
-Python 3 标准库。CLI：`python delta.py encode old.bin new.bin -o delta.bin` 和 `python delta.py decode old.bin delta.bin -o restored.bin`。还原后的文件要和原始文件完全一致。`python delta.py` 能跑。
+字节级差异（Byte-level Delta）：用滚动哈希（Rabin fingerprint 或简单的多项式哈希）在新文件中找和旧文件匹配的区域。匹配的部分记录为引用（offset, length），不匹配的部分记录为插入（literal data）。生成的 delta 是一组指令序列：COPY(old_offset, length) 和 INSERT(data)。
+
+块级差异（Block-level Delta）：把旧文件切成固定大小的块（比如 4KB），每块算一个强哈希（SHA256）。扫描新文件，遇到和旧文件某块哈希相同的就记录引用，不同的就记录为原始数据。适合大文件的增量更新。
+
+还原操作：读入旧文件和 delta 文件，按指令序列执行——COPY 指令从旧文件指定偏移复制数据，INSERT 指令直接输出数据。生成的新文件必须和原始新文件字节完全一致。
+
+Delta 文件格式：魔数 + 旧文件哈希 + 指令数量 + 指令序列。每条指令前缀标记类型和长度。
+
+CLI：python3 delta.py encode old.bin new.bin -o delta.bin。python3 delta.py decode old.bin delta.bin -o restored.bin。纯 Python 3 标准库。

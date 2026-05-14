@@ -1,5 +1,5 @@
-视频处理时需要单独操作视频轨道，提取出来或者查看详细信息。
+视频处理时需要单独查看视频轨道的详细信息——确认编码参数、帧率、关键帧分布，方便做转码或者剪辑的决策。不需要解码，纯容器层解析就够了。
 
-从 MP4/MKV 容器中提取视频轨道信息和数据。解析视频编码参数：编码格式（H.264/HEVC/VP9）、profile/level、分辨率、帧率、色彩空间。能根据 stts/stss/stsz 等采样表算出帧率和关键帧间隔。不需要解码，纯容器层解析。
+从 MP4/MKV 容器中提取视频轨道信息。MP4 的解析路径：moov → trak → mdia → minf → stbl，从 stsd（Sample Description Box）读取编码格式：avc1/avc3 是 H.264（解析 AVCDecoderConfigurationRecord 拿 profile、level、SPS/PPS 参数）、hev1/hvc1 是 HEVC（解析 HEVCDecoderConfigurationRecord）、vp09 是 VP9。分辨率从 tkhd 的 width/height 字段或者 SPS 里解析。帧率从 stts（Decoding Time to Sample Box）计算：总采样数 / (总时长 / timescale)。关键帧信息从 stss（Sync Sample Box）获取——列出所有关键帧的采样序号和间隔。MKV 的解析路径类似但用 EBML 元素：TrackEntry → Video → CodecID + PixelWidth/Height + FrameRate。
 
-Go 标准库，go build 编译通过。
+Go 标准库，不需要解码视频数据本身。go build 编译通过。

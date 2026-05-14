@@ -1,4 +1,11 @@
-用 C 写一个 Block Cache，LSM 存储引擎里的磁盘块缓存。
-从 sstable 读数据时先查缓存，命中就免一次磁盘 IO。用 LRU 淘汰策略，缓存粒度是 4KB 的 block。
-支持 get(block_id) 和 put(block_id, data)。缓存容量可配置，满了淘汰最久未用的 block。
-另外加个简单的命中率统计（hit/miss/total）。hash 表 + 双向链表实现 LRU。写个测试程序验证淘汰逻辑和命中统计。gcc 编译。
+SSTable 查询时每次从磁盘读一个 block（通常 4KB）代价不小，如果同一个 block 被反复访问那就更浪费了。LSM 存储引擎里加一层 block cache，把最近访问的磁盘 block 缓在内存里，命中率上去之后读性能能提升好几倍。LevelDB 就是这么干的。
+
+用 C 写一个 Block Cache。缓存粒度是 4KB 的 block，每个 block 用一个唯一标识（比如文件编号 + block 偏移量组成的 cache_id）来索引。淘汰策略用 LRU——用一个哈希表存 cache_id 到缓存条目的映射，加上一个双向链表维护访问顺序。最近访问的移到链表头部，满了就淘汰链表尾部的。
+
+接口：get(cache_id) 查缓存，命中返回数据指针和长度，未命中返回 NULL；put(cache_id, data, len) 把一个 block 的数据放入缓存，如果缓存满了先淘汰再插入。缓存容量可配置（比如默认 256MB），put 时检查当前内存占用，超了就触发淘汰。
+
+再加一个简单的命中率统计——记录 hit_count、miss_count、total_count，提供 cache_stats() 返回这些数据和命中率百分比。在调试和调优的时候很有用。
+
+LRU 的实现细节：哈希表用链地址法或开地址法都行，key 是 cache_id（uint64_t）。双向链表的每个节点和哈希表的条目共用同一个结构体，避免额外的内存分配。
+
+写个测试程序：模拟 1000 个 block 的访问模式（90% 的请求集中在 10% 的热 block 上），验证淘汰逻辑正确、命中率符合预期。gcc 编译。

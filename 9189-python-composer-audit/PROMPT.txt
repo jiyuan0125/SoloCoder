@@ -1,13 +1,9 @@
-PHP Composer 依赖安全审计，扫描 composer.lock 文件检查已知漏洞。
+PHP Composer 依赖安全审计。PHP 项目的 composer.lock 文件记录了所有安装的包和精确版本。写个工具扫描这些依赖是否有已知漏洞。
 
-有个 PHP 老项目要做安全审计，composer.lock 里有几百个依赖，需要检查有没有已知的安全问题。
+Python 实现。第一步解析 composer.lock：读取 JSON 格式的锁文件，提取 packages 数组（生产依赖）和 packages-dev 数组（开发依赖）。每个包的信息——name（vendor/package 格式）、version（如 v2.14.1）、source/dist URL。
 
-Python 实现：
-- 解析 composer.lock JSON 格式，提取所有 package 名称、版本
-- 对比本地漏洞数据库（包名+版本匹配）
-- 解析 composer.json 提取直接依赖声明
-- 区分 platform-packages（php、ext-*）和普通包
-- 输出审计报告：漏洞包、当前版本、CVE、修复版本、严重度
+第二步漏洞查询：PHP 包的漏洞数据来源——Packagist 的 Security Advisories API 或 GitHub Advisory Database。用包名和版本号查询 OSV（ecosystem=Packagist）。解析返回的漏洞列表——漏洞 ID、CVE 编号、影响版本范围、修复版本、描述。
 
-用法：python composer_audit.py check composer.lock --db php_vulns.json
-composer.lock 里包名是 vendor/package 格式，版本用语义化版本。
+第三步结果展示：默认只扫描生产依赖（packages），加 --include-dev 也扫描开发依赖。终端表格输出——包名、当前版本、漏洞编号、CVSS 评分、修复版本。传递依赖标注来源。汇总——总包数、有漏洞包数、按严重等级分布。
+
+也支持输出 JSON 格式对接 CI 流水线，有高危漏洞时返回非零退出码。python3 命令行工具。

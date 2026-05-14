@@ -1,3 +1,15 @@
-Python 装饰器用起来方便但内部机制不太直观，想做个分析工具。写一个装饰器分析器，能解析 Python 源码中的装饰器用法，展开装饰器的调用链（从 @decorator 还原到 func = decorator(func)），识别带参数的装饰器、类装饰器和装饰器堆叠顺序。
+Python 装饰器语法糖 @decorator 背后的机制是什么？多层装饰器堆叠的执行顺序是怎样的？写一个分析工具来展开和理解装饰器调用链。Python 实现。
 
-能检测常见的装饰器使用错误，比如缺少 functools.wraps。纯 Python，用 ast 模块，python 能跑，命令行分析 .py 文件。
+解析能力：扫描 Python 源码中所有使用了装饰器的函数和类。对每个装饰器：
+- 无参数装饰器 @decorator → func = decorator(func)
+- 带参数装饰器 @decorator(arg) → func = decorator(arg)(func)
+- 类装饰器 @MyClass → func = MyClass(func)
+- 多层堆叠 @d1 @d2 def f → f = d1(d2(f))（从下到上、从内到外）
+
+分析功能：
+- 展开装饰器调用链：把 @ 语法还原成等价的函数调用形式，显示完整的调用链
+- 检测 functools.wraps 遗漏：自定义装饰器如果内部定义了 wrapper 函数但没加 @functools.wraps，会丢失原函数的 __name__、__doc__ 等元信息
+- 装饰器参数类型推断：分析装饰器函数的参数，判断是无参数形式还是有参数形式
+- 装饰器副作用检测：装饰器返回的对象如果不是 callable（比如返回了 None），被装饰的函数会无法调用
+
+输出每个被装饰的函数/类的装饰器链展开结果和建议。python3 decorator_analyzer.py source.py。纯 Python 用 ast 模块。

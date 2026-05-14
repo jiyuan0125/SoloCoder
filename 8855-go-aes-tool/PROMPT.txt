@@ -1,8 +1,13 @@
-帮我写个 AES 加解密的命令行工具，Go 实现。
+有时候需要快速加密个配置文件或者一段敏感文本，不想引 OpenSSL 那么重的东西。一个小的 AES-GCM 加密工具就够了——AEAD 模式既加密又认证，不需要单独做 HMAC。
 
-有时候需要快速加密个配置文件或者敏感文本，不想引 OpenSSL 那么重的东西。一个小的 AES-GCM 加密工具就够了。
+用 Go 写一个 AES 加解密命令行工具。加密流程：用户传入密码 -pass "mypass"。用 PBKDF2 从密码派生 32 字节密钥（salt 随机生成 16 字节，迭代 100000 次，HMAC-SHA256）。生成随机 nonce（12 字节，crypto/rand）。用 AES-256-GCM 加密明文。输出格式：Base64(salt + nonce + ciphertext + tag)。
 
-功能：用 AES-256-GCM 模式加密文件或文本，输出带 nonce 的密文；解密还原原始内容；密码通过参数传入，内部用 PBKDF2 派生密钥。
+解密流程：从密文 Base64 解码，前 16 字节是 salt，接下来 12 字节是 nonce，剩余是密文+tag。用同样的密码和 salt 通过 PBKDF2 派生密钥。用 AES-GCM 解密。验证认证 tag（GCM 内置，tag 不匹配会返回 error）。
 
-用法：aes-tool encrypt -pass "mypass" -in plain.txt -out cipher.bin、aes-tool decrypt -pass "mypass" -in cipher.bin -out recovered.txt
-纯 Go 标准库实现，go build 通过。
+支持两种输入模式：-in file.txt -out file.enc 加密文件；-msg "text" 加密短文本直接输出。解密：-in file.enc -out file.dec。
+
+大文件处理：分块加密（chunk size 64KB），每块独立的 nonce，输出格式包含块数量和每块的偏移量。避免一次性加载大文件到内存。
+
+用法：aes-tool encrypt -pass "mypass" -in plain.txt -out cipher.bin、aes-tool decrypt -pass "mypass" -in cipher.bin -out recovered.txt。
+
+纯 Go 标准库实现（crypto/aes、crypto/cipher、crypto/rand），go build 通过。

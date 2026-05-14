@@ -1,1 +1,9 @@
-分析日志的时候需要把 URL 拆开来看各个部分。Go 写一个 URL 解析工具，比标准库 net/url 更细致一点：支持解析 scheme、host、port、path segments、query params（多值参数）、fragment、userinfo。还要能检测异常 URL（缺少 scheme、非法字符、端口越界等）。输入一个 URL 字符串，输出各部分的详细信息。go build 能过。
+分析日志的时候需要把 URL 拆开来看各个部分——光知道完整 URL 是 https://example.com:8080/api/users?page=2&sort=name#top 不够，得把 scheme、host、port、path、query params、fragment 都拆出来才能做统计分析。
+
+Go 写一个 URL 解析工具，比标准库 net/url 更细致一点。解析出这些组成部分：scheme（协议名）、host（主机名或 IP）、port（端口号，缺省时根据 scheme 推导默认值如 http=80 https=443）、path segments（路径按 / 拆成数组）、query params（多值参数也要保留，如 ?tag=a&tag=b 返回 tag=[a,b]）、fragment（# 后面的锚点）、userinfo（user:pass@host 格式的认证信息）。
+
+异常检测能力：缺少 scheme（给出建议 "did you mean https://..." ）、非法字符（空格、中文等未编码的字符）、端口越界（> 65535）、IPv6 地址格式校验（方括号包裹）。URL 编码的参数自动解码。
+
+输入一个 URL 字符串，输出各部分的详细信息（JSON 格式或格式化文本）。也支持批量模式——从文件逐行读取 URL，输出解析结果。
+
+go build 能过。

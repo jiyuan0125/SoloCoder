@@ -1,1 +1,5 @@
-WebM本质上是用EBML封装的VP8/VP9/Opus流，和MKV是近亲。写个Python解析器专门处理WebM文件，解析EBML元素结构，识别WebM特有的元素如VPCodecPrivate、DiscardPadding等。提取视频轨信息（编码器、分辨率）和音频轨信息（采样率、声道数）。能正确处理Duration元素（可能是浮点数）。Python3实现，命令行传入WebM文件路径。
+WebM 和 MKV 到底什么关系？WebM 是 Google 从 Matroska 规范里裁出来的一个子集，只允许 VP8/VP9 视频和 Opus/Vorbis 音频，容器用 EBML 编码。所以解析 WebM 的底层和解析 MKV 几乎一样——读变长整数、遍历 EBML 元素——只是关注的具体元素不同。
+
+解析器要做的事。识别 WebM 特有的元素：VPCodecPrivate（VP8/VP9 编解码器私有数据）、DiscardPadding（音频延迟补偿）、CodecDelay 等。从 Tracks 元素里提取视频轨的编码器类型（VP8 还是 VP9）、分辨率；音频轨的采样率、声道数。Duration 元素可能是浮点数——EBML 的浮点类型有 4 字节（float）和 8 字节（double）两种，按 IEEE 754 解码。EBML 头里的 DocType 要求是 webm。
+
+输出的信息能让用户确认这个 WebM 文件的具体参数。视频轨：编码器、宽、高。音频轨：编码器、采样率、声道数。总时长。用法：python3 webm_parser.py parse video.webm

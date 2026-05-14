@@ -1,8 +1,13 @@
-写个密码套件检查工具，Go 实现。
+排查 TLS 问题的时候经常需要知道服务端到底支持哪些密码套件。tls-scanner 只展示协商结果和标记强弱，但有些时候需要逐个测试每个套件看服务端是否真的接受。
 
-排查 TLS 问题的时候经常需要知道服务端支持哪些密码套件、哪些是安全的哪些该禁用。需要逐个测试而不是只看协商结果。
+用 Go 写一个密码套件检查工具。check 子命令：Go 标准库 crypto/tls 支持的所有密码套件（通过 crypto/tls.CipherSuites() 和 crypto/tls.InsecureCipherSuites() 获取列表）。对每个套件：创建自定义的 TLS config 只包含该套件，尝试连接目标服务器。如果握手成功说明服务端支持该套件，记录下来。如果握手失败说明不支持。
 
-功能：逐个尝试不同的密码套件连接目标服务器；标记每个套件的安全等级（根据密钥长度和算法）；列出服务器实际支持的套件清单；推荐应该启用和禁用的套件。
+安全等级标记：强——AES-GCM/ChaCha20-Poly1305 + ECDHE 密钥交换（前向保密）。中——AES-CBC + ECDHE，或 AES-GCM + RSA。弱——RC4、DES、3DES、NULL、EXPORT 套件、无前向保密。
 
-命令：cipher-check check -host example.com:443、cipher-check check -host example.com:443 -tls-version 1.2、cipher-check list（列出 Go 支持的所有密码套件）
+list 子命令：列出 Go 支持的所有密码套件及其安全等级。方便参考。
+
+推荐配置：根据扫描结果推荐应该启用和禁用的套件。
+
+命令：cipher-check check -host example.com:443、cipher-check check -host example.com:443 -tls-version 1.2、cipher-check list。
+
 Go 标准库 crypto/tls，go build 编译通过。

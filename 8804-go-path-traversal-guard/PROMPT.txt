@@ -1,11 +1,11 @@
-写个路径遍历攻击防护库，Go 语言。
+之前渗透测试发现文件下载接口没做路径校验，攻击者传了个 ../../../etc/passwd 就把系统文件读出来了。修复的时候发现这事比想象中复杂——URL 编码（%2e%2e%2f）、双重编码、符号链接、大小写（Windows 上）各种绕过手法层出不穷。
 
-起因：有次渗透测试发现文件下载接口没做路径校验，被读到了 /etc/passwd，挺丢人的。
+用 Go 写一个路径遍历攻击防护库。核心函数是 SanitizePath(userInput, rootDir) (safePath string, err error)：
 
-功能点：
-- 清洗用户输入的文件路径：解析 ..、符号链接、URL 编码（%2e%2e 之类），得到真实路径
-- 校验解析后的路径是否在允许的根目录范围内，超出就拒绝
-- 支持黑名单模式：禁止访问 /etc、/proc、/sys 等敏感系统目录
-- 提供一个简单的 HTTP 文件服务器演示，展示如何安全地提供文件下载
+第一步清洗用户输入：URL 解码（处理 %2e%2e 这类编码变体），去除空字节（\x00），标准化路径分隔符（\ 转成 /）。第二步解析真实路径：用 filepath.Clean 清理 ./ 和 ../，然后用 filepath.EvalSymlinks 解析符号链接得到真实路径。第三步校验边界：确保解析后的真实路径以 rootDir 为前缀。用 strings.HasPrefix 检查的时候要注意 trailing slash 的问题——rootDir 需要以 / 结尾，否则 /app 也匹配 /app-secrets。
 
-Go 标准库，go build 能编。
+另外支持黑名单模式：维护一个禁止访问的路径列表（/etc、/proc、/sys、/dev、/root、/var/log 等），即使路径在 rootDir 下但如果路径中有这些敏感目录组件也拒绝。
+
+提供一个演示用的安全文件下载 HTTP 服务：用户通过 ?file=xxx 参数指定要下载的文件，服务端校验路径合法性后返回文件内容。非法路径返回 400。
+
+Go 标准库（path/filepath、net/http），go build 能编。

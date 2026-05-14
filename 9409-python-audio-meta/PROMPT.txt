@@ -1,1 +1,7 @@
-我有一堆各种格式的音频文件（MP3、FLAC、OGG、WAV、AIFF），想批量查看它们的元数据信息。写个统一的Python工具来提取音频文件的通用元数据：时长、比特率、采样率、声道数、编码格式，以及标签信息（标题、艺术家、专辑）。不同格式用各自的解析逻辑，但对外暴露统一的接口。碰到不支持的格式给出提示而不是崩溃。python3运行。
+有一堆各种格式的音频文件想批量查看元数据——时长、比特率、采样率、标签信息。不同格式用各自的解析逻辑，对外统一接口。Python 写一个通用元数据提取工具。
+
+支持的格式。MP3：ID3v1/v2 标签（标题、艺术家、专辑、年份、曲目号）+ 帧头分析估算时长和比特率。FLAC：STREAMINFO 取采样率/位深/总采样数算时长，VORBIS_COMMENT 取标签。OGG：OGG 页面结构里找 Vorbis Comment。WAV：RIFF fmt chunk 取参数，INFO chunk 取标签。AIFF：COMM chunk 取参数（注意 80 位浮点采样率解码）。
+
+自动判断格式——文件头 magic number 决定解析分支（MP3 看 ID3 或 0xFFE0、FLAC 看 "fLaC"、OGG 看 "OggS"、WAV 看 "RIFF...WAVE"、AIFF 看 "FORM...AIFF"）。不支持的格式给提示不崩溃。
+
+统一输出：时长（秒，浮点）、比特率（kbps）、采样率（Hz）、声道数、编码格式、标题、艺术家、专辑、年份、曲目号。缺失字段空字符串。加 --json 输出 JSON 方便脚本处理。用法 python audio_meta.py info xxx.mp3 或 python audio_meta.py info xxx.flac。Python 3 实现，不依赖重型框架，直接解析二进制。

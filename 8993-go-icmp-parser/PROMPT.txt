@@ -1,3 +1,7 @@
-网络诊断时需要看 ICMP 报文的内容。Go 写一个 ICMP 协议解析器。
+Go 的 ICMP 协议解析器。解析 ICMP 报文，用于网络诊断和异常流量分析。
 
-解析 ICMP 报文：识别 ICMP 类型（Echo Request/Reply、Destination Unreachable、Time Exceeded、Redirect 等）；解析 ICMP header 各字段（type、code、checksum、identifier、sequence）；对 Echo Request/Reply 提取 ping 数据；对错误报文解析包含的原始 IP 头。支持从 pcap 文件或原始二进制数据中解析。Go 标准库，go build 通过。
+ICMP 报文结构简单——固定头部加可选的数据区。头部前四个字节是通用的：Type 字段定义报文类型（0=Echo Reply、3=Destination Unreachable、5=Redirect、8=Echo Request、11=Time Exceeded）、Code 字段提供子类型、Checksum 覆盖整个报文。后面四个字节含义取决于 Type——Echo Request/Reply 用 Identifier 和 Sequence Number 匹配 ping 请求和响应；Destination Unreachable 包含未用字段和 MTU 信息；Time Exceeded 类似。
+
+数据区按 Type 分。Echo Request/Reply 的数据区是 ping 发送的载荷内容（通常是时间戳和填充数据）。错误报告类报文（Destination Unreachable、Time Exceeded、Redirect）的数据区包含触发错误的原始 IP 包头部加前 8 字节——这对诊断很有用，能知道哪个 IP 包触发了错误。
+
+工具支持两种输入：从 pcap 文件提取 ICMP 包（通过 IP header 的 Protocol=1 识别），或者直接解析原始 ICMP 二进制数据。输出每个报文的类型、代码、以及类型相关的详细信息。Go 标准库，go build 通过。

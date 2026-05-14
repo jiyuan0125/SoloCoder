@@ -1,5 +1,5 @@
-写一个 MD5 哈希计算工具。
+MD5 哈希是日常文件校验最常用的工具——确认下载是否完整、检查两个文件是否相同、检测文件是否被篡改。虽然 MD5 已不推荐用于安全场景，但在数据完整性校验方面仍然广泛使用。写个好用的命令行 MD5 工具。
 
-日常用得很多，需要一个好用的命令行工具来计算文件的 MD5。支持单个文件和批量处理，能和参考值对比判断文件是否一致。大文件要分块读取不要一次性加载到内存。
+三种模式。单文件：给一个文件路径，计算并输出 MD5 哈希值（32 位十六进制小写）。目录批量：--dir 参数指定目录，递归扫描所有文件计算 MD5，输出文件名和哈希值的列表。验证模式：给文件路径和参考 MD5（--verify 参数），自动对比输出匹配或不匹配。
 
-python main.py file.zip 输出 MD5 值；python main.py --dir ./backup/ 批量计算并输出 文件名+MD5 的列表；python main.py file.zip --verify d41d8cd98f00b204e9800998ecf8427e 对比校验。Python 标准库 hashlib 实现。
+大文件处理——分块读取（每块 8KB），用 hashlib.md5() 的 update() 方法增量计算，不一次性加载到内存。即使是几 GB 的文件也能处理。批量模式的输出格式和 md5sum 命令保持一致（哈希值 + 两个空格 + 文件名），方便 diff 对比。用法：python3 md5_hash.py calc file.zip 或 python3 md5_hash.py calc --dir ./backup/ 或 python3 md5_hash.py verify file.zip --verify d41d8cd98f00b204e9800998ecf8427e

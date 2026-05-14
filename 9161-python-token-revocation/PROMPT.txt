@@ -1,12 +1,7 @@
-Token 吊销管理工具，维护一个已吊销的 JWT 或 OAuth token 黑名单。
+Token 吊销管理工具。JWT 一旦签发就无法撤回——这是 JWT 的设计特性也是缺点。如果用户登出了但 token 还没过期，被盗的 token 依然有效。需要一个黑名单机制来吊销已经签发但不应该再使用的 token。
 
-场景：用户登出、修改密码、或者管理员强制下线时，我们需要让已发出的 token 立刻失效。但 JWT 本身是无状态的，所以需要一个吊销列表。
+Python 实现一个 token 黑名单服务。吊销操作：接收一个 JWT token 或 token ID（jti claim），解析出 jti 和 exp 过期时间，存入黑名单（键值对，键为 jti，值为过期时间戳）。检查操作：验证 token 时先查询 jti 是否在黑名单中——如果在则拒绝（返回 401 Token Revoked）。
 
-Python 实现：
-- 接收 token 或 token ID（jti），加入吊销列表，记录吊销时间和原因
-- 检查某个 token 是否已被吊销（在黑名单中且未过期）
-- 自动清理已过期的吊销记录（token 原本就过期了就没必要再吊销）
-- 支持按用户批量吊销所有 token
+存储后端：内存字典（简单但不持久）、SQLite（持久化，重启后不丢失）、Redis（适合分布式部署）。黑名单自动清理：过期 token 自动从黑名单删除——因为过期后本身就不能用了，没必要继续占空间。清理线程定期扫描（默认每小时一次），或者每次查询时顺带检查。
 
-数据存本地 SQLite 或 JSON。示例：python token_revocation.py revoke --jti abc123 --reason "user_logout"
-能正常运行。
+吊销粒度支持：吊销单个 token（按 jti）、吊销某个用户的所有 token（维护 user_id → jti 列表的映射）、吊销某种类型的所有 token（如所有 refresh_token）。接口：revoke(token)、is_revoked(jti) → bool、revoke_all(user_id)。python3 命令行工具和库形式。

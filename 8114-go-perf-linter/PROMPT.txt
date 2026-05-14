@@ -1,5 +1,7 @@
-写一个 Go 性能反模式检测器。找出代码里的性能问题：循环内反复分配内存、string 拼接没用 builder、大 struct 值拷贝、不必要的 []byte 和 string 互转、goroutine 泄漏风险、channel 阻塞风险。
+写一个 Go 性能反模式检测器。代码能跑不代表跑得快——循环里反复分配内存、大 struct 值拷贝、string 和 []byte 来回转——这些性能问题在开发阶段不明显，到了生产环境高并发下就暴露了。
 
-每个问题给出预估的性能影响（低/中/高）和具体优化写法。
-用法：perf-linter -dir ./app
-Go 标准库，go build 通过。
+找出代码里的性能问题：
+
+循环内反复分配——for 循环体内每次迭代都 new 一个对象或者 append 到 slice 导致频繁扩容。string 拼接没用 builder——循环里用 + 拼接字符串（应该用 strings.Builder）。大 struct 值拷贝——超过 64 字节的 struct 作为函数参数传值而不是传指针。不必要的 []byte 和 string 互转——同一处代码反复在 string 和 []byte 之间转换。goroutine 泄漏风险——启动了 goroutine 但没有退出机制（缺 context 取消或 done channel）。channel 阻塞风险——发送到一个没有消费者的 channel 会永久阻塞。
+
+每个问题给出预估的性能影响（Low/Medium/High）和具体的优化写法示例。用法：perf-linter -dir ./app。Go 标准库，go build 通过。

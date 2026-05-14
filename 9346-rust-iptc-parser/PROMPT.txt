@@ -1,10 +1,7 @@
-做一个 IPTC 元数据解析工具，从 JPEG 文件中提取新闻图片标准的 IPTC/NAA 数据。
+新闻图片通讯社（路透社、美联、新华社）发稿的时候，每张图片都带着 IPTC 元数据——标题、描述、关键词、拍摄者、版权。这些信息嵌在 JPEG 的 APP13 段里。写一个 Rust 工具来提取这些新闻图片元数据。
 
-解析内容：
-- 定位 JPEG 中的 APP13 段（Photoshop IRB 容器），识别 "Photoshop 3.0" 标识
-- 解析 IRB 中的 8BIM 资源块，找到 IPTC-NAA 记录（资源 ID 0x0404）
-- 读取常用 IPTC 标签：ObjectName（标题 2:05）、Keywords（关键词 2:25）、Caption（说明 2:120）
-- 读取分类信息：Category（类别 2:15）、SupplementalCategory（补充类别 2:20）
-- 处理 IPTC 的 tag-length-value 编码格式
+定位 APP13 段——在 JPEG 文件中找 FFE1 之后的其他 APP 段，APP13 的标记是 FFE1 之后的 "Photoshop 3.0" 标识。实际上是 "8BIM" 或 "Photoshop 3.0\x00" 前缀，后面跟着 IRB（Image Resource Block）结构。在 IRB 里找到资源 ID 为 0x0404 的块——这就是 IPTC-NAA 数据。
 
-Rust 项目，cargo build 通过。`iptc-parser extract photo.jpg` 输出 IPTC 字段。
+IPTC 的编码格式——每个标签是 1 字节记录号（新闻图片的都是 2）+ 1 字节 dataset 号 + 2 字节数据长度 + 数据。如果长度字段的第一个字节是 0xFF，后面还有扩展长度。常用 dataset：2:05 ObjectName（标题）、2:07 EditStatus、2:10 Urgency（紧急度 1-8）、2:15 Category（类别如 "sports"、"politics"）、2:20 SupplementalCategory、2:25 Keywords（可重复出现多次！）、2:55 DateCreated（YYYYMMDD）、2:80 Byline（作者）、2:85 BylineTitle（作者头衔）、2:90 City、2:95 Province/State、2:101 Country、2:103 OriginalTransmissionReference、2:116 Copyright、2:120 Caption/Abstract。
+
+文本类型的直接读字符串。日期类型是 8 字节 YYYYMMDD。关键词会重复出现多次，要收集为数组。输出格式化的 IPTC 字段列表。用法 iptc-parser extract photo.jpg。Rust 实现，cargo build 通过。

@@ -1,5 +1,7 @@
-用 Rust 写一个 Protocol Buffers 编码器，把结构化数据编码成二进制格式。
+Protobuf 编码——从 JSON 数据生成二进制 protobuf。和那个解码工具配对使用。即使没有 .proto 文件也能通过 JSON 的数据类型自动推断并编码。Rust 实现。
 
-实现 protobuf 的 wire format 编码：varint（包括 zigzag 编码的 sint）、32/64-bit fixed、length-delimited（字符串、bytes、嵌套消息）。支持通过一个简单的 schema 描述（可以用 JSON 或简单的 DSL）来定义消息结构，然后按 schema 编码数据。也要支持不用 schema 直接构造消息（手动指定 field number 和类型）。
+从 JSON 推断 wire type——整数（JSON number 无小数点）编码为 varint（wire type 0），字符串编码为 length-delimited（wire type 2），浮点数编码为 32-bit 或 64-bit（wire type 5 或 1），布尔值编码为 varint（0 或 1），null 值跳过，数组按 repeated 字段处理，对象按嵌套消息递归编码。
 
-Rust 实现，cargo build 通过。
+编码实现。Varint：低 7 位一组，最高位为 1 表示后续还有字节，大端序输出。Tag：field_number 左移 3 位 | wire_type。Length-delimited：先写 tag，再写 varint(数据长度)，再写数据。32-bit 浮点用 IEEE 754 直接写 4 字节，64-bit 浮点写 8 字节。
+
+字段号从 JSON 的 key 推断——key 是数字型字符串如 "1"、"2" 直接作为 field_number，或者从 .proto 文件中读取字段映射。如果用户提供了 --schema message.proto，按 schema 定义的字段类型编码。JSON 中的嵌套对象先递归编码为 protobuf 字节序列，再作为 length-delimited 值写入。用法 protobuf-encode --input data.json --output data.bin。Rust 实现，cargo build 通过。

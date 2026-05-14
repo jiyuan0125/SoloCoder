@@ -1,9 +1,13 @@
-用 Go 实现一个简单的 Leader 选举机制。集群里有 3-5 个节点，某个时刻只有一个能成为 Leader，其他人都是 Follower。Leader 挂了要能重新选举。
+先搭好几个节点，再让它们自己争出谁是老大——这就是 Leader 选举要做的事。在很多分布式系统里（Raft、ZooKeeper 之类），集群需要一个 Leader 来协调写操作和日志复制，其他节点都是 Follower。Leader 挂了还得能自动选新的。这个工具用 Go 来实现这个机制。
 
-具体要求：
-- 模拟多个节点（goroutine 或 struct 即可），每个节点有唯一 ID 和状态（Leader/Follower/Candidate）
-- 通过心跳超时触发选举，随机化超时时间避免同时竞选
-- 选举成功后 Leader 定期发心跳维持权威，Follower 检测超时则发起新选举
-- 打印选举过程日志：谁发起选举、谁投票给谁、谁当选
+整个选举流程是这样的：
+1. 初始状态所有节点都是 Follower，各自启动一个随机时长的选举超时定时器（比如 150-300ms 的随机值）
+2. 超时触发后，Follower 变成 Candidate，自增当前 term，先给自己投一票，然后向其他所有节点发送 RequestVote 请求
+3. 其他节点收到请求后，如果在这个 term 里还没投过票，就同意并重置自己的超时定时器
+4. Candidate 收到超过半数的票后晋升为 Leader，开始定期向 Follower 发心跳维持权威
+5. 如果选举超时内没凑够票数，自增 term 重新发起选举
+6. Follower 收到更高 term 的心跳或投票请求时，立刻更新自己的 term 并退回 Follower
+
+要模拟的关键场景：正常选举、Leader 故障后重新选举、网络分区导致两个 Candidate 竞争（只有一个能赢）。每个节点用 goroutine 模拟，节点间通过 channel 传递消息。日志要清晰展示整个选举过程——谁在什么 term 发起选举、谁投给谁、最终谁当选。
 
 Go 标准库，go build 编译通过。

@@ -1,9 +1,11 @@
-用 Go 实现 PDQ Sort（Pattern-Defeating Quicksort）。这是 Rust 标准库的排序算法，在快排基础上做了很多优化来打败常见的数据模式。
+听说过 pdqsort 吗？Rust 标准库的排序算法，全称 pattern-defeating quicksort。它在普通快排的基础上加了一堆"作弊"检测——遇到已经有序的数据直接跳过，遇到大量重复值做特殊 partition，遇到快排退化的征兆立刻切堆排序。基本上你故意构造刁难数据都难不倒它。
 
-要实现的核心优化：
-- 检测并处理已有序、逆序、少量唯一值等模式
-- 避免快排的 worst case，退化时切换到堆排序
-- 对小数组使用插入排序
-- partition 时尽量选择好的 pivot
+用 Go 实现一个 pdqsort。
 
-Go 标准库，go build 通过。重点是对各种"刁难"数据模式（已排序、锯齿形、90%相同值等）都能高效处理。
+快排的 partition 要做得聪明。pivot 选择用三数取中甚至五数取中。partition 完之后检查两边是否严重不平衡——如果一侧的元素数不到总数的 1/16，说明这批数据有很多等于 pivot 的重复元素，用三路 partition（less-than / equal / greater-than）重新处理这一轮，把等于 pivot 的元素一次搞定。
+
+模式检测是 pdqsort 的灵魂。每次 partition 前检查：如果左右两个子数组各自已经有序（比较首尾各一个元素就够了），就直接跳过这一轮的递归。如果发现连续好几次 pivot 都选到了最大或最小值（说明在退化），就把这次 partition 用的元素换到数组末尾"罚站"，下次选 pivot 不会被它们带偏。
+
+退化保护：维护一个 balance 因子，每次 partition 严重不平衡时减少。balance 归零就切换到堆排序处理剩余部分。小范围（<24 个元素）切换到插入排序，并且先检查是否已有序，有序就直接返回。
+
+Go 标准库，go build 通过。对各种刁难数据——已排序、逆序、锯齿形、90% 相同值——都要高效处理，和 sort.Slice 做 benchmark 对比。

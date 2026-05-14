@@ -1,9 +1,14 @@
-做一个前缀树（Trie）的 Go 实现，用来做搜索词自动补全。
+自动补全、拼写检查、IP 路由表——这些都用 Trie（前缀树）。Go 实现一个通用的字节级 Trie。
 
-功能要求：
-- 支持插入单词和搜索单词是否存在
-- 前缀匹配：输入 "hel" 能返回 "hello"、"help"、"helmet" 等所有以该前缀开头的词
-- 支持删除单词，删除后要清理无用的中间节点
-- 统计以某个前缀开头的单词数量
+每个节点有一组子节点（按字节/字符索引）和一个标志位标记是否是某个 key 的结尾。子节点用 map[byte]*Node 或固定大小数组（ASCII 用 [256]*Node）。
 
-写个命令行小工具，从标准输入读取一批英文单词建树，然后接受前缀查询，输出补全结果。纯 Go 标准库，go build 能跑。
+操作：
+- Insert(key string, value)：从根开始逐字符（或逐字节）往下走，没有对应子节点就创建。到达 key 末尾时设置 value 和 end 标志
+- Search(key)：沿路径走到末尾，如果节点标记为 end 就返回 value，否则返回 not found
+- StartsWith(prefix)：检查是否有以 prefix 开头的 key。走到 prefix 末尾后只要子树非空就返回 true
+- KeysWithPrefix(prefix)：先走到 prefix 末尾节点，然后 DFS 收集该子树所有 end 标记的路径，返回完整的 key 列表。这就是自动补全的核心
+- Delete(key)：走到底标记为非 end，如果该节点没有子节点就可以删掉，向上递归删除空节点
+
+空间优化版本（可选）：如果节点只有一个子节点，可以合并成压缩 Trie（Radix Tree）。
+
+写个 main 演示：插入一组英文单词，测试自动补全（输入 "app" 返回 "apple", "application", "appreciate" 等）。也测试 IP 前缀匹配场景。go build 通过。

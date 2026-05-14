@@ -1,8 +1,11 @@
-写个 PKCS#12（.p12/.pfx）文件解析工具，Go 实现。
+运维从 Windows 服务器导出 .pfx 文件后需要转到 Nginx 用，Nginx 要单独的证书文件和私钥文件。每次查 openssl pkcs12 命令太麻烦，而且有些 .pfx 文件密码不对或者格式有问题不好排查。
 
-运维经常从 Windows 服务器导出 .pfx 文件，需要从中提取证书和私钥转到 Nginx 用。每次查 openssl 命令太麻烦。
+用 Go 写一个 PKCS#12（.p12/.pfx）文件解析工具。extract 子命令：用 crypto/pkcs12.Parse 或 pkcs12.LegacyRC2 解析 .p12 文件（传入密码）。提取证书链——可能有多个证书（叶子 + 中间 + 根），分别输出为 cert.pem、chain.pem。提取私钥——根据密钥类型输出 RSA 或 ECDSA 的 PEM 格式到 key.pem。设置文件权限 0600（私钥文件）。
 
-功能：解析 .p12/.pfx 文件，支持密码保护；提取其中的证书链和私钥；分别输出为 PEM 格式的证书文件和私钥文件；显示证书基本信息（主题、有效期）。
+info 子命令：只显示信息不导出——.pfx 文件包含几个证书、每个证书的主题和有效期、私钥类型和长度、是否密码保护、用的什么加密算法（RC2 还是 AES）。
 
-用法：pkcs12-parser extract -file cert.pfx -pass "password"、pkcs12-parser info -file cert.pfx -pass "password"（只显示信息不导出）
-用 Go 标准库 crypto/pkcs12，go build 能编译通过。
+兼容性处理：Windows 导出的 .pfx 很多用 RC2 加密，Go 标准库的 pkcs12 包有 LegacyRC2 函数处理这种情况。遇到不支持的加密算法给出明确提示。
+
+命令：pkcs12-parser extract -file cert.pfx -pass "password"、pkcs12-parser info -file cert.pfx -pass "password"。
+
+Go 标准库 crypto/pkcs12，go build 能编译通过。

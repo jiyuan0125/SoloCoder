@@ -1,1 +1,7 @@
-内网有 SMB 流量需要分析，排查横向移动。用 Python 写一个 SMB 协议解析器（SMBv1/v2 基本支持），从 pcap 文件中提取 SMB 数据包，解析 SMB 头部（协议标识、命令、状态、标志），识别操作类型（协商、会话设置、树连接、文件打开/读/写）。至少支持解析 Negotiate 和 Session Setup 命令。输出操作摘要，纯 Python 解析。
+内网渗透测试时经常碰到 SMB 协议——文件共享、打印机共享、域认证都走 SMB。抓包分析 SMB 流量有助于理解攻击手法和排查横向移动痕迹。
+
+Python 实现 SMB 协议解析器。支持 SMBv1 和 SMB2 协议。SMBv1 报文解析：NetBIOS Session Service 头（4 字节，包含消息长度）+ SMB Header（Magic 0xFF+SMB、Command、Status、Flags、PID/TID/UID/MID）+ 参数和数据区域。关键 Command：SMB_COM_NEGOTIATE（协议协商）、SMB_COM_SESSION_SETUP_ANDX（认证，提取用户名和域名）、SMB_COM_TREE_CONNECT_ANDX（连接共享，提取共享路径）。
+
+SMB2 报文解析：4 字节 SMB2 magic（\xFE\x53\x4D\x42）+ Header（StructureSize、CreditCharge、Status、Command、SessionId）+ 请求/响应体。关键 Command：Negotiate、Session Setup、Tree Connect、Create（打开文件）、Read/Write、Ioctl（含命名管道操作）。
+
+从 pcap 中提取 TCP 445 端口的流量，按 TCP 流重组后逐消息解析。输出每个 SMB 消息的命令类型、关键参数（用户名、文件名、共享路径）、NTSTATUS 错误码。python3 命令行工具。

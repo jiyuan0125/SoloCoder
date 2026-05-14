@@ -1,5 +1,9 @@
-帮我写个 Go panic 分析工具。
+帮我写个 Go panic 分析工具。Go 推崇用 error 而不是 panic 处理错误，但有些场景下 panic 会意外发生——数组越界、空指针、类型断言失败——需要在代码审查阶段识别这些风险点。
 
-这个工具扫描 Go 源码，找出所有可能触发 panic 的地方——包括显式的 panic() 调用、数组越界、空指针解引用、类型断言失败（没有 ok 模式的）、除零操作、map 并发读写等隐式 panic。对每个 panic 点，检查上层是否有对应的 recover 机制。标注哪些 panic 是可恢复的、哪些会导致整个程序崩溃。
+这个工具扫描 Go 源码，找出所有可能触发 panic 的地方：
+
+显式 panic——直接调用 panic("something went wrong")。数组/切片越界——arr[i] 访问但没有检查 i < len(arr)。空指针解引用——对可能为 nil 的指针做 .field 访问或方法调用。类型断言失败——x.(Type) 没有 ok 模式的（应该用 x, ok := x.(Type)）。除零操作——整数除法没有检查除数是否为零。map 并发读写——多个 goroutine 访问同一个 map 没有加锁。close 已经关闭的 channel。
+
+对每个 panic 点，检查上层是否有对应的 recover 机制（defer func() { if r := recover(); r != nil { ... } }()）。标注哪些 panic 是可恢复的（有 recover）、哪些会导致整个程序崩溃（没有 recover）。
 
 输出 panic 风险报告。Go 标准库实现，go build 编译过。

@@ -1,15 +1,9 @@
-PyPI 客户端工具，查询 Python 包索引上的包信息和版本数据。
+PyPI 客户端工具。经常要查某个 Python 包的信息——最新版本是什么、有哪些可用版本、依赖了什么、许可证是什么、有没有安全公告。每次打开浏览器查 pypi.org 太慢了，写个命令行工具。
 
-做依赖审计的时候需要查 PyPI 上某个包的最新版本、有哪些版本、依赖声明是什么。不想每次都打开浏览器查。
+Python 实现一个 PyPI 客户端。API 封装：调用 PyPI 的 JSON API（https://pypi.org/pypi/{package_name}/json）获取包信息。获取最新版本信息：name、version、summary、author、license、home_page、project_urls。获取所有历史版本：从 releases 字段提取版本号列表。
 
-Python 命令行工具：
-- 查询 PyPI 包信息：包名、最新版本、作者、许可证、摘要、项目 URL
-- 列出某个包的所有已发布版本（包括预发布版本）
-- 查询特定版本的依赖声明（requires_dist）
-- 本地缓存查询结果（JSON 文件），减少网络请求
-- 检查本地 requirements.txt 中的包是否有过期版本（有新版本可升级）
+包信息查询：输入包名，输出——当前最新版本、简短描述、许可证类型、作者、Python 版本要求、依赖列表（requires_dist）、下载统计（最近一周/一月/全部，从 pypistats.org API 获取）。
 
-示例：python pypi_client.py info requests
-python pypi_client.py versions flask
-python pypi_client.py check-updates requirements.txt
-用 PyPI JSON API（pypi.org/pypi/{name}/json），网络不通时用缓存也能展示数据。
+版本对比：输入包名和两个版本号，列出变更内容（从 changelog 或 GitHub releases API 获取，如果有的话）。安全公告查询：从 PyPI 的 vulnerability reporting 数据或 GitHub Advisory 获取该包的安全公告。
+
+命令行：python pypi_client.py info requests、python pypi_client.py versions flask、python pypi_client.py audit django。python3 用 requests 库。

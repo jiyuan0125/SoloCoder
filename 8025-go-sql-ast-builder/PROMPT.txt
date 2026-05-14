@@ -1,3 +1,9 @@
-用 Go 构建一个 SQL AST 生成器。输入 SQL 字符串，经过词法分析和语法分析后生成结构化的 AST。
-AST 节点要包括 SelectStmt、WhereClause、JoinClause、Expression 等，每个节点实现 String() 方法方便调试。
+SQL 光拆成 token 不够用，得组装成结构化的 AST 才能做后续的查询优化、权限校验这些事。
+
+用 Go 构建一个 SQL AST 生成器。输入 SQL 字符串，经过词法分析（tokenizer）和语法分析（parser）后生成结构化的 AST。语法分析用递归下降法，每个 SQL 子句对应一个解析函数。
+
+AST 节点要包括：SelectStmt（包含 Fields、From、Where、GroupBy、Having、OrderBy、Limit）、InsertStmt（表名、列名列表、值列表）、UpdateStmt（表名、赋值列表、Where）、DeleteStmt（表名、Where）。Where 条件用 Expression 树表示，支持二元运算（AND/OR 比较运算）、一元运算（NOT）、函数调用、子查询、BETWEEN/IN/LIKE 谓词。JoinClause 包含连接类型、左表右表和 ON 条件。
+
+每个节点实现 String() 方法还原 SQL 文本，实现 PrettyString() 方法输出带缩进的格式化 SQL。AST 可以序列化为 JSON 方便外部工具消费。
+
 支持 SELECT/INSERT/UPDATE/DELETE 四种语句的 AST 构建。go build 通过。

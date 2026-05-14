@@ -1,5 +1,14 @@
-写一个 Python 的开源许可证检查工具，分析项目依赖的许可证兼容性。
+公司规定项目只能用 MIT、Apache-2.0、BSD 这几个许可证的开源库，但开发人员经常随手 pip install 不管许可证。需要一个工具扫描所有依赖的许可证并检查兼容性。Python 实现。
 
-引入的开源组件的许可证可能与项目自身许可证冲突。扫描 requirements.txt、setup.py、pyproject.toml 中的依赖列表，查询每个包的许可证（从 PyPI API 或本地缓存的许可证数据库获取）。根据许可证兼容性矩阵（GPL 和专有软件不兼容等），报告冲突和风险。
+数据收集：读取项目的 requirements.txt 或 pyproject.toml 获取依赖列表。对每个依赖尝试获取其许可证信息——先查本地安装的包（pip show package 的 Location 字段找 LICENSE 文件），或者查 PyPI API（requests.get(f"https://pypi.org/pypi/{package}/json")）。
 
-Python 3 标准库（urllib 请求 PyPI）。CLI：`python license_checker.py requirements.txt`，输出每个依赖的许可证类型、兼容性状态（兼容/注意/冲突）。`python license_checker.py` 能跑。
+许可证识别：从 LICENSE 文件或 setup.py/pyproject.toml 的 license 字段提取许可证名称。用正则匹配常见许可证关键词——MIT、Apache-2.0、BSD-2/3-Clause、GPL-2.0/3.0、LGPL、MPL-2.0、Unlicense、CC0。
+
+兼容性矩阵：
+- MIT/BSD/Apache-2.0：互相兼容，商用友好
+- GPL 系列：传染性——引用 GPL 库的项目也必须开源。LGPL 允许动态链接
+- MPL-2.0：文件级传染——修改了 MPL 文件必须开源该文件
+
+检查规则：维护一个允许的许可证白名单。如果发现不在白名单中的许可证就报告。GPL 类许可证默认标记为风险。
+
+输出每个依赖的许可证、兼容性状态、风险级别。汇总：兼容数量、不兼容数量、未知许可证数量。python3 license_checker.py requirements.txt。纯 Python 3。

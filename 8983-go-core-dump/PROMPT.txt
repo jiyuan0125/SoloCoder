@@ -1,3 +1,9 @@
-Linux 程序 core dump 文件分析太依赖 gdb 了，想自己写个解析工具。Go 实现一个 core dump 分析器。
+Go 实现一个 Linux core dump 文件分析器，不依赖 gdb，直接解析 ELF 格式的 core 文件。
 
-解析 ELF 格式的 core dump 文件：读取 ELF header 和 program headers；提取各个内存段的内容；解析 NOTE 段中的寄存器状态（NT_PRSTATUS）；列出加载的共享库映射；输出崩溃时的寄存器值、信号类型、内存映射摘要。Go 标准库，go build 编译通过。
+Core dump 本质上就是一个特殊类型的 ELF 文件——ELF header 里的 type 字段是 ET_CORE。里面包含的 program headers 描述了进程崩溃时的内存映射：PT_LOAD 类型的段对应进程的各个内存区域（代码段、数据段、栈、堆等），PT_NOTE 类型的段保存了进程的附加信息。
+
+解析流程：先读 ELF header 确认文件类型是 ET_CORE。然后遍历 program headers，对每个 PT_LOAD 段记录其虚拟地址、文件偏移和大小，构建内存映射表。对 PT_NOTE 段，解析 NT_PRSTATUS 类型的 note——里面保存了崩溃时所有通用寄存器的值（RAX、RBX、RCX 到 R15、RIP、RSP、RBP），以及导致崩溃的信号编号（SIGSEGV、SIGABRT 等）。
+
+也解析 NT_AUXV 类型的 note 来获取辅助向量信息，其中包括加载的共享库的内存映射地址。
+
+输出内容包括：崩溃信号类型、崩溃时的寄存器值（重点标注 RIP 和 RSP）、内存段映射列表（每段的地址范围、权限、大小）、检测到加载的共享库列表。Go 标准库实现，go build 编译通过。

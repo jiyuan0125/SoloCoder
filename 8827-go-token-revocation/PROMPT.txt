@@ -1,12 +1,15 @@
-帮我实现一个 Token 吊销管理工具，Go 写的。
+JWT 是无状态的——一旦签发就没法直接撤回，这个设计在正常情况下很好（不需要查数据库），但碰到 token 泄露和用户主动登出就麻烦了。需要一套吊销机制在不完全放弃 JWT 无状态优势的前提下处理这些场景。
 
-JWT 是无状态的，一旦签发就没法直接撤回，需要一套吊销机制来处理 token 泄露和用户登出场景。
+用 Go 实现一个 Token 吊销管理工具。两种吊销模式：
 
-要实现：
-- Token 黑名单：记录被吊销的 token ID（jti）或整个 token 的哈希值
-- 支持两种吊销模式：精确吊销（单个 token）和批量吊销（按用户 ID 吊销该用户所有 token）
-- 黑名单存储用本地文件，加载到内存做快速查询
-- 自动清理过期的黑名单条目，避免无限增长
-- HTTP 接口：POST /revoke 吊销、GET /check?token=xxx 查询吊销状态
+精确吊销：记录被吊销的 token ID（从 JWT 的 jti claim 提取）或整个 token 的 SHA-256 哈希值。适合单设备登出场景。
+
+批量吊销：按用户 ID（sub claim）吊销该用户的所有 token。适合用户修改密码后全部设备登出、或者发现账号被盗后紧急处理。
+
+黑名单存储用本地 JSON 文件，启动时加载到内存 map 中做快速查询。map 的 key 是 jti 或 sub，value 是吊销时间和过期时间。
+
+自动清理：后台 goroutine 每分钟扫描一次，移除已经过期的黑名单条目（token 本身已经过期了，吊销记录也没意义了）。这样黑名单不会无限增长。
+
+HTTP 接口：POST /revoke 接收 {token: "xxx"} 或 {user_id: "xxx", all: true}，添加到黑名单。GET /check?token=xxx 查询吊销状态，返回 {revoked: true/false, reason: "user_logout"}。接口用 JWT 做认证，只有授权服务才能调用吊销接口。
 
 Go 标准库，go build 编译通过。

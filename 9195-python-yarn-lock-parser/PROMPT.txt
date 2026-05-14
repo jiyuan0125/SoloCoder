@@ -1,14 +1,7 @@
-Yarn yarn.lock 解析器，解析 Yarn 包管理器的锁文件。
+Yarn yarn.lock 文件解析器。Yarn 是 Node.js 的替代包管理器，yarn.lock 记录了所有依赖的精确版本和校验和。格式跟 npm 的 package-lock.json 完全不同，需要专门的解析器。
 
-yarn.lock 是自定义格式（不是 JSON 也不是 YAML），解析起来有点麻烦。需要正确处理它的多 key 语法和嵌套结构。
+Python 实现。yarn.lock 格式类似 YAML 但不是标准 YAML——以 "@scope/package@version": 开头定义一个依赖条目，下面缩进的字段包含 version、resolved（下载 URL）、integrity（SHA-512 校验和）、dependencies（该包的直接依赖列表）、optionalDependencies。
 
-Python 实现：
-- 解析 yarn.lock v1 格式（Yarn Classic）
-- 处理多 key 行："@scope/pkg@^1.0.0", "pkg@>=2.0.0" 开头的条目块
-- 提取每个条目的 version、resolved、integrity、dependencies
-- 支持查询：按包名搜索、查看某个包的所有解析版本
-- 检测幽灵依赖（被引用但未在 package.json 中声明的包）
+解析流程：逐行扫描，识别条目开头（包含 @ 的行以冒号结尾），解析缩进字段。注意处理带 scope 的包名（@babel/core）和多个 resolve 条目（同一个包可能有多个版本）。对每个条目提取——包名（去掉版本号部分）、精确版本号、resolved URL、integrity 校验和、直接依赖列表。
 
-用法：python yarn_lock_parser.py parse yarn.lock
-python yarn_lock_parser.py query yarn.lock --package lodash
-yarn.lock 格式特殊，注意引号包裹的 key 和缩进块的解析。
+分析功能：构建完整的依赖图（从 dependencies 字段构建边）、统计总包数和唯一包数（同一个包可能有多个版本）、检测重复依赖（同一个包的不同版本被不同的传递路径引入）。输出依赖列表、依赖树和统计信息，支持 JSON 导出。python3 命令行工具。

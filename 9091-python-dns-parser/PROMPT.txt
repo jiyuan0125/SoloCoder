@@ -1,1 +1,7 @@
-写个 DNS 协议解析器，从网络流量或 pcap 文件中提取 DNS 数据包并解析。用 Python 实现二进制 DNS 报文解析：解析 DNS 头部（ID、标志、计数）、Question 段、Answer 段（支持 A、AAAA、CNAME、MX、NS、TXT、SOA 记录类型）。输出易读的 DNS 问答信息。不用第三方 DNS 库，自己解析二进制字节，命令行工具。
+DNS 协议虽然不复杂但报文结构紧凑，手动解析容易出错。写个工具解析 DNS 报文，分析 DNS 流量或排查 DNS 问题的时候用。
+
+Python 实现 DNS 报文解析器。报文结构：12 字节头部（Transaction ID、Flags 包括 QR/Opcode/AA/TC/RD/RA/RCODE、问题数、回答数、授权数、附加数）+ 变长的 Question/Answer/Authority/Additional 段。
+
+Question 段解析：QNAME（域名用标签长度编码，如 \x03www\x07example\x03com\x00）、QTYPE（A=1、AAAA=28、CNAME=5、MX=15、NS=2、TXT=16、SOA=6）、QCLASS。Resource Record 解析：NAME + TYPE + CLASS + TTL + RDLENGTH + RDATA，根据 TYPE 解析 RDATA——A 记录解析为 IPv4 地址、AAAA 为 IPv6、CNAME 为域名、MX 为优先级+域名、TXT 为文本字符串、SOA 为主从服务器和序列号等信息。
+
+输入来源：从 pcap 文件中过滤 UDP 53 端口的数据包提取 DNS 载荷，或直接从 hex 字符串解析。输出：格式化的 DNS 报文内容，每个段逐条列出，域名解码为可读形式。统计功能：查询类型分布、响应码分布、最常查询的域名 Top N。python3 命令行工具。

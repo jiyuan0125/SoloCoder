@@ -1,4 +1,9 @@
-用 C 实现 SSTable（Sorted String Table）的读写。
-SSTable 是 LSM 存储引擎中磁盘上的数据文件格式，内容是排序好的 key-value 对，附带索引区。
-我要的功能：创建 sstable（接收排序好的 kv 对，写文件）、加载索引到内存、按 key 查找（先用索引二分定位 block，再读取对应 block）、merge 多个 sstable（归并排序去重）。
-文件格式自己设计，索引区放在文件尾部方便加载。写个命令行工具测试创建、查询、合并。gcc 编译。
+LSM 存储引擎里磁盘上的数据文件就是 SSTable（Sorted String Table），里面存着排序好的 key-value 对，附带一个索引区。设计好这个文件格式是整个引擎的关键——直接影响查询性能和 compaction 效率。
+
+用 C 实现 SSTable 的完整读写。文件格式自己设计，推荐这样的布局：文件头（魔数、版本号、entry 数量）→ 数据区（排序好的 key-value 对，按 4KB block 分组）→ 索引区（每个 block 的起始 key、偏移量和大小）→ 文件尾（索引区的偏移量和 CRC32 校验）。索引区放在文件尾部的目的是创建完数据区后一次性写入，加载时只需要读文件尾部就能把索引加载到内存。
+
+要实现的功能：sstable_create() 接收一组已经排序好的 key-value 对，按 block 大小切分后写入文件，同时构建内存索引，最后把索引和数据一起写入；sstable_load() 读取文件尾部的索引区到内存，返回一个查询句柄；sstable_get(handle, key) 先用内存索引二分定位到可能包含该 key 的 block，然后读取该 block 进行查找（block 内部也用二分）；sstable_merge() 归并排序多个 sstable 文件，处理重复 key（保留最新的值）和墓碑标记，输出一个新的 sstable 文件。
+
+get 操作的关键优化：block 内部用 restart point 机制做前缀压缩，减少存储空间。简单版本不做前缀压缩也行，但要保证 block 内可以二分查找。
+
+命令行工具测试创建、查询、合并的完整流程。gcc 编译。

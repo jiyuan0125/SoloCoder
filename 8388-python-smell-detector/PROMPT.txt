@@ -1,5 +1,20 @@
-写一个 Python 的代码坏味道检测器，自动识别常见的代码设计问题。
+代码坏味道（Code Smell）不是 bug，但是设计问题的信号——如果不及时处理会越来越难维护。做一个自动化的坏味道检测器。Python 实现。
 
-参考 Fowler 的《重构》中定义的坏味道，实现以下检测：Long Method（过长方法）、Large Class（过大类）、Long Parameter List（过长参数列表）、Feature Envy（方法调用外部对象多于内部）、Data Clumps（多组参数总是一起出现）、Shotgun Surgery（一个改动涉及太多文件）。每种坏味道给出位置和建议。
+检测的坏味道类型（15 种）：
+- Long Method：函数超过 40 行
+- Long Parameter List：参数超过 5 个
+- Large Class：类超过 300 行或 20 个方法
+- God Object：类的 LCOM > 0.8 且方法数 > 10
+- Duplicate Code：重复的代码块（复用 token 序列匹配）
+- Dead Code：定义但从未使用的函数和变量
+- Feature Envy：方法访问其他类的属性多于自身属性
+- Data Clumps：三个以上变量总是一起出现（函数参数、类属性）
+- Primitive Obsession：用基础类型代替小对象（如用 (x,y) 元组代替 Point 类）
+- Switch Statements：超过 5 个分支的 if-elif 链
+- Speculative Generality：只有一种实现的抽象类或接口
+- Temporary Field：类属性只在某些方法中使用
+- Message Chains：连续的属性访问 a.b.c.d（超过 3 层）
+- Middle Man：类的方法只是简单地委托给另一个类
+- Refused Bequest：子类不用父类的大部分方法
 
-Python 3，ast 模块解析。用法：`python smell_detector.py project/`，输出每种坏味道的实例列表，包含文件、行号、描述和建议操作。`python smell_detector.py` 能运行。
+每个坏味道报告位置（文件:行号）、类型、严重程度和简要说明。按严重程度排序输出。python3 smell_detector.py src/。纯 Python 3 用 ast 模块。

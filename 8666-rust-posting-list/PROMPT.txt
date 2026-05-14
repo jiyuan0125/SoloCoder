@@ -1,5 +1,11 @@
-搜索引擎里倒排索引的 posting list 如果用朴素数组存太占空间了，而且求交集很慢。用 Rust 实现一个高性能的 Posting List 数据结构。
+搜索引擎里倒排索引的 posting list 如果用裸数组存太占空间，而且求交集很慢。一个热门词的 posting list 可能有几百万个文档 ID，用 delta 编码 + varint 压缩能省很多空间。
 
-要支持动态添加文档 ID（有序去重），两个 Posting List 之间的高效 AND、OR、NOT 运算（用跳表或二分跳过来加速）。对连续的 docid 范围要做游程编码压缩。提供迭代器接口可以遍历所有 docid。
+用 Rust 实现高性能的 Posting List。
 
- Posting List 要能在内存里序列化和反序列化。cargo build 通过。
+压缩存储——对有序的文档 ID 列表做 delta 编码（存差值），再用 varint 编码差值。比如 [100, 105, 110, 200] → delta [100, 5, 5, 90] → varint 编码。解码时反向还原。
+
+集合运算——两个 Posting List 做 AND（交集）：同时解码两边的 varint 流，用双指针找相同的 docid。OR（并集）类似取并集。NOT（差集）从一个列表中去掉另一个列表中的元素。跳表加速——在长的 Posting List 上每隔 P 个 docid 存一个跳表指针，做交集时可以先比较指针跳过大段不可能匹配的数据。跳表间隔取 128。
+
+迭代器接口——提供 Next()、Advance(target) 方法，支持从当前位置跳到 >= target 的 docid。上层查询引擎用统一的迭代器接口组合多个 Posting List。
+
+Posting List 要能在内存里序列化和反序列化。cargo build 通过。

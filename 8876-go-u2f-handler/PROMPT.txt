@@ -1,8 +1,9 @@
-写个 U2F 认证数据解析工具，Go 实现。
+旧版 FIDO U2F 协议虽然逐步被 WebAuthn 取代了，但有些企业系统还在用（特别是硬件安全密钥的管理工具）。U2F 的注册和认证数据是二进制格式，需要按规范解析各字段。
 
-旧版 FIDO U2F 协议虽然逐步被 WebAuthn 取代了，但有些系统还在用。需要能解析 U2F 的注册和认证消息。
+用 Go 写一个 U2F 认证数据解析工具。parse-register 子命令：输入注册响应的 hex 数据。解析流程——保留字节（1 字节，值 0x05）、公钥（65 字节，未压缩的 P-256 点，0x04 + x + y）、密钥句柄长度（1 字节）、密钥句柄（变长）、X.509 证书（DER 格式，剩余字节）、签名（证书后面的部分）。展示所有提取的字段，证书显示主题和有效期。
 
-功能：解析 U2F 注册响应（提取公钥、密钥句柄、证书）；解析 U2F 认证响应（提取签名数据、计数器）；验证认证签名。
+parse-auth 子命令：输入认证响应的 hex 数据。解析——用户存在标志（1 字节 bit 0）、签名计数器（4 字节大端序）、签名数据（剩余字节）。展示是否用户在场、签名计数值（检测克隆设备——如果计数器回退说明可能有另一个设备在用同一个密钥）。
 
-命令：u2f-handler parse-register -data <hex>、u2f-handler parse-auth -data <hex>、u2f-handler verify-auth -data <hex> -pubkey <hex> -challenge <hex>
+verify-auth 子命令：输入认证数据、公钥（hex）、challenge（hex）。用公钥验证签名——签名的数据是应用参数（32 字节）+ 用户存在标志 + 计数器 + challenge 参数（32 字节）的拼接。ECDSA P-256 SHA-256 验签。
+
 Go 标准库 crypto 库，go build 能编译。

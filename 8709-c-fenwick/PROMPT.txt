@@ -1,5 +1,13 @@
-我要一个 Fenwick Tree（树状数组 / Binary Indexed Tree），用来快速计算前缀和。支持两种操作：给某个位置加一个值（单点更新），查询 [1, i] 的前缀和。如果能再支持区间更新就更好了。
+实时排行榜系统——每次有新得分进来就要更新分数、查询前缀排名。线段树能做但太重了，Fenwick Tree（树状数组）用更简洁的实现达到同样的效果：单点更新和前缀和查询都是 O(log n)，代码量只有线段树的三分之一。
 
-操作复杂度都是 O(log n)。lowbit 计算要写对。初始从数组构建也实现一下，不要一个个插入。
+用 C 语言实现 Fenwick Tree。
 
-纯 C 写，gcc 编译。演示：构建一个数组，做几次单点更新和前缀和查询，和暴力算的结果对比验证。
+第一步，理解 lowbit。lowbit(x) = x & (-x)，取 x 的最低位 1。比如 lowbit(6)=2, lowbit(8)=8。Fenwick Tree 的核心就是每个位置 i 管辖 [i-lowbit(i)+1, i] 这个范围。
+
+第二步，前缀和查询。query(i) = tree[i] + tree[i-lowbit(i)] + ... 一直减 lowbit 直到 0。每步跳 lowbit 的距离，步数是 O(log n)。
+
+第三步，单点更新。update(i, delta)：tree[i] += delta，然后 i += lowbit(i) 继续更新父节点。也是 O(log n) 步。
+
+第四步，区间更新（差分技巧）。把原数组转成差分数组，在差分数组上建 Fenwick Tree。区间 [l, r] 加 delta 等价于 update(l, delta) + update(r+1, -delta)。
+
+初始化：从数组构建 O(n)——不是一个个 insert，而是每个位置加上子节点的贡献。gcc 编译。演示更新和查询，与暴力对比验证。

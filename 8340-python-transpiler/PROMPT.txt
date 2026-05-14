@@ -1,3 +1,15 @@
-想把一个简单的脚本语言转译成 Python 执行。用 Python 写一个通用转译器框架，输入源语言代码（自定义语法），经过词法分析、语法解析、AST 变换，最后生成目标语言（Python）代码。
+有个遗留系统用类 Pascal 脚本写的业务规则，需要迁移到 Python 上跑。不想手动逐行翻译，写一个自动转译器。Python 实现通用转译器框架。
 
-内置一个示例：把类 Pascal 语法（begin/end、:=、if/then/else、while/do、procedure）转译成 Python。转译后生成的代码能直接 python 执行。纯 Python 实现，python 能跑。
+框架的流程：源代码 → Lexer → Parser → 源语言 AST → Transformer → 目标语言 AST → CodeGenerator → 目标代码。每个阶段都是可插拔的——换一种源语言只需要写新的 Parser，换目标语言只需要写新的 CodeGenerator。
+
+内置示例：类 Pascal → Python 转译。Pascal 语法支持：
+- 变量声明（var x: integer;）
+- 赋值（x := 10;）
+- 控制流（if/then/else、while/do、for i:=1 to N do、begin/end 块）
+- 过程和函数（procedure/function，参数和返回值）
+- 数组（array[1..10] of integer）
+- 输出（writeln）
+
+转译规则：begin/end → 缩进块（根据嵌套层级计算缩进）、:= → =、if/then/else → if/elif/else（加冒号）、while/do → while:（加冒号）、procedure → def、function → def + return。数组下标从 1 开始改成从 0 开始（需要调整循环边界）。
+
+转译后生成的 Python 代码要能直接 python 执行。附带一个 Pascal 示例程序（计算斐波那契或者冒泡排序）验证转译正确性。python3 transpiler.py input.pas。纯 Python 实现。

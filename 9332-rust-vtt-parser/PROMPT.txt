@@ -1,10 +1,7 @@
-做一个 WebVTT 字幕文件解析器，处理 Web 视频常用的 VTT 格式。
+WebVTT——网页视频的标准字幕格式。看起来像 SRT 但细节差异不少：时间分隔符用点号不用逗号，有 cue 设置语法（位置、对齐等），有 STYLE 块和 NOTE 注释，支持 HTML 标签。Rust 解析器。
 
-功能：
-- 解析 WEBVTT 文件头、可选的元数据区域
-- 读取每个 cue 的时间戳（HH:MM:SS.mmm --> HH:MM:SS.mmm 格式，也支持简写的小时省略格式）
-- 支持 cue identifier（可选的标签行）
-- 处理 VTT 的基本标签（<b>、<i>、<u>、<c.class>）和位置信息（position、line、align）
-- 支持 STYLE 块和 NOTE 注释块的跳过
+文件结构：第一行必须是 "WEBVTT"，后面可能跟着可选的描述文字（到第一个空行结束）。然后是空行分隔的 cue 块。每个 cue 由可选的标识行（任意文本，不含 "-->"）、时间戳行、文本内容组成。时间戳格式：HH:MM:SS.mmm（小时可省略变为 MM:SS.mmm），注意用点号不用逗号。
 
-Rust 实现，cargo build 通过。`vtt-parser parse captions.vtt --json` 输出结构化字幕。
+Cue 设置语法在时间戳行后面，用空格分隔——position:50% align:center size:80% line:85%。这些设置控制字幕在视频上的显示位置。文本内容可以包含 HTML 标签：<b>粗体</b>、<i>斜体</i>、<u>下划线</u>、<c.class>类名</c>、<v name>语者标识。也有 <ruby>和 <rt> 用于注音。
+
+STYLE 块（以 "STYLE" 开头）包含 CSS 样式规则——跳过即可不影响解析。NOTE 块（以 "NOTE" 开头）是注释——同样跳过。解析后输出 JSON：cue_id、start_ms、end_ms、settings（字典）、text（保留标签的原始文本）。用法 vtt-parser parse captions.vtt --json。Rust 实现，cargo build 通过。

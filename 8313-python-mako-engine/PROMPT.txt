@@ -1,3 +1,13 @@
-Python 生态的模板引擎我看过 Jinja2 了，现在想试试实现 Mako 风格的模板引擎。Mako 的特点是代码块直接用 Python 语法，比如 <% x = 1 + 2 %> 和 ${x} 输出。支持 <%! %> 声明块、<% %> 代码块、${expr} 表达式、% if/for/while 行控制语句和 <%def> 函数定义。
+Python 模板引擎除了 Jinja2 还有 Mako——它更直接，代码块直接写 Python 语句，不做额外的语法抽象。适合喜欢 "模板就是代码" 风格的开发者。用 Python 实现一个 Mako 风格的模板引擎。
 
-内部把模板编译成 Python 代码执行，编译错误要有明确提示。纯 Python，不依赖 Mako 库。python 能跑。
+Mako 的语法混合了 HTML 和 Python 代码：
+- <%! import os %> 模块级声明块（放在生成代码的顶部）
+- <% x = 1 + 2 %> 任意 Python 代码块
+- ${x + 1} 表达式输出，大括号里可以是任意 Python 表达式
+- % if condition: / % endif 行控制语句（% 开头的行当作 Python 代码行）
+- % for item in list: / % endfor
+- <%def name="func(arg)">...${arg}...</%def> 函数定义，调用 ${func("hello")}
+
+内部实现：模板文本被编译成一段 Python 代码——遇到 <% %> 块直接嵌入代码，遇到 ${expr} 替换为输出调用，遇到 % 行去掉 % 前缀当作 Python 代码行，普通文本变成字符串输出。生成完整的 Python 函数后用 exec() 执行。
+
+编译时错误要能定位到模板的原始行号（不是生成代码的行号）。python3 mako_engine.py template.mako data.json。纯 Python，不依赖 Mako 库。

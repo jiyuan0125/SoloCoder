@@ -1,3 +1,11 @@
-需要从 ELF 文件中解析 DWARF 调试格式的底层细节。Go 写一个 DWARF 格式解析器。
+编译器输出的 DWARF 调试信息到底长什么样？每次看到 ELF 文件里那些 .debug_* 段就很好奇，但 DWARF 规范文档太长了不想啃。不如直接写个解析器，边写边理解。
 
-解析 DWARF 的核心数据结构：解析 abbreviation 表、解析 DIE（Debugging Information Entry）树、处理 LEB128 编码的数值、解析行号表（.debug_line）映射源代码行号到机器地址。工具能 dump 出 DWARF 各段的结构化内容，便于调试和理解编译器输出。Go 标准库，go build 通过。
+Go 写一个 DWARF 格式的底层解析器，重点是把各段的结构化内容 dump 出来，便于调试和理解。
+
+解析的核心数据结构首先是 abbreviation 表（.debug_abbrev）：这里定义了 DWARF 信息的缩写编码，每个缩写有一个 code、一个 tag（如 DW_TAG_subprogram）和一组属性规范（属性名 + 属性形式）。属性形式决定了值的编码方式——DW_FORM_data1 是一个字节、DW_FORM_string 是以 null 结尾的字符串、DW_FORM_ref4 是四字节的偏移引用。
+
+然后是 DIE 树（.debug_info）：每个 DIE 由一个 abbreviation code 开头，后面跟着该 abbreviation 定义的所有属性值。属性值里用到的 LEB128 编码（Unsigned LEB128 和 Signed LEB128）要正确处理——这是 DWARF 里广泛使用的变长整数编码。
+
+行号表解析（.debug_line）：把源代码行号映射到机器地址。解析行号程序的头信息（版本、最小指令长度、默认 is_stmt），然后执行行号状态机指令（special opcode、extended opcode、standard opcode），逐步构建出行号到地址的映射表。
+
+工具能 dump 出每个段的结构化内容。Go 标准库实现，go build 通过。

@@ -1,3 +1,9 @@
-Linux 系统上的特权账户需要集中管控。用 Go 写一个特权账户管理工具，管理 sudoers 规则和Capabilities 分配。
+Linux 服务器上的特权账户管理简直就是一笔糊涂账——sudoers 文件东加一条西加一条，有的给了 NOPASSWD，有的给了 ALL 权限，capabilities 分配也没人记录。出了安全事件想追溯谁有什么权限，翻半天配置文件都理不清楚。
 
-能做这些事：解析 sudoers 文件格式、检查哪些用户有 NOPASSWD 权限、分析文件的 Linux capabilities、导出一份特权账户清单（包含权限来源和风险等级）。输入是系统配置文件路径或目录，输出结构化报告。纯 Go 标准库，go build 编译通过。
+用 Go 写一个特权账户管理工具，把 Linux 系统上的 sudoers 规则和文件 capabilities 统一梳理一遍。
+
+功能分两块。Sudoers 解析：读取 /etc/sudoers 文件和 /etc/sudoers.d/ 目录下的所有文件，解析每条规则的用户、可运行的主机、可以扮演的目标用户、允许的命令列表。重点标记 NOPASSWD 规则（不需要密码就能提权，风险很高）和 ALL 权限（可以在任何机器上以任何用户身份运行任何命令）。
+
+Capabilities 分析：扫描指定目录下的文件，用系统调用读取文件的 Linux capabilities 设置（通过解析 /proc 文件系统或者直接调用 getfattr），列出哪些二进制文件被赋予了额外的权限，比如 cap_net_raw（可以构造原始网络包）、cap_sys_admin（几乎等于 root）、cap_dac_override（绕过文件权限检查）。
+
+最后导出一份特权账户清单，每条记录包含用户名、权限来源（sudoers 文件路径或文件 capabilities）、具体权限内容、风险等级（NOPASSWD+ALL 为高风险，限定命令范围的中风险，只读类低风险）。输入是系统配置文件的路径或目录，输出结构化报告。纯 Go 标准库，go build 编译通过。

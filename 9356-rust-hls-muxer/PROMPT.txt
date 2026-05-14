@@ -1,5 +1,7 @@
-用 Rust 写一个 HLS 封装器，把 MPEG-TS 裸流切片成 HLS 格式。
+直播推流用的 HLS 封装——把一个 TS 文件按时间切成小分片，配上 m3u8 索引文件。切片要在关键帧边界否则播放器花屏。Rust 实现一个 HLS 封装器。
 
-工具读取输入的 TS 文件，按照指定的分片时长（比如 10 秒）切割成多个 .ts 分片文件，同时生成对应的 M3U8 播放列表文件。播放列表要符合 HLS 规范，包含 #EXTINF 标签记录每个分片的实际时长，支持指定分片序号起始值。输出的 m3u8 文件头部要有正确的 #EXTM3U 和版本号。
+关键帧检测——逐包（188 字节）扫描 TS 文件，通过 PAT/PMT 找到视频 PID，然后检查每个 PES 包里的 NAL 单元类型。H.264 的 NAL 类型 5 是 IDR（关键帧），类型 1 是非 IDR。记录每个 IDR 帧的 PTS 时间戳作为候选切割点。第一个关键帧的 PTS 作为起始时间。
 
-纯 Rust 实现，cargo build 通过，按 HLS 规范处理二进制数据。
+分片逻辑——从第一个关键帧开始，当累计时长达到或超过目标分片时长（如 10 秒）时，在下一个关键帧处切割。如果两个关键帧之间超过目标时长太多（如目标 10 秒但 GOP 是 20 秒），就在那个 GOP 处切。切割只是记录文件偏移，然后把对应的 TS 包复制到新文件。
+
+m3u8 生成——头部：#EXTM3U、#EXT-X-VERSION:3、#EXT-X-TARGETDURATION:目标时长。每个分片：#EXTINF:实际时长,（精确到小数）+ 分片文件名。VOD 模式末尾加 #EXT-X-ENDLIST。支持 --start-sequence 参数指定分片起始序号。用法 hls-mux -input video.ts -duration 10 -output ./hls_output/。纯 Rust 实现，cargo build 通过。

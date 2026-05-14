@@ -1,3 +1,9 @@
-用 Go 写个 HAML 模板解析器。HAML 是一种缩进式的 HTML 模板语言，用缩进表示嵌套，%tag 表示标签，.class 和 #id 表示属性，= expr 表示输出。
-解析 HAML 文本，输出对应的 HTML。支持属性定义 {attr: "value"}，Ruby 风格的 hash 写法。
+Rails 项目里 HAML 到处都是，简洁的缩进语法比 HTML 少写一半代码。现在要在 Go 工具链里处理 HAML 模板，需要自己写解析器。
+
+用 Go 写个 HAML 模板解析器。HAML 是缩进式 HTML 模板语言：缩进表示嵌套层级，%tag 创建 HTML 标签，.class 和 #id 附加 CSS 类和 ID（%div.container#main 生成 <div class="container" id="main">），= expr 输出表达式值（转义），!= expr 不转义输出，- code 执行 Ruby/Go 代码逻辑（用于条件判断等）。
+
+属性定义用花括号 {attr: "value", class: "active"}（Ruby hash 风格）或者圆括号 (attr="value" class="active")（HTML 风格）。自闭合标签（img、br、hr、input）不需要闭合。过滤器 :markdown / :plain / :javascript 可以把一段内容交给特定处理器。
+
+解析 HAML 文本，输出对应的 HTML。缩进不一致要报错（混用 tab 和空格）。支持变量绑定——传入 map[string]interface{} 替换 = expr 中的表达式。
+
 标准库，go build 编译通过。

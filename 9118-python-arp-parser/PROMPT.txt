@@ -1,5 +1,7 @@
-做一个 ARP 协议解析器，能读取 pcap 文件中的 ARP 包并分析。
+ARP 欺骗是内网中间人攻击的常见手法，上次内网被 ARP 欺骗搞了一次，好几个人的流量被劫持了。写个 ARP 解析工具，能从抓包中分析 ARP 活动检测异常。
 
-解析 ARP 包的各个字段：硬件类型、协议类型、操作码（请求/应答）、发送方和目标的 MAC/IP 地址。支持检测异常 ARP 活动：ARP 扫描（短时间内大量请求）、ARP 欺骗（同一个 IP 对应多个 MAC、同一个 MAC 频繁切换 IP）。
+Python 实现 ARP 报文解析器。ARP 报文结构：Hardware Type（以太网=1）、Protocol Type（IPv4=0x0800）、操作码（Request=1、Reply=2）、发送方 MAC 和 IP、目标 MAC 和 IP。解析以太网帧头获取源/目标 MAC 地址。
 
-输入 pcap 文件，输出所有 ARP 包的摘要和检测到的异常事件列表。Python 3，用标准库 struct 自己解析也行或用 scapy。
+从 pcap 文件提取 ARP 数据包（以太网类型 0x0806）。统计分析：ARP 请求/响应比例、每个 IP 的 MAC 地址映射表。异常检测：ARP 欺骗——同一个 IP 在短时间内对应了不同的 MAC 地址（可能是攻击者在冒充网关）、 Gratuitous ARP（未请求的 ARP 响应，用于宣告地址变更或欺骗）、ARP 扫描——大量 ARP 请求扫描整个网段。
+
+输出：ARP 映射表（IP→MAC 对照）、检测到的异常事件列表、异常时间线。也支持实时监听模式——持续捕获 ARP 包并实时检测欺骗行为。python3 命令行工具，不依赖 scapy。

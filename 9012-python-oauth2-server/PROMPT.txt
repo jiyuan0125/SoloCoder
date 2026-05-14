@@ -1,5 +1,10 @@
-帮小团队写个简易的 OAuth2 授权服务器，给内部几个服务之间的认证用。
+帮小团队写个简易的 OAuth2 授权服务器。背景是内部有三个微服务互相调用，用硬编码的 API Key 太原始了，需要一个统一的认证中心。
 
-Python 实现，能处理 authorization code grant 和 client credentials grant。需要能注册 client（分配 client_id 和 client_secret）、发放授权码、用授权码换 token、验证 token 有效性。token 用 JWT 格式签发。支持 scope 权限控制。数据存在 JSON 文件或者 SQLite 里都行。
+Python 实现，支持两种授权模式——authorization code grant（给有用户的场景用）和 client credentials grant（给服务间调用用）。核心端点：
 
-python3 能跑就行，不要用 Django/Flask 这些大框架，用标准库的 http.server 就好。
+- POST /register 注册新的 client，返回 client_id 和 client_secret，同时记录 redirect_uri 白名单和允许的 scope 列表
+- GET /authorize 展示授权页面，用户确认后生成 authorization_code（有效期 10 分钟，一次性使用）
+- POST /token 用授权码换 access_token（JWT 格式，包含 sub、scope、exp），或者用 client_credentials 直接获取 token
+- POST /token/introspect 验证 token 有效性，返回 active、scope、exp 等信息
+
+scope 权限控制要实际生效——token 里声明的 scope 决定了它能访问哪些资源。数据存在 SQLite 里，表结构包含 clients、auth_codes、tokens 三张表。python3 能跑就行，不要用 Django/Flask，用标准库 http.server 就好。

@@ -1,12 +1,13 @@
 帮我写一个 Go 的 LZ77 解压缩器。
 
-从 LZ77 压缩数据中还原原始内容。解析 bit 流中的 literal 和 match reference，遇到引用就回到已解压数据中复制对应长度。
+从 LZ77 压缩数据中还原原始内容。解析 bit 流中的 literal 和 match reference，遇到引用就回到已解压缓冲区中复制对应长度。解压比压缩简单——不需要搜索匹配，只需解析和复制。
 
 要实现：
-- 解析 bit 流：区分 literal 和 (distance, length) 引用
-- Literal 直接输出，引用从已解压缓冲区中复制（可能 length > distance，需要逐字节）
-- 处理 bit 级别的读取（Huffman 编码的距离和长度码表）
-- 流式解码：输入逐块读取，输出逐块产生
-- 验证解压结果和原始数据一致
+- 解析 bit 流：读取标志位区分 literal 和 (distance, length) 引用
+- Literal 直接输出到结果缓冲区
+- 引用从已解压缓冲区的 offset 位置复制 length 字节（注意 length 可能 > distance，需要逐字节循环复制）
+- 处理 bit 级别的读取（distance 和 length 用 Huffman 编码或固定变长码，参考 deflate 格式）
+- 流式解码：输入用 io.Reader 逐块读取，输出用 io.Writer 逐块产生，不需要一次全部加载
+- 验证解压结果和原始数据一致（可选的 checksum 校验）
 
-Go 标准库，go build 编译通过。distance/length 的变长编码参考 deflate 格式。注意边界检查，防止引用越界。
+Go 标准库，go build 编译通过。distance/length 的变长编码参考 deflate 格式规范。注意边界检查防止引用越界。

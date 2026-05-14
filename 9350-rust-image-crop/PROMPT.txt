@@ -1,10 +1,9 @@
-做一个图片裁剪工具，从大图中按坐标区域裁剪出子图。
+裁剪是图片处理的基础操作——从一个大图中切出一小块区域。操作本身不复杂：读取像素、提取子矩阵、编码输出。但边界检查和格式处理要做到位。Rust 实现。
 
-裁剪需求：
-- 读取 JPEG 或 PNG 图片，解码为像素矩阵
-- 用户指定裁剪区域的左上角坐标 (x, y) 和宽度、高度
-- 校验裁剪区域不超出图片边界，超出则报错
-- 从像素矩阵中提取指定区域，编码输出为 JPEG 或 PNG（根据输出文件扩展名决定）
-- 正确处理 RGBA 图片的 alpha 通道
+读取图片并解码为像素矩阵——支持 JPEG 和 PNG。JPEG 解码得到 RGB 三通道数据（每个像素 3 字节），PNG 可能是 RGB 或 RGBA（3 或 4 字节/像素）。像素按行优先存储：pixel(x, y) = data[(y × width + x) × channels]。
 
-Rust 实现，cargo build 编译通过。`image-crop photo.jpg --x 100 --y 50 --width 640 --height 480 -o cropped.jpg`。
+裁剪参数校验——用户传入 x, y, width, height。x 和 y 不能为负数，x + width 不能超过图片原始宽度，y + height 不能超过原始高度。如果参数非法，输出明确的错误信息（"crop region (100, 50, 640, 480) exceeds image bounds (500, 400)"）并退出。
+
+像素提取——创建一个新的像素缓冲区，大小为 width × height × channels。逐行从原图复制：for row in 0..height { src_offset = ((y + row) * src_width + x) * channels; dst_offset = row * crop_width * channels; copy }。RGBA 图片的 alpha 通道完整保留，不做特殊处理。
+
+输出格式根据文件扩展名决定——.jpg 输出 JPEG（质量 95%），.png 输出 PNG。用法 image-crop photo.jpg --x 100 --y 50 --width 640 --height 480 -o cropped.jpg。Rust 实现，cargo build 通过。

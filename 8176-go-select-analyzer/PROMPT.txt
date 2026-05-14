@@ -1,5 +1,9 @@
-帮我写个 Go select 语句分析工具。
+帮我写个 Go select 语句分析工具。select 是 Go 并发里最复杂的控制结构——多个 channel 操作同时就绪时随机选一个、nil channel 的 case 被永久跳过、没有 case 的 select 永久阻塞。这些行为不直观，容易写出 bug。
 
-分析 Go 源码中所有 select 语句的结构和行为。检测这些情况：select 里空的 case（永远阻塞）、只有一个 case 没有 default（等价于普通 channel 操作）、nil channel case（被永久跳过）、随机选择的公平性问题。还要检查 select 在 for 循环中的使用模式，看有没有超时控制的缺失。
+分析 Go 源码中所有 select 语句的结构和行为。检测这些情况：
 
-输出每个 select 的分支分析和风险提示。Go 标准库，go build 编译过。
+select 里空的 case（没有任何 case 也没有 default）——永远阻塞，通常是无意的错误。只有一个 case 没有 default——等价于普通的 channel 操作，用 select 是多余的。nil channel case——case 里的 channel 变量可能是 nil（nil channel 的 case 被永久跳过），需要追踪 channel 是否可能为 nil。缺少 default 和超时——select 在 for 循环里使用但没有超时控制（用 time.After 或 time.Tick），可能永久阻塞。close 后的 channel 行为——closed channel 的接收立即返回零值，可能被误用为正常数据。
+
+输出每个 select 的分支分析——列出所有 case 条件、是否有 default、风险提示。
+
+Go 标准库，go build 编译过。

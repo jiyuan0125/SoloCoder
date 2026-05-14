@@ -1,5 +1,12 @@
-实现一个 Arena（区域）分配器。一次性申请一大块内存，后续分配只移动指针，不支持单个释放，只支持整体重置。
+JSON 解析器每秒要处理成千上万个请求——每个请求产生大量临时对象（AST 节点、字符串、数组），请求结束后全部丢弃。如果每个节点都 malloc/free，内存管理开销比解析还大。Arena 分配器一次性申请一大块内存，后续分配只移动指针，请求结束后整体重置。极快，零碎片。
 
-arena_create(size) 创建 arena，arena_alloc(arena, size) 从中分配对齐的内存，arena_reset(arena) 重置为空。分配就是指针前移，极快。适合用在生命周期相同的临时对象场景。
+用 C 语言实现 Arena 分配器。
 
-C 语言，gcc 编译。演示：创建 arena，分配多种大小的对象，重置后再分配，验证不会出错。内存对齐到 8 或 16 字节。
+接口——arena_create(size) 创建一个指定大小的 arena。arena_alloc(arena, size) 从中分配对齐的内存。arena_reset(arena) 重置为空（指针回到起点）。arena_destroy(arena) 释放底层大块内存。
+
+- 分配就是指针前移：current += aligned_size。O(1)，不加锁
+- 不支持单个释放——只支持整体 reset
+- 内存对齐到 8 或 16 字节：size = (size + 7) & ~7
+- 空间不够了：可选报错，或者自动分配新的 chunk 链接到 arena
+
+适合生命周期相同的临时对象场景——编译器 AST、游戏帧数据、HTTP 请求上下文。gcc 编译。验证 reset 后再分配不出错。

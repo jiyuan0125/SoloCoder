@@ -1,5 +1,7 @@
-写一个 Host 头注入检测工具，测试 Web 应用是否信任了不可靠的 Host 头。
+Host 头注入是个容易被忽略的漏洞。Web 应用如果在密码重置邮件、重定向 URL、缓存键里直接使用了 Host 头的值，攻击者发送一个伪造的 Host 头就能劫持这些功能。比如密码重置邮件里的链接指向 attacker.com 而不是真实域名，用户点击就把 token 泄露了。
 
-发送 HTTP 请求时修改 Host 头为各种测试值（恶意域名、localhost、内网 IP），观察响应中的重定向地址、缓存键、密码重置链接里是否包含了伪造的 Host 值。如果密码重置邮件里的链接指向了攻击者的域名，那就是严重的 Host 头注入。
+Python 实现 Host 头注入检测器。测试方法：对目标 URL 发送多组 HTTP 请求，每组请求的 Host 头设为不同的测试值——恶意域名（evil.com）、本地地址（localhost、127.0.0.1）、内网 IP（10.0.0.1）、包含端口的变体（target.com:80@evil.com）。
 
-CLI 使用：python host_inject.py http://target.com --test-reset-link。输出每种 Host 值的测试结果和风险说明。Python 3 + requests。
+分析响应：检查 HTTP 响应头中是否反射了伪造的 Host 值（Location 重定向头、Set-Cookie 的 domain 属性）。检查响应体中是否包含伪造值（密码重置链接、canonical URL、RSS feed 链接）。检查是否因为 Host 不匹配导致了异常行为（500 错误、暴露内部路径）。
+
+每种测试值输出结果：是否反射、反射出现在哪里（响应头/响应体）、风险等级（密码重置链接被污染为高危、只是页面展示为中危）。python3 + requests 命令行工具。

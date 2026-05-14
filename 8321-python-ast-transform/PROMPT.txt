@@ -1,3 +1,10 @@
-代码重构的时候需要批量修改 Python AST，手动改太容易出错。写一个 AST 变换工具，支持用声明式规则描述变换（比如 "把所有 print() 调用替换成 logger.info()"、"给所有函数加类型注解"），然后自动应用这些规则修改代码。
+重构一个老项目，要把所有 print() 调用换成 logger.info()，手动改一百多个文件不现实。做一个 AST 变换工具，用声明式规则描述变换然后自动批量应用。Python 实现。
 
-提供 before/after 的 diff 预览，确认后再写入文件。纯 Python，用 ast 模块。python 能跑，命令行传入源文件和规则文件输出变换后的代码。
+变换规则的描述方式——每条规则包含匹配条件和替换动作。匹配条件是一个 AST 节点模式（比如 "Call 节点且 func 的 id 是 'print'"），替换动作可以是一个新的 AST 节点或者一个修改函数。内置几条常用规则：
+1. print() → logger.info()：匹配 ast.Call(func=ast.Name(id="print"))，替换为 logger.info 调用
+2. 给无类型注解的函数参数加 Any：匹配无 annotation 的 arg 节点，添加 annotation=ast.Name(id="Any")
+3. == None 改成 is None：匹配 Compare(ops=[Eq], comparators=[Constant(None)])，替换为 Is
+
+工具流程：读入源文件 → parse 成 AST → 应用所有变换规则 → unparse 回源代码 → 展示 diff 预览。用户确认后才写入文件（加 --dry-run 只预览不修改）。
+
+变换不能破坏代码结构——行的缩进、空行、注释尽量保留（用特殊标记节点记录原始位置）。python3 ast_transform.py source.py --rules rules.json。纯 Python 标准库（ast 模块）。

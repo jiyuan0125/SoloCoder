@@ -1,5 +1,7 @@
-用 Rust 实现一个 HLS 播放列表生成器，用于直播场景。
+第一步扫描目录。读取指定目录下所有 .ts 文件，按文件名自然排序。排序算法要正确处理数字——seg_1.ts、seg_2.ts、seg_10.ts 而不是 seg_1.ts、seg_10.ts、seg_2.ts。也可以接受用户通过 JSON 或文本文件指定的分片列表（按序排列）。
 
-输入一堆 TS 分片文件和对应的时长信息，生成符合 HLS 规范的 M3U8 播放列表。支持 Live 和 VOD 两种模式：Live 模式不断追加新分片并维持滑动窗口（只保留最近 N 个分片），VOD 模式在末尾加上 #EXT-X-ENDLIST。生成时要正确处理 #EXT-X-MEDIA-SEQUENCE 和 #EXT-X-TARGETDURATION 标签。
+第二步探测每个分片的实际时长。打开每个 .ts 文件，解析 PAT/PMT 找到视频 PID，读取第一个 PES 包的 PTS 作为起始时间，最后一个 PES 包的 PTS 作为结束时间。时长 = (end_pts - start_pts) / 90000 秒。如果分片很短没有足够的包（比如只有 PAT/PMT），就用目标时长作为估计值。快速模式可以跳过探测直接用目标时长。
 
-Rust 写，cargo build 编译通过，遵循 HLS RFC 8216 规范。
+第三步生成 m3u8。#EXTM3U 头部，#EXT-X-VERSION 设为用户指定值（默认 3）。#EXT-X-TARGETDURATION 设为所有分片时长的 ceil 最大值。#EXT-X-MEDIA-SEQUENCE 从指定值开始（默认 0）。每个分片写 #EXTINF:<duration>,\n<filename>。LIVE 模式不加 #EXT-X-ENDLIST（后续追加新分片），VOD 模式末尾加。
+
+第四步（可选）生成多码率主播放列表。用 --multi-codec 参数时额外输出 master.m3u8。用法 hls-playlist -dir ./segments/ -target 6 -version 3。Rust 实现，cargo build 通过。

@@ -1,12 +1,9 @@
-帮我做一个 Passkey 凭证管理工具，处理 WebAuthn 注册产生的公钥凭证数据。
+Passkey 凭证管理工具。浏览器支持 Passkey 后，用户注册时会产生一个公钥凭证，服务端需要存储和验证这些凭证。这个工具处理凭证的解析、存储和验证逻辑。
 
-现在浏览器支持 Passkey 了，用户注册后服务端需要存储和验证这些凭证。这个工具负责凭证的解析、存储和验证逻辑。
+Python 实现。注册流程解析：接收 WebAuthn 注册响应（JSON 格式），解析 attestation object 中的 authenticator data——提取 rpIdHash（验证 relying party ID 是否匹配）、credential ID（唯一标识这个凭证）、COSE 格式的公钥（支持 ECDSA P-256 和 RSA 2048）。提取后存储到凭证库。
 
-Python 实现：
-- 解析 WebAuthn 注册响应中的 attestation object，提取公钥、credential ID、签名算法
-- 验证认证响应：用存储的公钥验证签名，检查 challenge 匹配
-- 凭证存储到本地 JSON 文件，支持增删查
-- 命令行操作：register、authenticate、list、delete
+认证流程验证：接收认证响应，从存储中查找对应的凭证，用存储的公钥验证签名覆盖了 authenticator data + clientDataHash。检查 challenge 匹配、用户存在标志（UP）和签名计数（signCount 单调递增防止克隆）。
 
-数据用模拟的就行，重点是解析和验证逻辑要对。
-python passkey_handler.py register --cred '{"id":"xxx","publicKey":"..."}'
+凭证存储：本地 JSON 文件，每个凭证记录包含 credential_id、public_key（COSE 格式）、sign_count、创建时间、用户 ID。支持增删查——list 列出用户的所有凭证、delete 吊销指定凭证。
+
+数据用模拟的就行，重点是解析和验证逻辑。python3 命令行工具。

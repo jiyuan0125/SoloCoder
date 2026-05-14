@@ -1,1 +1,9 @@
-老系统里还有不少 Thrift 接口需要维护。Go 写一个 Thrift IDL 解析器，能解析 struct、enum、exception、service、typedef 定义，支持字段修饰符（required/optional）、默认值、注释。解析结果可以用 JSON 输出，方便做后续的代码生成或文档工具。遇到语法错误要标注行号和附近内容。纯标准库，go build 能编。
+老系统里还有不少 Thrift 接口需要维护——微博、Evernote 这些大公司到现在还在用 Thrift 做 RPC。维护老接口得先读懂 .thrift 文件，但 Thrift IDL 的语法还挺复杂的。
+
+Go 写一个 Thrift IDL 解析器。能解析 .thrift 文件中的定义类型：struct（字段带编号、类型、required/optional 修饰符、默认值）、enum（枚举值和对应数字）、exception（异常类型定义）、service（服务接口，包含一系列方法，每个方法有参数列表、返回类型、可能抛出的异常）、typedef（类型别名）。注释支持 // 和 /* */ 两种风格。
+
+字段修饰符语义要区分清楚——required 表示必须提供、optional 表示可选、什么都不写的行为取决于 strictness 配置。默认值支持字面量（数字、字符串、布尔值、map/list 字面量）。
+
+解析结果可以用 JSON 输出——每个 struct 输出字段列表（编号、名称、类型、修饰符、默认值），每个 service 输出方法列表（参数、返回值、异常）。方便做后续的代码生成或文档工具。
+
+遇到语法错误要标注行号和附近内容。纯标准库，go build 能编。

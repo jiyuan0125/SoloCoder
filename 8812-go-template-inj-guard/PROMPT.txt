@@ -1,11 +1,13 @@
-写一个模板注入（SSTI）防护工具，Go 实现。
+Go 的 text/template 有个容易被忽视的安全隐患——如果模板内容来自用户输入，攻击者可以在模板里调用任意方法。{{.}} 看起来人畜无害，但配合 call、printf、type 语句就能实现远程代码执行。我们的邮件模板系统差点出了这个事，还好上线前发现了。
 
-背景：我们有个内部平台让用户自定义邮件模板，用的是 Go 的 text/template，突然意识到如果用户能控制模板内容就完蛋了。
+用 Go 写一个模板注入（SSTI）防护工具。分三层防御：
 
-需要做到：
-- 检测 Go 模板中的危险调用：call、printf、管道操作、反射相关方法（.Method、.Field）
-- 提供模板沙箱执行器：只暴露白名单函数和数据字段给模板使用
-- 校验模板语法的同时检查是否包含危险的指令和内置函数调用
-- 命令行扫描模式：`./template-guard scan templates/` 扫描目录下所有模板文件
+静态扫描层 ScanTemplateFile(path string) []Finding：解析模板文件，遍历 AST 节点检测危险调用。危险指令包括：{{call ...}}（调用函数，可能执行任意代码）、{{printf ...}}（格式化输出，可能泄露内存数据）、{{.Method}}（调用对象方法）、管道操作 {{x | y}}（传递给未知函数）。也检测反射相关的方法名——Type、NumMethod、MethodByName、FieldByName 等。
 
-Go 标准库，go build 能通过。
+沙箱执行层 SandboxExecute(tmpl string, data interface{}) (string, error)：创建一个受限的模板执行环境——FuncMap 只暴露白名单函数（upper、lower、trim、date、len 等），数据对象只暴露白名单字段。尝试访问未白名单的字段或调用未注册的函数时返回错误。
+
+语法校验层 ValidateTemplate(tmpl string) error：在 Parse 阶段就检查模板是否包含危险的指令和内置函数调用。模板语法错误也一起报告。
+
+命令行：template-guard scan templates/ 扫描目录下所有 .tmpl/.html 文件，template-guard check --template "{{call .Func}}" 测试单条模板。
+
+Go 标准库（text/template、html/template），go build 能通过。

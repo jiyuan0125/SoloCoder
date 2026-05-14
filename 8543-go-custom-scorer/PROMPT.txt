@@ -1,9 +1,11 @@
-用 Go 实现自定义评分框架（Custom Scorer）。搜索场景多种多样，有时 BM25 不够用，需要让用户自定义评分逻辑。
+BM25 对大多数搜索场景够用，但有些特殊需求它搞不定——比如按商品的 popularity 分数加权排序、新发布的文档要排在老文档前面（时间衰减）、或者把多个自定义评分因素组合起来。这时候需要一个灵活的自定义评分框架。
 
-设计要求：
-- 定义 Scorer 接口：Score(docID, query) float64
-- 内置几种评分实现：常数评分、字段值评分（如按 popularity 分数排序）、衰减评分（时间衰减）
-- 支持评分组合：多个 Scorer 的得分可以用加权求和、相乘等方式组合
-- 支持函数查询：基于文档的字段值计算评分（如 log(popularity) + freshness）
+用 Go 实现可扩展的评分框架。
 
-Go 标准库，go build 通过。接口设计要灵活，能轻松扩展新的评分策略。
+Scorer 接口定义——type Scorer interface { Score(docID uint32, query string) float64 }。所有评分策略都实现这个接口，上层代码统一调用。
+
+内置评分实现——ConstantScorer：所有文档返回固定分数（用于测试或者作为占位）。FieldScorer：基于文档的某个数值字段（如 popularity、rating）做评分。DecayScorer：基于时间的指数衰减评分，decay_score = exp(-λ × age)，age 是距离现在的时间差，λ 控制衰减速度。TimeFreshnessScorer：直接用时间戳排序，越新分数越高。
+
+评分组合——CompositeScorer：把多个 Scorer 组合起来。支持加权求和（score = w1×s1 + w2×s2 + ...）和相乘（score = s1 × s2 × ...）。权重通过配置设定。
+
+函数查询——FuncScorer：用户传入一个闭包 func(docID uint32) float64，可以对文档的任意字段做计算。比如 log(popularity) + freshness_factor。

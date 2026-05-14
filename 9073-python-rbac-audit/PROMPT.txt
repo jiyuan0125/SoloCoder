@@ -1,1 +1,7 @@
-K8s 里的 RBAC 权限越来越乱，需要一个审计工具。用 Python 写一个 RBAC 审计工具，解析 K8s 的 Role、RoleBinding、ClusterRole、ClusterRoleBinding 配置（YAML 格式），分析权限分配情况：找出权限过大的角色（比如有 * 资源的 verbs）、识别谁可以操作 secrets、检测特权提升路径。输出权限图谱和风险点，命令行工具。
+K8s 集群的 RBAC 配置越积越多，没人知道哪些 ServiceAccount 有什么权限、有没有过度授权。出了事才去查就来不及了，得定期审计。
+
+写一个 K8s RBAC 审计工具，Python 实现。审计对象：从 kubeconfig 配置的集群中导出（或从 YAML 文件解析）所有的 Role、ClusterRole、RoleBinding、ClusterRoleBinding 资源。
+
+分析维度：权限热力图——列出每个 ServiceAccount 被绑定了哪些 Role/ClusterRole，实际能对哪些资源做什么操作。过度授权检测——拥有 * 资源或 * 动词的 ClusterRole（等于管理员权限）、能操作 secrets 资源的普通 ServiceAccount（应该只有特定服务需要）、能在 kube-system 命名空间操作的绑定。提权路径分析——如果一个 ServiceAccount 有创建 Pod 的权限，它可以通过挂载宿主机路径或使用特权容器提权到节点级别。
+
+输出审计报告：每个 ServiceAccount 的权限摘要（绑定的角色数量、能操作的资源种类数）、高风险绑定列表（附风险说明）、推荐的权限缩减方案。也支持对比两次审计结果的差异（新增了哪些权限）。python3 命令行工具。

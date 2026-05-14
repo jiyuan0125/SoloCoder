@@ -1,5 +1,7 @@
-帮我用 Rust 写一个文件完整性校验工具，类似一个简化版的 tripwire。
+系统文件被偷偷改了怎么办？安全审计需要知道哪些文件被修改了、新增了、删除了。写一个简化版 tripwire——为目录生成完整性清单，之后对比检查变化。Rust 实现。
 
-可以为指定目录下的文件生成完整性清单（记录每个文件的 SHA-256 哈希、大小、修改时间），保存为清单文件。之后再次运行时，重新计算并与清单对比，报告哪些文件被修改了、新增了、删除了。支持递归扫描子目录，可以排除某些路径（.git、node_modules 之类的）。
+清单生成——递归扫描指定目录，对每个文件记录 SHA-256 哈希（64 字符十六进制）、文件大小（字节）、最后修改时间（Unix 时间戳）。输出为清单文件，格式每行一个文件：SHA256  size  mtime  path（类似 sha256sum 格式但多了 size 和 mtime 列）。排除规则：--exclude .git --exclude node_modules --exclude __pycache__（支持多个排除模式）。
 
-Rust 实现，cargo build 通过。
+验证模式——重新扫描目录，逐文件计算当前哈希和元数据，与清单中存储的值对比。输出报告分为三类：MODIFIED（哈希变化了）、SIZE_CHANGED（大小变了但哈希没变——理论上不可能但作为双保险）、NEW（新增的文件不在清单里）、DELETED（清单里有但文件不存在了）、OK（完全一致）。
+
+性能优化——扫描时并行计算哈希（多线程），文件 I/O 和哈希计算流水线化。清单文件支持增量更新——不是每次重新生成，而是只更新变化的文件条目。用法 integrity-check generate /path/to/dir/ -o baseline.txt 和 integrity-check verify baseline.txt。Rust 实现，cargo build 通过。

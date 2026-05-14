@@ -1,9 +1,13 @@
-用 Go 实现一个基于有限状态机的 KV 存储。不是那种分布式 KV，而是把 KV 操作建模成状态机转换：Put 是状态变更，Get 是状态查询。
+把 KV 存储建模成状态机不是什么新想法，但这种做法有一个好处——所有操作都被序列化成了命令，可以重放、可以截断、可以做快照，天然适合分布式场景。之前手写了好几版 KV 没考虑这些，这次想用 Go 系统地实现一遍。
 
-具体功能：
-- 支持 Put(key, value) 和 Get(key) 和 Delete(key) 三种操作
-- 所有操作以命令形式输入，状态机按序执行并返回结果
-- 支持 Save/Load 快照：把整个 KV 内容序列化保存，之后可以恢复
-- 命令行交互，输入命令输出结果
+核心数据结构就是一个 map[string]string，加上三个操作命令：Put(key, value)、Get(key)、Delete(key)。每个操作封装成一个 Command 结构体（包含操作类型、key、value），序列化为 JSON 字节流传给状态机的 Apply 方法。
+
+需要实现的功能点：
+1. 命令执行：Apply 接收 Command，根据类型执行对应的 map 操作，Put 写入、Get 读取并返回值、Delete 删除
+2. 日志记录：每次 Apply 前把命令追加到操作日志里，带递增的 index
+3. 快照保存：把整个 map 序列化成 JSON 保存，记录当前的 lastApplied
+4. 快照恢复：从 JSON 反序列化恢复 map，清空旧日志
+
+命令行方式交互，支持 put mykey myvalue、get mykey、delete mykey、snapshot、restore 这些命令。每次操作都打印结果和当前状态机的总 key 数。退出时可以选择保存快照到文件，下次启动自动恢复。
 
 纯 Go 标准库，go build 通过就行。

@@ -1,5 +1,14 @@
-写一个 Python 的二进制结构解析器，类似 C 的 struct.unpack 但更灵活。
+解析网络报文和二进制文件头是嵌入式和网络编程的家常便饭。Python 的 struct 模块能用但格式串写起来不直观，也不支持嵌套结构和条件字段。写一个更灵活的二进制结构解析器。Python 实现。
 
-场景是解析网络报文和二进制文件，用户用一种简单的 DSL 描述数据结构（比如 `>HH4sII` 表示大端序、两字节、两字节、4字节字符串、两个四字节整数），引擎按照格式串从字节流中提取字段，支持嵌套结构、条件字段（根据前面字段的值决定后续解析方式）和对齐填充。
+DSL 格式描述语法：用简洁的文本描述二进制布局。基本类型：u8/u16/u32/u64（无符号整数）、i8/i16/i32/i64（有符号整数）、f32/f64（浮点）、bool、char[N]（定长字符串）、bytes[N]（原始字节）。字节序前缀：> 大端、< 小端、= 原生序。示例格式："> H port H flags 4s magic I count"。
 
-Python 3 标准库实现。CLI 用法：`python struct_parser.py parse --format ">HH4sII" data.bin`，输出每个字段的名字、类型和值。报文格式解析出错时给出明确的错误位置。`python struct_parser.py` 能直接运行。
+高级特性：
+- 嵌套结构：struct { H type I length payload } 用缩进或大括号表示嵌套
+- 条件字段：if (flags & 0x01) { I timestamp }，根据前面字段的值决定是否解析后续字段
+- 数组：count * I 表示 count 个 32 位整数
+- 对齐和填充：align 4 自动填充到 4 字节对齐，pad[N] 跳过 N 字节
+- 计算字段：用前面字段的值计算当前字段长度（比如 length-prefix 的变长数据）
+
+解析流程：读入格式描述和二进制数据，维护一个当前位置指针，按格式逐字段提取数据并推进指针。每个字段输出名字、偏移、类型和解析后的值。格式错误或数据不够时报具体位置。
+
+CLI：python3 struct_parser.py parse --format ">H port H flags 4s magic" data.bin。纯 Python 3 标准库。

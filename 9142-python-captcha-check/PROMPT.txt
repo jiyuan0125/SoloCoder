@@ -1,5 +1,7 @@
-写一个 CAPTCHA 验证组件，在 Flask 或 FastAPI Web 服务中集成验证码。
+写一个 CAPTCHA 验证组件，给 Web 服务加上验证码防止自动化攻击。reCAPTCHA 之类的第三方服务需要联网而且有隐私顾虑，不如自己生成简单的验证码够用就行。
 
-后端生成数学运算验证码（比如 "3 + 7 = ?"）或简单文字验证码，用 Pillow 画成带干扰线和噪点的图片。提供 API 接口：/captcha/get 返回验证码图片和 token，/captcha/verify 验证用户输入。
+Python 实现验证码系统。后端生成两种验证码——数学运算（如"3 + 7 = ?"、"15 - 8 = ?"，数字范围可配置）和简单文字验证码（4-6 个字母数字，排除容易混淆的字符如 0/O、1/l）。用 Pillow 库渲染图片：随机字体大小和颜色、添加干扰线（3-5 条随机曲线）、噪点（随机像素点）、轻微旋转和扭曲。
 
-验证码 token 存服务端（内存或 Redis），设过期时间（5 分钟）。支持配置验证码难度（运算位数、干扰强度）。Python 3，Flask + Pillow。pip install 装好依赖 python app.py 能跑起来。
+API 接口设计：GET /captcha/generate 返回验证码图片（PNG）和 token（UUID 格式，用于关联答案）。POST /captcha/verify 接收 token 和用户答案，返回验证结果。token 和答案存在内存字典（带 TTL 默认 5 分钟）或 Redis。答案验证不区分大小写。
+
+难度配置：简单模式（2 位数加减法、4 字母验证码）、中等（3 位数运算、5 字母）、困难（3 位数乘除法、6 字母加更多干扰）。python3 用 Flask 或 FastAPI + Pillow。

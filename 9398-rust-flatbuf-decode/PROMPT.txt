@@ -1,5 +1,7 @@
-帮我用 Rust 写一个 FlatBuffers 解码工具。
+第一步理解 FlatBuffers 的二进制布局。和 Protobuf 不同，FlatBuffers 是零拷贝设计——数据直接在 buffer 中原地读取，不需要先解析成内存对象。核心是 vtable 机制：每个对象前面有一个 vtable 偏移，vtable 里记录了每个字段的偏移量。
 
-FlatBuffers 是 Google 的零拷贝序列化格式。解析 FlatBuffers 的二进制数据，从根表开始遍历 vtable 和字段偏移，逐字段解读数据类型（int/float/string/vector/嵌套 table）。输出类似 JSON 的结构化视图，方便调试。不需要原始 schema 文件也能以 raw 模式浏览，有 schema 时输出带字段名的结果。
+第二步定位 vtable。读取 buffer 前面的根对象偏移（4 字节 little-endian），定位到根对象。根对象的头 4 字节（有符号整数，soffset）是 vtable 的偏移——当前对象位置减去 soffset 得到 vtable 位置。vtable 结构：2 字节 vtable 大小、2 字节对象大小、2 字节×N 个字段偏移（0 表示字段不存在）。
 
-Rust 实现，按 FlatBuffers 二进制格式规范解析，cargo build 通过。
+第三步读取字段值。根据 vtable 里的偏移定位到对象中的字段位置。字段类型决定了读取方式——1 字节=bool/byte、2 字节=short、4 字节=int/float、8 字节=long/double。字符串字段存的是 offset——从字段位置读取 4 字节偏移，加上字段位置得到字符串位置，前 4 字节是长度后面是 UTF-8 数据。嵌套对象类似——offset 指向子对象，子对象有自己的 vtable。
+
+向量——前 4 字节是元素个数，后面是连续的元素数据。用法 flatbuf-decode --input data.bin --output data.json。Rust 实现，cargo build 通过。

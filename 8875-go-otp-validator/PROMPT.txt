@@ -1,8 +1,13 @@
-做一个 OTP 验证工具，Go 写的，同时支持 TOTP 和 HOTP。
+后端验证用户提交的二次验证码时，需要服务端也计算一遍做比对。但要处理的细节不少——时钟偏差导致 TOTP 不匹配、计数器不同步导致 HOTP 失效、大小写问题。需要一个通用工具处理这些。
 
-后端验证用户提交的二次验证码时需要服务端也计算一遍做比对。需要一个通用工具来验证 OTP 是否正确。
+用 Go 写一个 OTP 验证工具，同时支持 TOTP 和 HOTP。
 
-功能：验证 TOTP 码，支持时间窗口容差（允许前后各 N 个步长的码）；验证 HOTP 码，指定计数器值；验证结果返回通过或失败；显示服务端预期值和用户输入值的对比。
+totp 验证：输入密钥、用户提交的验证码、可选的时间窗口容差（-window，默认 1，表示允许前后各 1 个步长）。验证逻辑——计算当前时间步的验证码和前后 window 个步长的验证码，看用户提交的码是否在其中任意一个匹配。匹配成功返回通过和实际匹配的步长偏移。恒定时间比较防时序攻击。
 
-命令：otp-validator totp -secret "JBSWY3DPEHPK3PXP" -code "123456"、otp-validator totp -secret "xxx" -code "123456" -window 1、otp-validator hotp -secret "xxx" -code "123456" -counter 5
+hotp 验证：输入密钥、用户提交的验证码、当前计数器值。直接用该计数器值计算验证码做比对。也支持 lookahead——如果当前计数器不匹配，尝试后续几个计数器（默认 10），找到匹配的返回新的计数器值供更新。
+
+验证结果输出：通过/失败、服务端预期值、用户输入值、匹配的计数器/时间步信息。
+
+命令：otp-validator totp -secret "JBSWY3DPEHPK3PXP" -code "123456"、otp-validator totp -secret "xxx" -code "123456" -window 2、otp-validator hotp -secret "xxx" -code "123456" -counter 5。
+
 Go 标准库，go build 编译通过。

@@ -1,11 +1,11 @@
-用 Rust 实现 Raft ReadIndex 读优化。
+线性一致性读在 Raft 里不是直接从 Leader 读就完事的。想象这个场景：网络分区后旧 Leader 还不知道自己已经被替换了，客户端从它读数据，结果拿到的是过期数据。ReadIndex 就是解决这个问题的标准方案——Leader 在读之前先确认自己仍然是合法 Leader。用 Rust 实现。
 
-直接从 Leader 读不安全——Leader 可能已经挂了但自己不知道。ReadIndex 机制让 Leader 在处理读请求时确认自己仍然是 Leader：先记录当前 commitIndex，然后向多数节点发心跳确认，确认后才返回数据。
+ReadIndex 的完整流程：客户端发读请求到 Leader → Leader 记下当前的 commitIndex 作为 readIndex → Leader 向所有 Follower 发一轮心跳（确认自己仍是 Leader）→ 收到多数 Follower 的确认后，等状态机 apply 到 readIndex → 返回数据给客户端。
 
-功能：
-- 客户端发起读请求，Leader 记录当前 commitIndex 作为 readIndex
-- Leader 向多数节点发送心跳确认自己还是 Leader
-- 收到多数确认后，等状态机 apply 到 readIndex 再返回
-- 支持批量处理多个读请求，共享一次确认
+数据结构：ReadRequest 包含 request_id 和 readIndex。Leader 维护一个 pending_reads 队列，存所有还没完成的读请求。心跳确认后检查每个 pending read 的 readIndex 是否 <= lastApplied，满足就可以返回了。
 
-cargo build 通过，测试验证读操作不会返回过期数据。
+为什么不直接读 Leader？因为 Leader 可能是旧网络分区遗留下来的，它的 commitIndex 可能没更新。ReadIndex 通过要求多数派确认心跳来保证 Leader 的合法性。
+
+模拟场景：正常 ReadIndex 读、Leader 切换后旧 Leader 的读请求被拒绝（收到更高 term 的响应）、读请求排队等待 apply。打印每个读请求的状态变化："Read#1: readIndex=42, waiting for apply... applied at 42, returning value"。
+
+cargo build 通过。

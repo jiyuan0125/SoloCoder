@@ -1,5 +1,5 @@
-写个 Base64 编解码的命令行工具，方便日常调试用。
+日常调试经常需要 Base64 编解码——API 请求的认证头、邮件附件的编码、配置文件里嵌入的二进制数据。写个命令行工具方便快速转换。
 
-能编码和解码，支持标准 Base64 和 URL-safe 变体。编码模式：读入文件或 stdin 的内容，输出 Base64 字符串。解码模式：输入 Base64 字符串还原原始数据，写文件或输出到 stdout。要处理好中文和二进制数据。
+两个操作。编码：读入文件（或 stdin 管道输入）的原始字节数据，输出 Base64 编码字符串。默认输出单行，加 --wrap 76 参数可以按 76 字符宽度换行（MIME 标准）。解码：输入 Base64 字符串，还原成原始字节数据写入文件或输出到 stdout。要处理好中文 UTF-8 和二进制数据——Base64 本身不关心内容，但对输入做字节级处理。
 
-Python 3 标准库 base64 模块。命令行：python base64_codec.py encode input.bin 和 python base64_codec.py decode "SGVsbG8=" -o output.bin。
+两种变体。标准 Base64（字母表 A-Za-z0-9+/，填充 =）和 URL-safe Base64（+ 和 / 替换成 - 和 _，无填充）。通过 --urlsafe 参数切换。URL-safe 变体在 URL 参数和文件名中使用不会出问题。用标准库 base64 模块实现。用法：python3 base64_codec.py encode input.bin 或 python3 base64_codec.py decode "SGVsbG8gV29ybGQ=" -o output.bin 或 python3 base64_codec.py encode --urlsafe input.bin

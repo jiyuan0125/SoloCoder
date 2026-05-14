@@ -1,5 +1,14 @@
-帮我用 Python 实现 rsync 算法的核心逻辑，实现高效的远程文件同步。
+rsync 算法是远程文件同步的经典方案——不需要传整个文件，只传差量。核心思路是：接收方把文件分块算校验和发给发送方，发送方在本地文件中找匹配块，只传不匹配的数据。Python 实现完整流程。
 
-rsync 的精髓是：发送方和接收方通过滚动校验和（rolling checksum）和强校验（MD4/SHA256）匹配相同数据块，只传输不匹配的部分。实现完整的流程：接收方计算文件块的弱校验和强校验发给发送方，发送方扫描本地文件找到匹配块，生成差异数据。支持可配置的块大小。
+算法步骤：
+1. 接收方把文件 B 切成固定大小的块（默认 1KB，最后一块可能小一些）
+2. 对每块计算弱校验（Adler-32 滚动校验和）和强校验（SHA256 或 MD5）
+3. 把所有块的校验和发给发送方
+4. 发送方扫描本地文件 A：对每个位置计算弱校验，如果弱校和在接收方的块集合中找到匹配，再计算强校验确认。匹配成功就记录块编号，不匹配就逐字节前进
+5. 输出差异数据：一系列 (matched_block_id) 和 (literal_data)
 
-Python 3 标准库。命令行：`python rsync.py signature receiver_file sig.json`、`python rsync.py delta sig.json sender_file delta.bin`、`python rsync.py patch receiver_file delta.bin output`。`python rsync.py` 能运行。
+弱校验用滚动哈希——窗口滑动一个字节时不需要重新计算整个校验和，只需减去离开的字节加上新进入的字节。这让扫描过程非常高效。
+
+生成的差异数据格式：每个元素是 BLOCK(token) 或 DATA(raw_bytes)。接收方收到后：BLOCK 就从自己的文件对应位置取数据，DATA 就直接使用原始数据。拼接所有元素得到最终文件。
+
+CLI：python3 rsync.py。演示：构造两个相似的文件，计算差量，验证还原正确性。纯 Python 3。

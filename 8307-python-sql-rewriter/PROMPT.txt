@@ -1,3 +1,12 @@
-线上慢查询优化需要自动改写 SQL，比如把子查询转成 JOIN、添加提示、改写 ORDER BY 常量为等价形式。帮我用 Python 实现一个 SQL 改写工具，能把输入的 SQL 解析成 AST，然后应用一系列改写规则输出优化后的 SQL。
+线上慢查询排行榜里很多 SQL 写法不规范——子查询能改成 JOIN 的没用 JOIN、SELECT DISTINCT 和 GROUP BY 同时出现、WHERE 1=1 这种恒真条件。做个自动改写工具，解析 SQL 后应用规则输出优化版本。Python 实现。
 
-至少支持三种改写：子查询转JOIN、多余DISTINCT消除、恒真条件移除。改写后要保持语义等价。纯 Python，命令行读 SQL 文件输出改写结果。
+改写规则（至少实现三种）：
+1. 子查询转 JOIN：SELECT * FROM t1 WHERE id IN (SELECT id FROM t2 WHERE t2.status='active') → SELECT t1.* FROM t1 JOIN t2 ON t1.id = t2.id WHERE t2.status='active'。只处理简单的 IN/EXISTS 子查询
+2. DISTINCT 消除：如果 SELECT DISTINCT 和 GROUP BY 同时存在，DISTINCT 是多余的；如果 SELECT 的列全是主键或 UNIQUE 索引列，DISTINCT 也是多余的
+3. 恒真/恒假条件移除：WHERE 1=1 直接删掉，WHERE 1=0 整个查询返回空集。WHERE a=1 AND 1=1 简化为 WHERE a=1
+
+实现流程：先把 SQL 解析成 AST（可以复用 SQL 解析器的逻辑），然后定义一组 Rule，每个 Rule 的 apply(ast) 方法检查 AST 是否匹配规则条件，匹配就做变换返回新 AST。规则按优先级顺序执行。
+
+改写后输出格式化的 SQL（带缩进和换行）。改写前后的 SQL 语义要等价——用一个简单的测试：在 SQLite 上跑改写前后的 SQL，结果必须一致。
+
+python3 sql_rewriter.py input.sql。纯 Python 标准库。

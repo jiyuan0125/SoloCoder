@@ -1,2 +1,7 @@
-用 Go 实现 Mustache 模板引擎。支持 Mustache 规范的核心标签：{{name}} 变量、{{#section}}...{{/section}} 区块(列表循环和条件)、{{^inverted}}...{{/inverted}} 反向区块、{{{html}}} 不转义输出、{{! 注释}}、{{>partial}} 部分模板。
-模板和数据合并后输出结果。go build 能过，不用第三方库。
+Mustache 的哲学是"无逻辑模板"——模板里不放 if/else，渲染逻辑都在数据层面处理。这种极简风格在前后端分离的项目里意外地好用。
+
+用 Go 实现 Mustache 模板引擎，兼容 Mustache 规范的核心标签。支持的标签类型：{{name}} 变量输出（HTML 转义）、{{{name}}} 不转义输出、{{#section}}...{{/section}} 区块（当值是 truthy 时渲染内容，当值是数组时循环渲染）、{{^inverted}}...{{/inverted}} 反向区块（值是 falsy 时渲染）、{{! 注释}} 模板注释、{{>partial}} 部分模板引入、{{=. .=}} 自定义分隔符。
+
+数据传入用 map[string]interface{} 或 struct。区块渲染的细节：布尔值 true 显示内容 false 不显示、数组循环每个元素、lambda 函数调用后渲染返回值。部分模板从文件系统加载（支持指定模板目录，按名字查找 .mustache 文件）。
+
+模板和数据合并后输出字符串结果。支持预编译模板（Parse 后可多次 Execute）。go build 能过，不用第三方库。

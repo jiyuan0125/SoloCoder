@@ -1,1 +1,7 @@
-Kubernetes 集群的安全配置需要检查。用 Go 写一个 K8s 安全审计工具，扫描 YAML 格式的资源清单文件（Pod、Deployment、Service、ConfigMap）。检查：容器是否以 root 运行、是否有特权模式、是否挂载了宿主机敏感目录、资源限制是否设置、ConfigMap 中是否有敏感数据明文、Service 类型是否为 NodePort 暴露过多。输出审计报告。标准库实现，go build 通过。
+Kubernetes 集群出了安全事故以后，才发现 Pod 一直在用 root 跑，ConfigMap 里明文存着数据库密码，Service 还开了 NodePort 把端口暴露到了节点网络——这些本该在部署之前就检查出来的东西，为什么每次都要等到出事才追悔？
+
+用 Go 写一个 K8s 安全审计工具，专门扫描 YAML 格式的资源清单文件。支持的资源类型包括 Pod、Deployment、Service、ConfigMap、Secret 这几种最常见的。
+
+审计维度要全面。对于 Pod 和 Deployment：检查 runAsNonRoot 是否设置、privileged 和 allowPrivilegeEscalation 是否为 true、有没有挂载 hostPath 到敏感路径（/var/run/docker.sock、/etc、/root）、资源限制 requests 和 limits 是否齐全。对于 ConfigMap：扫描 value 中是否包含密码、token、私钥等敏感字符串（匹配常见的 key name 模式和 Base64 特征）。对于 Service：检查 type 是否为 NodePort 或 LoadBalancer（可能不必要地暴露端口）。对于 Secret：检查是否使用了弱加密注解或者 data 字段是不是真的 Base64 编码。
+
+输出一份审计报告，按资源类型分组，每个问题标注严重程度、所在文件和行号、以及修复建议。做成 CLI 工具，支持扫描单个文件或整个目录。Go 标准库就能搞定，go build 编译通过。

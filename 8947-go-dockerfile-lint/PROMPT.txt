@@ -1,1 +1,9 @@
-团队的 Dockerfile 写得五花八门，需要统一规范。用 Go 写一个 Dockerfile 静态检查工具：解析 Dockerfile 内容（不依赖 docker 命令），检查常见问题：使用了 latest 标签、以 root 用户运行、安装了不必要的服务、没清理 apt 缓存、COPY 了整个目录而非必要文件、暴露了危险端口（22、3389）。内置 10+ 条检查规则，每条有对应的说明和修复建议。go build 通过。
+团队里十个开发写出来的 Dockerfile 有十个样，有人用 latest 标签，有人直接跑 root，有人装完 apt 不清缓存，镜像一个比一个大，安全漏洞一个比一个低级。每次 code review 都要重复指出同样的问题，浪费时间。
+
+用 Go 写一个 Dockerfile 静态检查工具，不依赖 docker 命令，纯文本解析。工具要能读取 Dockerfile 内容，逐条指令分析，然后给出问题列表和修复建议。
+
+内置至少 12 条检查规则：FROM 使用了 latest 标签（应该指定具体版本）、容器内以 root 用户运行（应该添加非 root 用户）、安装包后没有清理 apt/yum 缓存、COPY 整个目录而非必要文件（增加攻击面）、暴露了危险端口如 22 和 3389、使用了 ADD 而非 COPY（ADD 会自动解压，可能引入意外文件）、环境变量中包含密码或密钥、RUN 指令链过长导致层数膨胀、没有设置 HEALTHCHECK、使用了 sudo 命令、ENTRYPOINT 和 CMD 混用导致行为不一致、多阶段构建没有正确使用。
+
+每条规则输出对应的严重程度（Error/Warning/Info）、所在行号、问题描述和具体的修复代码示例。比如检测到 latest 标签，不只是说"别用 latest"，还要给出改成具体版本号的范例。
+
+支持三种运行模式：检查单个 Dockerfile、递归扫描目录下所有 Dockerfile、从 stdin 读取内容。输出默认是彩色终端格式，加 --json 参数输出 JSON。纯标准库，go build 通过。

@@ -3,3 +3,9 @@
 背景：微服务之间调用时需要把追踪上下文（trace_id、span_id、baggage 等）传给下游服务。实现一个 Context Propagator，支持将上下文信息序列化注入到 HTTP header（比如用 "X-Trace-Id"、"X-Span-Id" 这样的 header），以及从 HTTP header 中提取还原上下文。支持 baggage 机制——自定义的 key-value 对也可以在服务间传递。要处理编码转义，比如值里含有特殊字符的情况。
 
 纯 Rust 实现，cargo build 能过，写个小例子演示注入和提取的过程。
+
+这个工具的核心价值在于把context propagate的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
+
+上下文传播把 trace_id 和 span_id 通过请求头从服务 A 传到服务 B。没有这个机制，请求经过多个服务后就无法关联了。
+
+程序要打印关键操作的详细信息，让使用者清楚看到每一步的效果。Rust 标准库实现，cargo build 通过。

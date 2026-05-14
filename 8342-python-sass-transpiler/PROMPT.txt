@@ -1,3 +1,16 @@
-前端构建工具太重了，我只想简单地把 Sass/SCSS 编译成 CSS。用 Python 写一个 Sass 转译器，支持变量（$color: red）、嵌套规则、& 父选择器引用、@mixin/@include、@extend、数学运算和颜色函数（lighten、darken）。
+前端构建管道太重了，只想把几个 SCSS 文件编译成 CSS，不想装整个 Node.js 工具链。用 Python 写一个纯 Python 的 Sass/SCSS 转译器。
 
-SCSS 语法（花括号分号）和缩进语法都要支持。纯 Python 实现，不调用 libsass。python 能跑，命令行读 .scss 文件输出 .css。
+支持两种语法：SCSS 语法（花括号和分号）和 Sass 缩进语法（用缩进表示嵌套，无花括号分号）。
+
+核心功能：
+- 变量：$primary: #333; → 替换所有引用 $primary 的地方
+- 嵌套规则：.nav { ul { li { ... } } } → .nav ul li { ... }（选择器拼接）
+- & 父选择器引用：a { &:hover { color: red } } → a:hover { color: red }
+- @mixin / @include：@mixin border-radius($r) { border-radius: $r; } → @include border-radius(5px) 替换为 border-radius: 5px
+- @extend：.error { color: red; } .fatal { @extend .error; font-weight: bold; } → .error, .fatal { color: red; } .fatal { font-weight: bold; }
+- 数学运算：width: 100% / 3、$spacing * 2
+- 颜色函数：lighten($color, 10%)、darken($color, 20%)——用简单的 HSL 亮度调整
+
+解析流程：SCSS 用花括号分块的 tokenizer，Sass 缩进语法用 INDENT/DEDENT。构建嵌套规则树，然后展平为 CSS 选择器-属性对。@mixin 和变量先做文本替换再解析嵌套。
+
+python3 sass_compiler.py style.scss。纯 Python 不调用 libsass。

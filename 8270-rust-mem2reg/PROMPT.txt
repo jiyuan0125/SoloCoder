@@ -1,5 +1,9 @@
-帮我实现 mem2reg 优化 pass，把栈上的局部变量（load/store）提升到 SSA 寄存器。
+编译器前端生成的 IR 经常把所有局部变量都放在栈上（alloca + store + load），但这样后续优化 pass 很难分析数据流。mem2reg pass 把这些栈变量提升到 SSA 寄存器，消除冗余的内存访问。Rust 实现。
 
-扫描 IR 中的 alloca 指令，分析每个 alloca 的 store 和 load 操作。如果该 alloca 只在同一个基本块内使用且没有 address-taken，直接用值替换。如果跨基本块，在支配边界插入 phi 函数完成提升。不能提升的（被取地址、有复杂控制流）保持原样。
+扫描函数中所有 alloca 指令，逐个分析是否可以提升。不能提升的情况：alloca 的地址被传递给其他函数（address-taken）、有 volatile load/store、在循环中被条件性地 store（部分初始化）。对这些 alloca 保持原样。
 
-Rust 实现，cargo test 用含多个局部变量赋值的函数做测试。
+对于可提升的 alloca，分两步处理。简单情况：alloca 只在同一个基本块内被 load 和 store，且 store 在所有 load 之前——直接用 store 的值替换所有 load，删掉 alloca、store 和 load 指令。
+
+复杂情况：跨基本块的使用。对每个 alloca，收集所有 store 点，计算支配边界，在支配边界对应的块头部插入 phi 函数。然后在支配树上 DFS 做变量重命名——遇到 store 就更新当前值，遇到 load 就替换为当前值，遇到 phi 就创建新的 SSA 值。这个流程和 SSA 构建算法类似。
+
+cargo test 用含有多个局部变量赋值的函数验证——if-else 分支中各赋值然后汇合、循环迭代中的计数器。cargo build 通过。

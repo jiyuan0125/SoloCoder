@@ -1,5 +1,7 @@
-写一个 DHCP 协议解析工具，从 pcap 文件中提取 DHCP 交互信息。
+网络里有时候出现 IP 冲突或者客户端获取不到 IP，排查 DHCP 问题要看报文交互。写个 DHCP 解析工具从抓包中分析 DHCP 流程。
 
-解析 DHCP 包的各种消息类型（Discover、Offer、Request、ACK、NAK、Release）、请求和分配的 IP 地址、子网掩码、网关、DNS 服务器、租期等选项字段。追踪完整的 DHCP 四步交互过程。
+Python 实现 DHCP 报文解析器。DHCP 基于 UDP（客户端 68→服务端 67），承载在 BOOTP 格式上。解析 BOOTP 头：op（Request=1/Reply=2）、xid（事务 ID，用于匹配请求和响应）、客户端 IP、分配的 IP（yiaddr）、DHCP 服务器地址（siaddr）、客户端 MAC（chaddr）。
 
-能够检测异常：未授权的 DHCP 服务器（Offer 来源不是已知服务器）、重复 IP 分配、异常短租期。Python 3 写，用 scapy 或 dpkt 解析 pcap。
+DHCP Options 解析：逐个 TLV 解析——53（消息类型：Discover/Offer/Request/ACK/NAK/Release）、54（Server Identifier）、1（Subnet Mask）、3（Router 网关）、6（DNS 服务器列表）、51（Lease Time 租期秒数）、12（Host Name）、60（Vendor Class）、81（Client FQDN）。
+
+从 pcap 提取 DHCP 包，按 xid 分组展示交互流程（Discover→Offer→Request→ACK）。输出每个消息类型和关键 option 值。异常检测：NAK 消息（服务器拒绝分配）、租期过短（小于 1 小时可能不正常）、多个 DHCP 服务器响应（可能存在 rogue DHCP）。python3 命令行工具。

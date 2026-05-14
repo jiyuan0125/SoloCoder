@@ -1,4 +1,9 @@
-用 C 实现一个 LSM-Tree（Log-Structured Merge Tree），一个简易的 KV 存储引擎。
-LSM-Tree 是 RocksDB、LevelDB 的核心数据结构，写性能很高：写操作先到内存的 memtable，满了之后刷成磁盘上的 sstable，后台定期合并。
-我需要 put(key, value)、get(key)、delete(key)、scan(start, end) 四个操作。内存部分用跳表，磁盘 sstable 用简单有序文件。
+做一个自己的 KV 存储引擎听起来挺有意思。RocksDB 和 LevelDB 底层都用的 LSM-Tree，写性能极高——秘诀就在于所有写操作都先顺序写到内存里，满了再批量刷到磁盘。读的时候从内存查到磁盘逐层找，虽然读稍慢但写是真的快。
+
+用 C 实现一个简易的 LSM-Tree KV 存储引擎。内存部分用跳表做 memtable——put/get/delete 都是 O(logn)，支持按 key 有序遍历。磁盘部分用 sstable（排序好的文件），格式自己设计：数据区存排序好的 key-value 对，索引区放在文件尾部（每个 block 的起始 key 和偏移量）方便加载。
+
+四个核心操作：put(key, value) 先写 WAL 日志（可选），再写入 memtable；get(key) 先查 memtable，没命中就按层级查磁盘上的 sstable（从最新的开始查）；delete(key) 用墓碑标记（tombstone）写入 memtable，查询时遇到墓碑就返回"不存在"；scan(start_key, end_key) 范围遍历，合并内存和磁盘的数据。
+
+memtable 有大小上限（比如 4MB），满了之后变成 immutable memtable 等待刷盘，同时创建一个新的空 memtable 继续接收写入。后台刷盘把 immutable memtable 写成 sstable 文件。sstable 文件多了要做 compaction——把多个小文件归并排序成一个大文件，清理掉被覆盖和被删除的旧数据。
+
 整个程序编译成一个命令行工具，数据存在指定目录下。gcc 编译。

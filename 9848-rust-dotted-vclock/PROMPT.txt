@@ -1,12 +1,13 @@
-用 Rust 实现 Dotted Version Vector（点版本向量）。
+向量时钟有一个已知问题——客户端不断更新同一个 key 时，向量时钟会越来越大（因为每个更新者的 counter 都要记录）。Dotted Version Vector（点版本向量）通过把"当前更新者"和"已观察到的版本"分开来解决这个膨胀问题。用 Rust 实现这个优化。
 
-普通向量时钟有个问题：客户端写数据时不知道应该递增哪个节点，容易产生冲突。Dotted Version Vector 给每次写入分配一个唯一的 (node_id, counter) 点，避免兄弟值（sibling）的产生。
+Dotted VV 的数据结构：DotVersionVector { dot: (node_id, counter), context: VectorClock }。dot 是当前这个版本的"点"（谁写的、第几次写），context 是写这个版本时看到的所有其他版本（一个标准的向量时钟）。这样就把"谁更新了"和"更新时看到了什么"分开了。
 
-核心逻辑：
-- 每个节点维护一个 version vector（类似普通向量时钟）
-- 客户端读取时获取当前 context（包含 version vector）
-- 客户端写回时带上 context，服务端据此生成分配新的 dot
-- dot = (node_id, counter)，其中 counter 从 version vector 中该节点的值 + 1
-- 合并时，已经包含在 version vector 中的 dot 不再产生新 sibling
+更新的流程：节点写新版本时，dot 变成 (self_id, context[self_id] + 1)，context 更新为 merge(context, old_dot)。这样 dot 只有一个节点的 counter，不会膨胀。
 
-cargo build 通过，模拟两个客户端并发读写同一 key，测试不产生多余 sibling。
+版本比较的规则：版本 A 的 dot 被 B 的 context 覆盖（A.dot.node 在 B.context 中且 B.context[A.dot.node] >= A.dot.counter），则 A 是 B 的祖先（A before B）。如果 A 和 B 互不覆盖，它们是并发的（冲突）。
+
+服务器端的处理：服务器为每个 key 维护一个 Dotted VV。多个客户端的并发写会产生多个 sibling（兄弟版本），需要冲突解决。解决后合并为一个新版本，dot 指向服务器自己。
+
+模拟：3 个客户端并发写同一个 key，产生 3 个并发版本。服务器检测到冲突后用 LWW 解决，生成新的合并版本。打印版本演化图。
+
+cargo build 通过。

@@ -1,5 +1,11 @@
-在做用户标签系统，每个用户可能有几百个标签，需要快速做交集并集运算。用 Rust 实现一个 Roaring Bitmap 数据结构。
+用户标签系统——每个用户可能有几百个标签（兴趣、地域、行为），要快速做标签的交集并集运算。Roaring Bitmap 是压缩位图的标准实现，在 Druid、Spark、Elasticsearch 里都用。
 
-Roaring Bitmap 把 32 位整数空间分成 65536 个桶，每个桶根据数据稀疏程度选择用数组、位图还是游程编码来存储。要支持添加、删除、查找元素，以及两个 Roaring Bitmap 之间的 AND、OR、XOR、ANDNOT 运算。元素数量统计要准确。
+用 Rust 实现 Roaring Bitmap 数据结构。
+
+分桶策略——把 32 位整数空间分成 65536 个桶（高 16 位决定桶号）。每个桶根据数据稀疏程度选择存储方式：元素少于 4096 个用 Array Container（有序 Vec<u16>），超过 4096 个用 Bitmap Container（8192 字节的位图）。切换是自动的——Array 增长到阈值就转成 Bitmap，Bitmap 缩小到阈值就转回 Array。
+
+基础操作——add(value)：计算桶号，在对应桶中插入低 16 位。remove(value)：在桶中删除。contains(value)：判断是否存在。元素数量统计要准确。
+
+集合运算——两个 Roaring Bitmap 之间的 AND、OR、XOR、ANDNOT。运算时按桶号对齐——两边都有该桶就做桶级运算（Array+Array 可以双指针归并，Bitmap+Bitmap 逐字 OR），只有一边有的桶直接取过来。
 
 提供 CLI 能从文件加载整数集合，执行集合运算后输出结果。cargo build 通过。

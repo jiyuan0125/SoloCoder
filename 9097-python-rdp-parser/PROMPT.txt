@@ -1,1 +1,9 @@
-远程桌面协议的流量想分析一下有没有异常连接。用 Python 写一个 RDP 协议解析器，解析 RDP 连接建立阶段的 X.224 和 MCS 协议数据，提取连接请求中的关键信息（客户端名称、颜色深度、支持的通道）。能从 pcap 文件中识别 RDP 连接（TCP 3389），输出连接建立的基本信息。纯 Python 解析二进制，命令行使用。
+远程桌面协议 RDP 的流量分析在应急响应中挺重要，攻击者经常通过 RDP 横向移动。但 RDP 协议很复杂，写个工具解析基本的握手和输入输出数据。
+
+Python 实现 RDP 基本协议解析器。RDP 连接建立阶段的 X.224 Connection Request/Confirm（TPKT 头 4 字节 + DT data 头）要解析。然后是 MCS（Multipoint Communication Service）层的 Connect-Initial 和 Connect-Response。
+
+关键信息提取：从连接请求中提取客户端名称、通道数量和通道名称（如rdpdr、cliprdr、drdynvc）。从 GCC（Generic Conference Control）数据中解析用户名、域名、桌面分辨率和颜色深度。
+
+安全层解析：如果连接使用了 CredSSP（TLS 加密），解析 SPNEGO token 中的 NTLM 或 Kerberos 认证信息。如果使用标准 RDP 安全，解析 Server Security Header 和 Client Security Header 中的加密方法。
+
+从 pcap 中提取 TCP 3389 端口流量解析。输出连接建立过程的详细信息——客户端名、用户名、分辨率、安全层类型。python3 命令行工具，只解析握手阶段（加密后无法解密）。

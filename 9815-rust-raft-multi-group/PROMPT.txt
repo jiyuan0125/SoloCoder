@@ -1,11 +1,11 @@
-实现 Raft 多 Raft Group 管理，用 Rust。
+Multi-Raft 是 TiKV 和 CockroachDB 用的方案——不是整个集群一个 Raft 实例，而是把数据分成多个 range，每个 range 有自己的 Raft group。这样多个 range 可以并行复制，不互相阻塞。实现一个简单的 Multi-Raft 管理器来看看这种架构是怎么工作的。
 
-很多系统（如 TiKV、cockroachdb）用 Multi-Raft 把数据分片管理，每个分片跑一个独立 Raft 实例。需要在一个进程里管理多个 Raft Group，共享传输层和存储。
+核心数据结构：MultiGroupManager 包含多个 Raft Group，每个 Group 有自己的 GroupId、独立的 Raft 状态机（term、日志、commitIndex 等）、和一组副本节点。不同 Group 的副本可能分布在不同节点上——比如 Group-1 的副本是 [A, B, C]，Group-2 的副本是 [B, C, D]。
 
-要做的：
-- 定义 RaftGroup 结构，每个 Group 有独立的日志、状态机、配置
-- RaftNode 管理多个 Group，统一调度选举和心跳定时器
-- 不同 Group 的消息通过 Group ID 路由
-- 支持动态创建和销毁 Group
+管理器的功能：创建新 Group（指定副本节点列表）、向指定 Group 提交命令、查询 Group 的状态。每个 Group 的 Raft 实例完全独立——它们有各自的选举、日志复制、提交。管理器只是个容器。
 
-cargo build 通过，创建 3 个 Group 测试选举和日志复制互不干扰。
+跨 Group 操作：不实现分布式事务（太复杂），但需要支持 Group 的分裂和合并。分裂：当一个 Group 的数据量超过阈值时，一分为二，新 Group 继承原 Group 的部分数据。合并：两个相邻的 Group 合为一个。
+
+模拟 4 个物理节点上运行 3 个 Raft Group。每个 Group 有 3 个副本。打印物理节点 → Group 的映射关系，以及各 Group 的 Leader 分布。
+
+cargo build 通过。

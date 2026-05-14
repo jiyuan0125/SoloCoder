@@ -1,5 +1,9 @@
-帮我写个 Go 测试夹具（fixture）生成器。
+帮我写个 Go 测试夹具（fixture）生成器。很多测试都需要准备一堆初始数据——用户、订单、商品——每次手写太重复了。fixture 工厂函数能自动生成随机但合理的测试数据。
 
-很多测试都需要准备一堆初始数据，每次手写太重复了。工具接收一个 Go struct 类型定义（或从源码自动解析），生成 fixture 工厂函数。工厂函数可以生成该类型的随机实例，支持字段级别的自定义覆盖（类似 Python factory_boy 的思路）。
+工具接收一个 Go struct 类型定义（从源码自动解析），生成 fixture 工厂函数。工厂函数可以生成该类型的随机实例，每个字段根据类型自动生成随机值——string 用随机字母数字、int 用随机正整数、time.Time 用最近的时间、bool 随机、slice 用随机长度。支持字段级别的自定义覆盖（类似 Python factory_boy 的思路）。
 
-还要支持关联关系的 fixture（比如 Order 关联 User，生成 Order fixture 时自动生成 User）。输出 .go 文件。Go 标准库，go build 通过。
+工厂函数签名：NewUserFixture(overrides ...func(*User)) *User。调用时可以覆盖特定字段：NewUserFixture(func(u *User) { u.Name = "specific name"; u.Email = "test@example.com" })。
+
+还要支持关联关系的 fixture——比如 Order 关联 User，生成 Order fixture 时自动生成关联的 User fixture。支持 one-to-many 和 many-to-one 关系（通过 struct 字段的类型推断关系）。
+
+输出 .go 文件。Go 标准库，go build 通过。

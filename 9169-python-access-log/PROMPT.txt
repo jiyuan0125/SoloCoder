@@ -1,13 +1,9 @@
-访问日志分析工具，从 Web 服务器访问日志中提取安全相关的信息。
+访问日志分析工具，从 Web 服务器访问日志中提取安全相关的信息。手动看 nginx access.log 效率太低了，写个工具自动提取安全指标和异常模式。
 
-运维每天产生几万条 Nginx 访问日志，人工看不过来。需要一个工具自动找出可疑的访问模式。
+Python 实现日志分析器。日志解析：支持 nginx 默认格式（$remote_addr - $remote_user [$time_local] "$request" $status $body_bytes_sent "$http_referer" "$http_user_agent"）和 Apache Common/Combined 格式。每条日志解析为结构化对象——IP、时间、方法、路径、状态码、字节数、UA、Referer。
 
-Python 命令行工具：
-- 解析 Nginx/Apache Combined Log Format 日志
-- 统计 IP 访问频率，标记超过阈值的 IP（疑似爬虫或暴力破解）
-- 检测路径扫描行为（大量 404 响应、访问敏感路径如 /admin、/.env）
-- 按时间段统计请求量和状态码分布
-- 输出分析报告，包含 Top10 高频 IP、可疑请求列表、异常时间段
+安全指标统计——请求量 Top 20 IP（可能是扫描或攻击来源）、4xx/5xx 错误统计（按状态码和路径分组）、敏感路径访问（/wp-admin、/.env、/etc/passwd、/debug、/actuator）、异常 User-Agent（空 UA、已知攻击工具如 sqlmap/nmap/dirbuster）、高频路径（短时间大量请求同一路径可能是枚举或暴力破解）。
 
-用法：python access_log.py analyze access.log --threshold 100 --output report.txt
-支持日志文件和 stdin 输入，能处理百万行级别的日志。
+时间维度分析：每小时的请求量分布、异常高峰检测（请求量突然比平均值高 N 倍）。地理位置：可选加载 GeoIP 数据库统计 Top 国家/城市。
+
+输出分析报告——关键指标摘要、可疑行为列表、建议封禁的 IP。支持 JSON 输出。python3 命令行工具。

@@ -1,12 +1,13 @@
-帮我用 Rust 写一个服务注册中心（Service Registry）。
+服务注册中心是微服务架构的心脏——每个服务实例启动后在这里注册自己的地址，下线时注销。其他服务需要调用时从注册中心查询目标服务的实例列表。用 Rust 实现一个简单的服务注册中心。
 
-微服务架构里，每个服务启动后需要把自己的地址注册到注册中心，其他服务从注册中心发现可用实例。
+注册中心的接口设计：register(service_name, instance_id, address, metadata) 注册实例、deregister(service_name, instance_id) 注销实例、discover(service_name) → Vec<Instance> 查询实例列表、heartbeat(instance_id) 心跳续约。
 
-功能：
-- 服务注册：服务实例启动时注册自己的名称、地址、端口、元数据
-- 心跳续约：注册的实例需要定期发心跳，超时不续约的自动注销
-- 服务发现：按服务名称查询所有健康实例列表
-- 服务下线：实例主动注销（graceful shutdown）
-- 能看到注册中心的完整服务列表和各实例状态
+数据存储：HashMap<ServiceName, HashMap<InstanceId, Instance>>。Instance 包含 id、address（IP:Port）、metadata（键值对，比如版本号、权重）、注册时间、最后心跳时间。所有数据存内存。
 
-命令行交互，内存存储。cargo build 通过。
+实例的健康管理：每个实例注册后必须定期发送心跳（比如每 10 秒）。注册中心如果超过 30 秒没收到心跳，标记实例为 unhealthy（不返回给查询方），但还保留记录。超过 90 秒没心跳，彻底删除。
+
+变更通知（Watch 机制）：客户端可以 watch 某个 service_name。该服务下的实例列表发生变化时（注册、注销、状态变化），通知所有 watcher。通知通过 channel 异步发送。
+
+模拟 3 个服务各注册 2 个实例。运行过程中一个实例停止心跳，观察它从 healthy 变为 unhealthy 再被删除的过程。打印注册中心的状态变化。
+
+cargo build 通过。

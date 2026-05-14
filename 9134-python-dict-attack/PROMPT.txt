@@ -1,5 +1,9 @@
-帮我写一个字典攻击测试工具，用于安全评估时测试密码强度。
+写一个字典攻击测试工具，用于授权安全评估中测试服务的密码强度。这是安全团队内部用的渗透测试工具，不是用来攻击别人的。
 
-加载一个密码字典文件（每行一个密码），对目标服务做认证尝试。支持几种常见协议：HTTP Basic Auth、SSH、FTP。控制尝试速率避免触发封禁（可配置每秒请求数和间隔）。
+Python 实现。加载密码字典文件（每行一个密码，支持 # 开头的注释行和空行跳过），对目标服务逐个尝试认证。支持三种协议——HTTP Basic Auth（用 requests 发送带 Authorization 头的请求，检查 401/200 状态码判断成功）、SSH（用 paramiko 连接尝试密码认证，捕获 AuthenticationException 判断失败）、FTP（用 ftplib 登录，检查 530 Login incorrect / 230 Login successful 响应码）。
 
-注意这只是安全测试用的，要在授权范围内使用。输出每个尝试的结果，统计成功率、平均耗时。Python 3，用 paramiko 做 SSH、requests 做 HTTP、ftplib 做 FTP。python dict_attack.py --target ssh://host --user admin --wordlist rockyou.txt。
+速率控制：可配置请求间隔（默认 1 秒）和每秒最大请求数，避免触发目标的速率限制和 IP 封禁。断点续传：记录已尝试到字典的第几行到文件，中断后可继续。
+
+实时显示进度（已尝试/总数/百分比/当前密码），找到正确密码时高亮显示。结束后统计——总尝试次数、成功次数、成功率、总耗时。也输出安全建议。python3 命令行工具。
+
+多线程支持：HTTP 模式下可以用 ThreadPoolExecutor 并发请求（线程数可配置，默认 5），SSH 模式因为是长连接建议单线程。结果同时输出终端和 JSON 文件（包含所有尝试记录）。python3 命令行工具。

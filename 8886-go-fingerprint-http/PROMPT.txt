@@ -1,8 +1,11 @@
-写个 HTTP 指纹识别工具，Go 实现。
+做安全评估需要识别目标 Web 服务器和框架——是 Nginx 还是 Apache、有没有用 WordPress、后端是 PHP 还是 Java。这些信息直接关系到该测哪些漏洞。
 
-做安全评估的时候需要识别目标 Web 服务器和框架，比如 Nginx 还是 Apache、有没有用 WordPress。通过 HTTP 响应头和页面特征来判断。
+用 Go 写一个 HTTP 指纹识别工具。detect 子命令：发送 HTTP GET 请求到目标 URL。收集响应信息——Server header（直接暴露服务器软件）、X-Powered-By header（暴露后端技术）、Set-Cookie 中的特征（如 PHPSESSID → PHP、JSESSIONID → Java）。检查常见路径——/wp-login.php 存在 → WordPress、/administrator/ → Joomla、/elmah.axd → ASP.NET、/swagger-ui/ → Spring Boot。
 
-功能：发送 HTTP 请求获取响应头和部分页面内容；匹配 Server、X-Powered-By 等头的特征；通过常见路径和文件判断框架（如 wp-login.php → WordPress）；输出识别到的技术栈。
+特征库：内置常见技术栈的指纹规则。每条规则包含——匹配位置（header/cookie/body/status_code）、匹配模式（精确匹配/正则/包含）、技术名称和版本提取规则。
 
-命令：fingerprint-http detect -url https://example.com、fingerprint-http detect -url https://example.com -verbose、fingerprint-http detect -urls urls.txt -json
+输出识别到的技术栈列表——Web 服务器（Nginx/Apache/IIS/LiteSpeed）、编程语言（PHP/Java/Python/Go/Ruby）、框架（WordPress/Laravel/Spring/Django/Express）、CMS（WordPress/Joomla/Drupal）、前端框架（React/Vue/Angular，从 HTML 和 JS 特征推断）。
+
+命令：fingerprint-http detect -url https://example.com、fingerprint-http detect -url https://example.com -verbose、fingerprint-http detect -urls urls.txt -json。
+
 Go 标准库 net/http，go build 编译通过。

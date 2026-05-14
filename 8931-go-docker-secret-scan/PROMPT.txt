@@ -1,1 +1,11 @@
-Docker 镜像构建时可能把密钥 COPY 进去了。写一个 Go 工具扫描 Docker 相关文件中的敏感信息：检查 Dockerfile 里的 ENV、ARG、COPY 指令是否包含密码或密钥文件路径。检查 docker-compose.yml 里的环境变量是否明文存储密码。检查 .dockerignore 是否排除了敏感文件。输出风险条目和修复建议。go build 编译通过。
+Docker 镜像构建时可能把密钥 COPY 进去了——Dockerfile 里有 ENV SECRET=xxx，或者 COPY .env /app/，构建出来的镜像里就带着密钥。推到 Docker Hub 的话任何人都能拿到。
+
+用 Go 写一个 Docker 相关文件的敏感信息扫描工具。检查三类文件：
+
+Dockerfile 检查：ENV 指令中是否有密码、密钥等敏感值（ENV PASSWORD=xxx、ENV API_KEY=xxx）。ARG 指令是否有默认的敏感值。COPY 指令是否复制了敏感文件（.env、*.pem、*.key、id_rsa）。RUN 指令中是否有硬编码凭据（git clone https://user:pass@repo）。
+
+docker-compose.yml 检查：environment 中的明文密码（MYSQL_ROOT_PASSWORD: mysecretpassword）。volumes 挂载了宿主机敏感文件（/etc/shadow、/root/.ssh）。ports 直接暴露了敏感端口（3306、6379 到 0.0.0.0）。
+
+.dockerignore 检查：是否排除了 .env、.git、*.key 等敏感文件。缺少关键排除项时给出警告。
+
+输出每类文件的风险条目和修复建议。go build 编译通过。

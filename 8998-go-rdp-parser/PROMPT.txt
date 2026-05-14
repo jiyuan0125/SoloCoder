@@ -1,3 +1,9 @@
-需要分析远程桌面的连接行为。Go 写一个 RDP 协议解析工具。
+Go 实现一个 RDP 协议解析工具，只关注连接建立阶段，提取客户端信息和认证方式。
 
-从 pcap 文件提取 TCP 3389 端口的数据流：解析 RDP 连接建立的 X.224 和 MCS 层协议；提取客户端信息（计算机名、用户名、客户端分辨率、键盘布局）；识别认证类型；统计会话时长和数据量。不需要完整实现 RDP，只解析连接建立阶段即可。Go 标准库，go build 通过。
+远程桌面协议（RDP）的安全分析重点在于：谁在连接（客户端计算机名和用户名）、从哪里连（客户端 IP）、用的什么客户端（版本和分辨率）、用的什么认证方式（NTLM 还是 CredSSP）。完整实现 RDP 太复杂了，但连接建立阶段的信息已经能满足大部分安全审计需求。
+
+解析从 TCP 3389 端口的数据流开始。RDP 连接建立的第一步是 X.224 连接请求——这是一个 TPKT 头（4 字节：版本 0x03、保留、长度高字节、长度低字节）后面跟着 COTP（Connection-Oriented Transport Protocol）数据。X.224 请求里有一个 routingToken 字段（可选）和 cookie，里面可能包含用户名信息。
+
+接下来是 MCS（Multipoint Communication Service）层：先有 Connect-Initial 消息，里面包含 GCC（Generic Conference Control）数据。GCC 的 Create Conference Request 里面嵌入了客户端的 Conference Info——这里有客户端计算机名、分辨率、键盘布局、支持的颜色深度等信息。
+
+认证方式识别：如果在 MCS 之后看到了 CredSSP 的 SPNEGO token（NTLMSSP），说明用的是网络级认证（NLA）。工具输出客户端信息摘要和认证类型。Go 标准库，go build 通过。

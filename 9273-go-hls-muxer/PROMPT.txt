@@ -1,11 +1,7 @@
-帮我用 Go 写一个 HLS 封装工具。
+把一个 MPEG-TS 文件切成 HLS 直播流——这事看起来简单，实际有几个细节要注意。分片要在关键帧边界切割否则播放器会花屏，m3u8 的标签要严格符合规范否则某些播放器不认。Go 来实现。
 
-把一个 MPEG-TS 文件切片打包成 HLS 直播流：
-- 读取输入的 TS 文件，按照指定时长（如 10 秒）切分成多个 TS 分片
-- 生成 HLS m3u8 播放列表文件（主播放列表 + 媒体播放列表）
-- 支持 #EXTINF 标签标注每个分片时长
-- 支持 #EXT-X-TARGETDURATION、#EXT-X-MEDIA-SEQUENCE、#EXT-X-PLAYLIST-TYPE 等标签
-- 分片时要尽量在关键帧边界切割
-- 支持点播（VOD）和直播（LIVE）两种模式
+分片逻辑：读取 TS 文件，逐包（188 字节）扫描，通过 PAT/PMT 找到视频 PID，然后解析 PES 头的 PTS 时间戳确定每个关键帧的位置。H.264 的关键帧可以通过 NAL 单元类型为 5（IDR）来识别。分片时找到距离目标时长最近的关键帧作为切割点，生成独立的 .ts 文件。
 
-用法 hls-mux -input video.ts -duration 10 -mode vod -output ./hls_output/。go build 通过。
+m3u8 生成——VOD 模式下生成两个文件。主播放列表（master.m3u8）只有几行：#EXTM3U、#EXT-X-STREAM-INF 标签指定带宽和分辨率、指向媒体播放列表的 URI。媒体播放列表（media.m3u8）包含：#EXTM3U 头、#EXT-X-VERSION（默认 3）、#EXT-X-TARGETDURATION（所有分片的最大时长取整）、#EXT-X-MEDIA-SEQUENCE（分片起始序号）、每个分片的 #EXTINF 标签（实际时长，可以是小数）和文件名、最后 #EXT-X-ENDLIST 表示结束。
+
+LIVE 模式不写 #EXT-X-ENDLIST，后续可以追加新分片。用法 hls-mux -input video.ts -duration 10 -mode vod -output ./hls_output/。Go 标准库，go build 通过。

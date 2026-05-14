@@ -1,8 +1,9 @@
-做个 WebAuthn 认证数据处理工具，Go 实现。
+越来越多的网站支持 Passkey/WebAuthn 登录。调试 WebAuthn 的时候需要解析浏览器发给服务端的 authenticator 数据，这些数据是 CBOR 或自定义二进制格式，直接看不懂。
 
-现在越来越多的网站支持 Passkey/WebAuthn 登录，调试时需要解析浏览器发的 authenticator 数据。
+用 Go 写一个 WebAuthn 认证数据处理工具。parse-attestation 子命令：输入 attestation 对象的 JSON（从浏览器 WebAuthn API 获取的 response.attestationObject，Base64URL 解码后）。解析——格式标识符（fmt，如 none/packed/tpm/android-key）、authData（解析 RP ID Hash、flags、签名计数器、attestedCredentialData 中的 AAGUID + credential ID + COSE 公钥）。
 
-功能：解析 WebAuthn attestation 对象（提取凭证ID、公钥、签名等）；解析 assertion 响应（提取 authenticatorData、签名、clientDataJSON）；验证签名和 challenge 是否匹配。
+parse-assertion 子命令：输入 assertion 响应的 JSON。解析 authenticatorData（RP ID Hash + flags + 计数器 + 可选的扩展数据）。解析 clientDataJSON（type、origin、challenge、crossOrigin）。展示 challenge 是否匹配、origin 是否正确。
 
-命令：webauthn-handler parse-attestation -file attestation.json、webauthn-handler parse-assertion -file assertion.json、webauthn-handler verify -challenge <hex> -origin "https://example.com" -data <base64>
+verify 子命令：输入 challenge、origin、authenticatorData 和签名。验证流程——clientDataJSON 的 type 是否 "webauthn.get"（认证）或 "webauthn.create"（注册）。challenge 是否匹配。origin 是否匹配。用 COSE 公钥验证 authenticatorData + clientDataJSON hash 的签名。
+
 Go 标准库加 encoding/json，go build 通过。

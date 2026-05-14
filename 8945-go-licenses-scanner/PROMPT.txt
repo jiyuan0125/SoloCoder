@@ -1,1 +1,9 @@
-项目里混了一些 GPL 的依赖，商业发布可能有问题。写一个 Go 的开源许可证扫描工具：扫描项目目录下的依赖配置文件（go.mod、package.json），识别每个依赖的许可证类型。维护一个常用包的许可证映射表（内置几百条）。按许可证类型分组显示，标记有法律风险的（AGPL、GPL、SSPL 等）。支持配置白名单和黑名单。go build 编译通过。
+项目里混了一些 GPL 的依赖，商业发布可能有问题。需要扫描所有依赖的许可证类型，找出有法律风险的。
+
+用 Go 写一个开源许可证扫描工具。扫描项目目录下的依赖配置文件——go.mod（Go 依赖）、package.json（Node.js 依赖）。从文件中提取依赖包名和版本。
+
+许可证识别：维护一个常用包的许可证映射表（内置几百条，JSON 格式）——格式：package_name → license_type（MIT、Apache-2.0、GPL-2.0、GPL-3.0、LGPL、BSD-2-Clause、BSD-3-Clause、MPL-2.0、ISC、Unlicense 等）。映射表按包名精确匹配。也支持检查依赖目录下是否有 LICENSE 文件，用关键词匹配识别许可证类型。
+
+风险标记：高风险——AGPL-3.0（网络使用也必须开源）、GPL-2.0/3.0（衍生作品必须开源）、SSPL（MongoDB 的 Server Side Public License）。中风险——LGPL（动态链接没事，静态链接需要开源）、MPL-2.0（文件级别 copyleft）。低风险——MIT、Apache-2.0、BSD、ISC（基本无限制）。
+
+按许可证类型分组显示，标记有法律风险的。支持配置白名单和黑名单。go build 编译通过。

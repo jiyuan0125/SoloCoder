@@ -1,3 +1,9 @@
-我最近在做一个工作流系统，需要让运营同学自己写简单的脚本来描述业务规则。想用 Python 实现一个小型 DSL 引擎，支持变量赋值、条件判断（if/else）和循环（while/for），能解析自定义语法的脚本并执行出结果。
+运营团队每周都要改业务规则，找开发排期太慢了。给她们做个 DSL 让她们自己写脚本——定义变量、写 if/else 判断、跑 for 循环，不需要图灵完备但基本控制流要有。Python 实现，让运营用文本编辑器写 .dsl 脚本就能跑。
 
-解析的时候要能给出有意义的错误提示，包括行号和具体哪里出错了。用纯 Python 实现，不依赖外部解析库。python 能跑起来就行，最好有个命令行入口，读 .dsl 文件然后执行。
+语法设计参考简化版 Python：变量赋值 x = 10、算术表达式、字符串拼接、if/elif/else 块（用缩进或 end 标记）、while 循环、for x in range(n) 循环、print 输出。支持整数、浮点、字符串、布尔值四种类型。不支持函数定义和类。
+
+解析器分两步：词法分析产出 token 流（关键字、标识符、运算符、字面量、换行缩进），语法分析产出 AST（Assign、If、While、For、Print、ExprStmt 节点）。缩进用 INDENT/DEDENT token 处理，类似 Python 的方式。
+
+执行引擎遍历 AST 求值，维护一个变量作用域栈（支持嵌套块的局部变量）。运行时错误要带上源码行号——"RuntimeError at line 5: division by zero"。语法错误要带位置——"SyntaxError at line 3, column 10: unexpected token 'else'"。
+
+命令行：python3 dsl_engine.py script.dsl 执行脚本文件。纯 Python 实现，不依赖外部解析库。

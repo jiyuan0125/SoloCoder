@@ -1,5 +1,5 @@
-帮我做一个 CRC 校验工具，支持 CRC32 校验和的计算和验证。
+下载大文件后怎么确认没有损坏？发布方通常会提供 CRC32 校验值。算一下本地文件的 CRC32 和给定的值对不对就知道文件是否完整。写个 CRC32 校验工具来干这件事。
 
-下载大文件后需要校验完整性，一般发布方会提供 CRC32 值。工具要能：计算单个文件的 CRC32、批量计算目录下所有文件的 CRC32、对比给定的校验值是否匹配。输出要和常用的 CRC 工具一致方便对比。
+三种使用模式。计算模式：给一个文件路径，算出 CRC32 值输出（十六进制大写，8 位）。验证模式：给文件路径和参考 CRC32 值（--check 参数），工具算完后自动对比，输出匹配或不匹配的结果和实际值。批量模式：给一个目录路径（--batch），递归扫描所有文件计算 CRC32，输出一份校验报告——每行是文件名和对应的 CRC32 值，末尾是总文件数。
 
-用法：python main.py file.dat 计算 CRC32；python main.py file.dat --check ABCD1234 验证；python main.py --batch ./downloads/ 批量计算并生成校验报告。Python 标准库，用 zlib 或 binascii。
+大文件处理——不能一次读入内存，分块读取（每块 8KB）用 zlib.crc32 增量计算，传入上一个 CRC 值作为初始值继续算。最终结果取无符号 32 位整数再转十六进制。输出格式要和常见 CRC 工具（如 7-Zip 的 CRC-SHA）保持一致，方便用户交叉验证。用法：python3 crc_checker.py calc file.dat 或 python3 crc_checker.py verify file.dat --check ABCD1234

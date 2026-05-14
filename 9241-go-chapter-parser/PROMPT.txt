@@ -1,5 +1,5 @@
-教学视频想加章节标记方便跳转，MKV 支持这个功能。
+教学视频想加章节标记方便跳转——录了一小时的网课，加上章节之后学生能直接跳到感兴趣的部分。MKV 和 MP4 都支持章节，但格式完全不同，想统一处理。
 
-解析视频文件中的章节数据。支持 MKV 的 Chapters 元素和 MP4 的 chap box。提取每个章节的起止时间、章节标题（包括多语言标题）。嵌套章节（子章节）的层级关系也要保留。输出章节列表和总章节数。
+解析视频文件中的章节数据，支持两种容器。MKV 容器的 Chapters 元素：EditionEntry 包含多个 ChapterAtom，每个 atom 有 ChapterTimeStart（纳秒精度的时间戳）、ChapterTimeEnd（可选）、ChapterDisplay（含 ChapterString 标题和 ChapterLanguage 语言标签）。嵌套的 ChapterAtom 表示子章节——比如"第一章"下面有"1.1""1.2"这种层级关系，用缩进表示。MP4 容器的章节信息在 moov → trak → mdia → minf → stbl → stsg 或者 udta → chpl（QuickTime 章节：100 字节条目数组，每个条目包含时间戳和标题），Nero 格式的章节在 meta box 里的 ©chp 或者 chpl atom。输出章节列表：序号、起始时间（HH:MM:SS.mmm）、标题、层级深度。多层嵌套时用树状结构显示。
 
 Go 标准库，go build 通过。

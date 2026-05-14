@@ -1,12 +1,13 @@
-写个 Rust 程序实现任务故障转移（Failover）。
+分布式任务执行最怕的就是——任务跑到一半 Worker 挂了。这个任务是算完成了还是没完成？如果是拆分成子任务的大任务，一部分子任务已经完成了怎么处理？Failover 机制就是处理这些故障恢复场景的。用 Rust 实现一个带 failover 的任务执行框架。
 
-某个 worker 执行任务时挂了，它手里还没完成的任务要能被其他 worker 接手继续执行，不能丢任务。
+任务的状态机和持久化：每个任务的状态变化都记录到日志（类似 WAL）。状态链是：Submitted → Scheduled → Running → (Completed | Failed | Timeout)。Worker 每次开始执行和完成执行时都要写日志。这样即使 Worker 崩溃，重启后可以从日志恢复未完成的任务。
 
-具体要实现：
-- 一个任务队列 + 多个 worker，worker 从队列取任务执行
-- 可以模拟某个 worker 宕机（标记为 dead），它正在执行的任务需要被检测到
-- 其他 worker 定期检查，发现宕机 worker 的未完成任务后，把这些任务重新放回队列
-- 任务要有状态标记：pending / running / completed / failed，转移时状态要正确切换
-- 整个过程输出日志，能看到任务的转移和恢复
+故障检测和恢复：调度器监控每个 Worker 的心跳。超过 heartbeat_timeout 没收到心跳，标记 Worker 为 Dead。该 Worker 上所有 Running 状态的任务被重新标记为 Scheduled，分配给其他 Worker 重新执行。
 
-cargo build 编译通过，内存模拟。
+幂等性保证：重新执行任务时可能和之前的执行产生冲突（比如任务已经修改了外部状态）。解决方案是给任务分配一个 attempt_id，每次重试 attempt_id 递增。外部系统通过 (task_id, attempt_id) 来判断是否已经处理过。
+
+超时处理：任务执行时间超过 task.timeout 后强制取消。tokio 中用 tokio::time::timeout 包裹任务执行，超时返回 Err。
+
+模拟 3 个 Worker 执行 10 个任务。Worker-1 在执行第 3 个任务时"崩溃"。调度器检测到后把第 3 个任务重新分配给 Worker-2。打印完整的 failover 过程。
+
+cargo build 通过。

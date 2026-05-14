@@ -1,9 +1,9 @@
-帮我用 Go 写一个 WAH（Word-Aligned Hybrid）位图压缩。WAH 的思路是把位串按字对齐分块，连续全 0 或全 1 的块用 run-length 编码，混合块原样存储。
+你知道位图索引在数据库里用得很多吧？但普通位图占空间太大，压缩之后再做位运算又得先解压，两头不讨好。WAH（Word-Aligned Hybrid）位图就是来解决这个矛盾的——它按字对齐分块，连续全 0 或全 1 的块用 run-length 编码压缩，混合块原样存储，最关键的是 AND/OR 运算可以直接在压缩格式上做，不用解压。
 
-需要实现：
-- 从整数集合构建 WAH 压缩位图
-- 支持压缩位图之间的 AND、OR 位运算（直接在压缩域上做，不解压）
-- 能判断某个整数是否在位图中
-- 提供 population count
+那具体要做什么呢？先把整数集合构建成 WAH 压缩位图。WAH 的编码规则：每个 word 32 位，最高位是 0 表示 literal word（低 31 位就是原始位模式），最高位是 1 表示 fill word（第 30 位是填充值 0 或 1，低 30 位是连续多少个 literal word 长度的填充）。
 
-纯 Go 实现，go build 能过。压缩位运算的性能优势要体现出来，别偷偷解压再做。
+然后是压缩域上的位运算。两个 WAH 位图做 AND：两个 fill word 做 AND 有快速的查表结果（0-fill AND 任何东西都是 0-fill），fill 和 literal 混合时只处理 literal 部分。OR 同理。关键是不要偷偷解压再运算，要在压缩格式上直接操作。
+
+还要实现判断某个整数是否在位图中（定位到对应的 word，看是 fill 还是 literal），以及 population count（统计总共有多少位被设置了，fill word 直接乘长度，literal word 用 bits.OnesCount32）。
+
+纯 Go 实现，go build 能过。用 benchmark 对比一下压缩域运算和解压后运算的速度差距，前者应该快好几倍才对。

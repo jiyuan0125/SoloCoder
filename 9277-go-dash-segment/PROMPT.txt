@@ -1,10 +1,7 @@
-帮我写一个 DASH 分片工具，Go 实现。
+把一个完整的 MP4 文件切成 DASH 格式——这个需求在做自适应流媒体的时候经常碰到。DASH 用的是 fMP4（fragmented MP4），和普通 MP4 的区别在于数据不是全放在一个大 mdat 里，而是分成一个个独立的 fragment（moof + mdat 对）。
 
-把一个视频文件切成 DASH 格式的分片：
-- 输入 MP4 文件，按指定时长切分成 fMP4（fragmented MP4）分片
-- 生成初始化分片（init segment）包含 moov box
-- 每个媒体分片包含 moof + mdat
-- 生成对应的 MPD 清单文件，包含 SegmentTemplate 或 SegmentList
-- 支持设置分片时长和输出目录
+切片前先得把源 MP4 的 moov box 解析出来，拿到 track 信息和采样表。视频 track 的 stts（时间-采样数表）用来确定每帧的时间戳，stss（同步帧表）用来找关键帧。分片要在关键帧边界切割——一个 fragment 包含从某个关键帧到下一个关键帧之前的所有帧。
 
-用法 dash-segment -input video.mp4 -duration 4 -output ./dash_output/，生成 MPD 和分片文件。go build 通过。
+输出文件有两个部分。初始化分片（init.mp4）：包含 ftyp + moov，moov 里面是 mvhd、trak（含 tkhd、mdhd、hdlr、minf/stbl，但 stbl 里放的是 stsd 和空采样表），不包含实际数据。每个媒体分片（segment_001.m4s）：包含 moof（mfhd + traf（tfhd + trun））+ mdat，trun 里记录了这一段所有采样的时长、大小和偏移。
+
+MPD 清单文件也要自动生成——根据分片信息构造 SegmentTemplate 或 SegmentList。用法 dash-segment -input video.mp4 -duration 4 -output ./dash_output/。Go 标准库，go build 通过。

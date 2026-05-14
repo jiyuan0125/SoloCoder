@@ -1,9 +1,7 @@
-写一个从视频容器中提取字幕轨道的工具。
+第一步，找到字幕轨道。MP4 里字幕轨的 handler_type 是 "sbtl" 或 "text"（在 trak/mdia/hdlr box 里），sample entry 类型是 "tx3g" 或 "stpp"。MKV 里 TrackType 为 17 (subtitle) 的就是字幕轨，CodecID 可能是 "S_TEXT/UTF8"（SRT）、"S_TEXT/SSA"（ASS）、"S_TEXT/WEBVTT"、"S_HDMV/PGS"（图形字幕）等。
 
-支持格式：
-- MP4：从 moov/trak/mdia/minf/stbl 中提取 tx3g 或 sbtl 类型的字幕数据
-- MKV：从 Matroska Segment 中提取 subtitle 类型的 track
-- 能识别字幕编码格式（S_TEXT/UTF8、S_TEXT/SSA、S_TEXT/WEBVTT 等）
-- 把提取到的字幕数据以原始格式输出到文件
+第二步，从 MP4 提取 tx3g 字幕数据。tx3g 的 sample 结构：2 字节长度 + 文本 + 可选的样式原子。时间信息从 stts 和 ctts 表获取——每个 sample 的开始时间和持续时长。注意 tx3g 的文本是用 UTF-8 编码的，样式信息包含字体大小、颜色、位置等。
 
-Rust 项目，cargo build 编译通过。`sub-extract video.mkv --track-id 3 -o subtitles.srt`。
+第三步，从 MKV 提取字幕数据。字幕 Track 的数据在 Cluster 的 Block 中，每个 Block 是一条字幕。时间戳 = Cluster 的 Timecode + Block 的相对时间戳，乘以 TimecodeScale 得到纳秒再转成毫秒。CodecPrivate 对于 S_TEXT/SSA 来说是完整的 [Script Info] + [V4+ Styles] 头部。
+
+第四步，输出。识别字幕编码格式，把提取到的数据以对应格式保存到文件。对于 PGS 图形字幕给出"暂不支持文本提取"的提示。用法 sub-extract video.mkv --track-id 3 -o subtitles.srt。Rust 实现，cargo build 通过。

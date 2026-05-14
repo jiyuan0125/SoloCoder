@@ -1,6 +1,9 @@
-做一个 C 风格的预处理器。处理 #include、#define、#ifdef/#ifndef/#else/#endif、#undef 指令。支持嵌套 include（防止重复包含）、宏展开、条件编译。
+做一个 C 风格的预处理器。C 代码在编译之前要经过预处理——展开 #include、替换 #define 宏、处理 #ifdef 条件编译。这个步骤虽然简单但非常重要，想用 Go 实现一遍来理解。
 
-用法：preprocessor -I ./include main.c -o processed.c
-输出展开和条件选择后的纯代码。
-不用做得像 gcc -E 那么完整，核心指令覆盖就行。
-Go 标准库实现，go build 编译通过。
+处理的指令：#include "file.h" ——把指定文件的内容插入到当前位置（递归处理被包含文件里的指令）。#define NAME value ——定义宏，后续文本中的 NAME 替换为 value。#ifdef NAME / #ifndef NAME / #else / #endif ——条件编译，根据是否定义了某个宏来决定保留哪部分代码。#undef NAME ——取消宏定义。
+
+支持嵌套 include（最多 100 层防止无限递归），用 include guard 检测重复包含（#ifndef _HEADER_H_ / #define _HEADER_H_ / ... / #endif 模式）。
+
+宏展开支持带参数的函数宏和字符串化（#）及 token 粘合（##）操作符。不用做得像 gcc -E 那么完整，核心指令覆盖就行。
+
+用法：preprocessor -I ./include main.c -o processed.c。输出展开和条件选择后的纯代码。Go 标准库实现，go build 编译通过。

@@ -1,5 +1,11 @@
-需要一个两端都能高效插入和删除的队列，Vec 的头部操作太慢了。用 Rust 实现一个双端队列（Deque）。
+Rust 的 Vec 在尾部操作是 O(1)，但在头部插入或删除要移动所有元素——O(n)。滑动窗口算法需要在头部删除、尾部添加；工作窃取调度器两端都要操作。双端队列（Deque）用环形数组让两端操作都是均摊 O(1)。
 
-用环形数组实现，支持 push_front、push_back、pop_front、pop_back 四个操作，均摊 O(1)。容量不够时自动扩容，扩容策略要合理（比如翻倍）。实现 Iterator trait 支持正反遍历。能处理空队列 pop 时的情况。
+用 Rust 实现环形数组双端队列。
 
-提供基本功能测试，验证两头插入删除的正确性。cargo build 编译通过。
+第一步，内部结构。一个 Vec 作为存储，加上 head 指针和长度 count。tail 通过 (head + count) % capacity 计算。所有索引操作都要对容量取模实现环形效果。
+
+第二步，核心操作。push_front：head 前移一位再写入。push_back：写入 tail 位置，count 加 1。pop_front：读取 head 位置，head 后移，count 减 1。pop_back：tail 前移，count 减 1，返回数据。每个操作都是 O(1)。
+
+第三步，扩容策略。容量不够时分配两倍大小的新 Vec，把旧数据从 head 开始依次拷贝到新数组头部。均摊成本 O(1)。
+
+实现 Iterator 和 DoubleEndedIterator trait。空队列 pop 返回 None。cargo build 通过。

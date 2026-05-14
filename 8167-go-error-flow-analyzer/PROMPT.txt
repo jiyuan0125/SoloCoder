@@ -1,5 +1,10 @@
-写个 Go 工具，分析代码里的错误处理流程。
+写个 Go 工具，分析代码里的错误处理流程。Go 的 error 处理虽然啰嗦（if err != nil 写无数遍），但更危险的是处理写错了——丢失了错误信息、忽略了错误、重复处理。
 
-扫描 Go 源码，追踪 error 值从产生到处理的完整路径。检测以下问题：错误被忽略（函数返回 error 但调用方没有检查）、错误信息丢失（只返回 error 没有添加上下文）、重复的错误处理逻辑、switch/type switch 对 error 的处理是否穷举。
+扫描 Go 源码，追踪 error 值从产生到处理的完整路径。检测以下问题：
 
-输出每个函数的错误流向图和问题清单。命令行工具，Go 标准库实现，go build 通过。
+错误被忽略——函数返回 error 但调用方没有检查（_ = os.Remove(path) 丢弃了 error）。错误信息丢失——return err 没有添加上下文（应该用 fmt.Errorf("deleting temp file %s: %w", path, err)）。重复的错误处理逻辑——连续多段几乎相同的 if err != nil { return err } 可以提取为辅助函数。switch/type switch 对 error 的处理是否穷举——如果处理了 Sentinel errors 但没有 default 分支，可能遗漏了未知错误。
+
+输出每个函数的错误流向图——error 从哪里产生、经过哪些函数传递、最终在哪里被处理或丢失。
+
+这个工具在日常开发中能省不少重复劳动。
+命令行工具，Go 标准库实现，go build 通过。

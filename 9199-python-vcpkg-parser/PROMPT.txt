@@ -1,14 +1,7 @@
-vcpkg 依赖解析器，解析 C++ vcpkg 包管理器的依赖清单。
+vcpkg 依赖解析器。vcpkg 是微软的 C++ 包管理器，vcpkg.json 和 vcpkg-lock.json 记录了项目的依赖。C++ 项目的 SBOM 需要覆盖 vcpkg 安装的包。
 
-vcpkg 的依赖声明在 vcpkg.json 配置文件里，installed/ 目录下记录了已安装的包信息。需要解析这些文件来了解 C++ 项目的依赖状况。
+Python 实现。解析 vcpkg.json（项目配置文件）的 dependencies 数组——每个依赖可以是字符串（包名如 "fmt"）或对象（包含 name 和 version>= 等约束）。解析 vcpkg-lock.json（锁文件，类似 npm 的 package-lock.json），提取每个已安装包的 name、version、abi（二进制兼容性标识）。
 
-Python 实现：
-- 解析 vcpkg.json（清单模式配置），提取 dependencies 和 overrides
-- 扫描 vcpkg_installed/ 目录下的包信息（从每个包的 vcpkg/ 目录读取元数据）
-- 支持特性（features）依赖解析
-- 提取三元组（triplet）信息：x64-linux、x64-windows 等
-- 输出已安装包列表：名称、版本、描述、三方组
+也支持解析 vcpkg 的 installed 目录（vcpkg_installed/vcpkg/info/ 下的 .list 文件），从每个包的安装清单中提取包名、版本和安装的文件列表。
 
-用法：python vcpkg_parser.py parse vcpkg.json
-python vcpkg_parser.py installed ./vcpkg_installed
-vcpkg.json 是标准 JSON，版本格式有 version、version-date、version-string 几种。
+分析功能：统计已安装的包数量、按版本排序、构建依赖图（从 vcpkg-lock.json 的 dependencies 字段）。检测问题——同一个基础库有多个版本、缺少版本约束的依赖（应该锁定版本）。输出依赖列表、统计信息和 JSON 格式的 SBOM。python3 命令行工具。

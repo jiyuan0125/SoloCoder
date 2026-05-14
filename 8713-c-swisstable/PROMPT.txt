@@ -1,5 +1,12 @@
-我想实现一个 Swiss Table 风格的哈希表，类似 absl::flat_hash_map 的思路。用 SSE/普通字节操作同时检查多个 slot 的 tag 字节来加速查找。
+Google 的 absl::flat_hash_map 为什么这么快？Swiss Table 的秘密武器是 SIMD——把多个 slot 的 tag 字节一次性加载，用一条指令同时和目标 tag 比较，找到候选位置。即使不用 SSE，用字节循环模拟也能比传统哈希表快，因为比较的是单字节 tag 而不是完整 key。
 
-每个 slot 存一个 7-bit tag（取哈希值的高 7 位）加 key-value。通过一次比较多个 tag 快速定位候选位置。开放寻址，用二次探测或三角探测。支持 insert、find、erase。
+用 C 语言实现 Swiss Table 风格哈希表。
 
-纯 C 实现（不依赖 SSE 也行，用普通循环比较 tag），gcc 编译。演示插入和查找的性能对比，验证正确性。
+每个 slot 的结构——7-bit tag（取哈希值的高 7 位）加上 key-value 对。tag=0 表示空 slot，tag=1 表示已删除（tombstone），2-127 是正常 tag。一个 group 是 16 个 slot，tag 字节连续排列便于批量比较。
+
+- 查找：对 key 算哈希，取高 7 位作为 target tag。在 group 内用字节比较（SSE 或普通循环）找所有 tag 匹配的 slot，逐个比较完整 key
+- 插入：找空 slot 放入，记录 tag
+- 删除：标记 tombstone，不清除 key-value
+- 探测：二次探测或三角探测在 group 之间跳转
+
+gcc 编译（不依赖 SSE 也可以）。演示插入和查找的性能对比。

@@ -1,1 +1,15 @@
-帮我搞个 Splay Tree 的 Rust 实现。这个结构适合做缓存淘汰，因为最近访问的元素会被提到根部。实现基本的 insert、search、delete，每次操作完做 splay 把目标节点旋到根。写个 CLI 小程序，从命令行接受一系列操作指令（比如 "insert 5" "find 3" "delete 7"），然后输出当前树的先序遍历。cargo run -- "insert 1" "insert 2" "find 1" 这样能跑起来。
+缓存系统有个特点——最近访问的数据很可能很快还会被再次访问（时间局部性）。Splay Tree 利用这个特性，每次操作后把目标节点旋到根部，这样频繁访问的元素始终在树的上层，访问路径很短。
+
+用 Rust 实现 Splay Tree。
+
+实现流程——
+
+第一步，基本操作。insert：按 BST 方式插入，然后做 splay 把新节点旋到根。search：按 BST 查找，找到后 splay 到根。delete：先 splay 目标节点到根，然后删除根节点，把左右子树合并（找左子树的最大节点做新根）。
+
+第二步，splay 操作。把节点 x 旋转到根。六种情况：x 是根（不用动）、x 的父节点是根（单旋转 zig 或 zag）、x 和父同侧（zig-zig 或 zag-zag，先旋祖父再旋父）、x 和父异侧（zig-zag 或 zag-zig，先旋父再旋祖父）。用循环实现（不用递归）。
+
+第三步，CLI 交互。从命令行接受操作指令："insert 5"、"find 3"、"delete 7"。每次操作后输出当前树的先序遍历（显示结构）。
+
+第四步，性能演示。连续查找同一批 key，对比普通 BST 的访问路径长度——Splay Tree 第二次查找同样的 key 应该只需要 1 步（因为在根部）。
+
+用 Box<Node> 实现树结构。cargo run -- "insert 1" "insert 2" "find 1" 这样能跑起来。节点显示 key 和颜色（红/黑不需要，但可以显示子树大小）。

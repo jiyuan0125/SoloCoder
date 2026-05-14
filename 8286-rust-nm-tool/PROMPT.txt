@@ -1,5 +1,9 @@
-用 Rust 写一个 nm 工具，列出 ELF 文件里的符号表。
+排查一个链接错误说符号找不着，得看看 .a 文件里到底导出了哪些符号。nm 工具就是干这个的，用 Rust 写一个。它能列出 ELF 文件里所有的符号，包括名字、地址、类型和大小。
 
-显示每个符号的名字、地址、大小、类型（T 文本段全局、D 数据段全局、B BSS段全局、U 未定义、t 局部文本等）。默认按字母排序，加 -n 按地址排序，加 -u 只显示未定义符号。处理动态符号表（.dynsym）和普通符号表（.symtab）。
+解析 .symtab 段（完整符号表）和 .dynsym 段（动态符号表）。每个符号条目包含 st_name（指向 .strtab 的索引）、st_value（地址）、st_size（大小）、st_info（类型和绑定属性）、st_shndx（所在 section 索引）。
 
-cargo run -- /bin/ls 或者其他系统二进制测试。输出格式参考 GNU nm。
+符号类型判定规则：shndx == SHN_UNDEF 就是未定义（U），shndx 在 .text 范围内就是文本段——全局的标 T、局部的标 t。同理 .data 段是 D/d，.bss 段是 B/b，.rodata 段是 R/r。STB_LOCAL 的符号用小写，STB_GLOBAL/STB_WEAK 用大写。弱符号标 W。
+
+排序选项：默认按名字字母序排列；-n 按地址数值排序（未定义符号排最后）；-u 只显示未定义符号。输出格式：地址（十六进制 16 位宽）+ 类型字符 + 符号名。未定义符号地址显示空格。
+
+cargo run -- /bin/ls 打印符号列表。cargo build 通过。输出格式参考 GNU nm 但不需要完全一致。

@@ -1,10 +1,7 @@
-帮我写一个 EXIF 数据读取工具，从 JPEG/TIFF 文件中提取拍摄参数。
+拍照时相机记录了什么参数？光圈、快门、ISO、焦距、GPS 位置——全在 EXIF 里。写个工具把这些参数读出来看看。Rust 实现。
 
-提取功能：
-- 定位 JPEG 中的 APP1 段（Exif 标识），解析 TIFF 头和 IFD 结构
-- 读取常用的 Exif 标签：Make（厂商）、Model（相机型号）、DateTime（拍摄时间）
-- 读取拍摄参数：FNumber（光圈）、ExposureTime（快门）、ISO、FocalLength（焦距）
-- 读取 GPS 信息（如果存在）：GPSLatitude、GPSLongitude、GPSAltitude
-- 对 rational 类型（有理数）的值做浮点数转换输出
+定位 EXIF 数据——JPEG 文件里找 APP1 段（FFE1 标记），检查前 4 字节是否是 "Exif"。后面是 TIFF 头：2 字节字节序（II 或 MM）、2 字节魔数 42、4 字节第一个 IFD 偏移。IFD 结构和 TIFF 一样——2 字节条目数 + N×12 字节条目 + 4 字节下一 IFD 偏移。
 
-Rust 实现，cargo build 通过。`exif-reader photo.jpg` 输出格式化的 EXIF 信息。
+三个主要 IFD 的路径。IFD0（主图像 IFD）：Make(271) 厂商、Model(272) 型号、DateTime(306) 拍摄时间、Orientation(274) 方向、XResolution(282)、YResolution(283)。EXIF IFD（通过 IFD0 的 tag 34665 找到）：FNumber(33437) 光圈 f 值、ExposureTime(33434) 快门时间、ISOSpeedRatings(34855) ISO、FocalLength(37386) 焦距 mm、ExposureProgram(34850)、MeteringMode(37383)、Flash(37385)。GPS IFD（通过 tag 34853 找到）：GPSLatitude(2) 三个 RATIONAL 度分秒、GPSLatitudeRef(1) N/S、GPSLongitude(4)、GPSLongitudeRef(3) E/W、GPSAltitude(6) 海拔米。
+
+RATIONAL 值的转换——光圈 FNumber = numerator/denominator，快门 ExposureTime 同理（如 1/125 秒）。GPS 坐标 = 度 + 分/60 + 秒/3600。用法 exif-reader photo.jpg。Rust 实现，cargo build 通过。

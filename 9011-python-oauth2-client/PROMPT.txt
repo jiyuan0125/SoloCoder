@@ -1,5 +1,7 @@
-最近要对接一个 OAuth2 的服务，想先写个客户端工具熟悉一下流程。
+最近要对接一个 OAuth2 的服务，文档写得云里雾里的，不如直接写个客户端工具把流程跑通，也能顺便验证服务端的实现是否正确。
 
-用 Python 实现一个 OAuth2 客户端，支持 authorization code 和 client credentials 两种授权模式。能自动发起授权请求、处理回调、用 authorization code 换 token、刷新过期的 access token。token 要持久化存储，下次启动不用重新授权。把每一步的 HTTP 请求和响应都打印出来方便调试。
+用 Python 实现一个 OAuth2 客户端，支持 authorization code 和 client credentials 两种授权模式。authorization code 流程要完整实现：构建授权 URL（拼 client_id、redirect_uri、scope、state）、启动本地 HTTP 服务监听回调、从回调中提取 code 和 state（验证 state 一致性防止 CSRF）、用 code 换 token。client credentials 流程直接用 client_id + client_secret 调 token 端点。
 
-命令行交互，python3 运行。
+token 管理方面：access token 过期后自动用 refresh token 刷新，刷新失败则提示需要重新授权。token 持久化到本地 JSON 文件（~/.oauth2_tokens.json），文件权限设为 600，下次启动不用重新走授权流程。把每一步的 HTTP 请求和响应详细信息都打印出来方便调试，包括请求头、请求体、状态码、响应头。
+
+命令行交互，python3 运行，用标准库 http.server 处理回调。

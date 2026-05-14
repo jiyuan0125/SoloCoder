@@ -1,5 +1,5 @@
-我需要一个更全面的文件类型检测工具，能识别各种文件的真实格式。
+光看文件头的魔数有时候不够——ZIP、JAR、DOCX、XLSX、APK、ODT 这些格式开头都是 PK（50 4B 03 04），因为它们本质上都是 ZIP 压缩包。要区分它们需要往里面看一层，检查压缩包内部的目录结构来判断具体是什么。
 
-之前那个魔数检测只能看文件头，有些格式需要看更多内容才能判断。比如 ZIP 和 JAR 和 DOCX 开头都一样都是 PK，需要进一步区分。这个工具要结合文件头部魔数、文件内部结构和文件尾特征综合判断。至少能区分 ZIP/JAR/DOCX/XLSX/APK/OpenDocument 这些 ZIP-based 格式。
+检测策略分两级。第一级：读取文件头部魔数做初步分类，和魔数检测工具一样。第二级：如果第一级判定为 ZIP 格式，进一步解析 ZIP 内部结构——找到 Central Directory，列出里面的文件路径。DOCX 里面会有 word/document.xml，XLSX 有 xl/workbook.xml，PPTX 有 ppt/presentation.xml，APK 有 AndroidManifest.xml 和 classes.dex，JAR 有 META-INF/MANIFEST.MF，ODT 有 mimetype 文件内容为 application/vnd.oasis.opendocument.text。通过这些特征文件来精确判定。
 
-python main.py mystery.docx 输出 "DOCX (Microsoft Word Document)"。也支持输出 MIME 类型。Python 标准库。
+输出格式：文件类型名称 + MIME 类型。比如 "DOCX (Microsoft Word Document) - application/vnd.openxmlformats-officedocument.wordprocessingml.document"。用法：python3 file_type_detect.py detect mystery.docx

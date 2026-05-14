@@ -1,1 +1,7 @@
-需要从视频容器里单独提取视频轨道信息。写个Python工具解析MP4/MKV文件的视频轨，读取编码类型（H.264/H.265/VP9等）、Profile/Level、分辨率、帧率、色彩空间、比特率等参数。对于H.264还要能解析AVCC/HEVCDecoderConfigurationRecord里的SPS/PPS信息。这些信息都嵌在容器的特定box/element里，需要按格式规范定位。python3实现。
+1. 从视频容器文件里单独提取视频轨道的详细信息。支持 MP4 和 MKV 两种容器格式——先检测文件类型，然后走不同的解析路径。MP4 找 moov → trak → mdia → hdlr 确认是视频轨（handler_type 为 vide），再深入 stsd 读取编码参数。MKV 找 Tracks → TrackEntry，检查 TrackType = 1（视频）的条目。
+
+2. 提取的核心参数：编码类型（H.264/H.265/VP9/AV1）、Profile 和 Level、分辨率（宽×高）、帧率（从时间信息推算）、色彩空间（BT.601/BT.709 等）、比特率。这些信息在容器格式里各有各的存储位置，按规范精确定位。
+
+3. 对 H.264 额外解析 AVCC（或 HVCC for H.265）里的 DecoderConfigurationRecord——这里面有 SPS 和 PPS 的原始字节。从 SPS 里能提取 Profile、Level、参考帧数量、编码分辨率等更详细的编码参数。VP9 则从 VPCodecPrivate 里读特征信息。
+
+4. 输出一份完整的视频轨参数报告。用法：python3 video_track.py info video.mp4

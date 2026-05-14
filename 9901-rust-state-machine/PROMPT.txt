@@ -1,11 +1,11 @@
-帮我用 Rust 实现一个通用的有限状态机引擎。
+用 Rust 实现一个通用的分布式状态机框架。不同的业务逻辑可以插入不同的状态机实现，框架负责管理日志 apply 的顺序、快照的创建和恢复。这个抽象在 Raft 实现中很关键——把共识层和业务层解耦。
 
-场景是这样的：我需要在一个嵌入式通信协议里管理连接生命周期，比如 CLOSED→CONNECTING→CONNECTED→DISCONNECTING→CLOSED 这种状态流转。希望能定义状态和转移规则，然后驱动事件去触发状态变化。
+StateMachine trait 的设计：trait StateMachine { fn apply(&mut self, command: &[u8]) -> Vec<u8>; fn snapshot(&self) -> Vec<u8>; fn restore(&mut self, snapshot: &[u8]); }。apply 接收命令并返回结果，snapshot 序列化当前状态，restore 从快照恢复。
 
-功能要求：
-- 可以定义状态集合、事件集合、以及合法的转移规则（from_state + event → to_state）
-- 支持守卫条件（guard），转移前可以检查一个闭包返回 true 才允许执行
-- 每次状态变化触发 on_enter 和 on_exit 回调
-- 提供当前状态查询和转移历史记录
+示例实现——KV 状态机：底层用 HashMap<String, String>。命令格式用 JSON：{"op":"put","key":"x","value":"42"} 或 {"op":"get","key":"x"}。Put 返回旧值或空，Get 返回当前值或空。
 
-用纯 Rust 标准库，cargo build 能编译通过就行。
+框架层的管理：维护一个 last_applied 索引和待 apply 的日志队列。apply 必须按 index 顺序执行——不能跳过中间的。如果 index != last_applied + 1，排队等待。快照触发条件：日志条目超过 200 条。
+
+命令行交互：apply {"op":"put","key":"name","value":"alice"} 执行命令、snapshot 创建快照、restore 恢复快照、status 显示当前状态和 last_applied。
+
+cargo build 通过。

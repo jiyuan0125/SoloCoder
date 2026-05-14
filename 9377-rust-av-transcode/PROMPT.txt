@@ -1,5 +1,9 @@
-用 Rust 做一个音视频转码工具的框架，重点实现容器间的转换逻辑。
+转码工具的框架——不做完整的编解码（那太复杂了），而是聚焦于容器转换和基本参数调整。从一种容器格式读取音视频帧数据，按目标格式重新封装。Rust 实现。
 
-虽然完整的编解码比较复杂，但这个工具先实现容器格式转换的基本框架：能解析输入文件的容器结构，提取出音视频帧数据，然后按目标容器格式重新封装。比如从 FLV 转 MP4，从 MKV 转 MP4。关键是正确映射各容器的元数据字段，保留编码信息，修正时间戳。
+处理流程：解封装 → （可选）解码 → 处理 → （可选）编码 → 封装。简化版先实现 stream copy 模式（不编解码，直接复制帧数据）+ 基本的参数调整。
 
-Rust 实现，cargo build 通过，二进制解析按各容器规范。
+FLV 转 MP4——读取 FLV 的 Tag 结构，提取 H.264 NAL 数据和 AAC 帧。视频：AVC 序列头（SPS/PPS）转成 AVCDecoderConfigurationRecord 放入 stsd。音频：AAC 的 AudioSpecificConfig 转成 ESDS box。时间戳从 FLV 的毫秒转成 MP4 的 timescale 单位。
+
+MKV 转 MP4——从 EBML Cluster 的 SimpleBlock 提取帧数据。CodecID 映射到 MP4 sample entry：V_MPEG4/ISO/AVC → avc1，A_AAC → mp4a。关键帧标记从 SimpleBlock 的 keyframe 标志位转到 stss。
+
+参数调整——分辨率缩放需要解码-缩放-重编码（简化版暂不实现完整编解码）。帧率调整用丢帧或复制帧。音频重采样用线性插值。进度显示：已处理帧数/总帧数。用法 av-transcode -input in.flv -output out.mp4。Rust 实现，cargo build 通过。

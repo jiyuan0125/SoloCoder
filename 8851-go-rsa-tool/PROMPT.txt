@@ -1,8 +1,13 @@
-帮我写一个 RSA 密钥对的命令行工具，用 Go 标准库实现。
+开发的时候经常需要临时生成 RSA 密钥对、用公钥加密一段文本再私钥解密、或者对一段消息做签名验签。每次敲 openssl 命令参数老忘，干脆写个 Go 小工具直接在终端里搞定。
 
-平时做开发经常需要临时生成 RSA 密钥对、用公钥加密私钥解密，或者做签名验签。想有个轻量工具直接在终端里搞定这些事。
+用 Go 标准库实现一个 RSA 密钥对工具。三个子命令：
 
-主要功能：生成指定长度的 RSA 密钥对（2048/4096），输出 PEM 格式；用公钥加密一段文本，私钥解密还原；支持 PKCS#1v15 签名和验签。
+genkey：生成指定长度的 RSA 密钥对（2048 或 4096 位）。私钥输出为 PKCS#8 格式的 PEM 文件（默认 priv.pem），公钥输出为 PKIX 格式的 PEM 文件（默认 pub.pem）。屏幕上打印公钥的 SHA-256 指纹方便核对。
 
-用法示例：rsa-tool genkey -bits 2048、rsa-tool encrypt -pubkey pub.pem -msg "hello"、rsa-tool sign -key priv.pem -msg "hello"
-纯 Go 标准库，go build 能编译通过就行。
+encrypt：用公钥加密一段文本。从 PEM 文件加载公钥，用 RSA-OAEP（SHA256）加密消息（OAEP 比 PKCS1v15 安全，支持明文长度不超过 key_size - 2*hash_size - 2 字节）。输出 Base64 编码的密文。
+
+sign：用私钥对消息做签名。加载私钥，对消息做 SHA-256 哈希后用 PKCS#1v15 签名。输出 Base64 编码的签名值。verify：用公钥验证签名。加载公钥和签名，对消息重新哈希后验签。输出签名是否有效。
+
+用法：rsa-tool genkey -bits 2048、rsa-tool encrypt -pubkey pub.pem -msg "hello"、rsa-tool decrypt -key priv.pem -cipher "base64..."、rsa-tool sign -key priv.pem -msg "hello"、rsa-tool verify -key pub.pem -msg "hello" -sig "base64..."。
+
+纯 Go 标准库 crypto/rsa + crypto/x509，go build 能编译通过。

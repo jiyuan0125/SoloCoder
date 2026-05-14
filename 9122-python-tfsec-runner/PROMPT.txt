@@ -1,5 +1,7 @@
-做一个 Terraform 安全扫描包装器，自动检查 IaC 代码中的安全问题。
+做一个 Terraform 安全扫描工具。基础设施代码提交前没有安全审查，上一次有人把 RDS 实例的加密关掉了导致合规审计不通过。这次把扫描自动化，PR 之前必须过一遍。
 
-扫描指定目录下的 .tf 文件，用正则和简单语法分析找出常见的安全隐患：明文密码、安全组规则过于宽松（0.0.0.0/0）、未加密的资源（RDS、S3、EBS）、IAM 策略过宽（*:* 权限）、公开的 S3 bucket。
+扫描指定目录下的 .tf 文件。Python 解析 HCL 语法（用正则和简单 tokenizer，不需要完整的 HCL parser），提取 resource 块的类型、名称和属性值，然后对照检查规则逐条验证。
 
-内建一套检查规则（YAML 格式定义，方便扩展），对每个匹配的问题给出文件名、行号、风险说明和修复建议。Python 3，标准库 + PyYAML。python tfsec_runner.py ./terraform/。
+内置检查规则——安全组：ingress 规则的 cidr_blocks 包含 0.0.0.0/0 且开放的端口不是 80/443（如 22、3306、3389 直接暴露到公网）。加密：RDS 实例没有设置 storage_encrypted = true、S3 bucket 没有 enable_versioning 和 server_side_encryption_configuration、EBS volume 没有加密。IAM：policy 的 actions 包含 *:*（完全权限）、resource 为 *（不限制资源范围）。公开资源：S3 bucket 的 acl 为 public-read 或 public-read-write。
+
+规则用 YAML 格式定义——包含检查 ID、资源类型、属性路径、不安全值的匹配条件、严重等级、修复建议文本。支持自定义规则文件。python3 命令行工具，标准库 + PyYAML。

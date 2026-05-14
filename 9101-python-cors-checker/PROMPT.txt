@@ -1,5 +1,9 @@
-帮我写一个 Python 命令行工具，用来检测网站的 CORS 配置是否安全。
+CORS 配置搞错了就是个安全漏洞——Access-Control-Allow-Origin 设成 * 或者反射请求的 Origin 头，等于白名单形同虚设。写个工具自动检查目标网站的 CORS 配置。
 
-给一个 URL，工具发请求检查响应头里的 Access-Control-Allow-Origin、Allow-Methods、Allow-Headers 这些字段。主要看有没有把 origin 设成 * 或者反射任意 Origin 的问题，还有允不允许 credential 模式下配通配符。
+Python 实现 CORS 配置检查器。第一步发送正常请求：用 requests 库请求目标 URL，检查响应头中的 Access-Control-Allow-Origin、Access-Control-Allow-Methods、Access-Control-Allow-Headers、Access-Control-Allow-Credentials 值。
 
-输出要按安全等级分类：高危（任意 origin + credential）、中危（反射 Origin）、低危（配置不规范但暂无直接风险）。Python 3 标准库 + requests 就行，pip install 能装好依赖，python main.py 能跑。
+第二步发送恶意 Origin：分别用不同的 Origin 值发送请求——随机的 https://evil.com、null（某些配置会允许 null origin）、子域名 https://evil.target.com。如果响应的 ACAO 头反射了我们传入的 Origin 值，说明存在 CORS 配置漏洞——攻击者可以从任意域读取目标网站的响应。
+
+第三步检查 credentials：如果 ACAC 设为 true 且 ACAO 允许任意 origin（或反射 origin），这就是高危漏洞——攻击者可以带 cookie 跨域请求，等于窃取用户会话。
+
+也检查预检请求（OPTIONS）的响应是否正确配置。输出每个检查项的结果——通过/失败/警告，失败的附具体风险说明和修复建议。批量模式从文件读取 URL 列表。python3 命令行工具。

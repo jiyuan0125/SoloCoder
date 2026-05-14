@@ -1,5 +1,7 @@
-用 Rust 写一个 Base85 编解码工具。
+Base85（也叫 ASCII85）——PostScript 和 PDF 用的编码方式。比 Base64 编码效率更高（4 字节编码为 5 字符 vs Base64 的 3→4），但可读性差一些。Rust 实现。
 
-Base85（也叫 Ascii85）用在 PDF 和 PostScript 里，把 4 字节编码为 5 个 ASCII 字符。实现标准的 Ascii85 编解码，以及 ZeroMQ 使用的 Z85 变体。支持带 <~ 和 ~> 定界符的编码格式。处理特殊的全零压缩（z 字符表示四个零字节）。对二进制文件和字符串都能处理。
+编码原理——每 4 字节当作一个大端 32 位无符号整数，除以 85^4=52200625 取余，再把商和余数进一步分解成 5 个 0-84 的值，每个值加 33（ASCII 可打印字符）。公式：char[i] = (value / 85^(4-i)) % 85 + 33。不足 4 字节的组按实际字节数编码，输出字符数 = 字节数 + 1。
 
-Rust 实现，cargo build 通过。
+特殊优化——4 字节全零编码为 'z'（单字符代替 5 个字符!!!!!）。Adobe 版本用 <~ 和 ~> 作为分隔符。ZeroMQ 的 Z85 是另一个 Base85 变体，字母表不同。
+
+解码——反向操作：每个字符减 33 得到 0-84 的值，5 个值组合成 32 位整数：value = c[0]×85⁴ + c[1]×85³ + c[2]×85² + c[3]×85 + c[4]。'z' 展开为 5 个 '!'。用法 base85-codec encode --input binary.bin 和 base85-codec decode --text "<~<+oh#F]4M" -o output.bin。Rust 实现，cargo build 通过。

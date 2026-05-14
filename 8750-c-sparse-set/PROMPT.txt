@@ -1,5 +1,17 @@
-实现一个稀疏集合（Sparse Set）， Briggs 和 Torczon 提出的数据结构。在值域范围已知（0 到 N）的场景下，能 O(1) 插入、O(1) 判断成员、O(1) 删除、O(n) 遍历（n 是实际元素个数）。
+编译器的活跃变量分析——每遍扫过去要知道哪些变量"活着"。值域不大（比如 0-65535 的虚拟寄存器编号），但频繁插入、查找、删除、清空。HashSet 可以但清空要 O(n)。Sparse Set 做到了插入 O(1)、查找 O(1)、删除 O(1)、清空 O(1)、遍历 O(n)（n 是实际元素数不是值域大小）。清空只需要 size=0，所有操作瞬间完成。
 
-用两个数组：dense 存实际元素，sparse[value] 存该值在 dense 中的下标。清空整个集合只要把 size 设 0，非常快。适合值域不大的场景。
+用 C 语言实现 Sparse Set。
 
-C 语言，gcc 编译。测试：插入、查找、删除、遍历、清空，验证所有操作都正确。
+原理——两个数组：dense[] 存实际加入的元素（紧凑排列），sparse[] 用值做索引存该值在 dense 中的位置。一个 size 变量记录实际元素个数。
+
+查找——检查 sparse[value] < size 且 dense[sparse[value]] == value。两个条件都满足就是存在。O(1)。
+
+插入——dense[size] = value，sparse[value] = size，size++。O(1)。
+
+删除——把要删的元素和 dense[size-1] 交换，更新 sparse，size--。O(1)。
+
+清空——size = 0。不需要清理数组。O(1)。
+
+遍历——扫 dense[0..size-1]。O(n)，和值域大小无关。
+
+gcc 编译。测试全部操作的正确性。

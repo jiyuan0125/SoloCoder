@@ -1,1 +1,15 @@
-用 Rust 实现一个 Huffman 编解码器。读取一段文本或者字节流，统计字符频率，构建 Huffman 树，生成编码表，然后对原始数据做编码输出比特流。同时支持从编码表反向解码恢复原始数据。编码后的数据用紧凑的 bit 存储（不要一个 bit 一个字节）。写个命令行工具：huffman encode input.txt output.bin 和 huffman decode output.bin 恢复出原始文件。验证编解码后数据一致。cargo run 能用。
+Huffman 编码是数据压缩的基础——出现频率高的字符用短编码，频率低的用长编码，平均编码长度最小。ZIP、JPEG、MP3 都在某个阶段用了 Huffman 编码。实现一个完整的编解码器是理解信息论的好方法。
+
+用 Rust 实现 Huffman 编解码器。
+
+频率统计——读入一段文本或字节流，统计每个字符（或字节值 0-255）的出现频率。用 HashMap<u8, usize> 计数。
+
+构建 Huffman 树——把所有字符频率建成最小堆（优先队列）。每次从堆中取出两个最小频率的节点，合并成一个新节点（频率 = 两者之和），左右子树分别指向这两个节点。新节点放回堆。重复直到只剩一个节点，就是树的根。
+
+生成编码表——DFS 遍历 Huffman 树，左路径编码为 0，右路径编码为 1。每个叶节点对应一个字符和它的变长编码（比特序列）。编码表是 HashMap<u8, Vec<bool>>。
+
+编码——读原始数据，对每个字节查编码表，把编码后的 bit 依次写入输出。编码后的数据用紧凑的 bit 存储（用 Vec<u8>，每 8 个 bit 打包成 1 字节）。
+
+解码——把编码表（或 Huffman 树结构）和编码数据一起保存。解码时逐 bit 从根往下走 Huffman 树，到达叶节点输出对应字符。
+
+CLI 工具：huffman encode input.txt output.bin 和 huffman decode output.bin 恢复出原始文件。验证编解码后数据一致。cargo run 能用。

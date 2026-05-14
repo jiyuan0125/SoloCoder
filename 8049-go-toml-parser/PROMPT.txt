@@ -1,3 +1,9 @@
-用 Go 写一个 TOML 解析器。支持 TOML v1.0 的核心语法：键值对、表[table]、数组表[[table]]、基本类型（字符串、整数、浮点数、布尔、日期时间）、内联表和数组。
-解析为 Go 的 map[string]interface{} 结构。类型不对或格式错误要有清晰的报错信息。
+Rust 生态选了 TOML 做配置格式，Go 社区也在越来越多地使用它。TOML 比 YAML 简洁，比 JSON 有注释，解析规则也比 YAML 简单得多。
+
+用 Go 写一个 TOML 解析器，覆盖 TOML v1.0 的核心语法。支持的数据类型：字符串（基本字符串用双引号、多行字符串用三引号、字面量字符串用单引号）、整数（十进制、十六进制 0x、八进制 0o、二进制 0b）、浮点数（包含特殊值 inf 和 nan）、布尔值（true/false）、日期时间（RFC 3339 格式的 local-date、local-time、local-datetime、offset-datetime）、数组（混合类型数组也支持）。
+
+结构类型：键值对（key = value）、表（[table] 定义，支持点号路径 [a.b.c] 定义嵌套）、数组表（[[array_table]] 每出现一次添加一个新元素）、内联表（{key = val, key2 = val2}）。
+
+解析为 Go 的 map[string]interface{} 结构，类型映射要准确。类型不对或格式错误要有清晰的报错信息——行号、出错的内容、期望的格式。
+
 纯标准库，go build 通过。

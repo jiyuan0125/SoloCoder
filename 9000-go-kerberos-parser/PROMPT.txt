@@ -1,3 +1,9 @@
-排查 Kerberos 认证问题，需要解析 Kerberos 报文。Go 写一个 Kerberos 协议解析工具。
+Kerberos 认证出了问题，客户端报错误码但看不出来是哪一步失败——是 AS 交换就挂了，还是 TGS 拿票被拒，还是 AP 验证时加密类型不匹配？必须解析报文才能搞清楚。
 
-解析 ASN.1 编码的 Kerberos 消息：识别消息类型（AS-REQ、AS-REP、TGS-REQ、TGS-REP、AP-REQ）；提取关键字段：realm、cname/sname、till 时间、etype 加密类型列表、ticket 信息；解析 PAC（如果未加密部分可读）。从 pcap 提取 TCP/UDP 88 端口数据包。输出认证流程摘要和异常检测（如弱加密类型、异常 realm）。Go 标准库，go build 通过。
+Go 写一个 Kerberos 协议解析工具。从 pcap 提取 TCP/UDP 88 端口数据包，解析 ASN.1 BER 编码的 Kerberos 消息。
+
+消息类型识别：通过 APPLICATION tag 区分——AS-REQ(10)、AS-REP(11)、TGS-REQ(12)、TGS-REP(13)、AP-REQ(14)、AP-REP(15)、KRB-ERROR(30)。
+
+AS-REQ 解析：提取 KDC-REQ-BODY 里的 realm、cname（客户端主体名）、sname（请求的服务）、till（有效期）、etype（加密类型列表，标记弱加密如 des-cbc-md5）。AS-REP：提取 ticket 的 realm、sname、enc-part 加密类型。TGS 类似，额外关注 sname 看请求哪个服务的票。KRB-ERROR：提取 error-code（KDC_ERR_PREAUTH_REQUIRED 等具体原因）、e-text 错误描述。
+
+输出认证流程摘要：按时间展示 AS 交换和 TGS 交换过程。异常检测标记弱加密类型、异常 realm、非零 error-code。Go 标准库，go build 通过。

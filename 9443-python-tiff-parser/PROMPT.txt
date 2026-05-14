@@ -1,1 +1,5 @@
-TIFF格式非常灵活，IFD链式结构加上各种数据类型，实现起来很有挑战。写个Python解析器读取TIFF文件，处理字节序标志（II或MM）、解析IFD（Image File Directory）中的tag。能识别常见tag：ImageWidth、ImageLength、BitsPerSample、Compression、PhotometricInterpretation、StripOffsets等。支持多页TIFF，遍历所有IFD。数据类型包括BYTE、SHORT、LONG、RATIONAL等。python3实现。
+1. TIFF 格式的灵活性是出了名的——它用 IFD（Image File Directory）的链表结构组织数据，一个 TIFF 文件可以包含多页图像。文件开头 2 字节是字节序标志（II = 小端 Intel，MM = 大端 Motorola），然后是 2 字节的 magic number（42），再是 4 字节的第一个 IFD 的偏移量。
+
+2. 每个 IFD 的结构：2 字节 tag 数量，然后是若干 tag 条目（每个 12 字节：2 字节 tag ID、2 字节数据类型、4 字节值的数量、4 字节值或值的偏移量），最后是 4 字节指向下一个 IFD 的偏移（0 表示链表结束）。数据类型有 BYTE(1)、ASCII(2)、SHORT(3)、LONG(4)、RATIONAL(5，两个 LONG 组成分数)、SBYTE(6)、UNDEFINED(7)、SSHORT(8)、SLONG(9)、SRATIONAL(10)、FLOAT(11)、DOUBLE(12)。
+
+3. 常见 tag 要能识别：ImageWidth(256)、ImageLength(257)、BitsPerSample(258)、Compression(259)、PhotometricInterpretation(262)、StripOffsets(273)、SamplesPerPixel(277)、RowsPerStrip(278)、StripByteCounts(279)、XResolution(282) 等。多页 TIFF 遍历所有 IFD 输出每页参数。用法：python3 tiff_parser.py parse image.tif

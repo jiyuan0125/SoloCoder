@@ -1,5 +1,13 @@
-用 Rust 实现一个 B 树，练手所有权和借用。
+学 Rust 最头疼的就是所有权和借用，写个 B 树练手正好——节点之间有共享有可变有生命周期，搞清楚这些编译器就不再报错了。B 树是数据库和文件系统的核心索引结构，每个节点存多个 key，保持平衡。
 
-支持插入、删除、查找操作，节点存 key-value 对。阶数（最小度数 t）可配置，每个节点最多 2t-1 个 key。插入时节点满了就分裂，删除时节点太空就合并或借用。
+用 Rust 实现一个 B 树，节点存 key-value 对。
 
-实现 IntoIter 能遍历所有 key-value。打印出树的结构方便验证（缩进表示层级）。cargo build 和 cargo test 都能通过。
+结构设计——阶数（最小度数 t）可配置，每个节点最多 2t-1 个 key，最少 t-1 个（根节点除外）。节点结构体包含：keys: Vec<K>, values: Vec<V>, children: Vec<Box<BTreeNode>>（内部节点才有 children），is_leaf: bool。用 enum 或者 is_leaf 标记区分内部节点和叶节点。
+
+操作实现——insert：从根节点往下找插入位置，如果沿途的节点满了（2t-1 个 key）就先分裂。分裂操作把节点分成两半，中间的 key 提升到父节点。delete 比较复杂：要处理借兄弟的 key 和合并节点。search：从根开始二分查找 key，找不到就往对应的子节点递归。
+
+遍历——实现 IntoIter trait，中序遍历所有 key-value 对。visit 方法递归访问子树。
+
+打印树结构——DFS 遍历，缩进表示层级，每层打印该节点的 keys。方便验证树的结构是否正确。
+
+cargo build 和 cargo test 都能通过。测试：插入 20 个随机数据，删除几个，中序遍历验证有序。

@@ -1,5 +1,9 @@
-用 Rust 写一个 MPEG-TS 传输流解析器。
+MPEG-TS 是流媒体的血液——不管 HLS 还是 DASH 底层传输都用 TS 包。每个包固定 188 字节，没有任何索引，全靠 PAT/PMT 梳理结构。Rust 实现一个完整的 TS 解析器。
 
-从 TS 文件中逐包（188 字节）解析，提取 PID、自适应字段、载荷等信息。要能识别 PAT（PID 0）和 PMT 表，从中找出音视频流的 PID 和对应的流类型（如 H.264、H.265、AAC）。还要能解析 PES 包头，提取 PTS/DTS 时间戳。输出每个 TS 包的关键字段摘要和最终的流映射关系。
+包同步——第一个字节必须是 0x47（同步字节）。如果不是，逐字节搜索直到找到。验证：偏移 188、376 字节处也应该是 0x47。确认同步后逐包解析。4 字节包头：第 2-3 字节包含传输错误指示(1bit)、负载起始(1bit)、传输优先级(1bit)、PID(13bit)、加扰控制(2bit)、自适应字段控制(2bit)、连续计数器(4bit)。
 
-Rust 实现，按 ISO 13818-1 规范处理二进制，cargo build 通过。
+PAT 解析（PID 0x0000）：pointer field(1B) + table_id(0x00) + section_length + transport_stream_id + version_number + 当前/下一 + 节目条目（4 字节一组：2 字节节目号 + 2 字节 PMT PID）+ CRC32。节目号 0x0000 是网络 PID。
+
+PMT 解析：table_id(0x02) + section_length + program_number + PCR_PID + 流信息（5 字节一组：1 字节流类型 + 2 字节基本 PID + 2 字节 ES 信息长度 + 描述子）。流类型 0x1B=H.264、0x24=H.265、0x0F=AAC、0x03=MP3 音频。
+
+PES 包头：0x000001 起始码 + 流 ID + 包长度 + 标志字节 + PTS/DTS 标志决定后面 5 或 10 字节的时间戳编码。统计每个 PID 的包数和码率占比。用法 ts-parse stream.ts。Rust 实现，按 ISO 13818-1 规范，cargo build 通过。

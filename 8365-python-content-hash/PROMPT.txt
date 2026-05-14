@@ -1,5 +1,18 @@
-写一个 Python 的内容寻址存储工具，类似 Git 的 blob 存储机制。
+Git 的对象存储有个很妙的设计——文件内容用 SHA1 哈希命名，相同内容自动去重。想自己实现一个类似的内容寻址存储来理解这个机制。Python 实现。
 
-把文件内容用哈希值命名存储，相同内容的文件只存一份。实现内容寻址的核心功能：将文件存入仓库（计算 SHA256，按哈希值存储在 `.objects/` 目录下）、查询某个哈希是否存在、根据哈希取回内容、垃圾回收（清理不被引用的对象）、统计仓库占用空间。
+存储结构：.objects/ 目录下按哈希前两位分子目录（如 .objects/ab/，避免单目录文件太多），完整哈希作为文件名。每个对象文件内容是 zlib 压缩的原始数据。
 
-Python 3 标准库。命令行：`python content_hash.py store myfile.txt` 返回哈希；`python content_hash.py get <hash> -o output.txt`；`python content_hash.py gc` 清理；`python content_hash.py stats` 显示统计。`python content_hash.py` 能直接运行。
+操作接口：
+- put(data) → hash：计算 SHA256，如果 .objects/{hash[:2]}/{hash[2:]} 已存在就跳过（去重），不存在就 zlib 压缩后写入
+- get(hash) → data：读入 .objects/{hash[:2]}/{hash[2:]}，zlib 解压返回原始数据。哈希不存在返回 None
+- exists(hash) → bool：检查文件是否存在
+- delete(hash)：删除对象文件
+- list() → [hash]：列出仓库中所有对象的哈希
+
+引用管理：支持给对象起名字（类似 Git 的 tag/branch）。引用存在 .refs/ 目录下，每个引用是一个文件，内容是对象哈希。put_with_ref(data, name) 存数据并创建引用。
+
+垃圾回收：扫描所有引用找到可达对象的哈希集合。然后遍历 .objects/ 目录，不在可达集合中的就是垃圾对象，删除。报告回收了多少空间。
+
+统计：仓库总对象数、总占用空间、去重率（put 调用次数 vs 实际写入次数）。
+
+CLI：python3 content_hash.py put filename、python3 content_hash.py get hash、python3 content_hash.py gc。纯 Python 3 标准库。

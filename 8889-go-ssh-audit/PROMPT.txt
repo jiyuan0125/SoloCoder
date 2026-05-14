@@ -1,8 +1,11 @@
-做个 SSH 服务审计工具，Go 写的。
+加固服务器的时候需要检查 SSH 配置是否安全——还在用 diffie-hellman-group1-sha1 密钥交换？还支持 ssh-rsa 签名算法？root 能直接登录吗？类似 ssh-audit 那个工具的功能。
 
-加固服务器时需要检查 SSH 配置是否安全，比如是否还支持旧算法、是否允许 root 登录。类似 ssh-audit 那个工具。
+用 Go 写一个 SSH 服务审计工具。audit 子命令：用 crypto/ssh 连接目标 SSH 服务器（只做密钥交换不实际登录），从 ServerHello 中获取支持的算法列表——密钥交换算法（kex）、服务器密钥算法（host key）、加密算法（cipher）、MAC 算法、压缩算法。
 
-功能：连接 SSH 服务器获取支持的算法列表（密钥交换、加密、MAC、压缩）；检查是否使用弱算法（如 diffie-hellman-group1-sha1）；检查服务器密钥类型和长度；给出安全建议。
+安全检查：弱密钥交换——diffie-hellman-group1-sha1、diffie-hellman-group14-sha1（SHA-1 不安全）。弱加密——aes128-cbc、aes256-cbc、3des-cbc（CBC 模式有 padding oracle 问题）。弱 MAC——hmac-md5、hmac-sha1（太短）。弱密钥类型——ssh-rsa（SHA-1 签名）、ssh-dss（DSA 密钥太短）。检查服务器密钥长度——RSA 密钥是否 >= 2048 位、ECDSA 是否 >= P-256。
 
-命令：ssh-audit audit -host 192.168.1.1 -port 22、ssh-audit audit -host 192.168.1.1 -json（输出 JSON 报告）
+输出格式：按类别列出所有支持的算法，标记弱算法。给出安全建议——推荐禁用哪些算法、推荐添加哪些算法。支持 JSON 输出。
+
+命令：ssh-audit audit -host 192.168.1.1 -port 22、ssh-audit audit -host 192.168.1.1 -json。
+
 Go 标准库 crypto/ssh，go build 能编译通过。

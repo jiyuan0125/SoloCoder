@@ -1,3 +1,11 @@
-帮我用 Go 写一个 WASM 字节码解释器。能解析 .wasm 二进制文件的模块结构（magic number、类型段、函数段、代码段等），解释执行基本的 WASM 指令：栈操作、局部变量、算术运算、控制流（block loop if br）。
-不需要完整实现所有指令，但核心流程要能跑通一个简单的加法函数。从文件读入 wasm 字节码执行。
+WebAssembly 的二进制格式看着吓人，但其实结构很清晰——读懂 .wasm 文件是理解 WASM 运行机制的第一步。
+
+帮我用 Go 写一个 WASM 字节码解释器。能解析 .wasm 二进制文件的模块结构：先读 magic number（\0asm）和版本号，然后逐个解析 section——type section 定义函数签名、function section 建立索引映射、memory section 定义线性内存、export section 导出名称、code section 包含函数体字节码。
+
+解释执行基本的 WASM 指令：栈操作（i32.const、drop）、局部变量（local.get、local.set、local.tee）、算术运算（i32.add、i32.sub、i32.mul、i32.div_s）、控制流（block、loop、if、br、br_if、return、call）。
+
+线性内存用 []byte 模拟，支持 i32.load 和 i32.store。函数调用维护独立的栈帧，参数和返回值通过操作数栈传递。
+
+不需要完整实现全部指令，但核心流程要能跑通——至少能执行一个加法函数和一个循环累加函数。从文件读入 wasm 字节码，指定要调用的函数名和参数，执行并输出返回值。
+
 go build 通过。

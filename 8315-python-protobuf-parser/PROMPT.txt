@@ -1,3 +1,13 @@
-做微服务通信调试的时候需要检查 protobuf 编码的原始数据，但手头没有 .proto 文件。用 Python 写一个 Protobuf 二进制解析器，能根据 wire format 规范解析 varint、定长、长度分隔等编码类型，自动推断字段编号和类型。
+微服务间用 protobuf 通信，线上出了个 bug 需要看原始的二进制消息内容，但 .proto 文件在另一个仓库不方便拿。直接按 wire format 规范解析二进制数据。Python 实现。
 
-支持嵌套 message 和 repeated 字段的解析。输出人类可读的结构化文本。纯 Python 实现，不依赖 protobuf 库。python 能跑，命令行读二进制文件打印解析结果。
+Protobuf 的 wire format 是一个自描述的编码：每个字段以 tag 开头，tag = (field_number << 3) | wire_type。wire_type 有 6 种：
+- 0: Varint（int32/int64/uint32/uint64/sint32/sint64/bool/enum）
+- 1: 64-bit（fixed64/sfixed64/double）
+- 2: Length-delimited（string/bytes/embedded message/packed repeated）
+- 5: 32-bit（fixed32/sfixed32/float）
+
+Varint 解码：每个字节的最高位是 continuation bit，低 7 位是数据，小端序拼接。解析流程——读 tag 解出 field_number 和 wire_type，然后按 wire_type 读取数据。Length-delimited 类型需要递归尝试解析为嵌套 message（如果能成功解码就当 message，否则当 string/bytes）。
+
+repeated 字段：如果同一个 field_number 出现多次，就是 repeated。packed repeated 是一次 length-delimited 编码里包含多个 varint/固定长度值。
+
+输出人类可读的结构化文本：字段编号、推断的类型、值。嵌套 message 用缩进表示。python3 proto_parser.py message.bin。纯 Python 不依赖 protobuf 库。

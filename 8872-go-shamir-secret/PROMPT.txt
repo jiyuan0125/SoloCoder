@@ -1,8 +1,11 @@
-做个 Shamir 秘密分享工具，Go 写的。
+Shamir 秘密分享是个很实用的密码学方案——把一个密钥分成 n 份交给不同人保管，凑够 k 份才能恢复原值（k <= n）。比如把恢复密钥分给 5 个管理员，任意 3 个就能恢复，但任何 2 个人拿到份额都无法推断出原始密钥。基于多项式插值，安全性有数学证明。
 
-把一个密钥或密码分成多份交给不同人保管，凑够指定人数才能恢复。比如把恢复密钥分给 5 个管理员，任意 3 个就能恢复。
+用 Go 写一个 Shamir 秘密分享工具。split 子命令：输入原始秘密（任意字节串）和参数 n（总份数）、k（阈值）。在有限域 GF(p) 上（p 选一个大素数，比如 2^256 - 189）构造一个 k-1 阶随机多项式 f(x) = secret + a1*x + a2*x^2 + ... + a(k-1)*x^(k-1)。系数 a1~a(k-1) 是随机值。对 x = 1, 2, ..., n 计算 f(x) 得到 n 个份额。每个份额输出为 "x:hex(f(x))" 格式。
 
-功能：将任意字符串拆分为 n 份（阈值 k），任意 k 份可恢复原始内容；支持指定总份数和阈值；每份输出为 hex 或 base64 编码。
+combine 子命令：输入 k 个份额。用拉格朗日插值法在 GF(p) 上重构 f(0) = secret。拉格朗日系数 L_j(x) = product((x - x_m)/(x_j - x_m)) for m != j。每个份额的值乘以对应的拉格朗日系数再求和。
 
-用法：shamir-secret split -secret "my-master-key" -total 5 -threshold 3、shamir-secret combine -shares "share1,share2,share3"
-Go 实现，数学运算用标准库 big.Int，go build 编译通过。
+份额编码：每个份额输出为 Base64 编码（包含 x 值和份额值），方便复制粘贴传输。
+
+命令：shamir-secret split -secret "my-master-key" -total 5 -threshold 3、shamir-secret combine -shares "share1_base64,share2_base64,share3_base64"。
+
+Go 实现，数学运算用标准库 math/big，go build 编译通过。

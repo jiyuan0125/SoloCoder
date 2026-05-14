@@ -1,5 +1,7 @@
-想写一个 WebAuthn 的服务端验证逻辑，给网站加上无密码登录功能。
+想给网站加上无密码登录功能，但 WebAuthn 的注册和认证流程细节很多——attestation 格式有 packed/tpm/android-key/fido-u2f 好几种，CBOR 编码也容易搞错。先写个服务端验证组件把核心逻辑跑通。
 
-Python 实现 WebAuthn 服务端的核心验证组件。能处理注册和认证两个流程。注册时验证 attestation 对象的格式和签名，提取公钥和凭证 ID。认证时验证 authenticator data 和签名，检查 challenge 匹配、用户存在标志、签名计数（防重放）。支持解析 CBOR 格式的 WebAuthn 数据结构。
+Python 实现 WebAuthn 服务端验证。注册流程：验证 clientDataJSON 的 type 是 webauthn.create、challenge 匹配、origin 在白名单内。解析 attestationObject 根据 fmt 分派验证，提取公钥（COSE 格式，支持 ECDSA P-256 和 RSA）和凭证 ID。
 
-提供验证函数接口，python3 库形式。
+认证流程：验证 clientData 的 type 是 webauthn.get，解析 authenticatorData 检查 rpIdHash 匹配、用户存在标志和用户验证标志，验证签名覆盖 authenticatorData + clientDataHash。签名计数要单调递增，重复计数可能是克隆令牌。
+
+CBOR 解析用 cbor2 库，challenge 用 os.urandom 生成 32 字节随机值。python3 库形式，提供 verify_registration() 和 verify_authentication() 两个核心接口。

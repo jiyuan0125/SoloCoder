@@ -1,3 +1,9 @@
-Go 实现 INI 配置文件解析器。支持 section（[section]）、键值对（key = value）、注释（; 和 #）、多行值、嵌套引用其他 section 的值。
-解析后可以用 Get(section, key) 查询值，支持字符串、整数、布尔类型自动转换。提供从文件加载和写入接口。
+INI 格式虽然老了，但 Windows 时代的配置文件存量巨大，很多老系统还在用。Go 标准库没有 INI 解析器，得自己实现一个。
+
+Go 实现 INI 配置文件解析器。支持 section（[section_name] 格式，section 内的 key 属于该 section，section 外的 key 属于默认 section）、键值对（key = value 或 key : value，等号和冒号都行）、注释（分号 ; 和 # 开头到行尾）、多行值（下一行缩进表示续行）、变量引用（%(other_key)s 引用同 section 内的值，%(section.key)s 跨 section 引用）。
+
+解析后提供查询 API：Get(section, key) 返回字符串值、GetInt(section, key) 返回整数、GetBool(section, key) 解析 true/false/yes/no/1/0、GetFloat(section, key) 返回浮点数、Sections() 返回所有 section 名、Keys(section) 返回某 section 的所有 key。key 不存在返回空字符串，可配置返回 error。
+
+提供从文件加载（LoadFile）和从字符串加载（LoadString）两种方式。支持写入（SaveFile）——修改后的配置可以序列化回 INI 格式，保持原始注释。
+
 go build 能编译。

@@ -1,1 +1,7 @@
-代码仓库里偶尔会不小心提交密钥和 token，需要一个扫描工具。用 Python 写一个 secrets 扫描器，扫描指定目录下的所有文本文件，用正则匹配常见敏感信息模式：AWS Access Key、GitHub Token、私钥头（BEGIN RSA PRIVATE KEY）、数据库连接串、JWT token 等。输出匹配的文件路径、行号和匹配内容（部分遮蔽显示）。支持 .gitignore 过滤，命令行使用。
+代码仓库里不小心提交过 API Key、数据库密码这些东西，虽然后来删了但 git 历史里还有。写个工具扫描代码库把泄露的密钥找出来。
+
+Python 写一个密钥和敏感信息扫描器。扫描目标：代码文件和配置文件（排除二进制文件、node_modules、.git 目录等）。检测规则用正则匹配常见的密钥格式——AWS Access Key（AKIA 开头 20 字符）、AWS Secret Key（40 字符 base64）、GitHub Token（ghp_ 开头）、Slack Token（xoxb- 开头）、私钥文件内容（BEGIN RSA PRIVATE KEY）、数据库连接串（mysql://user:pass@host）、JWT Secret（常见变量名 jwt_secret、secret_key 后跟字符串值）、Generic API Key（各种 key/token/secret 变量名赋值模式）。
+
+每条规则包含：规则 ID、正则表达式、匹配描述、严重等级（高/低，实际的云服务密钥为高，疑似变量名为低）、误报控制（排除 test_ 前缀的测试文件和 mock 目录）。
+
+扫描结果：文件路径、行号、匹配到的类型、匹配到的原文片段（密钥值部分用 *** 遮蔽显示）。输出支持终端表格和 JSON 格式。python3 命令行工具。

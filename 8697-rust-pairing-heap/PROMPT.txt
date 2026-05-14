@@ -1,5 +1,10 @@
-Pairing Heap 实现比 Fibonacci Heap 简单很多，实际性能也不错，想试试。用 Rust 实现 Pairing Heap。
+Fibonacci Heap 理论漂亮但实现复杂——级联剪切、度数标记、循环链表，代码量很大。Pairing Heap 结构极其简单：每棵树就是一个根节点加一堆子树，用左孩子右兄弟表示法。实际性能测试中 Pairing Heap 往往和 Fibonacci Heap 差不多快，甚至更快（常数因子小）。
 
-操作：insert（O(1)）、find_min（O(1)）、merge（O(1)）、extract_min（均摊 O(log n)）、decrease_key。核心是 two-pass merge：extract_min 后把子树列表从前到后两两配对合并，再从后往前合并结果。decrease_key 用切下来再合并的方式实现。
+问题 1：基本操作怎么做？merge 两个堆——比较根节点，小的当父节点，大的作为第一个孩子插入左孩子位置。O(1)。insert——创建单节点堆然后 merge。O(1)。find_min——直接返回根节点。O(1)。
 
-支持泛型，能用于 Dijkstra 或其他贪心算法。cargo build 编译通过。
+问题 2：extract_min 怎么做？删掉根节点后，剩下的一堆子树需要合并回一个堆。two-pass merge：第一遍从左到右两两配对合并，第二遍从右到左依次合并到结果里。均摊 O(log n)。
+
+问题 3：decrease_key 怎么做？把节点从父节点切断，修改 key 值，然后和原堆 merge。
+
+用 Rust 实现泛型 Pairing Heap，支持 Ord 的类型都能用。cargo build 通过。
+测试——merge 两个堆 [1,3,5] 和 [2,4] 后 extract_min 应得到 1,2,3,4,5。decrease_key 测试：把堆中的 5 改成 0 后堆顶应该是 0。空堆的 extract_min 返回 None。用 1000 个随机元素验证排序正确性。

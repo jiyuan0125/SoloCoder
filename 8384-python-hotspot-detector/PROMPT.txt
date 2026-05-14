@@ -1,5 +1,16 @@
-实现一个 Python 的代码热点检测器，综合多个维度找出高风险文件。
+代码热点 = 高变更频率 × 高复杂度 × 大文件。改得又多又复杂的代码是最容易出 bug 的地方。综合多个维度找出项目中风险最高的文件。Python 实现热点检测器。
 
-代码热点 = 高复杂度 + 高变更频率 + 高缺陷密度。综合圈复杂度、git 变更频率、bug 修复提交关联（commit message 中包含 fix/bug）三个维度，给每个文件打一个风险分数（0-100）。还可以考虑代码行数、作者数等因素。输出风险排名，前 10% 的文件就是热点。
+输入维度（每个文件）：
+- Churn（变更频率）：最近 N 个月的 git commit 数量中该文件的修改次数
+- 复杂度：文件中所有函数的圈复杂度之和
+- 代码行数（SLOC）：有效代码行数
+- Bug 密度：该文件在 bug fix commit 中被修改的次数
 
-Python 3 标准库，git 通过 subprocess。CLI：`python hotspot.py project/ --top 10`，输出风险最高的文件列表，每项显示各维度分数和综合分。`python hotspot.py` 能直接运行。
+综合评分公式：Hotspot Score = normalize(churn) × normalize(complexity) × normalize(sloc)。每个维度先归一化到 0-1 范围（min-max 归一化），然后相乘得到综合分数。三个维度都高的文件分数最高。
+
+可视化输出：
+- 热力图：X 轴是复杂度，Y 轴是变更频率，气泡大小是代码行数。右上角的大气泡就是最危险的文件
+- 排行榜：按 Hotspot Score 降序排列的 Top 20 文件列表，包含各维度原始值和综合分数
+- 趋势对比：当前版本和上一版本的热点变化
+
+输出终端彩色报告和可选的 JSON。python3 hotspot.py /path/to/repo。纯 Python 3 + git 命令行 + ast 模块。

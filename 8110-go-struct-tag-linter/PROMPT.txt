@@ -1,5 +1,7 @@
-写一个 Go struct tag 检查和格式化工具。验证 json/db/validate 等常见 tag 格式正确性，检查 tag 里 key 重复、驼峰命名不符合规范、缺少 omitempty 建议这些。
+写一个 Go struct tag 检查和格式化工具。struct tag 写错了不会编译报错，但运行时 json 序列化/数据库映射会出各种莫名其妙的 bug——字段名拼错了、漏了 omitempty、key 重复了这些都要靠工具检查。
 
-还能自动格式化：把 tag 按固定顺序排列（json 在前，db 在后），统一 key 的大小写风格。
-命令：tag-linter -fix ./model/
-Go 标准库实现，go build 通过。
+验证 json/db/validate/bson/yaml 等常见 tag 的格式正确性。检查项包括：tag 里 key 是否重复（json 出现了两次）、驼峰命名是否符合规范（json 的 key 应该用 snake_case 还是 camelCase，可配置）、字段类型和 tag 是否匹配（int 字段加 bson 标签的 omitempty 策略）、缺少 omitempty 的可选字段给出建议、gorm 标签的 column 名和字段名不一致的警告。
+
+还能自动格式化——把 tag 按固定顺序排列（约定俗成的顺序：json 在前、db 在后、validate 再后、其他按字母序），统一 key 的大小写风格（snake_case 或 camelCase），对齐所有 tag 的冒号位置让代码更好看。
+
+命令：tag-linter -fix ./model/。-fix 参数直接原地修改文件，不加 -fix 只检查不修改。Go 标准库实现，go build 通过。

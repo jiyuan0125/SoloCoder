@@ -1,3 +1,9 @@
-安全审计需要追踪用户输入在代码里的流向。用 Python 实现一个数据流分析器，能从标记的 source（比如函数参数、input() 调用）开始，追踪数据通过赋值、函数参数传递、返回值的传播路径。
+安全审计最核心的一步是追踪数据流向——用户输入从哪进来、经过了哪些变换、最终到了哪里。如果到了危险的地方（eval、SQL 拼接）没经过滤就是漏洞。Python 实现一个数据流分析器。
 
-能检测到数据是否到达了危险的 sink（比如 eval()、exec()、SQL 拼接）。至少支持过程内分析和简单的过程间传播。纯 Python，python 能跑。
+标记 source：函数参数（标注为 @source 的参数）、input() 和 raw_input() 的返回值、os.environ 的值、request.args/request.form（Web 场景）。标记 sink：eval()、exec()、os.system()、subprocess.call() 的参数、SQL 字符串拼接、HTML 模板输出。
+
+传播规则：赋值传播 x = source → x 也是 tainted、字符串拼接 "SELECT " + x → 结果也是 tainted、函数参数传递 f(x) → x 的 taint 传到 f 的参数、返回值传播 return x → 调用方的接收变量也 tainted。净化操作：经过 int()、str.escape()、参数化 SQL 函数处理后标记为 clean。
+
+分析方法：过程内分析——在函数体内按语句顺序追踪 taint 传播，分支（if/else）两边都追踪然后合并。过程间分析——跨函数调用时追踪参数和返回值的 taint 传播，但只支持一层调用深度。
+
+报告每个 sink 点是否可达 tainted 数据，以及传播路径（哪一行赋值、哪一行传递）。python3 dataflow.py source.py。纯 Python 基于 ast 模块。

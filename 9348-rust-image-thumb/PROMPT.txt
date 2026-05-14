@@ -1,10 +1,7 @@
-做一个图片缩略图生成工具，把大图缩小生成指定尺寸的缩略图。
+第一步确定缩放策略。用户传入 --max-size 参数（如 200x200），表示缩略图的最大宽高。等比缩放：计算原图宽高比 ratio = width/height，如果 ratio > max_width/max_height 则按宽度缩放（new_width = max_width, new_height = max_width/ratio），否则按高度缩放。如果用户传 --exact-size 200x150 则强制拉伸到指定尺寸。
 
-生成逻辑：
-- 支持 JPEG 和 PNG 输入格式（通过文件头 magic number 判断）
-- 按比例缩放：用户指定最大宽高，保持原始宽高比，图片 fit 到目标框内
-- 也支持指定精确的宽高，强制拉伸模式
-- 使用最近邻（nearest neighbor）或双线性插值（bilinear）进行像素重采样
-- 输出 JPEG 缩略图，可设置压缩质量（1-100）
+第二步读取图片。通过文件头判断格式——JPEG（FFD8 开头）或 PNG（89 50 4E 47 开头）。解码为像素矩阵：JPEG 解析 SOF0 获取宽高和分量信息，解码像素数据；PNG 解析 IHDR 获取参数，zlib 解压 IDAT，滤波还原。如果不想完整实现编解码，可以用 image crate 做这一步。
 
-Rust 实现，cargo build 通过。`image-thumb photo.jpg --max-size 200x200 --quality 85 -o thumb.jpg`。
+第三步像素重采样。双线性插值——目标图的每个像素 (dx, dy) 映射回原图坐标 (sx, sy) = (dx × src_width/dst_width, dy × src_height/dst_height)。取周围四个像素 (x0,y0)、(x1,y0)、(x0,y1)、(x1,y1) 做加权平均，权重由小数部分决定。边界检查：x1 和 y1 不能超出原图范围。最近邻作为更快的选项——直接取最近的整数坐标像素，不插值。
+
+第四步编码输出。JPEG 格式可设置质量（1-100），默认 85。写入 JPEG 文件头 + 压缩数据。用法 image-thumb photo.jpg --max-size 200x200 --quality 85 -o thumb.jpg。Rust 实现，cargo build 通过。

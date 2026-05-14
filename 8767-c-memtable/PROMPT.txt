@@ -1,3 +1,9 @@
-帮我用 C 写一个 Memtable 数据结构，就是 LSM 存储引擎里内存中的写入缓冲区。
-要求：支持有序插入和查找，底层数据结构用跳表或者红黑树都行。接口有 put(key, value)、get(key)、delete(key)（用墓碑标记）、scan(from, to) 范围遍历、size()、flush_to_file() 导出为有序文件。
-memtable 有容量上限，满了要能被 immutable 化等待刷盘。写个简单的 demo 验证正确性和有序性。gcc 编译，纯标准库。
+LSM 存储引擎里 memtable 是写入的第一站，所有 put/delete 操作都先到这里。要求很简单——有序、支持快速查找和范围扫描、内存占用可控、满了之后能快速转成磁盘文件。
+
+用 C 写一个 Memtable 数据结构。底层用跳表实现（也可以用红黑树，但跳表实现简单且范围遍历天然友好）。跳表最大层数 20，概率 0.5。每个节点存 key（字符串）和 value（字节数组 + 长度）。
+
+接口：put(key, value) 插入或更新 key-value 对；get(key) 返回 value 或"不存在"；delete(key) 插入一条墓碑记录（tombstone，value 设为特殊标记），这样删除也是一次写入操作，和 LSM 的设计理念一致；scan(from_key, to_key) 范围遍历，返回 [from_key, to_key] 区间内所有未被删除的 key-value 对；size() 返回当前 memtable 的条目数或内存占用估算；flush_to_file(fd) 按序把所有 key-value 对写出到文件，直接就是 sstable 的数据区内容。
+
+memtable 有容量上限（由配置决定，比如 1MB 或 10000 条），满了之后应该能被"冻结"成 immutable 状态等待后台刷盘，不再接受新的写入。切换过程要快——只是把指针换个新跳表就行。
+
+写个 demo 验证正确性：大量随机 put 和 delete 后做 scan，确认结果有序且墓碑已被过滤。验证有序性。gcc 编译，纯标准库。

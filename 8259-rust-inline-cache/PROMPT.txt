@@ -1,5 +1,9 @@
-我想在 Rust 里实现一个 inline cache 机制，类似 V8 那种针对动态属性访问的优化。
+动态语言里属性访问很慢，V8 用 inline cache 把第一次查到的偏移缓存下来，后面直接用。想在 Rust 里实现一个类似的机制来理解原理。
 
-实现一个简单的 monomorphic inline cache：首次访问对象属性时记录其偏移位置，后续访问直接用缓存的位置读取。缓存 miss 时能更新，类型发生 polymorphic 变化时退化到慢路径。附带一个基于 struct 的小对象系统来演示效果。
+先做一个简单的对象系统：每个对象有一个类型 ID 和一组字段（字段名到值的 HashMap）。类型的布局信息记录了字段名到内存偏移的映射。普通属性访问就是查 HashMap，O(n)。
 
-纯 Rust 实现，不用 unsafe。cargo run 演示缓存命中和 miss 的场景，打印命中率和加速比。
+然后实现 monomorphic inline cache：每个属性访问点维护一个缓存条目（type_id, field_offset）。访问属性时先检查对象的 type_id 是否和缓存中的匹配——匹配就直接用 offset 读取，不匹配就走 HashMap 查找并更新缓存。
+
+当同一个访问点遇到第二种类型时，退化到 polymorphic inline cache：缓存最多保存 4 个类型，超过 4 个就变成 megamorphic，走慢路径（每次都查 HashMap）。用一个访问计数器统计命中和 miss。
+
+做个 demo：创建两种不同布局的对象，先连续访问同一类型观察缓存命中，然后混入另一种类型看命中率下降。打印每次访问是 cache hit 还是 miss，以及累计命中率。纯 Rust 实现，不用 unsafe。cargo run 演示，cargo build 通过。

@@ -1,5 +1,7 @@
-写一个 CRLF 注入检测和防御库。
+CRLF 注入虽然不算高危漏洞，但可以导致 HTTP 响应拆分、缓存投毒、日志伪造等问题。我们的 WAF 没有覆盖 CRLF 注入，手动检查 URL 参数太多了，写个工具自动化。
 
-检测 HTTP 请求中是否包含 %0d%0a（\r\n）或其变体编码，这些字符可能被注入到响应头里导致 HTTP 响应拆分。扫描 URL 参数、自定义 header、Cookie 值这些用户可控的输入点。
+Python 实现一个 CRLF 注入检测和防御库。检测功能：对 HTTP 请求中的用户可控输入做扫描——URL 参数值、自定义请求头（Referer、X-Forwarded-For 等）、Cookie 值。先用 urllib.parse.unquote 做多层 URL 解码直到稳定，然后搜索 %0d、%0a、\r、\n 及其双重编码变体。找到后判断注入位置——是在 URL 参数中还是 HTTP 头部中，不同的位置攻击面不同。
 
-提供一个中间件（Flask 版）自动过滤请求中的 CRLF 字符。也提供 CLI 工具扫描 URL 列表文件检测 CRLF 注入风险。输出哪些参数有问题和具体的 payload 位置。Python 3，标准库 urllib.parse 做解码。
+防御功能：提供 sanitize_crlf(value) 函数，从输入中剥离所有 \r 和 \n 字符及其编码形式。Flask 中间件：用 before_request 钩子自动过滤所有请求参数中的 CRLF 字符。
+
+CLI 工具：扫描一个 URL 列表文件，对每个 URL 的参数逐一检测，输出有风险的参数名和具体 payload。python3 标准库 urllib.parse。

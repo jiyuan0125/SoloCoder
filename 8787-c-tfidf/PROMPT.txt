@@ -1,4 +1,9 @@
-实现 TF-IDF 计算和文本相似度，C 语言。
-TF-IDF 把文档表示成向量：每个维度是一个 term，值是 TF×IDF。TF 是词频，IDF 是 log(总文档数/包含该词的文档数)。
-功能：从文件读取一组文档，构建词表，计算每篇文档的 TF-IDF 向量。然后支持余弦相似度计算两篇文档的相似程度。
-命令行：tfidf build docs.txt，然后 tfidf similar doc1 doc2 输出相似度分数。gcc 能编译就行。
+TF-IDF 是比 BM25 更基础的文本相似度算法，原理就两步：TF（词频）衡量一个词在一篇文档里多重要，IDF（逆文档频率）衡量一个词在所有文档里多独特。把两者相乘，每个词就得到一个权重。然后把文档表示成 TF-IDF 向量，两篇文档的相似度就用余弦距离来算。
+
+用 C 实现 TF-IDF 计算和文本相似度。流程：从文件读取一组文档（每行一篇，按空格分词，转小写），构建全局词表（所有出现过的词）。对每篇文档计算 TF-IDF 向量——TF 用原始计数或者 log(1+tf) 归一化，IDF 用 log(N / (1 + DF))（加 1 避免除零，N 是总文档数，DF 是包含该词的文档数）。向量维度等于词表大小，每个维度是 TF*IDF。
+
+相似度计算：cosine_similarity(vec_a, vec_b) = dot(a,b) / (|a| * |b|)。点积就是对应维度相乘再求和，分母是两个向量的模长的乘积。
+
+命令行支持两种操作：tfidf build docs.txt 构建索引并保存到文件（包含词表、DF、文档向量等）；tfidf similar doc_idx_a doc_idx_b -i index.bin 计算两篇文档的余弦相似度，输出 0~1 之间的分数。也支持 tfidf query "some terms" -i index.bin 找到和查询文本最相似的 top-N 文档。
+
+优化：向量是稀疏的，不需要存所有维度。用 (word_id, tfidf_value) 对的数组表示稀疏向量，点积计算用双指针归并。gcc 能编译就行。

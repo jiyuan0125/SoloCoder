@@ -1,12 +1,13 @@
-用 Rust 实现健康检查（Health Check）框架。
+健康检查端点是每个微服务的标配——/health 接口返回服务是否正常。但"健康"其实有多种含义：进程是否活着（liveness）、是否准备好接受流量（readiness）、启动是否完成（startup）。用 Rust 实现一个综合健康检查框架。
 
-服务需要暴露健康检查接口，检查分为存活探针（liveness）和就绪探针（readiness），类似 Kubernetes 的健康检查。
+三种探针的设计。Liveness Probe：检查进程是否活着。简单的 HTTP GET /healthz 返回 200。如果返回不了，Kubernetes 会杀掉进程重启。检查内容：主循环是否卡死、是否有死锁。
 
-要做的事：
-- 定义 HealthChecker trait，可以注册多个检查项（数据库连接、磁盘空间、依赖服务等）
-- 两种检查模式：liveness（进程活着吗）和 readiness（能对外服务吗）
-- liveness 失败 → 进程需要重启；readiness 失败 → 从负载均衡中摘除
-- 检查结果汇总：整体状态 = 所有检查项中最差的状态
-- 输出每次检查的详细结果（每个检查项 pass/fail + 耗时）
+Readiness Probe：检查是否准备好接受流量。即使进程活着，可能还在加载配置、初始化连接、预热缓存。/ready 接口只有所有依赖（数据库、缓存、消息队列）都连通时才返回 200。
 
-cargo build 通过。检查项用模拟实现。
+Startup Probe：检查启动是否完成。有些服务启动很慢（加载数据到内存），在启动完成前不应该做 liveness 检查（否则会被误杀）。/startup 接口在初始化完成后返回 200。
+
+健康检查的实现：定义一个 HealthCheck trait，三个方法：check_liveness()、check_readiness()、check_startup()。每个方法返回 Ok(()) 或 Err(reason)。框架定期调用这些方法并汇总状态。
+
+命令行可以手动触发检查，也可以后台定期检查并打印状态变化。"liveness: OK | readiness: FAIL (database connection timeout) | startup: OK"
+
+cargo build 通过。

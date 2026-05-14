@@ -1,10 +1,7 @@
-写一个图片缩放工具，支持 JPEG 和 PNG 图片的放大和缩小。
+图片缩放和缩略图有什么区别？缩放可以放大也可以缩小，支持多种模式，不只是 fit 进一个框。写一个更灵活的 Rust 图片缩放工具。
 
-缩放功能：
-- 读取 JPEG（解析到像素）或 PNG（解码像素数据）图片
-- 指定目标宽度和高度进行缩放，支持保持宽高比模式（只给宽度自动算高度）
-- 使用双线性插值进行像素重采样，保证缩放后图片质量可接受
-- 输出格式可选 JPEG（带质量参数）或 PNG
-- 正确处理 RGB 三通道和 RGBA 四通道数据
+三种缩放模式。精确模式：指定宽和高，图片缩放到刚好是那个尺寸。保持宽高比模式：只指定宽度（或高度），另一个维度按比例计算。如果同时指定了宽和高且要保持比例，则取较小的缩放比以确保整个图片 fit 进目标区域。裁剪模式：等比放大到完全覆盖目标区域，然后从中心裁掉超出的部分。
 
-Rust 项目，cargo build 通过。`image-resize input.jpg --width 800 --height 600 -o output.jpg` 或 `image-resize input.png --width 800 --keep-ratio -o output.png`。
+输入格式支持 JPEG 和 PNG。解码后得到像素矩阵（RGB 三通道或 RGBA 四通道）。缩放算法用双线性插值——对每个目标像素计算在原图中的浮点坐标，取四邻域加权平均。alpha 通道要独立处理——如果是 RGBA 图片，alpha 值也参与插值。PNG 输出保留 alpha 通道，JPEG 输出前把 alpha 和白色背景混合。
+
+输出格式由用户指定（--format jpeg/png）或根据输出文件扩展名判断。JPEG 可以设置质量参数。批量模式指定输入目录和输出目录。用法 image-resize input.jpg --width 800 --keep-ratio -o output.jpg。Rust 实现，cargo build 通过。

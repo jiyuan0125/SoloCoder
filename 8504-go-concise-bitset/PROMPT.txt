@@ -1,9 +1,11 @@
-我需要一个轻量级的位集合实现，用 Go 写。跟 Roaring Bitmap 那种复杂方案不同，Concise Bitset 用更简单的 RLE 变体来压缩 0/1 序列。
+先说一下为什么需要这个——我在做一个日志分析系统，每条日志有几十个布尔标记（是否错误、是否重试、是否超时等），需要对这些标记做快速的位运算来筛选。数据量几千万条，用普通位数组内存吃紧，Concise Bitset 用 RLE 变体来压缩 0/1 序列，稀疏场景下能省很多内存。
 
-主要功能：
-- 设置和清除指定位
-- 批量设置某个范围的所有位
-- 支持 AND、OR、NOT 位运算
-- 能快速统计有多少位被设置了（population count）
+实现流程分这几步——
 
-Go 标准库，go build 编译通过。稀疏数据场景下要比朴素位数组省内存。
+第一步，底层存储结构。Concise Bitset 把位序列编码成一个 uint32 数组，每个 uint32 是一个 word。有两种类型的 word：literal word（低 31 位存实际的位模式，最高位是 0）和 fill word（最高位是 1，第 30 位表示填充值是全 0 还是全 1，低 30 位表示连续多少个 word 的填充长度）。通过 fill word 一行就能表示 31×数百万 个连续相同位。
+
+第二步，基础操作。Set 位和 Clear 位：找到对应的 word 位置，如果是 fill word 需要展开成 literal word 再修改。批量设置某个范围 [from, to] 的所有位。Get 查询某个位的值。
+
+第三步，位运算。AND、OR、NOT 操作在压缩格式上直接做——两个 literal word 之间做位运算还是 literal word；literal 和 fill 之间有快速路径。NOT 操作把 0-fill 变成 1-fill 反过来就行。
+
+第四步，population count。统计有多少位被设置了，literal word 用 bits.OnesCount32，fill word 直接算。

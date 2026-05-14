@@ -1,5 +1,5 @@
-我有一组 H.264 裸流数据（Annex B 格式），需要封装成标准的 MPEG-TS 文件。用 Python 写个 TS 封装工具。
+有一组 H.264 裸流数据（Annex B 格式，NAL 单元以 00 00 00 01 或 00 00 01 开头），需要封装成标准的 MPEG-TS 文件才能被播放器识别。TS 封装的核心工作是把 NAL 单元打包进 PES（Packetized Elementary Stream）包，再把 PES 包切成 188 字节的 TS 包。
 
-功能：读取 H.264 裸流文件，按 TS 规范组装 188 字节的 TS 包，添加 PAT/PMT 表，将 NAL 单元封装到 PES 包再放到 TS 包里。输出的 .ts 文件要能用播放器正常打开。
+封装流程。先写 TS 文件头——PAT（PID 0x0000，列出节目号和对应的 PMT PID）和 PMT（列出视频流的 PID 和流类型 0x1B 即 H.264）。这两个表每隔一段要重复发送，播放器依赖它们定位流。然后处理 NAL 单元：找起始码分隔 NAL，SPS/PPS 要在每个 IDR 帧前面插入。PES 包头包含流 ID、PES 长度、PTS/DTS 时间戳（90kHz 时钟）。PES 包切成多个 188 字节 TS 包——第一个包的 payload_unit_start_indicator 设为 1，后续包设为 0。包之间可能需要插自适应字段填充对齐。
 
-Python 3 实现二进制操作，不依赖 ffmpeg。python ts_muxer.py input.h264 output.ts 这样用。
+输出的 .ts 文件用 ffplay 或 VLC 要能正常播放。用法：python3 ts_muxer.py mux input.h264 output.ts

@@ -1,10 +1,7 @@
-帮我做一个 SVG 文件解析工具，提取 SVG 中的基本图形元素和属性。
+SVG 解析不只是读 XML——还得理解图形语义。一个 rect 元素有哪些属性？path 的 d 属性里 M L C A Z 各代表什么？transform 怎么解析？这些都需要处理。Rust 写一个 SVG 元素提取工具。
 
-解析范围：
-- 解析 XML 头和 SVG 根元素，读取 viewBox、width、height 属性
-- 提取基本图形元素：rect（矩形）、circle（圆形）、line（直线）、path（路径）、text（文本）
-- 读取每个元素的填充色（fill）、描边色（stroke）、描边宽度等样式属性
-- 支持 style 属性的内联 CSS 解析（简单的 key:value 对）
-- 对 path 元素解析 d 属性中的命令序列（M、L、C、Z 等）
+XML 解析用标准库。读取 SVG 根元素的 viewBox、width、height 属性——viewBox 格式是 "minX minY width height" 四个空格分隔的数字。width 和 height 可能带单位（px、pt、mm、cm、%），纯数字默认 px。基本属性提取后开始遍历子元素。
 
-Rust 实现，cargo build 通过。`svg-parser info diagram.svg` 输出元素统计和属性列表。
+图形元素映射表。rect：x、y、width、height、rx（圆角）、ry。circle：cx、cy、r。ellipse：cx、cy、rx、ry。line：x1、y1、x2、y2。polyline/polygon：points 属性，格式是 "x1,y1 x2,y2 ..."。path：d 属性，指令包括 M/m（moveto）、L/l（lineto）、H/h（水平线）、V/v（垂直线）、C/c（三次贝塞尔）、S/s（平滑贝塞尔）、Q/q（二次贝塞尔）、T/t（平滑二次贝塞尔）、A/a（弧线）、Z/z（关闭路径）。大写绝对坐标，小写相对坐标。
+
+样式属性：fill（默认 black）、stroke（默认 none）、stroke-width、opacity。它们可以出现在元素的 style 属性里（"fill:red;stroke:blue" 格式的内联 CSS），也可以作为独立属性。transform 属性解析 translate(tx,ty)、rotate(angle,cx,cy)、scale(sx,sy)、matrix(a,b,c,d,e,f)。输出元素统计和属性列表。用法 svg-parser info diagram.svg。Rust 实现，cargo build 通过。

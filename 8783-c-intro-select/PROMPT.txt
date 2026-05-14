@@ -1,4 +1,13 @@
-用 C 实现 Introselect 算法。
-Introselect 是 quickselect 的改进：先用快排式的分区，但监测递归深度，如果太深（说明运气差 pivot 总是不好），就切换到 median-of-medians 保证最坏 O(n)。
-这算法是 C++ STL 的 nth_element 背后的思路。
-实现时追踪递归深度限制（2*ceil(log2(n))），超限后切到确定的 BFPRT 选择算法。测试：随机数组验证每次选出来的第 k 小确实正确。gcc 编译。
+quickselect 期望 O(n) 但最坏 O(n²)，在对安全性有要求的场景下（比如实时系统中求中位数做异常检测），最坏情况不可接受。Introselect 是 C++ STL 的 nth_element 背后用的算法——先用快排式的分区，同时追踪递归深度，如果发现深度超过了 2*ceil(log2(n))，说明 pivot 运气一直不好，立刻切换到保证 O(n) 的 BFPRT（median-of-medians）算法。
+
+用 C 实现 Introselect 算法。函数签名 introselect(array, left, right, k, depth_limit)。
+
+正常路径：随机选 pivot 做 partition，递归进入包含 k 的那一半，depth_limit 减 1。如果 depth_limit 降到 0 了还没找到结果，切换到 BFPRT 算法。
+
+BFPRT（Blum-Floyd-Pratt-Rivest-Tarjan）算法：把数组每 5 个元素分成一组，每组取中位数，再从所有中位数里取中位数作为 pivot。这个 pivot 保证至少比 30% 的元素大、至少比 30% 的元素小，所以每次分区至少能排除 30%，保证最坏 O(n)。
+
+初始调用时 depth_limit = 2 * ceil(log2(right - left + 1))。用 <math.h> 的 ceil 和 log2 函数。
+
+实现要点：median_of_medians 函数先对每 5 个元素做插入排序取中位数，然后递归调用 introselect 找这些中位数的中位数。partition 用这个中位数当 pivot。
+
+测试：随机数组（100 万个元素）验证每次选出来的第 k 小确实正确（和排序结果对比）。刻意构造让普通 quickselect 退化到 O(n²) 的输入（比如已排序数组选最后一个元素），验证 introselect 在这种情况下不会超时。gcc 编译。

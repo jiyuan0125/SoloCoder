@@ -1,12 +1,11 @@
-写个 Rust 程序实现日志截断（Log Truncate）。
+日志截断是日志复制的核心修复操作——当 Leader 发现 Follower 的日志和自己不一致时，从冲突点开始截断 Follower 的日志，然后用正确的日志覆盖。这保证了所有节点的日志最终收敛到一致的状态。用 Rust 实现这个截断和修复流程。
 
-日志不能无限增长，已经提交且应用过的旧日志需要被清理掉。截断前通常要先做快照。
+截断的触发条件：Leader 发 AppendEntries 时携带 prevLogIndex 和 prevLogTerm。Follower 检查自己 prevLogIndex 处的 term 是否等于 prevLogTerm。不匹配就拒绝（返回冲突信息）。Leader 收到拒绝后 nextIndex 回退并重试，直到找到匹配点。找到匹配点后，Follower 从匹配点之后截断所有日志，然后追加 Leader 发来的新条目。
 
-要做的事：
-- 维护一个操作日志，支持追加和按 index 查询
-- 支持生成快照：把当前状态序列化保存，记录快照对应的 last_included_index
-- 快照完成后，截断 last_included_index 之前的日志条目
-- 新加入的节点可以先传快照再传增量日志，不用传整个历史日志
-- 能看到日志大小变化和截断操作的效果
+快速回退的优化：Follower 在拒绝时不仅返回"不匹配"，还返回冲突位置的 term 和该 term 的第一个 index。这样 Leader 可以直接跳过整个冲突的 term，不需要一格一格回退。在日志很长时这个优化能节省很多轮 RPC。
 
-cargo build 通过。数据用内存模拟。
+需要验证的三个场景。完全一致的日志：直接追加，不需要截断。中间有冲突：比如 index 5 处 local_term=3 而 leader_term=2，截断 index 5 之后的所有条目再追加。一长一短：短的直接追加缺失部分。
+
+打印截断前后的日志对比，显示每个场景的冲突检测和修复过程。
+
+cargo build 通过。

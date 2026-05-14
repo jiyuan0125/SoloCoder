@@ -1,5 +1,5 @@
-MKV 文件里经常挂了字体、封面图之类的附件，想看看都有什么。
+MKV 文件里经常挂了字体、封面图之类的附件——做字幕渲染的时候 ASS 字体需要从容器里提取，封面图也要单独导出。想看看都有什么附件。
 
-解析视频容器中的附件轨道（attachment track），提取附件的文件名、MIME 类型和原始数据。MKV 里的 AttachedFile 元素要能完整解析。支持导出附件到本地文件（比如提取嵌入的字体或封面图）。
+解析视频容器中的附件轨道。MKV 容器里的附件在 Attachments 元素下：AttachedFile 子元素包含 FileName（文件名字符串）、FileDescription（描述）、FileMimeType（MIME 类型如 'application/x-truetype-font'、'image/jpeg'、'image/png'）、FileData（原始二进制数据）、FileUID。遍历所有 AttachedFile，列出附件清单：文件名、MIME 类型、数据大小。支持导出功能（-extract 参数指定文件名或者 -extract-all 导出全部）：读取 FileData 元素的内容，写入本地文件，文件名用原始 FileName。常见附件类型：TTF/OTF 字体文件（ASS 字幕渲染用）、JPEG/PNG 封面图、XML 元数据文件。对于 MP4 容器，没有原生的附件机制，但如果有 meta box 里的 ilst 下的 covr（封面）也要能识别和导出。
 
-Go 标准库，go build 编译通过。
+Go 标准库，二进制读写。go build 编译通过。

@@ -1,12 +1,11 @@
-用 Rust 实现消息队列的分区（Partition）机制。
+单个 topic 的吞吐量有上限——一个队列串行写入和消费，没法水平扩展。分区（partition）是消息队列实现高吞吐的关键：一个 topic 被分成多个 partition，每个 partition 是独立的队列，可以并行读写。Kafka 就是这个模型。用 Rust 实现分区消息队列。
 
-单个 topic 的消息量太大时，需要分成多个分区来并行处理，类似 Kafka 的 partition。
+分区的数据结构：TopicPartition { topic, partition_id, messages: Vec<Message>, subscribers: HashMap<ConsumerId, u64> }。一个 Topic 由 N 个 Partition 组成，N 可配置（默认 4）。消息根据 key 的哈希值决定去哪个 partition——hash(key) % N。没有 key 的消息轮询分配。
 
-要实现的：
-- 一个 topic 可以有多个 partition，消息按照 key 的 hash 值分配到对应分区
-- 同一个 key 的消息保证进入同一个分区（保证顺序性）
-- 每个分区维护自己的消息偏移量（offset）
-- 消费者可以订阅某个 topic 的特定分区，或者由系统自动分配分区
-- 能查看每个分区的消息数量和消费者分配情况
+分区内的消息顺序保证：同一个 partition 内的消息严格按写入顺序消费。不同 partition 之间的消息没有顺序保证。所以"需要保证顺序的消息"必须用相同的 key（这样会被路由到同一个 partition）。
 
-cargo run 能跑，内存模拟，不用真正的消息中间件。
+消费者组的概念：一组消费者组成一个消费组，每个 partition 被分配给组内的一个消费者。这样 N 个 partition 可以被 N 个消费者并行消费，吞吐量是单消费者的 N 倍。消费者加入/离开时触发 rebalance——重新分配 partition。
+
+模拟：1 个 topic、4 个 partition、3 个消费者。写入 100 条消息（10 个不同的 key），观察消息如何分配到各 partition。打印各 partition 的消息数量和各消费者的消费进度。
+
+cargo build 通过。

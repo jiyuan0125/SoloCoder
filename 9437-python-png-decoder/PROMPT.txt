@@ -1,1 +1,5 @@
-想自己实现一个PNG图片解码器来理解这个格式的细节。写个Python工具读取PNG文件，解析PNG签名、各个chunk（IHDR、PLTE、IDAT、IEND等），从IHDR提取宽高、位深度、颜色类型。对IDAT chunk的数据做zlib解压，然后处理PNG的过滤算法（None、Sub、Up、Average、Paeth），还原出原始像素数据。支持8位RGB和RGBA模式。python3实现。
+PNG 图片在磁盘上长什么样？文件头 8 字节签名（89 50 4E 47 0D 0A 1A 0A），然后是一连串 chunk。每个 chunk 有 4 字节长度、4 字节类型、数据、4 字节 CRC。核心 chunk：IHDR（宽、高、位深度、颜色类型、压缩方法、过滤方法、隔行扫描）、PLTE（调色板，索引色模式用）、IDAT（压缩的图像数据）、IEND（文件结束标记）。
+
+解码流程——收集所有 IDAT chunk 的数据拼在一起，做 zlib 解压缩，得到过滤后的扫描线数据。每条扫描线的第一个字节是过滤类型，后面是像素字节。PNG 定义了五种过滤算法：None（不过滤）、Sub（减左边像素）、Up（减上面像素）、Average（减左上平均值）、Paeth（用 Paeth 预测器选最优邻居）。对每条扫描线反向应用过滤还原出原始像素值。
+
+颜色类型——0 是灰度、2 是 RGB、3 是索引色、4 是灰度+alpha、6 是 RGBA。只支持 8 位位深度。隔行扫描（Adam7）暂不处理。输出每个像素的 RGB 或 RGBA 值。用法：python3 png_decoder.py decode image.png

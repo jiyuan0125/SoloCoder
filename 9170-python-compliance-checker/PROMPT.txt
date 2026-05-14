@@ -1,12 +1,7 @@
-合规性检查工具，自动扫描代码仓库和配置文件，发现违反安全规范的项。
+合规性检查工具。安全团队要求项目上线前过一遍合规检查清单——密码不能明文存储、API 要有认证、敏感数据要加密、日志不能包含 PII。手动检查太费时了，写个工具自动扫描代码和配置。
 
-每周安全团队都要检查各项目的配置是否合规，什么密钥硬编码啦、HTTPS 没开啦、日志级别不对啦，手工查太慢。
+Python 实现合规检查器。扫描目标：代码仓库目录。检查规则分三类——代码检查：正则扫描源文件，找硬编码的密码（password=、secret= 后跟字符串）、SQL 拼接（字符串 + 变量拼 SQL 语句）、调试信息泄露（print/env 输出敏感变量）、不安全的加密（DES、MD5 用于密码哈希）。
 
-Python 实现：
-- 扫描指定目录，检查常见合规问题：硬编码密钥/密码、HTTP 链接（非 HTTPS）、不安全的依赖版本声明、debug 模式开启
-- 读取 YAML/JSON/ENV 配置文件，检查关键安全配置项
-- 按严重级别分类：Critical（硬编码密钥）、Warning（HTTP 链接）、Info（建议优化）
-- 输出检查报告，每条包含文件路径、行号、问题描述、建议修复方式
+配置检查：扫描配置文件，找明文密钥（.env 文件里的 DATABASE_URL 含密码）、不安全的 CORS 配置（Access-Control-Allow-Origin: *）、未启用 HTTPS 的 URL、缺少认证的 API 端点。依赖检查：扫描 requirements.txt/package.json，标记已知有漏洞的包版本。
 
-示例：python compliance_checker.py scan ./my-project --output report.json
-能跑起来，误报率别太高。
+每条检查规则包含：规则 ID、检查类别（code/config/dependency）、严重等级（critical/high/medium/low）、问题描述、修复建议。规则用 YAML 定义，支持自定义。输出合规报告——通过/未通过项数量、按严重等级分组的问题列表。python3 命令行工具。

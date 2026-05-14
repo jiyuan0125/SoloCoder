@@ -1,5 +1,7 @@
-帮我用 Rust 写一个图片旋转的命令行工具。
+手机拍的照片方向不对是个老问题——EXIF Orientation tag 告诉软件该怎么旋转，但很多应用直接忽略它。需要一个工具把旋转"烧"进像素里，然后修正 EXIF。Rust 实现。
 
-我有一批手机拍的照片需要批量旋转到正确方向，有些是 90 度有些是 180 度。工具需要支持指定角度旋转（90/180/270），同时能读取 EXIF 里的 Orientation 标签自动纠正。支持 PNG 和 JPEG 两种格式输出，批量处理的时候能递归扫描目录。
+旋转操作的像素映射——90° 顺时针：新坐标 (x', y') = (height-1-y, x)，新图的宽高互换。180°：新坐标 (width-1-x, height-1-y)，宽高不变。270°：新坐标 (y, width-1-x)。水平翻转：(width-1-x, y)。垂直翻转：(x, height-1-y)。这些变换在像素级别直接做坐标重映射，不需要矩阵运算。
 
-用 Rust 标准库加 image crate 来做，cargo build 能编译通过就行。
+EXIF 自动纠正——读 Orientation tag(274) 的值。3→旋转 180°、6→旋转 90°、8→旋转 270°、2→水平翻转、5→90°+水平翻转、7→270°+水平翻转、4→垂直翻转。旋转完后把 Orientation 改为 1（正常方向）。
+
+支持 PNG 和 JPEG 输出。批量模式递归扫描目录，对每个图片文件检查 EXIF Orientation，不等于 1 的就自动旋转。JPEG 旋转后质量设为 95% 减少画质损失。用法 img-rotate -auto ./photos/ 或 img-rotate -angle 90 input.jpg output.jpg。Rust 标准库实现，cargo build 通过。

@@ -1,11 +1,9 @@
-用 Rust 写一个 Raft 客户端 SDK。
+客户端和 Raft 集群交互时有个经常被忽略的问题——线性一致性读。客户端发一个读请求，怎么保证读到的是最新已提交的数据？直接从 Leader 读就行了吗？Leader 可能刚选举出来，还没提交过任何日志——它那条数据可能被新一轮选举覆盖掉。用 Rust 实现客户端的读写交互，处理这些边界情况。
 
-客户端需要跟 Raft 集群交互：发请求到 Leader，遇到 Leader 变更时能自动重定向。集群地址列表可以配置，客户端需要维护谁是当前 Leader 的信息。
+客户端请求的类型：Write(key, value) 和 Read(key)。写请求直接发到 Leader，Leader 追加日志、复制、提交后返回结果。读请求需要走 ReadIndex 流程——Leader 先记下当前的 commitIndex 作为 readIndex，然后向集群发一轮心跳确认自己仍然是 Leader（防止旧 Leader 返回过期数据），等 commitIndex >= readIndex 后才返回数据。
 
-核心功能：
-- 发送写请求到 Leader，成功返回确认
-- 读请求可以走 Leader 或 ReadIndex 模式
-- Leader 不可用时自动尝试其他节点，获取最新的 Leader 地址
-- 支持超时和重试机制
+客户端的重试逻辑：如果请求发送到的节点不是 Leader（返回 NotLeader 错误），客户端根据错误信息中附带的 Leader 地址重试。如果不知道谁是 Leader，随机选一个节点重试。请求超时（比如 2 秒）后也要重试，最多重试 3 次。
 
-cargo build 通过，模拟一个集群环境做集成测试。
+模拟 5 个 Raft 节点 + 1 个模拟客户端。客户端并发发送 10 个写请求和 5 个读请求，打印每个请求的完整路径和结果。特别是展示一个场景：Leader 切换期间客户端的请求被拒绝并重试到新 Leader。
+
+cargo build 通过。

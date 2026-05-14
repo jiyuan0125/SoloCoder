@@ -1,4 +1,4 @@
-想把 Rust 函数编译到 WebAssembly 跑在浏览器里，需要做 Rust 到 Wasm 的绑定生成。
+想把 Rust 函数编译成 WebAssembly 跑在浏览器里——计算密集型任务用 Rust + Wasm 性能碾压纯 JavaScript。但 Rust 和 JavaScript 之间的类型系统差异很大：Rust 的 i32/u32/i64 怎么映射到 JS 的 number？String 和 &str 怎么跨边界传递？Vec<u8> 怎么变成 JS 的 Uint8Array？需要一个绑定生成器来处理这些类型映射，自动生成 JavaScript/TypeScript 的调用代码。支持 #wasm_bindgen 风格的属性标注来控制导出行为，生成 .d.ts 类型声明文件让前端开发者有完整的类型提示。同时支持反方向的绑定——从 Rust 调用浏览器提供的 JS 函数。
 
 用 Rust 写一个 Wasm 绑定生成器：
 - 解析 Rust 源码中的 pub 函数和结构体

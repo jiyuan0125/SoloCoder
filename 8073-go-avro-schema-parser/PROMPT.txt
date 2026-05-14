@@ -1,1 +1,9 @@
-处理 Kafka 消息的时候需要解析 Avro schema。Go 实现一个 Apache Avro schema 解析器，能解析 .avsc 文件中的 record、enum、array、map、union、fixed 类型定义。支持嵌套类型引用和命名空间。解析完输出 Go 结构体定义，字段类型正确映射（string→string, long→int64, bytes→[]byte 等）。go build 通过。
+Kafka 消息用 Avro 做序列化，需要解析 .avsc 文件来生成代码或做消息校验。Java 生态有完整的 Avro 工具链，Go 这边得自己搞定。
+
+Go 实现一个 Apache Avro schema 解析器。能解析 .avsc 文件（JSON 格式）中的类型定义。支持的类型：primitive（null, boolean, int, long, float, double, bytes, string）、complex（record 包含 fields 数组、enum 包含 symbols 数组、array 包含 items 类型、map 包含 values 类型、union 用数组表示多种可能类型、fixed 包含 size）、logical（date、decimal、timestamp-millis 等逻辑类型标注）。
+
+支持嵌套类型引用——record 的字段类型可以是另一个 record 的全限定名。支持命名空间（namespace）和别名（aliases）。字段可以有 default 值。
+
+解析完输出两样东西：一是原始 schema 的结构化 Go 对象表示，二是自动生成的 Go 结构体定义代码——字段类型正确映射（string→string, long→int64, bytes→[]byte, array→[]T, map→map[string]T, union→interface{} 或具体类型）。生成的代码带 JSON tag 和 Avro tag。
+
+go build 通过。

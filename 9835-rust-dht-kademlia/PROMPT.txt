@@ -1,12 +1,11 @@
-用 Rust 实现 Kademlia DHT。
+Kademlia 是 BitTorrent 用的 DHT 协议——和 Chord 不同，它用 XOR 距离度量，路由表按距离的二进制前缀组织。Kademlia 有一个很优雅的性质：节点 A 到节点 B 的查询和 B 到 A 的查询走完全相同的路径。用 Rust 实现 Kademlia 的核心路由和查找机制。
 
-Kademlia 是 BitTorrent 使用的 DHT 协议。节点 ID 是 160 位，距离用 XOR 度量。每个节点维护 k-bucket 路由表，查找效率是 O(log N)。
+节点 ID 的设计：160 位的 ID（和 SHA-1 同长度），这里简化成 64 位方便调试。XOR 距离：distance(A, B) = A XOR B，值越小越近。每个节点维护 k-bucket 路由表——按距离的前导零位数分层（0 到 63 层），每层最多存 k 个节点（通常 k=20）。
 
-要做的事情：
-- 160 位 node ID（用 SHA-1 生成），XOR 距离计算
-- K-bucket 路由表：按与自身距离的 2^i 到 2^(i+1) 范围分桶，每桶最多 k 个节点
-- FIND_NODE RPC：返回距离目标最近的 k 个节点
-- 迭代查找：发起者逐步向更近的节点查询，直到找不到更近的
-- 节点加入：先找一个已知节点，然后查找自己的 ID 填充 k-bucket
+查找流程：FIND_NODE(target) 操作。发起者先从自己的 k-bucket 里找 α 个距离 target 最近的节点（α 通常为 3），并行向它们发 FIND_NODE 请求。收到响应后更新已知节点列表，再从最近的 α 个未查询节点继续查询。每轮至少翻倍已知节点数，O(log N) 轮收敛。
 
-cargo build 通过，模拟网络测试 FIND_NODE 在 3 跳内收敛。
+k-bucket 的更新规则：收到新节点信息时，如果对应的 bucket 没满就直接加入。如果满了，ping 最早加入的节点——如果还活着就不加新节点，如果死了就替换。
+
+模拟 50 个节点，从节点 0 查找距离最远的节点 49。打印每轮查询的最近节点列表和总查询次数。
+
+cargo build 通过。

@@ -1,5 +1,7 @@
-写一个 Rust 的 Protocol Buffers 解码工具，不需要 .proto 文件就能看数据。
+Protobuf wire format 解码——在没有 .proto 文件的情况下解析二进制 protobuf 数据。调试微服务通信时经常碰到这种需求：抓包拿到一堆二进制数据，看不懂里面是什么。Rust 实现。
 
-直接解析二进制的 protobuf 编码数据，按 wire format 逐字段解读：varint、64-bit、length-delimited、32-bit 这些类型。对 length-delimited 的字段尝试以 UTF-8 字符串和嵌套消息两种方式解读。输出每个字段的 field number、wire type、原始值和可能的解读结果。类似 protoc --decode_raw 的功能。
+Wire format 基础——每个字段由 tag + value 组成。Tag = (field_number << 3) | wire_type。Wire type：0=Varint（变长整数）、1=64-bit（固定 8 字节）、2=Length-delimited（变长，前面是长度）、5=32-bit（固定 4 字节）。Varint 编码：每个字节的最高位为 1 表示后面还有字节，低 7 位是数据。sint32/sint64 用 ZigZag 编码（0→0, -1→1, 1→2, -2→3...）。
 
-Rust 实现，按 protobuf 编码规范解析二进制，cargo build 通过。
+解码逻辑——读取 tag，提取 field_number 和 wire_type。根据 wire_type 读取对应长度：Varint 逐字节读到最高位为 0；64-bit 读 8 字节；Length-delimited 先读 varint 长度再读对应字节数；32-bit 读 4 字节。
+
+嵌套消息的递归解析——wire_type=2 的字段可能是嵌套消息（也可能是 string/bytes）。尝试递归解析：如果能成功解析为合法的 tag-value 对就当作嵌套消息处理，否则当作 string 或 bytes。输出格式：缩进层级的 field_number: value，嵌套消息用大括号包裹。JSON 输出模式：字段号作为 key，值转成 JSON 类型。用法 protobuf-decode --input data.bin --output data.json。Rust 实现，cargo build 通过。

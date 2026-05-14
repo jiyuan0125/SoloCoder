@@ -1,1 +1,5 @@
-拍照时相机记录了很多参数在EXIF里，想把它们读出来看看。写个Python EXIF读取工具，从JPEG文件的APP1段解析EXIF数据。能读取IFD0（主图像信息）、Exif IFD（拍摄参数如光圈、快门、ISO、焦距）、GPS IFD（经纬度、海拔）。将EXIF tag ID映射到可读的名称，数值转换为人类可理解的格式（比如光圈用f值表示）。Python3实现，传JPEG文件路径。
+手机拍的照片里藏了多少信息？打开 EXIF 看看就知道了——拍摄时间、相机型号、镜头参数、GPS 经纬度，甚至还有海拔和指南针方向。这些数据嵌在 JPEG 文件的 APP1 段里，按 IFD（Image File Directory）的树形结构组织。
+
+EXIF 数据从 APP1 标记（FF E1）开始，前面是 Exif 头（6 字节 "Exif\x00\x00"），然后是 TIFF 头（字节序 + magic 42 + 第一个 IFD 偏移）。IFD0 是主图像信息——ImageWidth、ImageLength、Make、Model、Orientation、DateTime 等。Exif IFD 通过 IFD0 里的 ExifOffset tag 找到，存的是拍摄参数：FNumber（光圈 f 值）、ExposureTime（快门速度，如 1/125 秒）、ISOSpeedRatings、FocalLength（焦距 mm）、ExposureProgram（曝光模式）。GPS IFD 通过 GPSInfo tag 找到，里面有 GPSLatitude、GPSLongitude（度分秒格式）、GPSAltitude。
+
+把 tag ID 映射成可读名称，数值转成人类易懂的格式（光圈 f/2.8、快门 1/125s、ISO 400）。用法：python3 exif_reader.py show photo.jpg

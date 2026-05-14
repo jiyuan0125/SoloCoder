@@ -1,3 +1,11 @@
-帮我用 Go 实现一个简单的 SQL 查询优化器。能做基本的逻辑优化：谓词下推、投影裁剪、子查询展开为 JOIN、常量折叠。
-输入 SQL 字符串，输出优化后的 SQL。不用做物理执行计划，只做逻辑层面的改写。
+SQL 查询优化不是黑魔法，几个经典的逻辑优化规则就能覆盖大部分场景。想用 Go 把这些规则实现一遍，加深理解。
+
+帮我用 Go 实现一个简单的 SQL 查询逻辑优化器。输入 SQL 字符串，经过解析成 AST 后，依次应用以下优化规则，输出优化后的 SQL：
+
+谓词下推（Predicate Pushdown）——把 Filter 算子的条件下推到 Join、Project 下面，尽早过滤数据。投影裁剪（Projection Pruning）——只保留最终 SELECT 列表用到的列，中间节点不需要的列都砍掉。子查询展开（Subquery Unnesting）——把 WHERE EXISTS/IN 子查询转成 SEMI JOIN，WHERE NOT EXISTS 转成 ANTI JOIN。常量折叠（Constant Folding）——1+2 变成 3，'hello' || ' world' 变成 'hello world'。
+
+每条规则是一个独立的函数，输入 AST 输出改写后的 AST，可以单独测试。规则之间可以组合——前一条规则的输出是下一条的输入。
+
+不用做物理执行计划（选索引、选 JOIN 算法），只做逻辑层面的改写。输出优化前后的 SQL 对比和每条规则应用后的中间结果。
+
 go build 通过，标准库就好。

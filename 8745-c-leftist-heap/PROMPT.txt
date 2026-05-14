@@ -1,5 +1,11 @@
-实现一个左偏堆（Leftist Heap），利用 null path length (npl) 属性保证合并操作是 O(log n)。左孩子的 npl 不小于右孩子的 npl。
+多个优先队列要合并——事件驱动模拟系统里每个事件源一个优先队列，全局调度时要合并。二叉堆合并要重建，左偏堆（Leftist Heap）merge 只需 O(log n)。原理简单：保证右路径短——左子树 npl（null path length）永远不比右子树小，这样 merge 沿右路径递归深度就 O(log n)。
 
-支持 merge、insert、find_min、extract_min。合并时沿右侧路径递归，保证右侧路径长度 O(log n)。insert 就是 merge 一个单节点。extract_min 就是合并左右子树。
+用 C 语言实现左偏堆。
 
-C 语言，gcc 编译。测试：两个堆各插入若干元素，合并后连续 extract_min，输出应该全局有序。
+npl 怎么定义？从节点到最近空节点的最短距离。空节点 npl=0，叶节点 npl=1。关键约束：节点左子树 npl >= 右子树 npl。违反了就交换左右子树。
+
+merge 怎么做？比较两个堆的根，小根当新根。新根的右子树和另一个堆递归 merge。merge 完检查 npl 约束，必要时交换左右。更新根 npl = 右子树 npl + 1。
+
+其他操作——insert 就是 merge 一个单节点堆。extract_min 删掉根，左右子树 merge。find_min 返回根的值。delete 操作通过和特殊节点 merge 实现。
+
+用 malloc/free 管理节点。gcc 编译。两个堆合并后连续 extract_min，输出全局有序。

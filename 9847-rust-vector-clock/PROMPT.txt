@@ -1,13 +1,11 @@
-实现向量时钟（Vector Clock），用 Rust。
+向量时钟是分布式系统里最经典的因果追踪工具——一个 map[node_id]counter，每次本地事件自增自己的 counter，发送消息时带上整个向量。通过比较两个向量时钟可以判断事件的先后关系（因果序），或者判断它们是并发的。用 Rust 实现向量时钟的比较和合并逻辑。
 
-分布式系统需要跟踪事件的因果顺序。每个节点维护一个向量，记录已知各节点的事件序号。比较两个向量就能判断事件是因果有序、并发还是同一事件。
+数据结构：VectorClock 是一个 HashMap<String, u64>。操作包括：increment(node_id) 自增某个节点的 counter、merge(other) 逐节点取 max、compare(other) 判断因果关系。
 
-功能要求：
-- 每个节点有独立 ID，向量中对应位置递增
-- increment(node_id)：本节点事件发生，递增对应的计数器
-- merge(other)：取两个向量每个节点的最大值（并集）
-- happened_before(other)：判断本向量是否严格先于 other（所有分量 ≤ 且至少一个 <）
-- is_concurrent(other)：既不先于也不后于，即并发
-- compare_equal(other)：完全相同
+因果关系的判断规则：A happen-before B 当且仅当对所有节点 i，A[i] <= B[i]，且至少存在一个节点 j 使得 A[j] < B[j]。A concurrent B 当且仅当 A 不 happen-before B 且 B 不 happen-before A。A identical B 当且仅当所有节点的 counter 相等。
 
-cargo build 通过，测试 A→B→C 的因果链和 A∥B 的并发关系。
+需要实现的比较函数，返回一个 enum：enum Ordering { Before, After, Concurrent, Equal }。这个函数是向量时钟最核心的部分。
+
+应用场景的模拟：3 个节点协作编辑文档。节点 A 的向量时钟 [1,0,0]，B 的是 [1,2,0]，C 的是 [0,0,1]。比较发现 B after A（B 看到了 A 的编辑），但 C 和 A、C 和 B 都是 concurrent（C 没看到 A 和 B 的编辑）。当 C 的编辑和 A 的冲突时，需要额外的冲突解决策略（比如 LWW 或用户介入）。
+
+cargo build 通过。

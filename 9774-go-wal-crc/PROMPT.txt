@@ -1,9 +1,9 @@
-帮我用 Go 写一个带 CRC 校验的 WAL 记录编解码器。每条写入的日志记录都要带校验和，读取时验证数据完整性。
+先理解一下 WAL 记录的二进制格式，再实现它的编解码器——这样做最稳妥。每条记录的 wire format 是 [length:4字节大端][crc32:4字节大端][data:N字节]，其中 length 是 data 的字节长度，crc32 是 data 部分的校验和。这个编解码器是 WAL 的基础组件。
 
-具体实现：
-- 记录格式：[length(4字节)][crc32(4字节)][data(N字节)]
-- Write(data) → 计算 CRC32 → 写入 length + crc + data
-- Read() → 读 length → 读 crc + data → 验证 CRC → 返回 data 或报错
-- 处理边界情况：文件末尾 length 不够 4 字节就忽略（部分写入）
+写操作 EncodeAndWrite(w io.Writer, data []byte)：先计算 data 的 CRC32（用 IEEE 多项式），然后用 binary.BigEndian 把 len(data) 写成 4 字节、crc 写成 4 字节，最后写 data 本身。如果 data 为空也合法（有些系统用空记录做分隔符）。
 
-用 Go 标准库的 hash/crc32，go build 通过就行。
+读操作 ReadAndVerify(r io.Reader) ([]byte, error)：先读 4 字节 length，如果返回 io.EOF 说明文件正常结束。length 读到后，再读 length 字节的 data 和 4 字节的 expected_crc。计算 data 的 CRC32 和 expected_crc 比较——匹配则返回 data，不匹配则返回校验错误。
+
+边界情况的处理：文件末尾读 length 时不够 4 字节（返回 io.ErrUnexpectedEOF），说明这是崩溃时写了一半的记录，应当忽略而不报错。length 值异常大（比如超过 1MB）可能是文件损坏，返回错误。
+
+每个函数都写单元测试：正常写入+读取、空数据、大块数据（100KB）、损坏数据（手动改 crc）、部分写入模拟。Go 标准库的 hash/crc32，go build 通过就行。

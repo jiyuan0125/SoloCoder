@@ -1,3 +1,7 @@
-要处理 STIX 格式的威胁情报数据，但手头没有好用的解析工具。用 Go 写一个 STIX 2.1 JSON 格式的解析器。
+STIX 格式的威胁情报数据到处都在用，但每次拿到一个 STIX JSON 文件，想搞清楚里面到底描述了什么威胁、关联了哪些攻击手法、涉及哪些恶意软件，都要人工去翻那个嵌套很深结构很复杂的 JSON，费时费力还容易漏。
 
-能做：解析 STIX Bundle 对象，提取所有 Indicator、Malware、AttackPattern、ThreatActor 等核心对象；支持按类型过滤查询；解析 killing-chain 关系和 targeting 关系；输出为可读的摘要报告。输入是 STIX JSON 文件，支持命令行参数控制输出。纯标准库，go build 通过。
+用 Go 写一个 STIX 2.1 JSON 格式的解析和摘要工具。输入是一个 STIX Bundle 文件（JSON 格式），工具解析其中的所有 STIX 对象，然后输出人类可读的摘要报告。
+
+解析要覆盖这几种核心对象类型：Indicator（威胁指标，包含 IoC 和检测模式）、Malware（恶意软件描述）、AttackPattern（攻击手法，对应 MITRE ATT&CK 的战术和技术）、ThreatActor（威胁行为者）、Tool（使用的工具）。对于 Relationship 对象，解析其关系类型——比如一个 Malware uses 某个 AttackPattern，一个 ThreatActor uses 某个 Malware。这样就能把碎片化的情报拼成完整的攻击链图。
+
+支持按类型过滤查询（只要看 Malware 类型的对象、只要看某个 ThreatActor 关联的所有东西）。输出格式：默认是终端可读的文本报告，按攻击链顺序组织信息；加 --json 参数输出结构化数据。Go 标准库实现，go build 通过。

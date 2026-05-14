@@ -1,5 +1,7 @@
-帮我用 Python 写一个 WAV 音频文件解析器。
+最近在做一个音频处理引擎，WAV 是最基础的输入格式。WAV 看着简单但实际处理时各种边缘情况不少：24bit 音频、浮点格式、多声道、chunk 顺序不标准。Python 3 实现，不依赖第三方音频库。
 
-解析 WAV 文件的 RIFF 容器结构，读取 fmt chunk 获取音频格式信息（采样率、位深、声道数、编码格式），读取 data chunk 提取原始 PCM 样本数据。支持 8-bit、16-bit、24-bit、32-bit 整型和 32-bit 浮点格式。输出音频的基本信息和波形统计（最大值、最小值、RMS 响度）。也能处理包含其他 chunk（LIST、cue、fact 等）的 WAV 文件，跳过未识别的 chunk。
+RIFF 容器结构——文件头：4 字节 "RIFF"、4 字节文件大小、4 字节 "WAVE"。然后遍历子 chunk（4 字节 ID + 4 字节大小 + 数据，不足 2 字节倍数的有 1 字节 padding）。fmt chunk 是必须的——音频格式（1=PCM、3=IEEE Float、6=A-law、7=μ-law）、声道数、采样率、字节码率、块对齐、位深。
 
-Python 3 实现，不依赖第三方音频库，直接解析二进制。python 能跑起来。
+PCM 数据的解读——8bit 每采样 1 字节无符号整数（中心值 128）。16bit 是 2 字节有符号小端整数。24bit 是 3 字节有符号小端整数，左移 8 位扩展到 32 位。32bit 浮点是 IEEE 754，值域 -1.0~1.0。多声道数据交错存储：左右左右左右...。用 struct 模块解析。
+
+波形统计——计算所有采样的最大值、最小值和 RMS 响度（sqrt(Σx²/N)）。非标准 chunk（LIST、cue、fact、bext）跳过但不报错。用法 python wav_parser.py info audio.wav，输出格式信息和波形统计。Python 3 标准库，直接解析二进制。

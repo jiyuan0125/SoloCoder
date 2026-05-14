@@ -1,5 +1,9 @@
-我需要一个简单的权限提升管理工具，用来检测和记录系统上的 sudo 配置风险。
+写一个权限提升风险检测工具。Linux 系统上很多配置错误都可能导致普通用户提权到 root——SUID 二进制、sudo 配置不当、cron job 里的可写脚本。想写个工具把这些风险点自动扫出来。
 
-解析 /etc/sudoers 文件和 /etc/sudoers.d/ 目录下的配置，找出危险的权限分配：NOPASSWD 条目、通配符命令（如 /usr/bin/*）、能执行 shell 的命令（sudoedit、find、vim 等）。也支持通过 -u 参数检查某个用户拥有的 sudo 权限。
+Python 实现一个权限提升风险扫描器。SUID/SGID 检查：查找系统中所有设置了 SUID 或 SGID 位的文件（解析 find 命令输出或直接遍历文件系统），标记出常见的可利用二进制——nmap、vim、find、bash、python、perl、nc、awk 这些如果带 SUID 就等于给了 root shell。
 
-输出按风险等级排序，给出具体的配置行和建议修复方式。Python 3 纯标准库，python priv_mgr.py analyze 就能用。
+sudo 配置审计：解析 /etc/sudoers 和 /etc/sudoers.d/ 目录下的文件，检查是否有过于宽松的规则——用户可以无密码执行任何命令、可以执行 shell 类命令（sudo vim、sudo find、sudo less 都可以逃逸到 root shell）、NOPASSWD 标签的使用范围。
+
+Cron 任务检查：解析 /etc/crontab 和 /var/spool/cron/ 中的定时任务，检查脚本文件是否可写（攻击者可以修改脚本内容获得执行权限）。其他检查：/etc/passwd 中 UID 为 0 的非 root 账户、可写的 /etc/shadow、不必要的 capabilities（cap_setuid 等）。
+
+每个风险点标注严重等级和利用说明。python3 命令行工具。

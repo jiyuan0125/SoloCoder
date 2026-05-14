@@ -1,11 +1,13 @@
-写个 Rust 程序，给分布式 KV 加上 watch 机制。
+很多应用场景需要实时感知数据变更——比如配置更新后所有节点要立即生效，或者用户改了头像后所有聊天窗口要刷新。轮询太低效了，watch 机制是更好的方案——客户端注册对某个 key 的关注，服务端在数据变更时主动通知。用 Rust 实现分布式 KV 的 watch 功能。
 
-就是客户端能订阅某个 key 的变化，一旦这个 key 被更新了，订阅者能收到通知。类似 etcd 的 watch 功能。
+Watch 的注册：客户端调用 watch(key, callback) 注册对 key 的关注。服务端为每个 key 维护一个 watcher 列表。如果 key 不存在，也允许注册（等 key 被创建时触发）。
 
-要做的事：
-- 模拟一个 KV 集群，支持基本的 put/get 操作
-- 客户端可以 watch 一个或多个 key，当这些 key 的值发生变化时，watch 回调被触发
-- watch 事件要带上变更前的值和变更后的值，以及一个递增的 revision 号
-- 如果客户端中途才订阅，支持从某个历史 revision 开始回放事件
+变更触发：当 put(key, value) 执行成功后，服务端查找该 key 的 watcher 列表，向所有 watcher 发送通知（Event { key, new_value, old_value, version }）。通知是异步的——不阻塞写操作本身。如果通知发送失败（watcher 断连），从列表中移除该 watcher。
 
-用内存模拟，cargo build 通过。
+Watch 的选项：支持 WatchFrom(version)——只关注某个版本之后的变更。支持 PrefixWatch(prefix)——关注某个前缀下所有 key 的变更（比如 "config/" 前缀下的所有配置）。支持 WatchFilter(predicate)——只在满足条件时触发。
+
+历史变更的保证：如果客户端在注册 watch 期间短暂断连，重连后需要获取断连期间的变更。服务端维护一个最近 N 条变更事件的环形缓冲区。客户端重连时发送自己的 last_seen_version，服务端把缓冲区中更新的事件补发给客户端。
+
+模拟 3 个 watcher 监听同一个 key 的变更，打印每个 watcher 收到的通知和时序。
+
+cargo build 通过。

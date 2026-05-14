@@ -1,12 +1,13 @@
-用 Rust 实现一个任务队列。
+分布式任务队列和单机任务队列的区别在于——队列本身是分布式的，多个 producer 往里放任务，多个 consumer 从里面取任务，需要一个协调机制保证任务不重复分配。用 Rust 实现一个基于 broker 的分布式任务队列。
 
-生产者往队列里扔任务，消费者从队列里取任务执行。类似 Celery 或 sidekiq 的简化版。
+架构：一个 Broker 进程（这里用线程模拟）维护任务队列，多个 Worker 连接到 Broker 拉取任务。Broker 是中心化的（和 Kafka 类似的架构），负责任务的分配和状态管理。
 
-核心功能：
-- 任务队列支持 push（入队）和 pop（出队）操作，FIFO 顺序
-- 多个消费者能并发从队列取任务，每个任务只能被一个消费者取到
-- 任务执行结果要记录（成功/失败/超时），失败的任务可以重新入队
-- 能查看队列的当前长度、已完成任务数、失败任务数
-- 如果队列为空，消费者应该阻塞等待（或者返回空，可配置）
+Broker 的实现：维护三个队列——Pending（待执行）、Running（执行中）、Completed（已完成）。Worker 通过 Pull() 接口获取任务——Broker 从 Pending 头部取一个任务，转移到 Running，返回给 Worker。Worker 处理完后调用 Ack(task_id)，任务从 Running 移到 Completed。如果 Worker 在超时内没有 Ack（比如崩溃了），任务从 Running 重新放回 Pending 头部。
 
-cargo build 通过，内存实现，标准库就行。
+任务的可见性：Pending 队列中的任务对所有 Worker 可见，但每个任务只能被一个 Worker 取走。这个互斥用原子操作实现——Broker 是单线程处理分配请求（channel 串行化），所以不会有竞争。
+
+任务的状态查询：支持按状态过滤查询任务列表。支持按 task_id 查询单个任务的状态和执行者。
+
+模拟 3 个 Worker、20 个任务。其中一个 Worker 在执行第 5 个任务时"崩溃"（不发送 Ack），观察超时后任务重新被其他 Worker 获取。
+
+cargo build 通过。

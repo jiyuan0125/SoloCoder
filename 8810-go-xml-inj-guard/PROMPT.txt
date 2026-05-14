@@ -1,11 +1,9 @@
-写个 XML 注入和 XXE 防护工具，Go 实现。
+某金融系统解析用户上传的 XML 配置文件，完全没禁外部实体。渗透测试的时候构造了一个 XXE payload 读取了 /etc/passwd 和内网服务的响应，SSRF + 任意文件读取一气呵成。这件事之后团队才意识到 XML 解析的安全配置有多重要。
 
-之前看到某金融系统解析用户上传的 XML 配置文件，完全没禁外部实体，SSRF + 任意文件读取一气呵成。
+用 Go 写一个 XML 注入和 XXE 防护工具。安全解析器 SafeParseXML(data []byte) (xml.Root, error)：使用 encoding/xml 的 Decoder，配置上禁用所有危险特性——设置 Entity 为 xml.ETokenOnly（只处理基本 token，不扩展实体）、设置 CharsetReader 限制编码类型为 UTF-8 和 ISO-8859-1、禁用 DTD 处理。
 
-需要：
-- 安全的 XML 解析器：默认禁用 DTD、外部实体、ENTITY 声明，防止 XXE 攻击
-- 检测 XML 中的危险模式：<!DOCTYPE、<!ENTITY、SYSTEM、PUBLIC 关键词
-- 提供 XML 清洗功能：移除或转义潜在的注入载荷，保留安全的 XML 数据
-- 命令行模式：`./xml-guard check file.xml` 检测文件，`./xml-guard sanitize file.xml` 清洗输出
+危险模式检测函数 DetectXXE(data []byte) []Warning：扫描 XML 内容中的关键词——<!DOCTYPE（DTD 声明，XXE 的载体）、<!ENTITY（实体声明，包括内部和外部实体）、SYSTEM 和 PUBLIC（外部实体引用协议）、<!ATTLIST 和 <!NOTATION（可能被利用的DTD结构）。对检测到的每个模式输出位置和风险描述。
 
-Go 标准库（encoding/xml），go build 通过。
+XML 清洗函数 SanitizeXML(data []byte) ([]byte, error)：移除所有 <!DOCTYPE 和 <!ENTITY 声明，移除所有处理指令（<?...?>），对保留的元素内容做字符转义（< > & " '），输出安全的 XML。
+
+命令行：xml-guard check file.xml 检测危险模式，xml-guard sanitize file.xml 清洗输出到 stdout。Go 标准库（encoding/xml），go build 通过。

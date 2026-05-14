@@ -1,11 +1,7 @@
-帮我做一个 WebM 封装器，Go 实现。
+WebM 的封装格式跟 MP4 完全不是一个路子——它用的是 EBML（Extensible Binary Meta Language），一种类似 TLV 的二进制编码。EBML 元素的 ID 和 Size 都是变长编码，构造的时候得小心计算。Go 来实现一个 WebM 封装器。
 
-把 VP8/VP9 视频和 Opus/Vorbis 音频封装成 WebM：
-- 使用 EBML（Extensible Binary Meta Language）格式构建文件
-- 写入 WebM 文件头（EBML Header + Segment）
-- Segment 包含 SeekHead、Info（Duration、TimecodeScale）、Tracks
-- 视频 Track 使用 VP8/VP9 codec ID，音频用 A_OPUS 或 A_VORBIS
-- 数据以 Cluster + SimpleBlock/BlockGroup 组织
-- 每个 Cluster 包含一时间段的视频和音频帧
+EBML 元素的编码规则：ID 的第一个字节的最高位表示长度——遇到第一个 0 bit 前面有几个 1 就表示 ID 占几个字节。Size 的编码也类似，但第一位固定为 0 时表示不定长（size unknown，用于 Segment 这种不确定总大小的大容器）。实际写入时 SeekHead 和 Info 可以用确定长度，Segment 可以用不定长度简化处理。
 
-用法 webm-mux -video input.webm -audio input.ogg -output output.webm，go build 通过。标准库。
+文件结构：EBML Header（版本号 1、读写版本号 1、最大 ID 长度 4、最大 Size 长度 8、DocType "webm"、DocTypeVersion 4）→ Segment → SeekHead（记录 Info 和 Tracks 的偏移用于 seek）→ Info（TimecodeScale 默认 1000000 即毫秒，Duration 总时长）→ Tracks（视频 Track 用 V_VP9 CodecID，音频用 A_OPUS）→ Clusters。
+
+Cluster 是数据的核心——每个 Cluster 包含一个时间段的音视频帧。Cluster 的 Timecode（相对于 Segment 起始的绝对时间）之后是一系列 SimpleBlock 或 BlockGroup。SimpleBlock 编码：track number（EBML 变长整数）+ 2 字节相对时间戳 + 1 字节标志（keyframe 标记、invisible 标记、lacing 模式）+ 数据。用法 webm-mux -video input.webm -audio input.ogg -output output.webm。Go 标准库，go build 通过。

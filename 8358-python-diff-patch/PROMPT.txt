@@ -1,5 +1,9 @@
-帮我写一个 Python 的 diff 和 patch 工具，能对比两个文本文件并生成和应用补丁。
+代码审查和配置管理经常要对比文件差异、应用补丁。系统自带的 diff/patch 命令功能够用但不好集成到 Python 工具链里。自己实现 diff 和 patch 算法，顺便深入理解 Myers diff 算法的原理。Python 实现。
 
-类似 diff/patch 命令，但用 Python 实现。核心功能：计算两个文本的行级差异（类似 unified diff 格式），生成补丁文件；根据补丁文件把旧版本更新为新版本。支持上下文行数配置、空白差异忽略选项。patch 时如果目标文件已经被修改过，尝试做模糊匹配（fuzzy patch）。
+Diff 算法：实现 Myers diff（O(ND) 时间复杂度，N 是文件总行数，D 是差异数）。算法在 edit graph 上找最短路径——从 (0,0) 到 (N,M) 的最短路径对应最小编辑距离。用 BFS 按对角线 k 分组搜索，每轮扩展一步，找到终点就回溯生成编辑脚本。
 
-纯 Python 3，不用 difflib（自己实现 diff 算法，比如 Myers 或 patience diff）。CLI：`python diff_patch.py diff old.txt new.txt > changes.patch`，`python diff_patch.py patch old.txt changes.patch`。`python diff_patch.py` 能跑。
+输出格式：unified diff（和 git diff 输出一样）。包含文件名头（--- a/file 和 +++ b/file）、差异块头（@@ -行号,范围 +行号,范围 @@）、删除行（- 前缀）、新增行（+ 前缀）、上下文行（空格前缀）。上下文行数可配置（默认 3 行）。
+
+Patch 应用：读入 diff 输出和旧文件，逐块应用修改。匹配条件——差异块头指定的行号和上下文行要对得上。如果目标文件已被部分修改，做模糊匹配——允许行号偏移 ±3 行，上下文行可以部分不匹配。匹配失败时报告哪个块冲突。
+
+也支持空白忽略选项（-w）和反向 patch（-R）。CLI：python3 diff_patch.py diff old.txt new.txt > changes.patch。python3 diff_patch.py patch old.txt changes.patch。纯 Python 3 标准库。

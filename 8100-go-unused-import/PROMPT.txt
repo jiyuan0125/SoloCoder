@@ -1,1 +1,9 @@
-每次 code review 都要提醒删掉没用的 import，太烦了。Go 写一个未使用 import 检测工具，比 goimports 更精确一点：扫描 Go 源文件，检查每个 import 的包在文件中是否有实际使用（包括直接使用和间接使用比如结构体 tag 里的 json:"field"）。对于有别名导入和点导入（. import）的情况也要正确处理。输出需要删除的 import 列表。用 Go 标准库的 ast 包。go build 通过。
+每次 code review 都要提醒删掉没用的 import，太烦了。虽然 goimports 能自动处理，但它有时候会误判——把结构体 tag 里用到的包删掉。想做一个更精确的版本。
+
+Go 写一个未使用 import 检测工具，比 goimports 更精确一点。扫描 Go 源文件，检查每个 import 的包在文件中是否有实际使用。使用检测覆盖这些场景：
+
+直接使用——代码中直接引用了包名（fmt.Println、json.Marshal）。间接使用——结构体 tag 里引用了包（json:"field" 对应 encoding/json、db:"field" 对应某个数据库包、validate:"required" 对应 validator 包）。反射使用——字符串字面量里包含包路径（用于反射注册等场景，需要配置白名单）。类型断言和类型转换里的引用。
+
+特殊 import 处理：别名导入（import f "fmt"，检查 f 而不是 fmt）、点导入（import . "math"，检查所有裸函数名是否来自该包）、空白导入（import _ "driver"，不检查，默认不报未使用）。初始化侧效应导入保持原样。
+
+输出需要删除的 import 列表——包路径、import 位置（行号）、建议操作（删除或保留并注明原因）。用 Go 标准库的 ast 包。go build 通过。

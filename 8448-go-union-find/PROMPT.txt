@@ -1,10 +1,16 @@
-并查集（Union-Find）是图论里最基础的数据结构之一，Kruskal、连通性判断都用得到。用 Go 实现一个高性能的并查集。
+并查集（Union-Find）是图论里最基础的数据结构之一，Kruskal、连通性判断、等价类划分都用得到。用 Go 实现一个高性能的并查集。
 
-要求：
-- Find(x) 查找 x 所在集合的代表元素，带路径压缩
-- Union(x, y) 合并两个集合，按秩合并
-- Connected(x, y) 判断两个元素是否在同一集合
-- Count() 返回当前有多少个独立集合
-- 支持泛型或者 int 类型的元素
+两种优化策略：
+1. 路径压缩（Path Compression）：Find(x) 时把沿途的节点都直接指向根。递归实现自然自带路径压缩（find(x) 时 parent[x] = find(parent[x])）。迭代实现用两趟——第一趟找到根，第二趟把沿途节点指向根
+2. 按秩合并（Union by Rank）：每个根维护一个 rank（初始 0）。合并时 rank 小的树挂到 rank 大的下面。rank 相同时随便挂但根的 rank 加 1。保证树高 O(log n)
 
-写个 main：模拟 10 万个元素的动态连通性问题，执行 50 万次 union 和 find 操作，打印耗时。验证连通性判断的正确性。go build 通过。
+操作接口：
+- Find(x int) int：查找 x 所在集合的代表元素
+- Union(x, y int)：合并 x 和 y 所在的集合
+- Connected(x, y int) bool：判断 x 和 y 是否在同一集合
+- Count() int：返回当前独立集合的数量
+- Size(x int) int：返回 x 所在集合的元素数量
+
+内部用 parent 和 rank 两个 int 切片，NewUnionFind(n) 初始化 n 个元素。
+
+写个 main：模拟 10 万个元素的动态连通性问题，执行 50 万次随机 union 和 find 操作，打印耗时。验证连通性判断的正确性。go build 通过。

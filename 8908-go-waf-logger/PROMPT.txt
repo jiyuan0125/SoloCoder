@@ -1,1 +1,11 @@
-WAF 拦截了大量请求，需要专门记录和查询。写一个 Go 的 WAF 日志服务，接收拦截事件记录（源 IP、目标 URL、命中的规则 ID、时间戳、请求摘要），写入本地日志文件（按日期滚动）。支持命令行查询：按 IP 筛选、按时间段筛选、按规则 ID 筛选。输出统计摘要，比如被拦截最多的 IP Top 10。标准库实现，go build 通过。
+WAF 拦截了大量请求，需要一个专门的日志服务来记录和查询这些拦截事件。光有日志文件不行，还得能快速查询——某个 IP 今天触发了多少次规则、某条规则最近一小时命中了多少次。
+
+用 Go 写一个 WAF 日志服务。记录结构：每条拦截事件包含——timestamp（精确到毫秒）、source_ip、target_url、http_method、matched_rule_id、matched_rule_category（sqli/xss/etc）、request_summary（请求体前 200 字符，敏感信息脱敏）、action（block/log）、response_code。
+
+写入策略：日志写入本地文件，按日期滚动（waf-2024-01-15.log）。文件格式为 JSON Lines（每行一条 JSON）。文件自动压缩超过 7 天的历史日志。
+
+查询命令：waf-logger query --file waf.log --ip 192.168.1.100（按 IP 筛选）、waf-logger query --file waf.log --from "2024-01-15 10:00" --to "2024-01-15 11:00"（按时间段）、waf-logger query --file waf.log --rule-id R001（按规则 ID）。输出查询结果和统计摘要。
+
+统计报告：waf-logger stats --file waf.log——被拦截最多的 IP Top 10、命中最多的规则 Top 10、按小时分布的拦截量、按攻击类别分布。
+
+Go 标准库实现，go build 通过。

@@ -1,4 +1,4 @@
-AST 结构有了，但打印出来一团乱。需要一个 pretty printer 把 AST 格式化成人类可读的代码文本。
+AST 构建出来了，但打印出来要么是一坨 JSON 要么是嵌套层级深得没法看的 S-expression——都不是人类能直接阅读的东西。代码生成工具需要一个 pretty printer 把 AST 转换回格式化的源码文本，缩进、换行、对齐都要自动处理。Wadler 的 document algebra 是经典的解决方案：把排版决策延迟到最终输出时再做，group 自动决定一行放得下就不换行、放不下就折行。能不能在 Rust 里实现这套机制，然后支持多种语言的输出风格？K&R 风格花括号换不换行、参数列表怎么对齐，这些都可以通过配置控制。
 
 用 Rust 实现 AST pretty printer：
 - 实现 Wadler 风格的 document algebra（text、line、nest、group）

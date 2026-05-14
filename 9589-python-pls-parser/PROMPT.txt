@@ -1,3 +1,7 @@
 PLS 播放列表解析器。Winamp 时代的 PLS 文件现在还有些在用。
 解析 PLS 格式播放列表（[playlist] 段落，File1、Title1、Length1 等字段）。提取所有音轨的文件路径、标题和时长。支持任意数量的条目。输出到终端或导出 JSON/CSV。
 Python 3 纯标准库。python pls_parser.py radio.pls show，或 python pls_parser.py stations.pls --json -o stations.json
+
+最后一步别忘了，处理异常情况也很重要——输入文件不存在或者格式完全不对（比如把 PNG 当 CSV 传），要给出友好的错误提示而不是 traceback。如果文件特别大（超过 100MB），需要分块或者流式处理避免内存爆炸。输出结果可以同时支持终端打印和 JSON 文件导出两种方式。使用说明打印 --help 要清晰，每个参数的作用和默认值都要写明。
+
+测试用例要覆盖边界情况——空文件、超大文件、格式不对的文件、编码异常的文件。每个主要功能都要有对应的测试。用 Python 的 unittest 或 pytest 都行，python -m pytest tests/ 能跑通。

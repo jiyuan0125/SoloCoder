@@ -1,3 +1,7 @@
-需要追踪系统调用来排查安全问题。Go 写一个 syscall trace 分析工具。
+排查安全问题的时候经常需要看程序到底调了哪些系统调用——比如一个疑似被入侵的进程在频繁往外连，到底是哪个系统调用在发网络请求？或者一个进程 CPU 异常高，是在疯狂读文件还是在不停地 fork？strace 的原始输出太长了，几千行里找有用的信息很费劲。
 
-解析 strace 的输出日志：识别系统调用类型（文件 IO、网络、进程管理、内存操作）；统计各类系统调用的频率和耗时；检测异常模式（大量 connect 调用、频繁 exec、异常的 open 调用）；按进程分组汇总。输入是 strace 的文本输出或文件，输出分析报告。Go 标准库实现，go build 通过。
+Go 写一个 syscall trace 分析工具。输入是 strace 的文本输出（直接从 strace 命令的 stdout 管道传入，或者从保存的日志文件读取），工具解析每一行系统调用记录，分类汇总后输出分析报告。
+
+解析 strace 的输出格式：提取每行的进程 PID、系统调用名称、参数列表、返回值和耗时。把系统调用按类型分类——文件 IO 类（open、read、write、close、stat）、网络类（socket、connect、bind、accept、send、recv）、进程管理类（fork、clone、execve、wait、kill）、内存操作类（mmap、mprotect、brk）。
+
+统计维度：各类系统调用的频率排名、各类调用的累计耗时、平均每次调用的耗时。异常模式检测：短时间内大量 connect 调用（可能在扫描端口或发起 DDoS）、频繁的 execve 调用（可能在执行恶意脚本）、open 了敏感文件路径（/etc/shadow、/etc/passwd）。按进程 PID 分组汇总。Go 标准库实现，go build 通过。

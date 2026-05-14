@@ -1,5 +1,5 @@
-写一个文件完整性校验工具，生成和验证校验清单。
+发布软件包或者备份重要数据后，怎么确认文件没有被悄悄改过？生成一份校验清单，记录每个文件的 SHA-256 哈希值，之后随时可以用这份清单验证所有文件。和 sha256sum 命令类似但更友好，用 Python 写一个完整的工具。
 
-类似 md5sum/shasum 的命令行工具，但是做成一个更友好的 Python 版。生成一个校验清单文件（包含每个文件的路径和哈希值），之后可以用这个清单来验证文件是否被修改过。对发布软件包、备份数据验证很有用。
+两个操作。生成清单：扫描指定目录下所有文件，对每个文件计算 SHA-256 哈希值，输出到一个清单文件。清单格式和 sha256sum 兼容——每行是"哈希值  文件路径"（两个空格分隔），最后一行是总文件数和总字节数。验证清单：读取之前生成的清单文件，逐行取文件路径重新计算哈希，和清单中的哈希值对比。全部匹配输出 ALL VERIFIED，有差异的列出具体文件名、期望值和实际值。
 
-python main.py generate /path/to/dir/ --output checksums.txt 生成清单；python main.py verify checksums.txt 验证所有文件。清单格式兼容 sha256sum。Python 标准库。
+支持递归扫描子目录，清单中的路径是相对于扫描根目录的相对路径。大文件分块计算不占内存。清单文件可以用 gzip 压缩节省空间。用法：python3 integrity_check.py generate /path/to/dir/ --output checksums.txt 或 python3 integrity_check.py verify checksums.txt

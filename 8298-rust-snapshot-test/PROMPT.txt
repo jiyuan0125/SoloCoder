@@ -1,5 +1,11 @@
-写一个 snapshot testing 库，Rust 实现，方便对比函数输出和期望值。
+重构了一个函数，想确认输出没有意外变化。传统做法是手写 assert_eq! 但预期值一大就很难维护。Snapshot testing 的思路是——第一次运行时自动保存输出作为"快照"，后续运行自动对比，变了就报错并显示 diff。Rust 实现。
 
-第一次运行时自动把输出保存为 snapshot 文件（放在 __snapshots__/ 目录下）。后续运行如果输出和 snapshot 不同就报错，显示 diff。支持 review 模式：交互式确认是否更新 snapshot。支持多行文本和 JSON 格式的 snapshot，JSON 要格式化后再比较。
+库的接口：提供一个宏 snapshot!("test_name", output)，output 实现了 Display 或 Serialize。第一次运行时，把 output 的内容写入 __snapshots__/test_name.snap 文件。后续运行如果内容和文件不一致，打印 diff（类似 git diff 的格式，标出增删的行）并标记测试失败。
 
-提供宏 snapshot!("test_name", output) 简化使用。cargo test 验证库的基本功能。不依赖外部 snapshot 库。
+快照文件的格式：多行文本直接存原文，JSON 内容先格式化（pretty print + key 排序）再存，这样 diff 更有意义。文件头部加一行注释标明是自动生成的。
+
+Review 模式：设置环境变量 SNAPSHOT_UPDATE=1 时自动更新所有不一致的快照（不报错）。CI 环境下不开这个变量，变了就失败。
+
+支持的比较模式：严格匹配（完全一致）、正则匹配（忽略动态内容如时间戳）、JSON semantically equal（字段顺序不同但内容相同也通过）。
+
+提供宏简化使用，cargo test 验证库本身的基本功能。不依赖外部的 snapshot 库。cargo build 通过。

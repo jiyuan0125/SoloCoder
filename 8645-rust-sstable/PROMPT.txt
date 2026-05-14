@@ -1,1 +1,11 @@
-实现一个 SSTable（Sorted String Table）的 Rust 版本。SSTable 是磁盘上有序的只读键值文件。功能包括：把有序键值对写入文件（每个 entry 包含 key 长度、key、value 长度、value），文件末尾写一个索引块记录每个数据块起始 key 的偏移量。支持从文件打开 SSTable 并查找某个 key（先二分查索引找到数据块再在块内查找）。写个 demo：建一个 SSTable 文件然后查几个 key。cargo run 能跑。
+SSTable（Sorted String Table）是 LSM-Tree 的磁盘存储格式——一个只读的有序键值文件。它是 LSM-Tree 读取路径的基础：查找某个 key 时先在文件尾部的索引块中二分找到数据块，然后只读那个块。
+
+用 Rust 实现 SSTable 的写入和读取。
+
+文件格式——数据区：键值对按 key 有序排列。每个 entry 包含 key_len(u32)、key(bytes)、value_len(u32)、value(bytes)。按固定大小（比如 4KB）分成 Block。索引区：文件尾部，记录每个 Block 的 first_key 和文件偏移量。meta 区：记录 entry 数量、最小/最大 key 等元信息。
+
+写入——把有序的键值对依次写入文件。每写满一个 Block（约 4KB），在索引中记录该 Block 的 first_key 和偏移量。所有数据写完后写索引区，最后写 meta。
+
+读取查找——给定一个 key，先在索引区二分找到可能包含该 key 的 Block（first_key <= target_key）。然后只读那个 Block，在 Block 内线性扫描找到精确匹配。支持从文件打开 SSTable。
+
+写个 demo：建一个 SSTable 文件写入 1000 个键值对，然后查几个 key（有的存在有的不存在），验证查找正确。cargo run 能跑。

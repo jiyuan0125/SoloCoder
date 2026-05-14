@@ -1,5 +1,10 @@
-实现一个 van Emde Boas 树，用来处理 0 到 U-1 范围内的整数，支持 O(log log U) 的插入、删除、查找、前驱、后继操作。
+路由器转发表要在一百万条规则里找前驱/后继——红黑树 O(log n) ≈ 20 次比较。如果值域有限（比如 0 到 2^32-1），van Emde Boas 树能做到 O(log log U) ≈ 5 次操作。差距在超大规模数据下非常明显。代价是空间——O(U)，但用簇的懒初始化可以优化。
 
-用递归结构：每个 vEB 树包含一个 cluster 数组（每项是更小的 vEB 树）和一个 summary。支持 member、insert、delete、successor、predecessor、min、max 操作。宇宙大小 U 取 2 的幂。
+问题 1：结构怎么组织？递归定义——一个 vEB(U) 包含一个 summary（大小 sqrt(U) 的 vEB）和 sqrt(U) 个 cluster（每个也是大小 sqrt(U) 的 vEB）。U 取 2 的幂。
 
-C 语言，gcc 编译。取 U=16 或 64 做小规模测试，验证所有操作的正确性。
+问题 2：怎么查前驱/后继？在 cluster 里找，找不到就查 summary。递归深度 O(log log U)。
+
+问题 3：怎么实现？member、insert、delete、successor、predecessor、min、max。min/max 直接存，不用查。
+
+用 C 实现，U 取 16 或 64 做小规模测试。gcc 编译。验证所有操作的正确性。
+测试——U=16，插入 3,7,1,15,8。successor(3) 应返回 7，predecessor(8) 应返回 7。删除 7 后 successor(3) 应返回 8。

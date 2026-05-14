@@ -1,6 +1,12 @@
-实现一个缩进敏感的词法分析器，类似 Python 那种靠缩进决定代码块结构的方式。跟踪每一行的缩进级别，生成 INDENT 和 DEDENT token。
 
-处理混合 tab/空格（报错或统一转换），支持悬挂缩进、续行（行尾反斜杠）、括号内忽略缩进。
-用法：indent-lexer input.py
-输出 token 序列，包含自动生成的 INDENT/DEDENT/NEWLINE token。
-Go 标准库，go build 编译通过。
+用 Go 来做这件事正好合适。
+实现一个缩进敏感的词法分析器——类似 Python 那种靠缩进决定代码块结构的方式。缩进语言的好处是不用写花括号，代码看起来干净；坏处是词法分析器要自己处理缩进级别。
+
+跟踪每一行的缩进级别——用空格数表示。遇到缩进增加时生成 INDENT token，缩进减少时生成 DEDENT token，每行末尾生成 NEWLINE token。
+
+处理混合 tab/空格——默认报错（Python 3 的行为），可配置为统一转换（tab 按 4 空格计算）。支持悬挂缩进——if (很长的条件 and 另一个条件): 这种跨行的条件语句，括号内的内容不受缩进影响。续行（行尾反斜杠）——当前行和下一行视为同一行，不生成 NEWLINE。
+
+括号内忽略缩进变化——()、[]、{} 内部换行时不生成 INDENT/DEDENT，用嵌套深度计数器跟踪。
+
+这个工具在日常开发中能省不少重复劳动。
+用法：indent-lexer input.py。输出 token 序列，包含自动生成的 INDENT/DEDENT/NEWLINE token。Go 标准库，go build 编译通过。

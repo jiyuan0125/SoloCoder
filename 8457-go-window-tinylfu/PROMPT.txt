@@ -1,11 +1,12 @@
-Go 实现 Window TinyLFU 缓存策略。
+Window TinyLFU 是 Caffeine 缓存（Java 高性能缓存库）用的策略。结构：一个小的 window 缓存（FIFO）接新 key，一个大的主缓存用 SLRU。淘汰 window 里的 key 时用 TinyLFU 的频率估计决定是否准入主缓存。Go 实现。
 
-这是 Caffeine 缓存用的策略，比 W-TinyLFU 简化一点：一个小的 window 缓存接新 key，一个大的主缓存用 SLRU，淘汰 window 里的 key 时用 TinyLFU 的频率估计决定是否准入主缓存。
+三个组件：
+1. Window 区域：小比例（约 1% 容量，至少 1 个位置），用 FIFO 接收所有新条目。满了就淘汰最老的
+2. Main 区域（SLRU）：受保护段 + 试用段，作为主缓存存储长期热数据
+3. Count-Min Sketch：做频率估计。window 淘汰时比较被淘汰 key 和 main 中最小频率条目的频率——只有被淘汰 key 频率更高才准入（替换 main 中频率最低的）
 
-要实现：
-- Window 区域（小比例，约 1% 容量）用 FIFO 接收新条目
-- Main 区域（SLRU）作为主缓存
-- Count-Min Sketch 做频率估计，window 淘汰时和 main 中最小频率的条目比
-- Put/Get/Delete，支持容量设定
+准入逻辑：window 满了要淘汰 key X 时，看 X 的估计频率是否 > main 中 probation 段尾部 key Y 的频率。是 → 用 X 替换 Y，Y 被淘汰。否 → X 直接被丢弃。这个门控确保只有真正高频的新 key 才能进入 main 区域。
 
-Go 标准库，go build 能编译通过。Count-Min Sketch 的哈希函数选几个不同的种子就行。
+Count-Min Sketch 哈希函数选几个不同的种子（比如用 FNV-1a + xxhash）。定期衰减（每处理 N 个操作后计数器右移 1 位）。
+
+Put/Get/Delete，支持容量设定。Go 标准库，go build 能编译通过。

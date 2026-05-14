@@ -1,10 +1,7 @@
-之前读 EXIF 的工具挺好用，现在还需要一个往图片里写 EXIF 的 Go 工具。
+读 EXIF 搞定了，写入呢？往图片里写 EXIF 远比读取复杂——你得自己构造 IFD 结构、计算偏移量、处理字节序对齐，稍有不慎就会把 JPEG 文件搞坏。最近有个批量处理照片的需求，要在每张图上写入统一的版权信息和拍摄者名称，手动一个个改肯定不现实。
 
-要实现的功能：
-- 创建新的 EXIF 数据块，构造 IFD0、EXIF IFD 结构
-- 支持写入常见标签：DateTime、Make、Model、Orientation、Copyright、UserComment 等
-- 能修改已有 EXIF（读取、修改指定标签、重新编码写回）
-- GPS 信息写入：支持写入经纬度、海拔
-- 保持 JPEG 文件完整性，不损坏图片数据
+写入有两种场景：给没有 EXIF 的 JPEG 插入全新的 APP1 段，或者修改已有的 EXIF 数据。新建时在 SOI（FFD8）后面直接插入 APP1 段——FFE1 + 2 字节段长度 + "Exif\x00\x00" + TIFF 头 + IFD0 + EXIF IFD。IFD 的构造要严格按规范来：所有 tag 必须按 ID 升序排列，每个 tag 的值如果是 4 字节以内就内联存储，超出就放到 IFD 后面的数据区。RATIONAL 类型占 8 字节，肯定要放数据区，所以偏移量的计算得仔细。
 
-用法 exif-write -tag DateTime -value "2024:01:15 10:30:00" photo.jpg，修改后保存。Go 标准库，go build 通过。
+要支持的写入 tag：DateTime(306)、Make(271)、Model(272)、Orientation(274)——这个特别实用，手机拍的照片经常需要旋转，改这个 tag 比重新编码图片快得多；Copyright(33432)、UserComment(37510)、Artist(315)。GPS 写入要支持经纬度——分别写 GPSLatitude(2) 和 GPSLongitude(4)，都是三个 RATIONAL 值（度分秒），还有 GPSLatitudeRef(1) 和 GPSLongitudeRef(3) 标记南北和东西半球。
+
+写入时必须保证不损坏 JPEG 的其他段——DQT、SOF、DHT、SOS 这些图像数据段一个字节都不能动。如果是修改已有 EXIF，先把原来的 APP1 读出来，修改目标 tag 后重新编码，替换回原位。用法 exif-write -tag DateTime -value "2024:01:15 10:30:00" photo.jpg，Go 标准库，go build 通过。

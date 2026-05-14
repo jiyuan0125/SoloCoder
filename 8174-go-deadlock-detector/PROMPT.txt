@@ -1,5 +1,7 @@
-我在调试一个并发程序的死锁问题，帮我写个死锁检测工具。
+我在调试一个并发程序的死锁问题——两个 goroutine 互相等对方释放锁，程序就卡住了。死锁在开发环境很难复现，但到了生产环境高并发下就偶尔出现。需要一个静态分析工具来提前发现。
 
-工具分析 Go 源码中的锁使用模式（sync.Mutex、sync.RWMutex、sync.WaitGroup 等），构建锁获取顺序图。检测以下死锁场景：不同 goroutine 以不同顺序获取多把锁、自己重复加锁（recursive locking）、持锁期间阻塞在 channel 或 IO 操作上、WaitGroup 计数不匹配。输出锁依赖图和潜在死锁环路。
+工具分析 Go 源码中的锁使用模式（sync.Mutex、sync.RWMutex、sync.WaitGroup 等），构建锁获取顺序图。检测以下死锁场景：
 
-命令行工具，Go 标准库实现，go build 编译过。
+不同 goroutine 以不同顺序获取多把锁——goroutine A 先锁 M1 再锁 M2，goroutine B 先锁 M2 再锁 M1。这种 ABBA 模式是经典的死锁。自己重复加锁——同一个 goroutine 对同一个 mutex 连续 Lock 两次没有中间 Unlock（recursive locking，Go 的 mutex 不支持重入）。持锁期间阻塞——持锁期间做了 channel 接收、time.Sleep 或 IO 操作，其他 goroutine 等锁的时候也阻塞了。WaitGroup 计数不匹配——Add 和 Done 的数量不一致。
+
+输出锁依赖图和潜在死锁环路。命令行工具，Go 标准库实现，go build 编译过。

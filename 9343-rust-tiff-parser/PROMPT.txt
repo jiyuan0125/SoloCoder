@@ -1,10 +1,7 @@
-做一个 TIFF 图片文件格式解析工具，能处理 TIFF 的 IFD 结构。
+第一步验证字节序和魔数。TIFF 文件头 8 字节：2 字节字节序标记——"II"（0x4949）小端或 "MM"（0x4D4D）大端；2 字节魔数 42；4 字节第一个 IFD 的偏移量。根据字节序标记决定后续所有多字节数据的读取方式。
 
-解析要求：
-- 验证字节序标记（II 小端 / MM 大端），读取魔数 42 和第一个 IFD 偏移
-- 遍历 IFD（Image File Directory）中的标签条目，解析 tag ID、类型、数量、值/偏移
-- 识别关键标签：ImageWidth、ImageLength、BitsPerSample、Compression、PhotometricInterpretation、StripOffsets、StripByteCounts
-- 支持链式 IFD（一个 TIFF 文件可能包含多页，通过 NextIFDOffset 链接）
-- 处理大端小端的正确字节序转换
+第二步遍历 IFD。定位到 IFD 后，2 字节读取条目数量，然后每个条目 12 字节：2 字节 tag ID、2 字节数据类型（1=BYTE、2=ASCII、3=SHORT、4=LONG、5=RATIONAL 两个 LONG、6=SBYTE、7=UNDEFINED、8=SSHORT、9=SLONG、10=SRATIONAL、11=FLOAT、12=DOUBLE）、4 字节值的数量、4 字节值或偏移。每个类型的大小不同：BYTE/ASCII/UNDEFINED 1 字节，SHORT/SSHORT 2 字节，LONG/SLONG/FLOAT 4 字节，RATIONAL/SRATIONAL/DOUBLE 8 字节。如果所有值能塞进 4 字节就直接存在条目里，否则 4 字节是数据偏移。
 
-用 Rust 写，cargo build 通过。`tiff-parser info scan.tiff` 输出 IFD 标签列表。
+第三步识别关键 tag。ImageWidth(256)、ImageLength(257)、BitsPerSample(258)、Compression(259)、PhotometricInterpretation(262)、StripOffsets(273)、SamplesPerPixel(277)、RowsPerStrip(278)、StripByteCounts(279)、TileWidth(322)、TileLength(323)、TileOffsets(324)、TileByteCounts(325)、XResolution(282)、YResolution(283)。链式 IFD——每个 IFD 末尾 4 字节指向下一个 IFD（0 表示结束），遍历这个链表获取所有页。
+
+第四步处理多页 TIFF。每页独立显示自己的 IFD 标签。用法 tiff-parser info scan.tiff。Rust 实现，cargo build 通过。

@@ -1,10 +1,7 @@
-写一个 WebP 图片格式解析工具，解析 WebP 文件的容器结构和编码数据。
+WebP——Google 推出的图片格式，有损无损透明动画全支持。解析 WebP 就是解析 RIFF 容器 + VP8/VP8L/VP8X 编码头。Rust 实现一个 WebP 结构查看工具。
 
-解析内容：
-- 验证 RIFF 容器和 WEBP 标识
-- 解析 VP8 有损格式：读取 VP8 位流头的宽度、高度、帧类型
-- 解析 VP8L 无损格式：读取签名、宽度、高度、alpha 标志
-- 解析 VP8X 扩展格式：读取 ICC、alpha、EXIF、动画、XMP 等功能标志位
-- 提取 RIFF chunk 列表（如 ICCP、EXIF、XMP）并报告其大小
+RIFF 容器层——4 字节 "RIFF"、4 字节文件总大小-8、4 字节 "WEBP"。后面的 chunk 结构：4 字节 FourCC、4 字节大小、数据（奇数大小有 1 字节 padding）。遍历所有 chunk 收集信息。
 
-Rust 项目，cargo build 编译通过。`webp-parser info image.webp` 输出格式详情。
+VP8 有损 chunk（"VP8 "）：数据的前 10 字节是帧标签——3 字节 frame tag（其中包含 frame type：0=keyframe 1=interframe）、3 字节 start code（0x9D 0x01 0x2A）、2 字节 VP8 宽度（14 位）+ 水平缩放标志、2 字节 VP8 高度（14 位）+ 垂直缩放标志。VP8L 无损 chunk（"VP8L"）：1 字节签名（0x2F）、14 位宽度-1、14 位高度-1、1 位 alpha 标志、4 位版本号。
+
+VP8X 扩展 chunk（"VP8X"）：1 字节 flags——Rsv(2 位)、ICC(1 位)、Alpha(1 位)、Exif(1 位)、XMP(1 位)、Anim(1 位)、Rsv(2 位)；3 字节 canvas width-1（24 位小端）；3 字节 canvas height-1。其他 chunk：ICCP（ICC 颜色配置）、ALPH（alpha 通道）、EXIF（EXIF 元数据）、XMP（XMP 元数据）、ANIM（动画参数：背景色、循环次数）、ANMF（动画帧信息）。用法 webp-parser info image.webp。Rust 实现，cargo build 通过。

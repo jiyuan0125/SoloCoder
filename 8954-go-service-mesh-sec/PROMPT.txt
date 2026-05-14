@@ -1,3 +1,7 @@
-服务网格的安全策略配置太分散了，想做个工具统一检查。用 Go 写一个 service mesh 安全策略分析器，支持解析 Istio 的 AuthorizationPolicy 和 PeerAuthentication 资源。
+服务网格安全策略的分析流程一般是这样的：先把 Istio 的安全相关 CRD 导出成 YAML 文件，然后用工具解析这些配置，逐条检查是否有缺失或不当的设置，最后生成一份安全评估报告。
 
-能检测哪些服务没有配置 mTLS、哪些服务缺少访问控制策略、是否存在过于宽松的 ALLOW ALL 规则。输入是 YAML 文件，输出结构化的安全评估报告。Go 标准库就够了，go build 编译通过。
+这个工具要能处理两种 Istio 资源——AuthorizationPolicy 和 PeerAuthentication。对于 AuthorizationPolicy：解析 spec.selector 找到策略作用的目标服务，检查 spec.rules 里的 from、to、when 条件。要检测的问题包括：存在 action: ALLOW 但没有指定 from 条件的规则（相当于对来源不做任何限制）、使用了 namespace: "*" 的宽泛匹配、没有配置任何 AuthorizationPolicy 的服务（意味着所有流量都默认允许）。
+
+对于 PeerAuthentication：检查 mtls 模式配置——PERMISSIVE 表示同时允许明文和 mTLS（不够严格），STRICT 才是强制 mTLS。标记所有没有 PeerAuthentication 或用了 PERMISSIVE 模式的服务。
+
+输入是一个目录路径，工具递归查找所有 YAML 文件并识别 Istio 资源类型。输出结构化报告，按 namespace 和服务名分组，每项标注安全等级和建议的加固措施。Go 标准库实现，go build 编译通过。

@@ -1,5 +1,5 @@
-音频文件格式五花八门，每次查元数据都得用不同工具，太麻烦了。
+音频文件格式五花八门，每次查元数据都得用不同工具——MP3 用 eyeD3，FLAC 用 metaflac，WAV 又得 ffprobe——太麻烦了，想一个工具全搞定。
 
-写个通用的音频元数据读取工具，能自动检测文件类型（MP3、FLAC、OGG、WAV、AIFF、AAC），然后提取对应的元数据信息。输出统一格式的 JSON，包含文件格式、时长、码率、采样率、声道数和标签信息。不认识的格式给出友好提示。
+写个通用的音频元数据读取工具。打开文件后先读前面几十个字节做格式嗅探：'RIFF'+'WAVE' 是 WAV，'fLaC' 是 FLAC，'OggS'+'vorbis' 是 Ogg Vorbis，'FORM'+'AIFF'/'AIFC' 是 AIFF，0xFF F1/0xFF F9 是 AAC ADTS，'ID3' 或者直接搜 0xFF FB syncword 是 MP3。识别出格式后走对应的解析逻辑：WAV 读 fmt chunk 拿采样率/位深/声道数 + 推算时长；FLAC 读 STREAMINFO + VORBIS_COMMENT；Ogg Vorbis 从 identification header 拿采样率/声道数 + comment 拿标签；AIFF 读 COMM chunk；MP3 读 ID3 标签；AAC 解析 ADTS 帧头。输出统一格式的 JSON，包含文件格式、时长、码率、采样率、声道数和标签信息。不认识的格式给个友好提示，别 panic。
 
 Go 标准库，根据文件头魔数判断类型，go build 能过。

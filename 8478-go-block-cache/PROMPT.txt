@@ -1,12 +1,13 @@
 Go 实现一个 Block Cache，给 SSTable 读取加速用。
 
-读取 SSTable 时频繁读磁盘太慢，需要把热点 data block 缓存在内存里。Block Cache 通常用 LRU 策略，key 是 (file_id, block_offset) 的组合。
+读取 SSTable 时频繁读磁盘太慢，需要把热点 data block 缓存在内存里。Block Cache 通常用 LRU 策略，key 是 (file_id, block_offset) 的组合，和 RocksDB 的 block cache 类似。
 
 需要：
-- LRU 缓存，key 为 fileID + blockOffset 的组合
-- Get 和 Put 接口，缓存的是反序列化后的 block 对象
-- 支持配置最大内存占用（不是条目数，是字节数）
-- 并发安全，高并发读场景下性能要好
-- 统计命中率和驱逐次数
+- LRU 缓存，key 为 fileID + blockOffset 组合的 128-bit hash
+- Get(key) 和 Put(key, block) 接口，缓存的是反序列化后的 block 对象（[]byte 或 Block 结构体）
+- 支持配置最大内存占用（不是条目数，是字节数），超限自动驱逐最久未使用的条目
+- 并发安全，高并发读场景下性能要好——用分片锁（sharded LRU，16-64 个 shard 各自一把锁）
+- 统计命中率（hit/miss/eviction count），提供 Stats() 查询接口
+- 内存占用追踪：条目放入时记录其字节大小，维护当前总占用近似值
 
-Go 标准库，go build 通过。内存统计需要维护一个近似值，条目放入时记录大小。用分片锁减少锁竞争。
+Go 标准库，go build 通过。分片函数用 key % shardCount，每个 shard 内部用双向链表 + map 做 LRU。

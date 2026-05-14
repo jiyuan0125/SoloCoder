@@ -1,5 +1,9 @@
-写个 Go 的 mock 生成器，类似 mockgen 但更轻量。
+写个 Go 的 mock 生成器，类似 mockgen 但更轻量。mock 比 stub 更智能——stub 只是替换实现，mock 还能验证调用行为是否符合预期。
 
-工具接收 Go 接口定义（从源码解析），生成实现了该接口的 mock 结构体。生成的 mock 支持：设置期望调用（EXPECT().MethodName()）、设置返回值、设置调用次数约束（Times/AnyTimes）、参数匹配（exact match 或自定义 matcher）、记录所有调用参数供后续断言。
+工具接收 Go 接口定义（从源码解析），生成实现了该接口的 mock 结构体。生成的 mock 支持这些功能：
 
-命令行用法：输入接口名和包路径，输出 mock 文件。Go 标准库，go build 通过。
+设置期望调用——EXPECT().GetUser(1).Return(&User{ID: 1}, nil) 声明期望 GetUser 被调用且参数为 1。设置返回值——每个期望调用可以指定返回值。调用次数约束——Times(n) 精确调用 n 次、AnyTimes() 任意次数、MinTimes(n) 最少 n 次。参数匹配——支持精确匹配（EqualTo）和自定义匹配器（FuncMatcher，传入比较函数）。记录所有调用参数——GetAllCalls() 返回所有方法调用的参数列表，供后续断言。
+
+未满足的期望在测试结束时报告——"expected call GetUser(1) was not made"。意外的调用也报错——"unexpected call DeleteUser(1), no matching expectation"。
+
+命令行用法：mockgen -source=user.go -destination=user_mock.go。Go 标准库，go build 通过。

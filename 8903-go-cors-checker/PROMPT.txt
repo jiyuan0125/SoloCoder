@@ -1,1 +1,7 @@
-我有个 API 服务要对外提供，想确认 CORS 配置是否正确。帮我写一个 Go 工具，给定目标 URL，自动发送 OPTIONS 预检请求，检查 Access-Control-Allow-Origin、Allow-Methods、Allow-Headers、Allow-Credentials 这些响应头。支持指定自定义的 Origin 和请求方法来测试。输出结果要清楚说明哪些配置有问题，比如 Origin 设成了通配符 * 但又开了 credentials。标准库实现，go build 通过。
+API 服务要对外提供跨域访问，但 CORS 配置搞不好就会出安全问题——Access-Control-Allow-Origin 设成 * 又开了 credentials，浏览器会拒绝这种组合。或者 Vary 头没设导致 CDN 缓存错误的 CORS 响应。
+
+写一个 Go 工具，给定目标 URL，自动发送 OPTIONS 预检请求。检查 CORS 相关的响应头：Access-Control-Allow-Origin（是否是 * 或者具体的域名）、Access-Control-Allow-Methods（支持哪些 HTTP 方法）、Access-Control-Allow-Headers（允许哪些自定义 header）、Access-Control-Allow-Credentials（是否允许 cookie）、Access-Control-Max-Age（预检缓存时间）。
+
+支持指定自定义的 Origin 和请求方法来测试——模拟不同来源的请求看服务端返回什么。重点检查的问题：Origin 设成 * 但 Allow-Credentials 为 true（浏览器会拒绝）。Allow-Origin 是具体域名但没有 Vary: Origin header（CDN 缓存可能返回错误的域名）。Allow-Methods 包含 PUT/DELETE 等危险方法但没有认证。
+
+输出结果要清楚说明哪些配置有问题和修复建议。Go 标准库实现，go build 通过。

@@ -1,1 +1,7 @@
-需要在 Linux 下分析 ELF 二进制文件的格式。Go 实现一个 ELF 解析器，能读取 ELF header、program headers、section headers、symbol table、dynamic section。不用 Go 标准库的 debug/elf 包，自己按 ELF 规范解析二进制。输出文件的架构、入口点、所有段和节的详细信息。命令行传入 ELF 文件路径。go build 编译通过。
+需要在 Linux 下分析 ELF 二进制文件的格式——快速看看一个 .so 动态库导出了哪些符号、一个可执行文件依赖了哪些动态库、入口点地址在哪里。不用 Go 标准库的 debug/elf 包，自己按 ELF 规范从字节级别解析。
+
+Go 实现一个 ELF 解析器。读取 ELF 文件并解析以下结构：
+
+ELF Header——魔数 \x7fELF、文件类型（ET_REL/ET_EXEC/ET_DYN/ET_CORE）、目标架构（EM_X86_64/EM_AARCH64/EM_RISCV 等）、入口点虚拟地址、program header 和 section header 的偏移和数量。Program Headers——每个段的类型（PT_LOAD/PT_DYNAMIC/PT_INTERP）、权限标志（R/W/X）、虚拟地址、文件偏移和大小。Section Headers——每个节的名称（从字符串表读取）、类型（SHT_SYMTAB/SHT_STRTAB/SHT_TEXT/SHT_DATA 等）、地址和大小。Symbol Table——每个符号的名称、绑定类型（LOCAL/GLOBAL/WEAK）、类型（NOTYPE/FUNC/OBJECT/SECTION）、所在节索引和值。Dynamic Section——动态链接信息，包括 NEEDED（依赖的 .so 文件列表）、SONAME、INIT/FINI 函数地址等。
+
+输出文件的架构、类型、入口点、所有段和节的详细信息、导入导出符号列表。命令行传入 ELF 文件路径。go build 编译通过。

@@ -1,5 +1,9 @@
-我需要一个本地漏洞数据库管理工具。
+漏洞数据库管理工具，本地维护一份 CVE 数据库供其他安全工具查询。每次从 NVD 下载全量数据太慢了，不如本地建个索引，查询的时候秒返回。
 
-能从 NVD 的公开数据（JSON 格式）导入 CVE 信息到本地 SQLite 数据库。支持按 CVE 编号查询、按关键词搜索、按 CVSS 评分范围筛选、按影响的产品/版本过滤。定期更新数据库（增量导入最新的 CVE）。
+Python 实现本地漏洞数据库管理工具。数据源：从 NVD（National Vulnerability Database）下载 CVE 数据（JSON Feed 格式，每年一个文件，约 100MB），也支持导入 OSV 和 GitHub Advisory 数据。用 SQLite 做本地存储和索引。
 
-提供 CLI 接口：vuln-db search <keyword>、vuln-db show CVE-2024-xxxxx、vuln-db update。输出包含 CVE 编号、描述、CVSS 评分、影响版本范围。Python 3，用 sqlite3 + requests。
+数据库 Schema：CVE 编号（主键）、描述（英文原文）、CVSS v3.1 向量和评分、CPE（受影响的软件产品范围，用字符串模式匹配）、发布日期和最后修改日期、 CWE 弱点类型、参考链接列表。
+
+查询接口：按 CVE 编号精确查询、按关键词搜索描述、按 CPE 产品名查询所有相关漏洞（如 product=nginx）、按 CVSS 评分范围过滤、按时间范围过滤（如最近 30 天的新漏洞）。每个查询结果展示 CVE 编号、描述摘要、CVSS 评分和严重等级、受影响版本范围。
+
+更新机制：增量更新——只下载最新的 delta 数据合并到本地库。python3 命令行工具。

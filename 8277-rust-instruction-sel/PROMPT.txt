@@ -1,5 +1,9 @@
-帮我用 Rust 实现指令选择，把 IR 指令映射到目标机器指令。
+编译器后端从 IR 到机器指令之间有一道鸿沟——IR 是抽象的运算（add、mul），但目标机器有自己的指令编码和寻址模式。指令选择就是把 IR 树映射到目标指令树。Rust 实现一个基于 tree pattern matching 的指令选择器。
 
-用简单的 tree pattern matching 方式：定义一组从 IR pattern 到目标指令的规则（比如 IR 的 add 对应 x86 的 add，mul+add 可以合并成 lea）。对 IR 做自底向上的 pattern 匹配，选择代价最小的指令序列。
+先定义一套抽象的目标指令描述（Target Instruction）：每条目标指令有名字、操作数模式、输出、代价。比如 ADD_rr（寄存器+寄存器加法，代价 1）、ADD_ri（寄存器+立即数加法，代价 1）、LEA（地址计算，可以做加法+移位，代价 1）、IMUL_rr（乘法，代价 3）、SHL_ri（左移，代价 1）。
 
-先定义一套抽象的目标指令描述（不一定要真的 x86 编码），重点在匹配算法。cargo test 验证几个典型 IR 片段的选择结果。
+然后定义匹配规则——用 pattern tree 描述 IR 子树到目标指令的映射。比如 IR 的 Add(x, y) → ADD_rr(x, y)。更复杂的：IR 的 Add(Mul(x, Const(4)), y) → LEA(y, x, scale=4)（x86 的 LEA 可以一步完成乘 4 加 y）。
+
+选择算法：对 IR 表达式树做自底向上遍历，每个节点尝试所有能匹配的规则，选代价最小的。如果有多个子树可以合并成一条指令（比如上面的 LEA），优先合并。
+
+不要求真的 x86 编码，重点在匹配算法的通用性。cargo test 验证几个典型 IR 片段的选择结果。cargo build 通过。

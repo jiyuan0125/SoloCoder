@@ -1,1 +1,7 @@
-MP3文件的ID3标签格式挺复杂的，v2.3和v2.4还有区别。帮我写一个专门解析ID3标签的Python工具，能处理ID3v1（128字节尾部）和ID3v2.x（文件头部）两种格式。对v2要能解析frame header，识别TIT2、TPE1、TALB、TRCK、TDRC这些常用frame ID，正确处理同步安全整数和Unsynchronisation标志。非ASCII编码的文本也要能正确解码。python3运行。
+MP3 的 ID3 标签——v2.3 和 v2.4 有区别，帧格式复杂，文本编码多样。写一个专门的解析器把这些细节处理好。Python 实现。
+
+ID3v1（128 字节尾部）和 ID3v2（文件头变长）都要支持。v2 标签头：3 字节 "ID3"、2 字节版本号、1 字节标志、4 字节大小（syncsafe integer——每字节低 7 位有效共 28 位）。帧头：4 字节 ID + 4 字节大小（v2.3 普通 int，v2.4 syncsafe int）+ 2 字节标志 + 数据。
+
+常用帧 ID：TIT2 标题、TPE1 艺术家、TALB 专辑、TRCK 曲目号、TDRC 年份、TCON 流派、APIC 封面图。文本帧首字节编码标识：0=ISO-8859-1、1=UTF-16 BOM、2=UTF-16BE、3=UTF-8。非 ASCII 文本要正确解码。APIC 帧格式：编码 + MIME 类型 + 图片类型 + 描述 + 二进制数据。
+
+同步安全整数解码——0x7F 0x7F 0x7F 0x7F = 268435455（最大标签体大小约 256MB）。Unsynchronisation 标志如果被设置，数据中的 0xFF 0x00 要还原为 0xFF。用法 python id3_parser.py extract song.mp3。Python 3 运行。

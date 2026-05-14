@@ -1,12 +1,11 @@
-实现 Chord DHT 协议，用 Rust。
+先搭好 Chord DHT 的环结构，再实现查找、插入、节点加入这几个核心操作。Chord 把节点和 key 都映射到一个哈希环上，通过 finger table 做 O(log N) 跳查找。用 Rust 实现一个可以在单进程内模拟的完整 Chord DHT。
 
-Chord 是经典的分布式哈希表算法，节点和数据都映射到一个环形 ID 空间（0..2^m）。每个节点维护一个 finger table（路由表），查找只需要 O(log N) 跳。
+哈希空间的设计：用 64 位哈希空间（u64），key 和 nodeId 都通过 SHA-256 取前 8 字节映射到 u64。环是 [0, 2^64) 的区间，节点按顺时针排列。每个节点负责从 predecessor 到自己的区间。
 
-核心功能：
-- SHA-1 哈希把 node ID 和 key 映射到环上
-- Finger table：每个节点维护 m 个路由项，第 i 项指向 ID = node_id + 2^i 处的 successor
-- 查找：沿 finger table 逐步逼近目标，log(N) 跳定位
-- 节点加入：通知 successor 和 predecessor，更新 finger table
-- 稳定化：定期检查并修正 finger table 和 successor/predecessor
+Finger Table 的构建：节点 i 的第 k 个 finger 指向 successor(i + 2^k mod 2^64)。m=64 所以理论上最多 64 个表项，但实际只需要 log(N) 个有效的（很多指向同一个节点）。查找时从最高位开始，如果 finger[k] 比自己离 target 更近就跳过去。
 
-cargo build 通过，模拟 16 节点 Chord 环测试查找正确性。
+关键操作的实现：find_successor(id) 查找 id 的负责节点（O(log N) 跳）、put(key, value) 把数据存到负责节点、get(key) 查找数据、join(existing_node) 新节点加入环并通知其他节点更新 finger table。
+
+模拟 16 个节点的 Chord 环，插入 100 个 key，打印几次查找的路由路径。展示 finger table 如何加速查找——从 16 个节点的环中，一次查找通常只需要 4 跳左右。
+
+cargo build 通过。

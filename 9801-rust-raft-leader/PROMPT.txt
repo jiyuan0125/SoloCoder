@@ -1,10 +1,11 @@
-我需要一个 Raft 领导者选举模块，用 Rust 实现。
+之前参与一个分布式 KV 项目，Leader 选举那块代码写得太耦合了，测试也很麻烦。后来就想把选举模块单独拆出来做一个干净的实现。这次用 Rust 来写，所有权和类型系统能帮我在编译期就捕获不少状态转换的错误。
 
-场景：分布式系统中各节点需要通过投票选出唯一 Leader，实现 Term 递增、随机超时选举、RequestVote RPC 处理。节点状态要在 Follower/Candidate/Leader 之间正确切换。
+实现一个独立的 Raft Leader 选举模块。节点有三种角色：Follower、Candidate、Leader，用一个 enum 表示，状态转换通过方法调用驱动（而不是直接赋值字段）。每个节点维护 currentTerm、votedFor、当前角色这三个核心状态。
 
-功能要求：
-- 支持启动多个模拟节点，节点之间可以互相发送 RequestVote
-- Leader 选出后能持续发送心跳维持权威
-- 网络分区时不会出现双主（同一 Term 只有一个 Leader）
+选举超时机制：Follower 有一个随机化的选举超时（150-300ms），超时触发后转为 Candidate，自增 term，给自己投票，向其他节点发 RequestVote。Candidate 等待投票结果——如果收到多数票就变 Leader，如果收到更高 term 的心跳就退回 Follower，如果超时就重新发起选举。
+
+Leader 的心跳：成为 Leader 后立即开始定期（比如 50ms 间隔）向所有 Follower 发送心跳（空的 AppendEntries）。Follower 收到心跳就重置选举超时。
+
+用 tokio channel 模拟节点间的网络通信。每个节点是一个独立的 tokio task，通过 channel 收发消息。打印完整的事件日志——"node-2 [Follower] election timeout → [Candidate] term=5"、"node-2 [Candidate] received majority vote (3/5) → [Leader] term=5"。
 
 cargo build 通过，用单元测试验证选举正确性。

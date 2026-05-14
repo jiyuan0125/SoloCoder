@@ -1,5 +1,9 @@
-帮我搭一个 IR（中间表示）构建框架，Rust 实现，后续打算用来写编译器 pass。
+最近在写一个玩具编译器，到了后端优化这一步发现没有好用的 IR 数据结构，每次都是临时拼凑。这次想把 IR 构建框架先搭扎实，后续不管是常量折叠还是死代码消除都能直接在同一个 IR 上跑。Rust 实现。
 
-定义一套 SSA 形式的 IR：有基本块、指令、值（Value）的概念。支持常见的算术、比较、跳转、分支指令。提供 builder API 让调用方方便地往基本块里追加指令，能保证 SSA 的 def-use 链正确。
+定义一套 SSA 形式的 IR。核心概念：Value 是一切操作的产物，每条指令产生一个唯一的 Value ID（可以是递增整数）。指令类型包括二元运算（Add/Sub/Mul/Div/And/Or/Xor/Shl/Shr）、比较（Eq/Ne/Lt/Le/Gt/Ge）、跳转（Jump/Branch）、返回（Return）、Phi（合并前驱的值）、Load/Store（内存访问）。每条指令记录操作码、操作数（Vec<Value>）和可选的类型信息（i32/i64/f64）。
 
-不涉及代码生成和前端解析，先把 IR 数据结构和 builder 写扎实。cargo test 覆盖指令构建、基本块连接等场景。
+BasicBlock 持有一组有序指令，末尾必须是一条终结指令（Jump/Branch/Return）。Function 包含名字、参数列表、一组 BasicBlock。Module 包含多个 Function。
+
+Builder API 是重点：new_function 创建函数并返回 entry block，append_instruction 往当前 block 追加指令并返回新 Value，create_block 创建新 block，set_insert_point 切换当前写入位置。Builder 内部维护一个 Value 分配器保证 ID 唯一。
+
+SSA 的 def-use 链自动维护——每条指令创建时记录它的 use 列表。cargo test 覆盖指令构建、block 连接、phi 插入。cargo build 通过。

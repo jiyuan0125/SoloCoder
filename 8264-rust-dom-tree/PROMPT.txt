@@ -1,5 +1,9 @@
-给我写个支配树（Dominator Tree）构建算法，Rust 实现，从 CFG 算出每个基本块的直接支配者和支配边界。
+编译器后端优化经常需要知道"一个基本块控制了哪些其他块"，支配树就是描述这种关系的。用 Rust 实现 Lengauer-Tarjan 算法来构建支配树。
 
-用 Lengauer-Tarjan 算法，时间复杂度接近 O(E α(V,E))。能输出每个节点的 idom，以及完整的支配边界集合。顺便把支配树也打印出来，方便调试。
+先说支配关系的定义：节点 d 支配节点 n 当且仅当从入口到 n 的每条路径都经过 d。直接支配者 idom(n) 是最接近 n 的严格支配者。支配边界 DF(n) = {m : n 支配 m 的某个前驱，但不严格支配 m}。这些概念在 SSA 构建和循环分析中都要用到。
 
-给几个有典型结构的 CFG（if-else、嵌套循环、break/continue）做测试用例，验证支配关系计算正确。cargo test 全绿。
+Lengauer-Tarjan 算法的步骤：先从入口做 DFS 编号，得到 DFS 树和每个节点的 sdom（半支配者）。然后按 DFS 序逆序处理，用带路径压缩的 union-find 维护 bucket 结构，逐步计算每个节点的 idom。整体时间复杂度接近 O(E·α(V,E))。
+
+数据结构输出：DomTree（每个节点的 idom 和 children 列表）、DomFrontier（每个节点的支配边界集合）。提供查询方法：dominates(a, b) 判断 a 是否支配 b，dom_depth(n) 返回支配深度。
+
+测试用例覆盖 if-else 分支、嵌套循环（包含 break 和 continue）、不可达代码、多重入口等典型 CFG 结构。cargo test 验证支配关系和支配边界计算正确。

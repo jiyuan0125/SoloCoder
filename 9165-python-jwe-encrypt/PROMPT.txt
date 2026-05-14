@@ -1,14 +1,9 @@
-JWE（JSON Web Encryption）加密工具，实现 JSON 数据的加密和解密。
+JWE（JSON Web Encryption）加密工具。有些敏感信息需要在传输过程中加密——比如用户的身份证号、银行卡号。JWE 是标准的 JSON 数据加密封装格式，跟 JWS 签名对应但用于加密。
 
-有些敏感信息需要在传输过程中加密，比如用户的身份证号，用 JWE 标准格式封装。
+Python 实现 JWE Compact Serialization 格式（五段式：header.encrypted_key.iv.ciphertext.tag）。加密流程：生成 content encryption key（CEK，256 位随机密钥）→ 用接收方的公钥（RSA-OAEP）或共享密钥（AES-GCM KW）加密 CEK 得到 encrypted_key → 用 CEK 通过 AES-256-GCM 加密 payload 得到 ciphertext + auth tag → 生成随机 IV → 拼接五段。
 
-Python 实现：
-- 使用 AES-256-GCM 对 JSON payload 进行内容加密
-- 用 RSA-OAEP 或 AES-GCM（密钥包装模式）加密内容加密密钥
-- 生成 Compact Serialization 格式的 JWE token（5段式：header.cek.iv.ciphertext.tag）
-- 解密 JWE token，还原原始 payload
+解密流程：拆分五段 → 解码 header 获取 alg 和 enc → 用私钥解密 CEK → 用 CEK 解密 ciphertext 并验证 auth tag（tag 不匹配则报"解密失败：数据可能被篡改"）→ 返回原始 payload。
 
-示例：
-python jwe_encrypt.py encrypt --payload '{"ssn":"123456789"}' --key-path public.pem
-python jwe_encrypt.py decrypt --jwe <token> --key-path private.pem
-用 cryptography 库或纯标准库都行，能正确加解密。
+支持的算法组合——密钥加密：RSA-OAEP-256、A256GCMKW；内容加密：A256GCM、A128CBC-HS256。header 中还包含 kid（密钥 ID，用于选择正确的解密密钥）和 typ。
+
+命令行：encrypt、decrypt。python3 用 cryptography 库。

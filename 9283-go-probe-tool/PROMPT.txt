@@ -1,11 +1,7 @@
-做一个多媒体探测工具，类似 ffprobe 的简化版，Go 写的。
+每天都要看媒体文件信息——容器格式、编码参数、时长分辨率——每次都开 ffmpeg 太重了。写一个轻量级的探测工具，只读文件头和元数据，不做任何解码，速度要快。
 
-日常开发中经常需要快速查看一个媒体文件的基本信息：
-- 自动识别文件格式：MP4、MKV/WebM、AVI、FLV、TS、MP3、AAC、WAV、OGG 等
-- 提取容器信息：时长、创建时间、总码率
-- 提取流信息：每个流的编解码器类型、分辨率、帧率、采样率、声道数
-- 显示文件大小、容器格式版本
-- 支持 JSON 格式输出，方便脚本调用
-- 能处理损坏文件，至少给出能读到的信息
+格式识别通过文件头 magic bytes：MP4 的 ftyp box 前 4 字节是长度然后 "ftyp"，FLV 前三个字节是 "FLV"，MKV/WebM 有 EBML 头，AVI 是 "RIFF...AVI"，TS 的同步字节 0x47 出现在第 0、188、376 字节位置，MP3 看前三个字节是 "ID3" 或同步字 0xFFF，AAC ADTS 看同步字 0xFFF，WAV 是 "RIFF...WAVE"，OGG 是 "OggS"。
 
-用法 av-probe video.mp4，输出格式摘要和流列表。Go 标准库，go build 通过。
+识别出格式后走对应的解析分支。MP4 读 moov box 提取时长（mvhd 的 duration/timescale）、视频轨信息（从 stsd 的 avc1 读分辨率和编码信息）、音频轨信息（mp4a 的采样率和声道数）。MKV 读 Segment Info 和 Tracks 元素。FLV 读 onMetaData 和首个视频/音频 Tag 的编码信息。TS 解析 PAT/PMT 梳理流映射。
+
+输出包含：文件路径、文件大小、容器格式、总时长（秒+HH:MM:SS 格式）、总码率、各流信息（类型、编码、分辨率/采样率/声道数、码率）。加 --json 输出 JSON 格式方便脚本调用。损坏的文件不崩溃，给出能读到的信息。用法 av-probe video.mp4。Go 标准库，go build 通过。

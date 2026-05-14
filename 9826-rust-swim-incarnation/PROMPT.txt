@@ -1,12 +1,11 @@
-用 Rust 实现 SWIM 协议的 Incarnation 机制。
+在 SWIM 协议里，incarnation number 是一个核心的冲突解决机制——它解决了"一个节点被错误怀疑"的问题。比如节点 A 的网络到其他节点暂时不通了，其他节点怀疑 A 挂了。但 A 其实没挂，等网络恢复后 A 需要一个方式告诉所有人"我还在"。用 Rust 把 incarnation 机制单独实现。
 
-SWIM 用 incarnation（代数）来解决被怀疑节点的自证问题。节点被怀疑后可以递增自己的 incarnation，广播 alive 消息来证明自己还活着。 incarnation 越大越新，类似 Vector Clock 的思想。
+incarnation 的运作方式：每个节点维护自己的 incarnation（u64，初始 0）。正常情况下 incarnation 不变。当节点收到关于自己的 Suspect 指控时（通过 Gossip 传播听到），立即自增 incarnation 并广播一个 Alive 消息（带新的 incarnation）。其他节点比较同一节点的不同状态消息——incarnation 大的胜出。
 
-需要实现：
-- 每个节点维护自己的 incarnation（单调递增的整数）
-- 被怀疑时主动递增 incarnation，广播 alive 消息
-- 其他节点收到 alive 消息时比较 incarnation，只接受更大的
-- incarnation 也用于解决网络分区恢复后的状态冲突
-- 支持查询任意成员的当前 incarnation
+冲突解决的规则：如果节点收到 (NodeX, Alive, incarnation=5) 和 (NodeX, Suspect, incarnation=3) 两条消息，Alive 的 incarnation 更高，所以 Alive 胜出，Suspect 被忽略。如果两条消息的 incarnation 相同但状态不同，按优先级处理——Dead > Suspect > Alive。
 
-cargo build 通过，测试被怀疑节点自证后恢复为 alive。
+incarnation 的持久化：节点重启后 incarnation 从 0 开始。但这可能导致之前被怀疑的记录仍然有效（因为它们可能携带更高的 incarnation）。解决方案：节点重启后不等被怀疑，主动广播一个带 incarnation=0 的 Alive 消息。如果收到关于自己的旧 Suspect（incarnation 更高），说明是旧信息，忽略。
+
+模拟 10 个节点，故意让节点 3 被怀疑，然后网络恢复后节点 3 反驳（incarnation 自增），观察全集群的状态更新。
+
+cargo build 通过。

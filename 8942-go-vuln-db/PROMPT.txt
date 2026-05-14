@@ -1,1 +1,11 @@
-要给依赖扫描工具提供一个漏洞数据库。用 Go 写一个漏洞数据库管理工具：支持导入 CVE 记录（简化 JSON 格式，包含编号、影响包名、受影响版本范围、修复版本、严重程度）。支持按包名、CVE 编号、严重程度查询。能判断某个版本号是否在受影响范围内（支持 SemVer 范围表达式）。数据存在本地，支持导出为 JSON。go build 通过。
+给依赖扫描工具提供一个漏洞数据库。需要能导入 CVE 记录、查询、判断版本范围。数据库本身的管理也需要工具化。
+
+用 Go 写一个漏洞数据库管理工具。数据模型（JSON 格式存储）：每条 CVE 记录包含——ID（CVE-2024-XXXXX）、package（受影响的包名）、affected_versions（受影响版本范围表达式，如 ">=1.0.0,<1.2.4"）、fixed_version（修复版本，如 "1.2.4"）、severity（Critical/High/Medium/Low，对应 CVSS 分数范围）、description（漏洞描述）、references（参考链接）。
+
+查询功能：query --package github.com/gorilla/websocket 查询某包的所有已知漏洞。query --cve CVE-2024-12345 按 CVE 编号查询。query --severity Critical 按严重程度过滤。
+
+版本范围匹配：IsAffected(currentVersion, versionRange) bool——解析 SemVer 版本号（major.minor.patch），解析范围表达式（逗号分隔的约束），逐一检查是否满足。支持 <、<=、>、>=、= 操作符。
+
+数据管理：import --file cve_records.json 批量导入。export --output vulns.json 导出全部数据。stats 统计信息——总 CVE 数、按严重程度分布、按包名分布。
+
+go build 通过。

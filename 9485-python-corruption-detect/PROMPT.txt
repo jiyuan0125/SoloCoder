@@ -1,5 +1,5 @@
-帮我做一个文件损坏检测工具，判断文件是否完整可用。
+从网络下载的文件可能在中途被截断，磁盘出问题后文件可能损坏，需要快速检测常见文件格式是否还能正常使用。写个工具对文件做基本的完整性检查——不需要完全解析文件内容，只验证关键的结构是否完好。
 
-从网络下载或者磁盘出问题后文件可能损坏，需要一个工具快速检测常见文件格式是否损坏。检测方式包括：验证文件头魔数是否正确、文件尾标记是否存在（如 JPEG 的 FFD9）、关键结构是否能正常解析（如 ZIP 的 central directory、PDF 的 xref 表）。
+检测策略。文件头检查：魔数是否正确，比如 JPEG 必须以 FF D8 开头。文件尾检查：JPEG 必须以 FF D9 结尾、PNG 必须以 IEND chunk 结束、ZIP 最后的 Central Directory End 标记（50 4B 05 06）是否存在。关键结构检查：PDF 的 xref 表是否能定位到、MP4 的 moov box 是否存在、ZIP 的 Central Directory 能否正常读取。
 
-python main.py photo.jpg 输出 OK 或 CORRUPTED 加具体原因。支持批量检测目录下的文件。Python 标准库实现，注意处理各种异常情况别崩溃。
+每个文件输出 OK（通过检测）或 CORRUPTED（检测失败）加具体原因（如"JPEG 缺少结束标记"、"ZIP Central Directory 丢失"）。支持批量检测——传入目录路径扫描所有文件。注意处理各种异常情况不要崩溃，检测到一个错误就报告并继续下一个文件。用法：python3 corruption_detect.py check photo.jpg 或 python3 corruption_detect.py check ./downloads/

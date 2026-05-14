@@ -1,10 +1,7 @@
-最近在做一个内部工具平台，需要让用户用简单的 DSL 来定义自动化规则。比如 "when cpu > 80% then notify('ops-channel')" 这种。
+最近在做一个内部工具平台，需要让用户用简单的 DSL 来定义自动化规则。比如运维想写 "when cpu > 80% then notify('ops-channel')" 这种条件触发规则，产品经理想写 "when cart_total > 100 and vip == true then apply_discount(0.1)" 这种促销规则。
 
-用 Rust 实现一个 DSL 引擎，支持：
-- 变量绑定和赋值（let x = 10）
-- 条件判断 if/else
-- 基本算术和比较运算
-- 内置函数调用（print、notify 等）
-- 遇到语法或运行错误要给出清晰的行列号报错
+用 Rust 实现一个 DSL 引擎，支持以下语言特性：变量绑定和赋值（let x = 10，变量可以重新赋值）、条件判断 if/else（支持嵌套）、基本算术（加减乘除取模）和比较运算（> >= < <= == !=）、逻辑运算（&& || !）、内置函数调用（print 输出、notify 发通知、apply_discount 应用折扣）、字符串字面量和数字字面量。
 
-CLI 用法：dsl-engine run rules.dsl，解析并执行 DSL 脚本，输出结果。cargo build 能编译通过。
+解析器用递归下降，生成 AST 后树遍历执行。遇到语法错误要给出清晰的行列号报错——"error at line 3, column 15: expected ')' but found 'then'"。运行时错误同理——除零、未定义变量、参数数量不对等都要有明确提示。
+
+CLI 用法：dsl-engine run rules.dsl，解析并执行 DSL 脚本。cargo build 能编译通过。

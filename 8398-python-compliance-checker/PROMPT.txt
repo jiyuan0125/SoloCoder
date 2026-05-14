@@ -1,5 +1,18 @@
-帮我实现一个 Python 的合规性检查工具，验证代码是否符合安全编码规范。
+金融行业代码审计要求符合特定的安全编码规范——密码不能用 MD5、日志不能打印敏感字段、所有外部输入都要校验。手动逐条检查不现实，做一个自动化合规检查工具。Python 实现。
 
-参考 OWASP 和 CERT 编码标准，检查 Python 代码是否遵循安全最佳实践。检查项包括：异常处理是否完整（不能吞掉异常不记录）、日志中是否包含敏感信息、是否有输入验证、密码存储是否用了合适的哈希算法、是否有安全的会话管理、CORS 配置是否过于宽松。每条检查有对应的规范编号。
+规则定义：每条规则用 JSON 格式描述——规则 ID、合规标准来源（如 PCI-DSS 6.5、OWASP A1）、检测模式（AST 节点模式或正则）、严重级别、修复建议。
 
-Python 3，ast 模块。命令行：`python compliance.py --standard owasp src/`，输出每条检查的通过/失败状态和具体代码位置。`python compliance.py` 能直接运行。
+内置规则集（20+ 条）：
+- 密码存储：检查是否用了 hashlib.md5/sha1（弱哈希），要求 bcrypt/argon2
+- 日志脱敏：检查 logging 调用的参数是否包含 password/ssn/credit_card 等字段名
+- 输入验证：HTTP 请求参数直接使用的场景是否缺少验证
+- HTTPS 强制：HTTP URL 硬编码检查
+- CSRF 保护：表单处理函数是否验证了 CSRF token
+- 权限检查：路由处理函数是否都有权限验证装饰器
+- 加密算法：AES 的 ECB 模式检测（不安全）
+- 会话管理：session cookie 的 secure/httponly 标志
+- 错误处理：生产环境不能返回详细错误堆栈
+
+输出合规报告：通过/未通过的规则列表、按合规标准分组的检查结果、合规率百分比。未通过的规则给出具体的文件:行号和修复建议。
+
+python3 compliance.py src/ --standard PCI-DSS。纯 Python 3 用 ast 和 tokenize 模块。

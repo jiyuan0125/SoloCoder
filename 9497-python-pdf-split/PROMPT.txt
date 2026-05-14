@@ -1,5 +1,5 @@
-写一个 PDF 拆分工具，把一个大的 PDF 拆分成多个小文件。
+有些 PDF 几百页——教材、标准文档、年度报告——需要按章节或页码范围拆分成小文件方便分发或阅读。写个 PDF 拆分工具，支持三种模式覆盖不同的拆分需求。
 
-有些 PDF 几百页，需要按页码范围或按章节拆分。工具要支持三种模式：按页码范围拆分、每 N 页拆成一个文件、提取指定页面到新文件。拆分后的每个 PDF 都要是完整合法的。
+按页码范围拆分：指定起止页码，提取这个范围内的所有页面生成新 PDF。--range 1-10 表示取第 1 到第 10 页。每 N 页拆一个：--every 5 表示每 5 页生成一个独立文件，适合把大文件均匀切分。文件名自动编号：original_001.pdf、original_002.pdf。提取指定页面：--pages 1,5,10,20 只取这几个页面合并成一个新 PDF，适合从不同位置挑出关键页。
 
-python main.py split big.pdf --range 1-10 -o part1.pdf 按范围；python main.py split big.pdf --every 5 -o dir/ 每 5 页拆一个；python main.py split big.pdf --pages 1,5,10,20 -o selected.pdf 提取指定页。Python + PyPDF2。
+拆分后的每个 PDF 必须是完整合法的——有正确的文件头（%PDF-1.x）、xref 表（或 xref stream）、trailer。页面引用的资源（字体、图片）要跟着页面一起带走，不能断引用。每个拆分文件都能独立用 PDF 阅读器正常打开。用法：python3 pdf_split.py split big.pdf --range 1-10 -o part1.pdf 或 python3 pdf_split.py split big.pdf --every 5 -o ./parts/

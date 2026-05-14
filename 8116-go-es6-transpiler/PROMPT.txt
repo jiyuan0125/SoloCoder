@@ -1,5 +1,7 @@
-帮我实现一个 ES6+ 到 ES5 的 JavaScript 转译器。能把箭头函数转成 function、let/const 转 var、模板字符串转字符串拼接、解构赋值展开、Promise 用 callback 模拟。
+帮我实现一个 ES6+ 到 ES5 的 JavaScript 转译器——Babel 的核心功能自己实现一遍。虽然现在 IE 死了，但理解转译原理对前端工程师很重要。
 
-命令：es6-transpile input.js -o output.js
-只处理常见语法，不碰第三方库 API。
-Go 标准库，go build 通过。AST 级别转换，不是正则替换。
+能把以下 ES6+ 语法转译为 ES5 兼容代码：
+
+箭头函数转 function——(a, b) => a + b 变成 function(a, b) { return a + b; }，注意 this 绑定的差异要正确处理（箭头函数不绑定 this，需要用 var self = this 替代）。let/const 转 var——简单替换，不做块级作用域模拟。模板字符串转字符串拼接——\`Hello ${name}\` 变成 "Hello " + name。解构赋值展开——const {a, b} = obj 变成 var a = obj.a, b = obj.b。默认参数——function f(x = 10) 变成 function f(x) { if (x === undefined) x = 10; }。
+
+命令：es6-transpile input.js -o output.js。AST 级别转换，不是正则替换——先解析成 AST，在 AST 上做节点变换，再输出代码。Go 标准库，go build 通过。

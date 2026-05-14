@@ -1,5 +1,13 @@
-帮我写一个 Python 的内聚度度量工具，计算类的方法内聚程度。
+一个类做了太多不相关的事情（"God Object"）是代码异味之一。LCOM（Lack of Cohesion of Methods）量化了这个问题——值越高说明类的方法各干各的，类的职责越分散。Python 实现 LCOM 计算工具。
 
-LCOM（Lack of Cohesion of Methods）衡量一个类的方法是否在使用相同的属性。LCOM 值越高说明类的职责越分散。实现 LCOM1 到 LCOM4 四种算法：从最基础的（方法访问的属性交集为空的对数）到 Henderson-Sellers 版本。解析 Python 类定义，分析每个方法访问了哪些实例属性（self.xxx），计算 LCOM 值。
+分析方法：解析 Python 源码中的 ClassDef 节点，对每个方法提取它访问的实例属性（self.xxx 的引用集合）。比如方法 A 访问了 {self.name, self.age}，方法 B 访问了 {self.salary, self.department}，两者交集为空 → LCOM 高。
 
-Python 3，ast 模块。用法：`python cohesion.py mymodule.py`，输出每个类的 LCOM1-4 值、方法数、属性数、访问矩阵。`python cohesion.py` 能跑。
+四种 LCOM 算法：
+- LCOM1：访问不同属性的方法对数量。m 个方法中属性交集为空的对数
+- LCOM2：|P| - |Q|，其中 P 是属性-方法访问矩阵的和，Q 是方法间共享属性的度量
+- LCOM3（Henderson-Sellers）：1 - (Σ|A_m∩A_all|) / (m × |A_all|)，其中 A_m 是方法 m 访问的属性集，A_all 是类所有属性集
+- LCOM4：考虑方法间的调用关系——如果方法 A 调用了方法 B，它们间接访问了相同的属性
+
+输出每个类的 LCOM 值（四种算法）、方法-属性访问矩阵（可视化哪个方法用了哪个属性）、建议拆分方式（把访问不同属性集的方法组分成不同的类）。
+
+python3 cohesion.py source.py。纯 Python 3 用 ast 模块。

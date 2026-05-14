@@ -1,5 +1,24 @@
-帮我写一个 Python 的 SBOM（Software Bill of Materials）生成器，为项目生成物料清单。
+软件供应链安全越来越受重视，很多合规要求项目必须提供 SBOM（Software Bill of Materials）——列出所有组件及其版本、许可证和依赖关系。Python 实现 SBOM 生成器。
 
-安全合规要求提供 SBOM。扫描 Python 项目的所有依赖（解析 requirements.txt、setup.py、pyproject.toml），生成标准格式的 SBOM。支持 SPDX 和 CycloneDX 两种输出格式。每个组件记录：包名、版本、许可证、下载 URL、哈希值、依赖关系。生成的 SBOM 可以导入其他安全管理工具。
+SBOM 格式采用 SPDX（Software Package Data Exchange）标准的简化版。每个组件包含：
+- Package Name
+- Version
+- Supplier/Author
+- License
+- Download Location（PyPI URL）
+- Files Analyzed: false（不做文件级分析）
+- Dependencies（依赖的其他组件）
 
-Python 3 标准库。CLI：`python sbom.py --format spdx --output sbom.json`，在当前项目目录下生成 SBOM 文件。`python sbom.py --format cyclonedx --output sbom.xml`。`python sbom.py` 能跑。
+生成流程：
+1. 解析 requirements.txt 或 pyproject.toml 获取直接依赖
+2. 用 pip show 或 importlib.metadata 获取每个包的元信息（版本、作者、许可证、依赖列表）
+3. 递归获取传递依赖，构建依赖图
+4. 补充 PyPI 信息（下载 URL、项目主页）
+5. 生成 SPDX JSON 文件
+
+额外功能：
+- 哈希校验：计算每个包的 SHA256，方便验证完整性
+- 差异对比：两个版本的 SBOM 对比，找出新增/删除/升级的组件
+- 可选 CycloneDX 格式输出（另一种 SBOM 标准）
+
+CLI：python3 sbom.py generate requirements.txt -o sbom.json。python3 sbom.py diff sbom_v1.json sbom_v2.json。纯 Python 3。

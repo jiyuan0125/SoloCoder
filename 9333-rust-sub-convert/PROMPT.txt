@@ -1,10 +1,9 @@
-帮我写个字幕格式转换工具，在 SRT、ASS、VTT 三种常见格式之间互相转换。
+第一步确定转换方向。支持的格式对：SRT↔ASS、SRT↔VTT、ASS↔VTT。用户通过 --to 参数指定目标格式（srt/ass/vtt）。
 
-转换逻辑：
-- SRT → ASS：生成基本的 ASS 文件结构，使用默认样式，时间轴从逗号分隔改为点分隔
-- ASS → SRT：去掉样式定义和内联标签（{\...}），保留纯文本，时间格式转换
-- SRT → VTT：加 WEBVTT 头，时间轴的逗号改为小数点
-- VTT → SRT：去掉 WEBVTT 头和 HTML 标签，时间格式转换
-- 转换时保留所有字幕条目，不支持的功能（如样式）用合理默认值替代
+第二步读取源格式。SRT 解析：序号 + 时间轴（HH:MM:SS,mmm --> HH:MM:SS,mmm）+ 文本。ASS 解析：Events 段的 Dialogue 行，时间格式 H:MM:SS.cc。VTT 解析：WEBVTT 头 + cue（时间轴 HH:MM:SS.mmm + 文本）。
 
-Rust，cargo build 通过。`sub-convert input.srt --to vtt -o output.vtt`。
+第三步格式转换。SRT→ASS：生成 ASS 的 Script Info（用默认值：PlayResX=384, PlayResY=288）和默认 Style（Fontname=Arial, Fontsize=20, PrimaryColour=&H00FFFFFF, Alignment=2 底部居中）。时间轴从逗号分隔改为点分隔，小时位保持。文本原样保留。
+
+ASS→SRT：只保留文本和时间轴。去掉所有覆盖标签（{\...} 格式），用正则或手动清除。时间轴从 H:MM:SS.cc 转为 HH:MM:SS,mmm（百分之一秒转毫秒：cc×10）。样式信息丢弃。
+
+SRT→VTT：文件头加 "WEBVTT\n\n"。时间轴的逗号改为小数点。序号行可以保留作为 cue identifier。VTT→SRT：去掉 "WEBVTT" 头和 NOTE/STYLE 块。HTML 标签（<b>、<i>、<c>）去掉。小数点改逗号。用法 sub-convert input.srt --to vtt -o output.vtt。Rust 实现，cargo build 通过。

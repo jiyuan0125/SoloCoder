@@ -1,3 +1,9 @@
-需要在一个内部工具里分析 SQL 查询，提取表名、列名、JOIN 关系和 WHERE 条件。用 Python 写一个 SQL 解析器，支持 SELECT、FROM、WHERE、JOIN（INNER/LEFT/RIGHT）、GROUP BY、ORDER BY、LIMIT 这些常见子句。
+内部有个数据血缘分析工具，需要从 SQL 里提取出"哪些表被读了、哪些字段被引用了、表之间怎么 JOIN 的"。不能靠正则匹配，必须解析成 AST 才能准确分析。Python 写一个 SQL 解析器。
 
-能把 SQL 解析成 AST，然后提供遍历接口拿到表依赖和列引用。语法错误要报出行号位置。纯 Python 实现，python 能跑。
+支持的 SQL 子句：SELECT（列名、别名、聚合函数 COUNT/SUM/AVG/MAX/MIN、* 通配）、FROM（单表、多表逗号分隔、子查询派生表）、JOIN（INNER/LEFT/RIGHT/FULL, ON 条件）、WHERE（比较、BETWEEN、IN、LIKE、IS NULL、AND/OR/NOT）、GROUP BY（含 HAVING）、ORDER BY（ASC/DESC）、LIMIT/OFFSET。
+
+AST 节点类型：SelectStatement（columns, from_clause, joins, where, group_by, order_by, limit）、TableRef（名字、别名）、JoinClause（类型、表、条件）、ColumnRef（表名限定.列名）、BinaryExpr（左、操作符、右）、FunctionCall（名字、参数）。
+
+解析器用递归下降。词法分析产出 token（关键字、标识符、数字、字符串、运算符、括号、逗号、点号、星号）。语法错误报行号和 token 位置。
+
+提供遍历接口：遍历 AST 收集所有 TableRef 得到表依赖列表，收集所有 ColumnRef 得到列引用列表。python3 sql_parser.py "SELECT ..." 输出 AST 的 JSON 表示。纯 Python。

@@ -1,1 +1,13 @@
-帮我用 Rust 写一个 LRU Cache。就是最经典的最近最少使用淘汰策略。支持 get 和 put 操作，get 命中时要把元素移到最前面，put 超出容量时淘汰最久没用的。get 和 put 都要 O(1) 时间复杂度，用 HashMap 加双向链表实现。设一个容量上限，用户可以指定。写个命令行 demo 演示插入、查询、淘汰的过程。cargo build 能编译，cargo run 能看到缓存状态变化。
+缓存是后端服务里最常见的性能优化手段。LRU（最近最少使用）是最经典的淘汰策略——容量满了就踢掉最久没被访问的那条。Java 的 LinkedHashMap、Python 的 functools.lru_cache 底层都是这个原理。
+
+用 Rust 写一个 LRU Cache。
+
+数据结构——HashMap + 双向链表。HashMap 存 key 到链表节点的映射，O(1) 查找。双向链表维护访问顺序——最近访问的在头部，最久没用的在尾部。链表节点存 key、value、prev、next 指针。
+
+get 操作——查 HashMap 找到节点。找不到返回 None。找到了就把节点从当前位置摘下来，移到链表头部。返回 value。时间 O(1)。
+
+put 操作——如果 key 已存在，更新 value 并移到头部。如果 key 不存在，创建新节点插到头部，同时加入 HashMap。如果超出容量，删除链表尾部节点（最久没用的），同时从 HashMap 删除。时间 O(1)。
+
+容量 0 的边界情况——所有 put 操作都不存储，所有 get 都 miss。
+
+设一个容量上限，用户可以在构造时指定。写个命令行 demo 演示插入、查询、淘汰的过程，每步打印缓存状态。cargo build 能编译，cargo run 能看到缓存状态变化。

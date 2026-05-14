@@ -1,5 +1,16 @@
-帮我搭一个 property-based testing 框架，用 Rust 实现，类似 QuickCheck。
+单元测试只能测你想得到的情况，但 bug 往往藏在边界条件里——空字符串、溢出、NaN、超长输入。Property-based testing 让你定义性质（property），框架自动生成海量随机输入来找反例。用 Rust 实现一个类似 QuickCheck 的框架。
 
-核心能力：用户定义属性（property）函数，框架自动生成随机测试输入。内置常见类型的生成器（整数、字符串、Vec、Option）。支持 shrinking——测试失败时自动缩小输入范围找到最小复现用例。允许自定义 Generator 和自定义 shrink 策略。
+先定义核心 trait Generator：每个实现该 trait 的类型能生成随机值。内置生成器：bool（均匀随机）、整数类型（均匀分布在范围内）、字符串（随机长度 + 随机 ASCII 字符）、Vec<T: Generator>（随机长度 + 逐个生成元素）、Option<T: Generator>（随机 Some/None）。随机源用简单的 xorshift 或 fastrand 算法。
 
-用宏来简化 property 定义。cargo test 跑几个示例 property 验证框架本身能正常工作。不依赖 proptest 或 quickcheck crate。
+Property 定义为闭包：Fn(&T) -> bool，输入随机生成的值返回是否满足性质。测试运行时反复生成输入调用 property，默认跑 1000 次。发现反例后启动 shrinking——把输入值逐步缩小（整数减小、字符串缩短、Vec 删元素），找到仍然触发失败的最小输入。
+
+提供一个宏来简化定义：
+```rust
+property!(vec_reverse, |v: Vec<i32>| {
+    let reversed: Vec<i32> = v.iter().cloned().rev().collect();
+    let double: Vec<i32> = reversed.iter().cloned().rev().collect();
+    v == double
+});
+```
+
+cargo test 跑几个示例 property 验证框架。不依赖 proptest 或 quickcheck crate。cargo build 通过。

@@ -1,10 +1,13 @@
-Rendezvous Hashing（也叫 Highest Random Weight Hashing）是另一种分布式哈希方案，原理更简单：对每个 (key, node) 对计算一个权重值，选权重最高的节点。Go 实现。
+Rendezvous Hashing（也叫 Highest Random Weight Hashing）是最直观的分布式哈希方案——不用环也不用查找表，对每个 (key, node) 对计算一个权重，选权重最高的节点。Go 实现。
 
-功能：
-- AddNode / RemoveNode 添加和移除节点
-- Get(key) 返回权重最高的节点
-- 权重计算：hash(key + node_id) 或类似方案
-- 节点增删时，只有映射到该节点的 key 需要迁移
-- 支持节点权重
+原理：给定 key 和节点集合 S，对每个节点 n ∈ S 计算 score = hash(key, n)，选 score 最大的节点作为 key 的归属。简单粗暴但数学性质很好——节点增删时只有映射到该节点的 key 需要迁移。
+
+权重计算：用 hash(key + nodeID) 或更好的方案 hash(hash(key) ^ hash(nodeID))。避免哈希碰撞影响均匀性。
+
+优势：零内存（不需要维护任何数据结构，只需要节点列表）、天然支持权重（权重为 w 的节点用 w 个不同的 nodeID 参与计算）、代码简洁。劣势：每次查询 O(N)（N 是节点数，每个都要算哈希），节点多时比 Ring Hash 慢。
+
+优化：把节点按权重分组，先在组内比再组间比。或者用有限的查找表加速（缓存最近的结果）。
+
+操作：AddNode(node, weight)、RemoveNode(node)、Get(key) → node。
 
 写个 main：对比 Ring Hash 和 Rendezvous Hash 在 100 万 key、20 个节点场景下的均匀性和迁移率。go build 通过。

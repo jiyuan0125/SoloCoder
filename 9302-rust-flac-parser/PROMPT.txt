@@ -1,8 +1,7 @@
-帮我写个 FLAC 无损音频文件的解析器，能把 FLAC 文件的结构拆开来看。
+FLAC 无损音频格式——音乐发烧友的最爱。它的文件结构比 WAV 清晰得多，metadata block 链式排列，每个 block 有类型和大小标记。写一个 Rust 解析器来看看 FLAC 里面到底藏了什么。
 
-需要支持：
-- 解析 FLAC 文件头（fLaC magic number）和 metadata block 链（STREAMINFO、VORBIS_COMMENT、CUESHEET 等）
-- 读取 STREAMINFO 中的采样率、声道数、位深、总采样数等关键参数
-- 列出所有 metadata block 的类型和大小，能处理 PICTURE block 中的封面图信息
+文件以 4 字节 "fLaC" magic number 开头，后面是一串 metadata block。每个 block 的头部：1 字节标志位（最高位表示是否是最后一个 block）+ 7 位类型 + 3 字节数据长度。STREAMINFO（类型 0）是必须的——20 字节里包含：最小块大小、最大块大小、最小帧大小、最大帧大小、采样率（20 位）、声道数-1（3 位）、位深度-1（5 位）、总采样数（36 位）、MD5 校验和（16 字节）。
 
-Rust 项目，cargo build 通过。用法：`flac-parser info music.flac` 输出文件结构摘要。
+其他 metadata block 类型：PADDING（1）用于预留空间方便后续修改、APPLICATION（2）第三方应用数据、SEEKTABLE（3）快速定位表、VORBIS_COMMENT（4）标签信息——用 UTF-8 编码的键值对，格式是 vendor string + comment count + 若干 length+comment 对，comment 格式是 "KEY=VALUE"。PICTURE（6）封面图——包含图片类型、MIME 类型、描述、宽度、高度、色深、颜色数、数据大小和图片二进制数据。
+
+解析结果输出为结构化信息——所有 metadata block 的类型和大小，STREAMINFO 的关键参数（采样率、声道、位深、时长），VORBIS_COMMENT 的标签列表，PICTURE 的封面图信息。用法 flac-parser info music.flac。Rust 实现，cargo build 通过。

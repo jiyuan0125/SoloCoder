@@ -1,4 +1,9 @@
-用 C 实现一棵 R*-Tree，R-Tree 的改进版本。
-R* 相比普通 R-Tree 主要改进了插入策略：强制重插和面积+重叠双重优化，查询性能好很多。
-支持 insert(rect, id)、delete、range_search、nearest_k(query_point, k)。重点关注 choose_subtree 和 split 算法的实现。
-随机插入大量矩形后验证查询效率，和暴力遍历对比一下速度。gcc 编译，纯 C 标准库。
+上次用普通 R-Tree 做空间查询发现个问题——插入大量有重叠的矩形后，查询效率明显下降，因为一条查询路径可能会进入很多个子树。R*-Tree 对此做了两个关键改进：插入时不是选面积增量最小的子节点，而是综合考虑重叠面积增量和面积增量（优先减少重叠）；节点满了不急着分裂，而是尝试把部分条目重新插入（forced reinsert），很多时候这样就能减少重叠。
+
+用 C 实现一棵 R*-Tree。和普通 R-Tree 一样存矩形区域索引，但 choose_subtree 算法要改：对叶节点层选重叠面积增量最小的，非叶节点层选面积增量最小的。如果多个候选增量一样，选面积最小的那个。分裂算法用 sort-split：按各维度排序后尝试所有可能的分裂点，选使两个组包围盒面积之和最小的那个方案。
+
+forced reinsert 的实现：节点溢出时先不分裂，而是把节点的中心到各条目中心的距离排序，把距离中心最远的 p 个条目（p 约等于 M 的 30%）从节点中移除并重新插入到树中。只有第二次溢出时才真正分裂。
+
+接口和普通 R-Tree 一样：insert(rect, id)、delete(id)、range_search(query_rect)、nearest_k(query_point, k)。nearest_k 用优先队列做 best-first search。
+
+随机插入 10000 个矩形后做查询效率测试，和暴力遍历对比速度。gcc 编译，纯 C 标准库。

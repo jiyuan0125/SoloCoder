@@ -1,6 +1,11 @@
-用 C 写一个子集和（Subset Sum）问题的求解器。
-给一组正整数和一个目标值 target，判断能否从这组数里选出若干个数使和恰好等于 target。
-用 DP：bitset 做背包，或者用 bool 数组 dp[s] 表示和 s 是否可达。复杂度 O(n*target)。
-如果 target 很大就换成 meet-in-the-middle：把数组分两半，分别枚举所有子集和，排序后二分查找。
-两种方法都实现，大的数据用 MITM。
-命令行：subset_sum target numbers.txt，输出 yes/no 和具体选了哪些数。gcc 编译。
+给定一组正整数和一个目标值 target，判断能不能从这组数里选出若干个使和恰好等于 target。这是经典的子集和（Subset Sum）问题，NP-complete，但在 target 不太大的时候用 DP 可以高效求解。如果 target 很大就得换思路。
+
+用 C 写一个子集和问题求解器。两种方法：
+
+方法一（DP/Bitset）：当 target <= 几百万的时候用 DP。用 bitset 做背包——bitset dp 的第 s 位为 1 表示和 s 可达。初始 dp[0] = 1。对每个数 a，dp = dp | (dp << a)。最后检查 dp[target] 是否为 1。时间 O(n * target / 64)，空间 O(target / 8)。用 uint64 数组实现 bitset。
+
+方法二（Meet-in-the-Middle）：当 target 很大但数的个数不超过 40 左右的时候。把数组分成两半，分别枚举所有子集和（每半最多 2^20 = 100 万个），排序后二分查找——对左半的每个子集和 s，在右半的排序数组中查找 target - s 是否存在。时间 O(2^(n/2))，比暴力 O(2^n) 快很多。
+
+两种方法都实现，程序根据输入规模自动选择：n <= 40 且 target > 1000000 时用 MITM，否则用 DP。输出 yes/no，如果是 yes 还要输出具体选了哪些数。
+
+命令行：subset_sum target numbers.txt，numbers.txt 每行一个正整数。gcc 编译。

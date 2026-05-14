@@ -1,5 +1,9 @@
-用 Rust 写一个 MPEG-TS 封装器，把裸的 H.264 和 AAC 数据流封装成 TS 文件。
+把 H.264 裸流和 AAC 音频封装成 TS 文件——看起来不难但要做好需要处理好多细节：PAT/PMT 周期性插入、PCR 时钟、PTS/DTS 连续性。Rust 实现。
 
-工具接收 H.264 裸流文件和 AAC 音频文件作为输入，按照 ISO 13818-1 规范将它们打包成 188 字节的 TS 包。要生成 PAT 和 PMT 表，正确处理 PTS/DTS 时间戳，视频流和音频流分别用不同的 PID。输出标准的 .ts 文件可以用播放器播放。
+PID 分配：PAT=0x0000, PMT=0x1000, 视频=0x1001, 音频=0x1002。PAT 内容固定——节目号 1 → PMT PID 0x1000。PMT 内容：节目号 1、PCR PID=0x1001、视频流类型 0x1B + PID 0x1001、音频流类型 0x0F + PID 0x1002。PAT/PMT 每 100ms 插入一次（由 PCR 时钟计数决定）。
 
-纯 Rust 实现，cargo build 通过。
+视频 PES 封装——读取 H.264 Annex B 格式的 NAL 单元（0x000001 或 0x00000001 分隔）。SPS+PPS 作为第一个 PES 包发送（解码器初始化）。IDR 帧和后续帧各自封装成 PES 包。PES 头：起始码 0x000001 + 流 ID 0xE0（视频）+ 包长度 + PTS/DTS 标志 + 时间戳。PTS 编码：5 字节，标记位+32 位值分散在 5 字节中。
+
+音频 PES 封装——读取 AAC 帧（ADTS 头或裸帧），流 ID 0xC0（音频），只有 PTS 没有 DTS。PES 数据按 184 字节切分成 TS 包（188-4 字节头），不足的用自适应字段填充。每个 TS 包的连续计数器在各自 PID 上独立递增（0-15 循环）。
+
+PCR 插入——绑定在视频 PID 上，每 100ms 在某个 TS 包的自适应字段里写入 PCR 值（27MHz 时钟，42 位：33 位 base + 9 位 extension）。用法 ts-mux -video input.h264 -audio input.aac -output output.ts。Rust 实现，cargo build 通过。

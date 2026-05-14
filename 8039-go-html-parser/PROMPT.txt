@@ -1,3 +1,9 @@
-写个 Go 的 HTML 解析器。能处理真实世界不太规范的 HTML：自动补全未闭合标签、处理自闭合标签、忽略注释和 DOCTYPE。
-解析后构建 DOM 树，支持按标签名、class、id 查找元素，读取属性和文本内容。提供一个简洁的 API。
-标准库，go build 编译通过。
+先拿到一个 HTML 页面，可能是后端模板生成的也可能是爬虫抓的，反正不太规范——标签没闭合、属性没引号、大小写混着来。浏览器能容错解析，我的程序也得行。
+
+写个 Go 的 HTML 解析器，能处理真实世界不太规范的 HTML。容错策略：自动补全未闭合的标签（遇到 <p> 后再遇到 <p> 就自动闭合前一个）、处理自闭合标签（br img hr input 等不需要闭合）、忽略注释和 DOCTYPE 声明、大小写不敏感的标签名和属性名。
+
+解析后构建 DOM 树——节点类型有 Document、Element（标签名、属性 map、子节点列表）、Text（文本内容）、Comment（注释内容）。提供查询 API：GetElementById(id)、GetElementsByTag(tag)、GetElementsByClass(class)、GetElementsByName(name)、QuerySelector(cssSelector) 用简易 CSS 选择器查找。
+
+读取属性和文本内容的方法：GetAttribute(name)、InnerText()（递归获取所有子文本）、InnerHTML()（获取子节点 HTML 字符串）、OuterHTML()。
+
+提供一个简洁的 API，go build 编译通过，标准库。

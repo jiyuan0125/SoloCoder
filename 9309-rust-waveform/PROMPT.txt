@@ -1,9 +1,7 @@
-帮我做一个音频波形数据生成工具，从音频文件中提取波形信息用于可视化。
+音频可视化——在网页上展示波形图是基本操作。但波形数据不是原始 PCM，而是降采样后的摘要信息：每个时间窗口的最大值、最小值和 RMS 值。后端生成这些数据，前端直接渲染就行。Rust 来做后端的数据生成。
 
-具体要求：
-- 读取 WAV 格式的 PCM 音频数据（16bit/24bit/32bit 整数和 32bit 浮点）
-- 将音频按固定时间窗口分段，计算每段的峰值（max/min）和 RMS 值
-- 输出 JSON 格式的波形数据，包含采样点数、每秒采样数、峰值数组、RMS 数组
-- 对大文件做流式处理，不要一次性加载全部 PCM 数据到内存
+波形数据的计算逻辑——把音频按固定时间窗口分段（比如每秒 100 个点，每个窗口就是 10ms）。对每个窗口计算三个值：峰值最大值（max）、峰值最小值（min）、RMS 均方根。对于 16bit PCM，max 和 min 在 -32768~32767 范围内。RMS = sqrt(Σx²/N)。立体声先合并为单声道（左右取平均）再计算。
 
-用 Rust 写，cargo build 通过。`waveform gen audio.wav --samples-per-second 100 > wave.json`。
+PCM 数据读取支持多种位深——16bit 有符号小端、24bit（3 字节有符号小端扩展到 i32）、32bit 有符号、32bit 浮点（-1.0~1.0 范围归一化到 -32768~32767 方便统一处理）。流式处理大文件——不在内存里保留全部 PCM，而是按窗口读取、计算、丢弃原始数据，只保留摘要。
+
+输出 JSON 格式：{ "sample_rate": 44100, "channels": 2, "samples": 960000, "points_per_second": 100, "max": [...], "min": [...], "rms": [...] }。max/min/rms 数组长度 = 时长秒数 × points_per_second。用法 waveform gen audio.wav --samples-per-second 100 > wave.json。Rust 实现，cargo build 通过。

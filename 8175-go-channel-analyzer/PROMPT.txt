@@ -1,5 +1,9 @@
-写一个 Go channel 使用模式分析器。
+写一个 Go channel 使用模式分析器。channel 是 Go 并发编程的核心，但用错 channel 的代价很高——向关闭的 channel 发送会 panic、永久阻塞的 goroutine 会泄露内存。
 
-分析 Go 源码中所有 channel 的完整生命周期：创建、传递、发送、接收、关闭。检测这些常见错误：向已关闭的 channel 发送、重复关闭 channel、关闭 nil channel、goroutine 永远阻塞在 channel 操作上。识别 channel 的使用模式（信号、扇入扇出、管道、互斥等），对每种模式检查是否符合最佳实践。
+分析 Go 源码中所有 channel 的完整生命周期：创建（make(chan T) 或 make(chan T, N)）、传递（作为函数参数、赋值给变量、存入 struct）、发送（ch <- x）、接收（<-ch）、关闭（close(ch)）。
+
+检测这些常见错误：向已关闭的 channel 发送（发送在 close 之后，需要数据流分析判断顺序）、重复关闭 channel（两个地方都调了 close(ch)）、关闭 nil channel（channel 没初始化就 close，会 panic）、goroutine 永远阻塞在 channel 操作上（发送到没有消费者的 channel 或从没有生产者的 channel 接收）。
+
+识别 channel 的使用模式——信号模式（chan struct{}）、扇入扇出（多个 goroutine 发送到同一个 channel）、管道模式（一系列 goroutine 通过 channel 串联）、互斥模式（用 channel 模拟 mutex）。
 
 输出 channel 分析报告和问题列表。Go 标准库，go build 通过。

@@ -1,11 +1,7 @@
-做一个音视频容器转换（remux）工具，Go 实现。
+老项目有一堆 FLV 格式的视频素材需要迁移到 MP4 容器——不想重新编码因为那太耗时而且会损失画质。remux（重封装）只改容器不改编码数据，几分钟就能处理完一个几百 MB 的文件。Go 来做这个工具。
 
-remux 只改容器不改编码，速度快：
-- 从一种容器格式读取音视频流数据（不解码）
-- 重新封装到另一种容器格式中
-- 支持常见转换：MP4→MKV、MKV→MP4、FLV→MP4、TS→MP4、AVI→MP4
-- 保留原有的编码参数，只重建容器结构和索引
-- 保留字幕轨（如果目标格式支持）
-- 处理时间戳映射，确保音视频同步
+remux 的核心是不触碰编码数据，只重新组织容器结构。源容器解封装提取出编码帧（每个帧带时间戳和关键帧标记），然后按目标容器的规范重新写入。MP4 要构建 moov box（含采样表 stts/stsc/stsz/stco/stss），MKV 要构建 EBML 结构（Segment/Tracks/Clusters），FLV 要写 Tag 结构。
 
-用法 av-remux -input video.flv -output video.mp4，快速转换容器。go build 编译通过。标准库。
+支持常见转换路径：MP4→MKV（保留字幕轨）、MKV→MP4（MKV 的 CodecID 映射到 MP4 的 sample entry type）、FLV→MP4（FLV 的 AVC 序列头变成 MP4 的 AVCDecoderConfigurationRecord）、TS→MP4（PAT/PMT 信息转化成 moov 结构）、AVI→MP4。每种转换路径都需要处理容器间编码标识的映射。
+
+时间戳映射是关键——不同容器的时间基不一样。MP4 用 timescale（通常 24000 或 90000），MKV 用 TimecodeScale（纳秒），FLV 用毫秒。转换时要做正确的时间基换算。关键帧标记也必须保留——源容器里标记为 key frame 的帧在目标容器里也要标记。用法 av-remux -input video.flv -output video.mp4。Go 标准库，go build 通过。

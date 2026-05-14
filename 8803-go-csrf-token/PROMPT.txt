@@ -1,11 +1,11 @@
-帮我用 Go 实现一个 CSRF Token 生成与校验工具。
+CSRF（跨站请求伪造）是 Web 安全的老问题了——用户在银行网站已经登录了，然后访问了一个恶意页面，那个页面偷偷发了一个转账请求，浏览器会自动带上 cookie，服务端就分不清是用户主动操作还是被伪造的。解决方案是给每个表单一个不可预测的 token，提交时校验。
 
-上次面试被问到 CSRF 防护的实现细节，我想写个完整版加深理解。
+用 Go 实现一个完整的 CSRF Token 生成与校验工具。token 生成：用 crypto/rand 生成 32 字节随机数作为 token 值，然后把 session_id + timestamp + token 拼起来做 HMAC-SHA256 签名。最终 token 格式是 Base64(timestamp) + "." + Base64(random) + "." + Base64(signature)，总长度大概 100 字符左右。
 
-这个工具需要：
-- 生成加密安全的 CSRF Token（用 crypto/rand），token 关联到 session ID 和时间戳
-- 支持校验：验证 token 是否匹配、是否在有效期内（默认 1 小时）
-- 提供 HTTP middleware 形式：自动在响应中设置 token，在 POST/PUT/DELETE 请求中校验 token
-- 包含一个简单的演示 HTTP 服务器，展示表单提交时的 CSRF 保护流程
+校验流程：拆分 token 取出 timestamp、random、signature 三部分。先用相同的密钥重新计算 HMAC 签名，和携带的签名比对（用 constant time compare 防时序攻击）。签名通过后检查 timestamp 是否在有效期内（默认 1 小时，可配置）。
+
+提供 HTTP middleware：自动在 GET 请求的响应中注入 token（通过 cookie 或者 HTML hidden field），在 POST/PUT/DELETE 请求中从表单字段或 header（X-CSRF-Token）中提取 token 并校验。校验失败返回 403。
+
+包含一个演示 HTTP 服务器：一个简单的表单页面展示 CSRF 保护流程——提交表单时自动带上 token，服务端验证。
 
 Go 标准库，go build 编译通过。

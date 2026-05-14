@@ -1,12 +1,15 @@
-帮我实现一个 RBAC 权限引擎，Go 写的。
+后台系统要做基于角色的权限控制，不同角色看到不同菜单、调用不同接口。现在权限判断散落在各个 Handler 里，if-else 嵌套了七八层，改一个权限要改十几个文件。需要一个统一的权限判断层。
 
-后台系统需要做基于角色的访问控制，不同角色看到不同菜单、调用不同接口，需要一个统一的权限判断层。
+用 Go 实现一个 RBAC（基于角色的访问控制）引擎。核心概念：Role（角色，如 admin、editor、viewer）、Permission（权限，如 article:read、article:write、article:delete）、User（用户，关联一个或多个角色）。
 
-功能：
-- 定义角色（Role）和权限（Permission）：支持角色继承，admin 继承 editor 的所有权限
-- 权限检查：给定用户角色和请求资源+操作，判断是否允许（allow/deny）
-- 支持资源粒度的权限控制：比如 article:read、article:write、article:delete
-- 权限缓存：解析后的权限树缓存到内存，快速做权限判断
-- 提供简单的配置文件格式（JSON/YAML）定义角色-权限映射
+角色继承：支持多级继承——admin 继承 editor 的所有权限，editor 继承 viewer 的所有权限。继承关系是有向无环图，避免循环继承。角色继承时权限取并集——子角色拥有自身定义的权限加上所有祖先角色的权限。
+
+权限检查 Enforce(roleName, resource, action string) bool：给定角色和请求（resource:action 格式，如 "article:delete"），判断是否允许。先查角色自身的权限，没有就沿着继承链向上查。支持通配符权限——article:* 匹配 article 下的所有操作，*:* 匹配一切。
+
+权限缓存：解析角色继承链后把最终权限集合缓存到内存 map 中（role → permission_set）。角色或权限变更时清除缓存重新计算。
+
+配置文件：用 JSON 定义角色-权限映射和继承关系，支持运行时热加载（文件变化时自动重新加载）。
+
+命令行：rbac check --role=editor --resource=article --action=delete，rbac roles 列出所有角色和继承关系，rbac permissions --role=admin 列出角色的所有权限。
 
 Go 标准库，go build 能编译通过。

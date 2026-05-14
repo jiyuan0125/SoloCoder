@@ -1,5 +1,15 @@
-写一个 Python 的补丁文件解析器，能解析 unified diff 和 git diff 格式的补丁。
+CI 管道里需要分析 PR 的 diff 来决定跑哪些测试——如果只改了文档就不跑全量测试，如果改了核心模块就触发完整回归。第一步得解析 patch 文件。Python 实现。
 
-需要从补丁文件中提取结构化信息：哪些文件被修改了、每个文件有哪些改动块（hunk）、每个 hunk 的新旧行号范围、增删改的具体行内容。支持二进制文件标记、文件模式变更、重命名检测。解析结果以结构化 JSON 输出，方便其他工具处理。
+支持解析的格式：unified diff（标准 diff -u 输出）和 git diff 输出（包含 a/ 和 b/ 前缀，支持更多元数据）。
 
-纯 Python 3 标准库。用法：`python patch_parser.py changes.patch`，输出 JSON 格式的解析结果。格式错误的补丁文件给出具体出错位置。`python patch_parser.py` 能直接运行。
+解析产出结构：
+- Patch 对象：包含多个 FileDiff
+- FileDiff：旧文件路径、新文件路径、是否新建/删除/重命名、文件模式变更（如 chmod +x）、二进制标记
+- Hunk（差异块）：旧文件起始行号和范围、新文件起始行号和范围、行列表
+- Line：类型（added/removed/context/No-newline-at-end）、内容
+
+解析流程：逐行读取 patch 文件。遇到 --- a/path 和 +++ b/path 就开始一个新的 FileDiff。遇到 @@ -l,s +l,s @@ 就开始一个新的 Hunk。后续的 + - 空格 前缀行归类到当前 Hunk。
+
+额外提取的信息：修改了哪些函数（如果 diff 中有 @@ 标注了函数名）、总共增删改了多少行、哪些文件是纯格式修改（只有空白变化）。
+
+输出结构化 JSON，方便其他工具消费。CLI：python3 patch_parser.py changes.patch。纯 Python 3 标准库。

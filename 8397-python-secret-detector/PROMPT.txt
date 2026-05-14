@@ -1,5 +1,17 @@
-写一个 Python 的敏感信息检测器，防止密钥和凭据泄露到代码仓库。
+密钥和 token 不小心提交到 git 是最常见的安全事故之一——GitHub 每天都在扫新提交的密钥。做一个预提交的敏感信息检测器，在代码入库之前就拦截。Python 实现。
 
-密钥泄露是严重的安全事故。扫描源码文件和配置文件，检测：AWS Access Key、Secret Key 的模式、GitHub Token、数据库连接串中的密码、私钥内容（BEGIN RSA PRIVATE KEY）、JWT Secret、通用的高熵字符串（可能是 Base64 编码的密钥）。用正则模式和熵分析结合，减少误报。支持白名单（标记已知的假阳性）。
+检测模式（用正则 + 启发式）：
+- AWS 密钥：AKIA[0-9A-Z]{16}
+- GitHub Token：ghp_[a-zA-Z0-9]{36}、gho_[a-zA-Z0-9]{36}
+- 私钥：-----BEGIN (RSA |EC |DSA )?PRIVATE KEY-----
+- 数据库连接串：mysql://user:password@host、postgres://user:password@host
+- API Key 模式：key|token|secret|password|credential = "..." 赋值模式（变量名含关键字且值是字符串字面量）
+- JWT Token：eyJ[a-zA-Z0-9_-]+\.eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+
+- Slack Token：xox[baprs]-[a-zA-Z0-9-]+
+- Stripe Key：sk_live_[a-zA-Z0-9]+
 
-Python 3 标准库。CLI：`python secret_detector.py src/`，输出检测到的可疑内容，包含文件路径、行号、类型、内容预览（脱敏显示）。`python secret_detector.py` 能跑。
+白名单机制：.secretsignore 文件列出已知的误报（比如测试中的示例 key）。也支持行内注释 # nosem: AWS_KEY 来抑制特定警告。
+
+扫描范围：指定目录或 git diff（只扫描变更的行）。大文件用流式读取避免内存问题。
+
+输出每个发现：文件:行号、泄露类型、匹配的内容（前几位打码）、严重级别。python3 secret_detector.py src/。纯 Python 3 标准库。

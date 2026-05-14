@@ -1,5 +1,9 @@
-我需要一个配置文件中的密钥检测工具，防止敏感信息意外提交到代码仓库。
+配置文件中的密钥泄露是个老大难问题。开发者在 .env 文件里写 AWS Secret Key，在 config.yaml 里写数据库密码，然后一不小心就提交到 Git 了。写个工具在 pre-commit 阶段扫描配置文件，把敏感信息拦在仓库外面。
 
-扫描指定目录或文件，找出配置文件（.env、*.yaml、*.json、*.conf、*.ini）里可能包含的密钥：API key、数据库密码、OAuth token、私钥等。用正则匹配常见的密钥模式（如 AWS access key 的 AKIA 前缀、GitHub token 的 ghp_ 前缀、JWT 格式等）。
+Python 实现。第一步扫描目标：指定目录或文件路径，识别配置文件类型（.env、*.yaml、*.yml、*.json、*.conf、*.ini、*.toml、*.properties）。
 
-也支持基于熵值检测高随机性字符串（可能是随机生成的密码/token）。输出文件名、行号、匹配内容和密钥类型。可以生成 .gitignore 建议或 pre-commit hook。Python 3 标准库。
+第二步正则匹配：扫描常见密钥格式——AWS Access Key（AKIA 开头 20 字符）、AWS Secret Key（40 字符 Base64）、GitHub Token（ghp_/gho_ 前缀）、Slack Token（xoxb-/xoxp- 前缀）、私钥内容（BEGIN RSA/EC PRIVATE KEY）、数据库连接串（mysql://user:pass@host 这种格式）、通用 key/secret/token 变量赋值模式。
+
+第三步熵值检测：对配置文件中的字符串值计算 Shannon 熵，高熵值（>4.5 bits/character）的字符串可能是随机生成的密码或 token，标记为可疑。
+
+输出：文件名、行号、匹配到的密钥类型、原文片段（值部分用 *** 遮蔽）。能生成 .gitignore 建议条目和 pre-commit hook 脚本。python3 标准库。

@@ -1,5 +1,7 @@
-我在做并发代码审查，需要一个 goroutine 分析工具。
+我在做并发代码审查，需要一个 goroutine 分析工具——不只是找泄露，还要评估每个 goroutine 的生命周期管理是否到位。
 
-输入 Go 源码，分析所有 goroutine 的创建和生命周期。检测这些问题：goroutine 泄露（没有退出条件）、无限制创建 goroutine（缺少 worker pool）、goroutine 和 WaitGroup 的配合是否正确、context 取消传播是否到位、主 goroutine 退出时子 goroutine 是否会被正确清理。
+输入 Go 源码，分析所有 goroutine 的创建和生命周期。检测这些问题：
 
-对每个 goroutine 给出生命周期评估和安全评级。Go 标准库，go build 通过。
+goroutine 泄露——没有退出条件的 goroutine（没有 context 取消、没有 done channel、没有超时）。无限制创建——循环或 HTTP handler 里直接 go func() 而没有 worker pool 限制（高并发下可能创建成千上万个 goroutine）。WaitGroup 配合——Add/Done/Wait 的调用是否正确（Add 必须在 goroutine 启动前调用、Done 必须保证执行否则 Wait 永远阻塞）。context 传播——新 goroutine 是否接收并使用父 context（否则无法随请求取消）。主 goroutine 退出时——子 goroutine 是否会被正确清理（daemon 模式的 goroutine 随主进程退出）。
+
+对每个 goroutine 给出生命周期评估和安全评级（Safe/Risky/Dangerous）。Go 标准库，go build 通过。

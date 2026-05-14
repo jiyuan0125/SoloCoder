@@ -1,8 +1,11 @@
-做个 OCSP 在线证书状态查询客户端，Go 写的。
+CRL 文件太大更新又慢，很多场景更适合用 OCSP（Online Certificate Status Protocol）实时查证书状态。但调试 OCSP 的时候需要看请求和响应的细节，直接 curl 不方便。
 
-CRL 文件太大更新慢，很多场景更适合用 OCSP 协议实时查证书状态。想有个命令行工具直接向 OCSP responder 发请求。
+用 Go 写一个 OCSP 客户端工具。query 子命令：从证书中提取 OCSP Server URL（Authority Information Access 扩展）。构造 OCSP 请求——用 ocsp.CreateRequest(issuer, cert, &ocsp.RequestOptions{Hash: crypto.SHA256})，对证书的序列号用颁发者的公钥哈希生成请求。HTTP POST 请求发送到 OCSP responder（Content-Type: application/ocsp-request）。
 
-功能：从证书中提取 OCSP URL；构造 OCSP 请求并发送；解析响应，显示证书状态（good/revoked/unknown）；如果是 revoked 显示吊销时间和原因。
+解析响应：用 ocsp.ParseResponse 解析 OCSP response。展示字段——证书状态（Good/Revoked/Unknown）、ThisUpdate/NextUpdate 时间、如果 Revoked 显示吊销时间和原因代码、响应签名是否有效（用颁发者证书验证）。
 
-用法：ocsp-client query -cert server.crt -issuer ca.crt、ocsp-client query -cert server.crt -issuer ca.crt -url http://ocsp.example.com
+如果证书没有 AIA 扩展（没有 OCSP URL），支持手动指定 -url 参数。也支持跳过签名验证（-no-verify，调试用）。
+
+命令：ocsp-client query -cert server.crt -issuer ca.crt、ocsp-client query -cert server.crt -issuer ca.crt -url http://ocsp.example.com。
+
 Go 标准库 crypto/ocsp，go build 能编译。

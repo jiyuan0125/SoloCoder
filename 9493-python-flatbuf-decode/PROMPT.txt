@@ -1,5 +1,7 @@
-写一个 FlatBuffers 解码工具，能解析二进制 FlatBuffers 数据。
+1. FlatBuffers 在游戏和高性能场景用得多，和 Protobuf 不同它是零拷贝设计——数据不需要解析就可以直接访问。二进制布局的核心是 vtable（虚拟表）机制：每个对象前面有一个指向 vtable 的偏移量，vtable 里记录了每个字段的偏移位置。通过 vtable 可以直接跳到任何字段的位置读取。
 
-FlatBuffers 在游戏和高性能场景用得多，它的二进制布局和 Protobuf 不同，是零拷贝设计。工具需要解析 FlatBuffers 的 vtable 机制，读取字段偏移量，然后按类型解码每个字段。能在没有 schema 的情况下做基础解析。
+2. 解码流程。从二进制数据的指定偏移位置开始，先读 4 字节得到 vtable 的偏移量（有符号，向前指）。跳到 vtable 位置：前 2 字节是 vtable 自身大小，接下来 2 字节是对象数据大小，后面每 2 字节是各字段的偏移量（0 表示该字段不存在）。回到对象位置，按 vtable 给出的偏移读取字段值。
 
-python main.py decode --input data.bin --output data.json。如果有 .fbs schema 文件则按定义解析。Python 标准库，自己实现 vtable 解析和字段读取。
+3. 字段类型推断。1 字节可能是 bool/byte，2 字节可能是 short，4 字节可能是 int/float，8 字节可能是 long/double。如果偏移量指向的位置又是一个对象结构（前面有 vtable 指针），则是嵌套对象，递归解析。字符串：先读 4 字节长度，再读对应字节数按 UTF-8 解码。
+
+4. 输出 JSON 格式。用法：python3 flatbuf_decode.py decode --input data.bin --output data.json

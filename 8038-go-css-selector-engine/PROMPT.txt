@@ -1,3 +1,9 @@
-用 Go 实现 CSS 选择器引擎，用来匹配 HTML 元素。支持基本选择器：标签名、.class、#id、属性选择器([attr]、[attr=val]、[attr^=val])、组合选择器(空格 > + ~)和伪类(:first-child :nth-child)。
-输入 HTML 字符串和 CSS 选择器，返回匹配到的元素。HTML 解析用标准库。
+爬虫抓下来 HTML 页面后，怎么提取特定内容？用 CSS 选择器是最直觉的方式——前端工程师天天写选择器。
+
+用 Go 实现 CSS 选择器引擎，用来匹配 HTML 元素。支持基本选择器：标签名选择（div）、类选择器（.class）、ID 选择器（#id）。属性选择器：[attr] 有该属性、[attr=val] 等于、[attr^=val] 开头匹配、[attr$=val] 结尾匹配、[attr*=val] 包含匹配。组合选择器：后代（空格）、子元素（>）、相邻兄弟（+）、通用兄弟（~）。伪类：:first-child、:last-child、:nth-child(n)、:nth-of-type(n)、:not(selector)。
+
+输入 HTML 字符串（从文件读取，用标准库 html/parser 解析）和 CSS 选择器，返回匹配到的元素列表。每个元素输出标签名、属性 map、文本内容（递归拼接所有子文本节点）、在文档中的路径。
+
+选择器解析器要能处理复合选择器（div.container > p:first-child 这种多级组合）。性能上对 100KB 级别的 HTML 要在 100ms 内完成匹配。
+
 go build 通过。

@@ -1,1 +1,9 @@
-想自己搞一个简易的 WAF 引擎玩玩。用 Go 写一个 HTTP 请求过滤器，支持规则匹配引擎：能根据请求的 URL 路径、Query 参数、Header、Body 内容进行正则或关键词匹配。匹配到恶意请求时返回 403 并记录日志。规则用 JSON 文件定义，支持热加载。写几个示例规则防 SQL 注入和 XSS。用标准库的 net/http 做反向代理模式，go build 通过。
+想自己搞一个简易的 WAF（Web Application Firewall）引擎。不需要做得像 ModSecurity 那么复杂，核心就是：接收 HTTP 请求 → 规则匹配 → 放行或拦截。规则引擎是关键部分。
+
+用 Go 写一个 HTTP 请求过滤器。规则匹配引擎：规则用 JSON 文件定义，每条规则包含——id（规则编号）、name（规则名称）、severity（高/中/低）、conditions（匹配条件列表，条件之间是 AND 关系）、action（allow/block/log）。条件格式：field（匹配字段：url、query、header、body、method、content_type）、operator（contains、regex、equals、startsWith）、value（匹配值或正则表达式）、case_sensitive（默认 false）。
+
+匹配逻辑：对每个请求，按规则顺序逐条检查。一条规则的所有 conditions 都匹配时触发该规则。触发 block 规则时返回 403 并记录日志。触发 log 规则时记录日志但继续处理请求。
+
+写几个示例规则：SQL 注入检测——URL/query/body 中包含 union select、or 1=1、' or '1'='1 等模式。XSS 检测——body/header 中包含 <script>、javascript:、onerror= 等模式。路径穿越——URL 中包含 ../。
+
+用标准库 net/http 做反向代理模式（可选），或作为 middleware。go build 通过。

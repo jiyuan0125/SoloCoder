@@ -1,9 +1,13 @@
-帮我用 Go 写一个 Term（任期）管理器，这是 Raft 之类共识协议里的核心概念。Term 严格递增，用来标记逻辑时间。
+Term（任期）这个概念在分布式共识里太基础了，但很多人其实没完全理解它的运作方式。Term 就是一个逻辑时钟，严格递增，每次选举 +1。它解决的核心问题是：集群里怎么判断谁的信息是过时的——旧 Leader 的指令、过期节点的投票，统统靠 term 来识别和淘汰。
 
-需要实现：
-- 维护当前 term 号，支持自增和查询
-- 节点通信时比较 term：如果发现别人的 term 更大，就更新自己的并退回 Follower
-- Candidate 发起选举时自增 term，Leader 向 Follower 发送心跳时携带 term
-- 模拟一个场景：旧 Leader 发现更高 term 后自动降级
+用 Go 实现一个 Term 管理器来演示这套机制。每个节点维护自己的 currentTerm，初始值为 0。操作包括：自增 term（Candidate 发起选举时调用）、查询当前 term、收到更高 term 时更新（这会触发节点退回 Follower 状态）。
 
-用 Go 标准库，go build 能跑。在终端打印 term 变化的时间线。
+需要模拟的场景和对应的 term 变化规则：
+- 节点间通信（心跳、投票请求、日志复制）都携带发送方的 term
+- 如果接收方发现自己的 term < 对方的 term，立刻更新自己的 term 为对方值，并清空 votedFor
+- 如果发现自己的 term > 对方的 term，拒绝对方的请求（返回错误让对方更新）
+- 旧 Leader 收到新 Leader 的心跳后，发现自己 term 落后，自动降级为 Follower
+
+打印出来的效果应该是一条时间线："node-1 term=1 (Leader) → 收到 node-3 term=3 → 更新 term=3 降级为 Follower"。再模拟一个场景：网络分区期间两边的 term 各自增长，分区恢复后低 term 的一边自动让步。
+
+用 Go 标准库，go build 能跑。

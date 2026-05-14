@@ -1,4 +1,11 @@
-用 C 实现一个 Posting List（倒排记录表）的压缩存储和合并。
-搜索引擎里每个 term 对应一个 posting list（文档 ID 的有序列表），存成连续数组太浪费空间了。
-要做的事：用 delta 编码 + varint 把 posting list 压缩存储，解压还原。然后实现两个 posting list 的 AND 和 OR 合并（类似归并）。
-写个命令行 demo：构建若干 posting list，压缩后看空间节省多少，合并查询返回结果。gcc 编译通过。
+搜索引擎里每个词对应一个 posting list——出现该词的文档 ID 有序列表。对于大规模搜索（几十亿文档），posting list 可能非常长，直接存成 uint32 数组太浪费空间了。工业界的做法是用 delta 编码 + varint 压缩：先对有序的 doc_id 列表求差值（相邻两个 ID 的差），差值通常很小，用 varint 编码只需 1~2 字节。
+
+用 C 实现 Posting List 的压缩存储和合并运算。核心数据结构是一个压缩后的字节序列加上长度信息。
+
+压缩函数 compress(original_ids, len, output, &output_len)：输入有序的 doc_id 数组，先做 delta 编码（output[0] = original[0]，output[i] = original[i] - original[i-1]），然后对每个 delta 值做 varint 编码追加到输出缓冲区。返回压缩后的字节长度。
+
+解压函数 decompress(compressed, compressed_len, output, &output_len)：逆向操作，先 varint 解码得到 delta 值，再前缀和还原成原始 doc_id。
+
+合并函数：intersect(list_a, list_b, result) 两个 posting list 的 AND 合并——用双指针归并的方式，两个指针同时前进，遇到相同的 doc_id 就加入结果集。union_merge(list_a, list_b, result) 做 OR 合并。合并的输入和输出都支持压缩格式，但合并时先解压再操作再压缩也行（简单版本）。
+
+写个命令行 demo：构建若干个 posting list（每个包含几千到几万个 doc_id），压缩后看空间节省了多少百分比。然后对两个 posting list 做 AND 和 OR 合并，和未压缩版本的合并结果对比验证正确性。gcc 编译通过。

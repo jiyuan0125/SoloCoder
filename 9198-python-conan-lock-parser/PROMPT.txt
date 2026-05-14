@@ -1,14 +1,7 @@
-Conan 锁文件解析器，解析 C++ 包管理器 Conan 的锁文件。
+Conan 锁文件解析器。C++ 项目用 Conan 管理依赖，conan.lock 文件记录了依赖的精确版本和构建配置。C++ 项目的依赖管理一直是个痛点，写个工具提取依赖信息做 SBOM。
 
-Conan 2.0 的锁文件记录了 C++ 项目的精确依赖版本和构建配置。我们的 C++ 项目需要做依赖审计。
+Python 实现。conan.lock 文件是 JSON 格式。解析 graph 字段中的 nodes 对象——每个节点包含 ref（包引用，格式为 pkg/version@user/channel，如 fmt/9.1.1//@）、package_id（二进制包 ID，跟平台和编译器相关）、prev（包修订版本）、options（构建选项如 shared=True）、path（依赖链路径）。
 
-Python 实现：
-- 解析 Conan lockfile（JSON 格式），提取包引用、版本、recipe hash、package ID
-- 提取构建配置信息：编译器、OS、架构
-- 解析依赖图（depends_on 字段），构建依赖树
-- 查询功能：按包名搜索、按版本过滤、查找某个包的依赖链
-- 输出依赖清单和配置矩阵
+从 nodes 构建 dependency graph——每个节点的 depends 字段记录了它直接依赖的其他节点 ID。从图结构可以推导出完整的依赖树。
 
-示例：python conan_lock_parser.py parse conan.lock
-python conan_lock_parser.py deps conan.lock --package fmt
-Conan lockfile 是 JSON 格式，包引用格式是 name/version@user/channel。
+分析功能：统计所有唯一的包（按 name 去重后）、按版本号排序、检测同一个包的不同版本（可能需要统一版本）。输出依赖列表（包名、版本、用户/通道）、依赖树（文本形式展示层级关系）、JSON 导出。也支持提取 Conan recipe 中的许可证信息（如果有）。python3 命令行工具。

@@ -1,5 +1,9 @@
-帮我用 Rust 写一个轻量的 WebAssembly 字节码解释器，能跑基本的 wasm 模块就行。
+最近团队要把一个计算密集型模块迁移到 wasm 上跑，调试的时候发现没有好用的解释器能单步跟踪 wasm 字节码的执行过程。用 Rust 手写一个轻量的 WebAssembly 字节码解释器，方便在开发阶段验证 wasm 模块的行为是否符合预期。
 
-需要支持解析 wasm 二进制格式里的函数段、代码段，能执行 i32/i64 的加减乘除运算和基本的控制流指令（block、loop、if）。遇到不支持的指令类型给出清晰的错误提示，不要直接 panic。
+先说输入：接受一个 .wasm 二进制文件作为输入，解析出模块结构。wasm 二进制的编码方式是 LEB128 变长整数 + section 组织的，文件头 8 字节魔数 \0asm 后面跟着版本号，然后是各个 section——我们重点关注 Type section（函数签名）、Function section（函数索引）、Code section（函数体字节码）。
 
-不用接浏览器环境，纯命令行跑测试就行。cargo build 通过，附带几个 .wasm 测试文件验证执行结果。
+解释器要跑起来的核心是一个栈式虚拟机：维护一个操作数栈和一个控制流栈。执行引擎逐条解码指令并操作栈。第一阶段先覆盖这些指令——i32/i64 的 add、sub、mul、div_s、div_u、rem_s、rem_u，比较类的 eq、ne、lt_s、le_s、gt_s，以及 local.get、local.set、local.tee。控制流方面支持 block、loop、if/else，它们的嵌套产生的 label 用于 br 和 br_if 跳转。不支持的指令不要 panic，返回一个带指令 opcode 和偏移量的 Error。
+
+内存方面暂时只实现一个线性内存（linear memory），指令 i32.load、i32.store 能跑通就行。参数用 i32 传入，返回值也用 i32。函数调用 call 指令要支持模块内部的直接调用。
+
+纯命令行即可，cargo run -- test.wasm 这样执行模块的 start 函数或指定的导出函数。附几个手工构造的 .wasm 文件测试基本运算和控制流。cargo build 无警告通过。

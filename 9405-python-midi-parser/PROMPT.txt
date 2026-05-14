@@ -1,1 +1,7 @@
-想分析一些MIDI文件的乐曲结构，写个解析器吧。能读取MIDI文件头（格式类型、轨道数、时间 Division），解析每个track里的MIDI事件：Note On/Off、控制变更、程序变更、速度变化、SysEx消息等。把音符事件按时间线排列输出，这样就能看到旋律走向。delta-time用变长编码，要正确解码。Python3实现，不依赖外部库，传MIDI文件路径就能跑。
+帮一个做音乐教育的朋友分析 MIDI 乐谱结构——需要把 MIDI 文件里的音符事件按时间线提取出来。Python 实现，不依赖外部库。
+
+MIDI 文件结构。文件头（MThd chunk）：4 字节 "MThd"、4 字节长度（固定 6）、格式类型（0=单轨、1=多轨同步、2=多轨独立）、轨道数、时间单位（PPQN 或 SMPTE）。格式 1 最常见——第一个 track 是全局事件，后续是各乐器。
+
+每个轨道（MTrk）：4 字节 "MTrk"、4 字节长度、若干事件。delta-time 用变长整数编码——每字节最高位为 1 表示后续还有字节，低 7 位是数据。事件类型：Note On（0x9n，音高+力度）、Note Off（0x8n）、Control Change（0xBn）、Program Change（0xCn）、Pitch Bend（0xEn）。Meta 事件 0xFF 开头：0x51 03 是速度变化、0x58 是拍号、0x2F 轨道结束。
+
+解析后输出按时间线排列的音符事件——每条包含开始时间（tick）、结束时间、音高（0-127）、力度、通道、音符名（C4=60、A4=69）。用法 python midi_parser.py parse song.mid。Python 3 不依赖外部库。

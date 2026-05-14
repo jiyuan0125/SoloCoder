@@ -1,11 +1,11 @@
-写一个 Raft 快照机制，用 Rust 实现。
+Raft 快照是日志压缩的标准方案——把状态机的当前状态序列化保存，然后丢弃旧日志。快照恢复是反过来的操作：从序列化数据重建状态机。还有 Leader 给落后 Follower 发送快照的场景（InstallSnapshot RPC）。用 Rust 把这三个过程实现一遍。
 
-背景：Raft 日志不能无限增长，需要定期把已提交的日志压缩成快照。快照包含最后包含的 Index 和 Term，以及状态机的当前状态。
+快照的数据格式：Snapshot { last_included_index: u64, last_included_term: u64, data: Vec<u8> }。data 里存的是状态机的序列化状态（用 JSON 或 bincode）。快照创建的触发条件：日志条目数量超过阈值（比如 100 条）时自动触发。
 
-要实现的功能：
-- 能够将指定 Index 之前的日志截断并生成快照
-- 快照中保存 lastIncludedIndex、lastIncludedTerm 和状态机快照数据
-- 新节点可以通过 InstallSnapshot RPC 恢复状态
-- 从快照恢复后能正常继续追加新日志
+创建快照的流程：序列化状态机当前状态，记录 lastApplied 作为 last_included_index，对应 entry 的 term 作为 last_included_term。保存后截断 last_included_index 及之前的日志条目。打印截断前后的日志长度对比。
 
-cargo build 通过，确保日志截断和恢复的逻辑正确。
+从快照恢复：清空当前状态机和日志，反序列化快照数据重建状态机，设置 lastApplied = last_included_index。验证恢复后的状态和创建快照时一致。
+
+InstallSnapshot 的模拟：Leader 检测到 Follower 需要的 nextIndex 已被快照覆盖，发送 InstallSnapshot。Follower 收到后如果快照比自己的更新（last_included_index 更大），用快照替换状态机状态和日志。大快照支持分块发送（chunk），用 Vec<u8> 模拟网络传输。
+
+cargo build 通过，标准库实现。

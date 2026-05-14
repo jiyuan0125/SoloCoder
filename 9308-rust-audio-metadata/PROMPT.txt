@@ -1,11 +1,7 @@
-我想要一个通用的音频元数据提取工具，能自动识别文件格式然后提取标签信息。
+第一步是格式检测——根据文件头判断音频格式。MP3 看前三个字节是 "ID3" 或者 0xFFE0/0xFFF0 同步字。FLAC 前 4 字节 "fLaC"。OGG 前 4 字节 "OggS"。WAV 前 4 字节 "RIFF" 加偏移 8 处 "WAVE"。AIFF 前 4 字节 "FORM" 加偏移 8 处 "AIFF"。
 
-支持的格式：
-- MP3（ID3v1/v2 标签）：标题、艺术家、专辑、年份、曲目号、时长
-- FLAC（Vorbis Comment）：同样的字段加上采样率和位深
-- WAV（RIFF INFO 块）：基本的标题、艺术家、创作日期
-- OGG Vorbis（Vorbis Comment）：标签字段
+第二步按格式调用对应解析器提取通用字段。MP3（ID3v1/v2 标签）：标题、艺术家、专辑、年份、曲目号、时长（通过文件大小和帧头估算）。FLAC（VORBIS_COMMENT）：同样的字段加上 STREAMINFO 里的采样率和位深。OGG Vorbis（也是 VORBIS_COMMENT，在 OGG 页面结构里）。WAV（RIFF INFO 块——INFO chunk 里的 INAM 标题、IART 艺术家、ICRD 创建日期等，不是所有 WAV 都有）。
 
-根据文件扩展名或 magic number 自动判断格式，统一输出结构化的元数据。
+第三步统一输出。定义一个通用结构体——标题、艺术家、专辑、年份、曲目号、时长（秒）、采样率（Hz）、声道数、位深度、编码格式名称、比特率。不同格式能提取的字段不一样，缺失的填空。时长计算方式各异：WAV 通过 data chunk 大小/字节码率、FLAC 通过总采样数/采样率、MP3 通过帧头信息或 TLEN 帧。
 
-Rust 实现，cargo build 通过。`audio-meta info xxx.mp3` 或 `audio-meta info xxx.flac`。
+格式自动判断也看文件扩展名作为辅助。用法 audio-meta info xxx.mp3 或 audio-meta info xxx.flac。Rust 实现，cargo build 通过。

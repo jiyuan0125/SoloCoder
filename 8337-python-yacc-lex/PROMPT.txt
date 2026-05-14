@@ -1,3 +1,18 @@
-想深入了解 Lex 和 Yacc 的经典实现。用 Python 分别实现一个 Lex（词法分析器生成器）和 Yacc（语法分析器生成器）。Lex 部分：接受正则规则定义，构建 NFA/DFA，生成 token 流。Yacc 部分：接受 LALR(1) 文法，构建分析表，支持算符优先级解决冲突。
+想从原理层面理解 Lex 和 Yacc 的经典实现——NFA→DFA 转换、LALR 分析表生成。不用任何解析库，从正则表达式到分析表全手写。Python 分别实现 Lex 和 Yacc。
 
-两个工具能配合使用，附带一个完整的示例：解析类 C 语法的简单语言。纯 Python，python 能跑。
+Lex 引擎的流程：
+1. 用户定义 token 规则（名字 + 正则表达式）
+2. McMahton 算法把每个正则转为 NFA（连接 → 串联 NFA，| → 两个 NFA 并行，* → ε 循环）
+3. 子集构造法把 NFA 确定化为 DFA（用状态集合的幂集作为 DFA 状态）
+4. Hopcroft 算法做 DFA 最小化
+5. 生成的 DFA 从输入字符串产出 token 流（最长匹配）
+
+Yacc 引擎的流程：
+1. 用户定义 CFG 产生式和算符优先级
+2. 构建增广文法（加 S' → S）
+3. 构建 LR(0) 项目集族（闭包 + GOTO 函数）
+4. LALR(1) Lookahead 传播：从 LR(0) 项目集出发，传播 lookhead 信息直到不动点
+5. 构建分析表 ACTION 和 GOTO
+6. 移进-归约冲突用优先级和结合性解决
+
+两个引擎配合：Lex 产出 token 流，Yacc 的 LALR 驱动器消费 token 流构建 AST。附一个类 C 简单语言的完整示例（变量声明、赋值、if/while、表达式）。python3 lex_yacc.py。纯 Python 实现。

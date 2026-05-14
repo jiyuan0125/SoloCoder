@@ -1,12 +1,11 @@
-用 Rust 实现快照应用（Snapshot Apply）机制。
+用 Rust 实现快照应用机制。节点从快照恢复状态时，加载快照数据到状态机，丢弃旧日志。还有 Leader 给落后 Follower 发送 InstallSnapshot 的场景——当 Follower 需要的日志已经被快照覆盖了，只能发快照。
 
-节点从快照恢复状态时，需要把快照数据加载并应用到状态机。还有另一种场景：leader 给落后太多的 follower 发快照而不是逐条发日志。
+快照格式：Snapshot { last_included_index: u64, last_included_term: u64, state: Vec<u8> }。state 是 KV 状态机的序列化数据（JSON 或 bincode）。Apply 的流程：清空当前状态机和 lastIncludedIndex 之前的日志，反序列化快照重建状态机，设置 lastApplied = last_included_index。
 
-核心功能：
-- 状态机维护一个 key-value 状态，通过日志条目的 apply 来更新
-- 支持生成快照：把状态机当前状态和 last_applied_index 序列化
-- 从快照恢复：清空当前状态，加载快照数据，然后从快照之后的 index 继续应用日志
-- 模拟一个落后节点的恢复场景：先加载快照跳到 index 100，然后逐步应用 101 之后的日志
-- 验证最终状态和一直从头 apply 日志的结果一致
+InstallSnapshot 的模拟：Leader 检测到 Follower 的 nextIndex <= snapshot.last_included_index，说明需要的日志已被截断。发送 InstallSnapshot RPC 给 Follower。RPC 包含 last_included_index、last_included_term 和快照数据。Follower 收到后如果快照比自己的更新，替换状态机和日志。
+
+分块传输的支持：快照可能很大。程序把快照数据切成固定大小的 chunk（比如 4KB），逐个发送。Follower 收齐所有 chunk 后拼装完整快照再应用。每个 chunk 带 offset 和 done 标志。
+
+验证场景：模拟一个落后节点从快照恢复到 index 100，然后逐步应用 101-110 的日志。最终状态和从头 apply 所有日志的结果完全一致。
 
 cargo build 通过，标准库实现。

@@ -1,11 +1,7 @@
-写一个媒体信息查看器，Go 实现。
+比 probe 工具更深入——不只是看表面信息，要把文件的内部结构都展开给你看。MP4 的每个 box 大小和类型、MKV 的每个 EBML 元素、编码参数的细节——profile、level、像素格式、色彩空间这些。Go 来实现。
 
-比 probe 工具更详细，专门做信息展示：
-- 解析视频文件的容器结构（box/atom 级别）
-- 读取视频编码参数：profile、level、像素格式、色彩空间
-- 读取音频编码参数：采样率、位深、声道布局、比特率模式（CBR/VBR）
-- 提取字幕轨信息：语言、编码格式
-- 显示文件结构树（如 MP4 的 box 层级、MKV 的 EBML 元素）
-- 计算并展示音视频同步偏移信息
+第一步解析容器结构树。对 MP4 递归遍历 box 层级——从 ftyp 开始，然后 moov（包含 mvhd、trak、udta），trak 下面 mdia（包含 mdhd、hdlr、minf），minf 下面 stbl（包含 stsd、stts、stss、stsc、stsz、stco）。每个 box 输出缩进层级的类型名、偏移量和大小。
 
-用法 media-info movie.mkv，输出详细媒体报告。Go 标准库，go build 编译通过。
+第二步提取编码参数。视频方面从 stsd 的 avc1 或 hev1 读取编码配置——H.264 的 AVCDecoderConfigurationRecord 里包含 profile、level、SPS、PPS。从 SPS 可以解析出像素格式（YUV420/YUV422）、色彩空间（BT.601/BT.709）、actual 编码尺寸。音频方面从 mp4a 的 esds box 读取 AudioSpecificConfig，获取编码对象类型（AAC-LC/HE-AAC）、采样率索引、声道配置。
+
+第三步计算派生信息。帧率从 stts 计算——总帧数/总时长。码率从 stsz 计算——总字节数*8/总时长。关键帧比例从 stss 计算。AV 同步偏移通过比较音视频的初始 PTS 差值。用法 media-info movie.mkv，输出详细报告。Go 标准库，go build 编译通过。

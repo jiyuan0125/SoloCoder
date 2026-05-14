@@ -1,5 +1,14 @@
-用 Rust 写一个 Mach-O 文件解析器，能看 macOS 可执行文件和动态库的内部结构。
+手边有个 macOS 的动态库需要分析导出符号和段布局，但开发环境是 Linux，没有 otool 命令可用。用 Rust 写一个 Mach-O 文件解析器来替代。
 
-解析 Mach-O 的 header、load commands、symbol table，把段名、段地址、大小这些信息打印出来。支持 64 位格式（MH_MAGIC_64），fat binary 暂时不用管。解析失败要给出具体是哪个字段出的问题。
+Mach-O 的结构跟 ELF 差别挺大——它由 header + load commands + segments 组成，不像 ELF 有 section 和 program header 两套表。header 的 magic 是 0xFEEDFACF 表示 64 位，从里面读 cputype、cpusubtype、filetype（MH_EXECUTE、MH_DYLIB 等）、ncmds 和 sizeofcmds。
 
-命令行工具：cargo run -- target-file。用 macOS 上的二进制文件测试（如果没有真文件，自己构造一个最小的 Mach-O 二进制来测也行）。
+Load commands 是紧接着 header 的一系列变长结构，每个以 cmd + cmdsize 开头。需要解析的几种：
+- LC_SEGMENT_64：包含 segment name、vmaddr、vmsize、fileoff、filesize，以及内部 nsect 个 section 的信息（sectname、addr、size、offset）
+- LC_SYMTAB：指向 symbol table 和 string table 的 offset 和 count
+- LC_DYSYMTAB：动态符号信息
+
+符号表解析：从 LC_SYMTAB 拿到 symoff 和 stroff，nlist_64 结构包含 n_strx（名称索引）、n_type（类型和作用域）、n_value（符号值）。把全局符号和外部符号列出来。
+
+只处理 64 位（MH_MAGIC_64），fat binary（通用二进制）暂不支持。解析失败要报出是哪个 load command 的哪个字段出了问题，不要笼统地说"解析错误"。
+
+cargo run -- target-file 打印段信息和符号表。cargo build 通过。没有真文件的话用字节序列构造测试。

@@ -1,8 +1,9 @@
-写个自签名证书生成器，Go 实现。
+本地开发 HTTPS 服务每次都要手敲 openssl 命令生成自签名证书，参数老忘——什么 -x509、-newkey、-nodes、-days、-subj 一长串。做一个更简单的工具，一条命令搞定。
 
-本地开发 HTTPS 服务每次都要手敲 openssl 命令生成证书，参数老忘。做一个更简单直接的工具。
+用 Go 写一个自签名证书生成器。gen 子命令：生成 RSA（指定 bits：2048/4096）或 ECDSA（指定 curve：P-256/P-384）密钥对。创建 x509.Certificate 模板——Subject 的 CommonName 从 -domain 参数取、SAN（DNS 名称和 IP）从 -domain 列表解析、NotBefore 为当前时间、NotAfter 由 -days 参数控制（默认 365）、KeyUsage 包括 DigitalSignature 和 KeyEncipherment、ExtKeyUsage 包括 ServerAuth 和 ClientAuth、BasicConstraints 设 IsCA=false。用私钥自签名生成 DER 证书。
 
-要求：生成 RSA 或 ECDSA 自签名证书；支持指定域名（SAN）、有效期、密钥长度；同时输出证书和私钥的 PEM 文件；可以选择是否生成 CA 证书链。
+输出文件：私钥 PEM（文件名 priv.pem）和证书 PEM（文件名 cert.pem）。可选生成 CA 证书（-ca flag）——IsCA=true、KeyUsageCertSign、路径长度可配。生成 CA 后可以签发子证书（-ca-cert + -ca-key 参数）。
 
-命令：cert-generator gen -domain "localhost,myapp.local" -days 365 -keytype rsa -bits 2048、cert-generator gen -domain "example.com" -keytype ecdsa -curve P256
-纯 Go 标准库 crypto/x509，go build 通过。
+命令：cert-generator gen -domain "localhost,myapp.local" -days 365 -keytype rsa -bits 2048、cert-generator gen -domain "example.com" -keytype ecdsa -curve P256、cert-generator gen -domain "*.example.com" -ca -days 3650。
+
+Go 标准库 crypto/x509 + crypto/rsa + crypto/ecdsa，go build 通过。

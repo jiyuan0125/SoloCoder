@@ -1,5 +1,14 @@
-用 Python 写一个通用的二进制文件解析工具，能根据用户提供的格式描述解析任意二进制数据。
+逆向分析经常碰到未知的二进制格式——游戏存档、固件头部、私有协议。每次都手写解析脚本太浪费时间。做一个声明式的二进制解析框架，用户写格式描述就能自动提取字段。Python 实现。
 
-做逆向分析经常要解析各种二进制协议和文件格式，需要一个声明式的解析框架。用户通过 YAML 或 JSON 描述字段名、偏移量、长度、字节序、类型（整数、浮点、字符串、位域等），工具读入二进制文件后按描述提取所有字段，支持计算偏移和指针引用。输出结构化的 JSON 结果。
+格式描述用 YAML 或 JSON：每个字段定义 name、offset（可选，默认紧接上一个字段）、size（字节数）、type（uint8/uint16/uint32/uint64/int8/int16/int32/int64/float/bool/string/bytes/flags）、byte_order（big/little）、display（hex/dec/bin/ascii）。
 
-纯 Python 3，不依赖第三方库。命令行：`python binary_parser.py --spec format.yaml input.bin`，打印解析出的字段列表。规格文件里有错误（比如偏移越界）要能报告出来。`python binary_parser.py` 能跑。
+高级类型：
+- flags：把一个整数按 bit 位展开为布尔标志列表，比如 flags: [SYN, ACK, FIN, RST]
+- enum：值到名称的映射表，比如 1→"GET", 2→"POST"
+- pointer：offset 字段的值指向另一个位置的字符串或结构体
+- conditional：根据另一个字段的值决定解析方式
+- repeated：按指定次数或直到某个终止条件重复解析同一结构
+
+工具读入格式描述和二进制文件，按描述提取每个字段。输出结构化的 JSON：{字段名: 值}，值按 display 格式化。对格式描述做校验——offset+size 不能超过文件长度、字段之间不能重叠（除非显式声明）。
+
+CLI：python3 binary_parser.py --spec format.yaml input.bin。格式描述有错误时报告具体哪个字段有问题。纯 Python 3 不依赖第三方库。

@@ -1,5 +1,21 @@
-实现一个 Python 的 JSON Schema 验证器，能根据 schema 定义校验数据是否符合规范。
+API 请求体校验是后端开发最无聊但又最重要的部分——每个字段都要检查类型、范围、格式。JSON Schema 是标准化的校验描述语言，但每次都调在线验证不方便。自己实现一个。Python 实现。
 
-做 API 开发时经常需要校验请求体的数据格式。支持 JSON Schema 的核心关键字：type、required、properties、items、minLength、maxLength、minimum、maximum、pattern、enum、allOf、anyOf、oneOf。验证失败时给出具体的错误路径和原因（比如 `$.users[2].email: expected string, got null`）。
+支持的 JSON Schema 关键字（Draft-07 子集）：
+- type：string/number/integer/boolean/array/object/null
+- properties / additionalProperties：对象属性定义和额外属性控制
+- required：必填字段列表
+- items：数组元素类型（单个 schema 或元组 schema）
+- minItems / maxItems：数组长度限制
+- minLength / maxLength：字符串长度限制
+- minimum / maximum / exclusiveMinimum / exclusiveMaximum：数值范围
+- pattern：正则模式匹配字符串
+- enum：枚举值列表
+- const：常量值
+- allOf / anyOf / oneOf / not：组合逻辑
+- $ref：内部引用（指向 definitions 中的子 schema）
 
-Python 3 标准库。CLI：`python validator.py --schema user.schema.json --data request.json`，输出验证通过或失败详情。`python validator.py` 能直接运行。
+验证流程：递归遍历 schema 和 data，对每个 schema 关键字检查对应的 data 值。验证失败时收集错误信息——包含 JSON Path（$.users[2].email）、期望什么、实际是什么。
+
+错误报告是重点：不能只说"验证失败"，要精确到哪个字段、什么类型不匹配、期望什么值范围。多条错误按路径排序输出。
+
+CLI：python3 validator.py --schema user.schema.json --data request.json。纯 Python 3 标准库。

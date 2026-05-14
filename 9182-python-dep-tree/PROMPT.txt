@@ -1,14 +1,9 @@
-依赖树可视化工具，解析项目的依赖关系并生成树形结构。
+依赖树可视化工具。项目的依赖越来越多，到底哪些包依赖了什么，一层层传递依赖到底有多深，心里没数。写个工具把依赖关系可视化出来，一眼看清依赖结构。
 
-排查依赖冲突或者安全问题时，需要看清依赖的层级关系。A 依赖 B，B 依赖 C，C 有漏洞，影响链是怎样的？
+Python 实现依赖树解析和展示。支持的依赖文件——Python requirements.txt（简单列表，没有树结构）、Pipfile.lock（包含完整的依赖图）、package-lock.json（npm 的完整依赖树）、Cargo.lock（Rust 的依赖图）、go.sum（Go 的模块依赖）。
 
-Python 实现：
-- 解析 requirements.txt 或 package.json，获取直接依赖
-- 递归解析子依赖（调用 PyPI API 或 npm registry 获取依赖信息）
-- 构建依赖树，输出 ASCII 树形图（类似 tree 命令的输出）
-- 标记重复依赖和版本冲突（同一包出现多个版本）
-- 支持限制深度（--depth 3）
+解析后构建依赖图（有向图，用字典表示邻接表）。对于有树结构的锁文件（如 package-lock.json），直接提取 requires 字段构建树。对于简单列表（如 requirements.txt），只展示扁平列表。
 
-示例：python dep_tree.py requirements.txt --depth 3
-python dep_tree.py package.json --highlight-conflicts
-网络不通时用模拟数据，关键是树形渲染要好看。
+展示功能——树形文本输出：用缩进和连线字符展示依赖层级（如 ├── requests ├─── urllib3 └── certifi），深度可配置（默认全部展开）。统计信息：总依赖数、最大深度、叶子节点数、被最多包依赖的"热门"依赖排行。
+
+检测问题：循环依赖（A→B→A 这种死循环）、重复依赖（同一个包的不同版本被不同传递路径引入）、过深嵌套（超过 10 层的依赖链可能是架构问题）。输出支持文本和 DOT 格式（给 Graphviz 画图）。python3 命令行工具。

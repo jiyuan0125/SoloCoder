@@ -1,12 +1,15 @@
-写一个 OIDC（OpenID Connect）Provider，Go 实现。
+公司要搭建统一身份认证服务，各个子系统用 SSO 登录。选了 OIDC（OpenID Connect）协议——它在 OAuth2 之上加了身份层，通过 ID Token 告诉客户端"这个用户是谁"。
 
-公司需要搭建自己的统一身份认证服务，基于 OIDC 协议，让各个子系统用 SSO 登录。
+用 Go 实现一个 OIDC Provider。核心端点：
 
-要实现：
-- OIDC Discovery：提供 /.well-known/openid-configuration 端点返回配置信息
-- ID Token 签发：JWT 格式的 ID Token，包含 sub、iss、aud、exp 等标准声明
-- UserInfo 端点：返回认证用户的基本信息（姓名、邮箱、头像）
-- 支持Authorization Code 流程，包含简单的登录页面和授权确认页面
-- Session 管理：登录状态跟踪、单点登出
+Discovery endpoint（/.well-known/openid-configuration）：返回 JSON 格式的配置信息——issuer、authorization_endpoint、token_endpoint、userinfo_endpoint、jwks_uri、支持的 scopes（openid、profile、email）、支持的 response_types（code）、支持的签名算法。
+
+ID Token 签发：用户认证通过后签发 JWT 格式的 ID Token。包含标准声明——sub（用户唯一标识，opaque 字符串）、iss（provider 的 URL）、aud（client_id）、exp（过期时间）、iat（签发时间）、auth_time（用户认证时间）、nonce（防止重放）。用 RS256 或 HS256 签名。
+
+UserInfo endpoint：用 access_token 认证后返回用户基本信息——姓名、邮箱、头像 URL（内存中的 mock 数据即可）。
+
+Authorization Code 流程：包含简单的 HTML 登录页面和授权确认页面。用户输入用户名密码（mock 验证），确认后跳转。
+
+Session 管理：登录状态跟踪（cookie + 服务端 session），单点登出（登出时清除 session，通知各客户端）。
 
 Go 标准库，go build 通过。

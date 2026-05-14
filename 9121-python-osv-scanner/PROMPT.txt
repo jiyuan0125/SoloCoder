@@ -1,5 +1,7 @@
-帮我写一个依赖漏洞扫描器，查询 OSV（Open Source Vulnerabilities）数据库。
+帮我写一个依赖漏洞扫描器，基于 OSV 数据库。开发团队提交的依赖文件需要自动扫描有没有已知漏洞，集成到 CI 流水线里。
 
-用户提交一个 requirements.txt、package.json 或 go.mod 文件，工具解析出所有依赖和版本号，然后批量查询 OSV API（api.osv.dev）检查是否有已知漏洞。对每个有漏洞的依赖显示：漏洞 ID、严重程度、受影响版本范围、修复建议（升级到哪个版本）。
+Python 实现。第一步解析依赖文件：支持 requirements.txt（逐行解析包名和版本，跳过注释和空行）、package.json（解析 dependencies 和 devDependencies）、go.mod（解析 require 段）。自动识别文件类型。
 
-输出支持终端表格和 JSON 两种格式。Python 3，用 requests 调 OSV API。python osv_scan.py requirements.txt。
+第二步查询漏洞：调用 OSV API（POST https://api.osv.dev/v1/query），请求体包含 package name 和 version，批量查询每个依赖。API 返回的漏洞列表解析后提取关键字段——漏洞 ID（如 OSV-2023-XXX、GHSA-XXXX、CVE-YYYY-NNNNN）、严重等级（从 database_specific 的 severity 或 CVSS 评分推断）、受影响的版本范围（从 affected[].ranges 解析）、修复版本（从 ranges 中 fixed 字段提取）。
+
+第三步结果展示：终端表格格式显示每个有漏洞的依赖——包名、当前版本、漏洞 ID、严重等级、修复版本。JSON 输出方便对接 Jira 或 Slack 通知。没有漏洞的包也显示"已检查，无已知漏洞"。退出码：有高危漏洞返回 1（CI 阻断），只有低危返回 0。python3 用 requests 库调 API。

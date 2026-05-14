@@ -1,3 +1,13 @@
-想自己实现一个 Jinja2 风格的模板引擎来学习编译原理。支持 Jinja2 的核心语法：{{ expr }} 输出、{% if/elif/else %} 条件、{% for %} 循环（含 loop 变量）、{% set %} 赋值、{% include %} 和 {% macro %} 宏定义调用。
+Jinja2 是 Python 生态最流行的模板引擎，Flask 和 Ansible 都在用。想自己实现一个来理解模板编译和执行的原理——不是解释执行 AST，而是把模板编译成 Python 代码再执行。Python 实现。
 
-表达式求值要支持属性访问（obj.key）、方法调用（str.upper()）和算术运算。模板编译错误要有行号提示。纯 Python 实现，python 能跑。
+支持的 Jinja2 核心语法：
+- 输出：{{ expr }}，表达式支持算术、比较、属性访问 obj.key、方法调用 str.upper()、过滤器 name|upper
+- 控制流：{% if expr %}...{% elif expr %}...{% else %}...{% endif %}
+- 循环：{% for x in items %}...{% endfor %}，内置 loop 变量（loop.index 从 1 开始、loop.index0 从 0、loop.first、loop.last、loop.length）
+- 赋值：{% set x = expr %}
+- 包含：{% include "partial.html" %}
+- 宏：{% macro greeting(name) %}Hello {{ name }}{% endmacro %}，调用 {{ greeting("Alice") }}
+
+编译策略：模板先被解析成 AST，然后遍历 AST 生成等价的 Python 函数源码。TextNode → _output("...")，ExprNode → _output(str(expr))，ForNode → for 循环，IfNode → if/elif/else。最后用 exec() 执行生成的代码。这样做的好处是渲染速度极快（跳过了 AST 遍历开销）。
+
+编译错误带行号。python3 jinja_engine.py template.j2 data.json。纯 Python 实现。

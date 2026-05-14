@@ -1,1 +1,7 @@
-MP4文件基于ISO Base Media Format，想深入理解这个容器格式。写个Python解析器来读取MP4文件的box（atom）结构，递归遍历所有box，打印类型、偏移量、大小。能解析ftyp、moov、mvhd、trak、mdia、stbl这些关键box的字段内容。对容器box要能递归进去解析子box。处理文件很大时不要全部读入内存，按需seek读取。python3运行，传MP4文件路径。
+1. MP4 文件本质上是一堆嵌套的 box（也叫 atom），每个 box 有 4 字节大小、4 字节类型、然后是数据或子 box。解析器从文件头开始，读第一个 box 的大小和类型，处理完跳到下一个 box。容器类型的 box（moov、trak、mdia 等）里面还有子 box，需要递归进去继续解析。
+
+2. 要能识别并解析的关键 box：ftyp（文件类型和兼容品牌）、moov（所有元数据的根容器）、mvhd（全局头信息：创建时间、时长、时间刻度）、trak（单个轨道）、mdia（轨道媒体信息）、stbl（采样表，里面 stsd 存编码参数、stts 存时间戳、stsz 存大小）。每个 box 的字段按大端序读取。
+
+3. 大文件处理——视频文件动辄几个 GB，不能全部读入内存。按需 seek：只读 box 头部（8 字节，扩展大小的话 16 字节），判断类型后决定要不要深入读取数据。不需要解析的 box 直接 seek 跳过。
+
+4. 输出每个 box 的类型、文件偏移量、大小，以及解析出的关键字段值。层级用缩进表示。用法：python3 mp4_parser.py parse video.mp4

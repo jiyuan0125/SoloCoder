@@ -1,3 +1,9 @@
-程序崩溃了要分析调试信息。Go 写一个 DWARF 调试信息解析工具，能从 ELF 文件中提取 DWARF 数据。
+程序崩溃了，gdb 里看到的都是内存地址，要关联到源代码的函数名和行号就得解析 DWARF 调试信息。但 DWARF 格式本身很复杂，有时候只想快速查看编译单元、函数列表和行号映射，不需要 gdb 那么重的工具。
 
-解析 DWARF .debug_info 段：提取编译单元信息（源文件、编译器、语言）；列出函数和变量定义及其行号；解析类型信息（基本类型、结构体、枚举）；构建简化的调用栈映射。输入 ELF 文件路径，命令行参数控制输出哪些信息。Go 标准库，go build 通过。
+Go 写一个 DWARF 调试信息解析工具。从 ELF 文件中提取 DWARF 数据，输出结构化的调试信息。
+
+解析流程从 .debug_info 段开始：先读编译单元（Compilation Unit）头部，获取单元长度、DWARF 版本号、缩写表偏移。然后遍历该编译单元下的所有 DIE（Debugging Information Entry），根据 tag 类型分类处理——DW_TAG_subprogram 是函数定义，提取函数名、地址范围、所在源文件和行号；DW_TAG_variable 是全局变量，提取变量名、类型和地址；DW_TAG_structure_type 是结构体类型定义，提取字段名和偏移量。
+
+类型信息解析：识别基本类型（int、char、pointer）、结构体（字段列表和偏移）、枚举（枚举值名称和数值）。构建一个简化的调用栈映射——哪些函数调用了哪些函数，基于 DW_TAG_subprogram 里的地址范围和 DW_AT_call attributes。
+
+输入是 ELF 文件路径，命令行参数控制输出范围（--units 只看编译单元、--functions 列出函数、--types 列出类型）。Go 标准库实现，go build 通过。

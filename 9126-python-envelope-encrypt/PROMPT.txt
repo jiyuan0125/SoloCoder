@@ -1,5 +1,7 @@
-做一个信封加密方案的实现，用来安全保护数据密钥。
+信封加密是保护大量数据的标准方案。直接用主密钥加密所有数据太慢而且不安全——一旦主密钥泄露所有数据都完了。信封加密的思路是每次加密生成一个临时数据密钥（DEK），用 DEK 加密数据，再用主密钥（KEK）加密 DEK 本身。
 
-流程是这样的：生成一个随机数据密钥（DEK）→ 用 DEK 加密实际数据 → 用主密钥（KEK）加密 DEK → 把加密后的 DEK 和密文一起存储。解密时用 KEK 解密 DEK，再用 DEK 解密数据。
+Python 实现信封加密。加密流程：生成 32 字节随机 DEK（用 os.urandom）→ 用 DEK 通过 AES-256-GCM 加密明文数据 → 用 KEK 通过 AES-256-GCM 加密 DEK → 将加密后的 DEK、加密数据的 nonce、加密 DEK 的 nonce、密文和 auth tag 打包为一个 blob 存储。
 
-提供 encrypt(data, kek) 和 decrypt(encrypted_blob, kek) 两个接口，KEK 可以是密码派生的也可以是外部传入的密钥字节。Python 3，用 cryptography 库的 AES-GCM。
+解密流程：从 blob 中提取加密的 DEK → 用 KEK 解密得到原始 DEK → 用 DEK 解密数据 → 验证两层 auth tag。任何一层验证失败都拒绝解密。
+
+KEK 来源：可以是从密码派生（PBKDF2）、从文件读取、或从环境变量传入。接口设计：encrypt(data, kek) 返回 blob 字节串，decrypt(blob, kek) 返回原始数据。blob 格式自描述——包含版本号和各段的长度前缀。python3 用 cryptography 库。

@@ -1,5 +1,15 @@
-写一个 Python 的 AST 节点计数器，分析代码的语法结构复杂度。
+代码行数和 token 数都是表层度量，AST 节点数更能反映代码的结构复杂度——一个三元表达式和 if-else 块行数差很多但 AST 节点数差不多。Python 实现 AST 节点计数器。
 
-通过统计 AST 节点类型和数量来量化代码结构。解析 Python 源码，遍历 AST，统计每种节点类型的出现次数：FunctionDef、ClassDef、Call、If、For、While、BinOp、Compare、Subscript 等。按模块汇总，计算节点密度（节点数/代码行数），密度过高可能意味着代码过于复杂。
+统计每个 AST 节点类型的出现次数。Python 3 的 ast 模块定义了约 80 种节点类型，重点统计：
 
-Python 3，ast 模块。CLI：`python ast_counter.py module.py`，输出节点类型分布表和总数；`python ast_counter.py src/` 对目录批量分析，找出节点密度最高的文件。`python ast_counter.py` 能直接运行。
+表达式节点：BinOp、UnaryOp、BoolOp、Compare、Call、Attribute、Subscript、Starred、IfExp、Lambda、ListComp、DictComp、SetComp、GeneratorExp、Await、Yield、YieldFrom
+语句节点：FunctionDef、AsyncFunctionDef、ClassDef、Return、Assign、AugAssign、AnnAssign、For、AsyncFor、While、If、With、AsyncWith、Raise、Try、Assert、Import、ImportFrom、Global、Nonlocal、Expr、Pass、Break、Continue
+其他：arguments（函数参数）、arg（单个参数）、keyword（关键字参数）、comprehension（推导式）
+
+分析维度：
+- 节点多样性：文件中不同节点类型的数量。种类越多代码结构越复杂
+- 表达式/语句比：表达式节点数 / 语句节点数，反映代码是计算密集还是控制流密集
+- 嵌套深度：AST 树的最大深度
+- 函数平均节点数：总节点数 / 函数数量
+
+按文件和目录统计，支持排序和过滤。python3 ast_counter.py src/。纯 Python 3 用 ast 模块。

@@ -1,5 +1,7 @@
-我搞安全测试的时候经常遇到使用弱密钥签名的 JWT，想写个工具来暴力破解。
+搞安全测试的时候遇到用弱密钥签 JWT 的系统不在少数，尤其是内部项目，密钥经常就是 secret、password、123456 这些。手动逐个试太低效，写个工具自动化这个过程。
 
-Python 实现一个 JWT 弱密钥爆破工具。用字典文件尝试不同的密钥来验证 JWT 签名，支持 HS256/HS384/HS512 算法。要有基本的性能考虑，比如多线程加速。找到正确密钥后输出解码后的 payload 内容。也支持用常见弱密钥列表快速检测（比如 secret、password、123456 这些）。
+Python 实现一个 JWT 弱密钥爆破工具。先解析 JWT 的 header 确认算法（支持 HS256/HS384/HS512），然后从字典文件逐行读取候选密钥，用每个候选密钥重新计算签名并与 token 原始签名做恒定时间比较（hmac.compare_digest，防止计时攻击）。
 
-命令行使用，python3 运行，别搞 GUI。
+内置一个常见弱密钥列表（大概 500 条，包含 secret、password、key、jwt_secret、123456、admin、token、changeit 这些），即使不提供字典文件也能快速扫一轮。找到正确密钥后输出：密钥值、解码后的 header 和 payload JSON、耗时和尝试次数。
+
+性能方面，单线程大概每秒能试几千个密钥，用 concurrent.futures.ThreadPoolExecutor 做多线程加速，线程数默认 CPU 核心数。字典文件支持 # 开头的注释行和空行跳过。命令行使用，python3 运行，别搞 GUI。

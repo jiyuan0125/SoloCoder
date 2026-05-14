@@ -1,5 +1,7 @@
-用 Rust 实现一个图片隐写术工具，把秘密信息藏在 PNG 图片的像素里。
+CTF 比赛和安全课程最常用的隐写术——LSB（最低有效位）隐写。原理是把秘密信息编码到图片像素的最低位，肉眼完全看不出来。Rust 实现嵌入和提取两个功能。
 
-功能包括：将文本信息用 LSB（最低有效位）方式嵌入到 PNG 图片的 RGB 通道中，嵌入后图片视觉上无明显变化。也要能从隐写图片中提取出隐藏的文本。支持自定义嵌入位深度（1-4 bit），嵌入前加个简单的校验头标记数据长度。命令行用法类似 stego embed input.png output.png "secret" 和 stego extract output.png。
+嵌入流程：消息转成 UTF-8 字节序列，前面加一个 32 位的头部记录消息长度（字节）。然后逐位替换图片像素 RGB 通道的最低位——每个像素藏 3 位信息。替换方式：bit = message_byte >> bit_index & 1，pixel_channel = (pixel_channel & 0xFE) | bit。只改最低位对像素值的影响只有 ±1，人眼分辨不出来。
 
-Rust 实现，cargo build 能编译。
+提取流程：按顺序读取每个像素 RGB 通道的最低位，每 8 位拼成一个字节。先读 32 位（约 11 个像素）得到消息长度，然后继续读 length×8 位还原出完整消息。自定义嵌入深度（1-4 bit）时，每个通道藏更多位但图片失真更明显——1 bit 基本无感，4 bit 在某些纯色区域可以看出噪点。
+
+容量估算：宽 × 高 × 3 channels × bits_per_channel / 8 字节。一张 1000×1000 的 PNG 1bit 模式可藏约 375KB 文本。只支持 PNG 格式——JPEG 的有损压缩会破坏 LSB 数据。用法：stego embed input.png output.png "secret message" 和 stego extract output.png。Rust 实现，cargo build 通过。

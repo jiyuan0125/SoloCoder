@@ -1,3 +1,9 @@
-安全审计需要分析 SMB 文件共享协议的流量。Go 实现 SMB 协议解析器。
+安全审计需要分析文件共享的访问行为——谁在什么时间访问了哪些共享文件、做了什么操作（读、写、删除）。这些信息都在 SMB 协议流量里，但 SMB 协议本身比较复杂，需要专门写个解析器来提取关键操作。
 
-解析 SMB/CIFS 报文：识别 SMB1 和 SMB2 的消息头；提取关键操作（协商、会话建立、树连接、文件打开/读/写/关闭）；解析 SMB2 的结构化字段（状态码、命令类型、文件名）；从 pcap 重组后的 TCP 445 端口流中解析。输出操作摘要（谁访问了什么文件、做了什么操作）。Go 标准库，go build 通过。
+Go 实现 SMB 协议解析器。输入是 pcap 文件中 TCP 445 端口的重组后 TCP 流数据。重点解析 SMB2 协议（SMB1 现在用得少了，但需要能识别并跳过 SMB1 的协商过程）。
+
+SMB2 消息头解析：StructureSize、CreditCharge、Status（NT 状态码）、Command（Negotiate=0、Session Setup=1、Tree Connect=3、Create=5、Close=6、Read=8、Write=9）、Flags、NextCommand。每条 SMB2 消息通过 Command 字段确定类型。
+
+关键操作的提取：Negotiate 查看协商的安全模式和 SMB 版本；Session Setup 看认证方式；Tree Connect 看连接的共享路径（如 \\server\share）；Create 看打开或创建了什么文件（提取文件名字段）；Read/Write 记录对文件的操作和数据量；Close 关闭文件句柄。
+
+输出操作摘要：按时间线展示每条 SMB 操作，包含源 IP（谁）、共享路径和文件名（访问了什么）、操作类型（做了什么）、状态码（是否成功）。Go 标准库，go build 通过。

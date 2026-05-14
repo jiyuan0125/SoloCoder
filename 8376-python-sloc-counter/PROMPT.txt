@@ -1,5 +1,16 @@
-帮我写一个 Python 的代码行数统计器（SLOC Counter），准确统计源代码规模。
+项目管理需要知道每个模块的代码规模——不是文件大小，而是有效的代码行数。注释和空行不算代码行。Python 实现一个精确的 SLOC（Source Lines of Code）统计工具。
 
-不像 `wc -l` 那样简单粗暴地数行，要区分物理行和逻辑行。统计维度：总行数、代码行（SLOC）、注释行（单行和块注释）、空行。支持 Python、Java、C、Go、JavaScript 几种语言的注释规则。按文件、目录、语言三个维度汇总，输出表格和占比饼图数据。
+统计维度：
+- 总行数（LOC）：文件的总行数
+- 空行数（Blank）：只包含空白字符的行
+- 注释行数（Comment）：整行都是注释的行（Python 的 # 开头）、docstring 行（三引号包围的多行字符串）
+- 代码行数（SLOC）：LOC - Blank - Comment，即包含至少一个非空非注释 token 的行
+- 混合行：代码和注释在同一行（如 x = 1  # assign），这类行算代码行
 
-Python 3 标准库。CLI：`python sloc.py src/`，按语言分组显示每种语言的代码/注释/空行统计和百分比。`python sloc.py` 能跑。
+docstring 的处理：函数/类/模块开头的第一个字符串字面量算注释行（docstring 属于文档不是逻辑代码），但在表达式中间的字符串不算。用 ast 模块识别 docstring 位置。
+
+支持多种语言的 SLOC 统计——Python 用 ast 模块精确解析，其他语言（Java/C/Go/Rust）用行级正则匹配（// 和 /* */ 和 # 注释模式）。
+
+输出格式：按文件统计的表格（LOC/Blank/Comment/SLOC），目录汇总，语言分布饼图（文本版）。支持 --by-language 按语言分类统计。
+
+python3 sloc_counter.py src/。纯 Python 3 标准库。

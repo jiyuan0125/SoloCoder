@@ -1,5 +1,7 @@
-写一个 Rust 的文件类型检测工具，结合 magic number 和扩展名来判断真实类型。
+第一步检测真实格式。读取文件头部最多 1KB，用魔数匹配确定实际格式。同时检查文件扩展名——如果文件有扩展名就记录下来用于后续比对。
 
-有时候文件扩展名被改了或者丢失了，需要通过内容特征来判断。读取文件头部最多 1KB 数据，用 magic number 匹配确认真实格式。同时检查扩展名和实际内容是否一致（比如 .png 文件实际是 JPEG），不一致时给出警告。输出：检测到的真实格式、MIME 类型、和扩展名是否匹配。
+第二步验证一致性。扩展名声称的格式和魔数检测的格式是否一致？比如文件名是 image.png 但魔数显示实际是 JPEG——这种不一致可能是手动改了扩展名或者文件损坏。输出结果包含：真实格式、真实 MIME 类型、声明的格式（从扩展名推断）、是否一致。
 
-Rust 实现，cargo build 通过。
+第三步处理 ZIP 家族的细分。ZIP 文件（PK\x03\x04 开头）下面有很多子类型：DOCX（包含 [Content_Types].xml 和 word/ 目录）、XLSX（包含 xl/ 目录）、PPTX（包含 ppt/ 目录）、APK（包含 AndroidManifest.xml 和 classes.dex）、JAR（包含 META-INF/MANIFEST.MF）、ODT（包含 mimetype 文件内容为 "application/vnd.oasis.opendocument.text"）。通过读取 ZIP 的 central directory 里的文件名列表来区分。
+
+输出格式："检测到的真实格式: DOCX (Microsoft Word Document), MIME: application/vnd.openxmlformats-officedocument.wordprocessingml.document, 扩展名匹配: 不一致（.png vs 实际 DOCX）"。用法 file-type-detect mystery.docx。Rust 实现，cargo build 通过。

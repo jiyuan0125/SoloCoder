@@ -1,5 +1,7 @@
-帮我做一个 HashiCorp Vault 的客户端封装工具。
+HashiCorp Vault 的 API 用起来不算复杂但每次都要查文档，写个封装工具把常用操作包成简单的命令行。团队的密钥和证书都存在 Vault 里，日常操作就是读写密钥、检查版本、管理认证。
 
-封装 Vault 的常见操作：写入密钥（kv v2）、读取密钥、删除密钥版本、列出密钥路径。支持通过 AppRole 和 Token 两种认证方式。能处理 Vault 的 lease 续租。
+Python 封装 Vault 的 KV v2 引擎操作。读取密钥：vault-tool read secret/data/myapp/db → 返回最新版本的密钥值，格式化显示每个 key-value 对。写入密钥：vault-tool write secret/data/myapp/db username=admin password=s3cret → 创建新版本（KV v2 保留历史版本）。列出路径：vault-tool list secret/metadata/myapp/ → 显示该路径下的所有密钥名称。
 
-提供一个 CLI 工具：vault-tool read secret/data/myapp、vault-tool write secret/data/myapp key=value、vault-tool list secret/metadata。也提供 Python SDK 接口。Python 3，用 hvac 库或者 requests 直接调 Vault API。配置从环境变量读。
+认证方式：AppRole（从环境变量读取 role_id 和 secret_id，自动获取 token）和 Token（直接使用 VAULT_TOKEN 环境变量）。Token 自动续租：后台线程定期调用 auth/token/renew-self 延长 token 有效期。
+
+也提供 Python SDK 接口——VaultClient 类，初始化时配置地址和认证信息，之后调用 read(path)、write(path, data)、list(path)、delete(path, versions)。错误处理：Vault 不可达、权限不足、密钥不存在这几种情况分别抛不同的异常。python3 用 hvac 库或直接 requests 调 API。

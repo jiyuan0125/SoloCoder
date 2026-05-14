@@ -1,9 +1,7 @@
-帮我写一个 XMP 元数据解析器，Go 语言。
+Adobe 系工具（Photoshop、Lightroom、Illustrator）在保存文件时会往里面塞一份 XMP 元数据——本质就是一段 RDF/XML，里面记录了创作时间、作者、描述、版权等信息。问题在于 XMP 可以出现在各种文件格式的各种位置：JPEG 的 APP1 段里（以 "http://ns.adobe.com/xap/1.0/" 开头），PNG 的 iTXt chunk 里（keyword 为 "XML:com.adobe.xmp"），TIFF 的 tag 700 里。我得写一个能自动定位并解析 XMP 的 Go 工具。
 
-需求是这样的：
-- 从 JPEG、PNG、TIFF 文件中提取 XMP 数据包（通常是 XML 格式嵌入在文件里）
-- 解析 XMP 的 RDF/XML 结构，读取 dc:title、dc:creator、dc:description、xmp:CreateDate 等命名空间下的属性
-- 支持嵌套结构和数组类型（如多个创作者、多个主题标签）
-- 能处理扩展的 XMP 部分
+XMP 的 RDF/XML 结构长这样：外层是 <x:xmpmeta> 包裹的 <rdf:RDF>，里面有多个 <rdf:Description> 节点。每个 Description 有一个 rdf:about 属性（通常是空字符串）和若干命名空间下的属性。常用的命名空间有：dc（Dublin Core）提供 dc:title、dc:creator、dc:description、dc:subject；xmp 提供 xmp:CreateDate、xmp:ModifyDate、xmp:CreatorTool；tiff 提供 tiff:ImageWidth、tiff:ImageHeight、tiff:ResolutionUnit。
 
-命令行 xmp-parse design.png，输出所有 XMP 属性。Go 标准库即可，go build 能编译。
+解析时要处理几种值类型——简单文本属性直接读内容，数组属性用 <rdf:Bag>（无序）或 <rdf:Seq>（有序）或 <rdf:Alt>（多语言备选）包裹的 <rdf:li> 元素列表，嵌套结构用子 Description 表示。结构化属性比如 xmpTHRA 的Thumbnail 这种。
+
+命令行 xmp-parse design.png，输出所有 XMP 属性的键值对。Go 标准库 encoding/xml 解析，go build 能编译。

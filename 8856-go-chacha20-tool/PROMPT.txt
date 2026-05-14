@@ -1,8 +1,13 @@
-写个 ChaCha20-Poly1305 加解密工具，Go 语言实现。
+ChaCha20-Poly1305 在移动端和现代协议里性能很好，TLS 1.3 也在用它。AES 有硬件加速的平台快，但没有 AES-NI 的 ARM 设备上 ChaCha20 更快。想有个独立的 CLI 工具体验一下这个加密算法。
 
-ChaCha20 在移动端和现代协议里性能很好，TLS 1.3 也在用它。想有个独立的 CLI 工具体验下这个加密算法。
+用 Go 写一个 ChaCha20-Poly1305 加解密工具。加密流程：读取或生成 32 字节密钥（hex 格式传入或 crypto/rand 随机生成）。生成随机 nonce（12 字节）。用 chacha20poly1305.NewX() 创建 AEAD 实例。加密数据得到密文+tag。输出格式：nonce(12B) + ciphertext + tag(16B)，写文件时前面加 4 字节密文长度。
 
-要求：用 ChaCha20-Poly1305 做 AEAD 加密解密；支持从文件读取明文，加密后写文件；密钥可以是 hex 字符串传入，也可以随机生成后打印出来。
+解密流程：从文件读取 nonce + 密文 + tag。用同样的密钥创建 AEAD 实例。调用 Open() 解密并验证 tag。tag 验证失败返回错误（数据被篡改或密钥不对）。
 
-命令：chacha20-tool keygen > key.hex、chacha20-tool encrypt -key key.hex -in msg.txt -out enc.bin、chacha20-tool decrypt -key key.hex -in enc.bin -out dec.txt
+密钥管理：keygen 子命令生成随机 32 字节密钥输出为 hex 字符串。支持从文件读取密钥（一行 hex 字符串）。打印密钥的 SHA-256 指纹方便确认用的是哪个密钥。
+
+附加数据（AAD）支持：-aad "additional data" 参数，AAD 参与认证但不加密。解密时需要提供相同的 AAD 才能成功。用于关联密文和元数据（如文件名）。
+
+命令：chacha20-tool keygen > key.hex、chacha20-tool encrypt -key key.hex -in msg.txt -out enc.bin、chacha20-tool decrypt -key key.hex -in enc.bin -out dec.txt。
+
 Go 标准库 crypto/chacha20poly1305，go build 编译通过。

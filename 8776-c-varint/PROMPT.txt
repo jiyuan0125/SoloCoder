@@ -1,4 +1,11 @@
-帮我用 C 实现 Varint 编解码。
-Protocol Buffers、LevelDB 都用 varint 来紧凑地存整数：每个字节用最高位表示"还有没有后续字节"，低 7 位是数据。
-要支持编码和解码 uint32、uint64。再实现 signed varint（zigzag 编码：把有符号数映射成无符号数，小绝对值的数编码更短）。
-提供 encode/decode 函数和简单的 benchmark，对比 varint 和定长编码在不同数值范围下的字节数。gcc 编译。
+Protocol Buffers 和 LevelDB 里都有个 varint 编码——把整数按 7 bit 一组切开，每组最高位标记"还有没有后续字节"，小数字一两个字节搞定，大数字最多 5 或 10 个字节。比起固定 4 字节或 8 字节的存储，对大量小数值的场景能省很多空间。它也是 delta 编码和 LSM 索引里的基础组件。
+
+用 C 实现 Varint 编解码。每个字节的低 7 位是数据，最高位（MSB）是 continuation bit——1 表示后面还有字节，0 表示这是最后一个字节。多字节的数据按小端序排列（低字节在前）。
+
+编码函数：encode_uint32(value, buffer) 把 uint32 编码为 varint 字节序列写入 buffer，返回写入的字节数。值 0~127 只要 1 字节，128~16383 要 2 字节，以此类推，最多 5 字节。同样实现 encode_uint64，最多 10 字节。
+
+解码函数：decode_uint32(buffer, &value) 从 buffer 读取 varint 并还原为 uint32，返回消耗的字节数。decode_uint64 同理。
+
+再实现 signed varint：先用 zigzag 编码把有符号数映射成无符号数（zigzag(n) = (n << 1) ^ (n >> 31) for int32），然后用 varint 编码。这样 -1 编码为 1（1 字节），1 编码为 2（1 字节），小绝对值的数都用少量字节。
+
+提供一个 benchmark：生成不同数值范围的数据集（[0,127]、[0,16383]、[0,2^31-1]），各 100 万个，对比 varint 编码和定长编码（4 字节）的总字节数和编码耗时。输出对比表格。gcc 编译。

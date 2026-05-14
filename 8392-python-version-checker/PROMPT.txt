@@ -1,5 +1,13 @@
-帮我实现一个 Python 的版本兼容性检查器，检测代码在不同 Python 版本间的兼容问题。
+项目要求兼容 Python 3.8+，但开发者不小心用了 3.10 才有的语法（match-case）或标准库功能。CI 上跑低版本 Python 才发现就晚了。写一个静态版本兼容性检查器。Python 实现。
 
-代码在 Python 3.8 能跑但在 3.12 报错？这类问题需要提前发现。解析 Python AST，检查：版本特定的语法（如 3.10 的 match-case、3.9 的字典合并运算符 `|`）、标准库模块的版本可用性（如 `tomllib` 从 3.11 才有）、废弃和移除的功能（如 3.12 移除了 `imp` 模块）。用户指定目标版本范围。
+检查维度：
+- 语法兼容性：用 ast 模块尝试解析源文件。如果解析失败，检查错误是否因为高版本语法——match/case（3.10+）、ExceptionGroup/except*（3.11+）、类型参数语法（3.12+）
+- 标准库 API 兼容性：检查 import 和属性访问是否使用了目标版本没有的模块或函数。比如 tomllib 是 3.11 新增的，zoneinfo 是 3.9 新增的
+- 内置函数兼容性：dict.merge（3.9+）、str.removeprefix/removesuffix（3.9+）、int.bit_count（3.10+）、ExceptionGroup（3.11+）
+- 类型注解兼容性：内置泛型 list[int]（3.9+，之前需要 from typing import List）、ParamSpec（3.10+）、TypeVarTuple（3.11+）
 
-Python 3，ast 模块。用法：`python version_checker.py --min-version 3.8 --max-version 3.12 src/`，输出不兼容的代码位置和原因。`python version_checker.py` 能直接运行。
+版本特性数据库：一个 JSON 文件记录每个 Python 版本新增的语法、标准库模块、内置函数和类型。检查时对比目标版本过滤。
+
+输出每个不兼容用法的文件:行号、使用的特性、引入的 Python 版本、目标版本不支持。按严重程度排序。
+
+python3 version_checker.py src/ --target 3.8。纯 Python 3 用 ast 模块。

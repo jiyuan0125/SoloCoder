@@ -1,1 +1,11 @@
-公司的 API Key 需要定期轮换。用 Go 写一个密钥轮换管理工具：记录每个密钥的创建时间、过期时间、所属服务、状态（活跃/轮换中/已废弃）。到期前自动提醒（命令行查询即将过期的密钥）。支持轮换操作：生成新密钥、标记旧密钥为过渡期（仍可用 N 天）、最终废弃。数据存在本地 JSON 文件中。go build 编译通过。
+公司的 API Key 需要定期轮换——每个密钥有生命周期，到期前必须换新。现在密钥管理全靠 Excel，哪个 key 快过期了全凭记忆。
+
+用 Go 写一个密钥轮换管理工具。每个密钥的元信息：key_id（唯一标识）、service（所属服务）、created_at、expires_at、status（active/transitioning/revoked）、rotation_policy（自动轮换周期，如 90d）。
+
+即将过期提醒：expiring --days 30 列出未来 30 天内过期的密钥，按过期时间排序。
+
+轮换操作 rotate --key-id xxx：生成新密钥（随机 32 字节 Base62）。标记旧密钥为 transition 状态（仍可用，设一个过渡期，默认 7 天）。记录轮换事件。过渡期结束后旧密钥自动变为 revoked。
+
+数据存在本地 JSON 文件中。命令行：key-rotation add --service=user-svc --ttl=90d、key-rotation list、key-rotation expiring --days 30、key-rotation rotate --key-id xxx。
+
+go build 编译通过。

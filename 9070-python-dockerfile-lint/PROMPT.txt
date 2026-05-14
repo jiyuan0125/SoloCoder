@@ -1,1 +1,9 @@
-团队写的 Dockerfile 质量参差不齐，想做个自动检查工具。用 Python 写一个 Dockerfile Linter，解析 Dockerfile 内容，检查最佳实践：是否用了特定基础镜像 tag（不用 latest）、是否合理利用了构建缓存（COPY 顺序）、是否有不必要的包安装、是否定义了 HEALTHCHECK、是否用非 root 用户、镜像层数是否过多。输出问题列表和修改建议，命令行使用。
+团队里 Dockerfile 写法五花八门，有的用 latest 基础镜像，有的把密码写进环境变量，有的一个 RUN 一层搞得镜像几百 MB。写个 lint 工具统一检查规范。
+
+Python 实现一个 Dockerfile 静态分析工具。解析 Dockerfile 语法（逐行解析指令，支持多行续行 \），对每条指令做规则检查。
+
+安全规则：FROM 指令是否使用 latest 标签（应该用具体版本号）、ENV 是否包含密码或密钥（检测 PASSWORD、SECRET、TOKEN 等变量名）、COPY/ADD 的源路径是否包含敏感文件（.env、id_rsa、*.pem）、USER 指令是否存在（没有则以 root 运行）。
+
+最佳实践规则：RUN 指令是否合并（多个 apt-get install 应该用一条 RUN 减少层数）、apt-get install 后是否清理缓存（rm -rf /var/lib/apt/lists/*）、是否使用多阶段构建（编译和运行分离减小镜像体积）、HEALTHCHECK 是否设置。
+
+输出格式：每个问题标注严重等级（error/warning/info）、所在行号、问题描述和修复建议。最后给出一个整体评分（A-F）。python3 命令行工具，输入 Dockerfile 路径。

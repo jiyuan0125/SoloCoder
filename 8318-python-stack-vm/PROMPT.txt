@@ -1,3 +1,17 @@
-对栈式虚拟机的实现方式很感兴趣，想用 Python 从零实现一个。设计一套基于栈的指令集（PUSH、POP、DUP、ADD、SUB、MUL、DIV、MOD、CMP、JMP、JZ、JNZ、CALL、RET 等），支持整型和浮点运算、局部变量、函数调用（含参数传递和返回值）。
+对 Forth 和 JVM 这种纯栈式架构很着迷——没有寄存器，所有操作都在栈上完成，指令集特别简洁。Python 从零实现一个栈式虚拟机。
 
-附带一个简单的汇编器，能把助记符文本转成字节码。纯 Python，python 能跑，命令行读 .asm 文件执行并打印输出。
+指令集设计（约 25 条）：
+- 栈操作：PUSH imm、POP、DUP、SWAP（交换栈顶两个元素）
+- 算术：ADD、SUB、MUL、DIV、MOD（都是二元操作，弹出两个值压入结果）
+- 浮点：I2F（整数转浮点）、FADD/FSUB/FMUL/FDIV
+- 比较：CMP（弹出两个值比较，压入 -1/0/1）
+- 控制流：JMP addr、JZ addr（零跳转）、JNZ addr（非零跳转）
+- 局部变量：LOAD slot、STORE slot（slot 是函数帧中的位置索引）
+- 函数：CALL addr arg_count、RET
+- 输出：PRINT（弹出栈顶打印）
+
+函数调用的帧结构：调用时在调用栈上创建一个新帧（保存返回地址、参数作为初始局部变量），RET 时弹出帧恢复上一帧。局部变量的 slot 编号从 0 开始。
+
+附带一个简单的汇编器：把助记符文本转成字节码。汇编器支持标签（label:）用于跳转目标，汇编时解析标签地址。也支持注释（; 分号后面是注释）。
+
+python3 stack_vm.py program.asm 读入汇编文件执行并打印输出。纯 Python 实现。

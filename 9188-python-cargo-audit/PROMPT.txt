@@ -1,14 +1,7 @@
-Rust Cargo 依赖安全审计，扫描 Cargo.lock 检查 crates 的已知漏洞。
+Rust Cargo 依赖安全审计。Rust 生态有 RustSec Advisory Database 记录已知漏洞，cargo audit 命令可以查但我们要在 CI 中自定义逻辑，写个 Python 版本。
 
-Rust 生态的 cargo audit 工具挺好，但我们需要在 Python 轨道里统一处理所有语言的依赖审计。
+Python 实现。第一步解析 Cargo.lock：读取 TOML 格式的锁文件，提取 [[package]] 段的每个 crate——name、version、source（区分 crates.io 和 git 源）、checksum。也支持解析 Cargo.toml 的 [dependencies] 段获取直接依赖列表。
 
-Python 实现：
-- 解析 Cargo.lock（v2/v3 格式）提取所有 crate 名称、版本、来源
-- 对比本地漏洞数据库，检查已知安全问题
-- 解析 Cargo.toml 提取直接依赖和 features 信息
-- 检测 yanked 版本（已被作者撤回的版本）
-- 输出按严重度排序的审计结果
+第二步漏洞查询：从 RustSec Advisory Database 下载 advisories 目录（每条建议是一个 TOML 文件，包含漏洞影响的 crate 名和版本范围）。本地匹配：对每个 crate，查找对应 name 的 advisory 文件，检查版本号是否落在 affected 版本范围内（用 semver 版本比较）。也支持调 OSV API（ecosystem=crates.io）在线查询。
 
-示例：python cargo_audit.py check Cargo.lock --db rust_vulns.json
-python cargo_audit.py check --toml Cargo.toml
-Cargo.lock 的 TOML 格式解析要正确，注意 v3 格式用 [[package]] 数组。
+第三步结果展示：有漏洞的 crate 列表——名称、当前版本、advisory ID（如 RUSTSEC-2024-XXXX）、严重等级（根据 CVSS 或 RustSec 的分类）、描述摘要、修复版本。无漏洞的 crate 不显示，保持输出简洁。汇总统计。python3 命令行工具，用 tomllib 解析 TOML。

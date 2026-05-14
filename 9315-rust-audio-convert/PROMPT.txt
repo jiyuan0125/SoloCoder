@@ -1,9 +1,7 @@
-做一个简单的音频格式转换工具，支持 WAV、PCM 裸数据之间的转换。
+音频格式转换——在不同编码和位深之间互转。最常见的需求是 WAV 和裸 PCM 数据之间的转换：剥离/添加文件头，转换位深度。Rust 来做一个简洁的转换工具。
 
-转换能力：
-- WAV 转 PCM：剥离文件头，只输出裸采样数据（支持指定输出位深：16bit/24bit/32bit）
-- PCM 转 WAV：给裸 PCM 数据加上 WAV 文件头，需要用户指定采样率、声道数、位深
-- 支持单声道/双声道、大端/小端字节序的指定
-- 位深转换时做正确的量化（如 32bit float 转 16bit int 要 clamp 到 -32768~32767）
+WAV 转 PCM：读 WAV 文件，跳过文件头和所有非 data chunk，直接输出 data chunk 里的原始采样字节。可选参数：--bits 16/24/32 指定输出位深。如果输入是 32bit 浮点要转成 16bit 整数，需要做归一化（×32767）和 clamp（-32768~32767）。24bit 转 16bit 简单右移 8 位。PCM 输出不用文件头，纯二进制数据。
 
-Rust，cargo build 通过。`audio-convert to-pcm input.wav --bits 16` 或 `audio-convert to-wav raw.pcm --rate 44100 --channels 2 --bits 16`。
+PCM 转 WAV：给裸 PCM 数据加上 44 字节的标准 WAV 文件头——"RIFF" + 4 字节文件大小 + "WAVE" + fmt chunk（16 字节：编码格式、声道数、采样率、字节码率、块对齐、位深）+ data chunk header（"data" + 4 字节数据大小）。用户必须通过参数指定采样率（--rate）、声道数（--channels）、位深（--bits）。
+
+字节序的处理——WAV 固定是小端。如果用户指定大端输出 PCM（--big-endian），16bit 采样要反转字节顺序。单声道/双声道的声道数也要正确设置。用法：audio-convert to-pcm input.wav --bits 16，audio-convert to-wav raw.pcm --rate 44100 --channels 2 --bits 16。Rust 实现，cargo build 通过。

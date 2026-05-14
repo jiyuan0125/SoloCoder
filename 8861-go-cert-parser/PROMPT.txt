@@ -1,8 +1,11 @@
-做一个 X.509 证书解析工具，Go 写的命令行程序。
+排查 TLS 问题经常需要看证书的详细字段，openssl x509 -text 输出一大堆还找不到想要的字段。想有个工具能结构化地展示证书的关键信息，过期检测一眼就能看到。
 
-排查 TLS 问题的时候经常需要看证书的详细字段，openssl x509 -text 输出太杂了。想有个工具能结构化地展示证书的关键信息。
+用 Go 写一个 X.509 证书解析工具。parse 子命令：用 pem.Decode 读取 PEM 格式证书（也支持 DER 格式直接用 x509.ParseCertificate）。展示以下字段——主题（Subject 的 CN、O、OU、C）、颁发者（Issuer 同样格式）、有效期（NotBefore 和 NotAfter，人类可读的日期格式）、序列号（hex 格式）、SAN（Subject Alternative Names，DNS 名称和 IP 地址列表）、密钥用法（Key Usage 和 Extended Key Usage）、基本约束（Basic Constraints，是否 CA、路径长度）。
 
-功能：解析 PEM 或 DER 格式的证书文件；展示主题、颁发者、有效期、序列号、SAN、密钥用法、基本约束等字段；检测证书是否过期，计算剩余天数。
+check 子命令：在 parse 的基础上增加状态检测——是否过期（比较 NotAfter 和当前时间）、剩余天数、是否自签名（Subject 和 Issuer 相同）、密钥类型和长度（RSA 2048/4096 还是 ECDSA P-256 等）。
 
-用法：cert-parser parse -file server.crt、cert-parser check -file server.crt（显示是否过期和剩余天数）
-Go 标准库 crypto/x509 就够了，go build 能编译。
+批量检查：从文件读取多个证书路径，逐一检测并汇总报告——列出已过期的、即将过期的（30天内）、密钥太短的。
+
+命令：cert-parser parse -file server.crt、cert-parser check -file server.crt、cert-parser batch -list cert_paths.txt。
+
+Go 标准库 crypto/x509 + encoding/pem，go build 能编译。

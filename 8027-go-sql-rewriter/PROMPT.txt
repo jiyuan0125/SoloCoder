@@ -1,2 +1,9 @@
-用 Go 做 SQL 改写工具。能对 SQL AST 做几种常见改写：把 SELECT * 展开成具体列名（需要传 schema 信息）、消除无意义的恒真条件(1=1)、简化嵌套 EXISTS/NOT EXISTS、谓词下推。
-改写前后都输出 SQL 文本，让用户能对比。命令行工具，go build 能过。
+生产环境的 SQL 查询经常有一些写法上的坏味道——SELECT * 啦、恒真条件 1=1 啦、嵌套的 EXISTS 可以简化成 JOIN 啦。手动改太慢了，得自动化。
+
+用 Go 做 SQL 改写工具。先解析 SQL 成 AST，然后在 AST 上做改写，最后把 AST 还原成 SQL 文本。能做这几种常见改写：
+
+把 SELECT * 展开成具体列名（需要传入 schema 信息——表名和列名的映射，从 JSON 文件加载）。消除无意义的恒真条件（WHERE 1=1 AND ... 变成 WHERE ...）和恒假条件（WHERE 1=0 整个结果集为空）。简化嵌套 EXISTS/NOT EXISTS 为 SEMI JOIN / ANTI JOIN。谓词下推——把 WHERE 条件推到子查询内部，减少中间结果集大小。
+
+改写前后都输出 SQL 文本，用 diff 格式显示差异，让用户能确认改写是否正确。支持 --dry-run 只显示不执行。多条改写规则可以单独开关，用 --rules pushdown,expand,eliminate 参数控制。
+
+命令行工具，go build 能过。

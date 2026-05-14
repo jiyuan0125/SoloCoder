@@ -1,1 +1,9 @@
-最近在做基础设施相关的工具，需要解析 HashiCorp Configuration Language (HCL) 格式的配置文件。帮我用 Go 写一个 HCL 解析器，能处理 block、attribute、注释这些基本语法元素，支持嵌套 block，解析后输出结构化的 JSON 方便后续处理。遇到语法错误要给出清晰的行号和错误信息。用 Go 标准库实现，go build 能编译通过就行。
+最近在做基础设施相关的工具，需要解析 HashiCorp Configuration Language (HCL) 格式的配置文件——Terraform、Vault、Consul 的配置都是 HCL 写的。Go 生态虽然有 hcl 库，但想自己实现一个来理解它的语法结构。
+
+用 Go 写一个 HCL 解析器。HCL 是 JSON 的超集，但支持更人性化的写法。需要处理的语法元素：block（类型名 + 可选标签 + 花括号包裹体，如 resource "aws_instance" "web" { ... }，支持嵌套 block）、attribute（key = value 赋值，value 可以是字面量、表达式、变量引用）、注释（# 和 // 单行注释、/* */ 多行注释）。
+
+value 类型支持：字符串（双引号，支持转义和模板插值 ${var}）、数字（整数和浮点）、布尔值、列表（[...] 用逗号分隔）、对象（{...} 键值对）、模板插值（${expression}，支持属性访问和函数调用如 upper(name)）。
+
+解析后输出结构化的 JSON——block 变成嵌套对象，attribute 变成键值对。遇到语法错误要给出清晰的行号和错误信息，比如括号不匹配、缺少等号、无效的转义序列。
+
+用 Go 标准库实现，go build 能编译通过。

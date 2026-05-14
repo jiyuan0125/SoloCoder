@@ -3,3 +3,9 @@
 Baggage 就是在分布式追踪里随请求一路传递的自定义键值对，比如用户 ID、实验分组这些业务信息。实现一个 BaggageCarrier：支持添加、获取、删除 baggage 项；能把 baggage 序列化成字符串放到 HTTP header（类似 W3C baggage header 格式，逗号分隔，key=value）；能从 header 字符串反序列化回来；处理特殊字符的转义和 URL 编码；设置最大条目数限制防止滥用。
 
 纯 Rust，cargo build 通过，带个 demo 展示序列化和反序列化。
+
+这个工具的核心价值在于把baggage carrier的关键细节都暴露出来——不是藏在框架的抽象层后面，而是让你能直接看到每个操作的效果。用Rust实现，利用类型系统在编译期捕获状态转换的错误。cargo build 通过。
+
+Baggage 沿调用链传播用户自定义键值对——比如 tenant_id，沿途所有服务都能看到。用于日志关联和权限检查。
+
+程序要打印关键操作的详细信息，让使用者清楚看到每一步的效果。Rust 标准库实现，cargo build 通过。

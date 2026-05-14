@@ -1,5 +1,7 @@
-用 Rust 写一个文件损坏检测工具。
+从网络下载的文件可能损坏——断点续传不完整、磁盘坏道、传输错误。需要一个工具快速检测常见文件格式是否损坏。Rust 实现。
 
-检查文件是否完整、有没有被截断或损坏。对于图片（JPEG/PNG/GIF），检查文件头尾标记是否完整；对于压缩包（ZIP/GZ），验证压缩结构的完整性；对于视频（MP4/MKV），检查容器 box/element 结构是否闭合。也做通用的检查：文件大小是否为 0、是否全是 0x00 填充。输出每个文件的检查结果：OK / WARNING / CORRUPTED。
+检测策略按文件类型分别处理。JPEG：检查 SOI（FFD8）和 EOI（FFD9）标记是否存在，中间的 SOS 标记后面有没有实际的扫描数据。PNG：检查签名（89 50 4E 47）和 IEND chunk 是否存在。GIF：检查文件头（GIF87a/GIF89a）和尾部的 0x00 终止符。ZIP/DOCX/XLSX：验证 central directory 的 End-of-Central-Directory 记录是否存在且偏移量正确。
 
-Rust 实现，cargo build 通过。
+MP4/MKV 容器检测——MP4 检查 ftyp box 是否完整，moov box 能否正常解析到结束位置。MKV 检查 EBML 头是否完整，Segment 元素能否遍历到文件末尾。关键结构是否能正常解析——MP4 的 box 大小不应该超出文件范围，MKV 的 EBML 元素大小也不应该。
+
+通用检测——文件大小是否为 0、是否全是 0x00 填充（某些损坏的文件会被零填充）。输出每个文件的检查结果：OK / WARNING（部分结构异常但可尝试读取） / CORRUPTED（严重损坏无法使用），附带具体问题描述。用法 corruption-detect photo.jpg 或 corruption-detect ./downloads/。Rust 实现，cargo build 通过。

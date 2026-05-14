@@ -1,3 +1,7 @@
-微服务之间要加 mTLS，但证书管理很头疼。写个 Go 的 mTLS 证书管理工具，能自动生成自签名的 CA、服务端证书和客户端证书。
+微服务要上 mTLS，但是证书管理这件事真的让人头大——自己用 openssl 命令行签证书，命令参数一堆，稍微写错一个 SAN 就导致 TLS 握手失败，而且过期了也没人知道，等到线上报证书错误才发现。
 
-功能：生成 CA 密钥对、签发服务端证书（支持 SAN）、签发客户端证书、检查证书有效期和链式验证。命令行操作，比如 `mtls-manager ca create`、`mtls-manager cert issue --san=dns:api.example.com` 这样。证书存成 PEM 文件。用标准库的 crypto/x509 就行，go build 通过。
+写一个 Go 的 mTLS 证书管理工具，把这些操作都封装成简单的子命令。
+
+功能分为四个部分。CA 管理：创建自签名 CA 密钥对（RSA 4096 或 ECDSA P256），ca create 子命令生成 ca-key.pem 和 ca-cert.pem，证书有效期可配置。服务端证书签发：cert issue --type=server --san=dns:api.example.com,dns:api.internal，从 CA 签发带 SAN 扩展的服务端证书，密钥用途标记为 server auth。客户端证书签发：cert issue --type=client --cn=service-a，签发用于 mTLS 客户端认证的证书。证书检查：cert check --cert=server.pem，显示证书的主题、SAN、有效期、颁发者，并且做链式验证（确认证书确实是由指定 CA 签发的）。
+
+所有证书和密钥都存成 PEM 格式。命令行参数要合理，没有必填的就不要强制要求输入。用 Go 标准库的 crypto/x509、crypto/rand、crypto/rsa 和 encoding/pem 实现，不要引入第三方依赖。go build 通过。

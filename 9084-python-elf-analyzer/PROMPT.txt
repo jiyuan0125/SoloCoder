@@ -1,1 +1,9 @@
-Linux 下也需要分析可疑 ELF 文件。用 Python 写一个 ELF 文件分析器，解析 ELF 格式：读取 ELF 头、Program Header、Section Header，提取动态链接依赖（NEEDED 库）、符号表（Symbol Table）中的函数名，检查是否有异常（比如 ET_DYN 类型的文件却有可执行的 stack）。输出分析报告，纯 Python 解析二进制，命令行工具。
+Linux 服务器上发现一个可疑的二进制文件，想快速看看它是什么、有什么依赖、有没有异常的符号。写个 ELF 文件分析器。
+
+Python 实现一个 ELF（Executable and Linkable Format）文件解析器。先检查 ELF 魔数（\x7fELF），然后解析文件头：类别（32 位或 64 位）、字节序（大端或小端）、类型（可执行 ET_EXEC、共享对象 ET_DYN、可重定位 ET_REL）、机器架构（x86-64 EM_X86_64、ARM EM_ARM、AArch64 EM_AARCH64）、入口点地址。
+
+程序头表（Program Headers）：遍历所有 segment，关注 LOAD 类型（可加载段，检查权限标志——同时具有写和执行权限的段可疑）、INTERP 类型（动态链接器路径）、DYNAMIC 类型（动态链接信息）。
+
+节区头表（Section Headers）：列出所有 section 的名称和类型——.text（代码段）、.data（已初始化数据）、.bss（未初始化数据）、.dynsym/.dynstr（动态符号表和字符串表，列出导入的共享库和函数名）、.symtab（符号表，包含所有函数和全局变量）。
+
+动态链接信息：从 .dynamic 段提取 NEEDED 条目（依赖的共享库名称列表，如 libc.so.6、libssl.so.1.1）。python3 纯二进制解析。
