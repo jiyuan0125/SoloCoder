@@ -1,4 +1,4 @@
-每周的站会纪要散落在各个群里，上周讨论的结论这周没人记得。写个会议纪要管理工具，把会议内容、决议、行动项关联起来，敏捷团队用。
+上周三站会讨论的结果到这周三谁也想不起来了——翻遍飞书群也没找到。会议纪要不能这么管，得把议题、决议、行动项全关联起来，写个工具专门干这事。
 
 三个关联实体：Meeting、Topic、ActionItem。Meeting 有 ID、标题、日期、参会人列表（逗号分隔）、状态（draft/published/archived）。Topic 有 ID、关联 Meeting ID、内容、讨论结果、排序序号。ActionItem 有 ID、关联 Meeting ID（通过 Topic 间接关联）、内容、负责人、截止日期、状态（open/in-progress/completed）。
 

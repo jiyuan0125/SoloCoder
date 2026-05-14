@@ -1,11 +1,14 @@
-先想一下平时怎么管开发环境的监控配置——每个环境一套 agent，改个采集频率、调个告警阈值，得手动编辑 YAML，一不留神就改错了还不好回滚。我想用 CLI 工具把这事儿管起来，每个环境有独立的配置目录，互不干扰。
+生产环境的 Prometheus agent 采集间隔从 15s 改成了 5s，改完 YAML 推上去——结果格式写错了一个缩进，agent 起不来，监控断了二十分钟。五个环境五套 agent 配置，全靠手动编辑 YAML，改错无法回滚。
 
-首先得能创建环境，`env create <name>` 会初始化一个独立目录，里面放 agent 的默认配置。环境名称只能用小写字母、数字和连字符，长度 2 到 32 个字符，创建时如果同名环境已存在就报错。删环境用 `env delete <name>`，删之前要确认目录存在，不存在的给出提示。列出所有环境用 `env list`，显示名称和创建时间。
+MonitorEnv 实体有名称（小写字母+数字+连字符，2-32 字符）、创建时间、agent 配置列表。`env create <name>` 初始化独立目录，同名已存在则报错。`env delete <name>` 删除前确认目录存在。`env list` 显示所有环境名称和创建时间。
 
-然后是往环境里加 agent 配置。一个环境可以挂多个 agent，每个 agent 有自己的配置项。用 `agent add <env> <agent-name>` 添加，配置项包括采集间隔（秒，范围 1-3600）、日志级别（debug/info/warn/error）、目标地址（host:port 格式）、超时时间（毫秒，范围 100-30000）。所有配置项都有合理默认值，加的时候可以只指定想改的。
+AgentConfig 实体有名称、采集间隔（秒，1-3600）、日志级别（debug/info/warn/error）、目标地址（host:port）、超时时间（毫秒，100-30000）。`agent add <env> <agent-name>` 添加 agent 配置，所有配置项有合理默认值。`agent set <env> <agent-name> <key>=<value>` 修改配置，key 不在允许范围或 value 格式不对则报错。`agent show <env> <agent-name>` 查看完整配置。
 
-修改配置用 `agent set <env> <agent-name> <key>=<value>`，key 不在允许范围内报错，value 格式不对也报错。查看某个 agent 的完整配置用 `agent show <env> <agent-name>`。
+环境完全隔离——每个环境的配置和 agent 列表存在各自目录下，操作必须指定环境名。`env export <name>` 打包为 .tar.gz，`env import <file>` 导入（冲突时自动加后缀 _1）。每次修改立刻写盘，JSON 格式存储。
 
-环境之间完全隔离——每个环境的配置文件、agent 列表都存在各自的目录下，操作时必须指定环境名，不会串。导出功能用 `env export <name>`，把整个环境目录打包成一个 .tar.gz 文件，可以发给同事直接用 `env import <file>` 导入到另一台机器上。导入时如果环境名冲突，自动加后缀 _1、_2 这样。
+- `env create <name>` / `env delete <name>` / `env list`
+- `agent add <env> <name>` / `agent set <env> <name> <key>=<value>`
+- `agent show <env> <name>` / `agent list <env>` / `agent remove <env> <name>`
+- `env export <name>` / `env import <file>`
 
-另外加个 `agent list <env>` 命令，列出某个环境下所有 agent 的名称和状态。删 agent 用 `agent remove <env> <agent-name>`，删除前确认 agent 存在，不存在就提示。所有数据持久化在本地文件系统，JSON 格式存储配置，目录结构清晰。每次修改配置后立刻写盘，程序异常退出也不会丢数据。Go 标准库实现，go build 编译通过即可。
+Go 标准库实现，go build 通过。

@@ -1,4 +1,4 @@
-团队资源日历用 Excel 管，谁请假、谁出差全靠手动记，排期的时候经常忽略掉。写个 CLI 工具，把人员可用性和资源占用管理起来，主流程完成时自动生成关联的变更记录。
+上周排期忘了小李请了婚假，任务分给他之后卡了五天。人员可用性这种事不能靠记性，得有个工具把请假、出差、工时全管起来，排期前看一眼就知道谁在谁不在。主流程完成时自动生成关联的变更记录。
 
 核心实体：Member 有名字、角色、默认每日可用工时。CalendarEntry 有 ID、成员名、日期、类型（available/leave/training/travel/holiday）、可用工时（leave/holiday 为 0，travel 通常为 4）、备注。创建请假或出差记录后（`entry add <member> --date <date> --type <type> [--hours <n>] [--note <text>]`），自动生成一条关联的 AuditLog 记录，内容包括操作时间、操作人、变更内容摘要。
 

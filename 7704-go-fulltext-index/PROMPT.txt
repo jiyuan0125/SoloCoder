@@ -1,4 +1,4 @@
-全文索引——文档多了以后靠文件名搜索根本不够用，得有内容级别的检索能力。这个工具给本地 Markdown 笔记库加全文搜索。
+笔记库存了 300 多篇 Markdown，每次找东西只能 grep 文件名。明明记得写过一篇 goroutine 泄漏排查的文章，搜 "goroutine" 搜不到——因为标题写的是"内存问题定位"，正文里只提了一次 goroutine。靠文件名搜索根本不够用，得有内容级别的全文检索。
 
 ft-index 纯 Go 标准库，`go build -o ft-index ./cmd/ft-index` 直接编译。
 

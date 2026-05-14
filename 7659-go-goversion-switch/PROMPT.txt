@@ -1,4 +1,4 @@
-项目要求 Go 1.21，但本地还是 1.19，切换版本要改 PATH、GOROOT、GOFLAGS，改了这个忘了那个。写个 Go 版本切换工具，用嵌套资源路径管理多个版本的配置。
+三个项目三个 Go 版本——1.19、1.21、1.22——来回切换全靠手动 export PATH 和 GOROOT。上周切到 1.22 跑测试，忘了 GOFLAGS 里还留着 1.19 的构建标签，测试全挂了。版本切换这事得工具化，把每个版本的完整环境配置管起来。
 
 GoVersion 实体有版本号、安装路径、GOROOT、状态（installed/available/default）。VersionConfig 有嵌套结构——路径为 `version/<version>/config`，包含 PATH 追加项、环境变量覆盖、构建标签。`show version/1.21/config` 显示该版本的完整配置。`edit version/1.21/config --set GOROOT=/opt/go1.21` 修改配置。
 

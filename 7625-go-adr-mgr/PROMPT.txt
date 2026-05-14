@@ -1,4 +1,4 @@
-架构决策散落在聊天记录和邮件里，半年后新人问"为什么用 gRPC 不用 REST"，没人答得上来。写个 ADR（Architecture Decision Record）CLI 工具，把决策过程结构化存下来。
+半年前决定用 gRPC 不用 REST，原因写在哪了？没人知道。新人入职三天就问这种问题，我只能尴尬地翻聊天记录。得搞个 ADR（Architecture Decision Record）工具，把每个架构决策的前因后果结构化存下来。
 
 ADR 实体有 ID、标题、状态（proposed/accepted/deprecated/superseded）、上下文描述、决策内容、后果分析、决策日期、决策参与者、关联的替代方案 ID。数据存本地 JSON 文件，支持完整的增删改查。
 

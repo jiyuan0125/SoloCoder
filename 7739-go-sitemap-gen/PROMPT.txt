@@ -1,4 +1,4 @@
-Sitemap——搜索引擎优化绕不开的东西。文档站点页面一多手动维护 sitemap.xml 不现实，必须自动生成。这个工具从文档目录结构直接生成标准 sitemap。
+文档站点上线三个月了，Google Search Console 里收录还不到十分之一——一看才发现 sitemap.xml 根本没提交过，手动维护更是从来没做过。500 多个页面，总不能一个一个写 loc 标签。做个工具直接从文档目录结构生成标准 sitemap，改动文件后增量更新就行。
 
 sitemap-gen 用 Go 标准库实现，`go build -o sitemap-gen ./cmd/sitemap-gen` 编译。
 

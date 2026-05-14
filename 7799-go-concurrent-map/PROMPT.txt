@@ -1,4 +1,4 @@
-并发安全 Map——Go 的 map 不是并发安全的，多个 goroutine 同时读写会 panic。`sync.Map` 虽然安全但 API 不好用，还没有泛型支持。自己封装一个带泛型风格的并发安全 map。
+线上服务突然 panic，日志最后一行是 concurrent map read and write。Go 的原生 map 多个 goroutine 同时操作就炸。sync.Map 虽然安全但 API 不好用，还没有泛型支持。自己封装一个，分片锁提升性能，API 简洁好用。
 
 concurrent-map 用 Go 标准库实现，`go build -o cmap-demo ./cmd/cmap` 编译。它处理文件操作场景下的并发安全键值存储。
 

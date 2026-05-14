@@ -1,4 +1,4 @@
-go.mod 里的 replace 指令没人管得清——根目录一份，子模块一份，CI 环境还偷偷加了一份。上次清理依赖，改了根 go.mod 的 replace，子模块的根本没同步，本地能跑 CI 跑不了。
+上周清理完依赖，改了根 go.mod 里的 replace 指令，push 上去 CI 直接红了——子模块的 go.mod 里还残留着旧的 replace 路径，CI 环境还通过环境变量注入了第三份。三份 replace 规则互相打架，本地只测了一份所以没发现。
 
 ReplaceRule 实体有 ID、原始模块路径、替换目标路径/版本、来源文件（go.mod 路径）、注释/原因、状态（active/disabled）。工具扫描指定目录下所有 go.mod 文件，收集 replace 指令形成统一视图。
 

@@ -6,4 +6,4 @@
 
 上周还加了需求：按部门分组后，每个部门下面按项目堆叠，这样老板一眼就能看到哪个部门工时超标。
 
-输出 ECharts option 格式 JSON，前端直接 `setOption(data)` 就行。Go 标准库实现，单二进制分发，不依赖外部服务。数据存 JSON 文件。所有操作有审计日志。
+输出 ECharts option 格式 JSON，前端直接 `setOption(data)` 就行。不连外部服务，Go 标准库实现，单二进制分发。JSON 文件存数据，操作全程审计。

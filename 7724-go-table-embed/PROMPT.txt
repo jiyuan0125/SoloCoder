@@ -1,4 +1,4 @@
-Markdown 里嵌入表格数据——手动对齐列宽简直折磨人，稍微改个字就要重新调空格。这个工具自动格式化表格，还能从 CSV 和 JSON 数据源生成 Markdown 表格。
+改了表格里一个单元格的内容，列宽全乱了——手动对齐简直折磨人，五个列重新调空格花了十分钟。更别提从 Excel 导出的 CSV 直接贴进 Markdown，格式完全没法看。做个工具自动格式化表格，顺便支持从 CSV 和 JSON 直接生成 Markdown 表格。
 
 table-embed 用 Go 标准库实现，`go build -o table-embed ./cmd/table-embed` 编译。命令和子命令多级结构：根命令处理文件操作，子命令处理具体转换。
 

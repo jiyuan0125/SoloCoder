@@ -1,8 +1,8 @@
-团队写文档时经常需要画流程图和时序图，Mermaid 语法简单但写多了也容易出错——括号不匹配、节点名重复、箭头指向不存在的节点。出错了还不好排查，得有个工具帮着检查和整理。
+上周 review 架构文档，发现里面 Mermaid 流程图有三处语法问题——括号没匹配上、两个节点 ID 重复了、一个箭头指向不存在的节点。Mermaid 写起来快，但调试起来像盲人摸象，错误信息也看不懂。得有个工具帮着检查语法、整理格式。
 
 mermaid-tool 用 Go 标准库实现，`go build -o mermaid-tool ./cmd/mermaid-tool` 编译。它处理 Mermaid 图表定义文件，做语法检查、格式化、以及从代码提取图表。
 
-核心功能是代码片段管理——每个图表当作一个代码片段，有标题、Mermaid 类型（flowchart/sequence/class/...）、描述、语言标签。增删改查和搜索都用子命令操作。`add` 新增，`--type flowchart` 指定图表类型；`get <id>` 查看某个图表；`search <keyword>` 搜标题和描述；`export <id>` 导出为 Markdown 格式，方便粘贴到文档里。
+图表管理这块——每个图表当作一个片段，有标题、Mermaid 类型（flowchart/sequence/class/...）、描述、语言标签。增删改查和搜索都用子命令操作。`add` 新增，`--type flowchart` 指定图表类型；`get <id>` 查看某个图表；`search <keyword>` 搜标题和描述；`export <id>` 导出为 Markdown 格式，方便粘贴到文档里。
 
 语法检查在保存时自动执行——主操作执行时调用辅助检查，辅助检查也读同一份图表数据。检查项包括：graph 关键字后是否有方向声明（LR/TD/LR/RL）、节点 ID 是否有重复定义、箭头目标是否指向已声明的节点、花括号和方括号是否匹配。错误按行号定位输出。
 

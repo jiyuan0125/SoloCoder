@@ -1,4 +1,4 @@
-并发任务调度——多核 CPU 摆在那里不用白不用，但 goroutine 不加控制的话，一千个任务同时跑反而更慢。需要个调度器管理并发度。
+一台 16 核机器跑批处理，top 一看 CPU 6%，单线程串行执行的。加个 goroutine pool 控制并发度，同样的任务快了 8 倍。但 goroutine 不加控制一千个同时跑反而更慢，需要个调度器管理并发度。
 
 concurrent-scheduler 用 Go 标准库实现，`go build -o scheduler-demo ./cmd/scheduler` 编译。它处理文件操作等并发任务的调度。
 

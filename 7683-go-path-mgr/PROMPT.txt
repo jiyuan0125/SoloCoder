@@ -1,4 +1,4 @@
-PATH 变量在 .bashrc 里加了一条，忘了 Makefile 里也硬编码了一份，CI YAML 里还有一份。改了 .bashrc 加了新工具路径，Makefile 里的旧 PATH 没有，make 的时候 command not found。这种事已经出过三次了。
+make: command not found: protoc——明明刚装了啊？排查发现 PATH 在 .bashrc 里加了工具路径，但 Makefile 里硬编码了另一套 PATH，CI YAML 里还有第三套。三处 PATH 不一致，这种事这个月已经是第三次了。
 
 PATHEntry 实体有 ID、路径、优先级（数字越小越靠前）、来源标签（shell/docker/ci/manual）、状态（active/disabled）、描述。PATHConfig 实体有名称、PATH 条目列表、目标文件路径（要写入的目标配置文件）。`entry add <path> --priority <n> --source <tag> [--desc <text>]` 添加条目，路径必须是绝对路径。
 

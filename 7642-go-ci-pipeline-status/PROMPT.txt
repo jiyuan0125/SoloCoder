@@ -1,4 +1,4 @@
-CI 流水线状态散落在 Jenkins/GitLab 界面上，每次 Sprint Review 都得打开好几个页面看。写个 CLI 工具统一记录 CI 构建状态，修改构建记录时关联的 Sprint 数据也要同步更新。
+Sprint Review 的时候老板问"这轮 CI 通过率多少"，我得打开三个浏览器标签页现算。构建状态应该统一记下来，构建记录变了 Sprint 统计也跟着变，不用每次手动数。
 
 Sprint 有 ID、名称、时间范围、状态（active/closed）。Build 有 ID、流水线名称、分支、构建号、状态（success/failed/running/cancelled）、触发时间、完成时间、触发人、关联 Sprint ID。录入构建数据后，如果构建状态是 failed，自动在关联 Sprint 的失败计数上加一。修改构建记录（比如从 failed 改为 success）时，Sprint 的失败计数也要同步调整——这就是"修改主体后关联数据同步"的含义。
 

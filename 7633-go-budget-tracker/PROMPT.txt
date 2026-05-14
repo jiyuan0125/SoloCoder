@@ -1,4 +1,4 @@
-团队预算全靠 Excel 管，每月对账总要花半天。换 CLI 工具，录入支出后走审批流程，支持 CSV 导入老数据。
+每月对账日是我的噩梦——打开 Excel 发现上个月有七笔支出没登记、三笔金额对不上。该换工具了，录入就走审批，老数据 CSV 导入。
 
 预算条目有 ID、项目名、类别（hardware/software/travel/training/other）、金额、描述、日期、提交人、状态（draft/submitted/approved/rejected）、审批人。状态流转有三步：draft → submitted → approved/rejected。每步都可以添加备注。
 

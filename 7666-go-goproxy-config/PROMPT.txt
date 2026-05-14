@@ -1,4 +1,4 @@
-GOPROXY 这东西在 shell profile 里设一份，Makefile 里又设一份，CI YAML 里还有一份。上周公司代理地址换了，改了 .bashrc 忘了改 CI，构建直接拉不下来包，卡了半小时。
+上周公司内部代理地址从 proxy.old.com 换成了 proxy.new.com，改了 .bashrc 里的 GOPROXY 就以为完事了。二十分钟后 CI 构建全部卡住——原来 Makefile 里硬编码了代理地址，CI YAML 里还有一份，都没跟着改。这种散落配置必须统一管理。
 
 ProxyConfig 实体有 ID、环境名（local/ci/production）、代理服务器地址、直连模块列表（不走代理的私有模块）、校验和跳过列表（GONOSUMCHECK）、状态（active/disabled）。多个配置文件（~/.gitconfig 里的 insteadOf、环境变量 GOPROXY/GONOSUMCHECK/GONOSUMDB）由工具统一管理。
 

@@ -1,4 +1,4 @@
-网络接口配置写了三套——/etc/network/interfaces 有一套，netplan YAML 有一套，NetworkManager 还有自己的一套。改了 interfaces 里的静态 IP，netplan 那边还是旧的，networkctl 重启之后地址又变回去了。
+给 eth0 配了静态 IP，networkctl reload 之后地址确实变了——但重启机器又变回 DHCP 了。原来 /etc/network/interfaces 里的配置被 netplan 的 YAML 覆盖了，而 NetworkManager 还在后台偷偷改。三个配置系统互相覆盖，谁后加载谁说了算。
 
 InterfaceConfig 实体有 ID、接口名（eth0、wlan0 等）、IP 地址（静态/DHCP）、子网掩码、网关、DNS 服务器列表、MTU、状态（up/down）、配置来源（interfaces/netplan/NetworkManager）。`iface add --name <text> --method static|dhcp [--address <ip>] [--gateway <ip>]` 添加接口配置。
 
