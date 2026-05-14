@@ -1,3 +1,9 @@
-用户上传的文件扩展名经常乱写，.png 实际是 JPEG。Go 写文件类型检测：不依赖扩展名，直接从文件头魔数判断，常见文件类型覆盖 100+ 种。
+线上被注入了伪装成图片的脚本文件，安全团队要求所有上传文件必须按实际内容而非扩展名判断类型。手动 file 命令逐个检查效率太低。
 
-任务状态支持排队→运行→暂停→完成，暂停以后可以继续。纯标准库实现，go run . 能跑。
+先说核心：`magicdet` 是个 Go CLI 工具，通过文件头魔数判断真实文件类型，不依赖扩展名。用法 `magicdet <file-or-dir>`，单文件输出 `filename: <detected_type> (<mime>) <confidence>%`，目录则递归扫描汇总。
+
+然后是任务管理——每次扫描作为一个任务，状态机：`queued` → `running` → `paused` → `completed`。`magicdet scan --dir /uploads` 启动扫描，`magicdet status <task-id>` 查看当前状态，`magicdet pause <task-id>` 暂停（扫描中的文件处理完后停止），`magicdet resume <task-id>` 从暂停位置继续。
+
+魔数规则覆盖常见类型至少 100 种：PNG（`\x89PNG`）、JPEG（`\xFF\xD8\xFF`）、GIF（`GIF8`）、PDF（`%PDF`）、ZIP/JAR/APK/DOCX（`\x50\x4B\x03\x04`）等。扩展名和实际类型不一致时输出 `[MISMATCH] filename.ext declared=jpg actual=png`。文件小于 2 字节无法判断，输出 `[SKIP] filename reason=too_small`。
+
+纯标准库，`go run .` 能跑。退出码 0 全部匹配，1 检测到不匹配，2 参数错误，3 扫描被中断。

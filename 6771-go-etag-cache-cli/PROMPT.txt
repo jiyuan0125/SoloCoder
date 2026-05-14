@@ -1,3 +1,9 @@
-每次请求同一个接口都重复下载完整响应，浪费带宽。写个基于 ETag 的缓存客户端，首次请求保存响应和 ETag，后续请求带 If-None-Match，304 了就直接用缓存。
+微服务调用链里同一个外部 API 被调了几十次，每次都完整返回几百 KB 的 JSON，带宽成本直线上升。后端加了 ETag 支持，但 Go 标准库的 http.Client 不会自动处理 304 缓存。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`etagcache` —— Go CLI 和可复用 package。CLI 用法：`etagcache get -u https://api.example.com/data -H "Authorization: Bearer xxx"`。首次请求保存响应体到 `~/.etagcache/` 目录（按 URL 的 SHA256 哈希命名），同时记录 ETag 值。后续相同 URL 请求自动带上 `If-None-Match: <etag>` header，收到 304 则直接从本地缓存读取响应体输出。
+
+`etagcache list` 显示所有缓存条目：URL、缓存时间、大小、ETag 值。`etagcache clear -u <url>` 清除指定缓存，`etagcache clear --all` 清除全部。`--cache-dir <path>` 自定义缓存目录。
+
+缓存文件格式：响应体原文 + `.meta` JSON 文件存储 `{"url":"","etag":"","cached_at":"RFC3339","status":200,"headers":{}}`。服务器返回新 ETag 时自动更新缓存。格式错误的缓存文件（`.meta` 解析失败）自动删除并重新请求。`--ttl 1h` 设置缓存有效期，超时即使有 ETag 也重新请求。
+
+Go 标准库实现，不依赖第三方包。`go build` 编译通过，生成的二进制可直接运行。退出码 0 成功，1 请求失败，2 缓存错误，3 参数错误。

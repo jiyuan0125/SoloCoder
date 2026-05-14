@@ -1,3 +1,9 @@
-前端要测试数据但后端接口还没开发。自己用写个工具根据 JSON Schema 生成符合 schema 的随机数据，支持所有标准类型、格式、约束，输出 JSON 直接用。
+前端联调时后端接口没写完，mock 数据手动造字段一多就漏。有了 JSON Schema 就该能自动生成符合约束的假数据。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+命令行：`schema-faker -schema user.json -count 10 -output fake_data.json`。-count 默认 1，-output 不填打印 stdout。
+
+支持的类型：string（minLength/maxLength/pattern/format，format 覆盖 email/date-time/uri），integer/number（minimum/maximum/multipleOf），boolean 随机，array（items/minItems/maxItems），object（properties/required），enum 随机选。
+
+required 字段必须出现，非 required 有 50% 概率省略。pattern 处理不了就 fallback 成 minLength 到 maxLength 间随机字符串。嵌套递归处理，array items 为 object 按相同规则。不支持 $ref/allOf/anyOf/oneOf，遇到报 `error: unsupported keyword: <keyword>` 退出码 1。
+
+Go 标准库，不依赖第三方包，go build 能过。输出 JSON 缩进 2 空格。

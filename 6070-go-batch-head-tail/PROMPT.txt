@@ -1,2 +1,7 @@
-试了三个现成方案都不支持超大文件的快速预览。Go 自己写批量提取首尾行：可以只提取文件头用于预览，输出合并到一个文件或分别保存。
-同步分为：准备→扫描→传输→验证→完成。验证失败重试传输。go build 能编译通过，不依赖第三方库。
+三个现成的 head/tail 方案碰到 10GB 日志文件直接 OOM——就是需要一个能处理超大文件的批量首尾行提取工具。
+
+`headtail extract logfile.gz --head 100 --tail 50 -o preview.txt`：提取前 100 行和后 50 行合并输出。`--split` 参数改为分别保存到 `.head` 和 `.tail` 后缀文件。`headtail batch ./logs/ --pattern "*.log" --head 20` 批量处理目录，每个文件单独输出。
+
+大文件处理上，head 用 bufio.Scanner 逐行读取不加载全文，tail 先 seek 到文件末尾向前扫描换行符。管道输入也支持：`cat huge.log | headtail extract --head 50 --tail 30`。文件不存在时 stderr 输出 `error: file not found: <path>` 并 exit 1，空文件输出空内容不报错。二进制文件检测：遇到 `\x00` 字节时警告 `warning: binary file detected, output may be corrupted`。
+
+同步流程五个阶段——准备→扫描→传输→验证→完成，验证失败自动重试传输阶段最多 3 次。每阶段进度输出到 stderr：`[1/5] preparing...`。纯标准库，`go build` 能编译通过。

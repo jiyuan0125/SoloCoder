@@ -1,3 +1,13 @@
-磁盘快满了，但很多备份文件内容完全一样。相同内容的文件用硬链接指向同一份数据，省空间。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
-go build 过了就行，不用第三方库。
+磁盘快满了，但很多备份文件内容完全一样却占着独立空间。相同内容的文件用硬链接指向同一份数据，能省不少空间。
+
+直接说工具怎么用：`harddedup -dir ./backups/ -dry-run -min-size 1024`。`-dir` 是扫描目录，`-dry-run` 只输出会做什么不实际操作，`-min-size` 跳过小于该字节数的文件（默认 0）。
+
+扫描流程：遍历目录下所有文件，按文件大小分组，大小相同的再算 SHA-256，哈希也相同的视为重复。对每组重复文件保留最早的一个（按 mtime），其余删除后创建硬链接指向保留文件。
+
+输出 JSON：`{"scanned":1500,"duplicates":[{"hash":"sha256:abc...","size":4096,"files":["backup/jan/data.db","backup/feb/data.db"],"saved_bytes":4096}],"total_saved":"2.1GB"}`。
+
+`-dry-run` 时 `saved_bytes` 只统计不实际操作，stdout 输出 `[DRY-RUN] would replace {path} → {kept_path}`。实际操作时输出 `[DEDUP] replaced {path} → {kept_path}`。
+
+硬链接创建失败时（跨文件系统等）warning 并跳过。目录不存在时 exit 1。没有重复文件时输出 `no duplicates found` 并 exit 0。
+
+`go build` 过了就行，不用第三方库。

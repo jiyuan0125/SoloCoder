@@ -1,3 +1,9 @@
-数据库迁移完了发现一堆外键指向不存在的记录，查询结果全是空的。Go 写引用完整性检查：子表的引用值必须在主表里存在，悬挂引用逐条列出来。
+数据库迁移完跑了一把查询结果一堆空值——外键指向的记录迁移时丢了。手动排查几百张表的引用关系不可能，得自动化处理。
 
-同步流程走：准备→扫描→传输→验证→完成，验证失败重试传输。go build 能编译通过，不依赖第三方库。
+`refcheck` 是 Go 写的引用完整性检查工具。`refcheck scan -c config.yaml`，配置文件定义主子表关系：`checks: [{master:"users",master_key:"id",child:"orders",child_key:"user_id"}]`。悬挂引用逐条列出：`[ORPHAN] orders.id=5543 user_id=999 references missing users.id=999`。
+
+同步检查流程五步走：准备（加载配置）→ 扫描（读主子表数据）→ 传输（建立引用映射）→ 验证（比对完整性）→ 完成（输出报告）。验证失败 `--retry 3` 重试传输阶段。`--format json` 输出结构化结果 `{"total_refs":10000,"orphan_refs":23,"details":[...]}`。
+
+CSV 模式：`refcheck csv --master users.csv --master-key id --child orders.csv --child-key user_id`，首行当列名。空外键默认跳过，`--strict` 下报错。
+
+`go build` 通过，不依赖第三方库。退出码 0 无悬挂，1 发现悬挂，2 文件错误，3 重试耗尽。

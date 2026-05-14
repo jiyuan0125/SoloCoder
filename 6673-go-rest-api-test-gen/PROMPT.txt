@@ -1,3 +1,1 @@
-手写 API 测试用例太枯燥，50 个接口每个写正常异常场景要写 100 个测试。Go 工具从 OpenAPI spec 自动生成 REST API 测试用例，输出 Go test 代码。
-
-Go 实现，只用标准库，交叉编译友好。
+手写 50 个接口的测试用例，每个正常异常场景来一遍就是 100 个测试函数，复制粘贴到手抽筋。`apitestgen <openapi.yaml> --output tests/ --package apitest --base-url http://localhost:8080` 从 OpenAPI 3.0 spec 自动生成。解析 YAML 提取每个 endpoint 的 method（GET/POST/PUT/DELETE）、path、parameters（query/path/header）、requestBody（application/json）、responses（状态码和 schema）。每个 endpoint 生成两个测试函数：Test<Method><PathSlug>_Success 发送完整参数请求验证 2xx 和 Content-Type 含 application/json；Test<Method><PathSlug>_BadRequest 缺少 required 参数验证返回 400。生成的代码用 net/http.Client 发请求，json.Unmarshal 解析响应，t.Errorf("expected %d, got %d") 报告失败。输出文件名 api_<method>_<path_slug>.go，路径 `/` 替换为 `_`，`{param}` 替换为 `by_<param>`。`--base-url` 注入到 baseURL 变量。spec 不是合法 YAML 时 stderr 输出 "error: invalid OpenAPI spec" 退出码 1。output 目录不存在自动创建。Go 实现，只用标准库，交叉编译友好。

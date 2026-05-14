@@ -1,3 +1,6 @@
-导入的数据排序乱了，下游处理全出错，排查了半天。Go 写排序检查工具：升序降序都支持，哪几行顺序不对标出来。
+导入的数据排序全乱了，下游处理依赖时间顺序，结果计算出来一堆负数。排查了半天才发现源文件中间有几行顺序反了。
 
-数据流程分四个阶段：录入→清洗→校验→发布，校验不通过的退回清洗阶段。不用第三方包，go build 通过就行。
+第一步 `sortcheck -file data.csv -col timestamp [-order asc] [-strict]`。检查指定列是否按顺序排列，`-order asc` 升序（默认），`-order desc` 降序。发现乱序的行标出来：`UNORDERED | row 456: 2024-01-15 10:30:00 < row 455: 2024-01-15 10:31:00 (expected asc)`。最后汇总 `Checked: 5000 rows, Out of order: 3 rows (0.06%)`。`-strict` 模式下相等值也算乱序（严格递增/递减）。加 `-fix` 自动排序输出修正后的文件到 `-o fixed.csv`。
+第二步数据流程管理：录入→清洗→校验→发布四个阶段，校验不通过的退回清洗阶段。这个状态机管的是检查任务的状态。
+
+空文件输出 `no data to check` 退出码 0。全部有序退出码 0，有乱序行退出码 1。列名不存在输出 `error: column not found: <name>` 退出码 2。非数值列做数值排序时输出 `error: cannot compare non-numeric value at row N: "xxx"` 退出码 1。不用第三方包，go build 通过就行。

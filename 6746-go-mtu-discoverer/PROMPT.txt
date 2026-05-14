@@ -1,3 +1,9 @@
-VPN 隧道的 MTU 设太大包过不去、设太小浪费带宽。写个工具发递增大小的探测包，找到路径上不分片的最大包大小，直接告诉你 MTU 该设多少。
+VPN 隧道 MTU 设大了包过不去、设小了浪费带宽，到底该设多少？Ping 测试太粗糙，需要一个能精确探测路径 MTU 的工具。
+
+mtudisc --target 10.0.0.1 --min 500 --max 1500 --step 100 从最大值开始发探测包（设置 DF=Don't Fragment 位），如果收到 ICMP Fragmentation Needed 就减小包大小重试，直到找到不分片能通过的最大值。二分查找而不是线性步进：从 [min, max] 区间的中点开始，成功则提高下界，失败则降低上界，收敛后输出建议 MTU。
+
+输出格式：Path MTU to 10.0.0.1: 1400 bytes。加上 --verbose 在 stderr 打印每一步的尝试：Sending 1400 bytes... got ICMP need frag, next MTU hint: 1392。加上 --json 输出：{"target": "10.0.0.1", "path_mtu": 1400, "attempts": [...]}。
+
+如果 --target 不可达 exit code 1。整个范围都失败 exit code 2，打印 ERROR: unable to determine path MTU。超时 --timeout 2s 每个探测包。支持 --interface eth0 绑定源网卡。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

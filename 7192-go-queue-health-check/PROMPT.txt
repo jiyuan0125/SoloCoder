@@ -1,5 +1,9 @@
-队列健康状态没有监控，挂了都不知道。
+队列挂了半个小时运维才发现，用户投诉都打爆客服了。这种事不能靠人盯着，得有自动健康检查。
 
-死信队列管理（查看/重发/丢弃），死信原因分类统计，自动重发策略。校验完自动生成报告，报告模板不存在就跳过。代码分文件组织：核心逻辑、IO 处理、命令行入口分开。
+健康检查维度：队列深度（`--depth-warn 1000 --depth-crit 5000`）、消费延迟（`--lag-warn 60s --lag-crit 300s`）、消费速率（`--rate-min 10/s`，低于阈值告警）。每项检查结果标记为 `healthy`/`warning`/`critical`。整体状态取最差的单项。
 
-Go 命令行工具，go build 能过就行。
+死信队列管理集成进来：`qcheck dlq list --queue orders-dlq` 查看死信列表，`qcheck dlq retry --id 3 --queue orders-dlq` 重发，`qcheck dlq drop --id 3` 丢弃。死信原因分类：`parse_error`、`timeout`、`schema_mismatch`、`unknown`，统计 JSON 格式。重发策略 `--retry-max 5`，超限标记 `dead`。
+
+命令：`qcheck monitor --config queue.yaml --interval 30s --report health.json`。`--report` 指定报告输出路径，报告模板不存在时跳过格式化，只写原始 JSON。`qcheck once --config queue.yaml` 单次检查立即输出结果。
+
+代码分文件：`main.go`、`health.go`（健康检查逻辑）、`dlq.go`（死信管理）、`report.go`（报告生成）。输入配置缺失必要字段时输出具体字段名，退出码 1。Go 命令行工具，`go build` 能过就行。

@@ -1,3 +1,11 @@
-regexp 包能搞定格式校验，但完整性校验还得额外写。Go 命令行：数据完整性校验（行数、列数、校验和），增量校验只检查变更部分，结果跟上次对比。
-扫描有排队→扫描中→分析中→报告生成→完成状态。
-go build 能过，命令行工具能正常运行。
+数据 pipeline 每天跑完不知道结果对不对——行数少了可能源数据有问题，列数变了是 schema 漂移，校验和不对说明被篡改了。
+
+`schemaevolve` —— Go 数据完整性校验 CLI。`schemaevolve check -i data.csv --full` 全量校验行数、列数、每列 CRC32，输出 JSON：`{"file":"","rows":10000,"cols":5,"checksums":{"col1":"CRC32_ABC"},"file_checksum":"CRC32_XYZ"}`。
+
+增量校验：`--incremental --state .state.json` 只检查新增/修改行。`schemaevolve diff --old s1.json --new s2.json` 对比结果：`[CHANGED] col3 checksum: ABC→DEF`、`[ROW-COUNT] 10000→10050 (+50)`。
+
+状态机 `queued→scanning→analyzing→reporting→completed`。`watch --interval 30s` 持续监控自动增量校验。
+
+空文件 `[WARN] empty file` 不报错。列数不一致 `[MALFORMED] line=N expected=5 actual=3`。
+
+`go build` 能过。退出码 0 通过，1 校验失败，2 参数错误。

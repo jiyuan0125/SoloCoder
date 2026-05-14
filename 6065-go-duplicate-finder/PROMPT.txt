@@ -1,2 +1,9 @@
-客户催了好几轮了，存储费用太高要清理重复文件。Go 命令行做重复文件查找：支持按内容、按文件名、按大小三种模式，结果导出为 CSV 报告。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。纯标准库实现，go run . 能跑。
+先说场景：客户抱怨存储费用涨了 40%，排查发现大量重复文件占了空间。手动一个个对比不现实，得自动化。
+
+1. 命令：`dupfind scan --dir /data --mode content --output dupes.csv --workers 8`。
+2. 三种查找模式：`content`（SHA256 全内容比对）、`name`（纯文件名匹配，含扩展名）、`size`（文件大小相同即为候选，需配合 `--threshold` 确认）。`--mode` 默认 `content`。
+3. 结果 CSV 列：`hash`（仅 content 模式）、`filename`、`size_bytes`、`path`、`group_id`（同组重复文件共享 ID）。按 `group_id` 排序，每组内按路径排序。
+4. 空文件（0 字节）单独标记 `group_id=empty`，不参与哈希计算。
+5. 符号链接跟随目标文件。无权限读取的文件跳过，记到 stderr：`skipped: /path/to/file (permission denied)`。
+
+文件处理状态机：待处理→处理中→校验中→已完成。校验失败（哈希计算出错）退回处理中重试，最多重试 3 次后标记为 `failed`。`dupfind summary dupes.csv` 输出统计：总文件数、重复组数、可释放空间。纯标准库实现，`go run .` 能跑。

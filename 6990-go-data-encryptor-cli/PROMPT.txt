@@ -1,3 +1,8 @@
-合规要求导出的数据里手机号、身份证号这些敏感字段必须加密存储。写个数据字段加密工具，指定 CSV/JSON 中哪些字段要加密，用 AES 加密后输出。反过来也要能解密还原，不然数据分析的时候没法用。
+合规审计说导出数据里手机号和身份证号不能明文存储，必须加密。但加密了之后数据分析的人又没法用——得能解密还原。两难，写个字段级加解密工具。
+
+1. 加密模式：`datacrypt encrypt --input users.csv --fields phone,id_card --key secret123 --output encrypted.csv`。`--fields` 指定要加密的列名，逗号分隔。`--key` 为 AES-256 密钥，通过环境变量 DATACRYPT_KEY 也可以传入，命令行参数优先。加密算法 AES-256-GCM，密钥用 SHA-256(input key) 派生。加密后字段值格式为 base64(ciphertext)，前缀 "ENC:" 标识。
+2. 解密模式：`datacrypt decrypt --input encrypted.csv --fields phone,id_card --key secret123 --output decrypted.csv`。识别 "ENC:" 前缀的字段自动解密，无前缀的字段原样保留。
+3. 字段不存在时跳过并在 stderr 输出 "field not found: xxx"。密钥为空退出码 1。输入文件格式支持 CSV 和 JSON（`--format csv|json`），JSON 模式按字段路径加密，如 user.phone。
+4. 大文件流式处理不全量加载。处理完打印统计：加密/解密字段数、跳过字段数、耗时。
 
 Go 实现，只用标准库，交叉编译友好。

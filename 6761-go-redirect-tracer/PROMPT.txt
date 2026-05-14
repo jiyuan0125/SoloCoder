@@ -1,3 +1,5 @@
-短链接服务上线后有人投诉跳转不对，需要检查重定向链路。写个工具发请求记录每一跳的 URL、状态码、Location header，输出完整的重定向路径，看看到底被重定向到哪里了。
+短链接服务上线后陆续收到用户投诉说跳转到了奇怪的页面，运营那边排查没有头绪。手动 curl 一个个试效率太低了，写个工具直接发请求追踪整条重定向链路。
 
-Go 实现，只用标准库，交叉编译友好。
+`redtrace -url https://t.co/abc123`，发 HTTP GET 请求，禁止自动跟随重定向，记录每一跳的 HTTP 状态码、Location header 值、响应耗时。遇到 301/302/303/307/308 就继续跟踪 Location，最多跟踪 20 跳防止循环。输出每一跳的信息：`[1] 302 https://t.co/abc123 -> https://bit.ly/xyz (45ms)`，`[2] 301 https://bit.ly/xyz -> https://example.com/page (120ms)`，直到最终 200 或非重定向状态码。最终输出摘要：`Total: 3 hops, 165ms, final: https://example.com/page`。
+
+加 `-json` 输出 JSON 数组 `[{"hop": 1, "status": 302, "from": "...", "to": "...", "ms": 45}]`。循环重定向检测：如果同一 URL 出现两次，输出 `error: redirect loop detected at hop N` 并退出码 2。URL 无法访问输出 `error: request failed: <reason>` 退出码 1。正常完成退出码 0。纯标准库 Go 实现，交叉编译友好。

@@ -1,3 +1,9 @@
-年底盘点 50 多个微服务的依赖关系，人肉梳理不现实。Go 工具扫描配置文件和源码中的服务地址引用，生成依赖图输出 dot 格式，用 Graphviz 一画就出来了。
+年底盘点 50 多个微服务，架构师问"哪些服务直接依赖支付网关"，没人能答上来。Go 工具扫描配置文件和源码中的服务地址引用，生成依赖关系图。
 
-用 Go 标准库写，go run . 或 go build 都行。
+1. `depmap scan ./services/ --format dot` 递归扫描目录。解析规则：YAML/JSON 配置文件中 `host`、`endpoint`、`upstream`、`service_url` 字段提取为依赖关系。Go 源码中 `http.Get("http://user-svc/api/")`、grpc `grpc.Dial("order-svc:9090")` 的字符串字面量也提取。`--lang go|java|python` 指定源码语言，默认自动检测。
+
+2. `depmap graph dependencies.dot --layout hierarchical` 生成 dot 格式依赖图。`--circular-only` 只输出存在循环依赖的子图。`depmap stats` 输出依赖统计：每个服务的出入度 `{service, in_degree, out_degree, dependencies: [...]}`。
+
+3. 扫描完成后输出 `scanned 52 services, found 187 dependencies`。无依赖输出 `no dependencies found` exit 0。循环依赖输出 `warning: circular dependency detected: A→B→C→A` 到 stderr。dot 文件生成后提示 `use: dot -Tpng deps.dot -o deps.png`。
+
+用 Go 标准库写，`go run .` 或 `go build` 都行。

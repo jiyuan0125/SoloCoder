@@ -1,3 +1,11 @@
-熔断器配置了但不确定会不会正常打开。Go 工具模拟连续失败观察熔断器状态，模拟恢复后看半开状态是否正常，输出状态变化时间线。
+熔断器配了但不确定会不会正常打开，半开恢复到底有没有效果，这些全靠猜。写个工具模拟连续失败观察熔断器状态变化，模拟恢复后看半开状态是否正常。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+场景是这样的：先对一个接口连续返回错误，看熔断器什么时候从 Closed 变成 Open。然后停止错误，看能不能经过 Half-Open 回到 Closed。全程输出状态变化时间线。
+
+命令：`circuittest -target http://localhost:8080/api -fail-count 10 -recover-count 5 -threshold 5 -timeout 3s`。`-threshold` 是连续失败多少次触发熔断。`-timeout` 是 Open 状态等待多久进入 Half-Open。
+
+输出每一步的状态：`{"step":1,"action":"inject_failure","circuit":"closed","consecutive_failures":1,"timestamp":"..."}。` 触发熔断时输出 `circuit: open`。进入半开输出 `circuit: half-open`。恢复成功输出 `circuit: closed`。
+
+最终输出汇总：`{"state_transitions":3,"time_to_open":"5.2s","time_to_recover":"8.1s","total_requests":15}`。threshold 不合理（≤0）时 exit 1。target 不可达时 exit 1 并输出连接错误。
+
+Go 标准库实现，`go build` 能编译通过。

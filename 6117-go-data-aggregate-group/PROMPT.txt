@@ -1,5 +1,15 @@
-文档量上了百万级，Excel 直接打不开了。用 Go 做分组聚合。
-支持计数、求和、平均、最大、最小。
-多列分组和多列聚合。
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。
+文档量上了百万级，Excel 直接打不开了，Python pandas 也跑得巨慢。Go 做流式分组聚合，不把全部数据加载到内存。
+
+用法：`aggregate --input <CSV文件> --group-by <列名1,列名2> --agg <聚合列:方式> [--output <文件>]`。聚合方式支持 count、sum、avg、max、min，可以指定多个 `--agg`。
+
+示例：`aggregate --input sales.csv --group-by region --agg amount:sum --agg amount:avg --agg amount:max`。
+
+输出 CSV 首行是分组列名 + 聚合结果列名（格式 `列名_方式`，如 `amount_sum`、`amount_avg`）。
+
+空值处理：分组列是空值的行跳过，聚合列是空值不计入统计。avg 计算时除数是非空行数。
+
+输入不是合法 CSV 或指定列名不存在时 stderr 输出 `ERROR: column not found: <列名>` 退出码 2。
+
+数据流程有四个阶段：录入 → 清洗 → 校验 → 发布。校验不过退回清洗阶段重试，最多重试 3 次。阶段状态存 `.aggregate-state.json`。
+
 不用第三方包，go build 通过就行。

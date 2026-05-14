@@ -1,3 +1,9 @@
-10 个模块各自发版，changelog 全靠手写经常漏。按 git tag 版本分组，支持 conventional commits 格式自动生成变更日志。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+10 个模块各自发版，changelog 全靠手写经常漏掉 hotfix。按 git tag 版本分组，解析 conventional commits 格式自动生成变更日志——这是唯一的出路。
+
+1. `changelog generate --repo ./project --from v1.2.0 --to v1.3.0` 生成两个 tag 之间的变更。commit message 按 `feat|fix|refactor|docs|chore|perf|test` 分类到不同 section。`BREAKING CHANGE:` 或 `!` 后缀的 feat 归入 Breaking Changes 置顶。`changelog generate --all` 生成全部版本。
+
+2. 输出格式默认 Markdown，`-o changelog.md` 写入文件，不指定则 stdout。每个版本按 `{type}: {description}` 罗列，scope 用括号标注如 `feat(auth): add OAuth2 support`。无 tag 的 commit 归入 Unreleased section。
+
+3. tag 不存在时 `error: tag v1.2.0 not found` exit 2。空仓库输出 `no commits found` exit 0。commit 不符合 conventional 格式归入 Uncategorized 并警告 `warning: non-conventional commit: <hash> <message>`。
+
+主逻辑和辅助函数分文件写：changelog.go（生成逻辑）、git.go（git 操作）、format.go（输出格式化）。纯标准库，`go build` 编译通过。

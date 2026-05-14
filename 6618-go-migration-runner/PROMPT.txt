@@ -1,3 +1,11 @@
 数据库 migration 全靠手动执行 SQL 文件，哪天漏了就完蛋。写个工具管理 SQL 文件，按顺序执行、支持回滚，已执行的记到状态表里。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+这个工具做三件事：管理 migration 文件、按序执行、出错能回滚。
+
+命令：`migrate -dir ./migrations/ -db "sqlite://app.db" -action up`。`-action` 支持 `up`（执行所有未执行的）、`down`（回滚最近一个）、`down-all`（全部回滚）、`status`（查看状态）。`-dir` 是 SQL 文件目录，文件命名必须遵循 `001_create_users.sql`、`002_add_index.sql` 这种 `{序号}_{描述}.sql` 格式。
+
+状态表 `_migrations` 自动创建，字段：`id INTEGER PRIMARY KEY`、`version TEXT`（文件序号）、`applied_at DATETIME`。`up` 时跳过已执行的文件，`down` 按反序回滚。每个文件执行失败时输出 `migration failed: {file}: {error}` 并停止，不继续执行后续文件。
+
+SQL 文件目录不存在时 exit 1。文件命名不规范时 warning 但跳过。status 输出表格：版本号 | 文件名 | 状态（applied/pending）| 执行时间。
+
+纯 Go 标准库，`go build -o migrate .` 编译后单二进制直接跑。

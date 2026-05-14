@@ -1,3 +1,7 @@
-调试 cookie 相关的 bug 时手动拼 Set-Cookie header 经常出错。写个工具解析 Set-Cookie，按域名存储，能查询、删除、导出 cookie，方便排查。
+调试 cookie 问题太头疼了——Set-Cookie header 属性拼错、domain 不匹配、path 没覆盖到，手动看太累。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+解析：`cookiemgr parse --header 'Set-Cookie: sid=abc; Domain=.example.com; Path=/; HttpOnly; Secure'`。输出 JSON 含 name、value、domain、path、httponly、secure 字段，不识别的属性记到 `unknown_attrs`。
+
+按域名存储（`--store cookies.json`）：`cookiemgr store --header '...' --domain example.com`，同名覆盖。查询：`cookiemgr query --domain example.com --name sid`。删除：`cookiemgr delete --domain example.com --name sid`，不存在输出 `cookie not found` 退出码 1。
+
+`cookiemgr export --domain example.com --format netscape` 导出 Netscape 格式。过期 cookie 自动清理，`cookiemgr cleanup` 手动触发。存储文件不存在时自动创建空文件。Go 标准库实现，`go build` 能编译通过。

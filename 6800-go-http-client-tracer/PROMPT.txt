@@ -1,3 +1,7 @@
-接口响应慢不知道慢在哪——DNS 解析、TCP 连接、TLS 握手还是服务端处理？写个工具把 HTTP 请求的每个阶段耗时都记录下来，输出一条时间线，一眼看出瓶颈在哪。
+接口 P99 到了 800ms 但不知道慢在哪——DNS 解析 200ms？TCP 连接超时？TLS 握手慢？还是服务端处理本身就慢？得把 HTTP 请求拆开看每个阶段。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`http-trace --url https://api.example.com/users --method GET --count 10`。每个请求记录以下阶段耗时：DNS 查找、TCP 连接、TLS 握手、发送请求首字节（TTFB）、收到响应首字节、内容传输、总耗时。输出一条时间线：`[DNS 12ms][TCP 45ms][TLS 23ms][Wait 580ms][Transfer 8ms] Total: 668ms`。
+
+`--count 10` 连续发 10 个请求取统计值。每个阶段输出 P50/P95/P99/Max。`--output trace.json` 导出详细 JSON，每条请求一个对象：`{"dns_ms":12,"tcp_ms":45,...,"total_ms":668}`。`--compare https://api2.example.com/users` 同时测两个 URL 并排对比输出。
+
+`--header "Authorization: Bearer xxx"` 自定义请求头。非 HTTP/HTTPS URL 报错 "unsupported protocol" 退出码 1。DNS 查找失败单独标注 `[DNS FAIL]` 并记录错误信息。纯 Go 标准库，编译后单二进制可以直接跑。

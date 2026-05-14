@@ -1,3 +1,7 @@
-OpenAPI spec 文件几千行，给非技术人员看 JSON 不现实。上次转 Markdown 转了半天，这次直接写个工具按接口分组，包含参数表和响应示例，支持自定义模板。
+OpenAPI spec 文件几千行 JSON，产品经理和运营看不了这个。上次手动转 Markdown 转了半天还漏了好几个接口，这次直接写个工具自动转。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+1. `oapi2md -spec api.yaml [-o api-docs.md] [-template custom.tmpl]`。解析 OpenAPI 3.0 spec，按 path 分组生成 Markdown。每个接口一个章节：标题是 `METHOD /path`，参数用表格列出（name、type、required、description），响应示例取 `responses.200.content.example` 字段直接贴代码块。
+2. 如果没提供 `-template`，用内置模板。自定义模板用 Go text/template 语法，传入 `.Paths` `.Components` `.Info` 等数据结构。
+3. 加 `-group-by tag` 按标签分组，没标签的放"Uncategorized"。加 `-skip-deprecated` 跳过 deprecated 的接口。
+
+spec 文件不存在输出 `error: spec not found: <path>` 退出码 1。解析失败输出 `error: invalid spec: <detail>`。输出目录不存在自动创建。纯 Go 标准库，编译后单二进制可以直接跑。

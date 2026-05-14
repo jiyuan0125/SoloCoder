@@ -1,4 +1,7 @@
-测试数据手写太慢，生产数据又不能用。从模型定义生成随机数据，导出为 JSON 格式。
+每次写测试都要构造一堆假数据，手动写 JSON 构造器又慢又容易出错。能不能从 Go struct 定义自动生成随机测试数据？字段类型不同生成不同的随机值，int 就随机整数，string 就随机字符串，时间就随机时间戳。
 
-标准库搞定，go run . 跑起来。
-代码分几个文件组织，别全写 main.go 里。
+定义模型的方式：在 Go 源文件里写 struct 定义，工具解析 AST 提取字段名和类型，根据类型生成合理的随机值。支持的基础类型：int/int64/float64/string/bool/time.Time。string 类型默认生成 8-16 位随机字母，加 -locale zh 生成中文字符串。嵌套 struct 递归生成，slice 类型生成 3-5 个元素，map 类型生成 3-5 个键值对。命令：fixture-gen -file models.go -struct User -count 100 -output fixtures.json。-struct 指定目标结构体，-count 生成条数默认 10，-output 输出文件路径。
+
+输出 JSON 数组，每项是一个生成的对象。字段名优先使用 struct 的 JSON tag，没有 tag 用原始字段名（首字母转小写）。支持自定义规则文件 -rules rules.json，可以覆盖默认生成策略，比如指定某个字段只能从枚举值 ["active","inactive"] 中随机选取。struct 在文件中不存在时输出 "struct Xxx not found in file" 退出码 1。输出文件已存在时覆盖写入。
+
+标准库搞定，go run . 跑起来。代码分几个文件组织，别全写 main.go 里。

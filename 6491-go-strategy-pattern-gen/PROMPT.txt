@@ -1,3 +1,9 @@
-算法切换靠 if-else，加一种算法改一堆地方。生成策略接口和多个实现，策略选择器自动管理。记录状态：草稿→待审→通过→归档，通过后可以撤回重新编辑。
+算法切换靠 if-else 堆着，加一种算法就得改一堆地方。生成策略接口和多个实现，策略选择器自动管理，扩展起来不用动老代码。
 
-纯标准库，go run . 就行。
+命令：`stratgen -name PaymentStrategy -strategies "Alipay,Wechat,Bank" -pkg payment -output ./payment/`。`-name` 是策略接口名，`-strategies` 逗号分隔策略名，`-pkg` 是 Go 包名。
+
+生成文件：`strategy.go` 定义接口 `type {Name} interface { Execute(ctx context.Context, data interface{}) error }`，每个策略生成 `{name}.go` 实现接口。`selector.go` 提供 `Register(name string, s {Name})` 和 `Select(name string) ({Name}, error)`。Select 找不到时返回 `strategy "{name}" not registered` 错误。重复注册时覆盖并 log 警告。
+
+状态管理：`type Status string`，常量 `Draft → Pending → Approved → Archived`。Approved 可 `Revoke()` 回到 Draft。非法转换返回 `invalid transition: {from} → {to}`。
+
+缺 `-name` 或 `-strategies` 时输出 usage 并 exit 1。纯标准库，`go run .` 就行。

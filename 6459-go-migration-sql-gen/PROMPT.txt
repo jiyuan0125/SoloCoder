@@ -1,3 +1,9 @@
-数据库迁移靠手动写 SQL，版本一多就乱。新增表、添加列、修改类型的迁移自动生成，文件按序号命名。记录状态：草稿→待审→通过→归档，通过后可以撤回重新编辑。
+数据库迁移靠手动写 SQL，版本一多就乱。上个月有人把列名拼错了，上线后数据全丢了。写个工具自动生成迁移 SQL 文件。
+
+命令格式 `migrate-gen --type add_table --name users --params 'id:int:pk,name:string:notnull,age:int,created_at:datetime'`，`--type` 支持 `add_table`、`add_column`、`alter_type`、`drop_column` 四种操作。`--params` 逗号分隔字段定义，每个字段格式 `字段名:类型:约束`，约束可选，支持 `pk`、`notnull`、`unique`、`default:值`。
+
+生成的 SQL 文件放在 `migrations/` 目录下，文件名格式 `V{序号}_{操作}_{表名}.sql`，序号自动递增，从现有文件最大序号 +1 开始。`--dialect` 指定数据库方言，支持 `mysql`（默认）和 `postgres`，类型映射不同（比如 `datetime` 映射到 MySQL 的 `DATETIME` 和 PostgreSQL 的 `TIMESTAMP`）。`--dry-run` 只打印 SQL 不写文件。SQL 语句以分号结尾，包含 `-- Migration: V{序号}` 注释头。
+
+字段定义格式错误时报错 "invalid field definition: {input}"，退出码 1。`migrations/` 目录不存在自动创建。记录状态：草稿→待审→通过→归档，通过后可以撤回重新编辑。
 
 只依赖标准库，go build 通过就行。

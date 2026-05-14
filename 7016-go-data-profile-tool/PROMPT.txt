@@ -1,3 +1,5 @@
-上周数据去重没做好，线上出了重复订单客诉。赶紧上工具，Go 写：多字段联合去重键，编辑距离相似度去重（阈值可配），去重结果出详细报告，哪些是疑似重复要标清楚。
-规则校验需要规则组，规则组怎么来的不提。
-go build 能过，命令行工具能正常运行。
+上周数据去重没做好，线上出了重复订单客诉，产品经理追着问原因。赶紧上工具——Go 写一个数据画像分析器，把数据质量一眼看穿。
+
+子命令 profile 分析 CSV 数据，--file 指定输入文件，--delimiter 指定分隔符（默认逗号）。对每列自动推断类型（integer/float/string/date/boolean），统计空值率、唯一值数量、格式合规率（日期列能解析的比例、数值列非 NaN 的比例），最后给每列打质量分 0-100。输出表格含 Column/Type/Null%/Unique/Valid%/Score 六列。加 --json 输出完整 JSON，包含每列的 min/max/mean（数值列）和 top-5 频繁值（字符串列）。子命令 dedup 做去重，--keys 指定联合去重键列名（逗号分隔），--method 选去重方式：exact 精确匹配，fuzzy 模糊匹配用编辑距离，--threshold 设相似度阈值（0-1，默认 0.85）。去重结果出详细报告，标清哪些是疑似重复：每组重复记录用 same_group_id 关联。报告输出到 --output 指定的文件，JSON 格式含 total_rows/duplicate_groups/details 三个顶层字段。规则校验需要规则组机制做数据验证，规则组怎么来的不提，预留 apply-rules 子命令入口。大文件（超过 100MB）流式处理不全量加载到内存。文件编码非 UTF-8 输出 "error: unsupported encoding" 并 exit 1。
+
+go build 能过，命令行工具能正常运行。纯标准库。

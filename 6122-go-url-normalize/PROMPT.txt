@@ -1,5 +1,13 @@
-爬虫抓回来的 URL 什么格式都有，有带端口有不带的，参数顺序也不统一。Go 写个 URL 标准化。
-统一协议、去默认端口、排序查询参数。
-编码的字符统一处理。
-纯标准库实现，go run . 能跑。
-主逻辑和辅助函数分文件写。
+爬虫抓回来的 URL 什么格式都有，有带端口有不带的，参数顺序也不统一，去重根本没法做。Go 写个 URL 标准化工具，把混乱的 URL 统一成规范格式。
+
+用法：`urlnorm --input <文件> [--output <文件>] [--rules <规则文件>]`。也支持 stdin/stdout 管道：`cat urls.txt | urlnorm > normalized.txt`。
+
+标准化规则（全部默认开启，可通过 `--rules` 关闭部分）：1) 协议统一为小写 `http`/`https`；2) 去掉默认端口（:80/:443）；3) 查询参数按 key 字典序排序；4) 百分号编码统一（空格用 `%20` 不用 `+`，保留字不编码）；5) 去掉末尾斜杠（路径为 `/` 除外）；6) host 统一小写。
+
+规则文件 JSON 格式 `{"default_port":true,"sort_params":true,"lower_host":true,"trailing_slash":false}`。
+
+输出每行一个标准化后的 URL。无法解析的 URL 原样输出，行尾加 `# INVALID` 标记，stderr 输出 `WARN: invalid URL at line N: <内容>`。
+
+空行跳过不输出。退出码 0 全部成功，1 有无效 URL（但不中断），2 参数错误。
+
+纯标准库实现，go run . 能跑。主逻辑和辅助函数分文件写。

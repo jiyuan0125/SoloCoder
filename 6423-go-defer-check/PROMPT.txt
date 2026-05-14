@@ -1,5 +1,9 @@
-锁释放的 defer 写在循环里，导致一把锁占到底。把循环中的 defer、defer 在锁释放中的顺序问题全部标出来，可能的问题标注。
+先用 AST 解析 Go 源文件，找出 defer 在循环体内的调用、defer 和 Lock/Unlock 的顺序问题。工具目标是静态分析，不需要运行代码。
 
-构建流程：解析→编译→测试→打包，测试失败不打包。
+1. `defer-check scan ./src/` 递归扫描所有 `.go` 文件。检测规则：defer 出现在 for/range 循环体内时标注 `defer-in-loop: <file>:<line> defer will not execute until function returns`。`defer mu.Unlock()` 出现在 `mu.Lock()` 之前的标注 `defer-before-lock: <file>:<line>`。defer 在 if 块内但对应资源在 if 外分配的标注 `scope-mismatch`。
 
-不用第三方包，go build 通过就行。
+2. `defer-check check main.go --severity error` 只显示 error 级别问题。`--severity warning` 包含警告级（如 defer 在 goroutine 内调用 recover()，常见模式不报错）。`--ignore "_test.go"` 排除测试文件。
+
+3. 构建流程：解析→编译→测试→打包，测试失败不打包。每阶段输出进度 `[1/4] parsing AST...`。解析失败 `error: cannot parse <file>: <detail>` exit 2。无问题输出 `no defer issues found` exit 0。有问题 exit 1，输出格式 `SEVERITY | FILE:LINE | RULE | DETAIL`。
+
+纯标准库，`go build` 通过就行。主逻辑和规则分文件：scanner.go（AST 遍历）、rules.go（检测规则）。

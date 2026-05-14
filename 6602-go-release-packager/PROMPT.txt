@@ -1,3 +1,5 @@
-发版流程里打包这步一直人工操作，容易漏文件。Go 写个工具自动把编译好的二进制、配置文件、README 打成 zip/tar.gz，顺便生成 checksum。不同平台分别打包。
+发版流程里打包这步一直人工操作，上个版本漏了配置文件导致客户那边起不来，又紧急发了一版。这种低级错误不该再犯。
 
-用 Go 标准库写，go run . 或 go build 都行。
+子命令 pack 自动打包，--bin 指定编译好的二进制文件路径，--config 指定配置文件目录，--readme 指定 README 文件（默认找当前目录 README.md）。--format 选打包格式，支持 zip 和 tar.gz，不指定就两个都生成。输出文件名自动拼版本号和平台，格式为 release_{version}_{os}_{arch}.{ext}，版本号从 --version 读，没给就用 "dev"。打包完自动生成 checksum.sha256 文件，内容是标准 "HASH  FILENAME" 格式（sha256sum 兼容）。--platform 交叉打包，传 "linux/amd64,windows/amd64,darwin/arm64" 这种逗号分隔列表，为每个平台分别打一个包。子命令 verify 校验已有发布包，--package 指定包路径，校验包内每个文件的 sha256 与 checksum.sha256 是否一致，不一致输出 "checksum mismatch: FILE expected=HASH1 actual=HASH2" 并 exit 1。全部一致输出 "OK: all N files verified" 并 exit 0。输出目录不存在自动创建，权限 0755。二进制文件找不到 exit 1 输出 "error: binary not found: PATH"。
+
+用 Go 标准库写，go run . 或 go build 都行。主逻辑和辅助函数分文件。

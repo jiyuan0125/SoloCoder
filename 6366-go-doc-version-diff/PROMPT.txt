@@ -1,3 +1,9 @@
-两版需求文档的差异手动对比容易漏。差异用 Markdown 格式标注，可以忽略空格和换行只看内容差异。
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
+两版需求文档的差异手动对比容易漏——上回改了支付流程的边界条件，评审的时候谁都没注意到。
+
+`doc-diff diff --old v1.md --new v2.md --ignore-whitespace --context 3`，对比两个 Markdown 文件的内容差异。`--ignore-whitespace` 开启后连续空格合并为一个，行尾空格忽略，空行跳过。`--context` 控制变更行上下文行数，默认 3。输出用 Markdown 格式标注：删除的行前缀 `- `，新增的行前缀 `+ `，未变行前缀 `  `（两个空格）。
+
+加 `--summary` 只输出变更概要不输出具体内容："added {n} lines, removed {n} lines, changed {n} sections"。`--output diff.md` 写入文件，不指定输出到 stdout。`--format json` 输出 JSON：`{"old_file":"v1.md","new_file":"v2.md","added_lines":15,"removed_lines":8,"sections_changed":[{"line_start":23,"line_end":45,"type":"modified"}]}`。
+
+代码块内的差异也算（三个反引号之间的内容）。两个文件完全相同时输出 "no differences found" 退出码 0。输入文件不存在退出码 1。文件编码非 UTF-8 报错 "file {name} is not UTF-8 encoded"。同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
+
 go build 通过就行，标准库写的。

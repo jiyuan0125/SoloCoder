@@ -1,5 +1,1 @@
-Go AST 分析器，统计函数数量、行数、复杂度，最后输出分析报告。用 text/template 格式化结果。
-
-文件处理分四个阶段走：待处理、处理中、校验中、已完成，校验没过就退回处理中。
-
-纯标准库，go run . 就行。
+上个月 code review 发现有个函数写了 800 行，要是早点用工具扫一下就好了。Go 写 AST 分析器，`astanalyzer <path> --format text|json --output report.txt --complexity-threshold 15`。扫描指定目录下所有 .go 文件（递归遍历），用 go/parser 解析 AST，统计每个函数的函数名、参数个数、返回值个数、代码行数（从 func 到匹配的右大括号之间的行数）、圈复杂度（统计 if/for/case/&&/|| 的出现次数加 1，switch 里每个 case 算一次）。text 格式输出用 text/template 渲染表格，列：File、Function、Params、Returns、Lines、Complexity，超过 --complexity-threshold 的行末尾标记 "⚠ HIGH"。json 格式输出数组，每个元素包含 file、function、params、returns、lines、complexity 字段。最后输出汇总：总文件数、总函数数、平均行数、平均复杂度、超标函数数。文件解析失败时 stderr 输出 "warning: parse error: <file>: <error>" 跳过该文件继续。处理分四个阶段：pending→processing→validating→done，校验没过退回 processing 重新解析。路径不存在退出码 1。纯标准库，go run . 就行。

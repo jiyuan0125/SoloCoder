@@ -1,3 +1,7 @@
-日志里一堆 IP 要反查域名做威胁分析。批量查 PTR 记录，支持并发和超时，把 IP 到域名的映射表输出。单个 dig 太慢了。
+日志里有两千个 IP 地址要反查域名做威胁分析，一个一个 dig 要跑到什么时候？能不能并发批量查，超时的跳过，结果导出成表格？
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+命令 `rdnslookup -file ips.txt -concurrency 50 -timeout 3s -output result.json`。ips.txt 每行一个 IP（支持 IPv4 和 IPv6）。对每个 IP 查 PTR 记录（DNS 反向解析），`-concurrency` 控制并发 goroutine 数（默认 20），`-timeout` 是单次 DNS 查询超时（默认 5 秒）。输出 JSON 数组：`[{"ip": "1.2.3.4", "domain": "host.example.com", "status": "ok"}, {"ip": "5.6.7.8", "domain": "", "status": "no_record"}, {"ip": "9.10.11.12", "domain": "", "status": "timeout"}]`。status 三种值：`ok`（有 PTR 记录）、`no_record`（PTR 不存在）、`timeout`（查询超时）。
+
+加 `-csv` 输出 CSV 格式：`ip,domain,status`，适合 Excel 打开。加 `-filter ok` 只输出有结果的记录。结束后打印汇总：`Total: 2000 | Resolved: 1800 | No record: 150 | Timeout: 50`。
+
+输入文件不存在 exit 1。文件为空输出 "no IPs to resolve" exit 0。非法 IP 格式跳过并在 stderr 打印 "invalid IP: <addr>"。Go 标准库实现，go build 能编译通过。

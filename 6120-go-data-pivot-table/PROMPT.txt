@@ -1,5 +1,7 @@
-配置中心那边推过来的数据是扁平的，我们需要透视成交叉表才能看。Go 做数据透视。
-行字段、列字段、值字段由用户指定。
-值支持计数和求和。
-合并完成后自动删除源文件，保留模式不删除。
-不用第三方包，go build 通过就行。
+配置中心推过来的数据全是扁平的行记录，要看地区×产品的交叉汇总只能手动在 Excel 里做透视表，每周做一次太费时间。
+
+1. `pivot -file sales.csv -row region -col product -val amount -op sum`。读取 CSV，按 `-row` 指定的列作为行头，`-col` 作为列头，`-val` 指定值字段，`-op` 指定聚合方式。聚合支持 `count`（计数）和 `sum`（求和）。输出透视表到 stdout，格式为 CSV：行头是 region 值，列头是 product 值，单元格是聚合结果。最后一列是行合计 `TOTAL`，最后一行是列合计。
+2. 加 `-out result.csv` 写文件。多个行字段用逗号分隔 `-row region,city` 形成多级行头。值字段缺失时 count 算 0，sum 跳过。`-op count` 不需要 `-val`，直接数行数。
+3. 合并完成后自动删除源文件，加 `-keep` 保留模式不删除。
+
+输入文件为空输出 `error: no data rows` 退出码 0。指定列不存在输出 `error: column not found: <name>` 退出码 1。值字段含非数值做 sum 时输出 `warning: non-numeric value at row N: "abc", skipped`。不用第三方包，go build 通过就行。

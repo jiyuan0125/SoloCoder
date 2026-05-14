@@ -1,3 +1,9 @@
-压测配置每次都手动写，接口权重和 QPS 目标对不上。Go 工具根据接口权重和 QPS 目标自动生成请求序列，支持阶梯加压和恒定负载两种模式。
+压测配置每次手动写，接口权重和 QPS 目标对不上。先根据权重和 QPS 生成请求序列，再按序列执行压测。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+生成：`loadprofile gen -config profile.json -output sequence.json`。profile.json 格式：`{"targets":[{"url":"/api/users","weight":3,"method":"GET"},{"url":"/api/orders","weight":1,"method":"POST"}],"total_qps":100}`。按权重分配 QPS 输出请求序列。
+
+执行：`loadprofile run -sequence sequence.json -base-url http://localhost:8080 -duration 60s -mode step`。`-mode` 支持 `step`（从 10% 每 10 秒增加 10%）和 `constant`（恒定 QPS）。每秒输出：`{"second":1,"requests":100,"latency_p50_ms":12,"latency_p99_ms":45,"errors":0}`。
+
+完成后汇总：`total_requests: 6000, avg_latency_ms: 15, p99_ms: 42, error_rate: 0.001`。连接失败记录为 error 继续。不可达时 3 次重试后 exit 2。权重和为 0 时 exit 1 并输出 `error: total weight must be positive`。
+
+纯 Go 标准库，编译后单二进制直接跑。

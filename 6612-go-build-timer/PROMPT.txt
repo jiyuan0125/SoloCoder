@@ -1,3 +1,7 @@
-不确定是哪个包拖慢了编译速度。写个工具多次编译取平均值，区分增量编译和全量编译，输出各包的编译耗时排名，一眼就能看到瓶颈在哪。
+Go 项目编译越来越慢，到底是哪个包拖了后腿？能不能多编译几次取平均值排除干扰？需要一个工具量化每个包的编译耗时，区分增量和全量编译场景。
 
-用 Go 标准库写，go run . 或 go build 都行。
+命令 `buildtimer run -n 5 -mode incremental ./myproject`。`-n` 指定编译轮次（默认 3），`-mode` 选 `full`（先 `go clean -cache` 再编译）或 `incremental`（直接编译）。每轮编译后解析 `go build -x` 的输出，提取每个包的编译耗时。N 轮结束后取每个包的平均值和标准差。
+
+输出文本表格：列包括 Package、Avg(ms)、StdDev(ms)、Min(ms)、Max(ms)、Rank。默认按 Avg 降序排列。加 `-json` 输出 JSON 数组，每条含 `package`、`avg_ms`、`stddev_ms`、`min_ms`、`max_ms`、`rank`。加 `-top 10` 只显示最慢的 10 个包。
+
+项目路径不存在报 "project directory not found" exit 1。`go build` 本身失败时，打印编译错误并 exit 1，不输出耗时统计。N < 1 报 "n must be >= 1" exit 1。用 Go 标准库写，`go run .` 或 `go build` 都行。

@@ -1,5 +1,13 @@
-产品组下周要看数据校验的 demo，得赶紧弄个能跑的。检查 json、yaml、db 标签格式对不对，标签和字段类型匹不匹配。
+产品组下周要看数据校验的 demo，得赶紧弄个能跑的。检查 Go 结构体的 json、yaml、db、form 标签格式对不对，标签值和字段类型匹不匹配，省得上线后序列化炸了。
 
-导入成功后自动通知下游系统，本地模式没有下游配置。
+用法：`tagcheck <Go源文件或目录> [--severity error|warn]`。递归扫描 .go 文件，提取结构体字段的所有 struct tag，逐个检查。
+
+检查规则：json 标签名是否合法（字母开头、只含字母数字下划线连字符）、json 的 omitempty 对 bool 类型无效应提示 WARN、db 标签是否是有效 SQL 列名（小写+下划线，不含空格和特殊字符）、yaml 标签和 json 标签同名时值是否一致、form 标签的 skip 语法是否正确。
+
+输出表格格式：`文件名:行号  字段名  标签类型  严重程度  问题描述`。严重程度分 ERROR（标签格式错误、不合法字符）和 WARN（类型建议、不一致提示）。`--severity error` 只输出 ERROR 级别。
+
+退出码：0 无问题，1 发现 ERROR，2 输入不是 .go 文件或不存在。`--quiet` 模式只输出有问题的文件路径不输出详情。
+
+`--notify <URL>` 检查完成后 POST JSON `{"file":"...","errors":N,"warnings":N}` 到该 URL。没配就跳过。通知失败只 stderr WARN 不影响退出码。
 
 零外部依赖，go build 通过即可。

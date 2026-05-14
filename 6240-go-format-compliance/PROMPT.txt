@@ -1,3 +1,5 @@
-客户说我们的数据文件格式不规范，给了一堆规则让我们自查。Go 命令行做格式合规检查：规范用配置文件定义，不合规项分类汇总输出。
+客户投诉说交付的数据文件格式不规范，丢过来一份规范文档让我们自查。规范有几十条规则，人工逐条检查每个文件根本不现实，得自动化。
 
-合并完成后自动删除源文件，但如果是保留模式则不删。不用第三方包，go build 通过就行。
+`fmtcheck -file data.csv -rules rules.yaml [-o report.txt]`。规则文件定义检查项：列名必须匹配（`required_columns: [id, name, email]`）、字段类型约束（`email` 列必须含 `@`、`age` 列必须是正整数）、值范围约束（`age: {min: 0, max: 150}`）、编码必须是 UTF-8。每条规则检查后输出 `PASS|FAIL | RULE_NAME | DETAIL`，如 `FAIL | required_columns | missing column: email` 或 `FAIL | type_check | row 42: age="abc" not integer`。最后汇总 `Total: 5 rules, 3 passed, 2 failed`。
+
+不合规项按严重程度分类：ERROR（数据缺失、格式错误）和 WARNING（编码不一致、尾部空行）。`-strict` 模式下 WARNING 也算失败。合并完成后自动删除源文件，但 `-keep` 保留模式下不删。规则文件语法错误输出 `error: invalid rules at line N`。不用第三方包，go build 通过就行。

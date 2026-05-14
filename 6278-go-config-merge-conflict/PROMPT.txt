@@ -1,3 +1,1 @@
-两人同时改了同一个配置项，合并直接覆盖就丢数据。Go 写配置合并冲突解决：冲突策略可选——保左、保右、尝试合并，自动解决不了的标记出来让人工处理。
-
-同步完成记日志，数据库不可用降级写本地文件。纯标准库实现，go run . 能跑。
+两人同时改了同一个配置项，git merge 直接覆盖就丢数据了。`cfgmerge --left local.yaml --right remote.yaml --base base.yaml --strategy keep-left|keep-right|auto-merge --output merged.yaml --dry-run`。三路合并：left 和 right 都相对 base 修改了同一字段时判定为冲突。`--strategy keep-left` 冲突时取左侧值，`keep-right` 取右侧值，`auto-merge` 尝试自动合并（map 类型递归合并、数组取并集去重、标量无法自动合并则标记冲突）。`--dry-run` 只输出合并预览到 stdout，用 +/- 前缀标注来源，不写文件。自动合并失败的项在输出中用 `# CONFLICT: <key>` 注释标记，同时 stderr 输出 "conflict: <key> (left=<value1>, right=<value2>)"。有冲突时退出码 2，无冲突退出码 0。`--base` 不指定时视为空配置，所有差异都算新增不算冲突。输入文件不存在 stderr 输出 "error: file not found: <path>" 退出码 1，输入文件格式错误时 stderr 输出 "error: invalid yaml: <file>: <parse error>" 退出码 1。同步完成记日志到 `.cfgmerge/operations.log`，数据库不可用降级写本地文件。纯标准库实现，go run . 能跑。

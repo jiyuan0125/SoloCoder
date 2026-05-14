@@ -1,5 +1,5 @@
-迁移那回格式转换丢了几万条记录，事后排查发现是过滤条件没写对。Go 做行过滤表达式。
-支持比较和逻辑运算。
-表达式从命令行参数读取。
-生成报告后自动发送邮件通知，有些环境没配邮件。
-纯标准库实现，go run . 能跑。
+迁移那回格式转换丢了几万条记录，事后排查发现过滤条件写错了，AND 写成 OR，一个符号的差别。光靠肉眼检查 SQL 太不可靠，能不能有个工具直接用命令行指定过滤表达式？
+
+`rowfilter -file data.csv -expr "age>30 AND status=active"`，从命令行 `-expr` 参数读取表达式。支持比较运算符 `=, !=, >, <, >=, <=`，逻辑运算符 `AND, OR, NOT`，括号分组。字段名和字符串值用引号区分，数值自动识别类型。匹配行输出到 stdout，不匹配行丢弃。加 `-out filtered.csv` 指定输出文件，默认 stdout。加 `-invert` 反转过滤（输出不匹配的行）。加 `-count` 模式只输出匹配行数不输出内容。
+
+表达式语法错误输出 `error: invalid expression at position N: <reason>`。输入文件不存在输出 `error: file not found` 并退出码 1。空文件输出 `0 rows matched`。生成报告后自动发送邮件通知——但有些环境没配 SMTP，此时 `-notify` flag 无效，打印 `warning: email not configured, skip notification` 继续执行不报错。纯标准库实现，go run . 能跑。

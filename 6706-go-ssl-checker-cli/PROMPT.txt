@@ -1,3 +1,5 @@
-去年有个线上事故就是因为 SSL 证书过期没提前发现，整个支付流程挂了 20 分钟。写个证书检查工具，连上主机端口拿到证书链，把有效期、颁发者、加密套件都列出来，快过期的标红告警。
+去年线上 SSL 证书过期没提前发现，整个支付流程挂了 20 分钟，客户投诉几十单，老板震怒。不能再靠人记过期时间了，得有工具提前告警。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+Go 写证书检查工具。子命令 check 连上指定主机端口拿证书链，用法 check --host example.com:443，输出证书详情表格：Subject、Issuer、Not Before、Not After、Days Remaining、Serial Number。加 --output json 输出 JSON 格式。子命令 chain 检查证书链完整性，从叶子证书逐级验证到根证书，链中任何一级断裂输出 "error: chain broken: CERT_SUBJECT at depth N, reason: REASON" 并 exit 2。快过期的证书标红，--warn-days 设置提前告警天数（默认 30），剩余天数不足时输出 "WARNING: CERT_SUBJECT expires in N days" 到 stderr 并 exit 1。加 --cipher 列出协商的加密套件名称和密钥长度。批量检查从文件读主机列表，--hosts-file 指定，每行一个 host:port，超时 5 秒连接失败的标 "TIMEOUT" 不中断批处理。连接拒绝输出 "error: connection refused: HOST"。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。代码分文件。

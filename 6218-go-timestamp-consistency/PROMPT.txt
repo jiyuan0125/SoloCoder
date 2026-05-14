@@ -1,3 +1,9 @@
-有个文件的修改时间比创建时间还早，怀疑是篡改过。Go 写个时间戳一致性检查：修改时间早于创建时间的标记异常，时间戳在未来（系统时钟可能有偏）的也标出来。
+之前碰到个诡异的事：一个配置文件的 mtime 居然比 crtime 还早，大概率是被篡改后又手动改了时间戳。时间戳一致性这种事不能靠肉眼看。
 
-任务状态要支持排队→运行→暂停→完成，暂停以后还能继续。纯标准库实现，go run . 能跑。
+1. 扫描指定目录下所有文件，检查三个时间属性：创建时间（crtime/birth）、修改时间（mtime）、访问时间（atime）。
+2. 异常判定规则：mtime 早于 crtime 标记为 `time_inconsistency`，atime 早于 crtime 标记为 `access_anomaly`，任何时间戳在未来（超过当前系统时间 +1 小时容差）标记为 `future_timestamp`。
+3. 命令行：`tscheck scan --dir /path/to/check --output report.json --tolerance 1h`。
+4. 输出 JSON 数组，每条记录含 `file`（路径）、`crtime`、`mtime`、`atime`（ISO 8601 格式）、`issues`（异常类型数组）。
+5. 没有异常的文件不输出。没有权限读取的文件记到 stderr，文件路径 + `permission_denied`，不中断扫描。
+
+任务状态支持排队→运行→暂停→完成四态，暂停后可继续。`tscheck status` 显示当前任务状态和已扫描文件数。纯标准库实现，`go run .` 能跑。扫描符号链接时跟随链接检查目标文件。

@@ -1,4 +1,7 @@
-struct 嵌套了三层，方法提升有冲突都不知道。分析嵌入层次和冲突，方法提升链也列出来。
+你有没有遇到过这种情况——struct 嵌套了三四层，某个方法不知道是从哪层提升上来的，两个嵌入类型还有同名方法冲突编译都过不了。写个工具把嵌入关系理清楚，方法提升链和冲突一目了然，省得每次都得人工画图。
 
-标准库搞定，go run . 跑起来。
-代码分几个文件组织，别全写 main.go 里。
+解析 Go 源文件 AST，递归追踪 struct 的嵌入链。对每个 struct 输出四部分信息：直接嵌入的类型列表、间接嵌入（嵌入的嵌入）的类型列表、完整方法提升链（格式如 C -> B -> A.FieldName，展示方法从哪一层提升到当前类型）、同名方法冲突（多个嵌入类型都包含的方法名及其来源）。命令：embed-analyze -dir ./pkg -type BaseService，不指定 -type 时分析目录下所有 struct 定义。
+
+输出格式：每个 struct 一个段落，有方法冲突时用 CONFLICT 标记并列出来源类型和冲突方法名。-format json 输出结构化数据，每个 struct 包含 name、embeds（层级嵌套数组）、promoted_methods（方法名到来源类型的映射）、conflicts（方法名到多个来源类型的映射）。嵌入层级超过 5 层时输出 DEEP 告警提醒，比如 "DEEP: 6 levels of embedding in struct BaseService"。遇到标准库类型只显示类型名不再展开其内部嵌入。目录下没有 .go 文件时输出 "no Go files found" 退出码 0。
+
+标准库搞定，go run . 跑起来。代码分几个文件组织，别全写 main.go 里。

@@ -1,3 +1,7 @@
-备份里 3 万个文件，find 一次要 2 分钟。建索引，增量更新，按文件名秒查。
-任务状态是排队→运行→暂停→完成，暂停后可以继续。
-go build 通过就完事，全标准库写的。
+备份目录里攒了三万多个文件，每次 find 搜一遍要两分钟。线上的恢复流程对时间要求很严，必须在 30 秒内定位到目标文件。给备份目录建个索引，增量更新，按文件名秒查。
+
+索引存储在本地 JSON 文件 index.json 中，结构：root 字段记录根目录路径，files 数组每项包含 path（相对路径）、name（文件名）、size（字节数）、mod_time（修改时间 RFC3339 格式）、checksum（SHA256 哈希），updated_at 记录索引最后更新时间。三个子命令：build -dir /backup 全量扫描建索引；update -dir /backup 增量更新，对比文件修改时间只处理变更过的文件；search -dir /backup -name "config.yaml" 按文件名搜索，支持模糊匹配，结果按路径排序输出。
+
+文件数超过 10 万条时 update 模式会显示进度：已扫描 N 个文件，变更 M 个，耗时 X 秒。索引文件损坏或格式不对时输出 "index file corrupted, please rebuild" 提示用 build 重建。-exclude "*.tmp" 排除不需要索引的文件模式，支持多个。search 没有匹配结果时输出 "no files matched" 退出码 0。build 完成后输出统计：总文件数 N、索引大小 KB、耗时秒数。
+
+任务状态是排队→运行→暂停→完成，暂停后可以继续。go build 通过就完事，全标准库写的。

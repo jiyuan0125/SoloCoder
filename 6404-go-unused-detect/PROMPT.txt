@@ -1,5 +1,9 @@
-代码库膨胀得厉害，很多函数和变量早就没人调用了却一直留着。跨文件分析引用关系，被测试引用的排除掉。
+代码库四年了没人清理，函数和变量遍地都是，到底哪些还在用、哪些早该删了？上周想删个函数，grep 了一下发现整个项目只有一个测试在调它——但不确定其他地方有没有动态调用。
 
-扫描流程：初始化→扫描中→分析中→报告生成，分析出的问题标记为异常。
+unused scan --dir ./mypkg 分析指定目录下所有 .go 文件。用 go/parser 构建 AST，提取所有函数声明、变量声明、类型声明。然后扫描所有函数体和文件顶层代码里的引用，构建"谁引用了谁"的映射。被 _test.go 引用的符号标记为 test-only，不算 unused。
 
-标准库搞定，go run . 跑起来。
+输出 unused_report.json：{"unused": [{"name": "oldHelper", "type": "function", "file": "utils.go", "line": 42}], "test_only": [...], "used": [...]}。加上 --format table 改为终端表格输出，列：符号名 | 类型 | 文件 | 行号 | 状态（unused/test-only/used）。
+
+扫描流程有状态：初始化→扫描中→分析中→报告生成，每阶段在 stderr 打印进度。分析出问题的标为异常。如果扫描的目录没有 .go 文件，exit code 1 并打印 ERROR: no Go source files found。
+
+入口函数 main 和 init 永远不算 unused。实现接口的方法不算 unused。标准库搞定，go run . 跑起来。

@@ -1,3 +1,9 @@
-反爬策略里 TLS 指纹是关键因素，想看看我们客户端的指纹长什么样。写个工具连上 HTTPS 服务器，分析 TLS 握手过程中的 cipher suite、扩展、证书链，输出指纹哈希值。
+先用工具连接目标 HTTPS 服务器，然后抓取 TLS 握手过程中客户端发出的 ClientHello 信息，最后算出指纹哈希输出。整个流程就三步，每一步的结果都要在终端展示清楚。
 
-Go 标准库，命令行参数用 flag 包解析。
+1. 连接阶段：`tlsfp -host example.com -port 443`。用 `tls.Dial` 建立连接，配置自定义的 ClientHello 参数。默认端口 443，不填 -host 报 `error: -host is required` 退出码 1。连接超时 10 秒，超时报 `error: connection timeout after 10s` 退出码 1。
+
+2. 信息提取阶段：从 `tls.ConnectionState` 获取 cipher suites 列表（十六进制格式如 0x1301）、TLS 版本号、服务器证书链（每个证书输出 Subject、Issuer、有效期起止、SHA256 指纹）。支持的 TLS 版本映射：0x0301=TLS1.0, 0x0302=TLS1.1, 0x0303=TLS1.2, 0x0304=TLS1.3。
+
+3. 指纹计算阶段：将 ClientHello 的关键字段（cipher suites 拼接、extensions 列表、elliptic curves）按 JA3 规则拼接成字符串，计算 MD5 哈希作为指纹。输出格式为 `JA3: <md5hash>` 一行，后面跟完整的分解字段。
+
+加 `-json` flag 输出 JSON 格式包含所有字段。加 `-verbose` 输出完整证书链 PEM。Go 标准库，flag 包解析参数。

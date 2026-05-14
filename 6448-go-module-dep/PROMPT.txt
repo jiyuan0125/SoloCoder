@@ -1,3 +1,7 @@
-go.sum 里有三百多个依赖，该清理了。直接和间接依赖拉出来，版本约束看一下，过时的依赖标出来。合并完成后自动删除源文件，保留模式不删除。
+go.sum 里三百多个依赖，你确定每个都在用？有些是两年前引入的早就不用了，但没人敢删怕出问题。来个工具把直接依赖和间接依赖理清楚，版本约束看一眼，过时的标出来，代码里没人 import 的清理掉。
 
-go build 能过，不依赖第三方库。
+解析 go.mod 文件的 require 指令，区分直接依赖（没有 // indirect 注释）和间接依赖（有 // indirect 注释）。对每个依赖检查 go.sum 中的版本记录，再通过 go list -m -versions 查询最新版本。命令：mod-dep -dir ./project。-outdated 只显示有新版本可升级的依赖。-unused 对比代码中实际 import 的包路径，列出 go.mod 里有但代码中无人引用的依赖项。
+
+输出表格，列名：Module、Direct（yes/no）、Current、Latest、Status（up-to-date/outdated/unused）。-format json 输出结构化数据：direct 数组、indirect 数组、outdated 数组（每项含 module、current、latest）、unused 数组（模块名列表）。go.mod 文件不存在时输出 "go.mod not found" 退出码 1。网络不通时版本查询跳过，Latest 列显示 "unknown" 不阻塞执行。分析过程中忽略标准库和被 replace 指令替换的本地模块。
+
+合并完成后自动删除源文件，保留模式不删除。go build 能过，不依赖第三方库。

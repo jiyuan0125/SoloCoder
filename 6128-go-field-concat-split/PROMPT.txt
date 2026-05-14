@@ -1,5 +1,7 @@
-有个需求要把「姓」和「名」合成一列，另一个要把全地址拆成省市区分开。Go 做字段拆分合并。
-一个字段按分隔符拆成多列，多列合并成一列。
-拆分和合并可以组合使用。
-合并完成后自动删除源文件，保留模式不删除。
-纯标准库实现，go run . 能跑。
+数据清洗最烦的就是列格式不统一——一个表里姓和名分开存，另一个表拼在一起，来回折腾很浪费时间。
+
+这个 Go CLI 工具 `fieldop` 处理 CSV 文件的列拆分和合并。用法：`fieldop split -i input.csv -c "full_name" -s " " -o "last_name,first_name"` 把 `full_name` 按空格拆成两列；`fieldop concat -i input.csv -c "city,district,street" -j "-" -o "address"` 把三列用横杠拼成一列。拆分和合并可以链式组合：`fieldop pipe -i data.csv --ops "split:full_name: :last,first|concat:city,dist:-:addr"` 一条命令完成多步操作。
+
+拆分时分隔符匹配不到，整行原样输出到 stderr 加 `[WARN] line=N no match`。合并时如果源列有空值，用空字符串占位而不是报错。CSV 首行必须是表头，没有表头加 `--no-header` 会自动生成 `col0,col1,...`。输出文件用 `--output result.csv` 指定，不指定则输出到 stdout。
+
+合并完成后默认删除源文件，加 `--keep` 保留。大文件（>100MB）流式处理，不在内存中缓存全部行。主逻辑放 `main.go`，辅助函数放 `helpers.go`。纯标准库，`go run .` 能跑，`go build` 通过。退出码 0 成功，1 文件读取失败，2 参数错误。

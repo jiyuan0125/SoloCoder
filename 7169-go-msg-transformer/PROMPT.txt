@@ -1,5 +1,5 @@
-字段名改了但上游还是用旧字段名，得做映射。
+字段名改了但上游还是用旧字段名，每次都要写一堆转换代码。更烦的是不同 topic 的分区配置乱七八糟，消费者组经常倾斜。能不能有个统一工具？
 
-Topic 管理和分区配置、分区均衡工具、复制因子调整。数据转换需要映射模板，模板怎么定义不提。多核机器上跑的时候多个 goroutine 同时处理。
+Go CLI 工具做消息转换。子命令 transform 做字段映射转换，--input 指定输入 JSON 文件或 stdin（-），--mapping 指定映射规则文件（JSON 格式，如 {"old_name":"new_name","status":"state"}），--output 指定输出路径。转换时未在映射表中的字段原样保留。值类型不匹配（字符串转数字失败）输出 "warning: type mismatch: FIELD expected=TYPE actual=VALUE" 到 stderr，保留原值。子命令 topic 管理 topic 和分区，--list 列出 topic，--describe TOPIC 显示分区详情（leader、replicas、ISR）。子命令 rebalance 做分区均衡，分析当前分配，输出建议的重新分配方案，显示每个 consumer 消费的分区数差异。子命令 replicate 调整复制因子，--topic 指定，--factor 指定目标值。多核并行处理，--workers 指定 goroutine 数（默认 CPU 核数），用 sync.WaitGroup 等待全部完成。空输入文件输出 "warning: empty input" 到 stderr 并 exit 0。映射文件格式错误 exit 1。
 
-Go CLI 工具，go build 能过就行。
+Go CLI 工具，go build 能过就行。代码分文件组织。

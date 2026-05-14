@@ -1,5 +1,11 @@
-好多数据集都有空值，导到分析工具里就报错。Go 命令行工具做空值填充。
-支持用固定值、前后值、平均值填充。
-不同列可以用不同的填充策略。
+数据集有空值怎么办？导到分析工具里就报错，手动填又填不过来。能不能有个工具自动处理？
+
+`null-fill fill --input data.csv --output filled.csv --strategy forward --columns "age,income"`，`--strategy` 支持 `fixed`（固定值，需搭配 `--value` 参数）、`forward`（前一个非空值填充）、`backward`（后一个非空值填充）、`mean`（数值列的平均值）、`median`（中位数）。`--columns` 指定要填充的列，逗号分隔；不指定则处理所有有空值的列。
+
+不同列可以用不同策略，通过 `--rules rules.json` 指定，JSON 格式是 `{"age":"mean","name":"forward","score":"fixed:0"}`。`--rules` 和 `--strategy` 同时存在时 `--rules` 优先生效，未在 rules 里的列用 `--strategy`。
+
+CSV 第一行当表头。空值判断：空字符串、纯空白、"null"、"NULL"、"NA"、"N/A" 都视为空。`mean` 和 `median` 策略只能用于数值列，对非数值列报错 "column {name} is non-numeric, cannot use {strategy}"。forward 的第一行是空值且前面没有值时跳过该字段保持为空。全空的列无法填充，打印 warning。
+
+输出后统计信息到 stdout："filled {total_nulls} nulls across {cols} columns"。主逻辑和辅助函数分文件写。
+
 纯标准库实现，go run . 能跑。
-主逻辑和辅助函数分文件写。

@@ -1,3 +1,10 @@
-同一个 key 的消息只关心最新值，历史版本占空间。Topic 管理和分区配置、分区均衡工具、复制因子调整。支持多层级的规则路径 rules/{group}/{name}/{version}。
+Kafka 集群磁盘快满了，排查发现 70% 是同一个 key 的历史版本消息，业务上只关心最新值。需要一个工具把重复 key 的旧消息清理掉，释放空间。
 
-Go 命令行工具，go build 能过就行。
+Go 命令行 `msgcompact`，主要子命令：`compact`、`topic-config`、`rebalance`。`compact -b <brokers> -t <topic>` 扫描指定 topic，统计每个 key 的消息版本数，输出压缩前后预估大小对比。加 `--execute` 才真正执行压缩，只保留每个 key 最后一条。
+
+1. `topic-config list` 列出所有 topic 的分区数、复制因子、保留时间。`topic-config set -t <topic> --partitions N --replication-factor M` 在线调整分区和复制因子，执行前打印变更预览需用户确认。
+2. `rebalance -b <brokers>` 检测分区在 broker 间的分布，输出迁移建议（哪些分区该从哪台搬到哪台），`--execute` 执行迁移。
+3. 规则路径支持多层级 `rules/{group}/{name}/{version}`，按 group 分组加载规则文件，同名高版本覆盖低版本。
+4. 空 topic（0 条消息）直接跳过并输出 `[SKIP] topic=<name> reason=empty`。
+
+Go 标准库实现，`go build` 能编译通过。退出码 0 正常，1 broker 连接失败，2 参数缺失。

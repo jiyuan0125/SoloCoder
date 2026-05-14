@@ -1,3 +1,9 @@
-文档模板里有 {{variable}} 占位符，每次手动替换容易漏。变量值从配置文件读取，未定义变量可选保留原样或报错。
-导入成功后自动通知下游系统，本地模式没有下游配置。
+文档模板里 {{project_name}} 这种占位符，改漏一个就出事故。换个思路——变量集中管理，工具统一替换。
+
+用法：`var-replace --template template.md --vars config.yaml`。模板里 `{{var}}` 格式的占位符会被替换成 vars 文件里对应的值。vars 文件支持两种格式：YAML（`key: value`）和环境变量风格（`KEY=VALUE`，每行一个）。`--missing error` 遇到未定义变量直接报错退出码 1，`--missing keep` 保留 `{{var}}` 原样不动，默认 error。
+
+替换完输出统计：`替换 N 个变量, 保留 N 个未定义, 耗时 Xms`。`--output result.md` 指定输出文件，不指定就覆盖原文件（先备份为 `.bak`）。支持嵌套变量：`{{base_url}}/api/{{version}}` 两个占位符分别替换。支持默认值语法 `{{var:default_value}}`，变量未定义时用冒号后面的默认值。
+
+空模板文件输出 "empty template" 退出码 0。vars 文件里声明的变量在模板中没用到，输出 `WARN: unused variable: xxx`。本地模式没有下游配置——导入成功后的通知功能只在配置了 `--notify-url` 时生效，没配就跳过不报错。
+
 全标准库，go run . 跑一遍就行。

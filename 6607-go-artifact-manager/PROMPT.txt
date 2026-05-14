@@ -1,3 +1,13 @@
-构建产物散落在各台机器上，找起来费劲。搞个工具统一管理：上传下载、按项目名和版本组织、列出来、删掉旧的。存储在本地目录，支持按时间清理。
+构建产物散落在各台机器上，找起来费劲。搞个工具统一管理上传下载。
+
+`artifact-mgr upload --file build/app.tar.gz --project myapp --version v1.2.3`，上传到 `./artifacts/{project}/{version}/`。已存在拒绝输出 "already exists" 退出码 2，`--force` 可覆盖。上传时自动生成 `manifest.json` 含文件名、SHA256、大小、上传时间。
+
+`artifact-mgr download --project myapp --version v1.2.3 --file app.tar.gz --output ./local/`，不存在报 "not found" 退出码 1。
+
+`artifact-mgr list --project myapp` 表格输出 version、file_count、total_size、upload_time。`--json` 输出 JSON。`--all` 列所有项目。
+
+`artifact-mgr cleanup --project myapp --keep 5`，保留最近 N 版本删更早的。`--dry-run` 只显示不删。`artifact-mgr info --project myapp --version v1.2.3` 输出 manifest 内容。
+
+项目不存在时自动创建目录。`--project` 只允许小写字母数字和连字符。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。

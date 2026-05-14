@@ -1,3 +1,9 @@
-CI 里交叉编译 6 个平台的二进制，每次手动改 GOOS GOARCH 太烦了。写个工具，从配置文件读目标平台列表批量编译，记录每个平台的编译结果和二进制大小。
+CI 里交叉编译要覆盖六个平台，每次手动设 GOOS GOARCH 再改输出文件名，经常漏一个。能不能从配置文件读平台列表，一把全编了？
 
-Go 标准库，命令行参数用 flag 包解析。
+配置文件格式 crosscompile.json：{"targets": [{"os": "linux", "arch": "amd64"}, {"os": "darwin", "arch": "arm64"}, {"os": "windows", "arch": "amd64"}], "output_dir": "./dist", "ldflags": "-s -w"}。
+
+xbuild run --config crosscompile.json 遍历每个 target，设置 GOOS 和 GOARCH 环境变量执行 go build -o ./dist/<name>_<os>_<arch>。Windows 平台输出加 .exe 后缀。每个 target 编译完记录结果到 build_result.json：{"target": "linux/amd64", "status": "success", "binary_size": 8388608, "duration_ms": 1200, "error": ""}。编译失败不停止，继续下一个，status 写 failed。
+
+xbuild summary 读取 build_result.json 输出表格：平台 | 状态 | 大小 | 耗时。全部成功 exit 0，有失败 exit 1。
+
+xbuild clean 清空 output_dir。flag 包解析命令行参数，--config 默认读当前目录的 crosscompile.json。文件不存在 exit 1。Go 标准库实现。

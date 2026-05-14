@@ -1,5 +1,8 @@
-大 JSON 文件里找特定字段值，jq 语法记不住。客户等着要，先搞个 Go 工具支持标准 JSONPath 语法、过滤表达式、聚合函数，输出匹配结果。
+大 JSON 文件里找几个字段值，jq 语法太诡异了每次都要翻文档。客户等着要数据，先搞个支持标准 JSONPath 的 Go 工具。
 
-文件可能很大，超过内存要能处理。
+你试过这样查吗？`jq '$.store.book[*].author' data.json` 列出所有作者。`jq '$.store.book[?(@.price < 10)]' data.json` 过滤价格低于 10 的书。`jq '$.store..price' data.json` 递归搜索所有 price 字段。聚合函数：`jq 'length($.store.book)'` 返回数组长度，`jq 'sum($.store..price)'` 求和，`jq 'min/max'` 取极值。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`jq query '$..name' data.json -o result.json` 输出匹配结果。`--stream` 模式用 json.Decoder 流式处理，支持 >1GB 的文件不全量加载。`--flatten` 将嵌套结果拍平为 JSON 数组。无匹配输出 `null` exit 0。JSONPath 语法错误 `error: invalid jsonpath: <detail> at position <N>` exit 2。
+
+文件读取失败 exit 1。输入不是合法 JSON `error: invalid json at line <N>` exit 2。`--pretty` 格式化输出，默认紧凑。纯 Go 标准库，编译后单二进制可以直接跑。
+`go build` 编译后单二进制可以直接跑。

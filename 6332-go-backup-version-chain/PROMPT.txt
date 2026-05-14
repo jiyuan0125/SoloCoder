@@ -1,3 +1,7 @@
-备份不是只能回滚到最新版。每个版本记录增量变更，任意历史版本都可以恢复出来。
-写入结果的同时要更新索引，索引构建也要读取已有结果。
-go run . 跑起来，标准库实现。
+上周数据库出问题想回滚到三天前的版本，发现增量备份链只保留了最近两个版本，之前的全丢了。得重新设计备份策略，每个版本都记录增量变更，任意历史版本都能恢复出来，不能只靠最近一份。
+
+备份目录结构：<backup_root>/<timestamp>/ 每次备份创建一个带时间戳的子目录，里面存增量变更文件和一个 manifest.json。manifest 记录本次变更的文件列表，每项包含 path、action（ADD/MODIFY/DELETE）、size、checksum（SHA256）四个字段。恢复时从目标版本往前回溯，逐层应用变更直到完整还原。命令：backup-chain -action backup -source /data -store /backup 执行备份；backup-chain -action restore -version 20240115T100000 -target /data -store /backup 恢复指定版本。
+
+索引文件 index.json 存在 backup_root 下，记录所有版本的时间戳、文件数、总大小、创建时间。每次备份后自动更新索引。list 子命令输出所有可用版本列表，按时间倒序，格式：时间戳 | 文件数 | 总大小。版本不存在时返回 "version not found: xxx" 退出码 1。恢复目标目录非空时输出警告但继续执行，已有文件会被覆盖。
+
+写入结果的同时要更新索引，索引构建也要读取已有结果。go run . 跑起来，标准库实现。

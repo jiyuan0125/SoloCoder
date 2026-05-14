@@ -1,3 +1,9 @@
-备份盘坏道导致好几个文件损坏，幸亏发现了。得加哈希校验，定期自动验证备份完整性。损坏的备份打上标记。
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。
-Go 写，go build 通过就行，不用第三方包。
+备份盘坏道这事儿之前没人在意，直到上个月恢复数据发现三个文件全损。现在得有个工具定期校验备份文件完整性，不能等需要恢复的时候才发现坏了。
+
+怎么校验？bverify scan --dir /backup --algorithm sha256，递归扫描目录下所有文件，计算哈希存到 .checksums.json。格式：{"files": [{"path": "data/db.tar.gz", "size": 1048576, "sha256": "abc123...", "scanned_at": "2024-01-01T00:00:00Z"}]}。
+
+下次跑 bverify check --dir /backup 读 .checksums.json，重新计算每个文件的哈希，对比是否一致。不一致的在 stderr 打印 MISMATCH: data/db.tar.gz expected=abc123 got=def456，exit code 1。所有文件一致 exit 0，打印 OK: all N files verified。
+
+大文件分块计算，每块 4MB，避免一次读整个文件占满内存。空文件正常处理，哈希是空字符串的 SHA256。符号链接跳过并打印 SKIP: symlink xxx。
+
+审批流程管理：提交校验请求→初审（自动跑 check）→复审（人工确认）→通过，初审不过可以修改后重提，状态流转记在 audit.json 里。Go 写，go build 通过，不用第三方包。

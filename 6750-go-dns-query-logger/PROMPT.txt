@@ -1,3 +1,13 @@
-DNS 解析慢不知道是客户端问题还是服务器问题。写个工具监听网卡上的 DNS 流量，把查询的域名和响应记录下来，跑一段时间输出查询日志和统计分析——哪些域名查最多、平均响应多久。
+DNS 解析慢不知道是客户端问题还是服务器问题，运维排查没有抓手。写个工具监听网卡上的 DNS 流量（UDP 53），把查询的域名、查询类型、响应时间和响应码记录下来，跑一段时间输出查询日志和统计分析。
+
+用法：`dnslog [--interface eth0] [--duration 60s] [--output <目录>] [--top 20]`。
+
+实时输出每条查询到 stdout：`[15:04:05] A example.com  12ms NOERROR`。支持的查询类型：A、AAAA、CNAME、MX、NS、TXT、SRV。
+
+duration 到期后输出统计报告。报告分三部分：1) 查询最多的域名 TOP N（`--top` 控制，默认 20），每行 `域名  查询次数  平均耗时  最后查询时间`；2) 慢查询（>100ms）列表；3) 错误查询（NXDOMAIN、SERVFAIL）列表。
+
+统计同时写入 `<output>/dns-stats.json`，格式 `{"total":1500,"by_domain":{"example.com":{"count":50,"avg_ms":12,"errors":0}},"slow_queries":[...],"error_queries":[...]}`。
+
+无权限抓包时 stderr 输出 `ERROR: permission denied, run with sudo or CAP_NET_RAW` 退出码 3。网卡不存在时 stderr 输出 `ERROR: interface not found: <名称>` 退出码 2。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

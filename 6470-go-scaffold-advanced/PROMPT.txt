@@ -1,3 +1,9 @@
-每个新服务都要搭 handler→service→repository 三层，接口定义、依赖注入一写就是半天。自动生成三层骨架和依赖注入。同步完成后自动记录同步日志到数据库，数据库不可用时写本地文件。
+先规划项目结构，再根据配置生成三层骨架代码，最后写入目录——新服务搭建三步走。
 
-纯标准库，go run . 就行。
+命令行：`scaffold -name user-service -layers handler,service,repository -output ./generated`。-name 服务名，-layers 指定层（handler/service/repository），-output 输出目录默认当前目录。
+
+每层生成 Go 文件：handler.go 含 `type UserHandler struct` 和 Get/Create/Update/Delete 方法。service.go 定义 `type UserService interface`。repository.go 定义 `type UserRepository interface` 和内存实现。方法签名接收 context 和请求结构体返回响应和 error。
+
+main.go 自动依赖注入——repository 注入 service，service 注入 handler，注册到 HTTP 路由 `/api/v1/users`。加 `-with-mock` 生成 mock_test.go，加 `-with-config` 生成 config.go 从环境变量读配置。
+
+目录已存在输出 `error: directory already exists: <path>` 退出码 1。完成后记录日志到 scaffold.db（服务名、时间、层数），db 不可用写 scaffold.log。纯标准库，go run . 就行。

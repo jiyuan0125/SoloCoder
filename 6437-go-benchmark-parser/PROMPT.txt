@@ -1,4 +1,7 @@
-每次发版都要对比基准测试结果，手动看 diff 太累。提取 ns/op、allocs/op 等指标，多次运行结果自动对比。
+每次发版都要对比 benchmark 结果，手动看 diff 眼睛都花了。上个月有个回归性能问题漏检，线上才暴露。这回用工具自动做——提取 `go test -bench` 输出的关键指标，多次运行结果自动对比。
 
-标准库搞定，go run . 跑起来。
-代码分几个文件组织，别全写 main.go 里。
+用法：`bench-parser parse <bench_output.txt>` 解析单次结果，`bench-parser compare <old.txt> <new.txt>` 对比两次结果。解析输出 JSON 格式：每个 benchmark 一条记录，字段包括 `name`（函数名）、`ns_per_op`、`allocs_per_op`、`bytes_per_op`、`runs`。compare 时输出差异表：`名称 | 旧值 | 新值 | 变化% | 判定`，变化超过 `-threshold`（默认 10%）标 `REGRESSION`，改善标 `IMPROVEMENT`，5% 以内标 `STABLE`。
+
+空输入文件报 "no benchmark results found" 退出码 1。格式不对的行跳过并输出 `WARN: skipping malformed line N`。对比时新旧文件没有同名 benchmark 的，分别列在 `ONLY_IN_OLD` 和 `ONLY_IN_NEW` 下面。
+
+标准库搞定，go run . 跑起来，代码分几个文件组织，别全写 main.go 里。

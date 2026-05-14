@@ -1,3 +1,9 @@
-服务启动偶发 panic，查了半天是 init 执行顺序不确定导致的。分析包之间的 init 依赖，init 副作用标注出来。数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。
+先说问题：上周服务冷启动偶发 panic，排查发现是两个包的 init 函数有隐式依赖，A 包的 init 调了 B 包的函数，但 B 的 init 还没跑完，B 的全局变量是 nil。这种 init 副作用太难定位了。
 
-纯标准库，编译完直接跑。
+工具的使用流程：先 initorder analyze --dir ./mypkg，工具用 go/parser 解析所有 .go 文件的 import 关系和 init 函数体。然后构建包级依赖图，确定 init 执行顺序（Go 规范是按 import 拓扑排序）。接着扫描每个 init 函数的 AST，记录它引用了哪些包级变量和调用了哪些函数，标注副作用。
+
+输出 init_report.json，包含：packages 按执行顺序排列，每个包的 init 里引用的外部符号列表、可能的副作用（写全局变量、调用外部函数、启动 goroutine）。
+
+加上 --strict 标志后，如果检测到循环 import（A→B→A），输出 ERROR: import cycle detected 并 exit 2。如果检测到 init 里启动了 goroutine，标 WARNING: goroutine spawned in init()。
+
+数据流程四个阶段——录入→清洗→校验→发布，这里校验不过的退回清洗阶段重新分析。纯标准库实现，go build 编译完直接跑。主逻辑和辅助函数分文件写，init 分析模块和报告生成模块分开。

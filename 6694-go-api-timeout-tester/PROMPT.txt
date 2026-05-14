@@ -1,3 +1,9 @@
-API 超时设了 3 秒但客户端 10 秒才报错，超时逻辑到底怎么工作的不清楚。Go 工具发送请求设置不同超时值，观察客户端和服务端行为，输出超时统计。
+API 超时设了 3 秒但客户端 10 秒才报错，这中间到底发生了什么？需要搞清楚超时逻辑在端到端链路上怎么工作的。
+
+`timeout-test --target http://localhost:8080/api/data --timeouts 1s,2s,3s,5s,10s --method GET --iterations 5`。对同一个接口用不同超时值各发 N 个请求，`--iterations` 默认 3。`--timeouts` 逗号分隔超时列表，单位支持 `ms` 和 `s`。`--method` 默认 GET，`-H` 自定义 header，`-body` 请求体。
+
+每个超时值跑完后输出一组数据：实际响应时间平均值、超时触发次数、收到的状态码分布。最终输出汇总表格，列是 timeout_setting、avg_response_ms、timeout_count、success_count、status_codes。加 `--json` 输出完整 JSON，结构是 `{"target":"...","results":[{"timeout_ms":1000,"avg_response_ms":950,"timeouts_triggered":2,"successes":3,"status_codes":{"200":3}}]}`。
+
+连接被拒记为 connection_refused，DNS 失败记为 dns_error，不在超时统计里。服务端慢响应（超过设置的超时值）计为 timeout。Ctrl+C 中途退出时输出已完成的部分结果。目标 URL 无效时报错 "invalid target URL" 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。

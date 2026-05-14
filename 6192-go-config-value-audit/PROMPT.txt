@@ -1,5 +1,15 @@
-配置管理要做好审计，哪些配置有明文密码、哪些有硬编码 IP，得自动查。Go 做配置值审计。
-比如密码明文、硬编码 IP、过期配置。
-审计报告标记风险级别。
-不用第三方包，go build 通过就行。
-主逻辑和辅助函数分文件写。
+配置管理要做审计，哪些配置有明文密码、哪些有硬编码 IP，手动查根本查不过来。Go 做配置值自动审计，扫描常见格式（.yaml、.json、.toml、.env、.ini），检测安全风险。
+
+用法：`cfgaudit <目录或文件> [--rules <规则文件>] [--format text|json] [--severity low|medium|high|critical]`。
+
+内置检测规则：明文密码（字段名含 password/passwd/secret/token 且值不是占位符）、硬编码 IP（值匹配 `\d+\.\d+\.\d+\.\d+` 但不是 127.0.0.1 或 0.0.0.0）、过期配置（注释中含 deprecated）、弱密钥（值长度过短）。
+
+审计报告按风险级别标记：CRITICAL（明文密码）、HIGH（硬编码内网 IP）、MEDIUM（过期配置）、LOW（弱密钥）。`--severity` 过滤只显示该级别及以上。
+
+text 格式每行 `级别  文件:行号  字段名  问题描述  当前值（脱敏）`。密码类值脱敏只显示前 2 字符加 `***`。
+
+json 格式输出数组 `[{"severity":"CRITICAL","file":"...","line":12,"field":"password","issue":"plaintext secret","value":"ab***"}]`。
+
+无问题退出码 0，有 CRITICAL/HIGH 退出码 1，仅有 MEDIUM/LOW 退出码 0。
+
+不用第三方包，go build 通过就行。主逻辑和辅助函数分文件写。

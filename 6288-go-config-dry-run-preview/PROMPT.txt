@@ -1,3 +1,11 @@
-改配置怕改坏了不敢直接上线，想先看看改完长什么样。Go 做配置变更预演：展示变更前后的差异，不实际修改文件——确认没问题再真正执行。
+改配置怕改坏了不敢直接上线，这个问题困扰运维团队很久了。想要的效果很明确——先看看改完长什么样，确认没问题再真正执行。而且光预览不够，还得有个审批流程卡住。
 
-带审批流程：提交→初审→复审→通过，初审不过可以修改后重提。不用第三方包，go build 通过就行。
+1. 命令行：`cfgpreview -target config.yaml -changes patch.json -mode preview`。-mode 支持 preview（只展示差异不修改）、apply（确认后实际写入）、approve（审批流程）。patch.json 格式：`{ "set": {"db.timeout": 30, "db.pool_size": 10}, "delete": ["cache.ttl"] }`。
+
+2. preview 模式输出当前值和目标值的对比，格式和 diff 工具类似 `[~] db.timeout: 15 → 30`，最后问 `apply these changes? (y/n):`。输入 y 执行写入，输入 n 取消退出码 0。apply 模式跳过确认直接写入。
+
+3. 审批流程分四步：提交生成一个 proposal ID（UUID 格式），初审检查语法合法性和 key 是否存在，复审确认值在合理范围内（数值范围、字符串长度），通过后才能 apply。每步状态存本地 JSON 文件 `proposals.json`：`{ "id": "...", "status": "pending|reviewed|approved|rejected|applied", "changes": {...}, "reviewer": "", "timestamp": "..." }`。
+
+4. 不存在的 key 在 set 操作时自动创建。delete 操作的 key 不存在时跳过并 warning。
+
+不用第三方包，go build 通过就行。

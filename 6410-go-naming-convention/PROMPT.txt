@@ -1,3 +1,9 @@
-团队代码规范规定驼峰命名、导出命名、接口命名都有格式要求，人工检查太费劲。把不规范的标识符全列出来。任务状态：排队→运行→暂停→完成，暂停后可以继续。
+团队代码规范规定驼峰、导出、接口命名有格式要求，code review 一个个看太费劲。写个工具把不规范的标识符全列出来。
 
-只依赖标准库，go run . 能跑。
+命令：`namelint -dir ./pkg/ -rules camel,export,interface -format json`。`-dir` 扫描目录（默认 `.`），`-rules` 选择检查规则，`-format` 支持 json 和 text。
+
+规则：`camel` 检查局部变量是否 camelCase，含 `_` 报违规。`export` 检查导出标识符首字母大写且不是单字母。`interface` 检查接口名以 `er` 后缀或 `I` 前缀。
+
+JSON 输出：`{"violations":[{"file":"handler.go","line":15,"name":"user_id","rule":"camel","message":"use camelCase: userId"}]}`。text 模式每行 `handler.go:15: user_id violates camel`。无违规输出 `no violations found` 并 exit 0。有违规 exit 1。目录不存在 exit 2。跳过 `_test.go` 和 `vendor/`。
+
+状态流转：Queued → Running → Paused → Done。`-pause-after 50` 每扫 50 文件暂停，`-continue` 恢复。标准库，`go run .` 能跑。

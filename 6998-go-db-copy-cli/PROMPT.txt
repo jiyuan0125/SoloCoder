@@ -1,3 +1,10 @@
-要把开发库的几张表复制到测试库，但表结构和数据量都不一样，不能直接拷文件。写个数据库复制工具，在两个 SQLite 数据库之间复制表。支持全表复制和条件过滤（只要最近 30 天的数据）。目标库没有的表自动建。
+第一步，确定需求：开发库的几张表要复制到测试环境，表结构可能不一样，数据量也差别很大，直接拷文件行不通。得有个工具在两个 SQLite 文件之间做智能表复制。
 
-Go 实现，只用标准库，交叉编译友好。
+1. 命令：`dbcopy copy --source dev.db --target test.db --table users,orders --filter "orders:created_at > datetime('now', '-30 days')" --create-missing`。
+2. `--source` 和 `--target` 指定源和目标 SQLite 文件路径。`--table` 逗号分隔要复制的表名，不指定则复制所有表。
+3. `--filter` 格式为 `表名:SQL WHERE 条件`，只复制满足条件的行。无 filter 则全表复制。
+4. `--create-missing` 标志：目标库不存在的表，自动用源库的 CREATE TABLE 语句建表。不加此标志且目标缺表时，输出 `table XXX not found in target, use --create-missing` 并跳过该表。
+5. 复制过程中遇到主键冲突：`--conflict skip`（默认）跳过重复行，`--conflict replace` 覆盖，`--conflict error` 中断并退出码 1。
+6. 输出汇总：`{table: "users", copied: 150, skipped: 3, errors: 0}`，每张表一行 JSON 到 stdout。
+
+源文件或目标文件不存在时输出具体错误并退出码 1。表为空时正常复制（零行）。Go 标准库实现，交叉编译友好。

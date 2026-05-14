@@ -1,3 +1,7 @@
-甲方要求服务间调用必须走代理，方便做监控和限流。时间紧，先搞个简单的服务网格代理出来。管理多个后端服务的连接，请求进来按规则路由，支持轮询和权重两种负载均衡策略。配置驱动，健康检查挂掉的后端自动从列表里剔除。
+甲方有个硬性要求：服务间调用必须走代理，方便做调用监控和限流。时间紧来不及上 Istio，先搞个轻量服务网格代理出来应急。
 
-Go 实现，只用标准库，交叉编译友好。
+代理管理多个后端服务连接池，请求进来按路由规则分发。配置文件 JSON 格式：`{"routes": [{"path": "/api/users", "backends": ["10.0.1.10:8080", "10.0.1.11:8080"], "weights": [70, 30], "lb": "weighted"}]}`。负载均衡支持两种策略：`round-robin`（轮询）和 `weighted`（按权重比例分发）。`lb` 字段不填默认 `round-robin`。
+
+每 10 秒（`--health-interval` 可调）对后端做健康检查——发 HTTP GET 到后端根路径，连续 3 次失败（超时 2 秒或非 2xx 响应）则标记为 `unhealthy`，自动从可用列表剔除。恢复后自动加回。`--status-port :9090` 暴露状态页面，JSON 格式输出每个后端的 `address`、`status`（healthy/unhealthy）、`active_conns`、`total_requests`、`last_check`。
+
+命令：`meshproxy --config mesh.json --listen :8080 --status-port :9090`。路由找不到匹配时返回 404 `{"error": "no route matched"}`。所有后端都挂了返回 503 `{"error": "all backends down"}`。Go 标准库实现，交叉编译友好。

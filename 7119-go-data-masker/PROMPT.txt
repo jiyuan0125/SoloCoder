@@ -1,5 +1,9 @@
-合规审计发现测试环境用的是生产数据，赶紧脱敏。老板说要搞数字化，第一步先把数据库工具搞起来。
+合规审计查出测试环境直接用了生产数据，客户手机号身份证全暴露。赶紧把脱敏工具搞起来。数据库空间分析、碎片化检测后面再说，眼下先把敏感字段遮住。
 
-数据库空间分析、碎片化检测、优化建议。认证通过后自动记日志，日志写入失败不影响正常结果。
+命令行：`datamask -config mask.json -input prod_dump.json -output masked.json`。config 定义脱敏规则：`{ "rules": [{ "field": "phone", "strategy": "partial", "keep_prefix": 3, "keep_suffix": 4 }, { "field": "id_card", "strategy": "hash" }, { "field": "email", "strategy": "replace", "pattern": "@.*", "replacement": "@masked.com" }] }`。
+
+脱敏策略：partial 保留前后 N 位中间 * 填充，hash 用 SHA256 前 8 位，replace 正则替换，faker 随机姓名。field 不存在时跳过并记录 `warning: field <name> not found`。
+
+输入支持 JSON 数组和 JSONL，按扩展名判断。输出格式和输入一致。处理时打印 `masking: <当前行>/<总行数>`。认证通过后自动记日志到 mask.log，格式 `[<timestamp>] masked <count> records, <warnings> warnings`，日志写入失败不影响结果。
 
 Go CLI 工具，go build 能过就行。

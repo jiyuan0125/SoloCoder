@@ -1,5 +1,9 @@
-防火墙规则几十条，运维说都配好了但我不信。定义一个期望的连通性矩阵（哪些 IP:端口 通、哪些不通），然后实际去测每条路径，把符合预期的和不符合的分别列出来。
+防火墙规则到底有没有生效？运维说配好了，但到底信不信？不如直接测一遍。
 
-输入文件可能是空的或者只有 header 行。
+定义期望连通性矩阵：YAML 或 JSON 文件，格式为 `{"rules": [{"from": "10.0.1.5", "to": "10.0.2.10:8080", "expected": "allow"}, {"from": "10.0.1.5", "to": "10.0.2.11:22", "expected": "deny"}]}`。工具读入矩阵后逐条测试，对每条规则尝试 TCP 连接（超时 3 秒，可通过 `--timeout` 调整），实际结果与期望对比。
 
-Go 实现，只用标准库，交叉编译友好。
+命令：`fwtest check --rules matrix.yaml --output report.json --timeout 5s`。输出 JSON 报告，每条规则包含 `from`、`to`、`expected`、`actual`（`allow`/`deny`/`timeout`）、`matched`（布尔）、`latency_ms`。汇总字段 `total`、`passed`、`failed`。
+
+输入文件为空或只有 header 时输出 `no rules to test` 到 stderr，退出码 0。规则格式错误时输出具体行号和原因，退出码 1。无权限执行网络测试的规则标记为 `skipped`，不计入 passed/failed。
+
+支持 `--parallel 10` 控制并发测试数，默认 5。Go 标准库实现，交叉编译友好。`fwtest validate matrix.yaml` 可以只校验规则文件格式不执行测试。

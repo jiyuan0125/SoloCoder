@@ -1,3 +1,7 @@
-二进制体积悄悄涨了 40MB 没人注意到。写个工具每次编译后自动记录大小到 SQLite，支持趋势查询和版本对比，输出增量报告。
+二进制文件体积一个版本比一个大，但没人知道是哪个版本开始膨胀的、涨了多少。能不能每次编译完自动记录大小，还能看趋势、对比任意两个版本的差异？等到发现的时候已经涨了 40MB，回溯都找不到原因。
+
+数据存在本地 SQLite 文件 binary_sizes.db 中，表 records 包含字段：id（自增主键）、binary_path、size_bytes、git_commit、git_tag、build_time、go_version。三个子命令。track：binary-tracker track -bin ./myapp，记录当前二进制文件大小，自动获取 git commit hash 和 tag。diff：binary-tracker diff -from v1.0.0 -to v1.1.0，对比两个版本的大小差异，输出增量字节数、变化百分比、两个版本之间所有记录的趋势。trend：binary-tracker trend -last 10，显示最近 N 次记录的变化趋势，用 ASCII 柱状图展示。
+
+二进制文件不存在时输出 "binary not found: xxx" 退出码 1。没有 git 信息的目录下 commit 和 tag 字段填 "unknown"。SQLite 文件不存在时自动创建建表。-db 参数指定数据库路径，默认当前目录下 binary_sizes.db。trend 的柱状图每行一条记录，柱长按比例缩放，右侧标注具体字节数。体积增长超过 10% 的记录用 ⚠ 标记。
 
 Go 标准库，命令行参数用 flag 包解析。

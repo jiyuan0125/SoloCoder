@@ -1,3 +1,9 @@
-日志文件昨天偷偷涨到 12G 把磁盘打满了。Go 实现一个文件大小监控，记录历史大小数据，超过阈值就告警，别再出磁盘爆满的事。
+昨天日志文件偷偷涨到 12G 把磁盘打满了——你说这事谁能提前发现？得有个监控，记录文件大小的历史趋势，超阈值就告警。
 
-写入监控结果的同时要维护索引，索引构建过程中也要读已有结果，注意读写顺序。纯标准库实现，go run . 能跑。
+命令行：`sizemon watch --dir /var/log --threshold 1GB --interval 60 --history history.json`。`--threshold` 支持单位 KB/MB/GB，超过阈值时 stderr 输出 "ALERT: /var/log/app.log exceeded 1GB (current: 1.2GB)"。`--interval` 检查间隔秒数。`--history` 指定历史数据存储文件，JSON 格式 [{file, records[{timestamp, size_bytes}]}]，每次检查追加一条记录。
+
+历史数据保留最近 1000 条记录，超出的丢弃最旧的。`--report` 输出趋势报告：每个文件的平均增长速率（bytes/hour）、最大值、当前值。增长率超过 100MB/hour 标记 "RAPID GROWTH"。
+
+写入监控结果的同时要维护索引——索引是文件名到 history 数组偏移的映射，用 map 存储。索引构建过程中也要读已有结果（启动时加载 history.json），注意先用临时文件写入再原子 rename，避免读写冲突。
+
+纯标准库实现，go run . 能跑。目录不存在退出码 1。

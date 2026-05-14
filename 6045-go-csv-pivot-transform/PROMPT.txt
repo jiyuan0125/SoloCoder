@@ -1,2 +1,15 @@
-线上的批处理脚本做 CSV 透视太慢了，数据量一大就跑不动。Go 重写一个：用户指定行键、列键、值列，聚合方式支持计数和求和。
-导入数据后自动做一致性检查，一致性检查需要读取刚导入的数据。不用第三方包，go build 通过就行。
+线上的批处理脚本做 CSV 透视太慢了，数据量一大就跑不动，一个 50 万行的报表要跑 20 分钟。Go 重写透视：用户指定行键、列键、值列，聚合方式支持计数和求和。
+
+用法：`pivot --input <CSV文件> --row <行键列> --col <列键列> --value <值列> --agg count|sum [--output <文件>] [--fill <空值填充>]`。
+
+输出透视表：行键去重作为每行，列键去重作为每列，单元格是聚合值。`--agg count` 对值列计数（非空值个数），`--agg sum` 对值列求和。
+
+`--fill` 指定空单元格的填充值，默认 `0`。行键或列键为空的行跳过，stderr `WARN: skipped row N: empty key`。
+
+`--sort-row` 和 `--sort-col` 按键值排序输出。
+
+导入数据后自动做一致性检查：值列含非数字且 agg=sum 时，stderr `ERROR: non-numeric value at row N: <值>` 退出码 1。agg=count 时非数字不影响。
+
+输入文件不存在 stderr `ERROR: file not found: <路径>` 退出码 2。指定列名不存在 stderr `ERROR: column not found: <名称>` 退出码 2。
+
+不用第三方包，go build 通过就行。

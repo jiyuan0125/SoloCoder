@@ -1,3 +1,11 @@
-200 多个技术文档，找一个 API 的用法翻了半小时。建关键词搜索索引，搜索结果带上下文高亮。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-标准库写的，go run . 一把跑通。
+200 多个技术文档，找一个 API 的用法翻了半小时。得建个关键词搜索索引，搜索结果还要带上下文高亮，省得每次全文遍历。
+
+用法分两步：先建索引 `docindex build -dir ./docs/ -index .index.db`，再搜索 `docindex search -index .index.db -query "JWT认证" -top 10`。`build` 子命令扫描目录下所有 `.md` 和 `.txt` 文件，按行分词建立倒排索引，持久化到 `-index` 指定的文件（默认 `.index.db`）。`search` 子命令返回匹配结果。
+
+输出 JSON：`{"results":[{"file":"auth.md","line":42,"context":"...实现JWT认证的步骤...","matches":["JWT认证"]}]}`。`context` 是匹配行前后各 2 行的内容，匹配词用 `**` 包裹标记高亮。`-top` 控制返回条数，默认 20。
+
+索引文件不存在时搜索子命令输出 `error: index not found, run build first` 并 exit 1。目录为空时 build 子命令输出 `warning: no .md or .txt files found` 但 exit 0。`-query` 为空时输出 usage 并 exit 1。
+
+首次运行没有历史统计，build 完成后输出 `indexed {n} files, {m} lines, {k} tokens`。后续 build 增量更新，输出 `updated: +{a} new, ~{b} modified, -{c} deleted`。
+
+标准库写的，`go run .` 一把跑通。

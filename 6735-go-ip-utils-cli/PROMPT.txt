@@ -1,3 +1,3 @@
-日常运维中 CIDR 计算、IP 范围展开、子网划分、判断 IP 是私有还是公网还是组播这些操作太常见了。写个工具集把这些功能都做了，命令行管道友好，方便写脚本调用。
+日常运维里面，CIDR 计算子网掩码、展开 IP 范围、判断一个 IP 是内网还是公网，这些操作频繁到烦了。每次都去网上找在线工具，复制粘贴还怕泄露内网地址信息，不如本地搞一个，管道友好，方便脚本调用。
 
-Go 实现，只用标准库，交叉编译友好。
+`ipkit` 是一个 IP 工具集，子命令模式：`ipkit cidr 192.168.1.0/24` 输出网络地址、广播地址、子网掩码、可用主机数、主机 IP 范围（起止地址）；`ipkit expand 10.0.0.0/28` 列出范围内所有 IP，每行一个；`ipkit classify 172.16.5.1` 输出分类结果（private/public/multicast/link-local/loopback），只输出一个单词方便脚本判断；`ipkit subnet 10.0.0.0/24 --prefix 26` 把 /24 拆分成多个 /26 子网，每行输出一个 CIDR。加 `--json` 任何子命令都支持 JSON 格式输出。所有输出都是纯文本，方便管道：`ipkit expand 10.0.0.0/28 | head -5`。输入 IP 格式无效退出码 1 输出 `error: invalid IP address: <input>`。CIDR 格式无效退出码 1 输出 `error: invalid CIDR notation: <input>`。Go 实现，只用标准库，交叉编译友好。

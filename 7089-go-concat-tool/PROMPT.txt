@@ -1,4 +1,5 @@
-技术规划里增量计算排第一个，Q1 必须交付。Go CLI：对比两个数据集差异，变更标记新增/修改/删除，差异合并。
-数据转换需要映射模板，模板怎么定义不提。
-处理流程有预处理、主处理、后处理三个步骤。
-go build 能过，命令行工具能正常运行。
+技术规划里增量计算排第一个，Q1 必须交付——差异对比不准的话，下游数据同步全乱。两个数据集的差异到底在哪，新增了什么、改了什么、删了什么，得标得清清楚楚。
+
+子命令 diff 对比两个数据集，--source 和 --target 各指定一个 CSV 文件。--key 指定用于匹配行的唯一键列名（必填）。每行差异标记为 ADDED（target 有 source 无）、MODIFIED（键相同但内容不同）、DELETED（source 有 target 无）。修改的行详细列出变更字段：column_name: old_value -> new_value。输出 diff 结果到 stdout，加 --output 写文件，格式为 CSV，额外加 _diff_type 和 _diff_detail 两列。子命令 merge 合并差异，--diff 指定 diff 输出文件，--base 指定基准文件，--strategy 冲突策略：ours 保留基准，theirs 用 target 覆盖，manual 交互选择。数据转换需要映射模板做字段名映射，模板怎么定义不提，预留 --template 参数。处理流程三步走：预处理（去空行、统一编码）→主处理（diff/merge）→后处理（输出格式化），每步计耗时。输入文件找不到 exit 1，空文件直接输出空结果。
+
+go build 能过，命令行工具能正常运行。代码分文件组织。

@@ -1,4 +1,1 @@
-一个 3000 行的 Markdown 文件，编辑器打开都卡。按二级标题拆分成独立文件，自动生成索引文件方便跳转。
-管理校验规则和校验结果：对文件执行校验后记录结果。
-纯标准库，go run . 能跑。
-主逻辑和辅助函数分文件写。
+先拿到一个 3000 行的 Markdown，编辑器打开都卡。`docsplit <input.md> --level 2 --output ./sections --index --encoding utf-8` 按标题级别拆分。`--level 2` 表示按二级标题（##）拆，每个二级标题下的内容（含三级及更深子标题）写成一个独立文件。文件名从标题文本生成：转小写、空格和特殊字符替换为连字符、截断到 50 字符、加 .md 后缀。`--index` 额外生成 index.md，内容是所有拆出文件的链接列表，格式 `[标题文本](文件名.md)`，按在原文中出现的顺序排列。拆分时保留每个文件的标题行作为开头。原文没有指定级别标题时输出 "warning: no matching headings found" 并退出码 0，原样复制到输出目录。输出目录不存在自动创建（os.MkdirAll）。输入文件不存在退出码 1，stderr 输出 "error: file not found: <path>"。管理校验规则和校验结果：`docsplit rule add --name <name> --pattern <regex>` 添加规则，`docsplit check <file>` 执行校验并记录结果到 `.docsplit/checks.json`。纯标准库，go run . 能跑，主逻辑和辅助函数分文件写。

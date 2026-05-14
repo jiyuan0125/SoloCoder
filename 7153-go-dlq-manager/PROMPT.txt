@@ -1,5 +1,10 @@
-消费者重复处理了好几笔订单，幸好是测试环境。
+消费者重复处理了好几笔订单才被发现，幸好只是测试环境。消息去重不做，迟早出生产事故。
 
-消息去重，基于 ID 或内容哈希，去重窗口可配置，去重统计报告。
+去重机制：每条消息按去重键（消息 ID 或内容 SHA256 哈希，`--dedup-key id` 或 `--dedup-key hash`，默认 `id`）判断。去重窗口 `--window 5m`，窗口期内相同键的消息视为重复。窗口过期后相同键可重新处理。去重记录存在本地 SQLite 文件（`--store dedup.db`），重启后不丢失。
 
-字段映射变更后已有的转换任务结果要标记为过时。处理流程分预处理、主处理、后处理三个步骤。Go 命令行工具，go build 能过就行。
+1. 命令：`dlqmgr consume --source messages.json --store dedup.db --dedup-key id --window 5m --output processed.json --report report.json`。
+2. 输入 JSON 数组，每条消息至少含 `id` 字段。输出已处理的消息数组。
+3. 去重统计报告 `report.json`：`{"total": 100, "unique": 85, "duplicate": 12, "expired_window": 3}`。
+4. 字段映射变更后（`--mapping-version v2`），已有的处理结果标记为 `stale`，写入 `stale_results.json`。
+
+处理流程严格分三步：预处理（校验消息格式、提取去重键）→主处理（去重判定、业务逻辑）→后处理（写结果、更新统计）。任何步骤失败不影响其他消息，错误记录到 `errors.json`。Go 命令行工具，`go build` 能过就行。

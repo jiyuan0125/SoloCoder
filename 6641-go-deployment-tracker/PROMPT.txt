@@ -1,3 +1,11 @@
-谁在什么时候部署了哪个版本？翻了半天日志找不到。年底批量处理数据的时候正好搞个工具，记录每次部署的服务名、版本、环境、时间、操作人，查询历史和按服务统计。
+谁在什么时候部署了哪个版本？翻了半天日志找不到。年底批量处理数据的时候正好搞个工具把部署记录管起来。
+
+`deploy-track record --service user-api --version v2.3.1 --env production --operator zhangsan`。`--env` 限定 `dev`、`staging`、`production`，其他值报错 "invalid env" 退出码 1。存储在本地 `deployments.json`，每条含 id（UUID v4）、service、version、env、operator、timestamp（RFC3339）。
+
+`deploy-track list --service user-api --env production --limit 20`，查询历史。不指定 `--service` 则列出所有服务。输出格式是表格，列顺序：id（前8位）、service、version、env、operator、timestamp。加 `--json` 输出 JSON 数组。`--limit` 默认 10，最大 100。
+
+`deploy-track stats --service user-api`，按服务统计：总部署次数、每个环境的部署次数、最近一次部署时间和操作人。`deploy-track rollback --id abc12345`，标记某次部署为回滚，在该条记录上加 `"rolled_back": true` 字段和 `rolled_back_at` 时间戳。
+
+数据文件不存在时首次操作自动创建空数组。文件损坏无法解析时报错 "corrupted data file" 退出码 1。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

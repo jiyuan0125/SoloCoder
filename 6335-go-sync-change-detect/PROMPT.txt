@@ -1,3 +1,13 @@
-10 万个文件全算哈希太慢了。先比 mtime 和 size 快速筛一遍，只有这些变了才算哈希确认。
-构建流程是解析→编译→测试→打包，测试失败不打包。
-纯标准库写的，go run . 直接跑。
+10 万个文件全算哈希太慢了，先比 mtime 和 size 快速筛一遍，只有这些变了才算哈希确认——这个策略能省 95% 的计算量。
+
+但问题来了：怎么高效检测哪些文件变了？两遍扫描法，第一遍只比 mtime 和 size，第二遍对候选文件算 SHA-256 确认。
+
+命令：`changedetect -source ./src/ -snapshot .snapshot.json -output changes.json`。`-source` 是要检测的目录。`-snapshot` 是上次的快照文件（首次运行会自动创建）。`-output` 是变更结果。
+
+快照 JSON 格式：`{"files":{"path/to/file":{"mtime":"2024-01-15T10:00:00Z","size":1024,"hash":"sha256:abc..."}}}`。变更输出：`{"added":["new_file.go"],"removed":["old_file.go"],"modified":[{"path":"main.go","change":"content","hash_old":"...","hash_new":"..."}],"unchanged":998}`。
+
+首次运行（无快照）所有文件标记为 `added`，输出 `first run: snapshot created, {n} files indexed`。空目录输出 `no files found` 并 exit 0。快照文件损坏时忽略并全量重建。
+
+构建流程：解析→编译→测试→打包，测试失败不打包。
+
+纯标准库写的，`go run .` 直接跑。

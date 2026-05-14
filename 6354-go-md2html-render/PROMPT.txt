@@ -1,3 +1,1 @@
-内部 wiki 的 Markdown 渲染出来代码块没有高亮，表格也不像样。加 CSS 类名做代码高亮，表格和任务列表要能渲染出来。
-任务状态是排队→运行→暂停→完成，暂停后可以继续。
-go build 过了就完事，不用第三方包。
+内部 wiki 的 Markdown 渲染出来代码块没高亮，表格不像样，任务列表也没法用。用 `md2html <input.md> --output <output.html> --css style.css --highlight --title "Document"` 做渲染。`--highlight` 给代码块加 CSS 类名，按语言标签匹配：```go 加 class="language-go"，```python 加 class="language-python"，```javascript 加 class="language-javascript"，没标语言加 class="language-plaintext"`）。表格渲染成 `<table class="md-table">` 带 `<thead>` 和 `<tbody>`，表头加粗 `<th>`，每行一个 `<tr>`。任务列表 `- [ ]` 渲染成 `<input type="checkbox" disabled>`，`- [x]` 渲染成 `<input type="checkbox" checked disabled>`。`--css` 指定外部 CSS 文件路径，在 `<head>` 里用 `<link rel="stylesheet" href="...">` 引入，不指定则内联一段基础样式（表格边框、代码块背景色）。`--title` 设置 `<title>` 标签。输入文件不存在退出码 1，stderr 输出 "error: file not found: <path>"。输出文件已存在直接覆盖。任务状态分排队→运行→暂停→完成四个阶段，暂停后可以继续执行。go build 过了就完事，不用第三方包。

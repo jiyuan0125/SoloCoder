@@ -1,5 +1,7 @@
-供应链系统里长度单位有米有英尺，重量有千克有磅，手动换算太容易出错了。Go 做单位批量转换。
-常见单位：长度、重量、温度。
-转换公式内置，用户指定源和目标单位。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+供应链系统里一条采购单，长度有人填米有人填英尺，重量有千克有磅，财务对账的时候全靠手动换算，出错是迟早的事。搞个批量单位转换工具，Go 标准库实现。
+
+支持的单位类别：长度（m/ft/in/cm/mm）、重量（kg/lb/oz/g）、温度（℃/℉/K）。`convert batch input.csv --from-col length --from-unit m --to-unit ft -o result.csv` 批量转换。`convert single 100 kg lb` 单条转换，直接输出结果数字。温度转换特殊处理：℃↔℉ 用公式，K↔℃ 用偏移，不支持非温度单位交叉转换。
+
+输入 CSV 格式：第一行为表头，`--from-col` 指定源列名。空值跳过不报错，非数字值标注 `INVALID` 并 stderr 警告 `warning: non-numeric value at row <N>: <value>`。输出新增 `<col>_<to_unit>` 列，原列保留。`--precision 2` 控制小数位数，默认 4。
+
+不支持的单位组合 `error: cannot convert <from> to <to>` exit 1。文件读取失败 exit 1。转换成功 exit 0，输出统计 `converted 156 values, 3 invalid`。主逻辑和辅助函数分文件写：convert.go（转换算法）、csv.go（CSV 读写）、units.go（单位定义）。`go build` 能编译通过。

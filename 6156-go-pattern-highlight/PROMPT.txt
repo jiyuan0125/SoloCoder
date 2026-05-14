@@ -1,5 +1,9 @@
-运维排障的时候要在终端里肉眼找关键字，太费眼了。Go 做搜索结果高亮。
-终端输出用颜色高亮。
-也支持输出 HTML 格式带高亮标记。
-扫描分初始化→扫描中→分析中→报告生成。分析发现问题标记为异常。
-不用第三方包，go build 通过就行。
+凌晨三点线上告警，日志刷了几万行要在终端里找关键字，肉眼扫描到天亮。做个搜索高亮工具，匹配到的关键字用颜色标注，不用再满屏幕找。
+
+用法：`highlight search --input app.log --pattern "ERROR|FATAL|panic" --color red`。`--pattern` 支持正则表达式。`--color` 支持 red、green、yellow、blue、magenta、cyan。多个 pattern 可以多次指定 `--pattern`，每个用不同颜色，如 `--pattern ERROR --color red --pattern WARN --color yellow`。
+
+终端输出用 ANSI 颜色码高亮，加 `--html output.html` 输出 HTML 格式，匹配文本用 `<span class="highlight-N">` 包裹，N 为 pattern 索引。HTML 内联 CSS 定义颜色，不依赖外部样式。`--context 3` 显示匹配行前后各 3 行。
+
+扫描阶段：初始化→扫描中→分析中→报告生成。分析发现问题标记为异常。报告生成打印统计：每个 pattern 的匹配次数、匹配文件数。无匹配退出码 0 打印 "no matches"。
+
+输入文件不存在退出码 1。不用第三方包，go build 通过就行。

@@ -1,3 +1,5 @@
-论文文档的脚注编号在编辑后乱序了。内联脚注和引用脚注互转，脚注编号重新排列。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
-go build 能编译通过就行，全标准库实现。
+论文文档的脚注在多人编辑后乱成了一锅粥——有人用 [1][2]，有人用 [^note]，引用和定义对不上号。更头疼的是编辑部要求全部改成内联脚注风格，上百条手动改要疯。
+
+Go 命令行工具处理 Markdown 脚注。子命令 reorder 重排脚注编号，扫描全文，按脚注在正文中首次出现的顺序重新编号，输出统一使用 [^N] 格式（N 从 1 开始）。未引用的脚注定义输出 "warning: orphan footnote: [^X] at line N" 到 stderr，保留在文末。重复编号自动合并，后出现的改为新编号。子命令 to-inline 把引用脚注（[^N]）转成内联脚注，脚注内容直接插入到引用位置，用方括号包裹如 [脚注内容]。子命令 to-ref 反过来，内联脚注转引用脚注，自动在文末生成定义块，按出现顺序编号。--file 指定输入 Markdown 文件，--output 指定输出路径，不指定输出到 stdout。空文件直接输出空文件。没有脚注的文件输出 "no footnotes found" 到 stderr 并 exit 0。嵌套方括号容错处理，不匹配的方括号保留原样不报错。非 Markdown 输入输出 "error: not a markdown file: FILE" 并 exit 1。
+
+go build 能编译通过就行，全标准库实现。代码分文件组织。

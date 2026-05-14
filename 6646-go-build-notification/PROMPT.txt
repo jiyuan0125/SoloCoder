@@ -1,3 +1,7 @@
-构建失败了没人知道，看日志才发现晚了半天。Go 工具构建完成后发通知，支持 webhook URL、邮件内容、Slack 消息，成功失败用不同模板。
+CI 构建挂了半天没人发现，等到部署时才发现问题，白白浪费了时间。需要一个构建后自动通知的工具，不管成功还是失败，第一时间把结果推出去。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+1. 命令 `buildnotify run -- ./build.sh`。先执行后面的构建命令，捕获 exit code。根据成功/失败选择不同的通知模板。通知方式通过配置文件 `notify.yaml` 指定，支持三种渠道：`webhook`（POST JSON 到 URL）、`email`（生成邮件内容文本，写到文件）、`slack`（生成 Slack Block Kit JSON）。每个渠道的模板用 Go template 语法，可引用变量 `{{.Status}}`（success/failure）、`{{.Duration}}`、`{{.ExitCode}}`、`{{.Command}}`、`{{.Output}}`（最后 20 行）。
+
+2. 配置示例：`channels: [{type: webhook, url: "https://...", success_template: "...", failure_template: "..."}]`。成功模板和失败模板可以分别定义。不加配置文件时只输出构建结果摘要到 stdout，格式 "BUILD <STATUS> | exit=<code> | duration=<time>"。
+
+3. 构建命令本身超时（`-timeout 10m`）也触发失败通知，status 标记为 "timeout"。webhook 请求失败不阻塞主流程，打印 warning 继续执行。配置文件不存在 exit 1，模板语法错误打印具体行号和原因。纯 Go 标准库，编译后单二进制。

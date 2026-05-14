@@ -1,3 +1,5 @@
-网络流量突然飙升不知道什么原因，要分析是哪些流在占带宽。从 pcap 文件或实时捕获中按五元组识别流，统计每个流的包数、字节数、持续时间，快速定位大流。
+上周机房流量突然飙到带宽上限，排查了两个小时才发现是某台机器在做大文件同步。当时如果有工具能快速按流统计流量，五分钟就定位到了。
 
-Go 实现，只用标准库，交叉编译友好。
+写一个 CLI 工具 `flowanalyzer`，从 pcap 文件或实时抓包中按五元组（srcIP、dstIP、srcPort、dstPort、protocol）聚合成流。每个流统计包数、字节数、持续时间（首包到末包的时间差）、平均速率（bytes/s）。命令行用法：`flowanalyzer -i capture.pcap -top 20 -sort bytes`，`-sort` 支持 `bytes`、`packets`、`duration` 三种排序维度。输出格式为文本表格，列顺序：Flow（五元组）、Packets、Bytes、Duration、AvgRate。加上 `-json` flag 切换成 JSON 数组输出，每条记录包含这五个字段。
+
+实时捕获模式下用 `-interface eth0 -duration 30s` 指定网卡和采集时长，超时自动停止并输出统计。如果 pcap 文件不存在或格式无法解析，报错 "failed to parse pcap: <原因>" 并 exit 1。空 pcap（零包）输出 "no packets found" 然后 exit 0。Go 标准库实现，交叉编译友好，不依赖 libpcap 的 CGO 绑定。go build 编译通过即可。

@@ -1,3 +1,3 @@
-团队规范要求每个导出函数都要有 godoc 注释，但没人遵守。解析 Go doc 风格的注释，按包组织文档输出。
-处理完每个目录后更新进度，空目录不用处理但计数要更新。
-go run . 就能跑，标准库实现。
+团队有规范每个导出函数都要有 godoc 注释，但 code review 时没人仔细检查。上次有个公共库函数没注释，调用方理解错了参数含义导致线上事故。事后复盘发现，如果注释完整，这个事故完全可以避免。
+
+能不能写个工具自动从代码里提取文档？`godocgen` 解析 Go 源码，提取所有导出函数、类型、常量的注释，按包组织输出。用法：`godocgen --dir ./pkg --output docs.md --format markdown`，不加 `--output` 就打印到 stdout。每个包一个章节（二级标题 `## package/<name>`），列出导出符号名、声明（函数签名/类型定义）和注释内容。空目录（没有 .go 文件）打印 `skipping empty directory: <path>` 并继续，计入已扫描目录数。处理完每个目录后在 stderr 打印 `processed <N> files in <dir>`。目录不存在退出码 1 输出 `error: directory not found: <path>`。没有导出符号的包在输出中标注 `// no exported symbols`。缺少注释的导出符号在 stderr 标记 `warning: <符号名> has no doc comment in <文件>`。`go run . --dir .` 能跑，标准库实现。代码分文件组织。

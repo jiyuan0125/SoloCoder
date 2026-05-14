@@ -1,3 +1,5 @@
-要给一百多个用户发邀请链接，每个链接带不同的参数。写个工具从 CSV 读参数，逐行填到 URL 模板里发请求，结果写到另一个 CSV，成功失败一目了然。
+要给一百多个用户发邀请链接，每个链接带不同的用户 ID 和 token 参数。手动一个个改 URL 发请求太蠢了，得批量处理。
 
-用 Go 标准库写，go run . 或 go build 都行。
+第一步准备 CSV 文件 `params.csv`，列名对应 URL 模板中的占位符。第二步 `batchcall -csv params.csv -template "https://api.example.com/invite?uid={user_id}&token={token}" [-method POST] [-header "Authorization: Bearer xxx"] [-concurrency 5] [-out results.csv]`。逐行读取 CSV，将 `{user_id}` 替换为对应列的值，发 HTTP 请求。`-concurrency` 控制并发数，默认 5。结果写到输出 CSV，列名 `row,user_id,status_code,response_body,error`。成功行 `status_code` 为 200-299，其他记录到 error 列。
+
+最后输出汇总 `Total: 120 | Success: 115 | Failed: 5 | Time: 34.2s`。CSV 文件不存在退出码 1。模板中的占位符在 CSV 中没有对应列输出 `error: placeholder {xxx} not found in CSV columns`。并发数超过 50 提示 `warning: high concurrency may trigger rate limit`。用 Go 标准库写，go run . 或 go build 都行。

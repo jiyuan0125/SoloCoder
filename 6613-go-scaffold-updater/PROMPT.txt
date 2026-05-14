@@ -1,3 +1,7 @@
-脚手架模板更新了但项目里的旧配置没跟着改，上线才发现。Go 工具对比模板和当前项目文件的差异，列出过时的配置，可以选择性地更新。
+团队的脚手架模板上周更新了 ESLint 配置和 Dockerfile，但十几个老项目还在用旧版本，上次部署就因为过时的 Node 版本出了问题。需要一个工具自动对比模板和项目文件的差异，提示哪些配置该更新了。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+CLI 命令 `scaffoldup check -template ./template -project ./myproject`。递归扫描两个目录中同路径的文件，对每个文件按行对比。差异分为三类：`added`（模板有项目没有的行）、`removed`（项目有模板没有的行）、`changed`（同一位置内容不同）。输出 `diff-report.json`，结构：`{"files": [{"path": ".eslintrc", "diffs": [{"type": "changed", "line": 5, "template": "...", "project": "..."}]}], "summary": {"total_files": 8, "changed_files": 3}}`。
+
+选择性更新用 `scaffoldup apply -template ./template -project ./myproject -files ".eslintrc,Dockerfile"`，只更新指定文件，其余不动。apply 前自动备份到 `.scaffold-backup/<timestamp>/`。`scaffoldup list` 列出所有有差异的文件路径，不输出详细 diff。
+
+模板目录或项目目录不存在报 "directory not found: <path>" exit 1。两个目录完全一致输出 "no differences found" exit 0。Go 标准库实现，go build 编译通过。

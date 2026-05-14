@@ -1,5 +1,1 @@
-重试策略乱七八糟，有的消息重试了 100 次还没放弃。
-
-死信队列管理（查看/重发/丢弃），死信原因分类统计，自动重发策略。签名时验证证书状态，验证时也要检查签名链。输入可能有乱码行和空行，别崩。
-
-Go 命令行工具，go build 能过就行。
+首先看看当前问题：重试策略乱七八糟，有个消息重试了 100 次还没放弃，队列堵死下游全部超时。然后整理一套规范的重试调度器。第一步，子命令 list 列出死信队列消息，--queue 指定队列名，--status 过滤状态（pending/retrying/failed/discarded），输出表格含 message_id/retry_count/last_error/next_retry_at 四列。第二步，子命令 resend 重发指定消息，--id 传消息 ID，--all 重发全部失败消息。自动重发策略用指数退避，初始间隔 1 秒，上限 60 秒，最大重试次数用 --max-retries 指定（默认 5）。超过上限的消息自动标记 discarded，输出 "discarded: ID (exceeded max retries: N)" 到 stderr。第三步，子命令 stats 统计死信原因分类，按 error_type 分组计数，输出 JSON 格式 {"error_type": count}。签名验证这块，签名时验证证书状态（expired/revoked/valid），验证时也检查签名链完整性，链断裂输出 "error: certificate chain broken at depth N"。输入消息有乱码行或空行直接跳过，打印 "skipped invalid line N" 到 stderr 并继续。Go 命令行工具，go build 能过就行，纯标准库实现。

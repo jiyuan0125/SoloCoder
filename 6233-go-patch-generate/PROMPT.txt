@@ -1,3 +1,5 @@
-每次发版要给客户出补丁包，手动 diff 再整理太麻烦。Go 写补丁生成工具：上下文行数可配置，输出的补丁文件用标准格式，其他工具也能直接用。
+每次发版给客户出补丁包，手动 diff 再整理能搞一下午，还容易漏。问题不止是慢——上下文行数不统一、补丁格式不标准，客户那边打不上又得返工。
 
-生成补丁后自动出摘要文件，如果变更内容没什么可摘要的就正常跳过。纯标准库实现，go run . 能跑。
+Go 写补丁生成工具。子命令 diff 生成补丁，--old 和 --new 分别指定旧版本和新版本的目录或文件路径。--context 设置上下文行数，默认 3，范围 0-10。输出标准 unified diff 格式到 stdout，用 --output 写文件。补丁文件名自动带上版本号和时间戳，比如 patch_v1.2.3_20240115.diff。子命令 summary 在生成补丁后自动出摘要文件，内容包含变更文件列表、增删改行数统计（+added/-modified/~deleted）、变更类型分类。如果变更内容为空——两个目录完全一样——正常跳过摘要，输出 "no changes detected" 到 stdout 并 exit 0。子命令 apply 验证补丁能否干净地打到目标目录，--patch 指定补丁文件，--target 指定目标目录，不实际修改文件只检查冲突。有冲突输出 "conflict: FILE at line N"。补丁文件损坏输出 "error: malformed patch at line N" 并 exit 1。空目录输入 exit 1 并提示 "error: source directory is empty"。二进制文件差异输出 "binary diff: FILENAME (N bytes)"。
+
+纯标准库实现，go run . 能跑。代码分文件组织。

@@ -1,3 +1,11 @@
-5 个同事写文档风格各异，合并后格式一片混乱。统一标题用词、列表格式、代码块标记，中英文间自动加空格。
-生成报告后自动发送邮件通知，有些环境没配邮件。
-go run . 能跑起来，全标准库写的。
+5 个同事写文档风格各异，合并后格式一片混乱——有的标题全大写有的首字母大写，列表有 `-` 有 `*`，中英文之间没空格看着特别挤。得有个工具统一格式。
+
+先说命令：`docfmt -dir ./docs/ -rules title,list,spacing -write`。不加 `-write` 时只输出会改什么（dry-run 模式）。`-rules` 选择要应用的规则，不指定则全部应用。
+
+规则明细：`title` 统一标题为首字母大写其余小写（`# API REFERENCE` → `# Api reference`），连续两个以上换行压缩为两个。`list` 统一无序列表符号为 `- `，有序列表保持 `1. ` 格式，缩进用 4 空格。`spacing` 在中文字符和英文字母/数字之间插入空格（`Go语言` → `Go 语言`），已在的不再加。
+
+输出统计：`{"files":12,"modified":8,"changes":{"title":15,"list":23,"spacing":156}}。` dry-run 时每处改动输出 `file.md:10: "API REFERENCE" → "Api reference"`。
+
+文件编码非 UTF-8 时 warning 并跳过。空文件跳过。目录不存在时 exit 1。没有需要修改的内容时输出 `all files already formatted` 并 exit 0。
+
+`go run .` 能跑起来，全标准库写的。不需要邮件通知——没配邮件的环境跳过不报错。

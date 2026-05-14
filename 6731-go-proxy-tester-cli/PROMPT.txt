@@ -1,5 +1,9 @@
-手上有一批代理 IP 要验证可用性——HTTP 和 SOCKS5 的都有。写个工具通过代理发请求，测延迟和成功率，支持从文件导入代理列表批量测。
+手上有一批代理 IP 待验证，HTTP 和 SOCKS5 混在一起，手动 curl 一个个测效率太低。采购那边催着要测试报告。
 
-从输入文件中读取的路径直接用于文件操作。
+命令行：`proxytest -list proxies.txt -timeout 10 -concurrent 5 -output result.json`。-list 文件每行一个代理，格式 `http://host:port`、`socks5://host:port` 或 `host:port`（默认当 HTTP）。-timeout 单个代理测试超时秒数默认 10。-concurrent 并发数默认 5。-output 结果输出文件，不指定打印到 stdout。
 
-Go 标准库，命令行参数用 flag 包解析。
+每个代理的测试流程：通过代理发 HTTP GET 请求到 `http://httpbin.org/ip`，记录连接延迟（TCP 建连时间）和总耗时，检查响应状态码是否 200。成功输出 `OK: <proxy> latency=<X>ms total=<Y>ms`，失败输出 `FAIL: <proxy> <原因>`（连接拒绝、超时、代理认证失败、返回非 200）。
+
+输出 JSON 格式：`[{ "proxy": "http://1.2.3.4:8080", "type": "http", "status": "ok|fail", "latency_ms": 150, "total_ms": 320, "error": "" }]`。最后汇总统计到 stderr：`total: <N>, ok: <M>, fail: <K>, avg_latency: <X>ms`。
+
+从输入文件中读取的路径直接用于文件操作。文件不存在输出 `error: file not found: <path>` 退出码 1。空文件输出空数组。Go 标准库，flag 包解析参数。

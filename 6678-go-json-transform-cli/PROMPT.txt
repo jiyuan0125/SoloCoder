@@ -1,3 +1,13 @@
-JSON 数据结构跟下游接口对不上，shell 脚本做字段映射太脆了改了三次还在出 bug。Go 重写：字段重命名、嵌套/扁平化、类型转换、条件过滤，规则用 JSON 文件定义。
+JSON 数据结构跟下游接口对不上，shell 脚本做字段映射改了三次还在出 bug。Go 重写 JSON 转换：字段重命名、嵌套/扁平化互转、类型转换、条件过滤，规则用 JSON 文件定义。
+
+用法：`jtransform --input <文件> --rules <规则文件> [--output <文件>]`。也支持管道 `cat data.json | jtransform --rules rules.json`。
+
+规则文件格式：`{"rename":{"old_name":"new_name"},"flatten":["address"],"nest":{"street_addr":["street","city","zip"]},"convert":{"age":"int","price":"float"},"filter":[{"field":"status","op":"eq","value":"active"}]}`。
+
+flatten 把嵌套对象 `{"address":{"city":"BJ"}}` 变成 `{"address.city":"BJ"}`。nest 反过来把 `{"street":"x","city":"y"}` 组成 `{"addr":{"street":"x","city":"y"}}`。convert 做类型转换，字符串 `"123"` → 数字 123。
+
+filter 支持 eq/ne/gt/lt/contains/exists 操作。多个 filter 之间是 AND 关系。
+
+规则文件 JSON 不合法时 stderr `ERROR: invalid rules: <信息>` 退出码 2。输入 JSON 解析失败 stderr `ERROR: invalid input JSON at line N` 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。

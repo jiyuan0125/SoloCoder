@@ -1,3 +1,9 @@
-服务器磁盘快满了，估计有一堆重复文件占空间。Go 命令行做哈希去重检测：不同目录下同名文件也要比较内容，结果按哈希值分组，一目了然哪些是重复的。
+服务器磁盘快满了，清了一下临时文件还是不够，估计不同项目目录下有一堆内容相同但文件名不一样的重复文件在占空间。
 
-记录状态要支持：草稿→待审→通过→归档，通过后还能撤回重新编辑。不用第三方包，go build 通过就行。
+哈希去重检测：扫描多个目录，对文件内容计算 SHA256，相同哈希的文件归为一组。不同目录下同名文件也要比较内容，不跳过。结果按哈希值分组输出，一目了然哪些文件是重复的。
+
+CLI：`hashdup scan --dirs "/project-a,/project-b,/backups" --output dupes.json --hash sha256 --min-size 1024`。`--dirs` 逗号分隔多个目录。`--hash` 支持 `sha256`（默认）和 `md5`。`--min-size` 跳过小于指定字节数的文件，默认 0 不过滤。`--max-depth 5` 限制递归深度。
+
+输出 JSON：`{"groups": [{"hash": "a1b2c3...", "size": 4096, "files": ["/project-a/main.go", "/backups/main.go"]}], "summary": {"total_files": 500, "duplicate_groups": 12, "wasted_bytes": 204800}}`。
+
+记录状态流转：草稿→待审→通过→归档。通过后可撤回（`hashdup recall --group 3`）重新编辑备注。`hashdup report dupes.json --format table` 以表格形式展示。目录不存在输出 `error: directory not found: /path` 退出码 1。符号链接跟随目标。不用第三方包，`go build` 通过就行。

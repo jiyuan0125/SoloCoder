@@ -1,3 +1,7 @@
-API 网关的速率限制到底是 500 QPS 还是 1000 QPS？文档写的和实际不一样。Go 工具按指定 QPS 发请求，检测何时被限流，输出限流阈值和响应时间变化曲线。
+文档说 API 网关限流 500 QPS，压测打上去 600 QPS 还在 200 OK。到底是限流没生效还是阈值比文档高？用工具实测——按指定 QPS 发请求，精确检测限流触发点。
 
-Go 实现，只用标准库，交叉编译友好。
+用法：`rate-limit-test --url http://api:8080/test --qps 800 --duration 30s --ramp-up 5s`。ramp-up 阶段线性增加 QPS 从 0 到目标值，避免上来就打满被直接拒绝。每个请求记录状态码和响应时间。完成后输出报告。
+
+报告分三部分：一、限流阈值检测结果——第一个收到 429 的 QPS 值标记为 `detected_limit`，始终没触发则标记 `not_detected`；二、响应时间变化——按 QPS 区间统计平均、P50、P95、P99 响应时间，输出表格；三、状态码分布——每个状态码的计数和百分比。`--output report.json` 导出完整 JSON，每条请求一条记录包含时间戳和耗时。
+
+`--method POST --body '{"test":1}'` 支持自定义方法和请求体。`--header "Authorization: Bearer xxx"` 添加自定义头，可多次指定。目标 URL 不可达直接报错 "connection refused" 退出码 1。Go 实现，只用标准库，交叉编译友好。

@@ -1,3 +1,7 @@
-技术文档里一堆外链，过了一半都 404 了。收集 Markdown 文件中所有链接，分三类：外部链接、内部链接、图片链接，顺便检测死链。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+技术文档项目维护了两年，外链死了一大半没人管。上周新人按照文档搭环境，结果参考链接全 404，浪费一下午。得有个工具把所有链接收集起来，顺便检测哪些已经失效了。
+
+linkcheck collect --dir ./docs 扫描目录下所有 .md 文件，用正则提取 [text](url) 和 ![alt](src) 格式的链接。分三类收集：外部链接（http/https 开头）、内部链接（相对路径或 # 锚点）、图片链接（![...](...)）。输出 links.json，结构：{"external": [...], "internal": [...], "images": [...]}，每条记录包含 source_file、line_number、link_text、url。
+
+加上 --validate 标志会对外部链接发 HEAD 请求检查状态码。超时设 5 秒。状态码 >= 400 或网络错误的标记为 broken，输出到 stderr：BROKEN: docs/guide.md:42 https://example.com/dead -> 404。验证完在 JSON 里加 status_code 字段。
+
+并发验证最多 10 个 goroutine，避免打爆对方服务器。--timeout 可自定义秒数。内部链接检查文件是否存在，不存在的也标 broken。图片链接检查路径指向的文件是否存在。go build 能编译通过，纯标准库，主逻辑和辅助函数分文件写。

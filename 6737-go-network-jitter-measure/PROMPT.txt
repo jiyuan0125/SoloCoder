@@ -1,3 +1,9 @@
-VoIP 通话质量跟网络抖动直接相关，我们的 SBC 上只看了平均延迟，没关注抖动。写个工具发带时间戳的探测包，计算包间延迟变异，输出抖动的统计和分布，看看到底稳不稳。
+VoIP 通话质量投诉不断，平均延迟没问题——抖动才是元凶，平均数掩盖了波动。SBC 只看了 avg latency 没管包间变异，写个探测工具把抖动量化出来。
 
-用 Go 标准库写，go run . 或 go build 都行。
+命令行：`jitterprobe -target 192.168.1.1 -port 80 -count 100 -interval 20ms -output jitter.json`。-target 必填，-port 默认 80，-count 默认 100，-interval 默认 20ms。
+
+探测机制：TCP 拨号+立即关闭模拟探测包，time.Since 记录往返时间。计算：平均延迟、中位数、jitter（RFC 3550：相邻包延迟差绝对值的平均）、最大延迟差、丢包率。
+
+输出 JSON：`{ "target":"...", "packets_sent":100, "packets_received":98, "loss_rate":0.02, "latency":{"avg_ms":12.5,"median_ms":11.2,"p99_ms":41.0}, "jitter_ms":3.2 }`。
+
+终端实时打印 `#<N> <延迟>ms (jitter: <当前>ms)`，结束打印摘要。不可达输出 `error: target unreachable: <addr>` 退出码 1。Go 标准库，go run . 或 go build 都行。

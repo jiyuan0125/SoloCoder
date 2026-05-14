@@ -1,5 +1,9 @@
-搜完结果还想按字段聚合统计一下，比如按状态码分组看各自有多少条。Go 做字段聚合搜索。
-搜索条件过滤后做分组统计。
-结果按聚合值排序。
-同步分为：准备→扫描→传输→验证→完成。验证失败重试传输。
-不用第三方包，go build 通过就行。
+搜索结果出来还要手动数每种状态码各有多少条？Excel 透视表拉来拉去效率太低。Go 写个字段聚合搜索工具，搜完直接出分组统计。
+
+对 JSON 或 CSV 数据先按搜索条件过滤，然后按指定字段分组计数，结果按聚合值降序排列输出。命令行：`aggsearch -input data.json -filter "status>=400" -group-by "status" -output result.json`。-filter 表达式支持 `<field><op><value>` 格式，op 包括 =、!=、>、>=、<、<=，数值比较和字符串比较自动判断类型。多条件用逗号分隔表示 AND 关系。-group-by 指定聚合字段名。
+
+输出格式：`{ "field": "status", "groups": [{ "value": "404", "count": 23 }, { "value": "500", "count": 8 }], "total_matched": 31, "total_records": 150 }`。count 相同时按 value 字母序排列。
+
+同步拆成阶段：准备校验输入和 filter 语法，扫描逐条过滤积累分组计数，写入输出文件，回读验证——验证失败重试一次。进度 `[scan] processing... <当前>/<总数>`。
+
+-filter 语法错误输出 `error: invalid filter expression: <表达式>` 退出码 1。-group-by 字段不存在输出 `error: field not found: <字段名>` 退出码 1。空结果输出空 groups 和 total_matched=0。不用第三方包，go build 通过就行。

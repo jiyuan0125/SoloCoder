@@ -1,4 +1,9 @@
-事件驱动架构的事件分发代码写起来很啰嗦。自动生成事件类型定义、处理函数、注册逻辑，事件分发框架也一起生成。
+微服务里事件驱动的代码写起来很啰嗦——每个事件类型要定义结构体、写处理函数、注册到分发器，改一个事件要改三个地方。做一个生成器把这些样板代码自动化。
 
-go build 能过，不依赖第三方库。
-代码分几个文件组织，别全写 main.go 里。
+第一步，定义事件描述文件 `events.yaml`：`events` 数组，每条含 `name`（事件名如 UserCreated）、`fields`（字段列表，每项含 `name` 和 `type`）、`handlers`（处理函数名列表）。第二步，`evgen generate -config events.yaml -output ./events`。生成三个文件：`event_types.go`（所有事件结构体定义）、`handlers.go`（每个处理函数的签名和空实现，带 `// TODO: implement` 注释）、`dispatcher.go`（注册表 + Dispatch 方法，按事件名路由到对应 handlers）。
+
+dispatcher 的 Dispatch 方法签名：`func Dispatch(eventName string, payload []byte) error`，内部用 map 查找注册的 handlers 并依次调用。事件名未注册返回错误 "event not registered: <name>"。
+
+第三步，`evgen validate events.yaml` 检查：事件名不能重复、handler 名不能为空、字段 type 必须是 Go 合法类型（string/int/bool/float64/[]byte 或自定义）。违反任何一条报具体错误并 exit 1。
+
+代码分文件组织：config.go、generator.go、validator.go、main.go，别全塞 main.go。go build 能过，不依赖第三方库。

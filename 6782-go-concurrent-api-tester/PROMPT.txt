@@ -1,3 +1,7 @@
-上线前要跑一遍完整的接口回归——登录、查询、下单、支付这一整条链路。写个并发 API 测试器，支持定义多步测试场景，同时跑多组不同接口的请求，汇总结果看哪些挂了。
+上线前要跑完整的接口回归链路——登录拿 token，拿 token 查商品，加购物车，下单，支付。这些步骤有依赖关系不能并行，但多组不同用户的链路可以同时跑。手动 curl 一个个调太慢了。
 
-Go 标准库，命令行参数用 flag 包解析。
+场景定义文件 tests.json 格式：{"name": "user-flow", "concurrency": 5, "steps": [{"name": "login", "method": "POST", "url": "http://localhost:8080/api/login", "body": {"user":"test","pass":"123"}, "extract": {"token": "$.data.token"}}, ...]}。extract 用简单的 $.field.nested 语法从 JSON 响应里提取值，后续步骤的 body 和 header 里用 {{token}} 引用。
+
+apitest run --config tests.json --timeout 30s 按 concurrency 指定的并发数同时跑 N 组场景。每组场景内部按 steps 顺序执行，步骤间传递提取的变量。每个步骤记录：状态码、响应时间、是否通过（2xx/3xx 算通过）。
+
+输出结果到 result.json：{"scenario": "user-flow", "total_runs": 5, "passed": 4, "failed": 1, "details": [{"run": 1, "steps": [...], "total_ms": 1200, "status": "pass"}]}。有失败 exit code 1。--verbose 在 stderr 实时打印每步进度。Go 标准库，flag 包解析参数。

@@ -1,3 +1,9 @@
-从浏览器开发者工具复制出来的 curl 命令要转成 Go 代码，手写容易漏参数。写个工具解析 curl 的各种参数（-X、-H、-d、-F 等），直接生成能编译的 Go HTTP 代码。
+每天从 Chrome DevTools 复制 curl 命令要手写成 Go 代码，参数一多就漏 header。粘贴 curl 命令，输出能 go build 的 Go HTTP 代码。
 
-Go 标准库，命令行参数用 flag 包解析。
+命令行：`curl2go -input "curl 'https://api.example.com' -H 'Auth: xxx' -d '{\"name\":\"test\"}'"`，或 `-input @request.txt` 从文件读。输出 stdout，`-output client.go` 写文件。
+
+解析 curl 参数：`-X` 指定方法默认 GET，`-H` 收集请求头，`-d` 处理请求体（POST 自动设 Content-Type），`-F` 用 `multipart.NewWriter`，`--compressed` 加 Accept-Encoding，`-k` 设 `InsecureSkipVerify: true`。
+
+生成代码：import 只引实际用到的标准库，`net/http.Client` 带 10 秒超时，`defer resp.Body.Close()`，打印状态码和 body。能 `go build` 通过。
+
+不认识的参数输出 `// TODO: unsupported flag: <flag>` 不报错。输入为空打印 `error: empty input` 退出码 1。Go 标准库，flag 包解析参数。

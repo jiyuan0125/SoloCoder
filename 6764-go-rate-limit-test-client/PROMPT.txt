@@ -1,5 +1,9 @@
-自己写的限流中间件不知道有没有生效。写个测试工具按指定速率发请求，记录被限流的比例和恢复时间，分析限流窗口大小对不对。
+自己写的限流中间件有没有生效？手动刷新根本测不出来。要一个精确控制请求速率的工具，模拟并发统计被拒比例——可量化可复现。
 
-项目拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。
+主命令：`ratetest run -url http://localhost:8080/api -rps 100 -duration 30s -concurrency 10 -output result.json`。-rps 每秒请求数，-duration 总时长，-concurrency 并发数。默认 GET，加 `-method POST -body '...'` 自定义。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+输出 JSON：`{ "total_sent": 3000, "status_codes": {"200":2700,"429":280,"503":20}, "rate_limited_pct": 10.0, "latency": {"avg_ms":45,"p99_ms":200}, "recovery_time_ms": 1500 }`。recovery_time 从第一个 429 到恢复连续 200 的时间。
+
+终端实时输出 `<已发送>/<目标> | rate_limited: <X>% | avg: <Y>ms`。结束打印完整报告。目标不可达 `error: target unreachable: <url>` 退出码 1。
+
+拆成至少 3 个 Go 源文件：主入口、核心逻辑、数据模型分开。纯 Go 标准库，编译后单二进制直接跑。

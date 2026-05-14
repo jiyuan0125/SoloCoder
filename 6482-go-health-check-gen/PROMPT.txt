@@ -1,3 +1,7 @@
-K8s 需要存活和就绪两种探针，每次都要手写。生成依赖检查和超时控制，就绪和存活探针各一个。任务状态：排队→运行→暂停→完成，暂停后可以继续。
+K8s 里每个服务都要配存活探针和就绪探针，手写检查逻辑枯燥还容易漏——忘了检查数据库连接就上线，结果探针一直返回 200 但实际服务不干活。写个生成器根据依赖列表自动生成两种探针的完整 HTTP handler 代码。
 
-零外部依赖，go run . 能跑。
+输入配置文件 health.yaml，列出服务依赖项：每项包含 name（依赖名称）、type（检查类型，支持 tcp 和 http）、addr（tcp 地址）或 url（http 检查地址）。命令：health-gen -config health.yaml -output health.go -port 8081。生成两个 HTTP 端点：/healthz 存活探针，只要进程活着就返回 200；/readyz 就绪探针，检查所有依赖可用性，全部通过返回 200，任一失败返回 503 并在响应体中列出失败项。
+
+每个依赖检查有超时控制，默认 3 秒，通过 -timeout 参数可调。就绪探针响应体格式：{"status": "ok|degraded", "checks": {"db": "ok", "redis": "ok", "api": "fail: connection refused"}}。生成的代码含 main 函数注册路由，用标准库 net/http 实现，不依赖任何框架。配置文件不存在时输出 "config file not found" 退出码 1。依赖项为空时仍然生成探针代码，/readyz 直接返回 200。
+
+任务状态：排队→运行→暂停→完成，暂停后可以继续。零外部依赖，go run . 能跑。

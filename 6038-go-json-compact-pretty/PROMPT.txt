@@ -1,2 +1,7 @@
-JSON 文件有的是压缩的一行，有的是格式化过的，工具链里混着用。做个紧凑和美化的双向切换：默认美化用 2 空格缩进，流式处理大文件不全量加载。
-同步分为：准备→扫描→传输→验证→完成。验证失败重试传输。纯标准库实现，go run . 能跑。
+先是开发环境输出美化过的 JSON 方便看，然后传到日志收集器要求压缩成一行省带宽，来回切太麻烦。做一个紧凑和美化的双向切换工具。
+
+步骤一，命令行：`jsonfmt --input data.json --mode pretty --indent 2` 或 `--mode compact`。pretty 模式默认 2 空格缩进，`--indent` 可改为 4 或 tab（`--indent tab`）。compact 模式去掉所有空白，key 和 value 之间只保留一个冒号，逗号后不加空格。
+步骤二，流式处理大文件不全量加载——用 json.Decoder 逐 token 读取处理，内存占用不超过 10MB。文件大小判断阈值 `--stream-threshold` 默认 10MB，超过阈值自动切换流式模式，并在 stderr 输出 "using stream mode"。
+步骤三，同步阶段：准备→扫描→传输→验证→完成。验证失败重试传输——验证阶段比较输入输出 JSON 的语义等价性（忽略空白差异），不等价则重试，最多 3 次，仍失败退出码 3。
+
+输入文件不存在退出码 1。JSON 语法错误退出码 2 并打印 "parse error at line N: message"。输入为空 JSON 正常输出。加 `--output` 指定输出文件，不指定则 stdout。纯标准库实现，go run . 能跑。

@@ -1,3 +1,9 @@
-有十几个 API 要监控可用性，手动挨个 curl 不现实。写个 URL 健康检查工具，批量检查多个 URL 是否可访问，记录状态码和响应时间，支持间隔检查，挂了就告警。
+有十几个内部 API 要监控可用性，手动 curl 不现实。Zabbix 配起来太重，先来个轻量的命令行工具。
 
-Go 实现，只用标准库，交叉编译友好。
+配置文件 urls.yaml（或 urls.json）列出要检查的 URL 列表，每个条目包含 url、method（默认 GET）、expected_status（默认 200）、timeout（默认 5s）。json 格式示例：[{"url": "http://api.internal/health", "method": "GET", "expected_status": 200, "timeout": "3s"}]。
+
+healthcheck run --config urls.json 并发检查所有 URL。每个请求记录：url、status_code（实际）、expected_status、response_ms、result（ok/fail/timeout/error）。输出 health_report.json：{"timestamp": "...", "results": [...], "summary": {"total": 12, "ok": 10, "fail": 1, "timeout": 1}}。
+
+加上 --interval 60 每 60 秒重复检查一次。--on-fail "sendmail admin@co.com" 在有失败时执行指定命令（健康检查结果通过 stdin 传入）。
+
+所有 URL 都 OK exit 0，有失败 exit 1。配置文件不存在 exit code 2。--format table 终端输出表格：URL | 状态码 | 耗时 | 结果。Go 实现，只用标准库，交叉编译友好。

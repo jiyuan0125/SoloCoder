@@ -1,3 +1,9 @@
-写了 30 多个 Go 包，godoc 启动太慢每次都要等。离线生成 Markdown 格式的 API 文档，解析 Go 的 doc 注释。
-扫描分初始化→扫描中→分析中→报告生成，分析发现问题标记为异常。
-纯标准库，go run . 跑一遍。
+30 多个 Go 包的 API 文档全靠 godoc 在线看，离线环境直接抓瞎。PM 和前端经常问"这个接口参数是啥"，来回解释浪费时间。能不能一个命令把所有包的文档生成 Markdown？
+
+`apidocgen` ——Go CLI 工具，解析 Go 源码的 doc 注释，生成 Markdown 格式 API 文档。第一步 `apidocgen scan --dir ./pkg` 扫描指定目录下所有 `.go` 文件（排除 `_test.go`），解析包名、导出函数、类型定义和注释。第二步 `apidocgen generate --dir ./pkg --output docs/api.md` 生成文档，Markdown 结构按包分组，每个导出符号列出签名、参数说明、返回值、示例代码（从 `Example*` 测试函数提取）。
+
+扫描过程有状态流转：`init → scanning → analyzing → generating`，用 `--verbose` 打印每阶段进度。分析阶段检查：缺少注释的导出符号标记 `[MISSING-DOC]`，注释格式不符合 `godoc` 规范的标记 `[BAD-FORMAT]`，这些异常汇总输出到 stderr。
+
+单文件超过 5000 行时流式解析不一次性加载。输出 Markdown 的代码块用 `go` 语法高亮。`--format json` 切换 JSON 输出格式，结构为 `{"package": "", "symbols": [{"name": "", "type": "", "signature": "", "doc": ""}]}`。
+
+纯标准库，`go run .` 跑一遍，`go build` 通过。退出码 0 成功，1 目录不存在，2 生成失败。

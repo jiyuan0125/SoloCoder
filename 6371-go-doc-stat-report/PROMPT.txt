@@ -1,4 +1,1 @@
-翻译报价要按字数算，但中文和英文字数统计方式不一样。多文件汇总，中文字数和英文单词分别统计。
-管理同步源和同步任务：用户创建同步任务关联到同步源。
-纯标准库，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+翻译报价要按字数算，但中文按字符数、英文按单词数，混在一起统计就乱了。到底怎么统计才准确？`docstat <files...> --format text|json --output report.txt --by-file --encoding utf-8`。逐文件统计五项指标：中文字数（Unicode 范围 \u4e00-\u9fff 的字符计数）、英文单词数（以空白字符分隔的非空白序列，排除纯标点 token）、总字符数（含标点空格，用 utf8.RuneCountInString）、段落数（空行分隔的文本块数量）、行数（总行数含空行）。`--by-file` 分文件输出每项统计，不指定则只输出汇总合计。text 格式输出对齐的表格，列：文件名（截断到 30 字符）、中文字数、英文单词、总字符、段落、行数，最后一行 "合计" 是所有文件的累加。json 格式输出 {"files": [{filename, chinese_chars, english_words, total_chars, paragraphs, lines}], "summary": {...}}。空文件统计全为 0 不报错退出码 0。文件不存在时 stderr 输出 "error: file not found: <path>" 退出码 1。管理同步源和同步任务：`docstat sync add --name <n> --source <path>`、`docstat sync list`、`docstat sync remove --id <id>`。纯标准库，go run . 能跑，代码分几个文件组织。

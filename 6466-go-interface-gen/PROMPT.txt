@@ -1,4 +1,7 @@
-写 mock 的时候发现接口定义和实现方法签名对不上。自动识别公开方法生成接口，接口文件单独存放。
+写 mock 的时候发现接口定义和实现的方法签名对不上，不是参数类型差一点就是返回值个数不一致。手动维护接口太容易漏了，得自动从实现类提取接口定义，保持接口和实现始终同步。
 
-go build 能过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+工具解析指定 Go 源文件的 AST，提取目标类型的所有导出方法（接收者为指定类型、方法名首字母大写），生成对应的 interface 定义。命令：iface-gen -type UserService -file service.go -output interfaces.go。-type 指定目标结构体名称，-file 指定源文件路径，-output 指定输出文件路径。输出文件包含 package 声明和 type XxxInterface interface { ... }，方法签名与原方法完全一致但去掉接收者参数。方法签名中引用了外部包的类型时，自动补充对应的 import 声明。
+
+支持一次指定多个类型：-type UserService,OrderService，每个类型各生成一个接口定义。输出文件已存在时追加新接口而不是覆盖。方法签名中包含 chan、func、interface 等复杂类型参数也要正确处理和保留。-pkg 参数指定输出文件的 package 名称，默认与源文件一致。源文件中找不到指定类型时输出 "type Xxx not found" 退出码 1。
+
+go build 能过，不依赖第三方库。主逻辑和辅助函数分文件写。

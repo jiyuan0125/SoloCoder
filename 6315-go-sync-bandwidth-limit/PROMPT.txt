@@ -1,3 +1,5 @@
-跨机房同步带宽就 10Mbps，白天业务高峰根本抢不过。得限速：按字节数/秒控制，高低峰时段不同速率。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
-Go 实现，go build 通过就行，不用第三方包。
+跨机房同步就 10Mbps 带宽，白天业务高峰跑同步直接把链路打满了，其他服务全部超时。运维要求同步任务必须限速，而且白天和晚上的速率要不一样——白天 2MB/s，晚上可以跑到 8MB/s。
+
+`synclimit -src /data/logs/ -dst /backup/ -rate 2MB [-schedule "peak:08:00-20:00=2MB,offpeak:20:00-08:00=8MB"]`。没有 `-schedule` 时用固定 `-rate`。有 schedule 时按当前时间自动切换速率。实现方式用 token bucket：每隔 100ms 计算可用令牌数，写超限就 sleep。同步过程中实时输出速率 `syncing: 45.2MB/120MB (2.0MB/s, ETA: 37s)`。
+
+每个同步记录有状态流转：草稿→待审→通过→归档。通过后可以撤回重新编辑（状态回到草稿）。这些元数据存 JSON 文件 `.synclimit_state.json` 在目标目录，格式 `{"records": [{"file": "a.log", "status": "archived", "bytes": 1024}]}`。源文件删除权限不足时输出 `error: permission denied: <file>` 继续处理下一个。目标磁盘满输出 `error: disk full` 退出码 2。文件已存在且大小相同跳过并输出 `skip: <file> (up to date)`。正常完成退出码 0。Go 实现，go build 通过就行，不用第三方包。

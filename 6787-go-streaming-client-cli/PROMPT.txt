@@ -1,3 +1,11 @@
-SSE 和 NDJSON 这种流式响应用 curl 看不到实时处理效果。写个流式客户端逐行接收输出，支持超时和手动取消，调试流式接口时用。
+SSE 和 NDJSON 这种流式响应，用 curl 看不到实时处理效果，数据到了是一坨还是逐条的完全不知道。得有个专门的流式客户端，逐行接收输出，调试流式接口的时候用。
+
+核心问题：需要看到每一行是什么时候到的，间隔多久，有没有卡住。
+
+命令行：`streamcli -url http://localhost:8080/stream -format ndjson -timeout 30s`。`-url` 必填，`-format` 支持 ndjson 和 sse 两种（默认自动检测：响应头 `text/event-stream` 为 sse，否则按 ndjson 处理）。`-timeout` 是整个请求的超时时间，默认 0（不超时）。`-cancel` 参数支持手动中断信号：监听 SIGINT 优雅退出，输出 `cancelled after {n} lines`。
+
+每收到一行/一个事件立即输出 JSON：`{"index":1,"data":"...","latency_ms":42,"total_bytes":1280}`。`latency_ms` 是距离上一条的时间间隔。支持 `-filter` 按正则过滤内容，只输出匹配的行。
+
+URL 无效时 exit 1 并输出 `error: invalid url`。超时到达时输出 `timeout after {n}s, received {m} lines` 并 exit 2。服务端返回非 200 时 exit 3 并输出状态码。正常结束 exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。

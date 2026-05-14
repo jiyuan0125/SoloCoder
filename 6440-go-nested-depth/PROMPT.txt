@@ -1,3 +1,9 @@
-有个函数嵌套了 8 层 if，review 的时候看吐了。if/for/switch 的嵌套层数统计出来，超过阈值的代码块标记。审批流程：提交→初审→复审→通过，初审不过可以修改重提。
+有个函数嵌套了 8 层 if，review 的时候看吐了。if/for/switch/select 的嵌套层数统计出来，超过阈值（默认 4，通过 `-max-depth N` 可调）的代码块标记为需要重构。
+
+用法：`depthcheck <目录或文件> [-max-depth N] [-format text|json]`。text 格式每行输出 `文件:行号  函数名  嵌套层数  标记`，超过阈值的标记 `⚠ DEEP`。json 格式输出 `[{"file":"...","line":12,"func":"HandleReq","depth":7,"deep":true}]`。
+
+审批流程用命令行子命令管理：`depthcheck submit <文件>` 提交审查，`depthcheck review <id> --approve` 或 `--reject`，`depthcheck list` 查看待审列表。初审不过可以修改后重新 submit。审批状态存 JSON 文件 `.depth-reviews.json`，格式 `{"id":{"file":"...","status":"pending|approved|rejected","reviewer":"","comments":""}}`。
+
+嵌套为 0 的文件不出现在输出中。空文件或无函数定义的文件跳过，不报错。
 
 零外部依赖，go run . 能跑。

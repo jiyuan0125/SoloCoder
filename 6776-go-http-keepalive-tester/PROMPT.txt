@@ -1,3 +1,7 @@
-怀疑客户端的连接池没有复用连接。写个测试工具发多个请求到同一服务器，检查连接是否真的在复用，统计实际建立了几次 TCP 连接。
+压测发现客户端和服务端之间建了大量短连接，怀疑连接池没有复用 Keep-Alive。需要个诊断工具——对同一个服务端发 N 个请求，数一数到底建立了几次 TCP 连接，看连接复用率到底是多少。
+
+工具启动一个本地 HTTP Server 作为被测目标，在每个连接建立时记录远程端口和时间戳。然后启动 Client 对该 Server 发送指定数量的 GET 请求，最后对比实际建立的 TCP 连接数和请求数。命令：keepalive-test -requests 10 -url http://localhost:8080。-requests 指定发送请求总数，默认 10。不指定 -url 时自动启动内置测试 Server，监听随机可用端口。
+
+输出结果包含：总请求数、TCP 连接数、连接复用率（请求数除以连接数）、每次连接处理了几个请求的分布。复用率为 1:1 时说明完全没有复用，输出 WARNING 提示。加 -verbose 打印每次请求对应的连接详情（RemoteAddr 和连接编号）。Client 端默认使用标准库 http.Client，自动启用 Keep-Alive。加 -disable-keepalive 参数关闭 Keep-Alive 作为对比组。支持 -interval 500ms 设置请求间隔，避免瞬间打满。服务端启动失败时输出 "failed to start test server" 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。

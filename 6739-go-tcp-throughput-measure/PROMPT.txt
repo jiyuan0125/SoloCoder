@@ -1,3 +1,7 @@
-新拉了两条专线，要看实际吞吐量到底能跑到多少。用 Go 写个精确测量工具，调好缓冲区大小和并发数，输出吞吐量曲线和峰值，跨平台编译到 Linux 和 Mac 上都能跑。
+先配好参数再测——`tcp-throughput --mode server --port 5201` 在远端起服务端，然后 `tcp-throughput --mode client --host remote:5201 --duration 10s --buffer-size 64KB --connections 4` 从客户端打流量。先跑一遍 TCP，再跑一遍看看专线到底能扛多少。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+客户端输出分三个阶段：预热阶段（前 2 秒不计入统计）、稳定测量阶段（每秒输出当前吞吐量 `1.2 Gbits/s`）、总结阶段。总结包括：平均吞吐量、峰值吞吐量、最低吞吐量、总传输字节数、重传次数（如果系统支持读取）。`--unit mb` 指定输出单位（kb/mb/gb），默认 mb。
+
+`--buffer-size` 从 4KB 到 1MB 可调，小缓冲测延迟影响，大缓冲测带宽上限。`--connections` 多连接并行聚合吞吐。`--csv throughput.csv` 每秒一条记录导出时间序列数据，字段：`timestamp,bytes_sent,throughput,connections_active`。服务端没收到数据超过 5 秒自动退出。
+
+客户端连不上服务端 3 秒超时报 "connection refused" 退出码 1。`--mode` 不指定也报错 "must specify --mode server or client"。纯 Go 标准库，编译后单二进制可以直接跑。

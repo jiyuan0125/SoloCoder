@@ -1,3 +1,11 @@
-配置文件改了但结构体没同步，运行时才发现字段对不上。从 YAML/TOML 配置文件生成 Go 配置结构体，字段名和标签自动映射，默认值写进注释。
+配置文件改了但结构体没同步，运行时才发现字段对不上，这种 bug 排查起来特别恶心。从 YAML/TOML 配置文件直接生成 Go 配置结构体，字段名和标签自动映射，省得手工对。
 
-不用第三方包，go build 通过就行。
+命令：`configgen -file config.yaml -type AppConfig -pkg config -output ./config/structs.go`。`-file` 支持 `.yaml`、`.yml`、`.toml` 三种格式。`-type` 是生成的结构体名，`-pkg` 是包名。
+
+生成规则：YAML 键名 `db_host` 转为 `DbHost`（首字母大写驼峰），自动加标签 `yaml:"db_host"`。TOML 键名同理加 `toml:"db_host"`。嵌套对象生成嵌套结构体。整数生成 `int`，浮点生成 `float64`，布尔生成 `bool`，字符串生成 `string`，数组生成 `[]T`。
+
+默认值写进注释：`DbHost string `yaml:"db_host"` // default: localhost`。遇到 `env:` 前缀的值额外生成 `env` 标签。
+
+`-file` 不存在时 exit 1 并输出 `error: file not found: {path}`。不支持的格式时 exit 1。输出目录不存在自动创建。空配置文件生成空结构体只有类型名。
+
+不用第三方包，`go build` 通过就行。

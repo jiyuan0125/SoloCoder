@@ -1,5 +1,5 @@
-表里有几列文本长度差异特别大，有的超长有的空，需要快速摸底。Go 写文本长度统计。
-最大值、最小值、平均值、分布。
-超长行标记出来。
-纯标准库实现，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+表里有几列文本长度差异特别大，有的超长把页面撑开了，有的全是空值，得快速摸底才能决定清洗策略。
+
+`txtstat -file data.csv -col content [-threshold 1000] [-json]`。读取 CSV 文件指定列，统计该列文本长度。输出统计摘要：`column: content | min: 0 | max: 48520 | avg: 342.5 | median: 156 | p95: 1200 | p99: 8500`。空字符串单独计数 `empty: 23 (4.6%)`。超过 `-threshold` 的行标记出来 `LONG | row 1567 | length: 48520 | content preview: "Lorem ipsu..."`，默认阈值 1000 字符。`-json` 输出 `{"column": "content", "min": 0, "max": 48520, "avg": 342.5, "p95": 1200, "over_threshold": [{"row": 1567, "length": 48520}]}`。
+
+输入文件不存在报错退出码 1。指定列名不存在输出 `error: column not found: <name>`。空文件输出 `error: no data rows` 退出码 0。纯标准库实现，go run . 能跑。代码分几个文件组织，stats 计算逻辑、CSV 解析、CLI 入口各一个文件，别全写 main.go 里。

@@ -1,3 +1,9 @@
-文档里的数据图表不知道是从哪个文件生成的。标注来源文件和行号，来源变更时标记文档需要更新。
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
-go run . 能跑，标准库够用了。
+文档里的数据图表不知道是从哪个数据文件生成的，上游数据改了文档没更新，线上出了好几次乌龙。得有个工具给文档标注来源文件和行号，来源变更时自动标记文档需要更新。
+
+先建标注：`anno build -docs ./docs/ -sources ./data/ -output annotations.json`。扫描 docs 目录下 `.md` 文件中引用 sources 目录文件的语句（识别 `./data/xxx.csv`、`data/xxx.json` 这类相对路径），记录文件名、行号和引用位置。输出 JSON 数组：`[{"doc":"report.md","line":15,"source":"sales.csv","source_line":3}]}`。
+
+然后检查：`anno check -annotations annotations.json -sources ./data/`。对比每个 source 文件的 mtime 和记录，有变更的标记 `status: "stale"`，未变更的 `status: "fresh"`。输出 `{"checked": 12, "stale": [{"doc":"report.md","source":"sales.csv","changed_at":"2024-01-15"}]}`。
+
+标注文件不存在时输出 `error: annotations file not found` 并 exit 1。docs 目录为空时 exit 0 并输出 `no documents to annotate`。sources 目录不存在时 exit 1。
+
+同步流程：准备→扫描→传输→验证→完成，验证失败重试传输（最多 3 次）。go run . 能跑，标准库够用了。

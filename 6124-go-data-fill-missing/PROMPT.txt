@@ -1,5 +1,9 @@
-时序数据中间经常断几个点，画图出来的曲线全是缺口。Go 做缺失数据填充。
-用线性插值或前值填充。
-时间间隔自动检测。
-生成报告后自动发送邮件通知，有些环境没配邮件。
-go build 能编译通过，不依赖第三方库。
+时序数据中间断了几秒没采到值，Grafana 画出来的图全是缺口。得有个工具自动把缺失的点补上。
+
+用法：fill --input data.csv --output filled.csv --method linear。输入 CSV 格式：timestamp,value，时间戳用 RFC3339 或 Unix 秒。工具自动检测时间间隔——计算相邻数据点时间差的中位数作为期望间隔，偏差超过两倍间隔视为缺失。
+
+两种填充方法：--method linear 线性插值（前后两个有效值算加权平均），--method forward 前值填充（用最近一个有效值）。输出 CSV 和输入格式一致，补充的行在第三列标记 fill=true。
+
+加上 --report 标志在 stderr 输出报告：原始点数、缺失点数、填充点数、填充比例。输出超过 50% 缺失的时段打印 WARNING: high missing ratio in interval [start, end]。
+
+输入文件不存在 exit code 1。空文件输出空。连续超过 10 个缺失点停止填充，打印 WARNING: gap too large at timestamp。某些环境没配邮件，--notify email 选项在没配 SMTP 的情况下打印 INFO: email not configured, skipping notification 而不是报错。go build 能编译通过，纯标准库。

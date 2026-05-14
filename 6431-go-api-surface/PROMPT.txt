@@ -1,5 +1,10 @@
-发布的时候不知道哪些导出符号被外部用到了，改了之后下游全炸。列出所有导出的函数、类型、常量，API 变更能检测出来。
+每次改导出接口都提心吊胆——不知道下游哪些项目在用，改了之后一堆人找上门。需要把当前包的所有导出符号列出来，下次改动前能对比差异。
 
-保存时要同步更新缓存，缓存加载需要读取存储的数据。
+用法分三个子命令：
+- surface list --pkg ./mypkg — 扫描指定目录下 .go 文件，用 go/parser 提取所有导出的函数签名、类型定义、常量和变量。输出 apilist.json，结构：{"functions": [{"name": "Foo", "signature": "func Foo(x int) error"}], "types": [...], "constants": [...], "variables": [...]}。
+- surface diff --old v1.json --new v2.json — 对比两份 apilist.json，输出差异：新增的符号、删除的符号、签名变化的函数。Breaking changes（删除函数、签名变化）标为 BREAKING，新增标为 ADDED。输出格式：[{"symbol": "Foo", "change": "BREAKING", "detail": "signature changed from ... to ..."}]。
+- surface check --pkg ./mypkg --baseline v1.json — 当前代码和基线对比，如果有 breaking change 以 exit code 1 退出，否则 exit 0。可以塞进 CI。
+
+扫描时忽略 _test.go 文件。编译错误的文件跳过并在 stderr 打印警告。保存时同步更新缓存——.api_cache.json 存在包目录下，源文件 mtime 没变就直接读缓存，缓存 JSON 损坏则重新扫描。
 
 零外部依赖，go run . 能跑。

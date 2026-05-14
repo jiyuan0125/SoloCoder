@@ -1,3 +1,13 @@
-Mermaid 图表语法写错了，渲染出来是空白。验证图表语法正确性，图表独立保存为文件。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
-go build 通过就完事，全标准库。
+Mermaid 图表语法写错了渲染出来是空白，排查半天才发现是少了个括号。能不能自动验证图表语法、同时把图表独立保存成文件？
+
+这个工具做两件事：检查 Mermaid 语法正确性，把通过检查的图表提取为独立的 `.mmd` 文件。
+
+命令：`diagramcheck -dir ./docs/ -output ./diagrams/ -format mmd`。`-dir` 扫描目录下所有 `.md` 文件，识别 ```mermaid ... ``` 代码块。`-output` 是图表输出目录，`-format` 支持 mmd（纯文本）和 svg（留空占位，因为标准库没法真正渲染 SVG）。
+
+输出 JSON：`{"found":5,"valid":4,"invalid":[{"file":"design.md","line":42,"error":"unexpected token at position 15"}],"extracted":["diagrams/flow1.mmd","diagrams/sequence1.mmd"]}`。
+
+语法检查规则：匹配基本的 Mermaid 关键字（graph、sequenceDiagram、classDiagram 等）开头，括号和箭头配对检查，不识别的关键字报 warning 不算 error。
+
+没有图表时输出 `no diagrams found` 并 exit 0。图表语法全对 exit 0。有语法错误 exit 1。输出目录不存在自动创建。空代码块（```mermaid\n```）跳过并 warning。
+
+`go build` 通过就完事，全标准库。

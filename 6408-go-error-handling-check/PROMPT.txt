@@ -1,5 +1,3 @@
-code review 最常挑的毛病就是错误没处理。把忽略错误返回值的地方全部标出来，重复的错误处理模式也识别一下。
+code review 里最常挑的毛病——`result, _ := doSomething()`，错误返回值直接扔了。还有那种 `if err != nil { log.Println(err) }` 之后程序继续跑的，静默吞掉错误比直接 panic 还危险，因为出问题时完全没线索。人工审查太累了，50 个文件的 PR 根本看不过来。
 
-合并完成后自动删除源文件，保留模式不删除。
-
-不用第三方包，go build 通过就行。
+工具叫 `errcheck`，扫描 Go 源码中的错误处理问题。用法：`errcheck --dir ./pkg --severity warn`。检测三种模式：一是忽略错误返回值（`_ = ` 或未接收），二是重复的 if err != nil 处理（连续 3 个以上相同模板的 error check），三是 err 判断后没有 return 或 os.Exit 的可疑模式。输出按严重程度分三级：error（忽略错误返回值）、warn（重复处理模式）、info（可疑但不确定）。每条结果格式：`<severity> <文件>:<行号>: <描述>`。加 `--format json` 输出 JSON 报告。扫描完成后自动在 stdout 打印统计：`total issues: X, errors: Y, warnings: Z, info: W`。有 error 级别问题退出码 1，否则退出码 0。目录不存在退出码 1 输出 `error: directory not found`。不用第三方包，`go build` 通过就行。

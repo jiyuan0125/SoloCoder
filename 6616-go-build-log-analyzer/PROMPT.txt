@@ -1,3 +1,9 @@
-Jenkins 日志几千行，找不到编译错误在哪。下周要演示，先出个原型：支持 Go、Java、C++ 编译器输出格式，按严重程度分类，去重后输出关键信息。
+Jenkins 日志几千行，找编译错误跟大海捞针一样。下周要给老板演示，先出个能用的原型。
+
+`log-analyzer parse --file build.log --lang go --severity error`，`--lang` 支持 `go`、`java`、`cpp` 三种编译器输出格式。`--severity` 过滤级别，可选 `error`、`warning`、`info`，可重复指定，默认显示全部。Go 格式匹配 `file.go:line:col: error message`，Java 匹配 `[ERROR] message`，C++ 匹配 `file.cpp(line): error: message`。
+
+输出按严重程度分组，每组内按文件路径排序。去重逻辑：相同文件+行号+消息内容只保留第一次出现。输出格式 `--output text` 或 `--output json`。JSON 结构是 `{"errors":[],"warnings":[],"info":[],"summary":{"total":5,"unique":3,"files_affected":2}}`。text 格式每组前加标题行 `[ERRORS] (3 unique)`，每条一行，格式 `{file}:{line}: {message}`。
+
+输入文件不存在报错退出码 1。空文件输出空结果和 summary 全零。无法识别格式的行归入 `unparsed` 类别，最后统计 unparsed 行数。文件超过 10MB 时打印 "large file, processing may be slow" 到 stderr 但继续处理。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

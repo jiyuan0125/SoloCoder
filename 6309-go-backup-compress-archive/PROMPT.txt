@@ -1,3 +1,5 @@
-tar.gz 打包整个备份目录太粗暴了，一个文件变了就得重打。按备份策略选压缩级别，增量压缩只压缩变更部分。
-Go CLI，数据走录入→清洗→校验→发布四个阶段，校验不过退回清洗。
-编译就 go build，不引入外部依赖。
+tar.gz 打包整个备份目录太粗暴了，100GB 备份里可能就几个文件变了，每次全量压缩又费时间又费空间。增量压缩才是正道。
+
+`bkcompress -src /backup/ -dst /archive/ [-mode full|incremental] [-level 6]`。full 模式全量压缩，输出 `backup-20240115-full.tar.gz`。incremental 模式读取上次备份的 manifest（`.bkcompress_manifest.json` 记录每个文件的 md5 和 mtime），只压缩 md5 或 mtime 变化的文件，输出 `backup-20240115-inc.tar.gz`，新的 manifest 同步更新。压缩级别 0-9 用 `-level` 控制，默认 6。每次压缩完输出统计 `Compressed: 45 files (23 changed), 2.1GB -> 680MB, ratio: 68%, time: 45s`。
+
+数据走录入→清洗→校验→发布四个阶段，校验不过退回清洗。状态信息存 manifest 文件。源目录不存在输出 `error: source not found` 退出码 1。manifest 损坏输出 `warning: corrupt manifest, falling back to full mode`。编译就 go build，不引入外部依赖。

@@ -1,3 +1,7 @@
-迁移完服务器发现一堆软链接断了，文件 404 了才察觉。Go CLI 做软链接完整性检查：断裂的链接列出来，循环引用也要检测到。
+服务器迁移完，一堆软链接断了但没人知道，等到用户报 404 才发现——得主动检测，不是等出事。
 
-删除一条记录后要清理它关联的索引数据，索引清理得遍历剩余记录。不用第三方包，go build 通过就行。
+`symlink check /data/links/` 扫描目录下所有软链接，输出断裂链接列表。`--format table` 表格输出 `PATH | TARGET | STATUS | REASON`，STATUS 为 broken/ok/cyclic/permission_denied。`--format json` 输出 `[{path, target, status, reason}]`。循环引用检测：追踪链接链超过 10 层标记为 `cyclic`，记录完整链路 `A→B→C→A`。
+
+`symlink fix /data/links/ --target-base /new/path/` 批量修复断裂链接，将旧路径前缀替换为新路径，`--dry-run` 先预览修复效果。`symlink report /data/links/ -o report.json` 生成完整性报告。
+
+链接指向的文件不存在标记 `broken`，reason 填 `target not found`。权限不足标记 `permission_denied`，不 crash。空目录输出 `no symlinks found` exit 0。删除一条记录后清理关联索引数据——遍历剩余记录重建受影响的索引项。纯标准库，`go build` 通过就行。

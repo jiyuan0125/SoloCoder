@@ -1,5 +1,9 @@
-服务间通信有时候要 JSON 有时候要二进制，手动转换太繁琐。支持两种格式的序列化，字段可以选择性序列化。
+上周服务切换通信协议，JSON 和二进制之间来回转，手动写 Marshal/Unmarshal 写到手软。得有个工具自动生成序列化代码，字段还能按需选择是否参与序列化。
 
-生成报告后自动发送邮件通知，有些环境没配邮件。
+命令行用法：`serializer-gen -type User -format json,binary -output ./gen/`。`-type` 指定结构体名称，`-format` 用逗号分隔目标格式（支持 json 和 binary），`-output` 是输出目录，默认当前目录。每个格式生成独立文件，命名规则为 `{type}_{format}_serializer.go`。
 
-纯标准库，编译完直接跑。
+生成的 JSON 序列化代码要处理 `json:"-"` 标签跳过字段，binary 格式用固定字节序（大端）编码整数和浮点数，字符串前 4 字节写长度再写内容。字段选择性序列化通过结构体标签 `serialize:"true|false"` 控制，没标默认 true。
+
+错误处理：结构体不存在时 stderr 输出 `error: type "{name}" not found` 并 exit 1；输出目录不可写时输出 `error: cannot write to "{path}"` 并 exit 1；未指定 `-type` 时输出 usage 并 exit 1。成功 exit 0。
+
+纯标准库，`go build -o serializer-gen .` 编译完直接跑。不需要邮件通知功能——本地模式跳过通知逻辑，不报错。

@@ -1,3 +1,11 @@
-Go 编译报错信息格式不统一，CI 里解析不出来。写个工具提取文件名、行号、错误类型、错误消息，相同错误聚合、按文件分组，输出 JSON 给下游用。
+Go 编译报错信息格式不统一，有 `file.go:10: syntax error` 也有 `file.go:10:2: undefined: Foo`，CI 里正则匹配总是漏。得有个工具把编译错误结构化提取出来。
 
-Go 实现，只用标准库，交叉编译友好。
+直接说命令：`errparse -input build.log -format json`。也支持 stdin 管道输入：`go build ./... 2>&1 | errparse -format json`。`-format` 支持 json 和 summary 两种。
+
+json 模式输出：`{"errors":[{"file":"main.go","line":10,"col":2,"type":"undefined","message":"undefined: Foo"}],"groups":{"main.go":3,"handler.go":1},"duplicates":1}`。`type` 从错误消息中提取关键词（syntax error、undefined、type mismatch、unused import 等）。相同文件+行号+消息的错误只保留一条，`duplicates` 记录去重数量。`groups` 按文件分组统计错误数。
+
+summary 模式输出可读文本：按文件分组，每组列出错误，最后输出总计 `total: {n} errors, {m} files affected`。
+
+输入为空时输出 `{"errors":[],"groups":{},"duplicates":0}` 并 exit 0。无法解析的行 stderr 输出 `warning: unparseable line {n}: {content}` 并跳过。
+
+Go 实现，只用标准库，`go build -o errparse .` 交叉编译友好。

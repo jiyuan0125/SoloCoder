@@ -1,3 +1,1 @@
-每次新加一个 gRPC 服务都要手写客户端调用代码，重复劳动。看到别人的工具能从 protobuf 定义自动生成，Go 标准库自己也搞一个：包含连接、调用、错误处理，输出可直接使用的代码。
-
-Go 实现，只用标准库，交叉编译友好。
+第一步拿到 .proto 文件，第二步解析 service 定义和 message 定义，第三步 `grpcgen <file.proto> --output client/ --package myclient --timeout 30s` 生成客户端代码。解析 proto 文件提取 service 名称、每个 rpc 的方法名（大写开头）、请求和响应 message 类型、message 的字段定义（repeated 修饰符、类型、名称、编号）。生成的代码包含：NewClient(addr string, opts ...Option) 连接函数，每个 rpc 方法生成一个调用函数（大写开头导出），参数是请求结构体指针，返回响应结构体指针和 error。请求结构体字段和 proto message 一一对应，类型映射：string→string，int32→int32，int64→int64，bool→bool，float→float32，double→float64，bytes→[]byte，repeated T→[]T。连接失败返回 fmt.Errorf("dial failed: %s", addr)。调用超时由 --timeout 控制（默认 30s），超时返回 fmt.Errorf("deadline exceeded: %s", method)。proto 文件语法错误时 stderr 输出 "error: parse proto failed at line <n>: <msg>" 退出码 1。每个 service 生成独立文件 grpc_<service>_client.go，加 package 声明和 import 块。Go 实现，只用标准库，交叉编译友好。

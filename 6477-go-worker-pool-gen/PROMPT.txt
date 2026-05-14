@@ -1,4 +1,13 @@
-并发任务处理写得乱，goroutine 随手 go 出来也不管关闭。生成任务队列、worker 数量可配置、优雅关闭，错误统一收集。
+并发任务处理写得乱，goroutine 随手 go 出来也不管关闭，线上 goroutine 泄露了好几次。这个工具生成一个可配置的 worker pool：任务队列、worker 数量可调、优雅关闭、错误统一收集。
 
-不用第三方包，go build 通过就行。
-代码分几个文件组织，别全写 main.go 里。
+用法：`poolgen --workers <N> --queue-size <M> --input <任务文件> [--timeout 30s] [--output <结果文件>]`。
+
+任务文件 JSON 格式 `[{"id":"1","type":"fetch","params":{"url":"..."}},...]`。worker 从队列取任务执行，结果写入输出文件 JSON `[{"id":"1","status":"success|error","output":"...","duration_ms":123}]`。
+
+优雅关闭：收到 SIGINT 后不再接收新任务，等当前正在执行的 worker 完成（最多等 `--timeout`），超时后强制退出，已完成的结果仍然写入输出文件。
+
+错误收集：单个任务失败不影响其他 worker，错误记录到结果的 status=error 和 output 中含错误信息。所有任务都失败时退出码 1，部分失败退出码 0（结果里有详细错误），参数错误退出码 2。
+
+`--progress` 开启进度条到 stderr：`[50/100] 50%  ETA: 12s  errors: 3`。
+
+不用第三方包，go build 通过就行。代码分 pool.go、worker.go、task.go、main.go 几个文件，别全写 main.go 里。

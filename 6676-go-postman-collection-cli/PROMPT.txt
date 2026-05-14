@@ -1,3 +1,11 @@
-Postman Collection 有 200 个请求，手动转成 curl 要转一天。Go 工具提取请求列表，转换为 curl 命令或 Go HTTP 代码，环境变量替换也处理了。
+Postman Collection 有 200 个请求，手动转成 curl 要转一天。这个工具解析 Postman Collection v2.1 的 JSON 文件，提取每个请求的 method、URL、headers、body，转成 curl 命令或 Go http.NewRequest 代码。
+
+用法：`pmconvert <collection.json> --format curl|go [--output <目录>] [--env <环境变量文件>]`。curl 格式输出每个请求一个 .sh 文件，内容是完整的 curl 命令，带所有 headers 和 body。Go 格式输出一个 .go 文件，每个请求一个函数 `func reqXxx() *http.Request`。
+
+环境变量替换：Postman 里 `{{base_url}}` 这种占位符，从 `--env` 指定的 JSON 文件读取替换。格式 `{"base_url":"https://api.example.com","token":"xxx"}`。找不到变量时保留原样，输出 WARN 到 stderr。
+
+`--filter <name>` 只转换名字包含关键字的请求。`--list` 只列出请求名不转换。
+
+Collection 文件解析失败时 stderr 输出 `ERROR: invalid collection format` 退出码 1。环境变量文件不存在时退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。

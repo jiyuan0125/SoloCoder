@@ -1,5 +1,9 @@
-报表里要加一列「单价×数量」还有「总价÷总件数」，每次都手动算太蠢了。Go 命令行做字段计算器。
-支持四则运算和简单函数。
-引用其他列的值参与计算。
-构建流程是解析→编译→测试→打包。测试失败不打包。
+报表里要加一列「单价×数量」还有「总价÷总件数」，每次都手动拉 Excel 公式太蠢了。上个月公式还拉错了行，数据全歪。Go 命令行做字段计算器，读 CSV 自动算新列。
+
+用法：`field-calc --input data.csv --output result.csv --expr "total=price*qty" --expr "avg=total/count"`。`--expr` 支持多次指定，每次定义一个新列。表达式里引用已有列名做变量，支持四则运算（+-*/）和括号。内置函数 round(x,n) 四舍五入保留 n 位小数、abs(x) 取绝对值、max(a,b)、min(a,b)。
+
+列名不存在时打印错误 "column not found: xxx" 并退出码 1。除以零的结果填 "ERR"。输出 CSV 在原列后面追加计算列。加 `--format table` 终端直接打印对齐表格，列宽按最长值对齐。`--precision 2` 控制浮点输出位数，默认 2。
+
+构建流程是解析→编译→测试→打包，测试失败不打包——Makefile 里 test 目标失败时 build 目标不执行。空行跳过不参与计算。数值列包含非数字字符时打印警告 "non-numeric value in row N column xxx" 并该行计算结果留空。
+
 纯标准库实现，go run . 能跑。

@@ -1,3 +1,9 @@
-软链接同步是个坑：复制链接本身还是跟随链接复制内容？断裂链接怎么处理？得支持两种模式让用户选。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-go build 能编译通过，第三方库零依赖。
+软链接同步到底怎么搞？复制链接本身（`-P` 保持链接）还是跟随链接复制实际内容？断裂链接（目标不存在）又怎么处理？这是同步工具绕不开的坑。
+
+工具提供三种链接处理模式，通过命令行参数选择。`--symlink follow`（跟随链接复制内容，默认）、`--symlink preserve`（复制链接本身）、`--symlink skip`（跳过所有链接）。断裂链接在 follow 模式下输出 `warning: broken symlink /path/link -> /missing/target, skipped`，在 preserve 模式下正常复制链接（即使目标不存在），在 skip 模式下静默跳过。
+
+1. `file convert --input src/ --output dst/ --symlink follow` 执行同步转换。
+2. `file check --path target/` 检查目录下有多少断裂链接，输出表格：路径、链接目标、状态（ok/broken）。
+3. `file merge --source-a dir1/ --source-b dir2/ --output merged/ --symlink preserve` 合并两个目录，冲突文件保留较新的。
+
+`file check` 无断裂链接时输出 `no broken symlinks found` 退出码 0。目录不存在时输出 `error: directory not found` 退出码 1。循环链接（A→B→A）检测到后输出 `error: symlink loop detected` 并跳过。`go build` 能编译通过，第三方库零依赖。

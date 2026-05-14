@@ -1,4 +1,1 @@
-备份命名全靠人记，三个月后根本分不清哪个是哪个。给备份加标签、描述、创建时间、大小这些元数据，搜索备份时按元数据过滤。
-管理审批流程和流程实例：用户提交审批走已有流程。
-纯标准库，go run . 能跑。
-主逻辑和辅助函数分文件写。
+备份命名全靠人记，三个月后分不清哪个是哪个了。`bkmeta <backup-dir> --action tag|search|list --tag "prod,pre-release" --desc "上线前备份" --search "tag:prod date:2024-01"`。tag 动作给备份目录写元数据文件 `.backup-meta.json`，JSON 格式包含 name（目录名）、tags（字符串数组）、description（字符串）、created_at（RFC3339 格式）、total_size（int64 字节）、file_count（int）。search 动作按条件过滤，支持 tag:xxx 精确匹配标签、date:YYYY-MM 匹配 created_at 前缀、desc:keyword 模糊匹配 description 字段，多个条件用空格分隔表示 AND 关系。list 动作递归扫描当前目录下所有含 .backup-meta.json 的子目录，表格输出：名称、标签（逗号分隔）、创建时间、总大小（人类可读如 1.2GB）、文件数。备份目录没有 .backup-meta.json 时 tag 自动创建，已有则更新（tags 追加不覆盖已有标签）。管理审批流程：`bkmeta approve submit --desc <desc>` 提交申请，`bkmeta approve list` 查看所有申请，状态流转：草稿→待审→通过→归档。通过后可 `bkmeta approve revoke --id <id>` 撤回重新编辑。纯标准库，go run . 能跑，主逻辑和辅助函数分文件写。

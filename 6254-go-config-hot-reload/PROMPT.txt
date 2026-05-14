@@ -1,3 +1,11 @@
-改个配置要重启服务太蠢了，高峰期重启就是事故。Go 命令行做配置热加载：文件一变就通知调用方，格式错误时保留上一次有效配置不生效——宁可配置旧一点也不能用坏的。
+凌晨 3 点改了个阈值配置要重启服务，结果启动失败——配置文件多了个逗号 JSON 解析报错，线上服务挂了半小时。这种事故完全可以用热加载 + 格式校验避免。
 
-同步完成记日志，数据库不可用降级写本地文件。纯标准库实现，go run . 能跑。
+写个 Go CLI `cfgwatch` 做配置文件热加载。`cfgwatch -c config.json --handler "./reload.sh"` 监控配置文件变化，文件修改后自动触发 handler 脚本。核心保证：格式错误时保留上一次有效配置不生效，打印 `[INVALID] config parse failed: <error>, keeping last valid config`。
+
+支持的配置格式：JSON、YAML（简单子集）、TOML（简单子集），通过文件扩展名自动识别。首次启动时配置文件不存在也不报错，打印 `[WAITING] config file not found, waiting...` 持续等待。配置变更通知机制：除了执行 handler 脚本，还可以通过 `--callback "http://localhost:8080/reload"` 发 HTTP POST 通知。
+
+`cfgwatch validate -c config.json --schema schema.json` 用 schema 文件校验配置结构（schema 就是 JSON Schema 简化版：检查必填字段和类型）。校验失败退出码 1 并列出所有错误。
+
+同步写入日志到 `cfgwatch.log`：每次变更记录时间、旧值 hash、新值 hash、校验结果。日志文件不可写时降级输出到 stdout。`--debounce 500ms` 防抖，避免编辑器保存触发多次重载。
+
+纯标准库实现，`go run .` 能跑。退出码 0 正常退出（SIGINT/SIGTERM），1 配置错误。

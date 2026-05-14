@@ -1,2 +1,11 @@
-新规要求所有配置变更可追溯，软链接的管理也要记录。Go 做批量软链接：保持相对路径结构，已存在的链接跳过或更新。
+那配置变更要可追溯，软链接的管理总得有个记录吧？每次手动 ln -s 改完不知道改了什么，回滚的时候也找不到之前指向哪。
+
+`batchlink create --source /data/configs/ --target /opt/app/configs/ --mode relative --log changes.json`。`--mode` 支持 `relative`（生成相对路径的符号链接）和 `absolute`（绝对路径）。`--log` 记录每次操作到 JSON 日志文件，每条记录包含 `{action:"create",source:"...",target:"...",timestamp:"RFC3339"}`。
+
+已存在的链接行为由 `--exist` 控制：`skip`（默认，跳过不报错）、`update`（删除旧链接重建）、`fail`（报错退出）。`fail` 模式下冲突时输出 "link already exists: {path}" 退出码 2。目标路径已存在且不是符号链接时（是真实文件或目录），任何模式都跳过并打印 warning 到 stderr。
+
+`batchlink verify --source /data/configs/ --target /opt/app/configs/`，检查所有链接是否有效。断开的链接（目标不存在）输出 "BROKEN: {link} -> {target}"。输出统计："total: {n}, valid: {n}, broken: {n}"。
+
+`batchlink rollback --log changes.json`，读取操作日志逆向执行：把创建的链接删除。日志文件不存在退出码 1。源路径不存在退出码 1。
+
 构建流程是解析→编译→测试→打包，测试失败不打包。不用第三方包，go build 通过就行。

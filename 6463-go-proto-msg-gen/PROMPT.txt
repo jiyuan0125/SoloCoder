@@ -1,3 +1,9 @@
-不用 protobuf 编译器，直接从定义文件生成 Go 结构体。序列化方法用 encoding/json，够用了。构建流程：解析→编译→测试→打包，测试失败不打包。
+为什么不用 protoc？因为场景简单，就几个消息定义，不想拉一整套编译工具链进来。直接从 .proto 风格的定义文件生成 Go struct 够用了。
 
-go build 能过，不依赖第三方库。
+定义文件长什么样？自定义格式，每行一个字段定义：message User { string name = 1; int32 age = 2; repeated string tags = 3; }。支持 int32/int64/string/bool/repeated 四种类型。嵌套 message 暂不支持。
+
+怎么用？protogen parse --input messages.proto --output ./gen/。工具解析定义文件，为每个 message 生成一个 Go 文件，包含 struct 定义和 MarshalJSON/UnmarshalJSON 方法（用 encoding/json，字段名用 proto 里定义的 json tag）。生成的 struct 里 repeated 变成切片，optional 变成指针。
+
+文件名格式：gen_<message_name>.go，包名统一 gen。如果输出目录不存在自动创建。同一个 message 名重复定义报错退出，exit code 1。
+
+构建四阶段——解析→编译→测试→打包，这里测试指生成的代码能通过 go vet，打包指写入文件。测试失败不打包，打印错误到 stderr。go build 能过，不依赖第三方库。

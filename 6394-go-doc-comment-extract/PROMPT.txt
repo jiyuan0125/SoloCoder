@@ -1,3 +1,7 @@
-PR 里的 TODO 和 FIXME 注释没人跟踪。提取注释内容（可能是审阅意见），按文件分组输出。
-处理完每条记录后要触发统计更新，统计更新也需要读原始记录。
-编译过就行，go build，标准库。
+代码里积了上百条 TODO 和 FIXME 注释，没人知道有哪些，更没人跟踪。想拉个清单看看哪些该处理了，总不能一个个文件翻吧。
+
+1. 命令 `todoextract scan -dir ./src -types TODO,FIXME,HACK,XXX`。递归扫描目录下所有 Go 源文件，提取匹配类型的注释。`-types` 默认只找 TODO 和 FIXME。每条注释记录：文件路径、行号、注释类型（TODO/FIXME 等）、注释内容文本、所属函数名（从 AST 解析注释所在的函数范围）。输出按文件分组，文件内按行号排序。
+
+2. 输出格式：文本模式（默认）按文件分节，每条一行 `file.go:42 [TODO] 这段逻辑需要优化`。加 `-json` 输出 JSON 数组：`[{"file": "handler.go", "line": 42, "type": "TODO", "content": "...", "function": "handleRequest"}]`。加 `-group-by type` 按注释类型而非文件分组。
+
+3. 处理完每条记录后触发统计更新：统计每个类型的数量、涉及文件数、按月份分布（从 git blame 获取注释添加时间，blame 失败则跳过不阻塞）。统计也需要读取原始注释记录数据。扫描零匹配输出 "no matching comments found" exit 0。目录不存在 exit 1。编译过就行，go build，标准库。

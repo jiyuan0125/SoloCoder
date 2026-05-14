@@ -1,5 +1,9 @@
-数据库迁移全靠手动执行 SQL，版本之间来回跳容易出错。生成 up/down 迁移，版本管理自动维护。
+去年底手动执行迁移 SQL 把生产库搞崩了一次——版本之间来回跳，down 脚本找不到了，回滚不了。从那以后就想搞个自动管理迁移版本的工具。
 
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
+mgmt create --name add_users_table 生成两个文件：migrations/0001_add_users_table.up.sql 和 migrations/0001_add_users_table.down.sql，序号自动递增。如果 migrations 目录不存在就创建。已存在的序号不能跳过，比如有 0001 和 0003 但没有 0002 会报错。
 
-不用第三方包，go build 通过就行。
+mgmt up 执行所有未执行的 up 迁移，按序号从小到大。执行成功在 migrations/.applied.json 记录已应用的版本号和执行时间戳。mgmt down --steps N 回滚最近 N 个迁移，执行 down 文件并从 applied 记录移除。
+
+mgmt status 输出当前状态表格：版本号 | 名称 | 状态（applied/pending）。mgmt validate 检查所有迁移文件是否存在且非空，down 文件缺失的标 WARNING。
+
+同步分五步——准备→扫描→传输→验证→完成。验证失败重试传输，最多重试 3 次。不用第三方包，go build 通过就行。主逻辑和 SQL 解析辅助函数分文件写。已执行的迁移不可重复执行，重复执行打印 INFO: migration N already applied 并跳过。

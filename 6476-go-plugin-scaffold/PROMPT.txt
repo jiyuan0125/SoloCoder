@@ -1,5 +1,7 @@
-系统要做插件化，但每次加功能都要改核心代码。生成插件接口定义和注册机制，附带一个示例插件。
+系统要做成插件化架构，但每次加新功能都得改核心代码——注册、初始化、依赖注入，改一处动全局。能不能定义好插件接口，然后自动生成新插件的脚手架代码？
 
-扫描流程：初始化→扫描中→分析中→报告生成，分析发现问题标记为异常。
+命令 `plscaffold init -name myplugin -output ./plugins`。生成完整的插件目录：`plugins/myplugin/` 下包含 `plugin.go`（实现 Plugin 接口）、`config.yaml`（插件默认配置）、`README.md`（自动生成的说明）。Plugin 接口定义四个方法：`Name() string`、`Init(config []byte) error`、`Run(ctx context.Context) error`、`Shutdown() error`。同时生成全局注册文件 `plugins/registry.go`，自动 import 并注册所有子目录下的插件。
 
-纯标准库，go run . 就行。
+`plscaffold list` 扫描 plugins 目录列出所有已注册插件：名称、版本（从 config.yaml 读）、状态。扫描流程状态机：initializing → scanning → analyzing → report_generated，analysis 阶段发现问题则标记为 `anomaly`，正常则标记为 `healthy`。
+
+`plscaffold validate -dir ./plugins/myplugin` 检查插件是否正确实现了接口：方法签名匹配、config.yaml 格式正确、无编译错误。验证失败打印具体问题：缺少哪个方法、config 哪个字段非法。同名插件已存在报 "plugin already exists: <name>" exit 1。纯标准库，`go run .` 就行。

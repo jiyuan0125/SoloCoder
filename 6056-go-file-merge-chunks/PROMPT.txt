@@ -1,2 +1,7 @@
-分割的文件要合并回去，没有 manifest 时按文件名自然排序。合并完校验哈希和原始文件一致。合并完成后自动删除源文件，保留模式不删除。
+之前用 split 把大文件切成了一堆小碎片，现在要合并回去。有的碎片目录带 manifest 文件记录了顺序，有的没有——没有 manifest 就按文件名自然排序拼起来。合并完还得校验哈希，不能拼出个损坏的文件来。
+
+命令：merge-chunks -dir ./chunks -output merged.dat。-dir 指定碎片所在目录。如果目录下有 manifest.json（内容为文件名的有序列表），按 manifest 顺序合并；没有 manifest 则按文件名自然排序（chunk_1 < chunk_2 < chunk_10，数值排序而非字典序）。-checksum sha256:abc123... 指定期望的哈希值和算法，合并完成后自动校验。哈希不匹配时输出 "checksum mismatch: expected xxx, got yyy" 退出码 1。
+
+默认行为是合并成功后自动删除源碎片文件，加 -keep 改为保留模式不删除。碎片目录为空或找不到可合并的文件时输出 "no chunks found" 退出码 1。合并过程中如果程序中断，产生的部分输出文件要清理掉，不留垃圾。执行完输出统计：合并了 N 个文件、总大小字节数、耗时毫秒数、校验结果（PASS/FAIL/SKIP）。支持的哈希算法：md5、sha1、sha256，通过 -checksum 参数前缀指定。
+
 纯标准库实现，go run . 能跑。

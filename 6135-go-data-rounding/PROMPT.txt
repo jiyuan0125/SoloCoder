@@ -1,5 +1,1 @@
-客户报表里金额精度不一致，有的两位小数有的六位，合计对不上。Go 命令行做数据精度处理。
-四舍五入、截断、向上取整。
-可以只处理指定列。
-不用第三方包，go build 通过就行。
-代码分几个文件组织，别全写 main.go 里。
+用 `dataround <input.csv> --mode round|trunc|ceil --precision 2 --columns amount,rate --output result.csv` 处理精度。三个模式含义：round 四舍五入，trunc 直接截断小数位，ceil 向上取整到指定位数。`--precision` 控制保留几位小数，默认 2。`--columns` 指定处理哪些列，逗号分隔，不指定则处理所有数值列。输入 CSV 第一行为表头，自动识别数值列（能被 strconv.ParseFloat 解析的）。非数值列原样保留不动，解析失败的数值单元格原样保留并在 stderr 打印 "warning: invalid number at row %d col %s: %s"。输出 CSV 保持和输入相同的列顺序和分隔符。输入文件不存在退出码 1 并 stderr 输出 "error: file not found: <path>"。空文件输出 "error: empty input" 退出码 1。表头行缺少指定列名时 stderr 输出 "error: column not found: <name>" 退出码 1。不用第三方包，go build 通过就行，代码分 main.go、rounding.go、csvhandler.go、validator.go 四个文件。

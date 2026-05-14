@@ -1,3 +1,1 @@
-新采购的网络设备要做性能验收，要测 TCP 吞吐量、UDP 丢包率、连接建立时间这几项。支持配置不同消息大小跑多轮。不想装重型测试软件，Go 标准库写一个够用。
-
-用 Go 标准库写，go run . 或 go build 都行。
+新采购的网络设备验收，要测 TCP 吞吐量、UDP 丢包率、连接建立时间，还得配不同消息大小跑多轮才出报告，不想装重型软件。Go 写 `netbench --mode tcp|udp|connect --host <addr> --port 8080 --size 1024,4096,16384 --rounds 5 --duration 10s --timeout 5s --output result.json`。tcp 模式：持续发数据 --duration 时间，统计每秒吞吐量 MB/s，取各轮平均。udp 模式：发 1000 个数据包统计发送数、接收数、丢包率百分比，超时 --timeout 算丢包。connect 模式：建 50 次 TCP 连接测握手耗时，统计平均/最小/最大 ms。`--size` 逗号分隔的消息大小列表，每种大小跑 `--rounds` 轮。每轮结束 stdout 输出 "round N: size=<bytes>, throughput=<mbps>, loss=<pct>, conn=<ms>"。JSON 输出 {"mode":"...", "results":[{"size":N, "rounds":[{"round":N, "throughput_mbps":N, "loss_rate_pct":N, "connect_time_ms":N}]}], "summary":{"avg_throughput":N}}。服务端未启动 stderr 输出 "error: cannot connect to <addr>" 退出码 1。Go 标准库写，go run . 或 go build 都行。

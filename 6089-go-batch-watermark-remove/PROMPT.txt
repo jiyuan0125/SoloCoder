@@ -1,2 +1,5 @@
-从第三方拿到的文档带水印信息，批量清理太耗时。之前用 Python 脚本做的，换 Go 重写一遍：支持多种水印格式，处理不了的文件跳过。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。纯标准库实现，go run . 能跑。
+先说问题：从第三方拿到的文档全带水印，批量清理靠人一个个搞，效率为零。之前用 Python 脚本做的，换 Go 重写一遍，编译出来单文件部署更方便。
+
+子命令 remove 去除水印，--dir 指定输入目录，--output 指定输出目录（默认 ./output）。--types 指定水印类型（text/image/both，默认 both）。处理不了的文件——比如扫描件PDF水印太深、图片水印覆盖关键内容——跳过并记录到 stderr："skipped: cannot process: FILENAME: REASON"。文件处理有四个阶段：待处理（pending）、处理中（processing）、校验中（validating）、已完成（completed）。校验阶段检查输出文件大小是否合理（不能比原文件大 50% 以上，可能是水印没清掉反而加了东西），校验失败回到处理中重试一次，再失败标 failed 并输出 "validation failed: FILENAME"。子命令 status 查看批处理进度，输出 "pending:N processing:N validating:N completed:N failed:N"。子命令 report 生成处理报告，--format text 或 json，内容含每个文件的处理状态、耗时、跳过原因。大文件超过 --max-size（默认 50MB）的自动跳过。
+
+纯标准库实现，go run . 能跑。代码分文件组织。

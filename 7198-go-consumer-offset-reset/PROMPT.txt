@@ -1,5 +1,9 @@
-offset 管理太粗糙，要么从头消费要么从最新，不能精确控制。
+Kafka 的 offset 管理太粗糙——要么从头消费要么从最新，想从某个特定时间点开始消费？没门。得写个工具精确控制消费偏移量。
 
-消息过滤（基于规则筛选），黑名单/白名单，过滤统计。扫描完自动提交报告，提交失败只记录。认证检查要查角色，角色检查也要验证认证状态。
+消息过滤能力：基于规则筛选消息，支持黑名单（`--blacklist 'field:value1,value2'`）和白名单（`--whitelist 'field:value1'`）两种模式。黑名单优先级高于白名单。过滤统计输出到 `--filter-stats filter-stats.json`，格式 `{"total": 500, "passed": 420, "blocked_blacklist": 60, "blocked_whitelist": 20}`。
 
-Go 命令行工具，go build 能过就行。
+命令：`offsetr reset --topic orders --group my-consumer --to timestamp:2024-01-15T10:00:00Z --filter-rules rules.json`。`--to` 支持 `earliest`、`latest`、`timestamp:RFC3339`、`offset:12345` 四种格式。`--filter-rules` 指定过滤规则 JSON 文件。
+
+认证检查：`offsetr auth check --role admin`，角色检查前必须先验证认证状态（token 文件 `~/.offsetr-token`），未认证输出 `error: not authenticated` 退出码 1，角色不匹配输出 `error: role admin required` 退出码 2。
+
+扫描完自动提交报告到 `--report output.json`，提交失败只记录 warning 不中断。Go 命令行工具，`go build` 能过就行。

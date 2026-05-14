@@ -1,2 +1,5 @@
-临时文件到处都是——~ 开头的、.tmp 后缀的、.bak 后缀的，磁盘空间告警了好几次。Go 做清理：按文件名模式匹配，超过指定天数的临时文件才清理。
-校验完成后自动更新统计信息，首次运行没有历史统计。go build 能编译通过，不依赖第三方库。
+临时文件到处都是——~ 开头的编辑器备份、.tmp 后缀的下载残留、.bak 后缀的旧配置，磁盘空间告警了好几次了。手动删怕误删，不删又爆盘。
+
+Go 做临时文件清理工具。子命令 scan 扫描临时文件，--dir 指定扫描目录（默认当前目录），--patterns 指定文件名匹配模式（逗号分隔，支持 ~ 开头、.tmp 后缀、.bak 后缀、.swp 后缀、.cache 后缀），--older-than 指定只列出超过 N 天的文件（默认 7）。输出表格含 Path/Size/Age(days)/Pattern Matched 四列，按文件大小降序排列。加 --json 输出 JSON 数组格式。子命令 clean 执行清理，先用 scan 的逻辑找目标文件，删除前逐个打印 "deleting: PATH (SIZE, AGE days)" 到 stderr。加 --dry-run 只列出不动手。删除失败的文件（权限不够等）输出 "error: failed to delete: PATH: REASON" 继续处理下一个，最后汇总失败数。子命令 stats 查看统计信息，--history 指定历史统计文件（默认 .cleaner-stats.json），输出累计清理文件数、累计释放空间（MB）、上次清理时间。首次运行没有历史统计文件自动创建空的。校验完成后自动更新统计信息。空扫描结果输出 "no temp files found" 到 stderr 并 exit 0。
+
+go build 能编译通过，不依赖第三方库。纯标准库。

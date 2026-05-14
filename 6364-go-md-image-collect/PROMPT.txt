@@ -1,3 +1,9 @@
-文档迁移后一半图片显示不出来，相对路径全乱了。把图片复制到统一目录，更新引用路径，缺失的图片标红。
-子命令结构：db migrate、db rollback、db status、db seed。
-就一个 go build 的事，第三方库一个不碰。
+文档从旧 wiki 迁移到新平台后一半图片 404——相对路径全乱了。手动检查几百个 Markdown 里的图片引用？不可能。
+
+写个 Go CLI `mdimg`。`mdimg collect -d ./docs/ -o ./assets/images/` 扫描 `.md` 文件，把本地图片复制到统一目录并更新引用路径。输出：`[COPIED] guide.md: old/logo.png → assets/images/logo.png`。
+
+缺失图片标红：`[MISSING] api.md: line=42 ref=images/arch.png not found`。`--download` 下载远程图片到本地。重复图片（SHA256 相同）只保留一份并更新引用。`--dry-run` 只显示不执行。`--format json` 结构化输出。
+
+子命令：`mdimg db migrate`、`mdimg db rollback`、`mdimg db status`、`mdimg db seed`。索引用 SQLite：`CREATE TABLE images (path TEXT PRIMARY KEY, source_file TEXT, hash TEXT, size INT)`。
+
+就一个 `go build` 的事，第三方库一个不碰。退出码 0 成功，1 有缺失图片，2 参数错误。

@@ -1,5 +1,15 @@
-ETL 里百分比数据解析总出问题，有的带%有的不带，有的是小数。Go 搞百分比数据解析。
-百分号、千分号、小数形式互转。
-百分比值和百分比字符串要区分。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+ETL 里百分比数据解析总出问题，有的带 % 有的不带，有的是小数，还有千分号 ‰ 的，格式混乱到怀疑人生。Go 搞百分比数据的统一解析和转换。
+
+用法：`pctparse --input <CSV文件> --column <列名> [--output <文件>] [--target percent|decimal|fraction] [--strict]`。
+
+解析规则：`85%` 或 `85％` → 85；`0.85` → 85（自动判断，<1 的视为小数比例）；`85` → 85（默认当百分比）；`850‰` → 85。百分比值和百分比字符串要区分——输入 `85%` 解析为 float64 85.0，不是 0.85。
+
+`--target` 控制输出格式：percent 输出 `85%`，decimal 输出 `0.85`，fraction 输出 `85`（纯数值）。
+
+`--strict` 模式下无法解析的值报错 stderr `ERROR: cannot parse at row N: <值>` 退出码 1。非 strict 模式跳过无法解析的行，stdout 输出 `SKIP: row N: <值>`。
+
+输入列不存在 stderr `ERROR: column not found: <列名>` 退出码 2。
+
+支持管道：`cat data.csv | pctparse --column rate --target decimal`。
+
+go build 能编译通过，不依赖第三方库。主逻辑和辅助函数分文件写。

@@ -1,5 +1,9 @@
-合作方 API 要求邮箱地址必须是标准格式，我们数据里大小写、空格、+别名啥都有。Go 标准库做一个。
-去空格、统一小写、去掉+别名部分。
-格式不合法的标记出来。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+合作方对接接口要求邮箱标准化，我们的用户数据里什么格式都有——全大写的、带空格的、Gmail 带 + 别名的——直接传过去一半被拒。Go 写个批量标准化工具，处理完直接能用。
+
+三种标准化规则逐条执行——去空格（前后和中间的都去掉）、统一转小写、去掉加号别名部分（即 `user+tag@gmail.com` 变成 `user@gmail.com`，只处理加号到 @ 之间的内容）。Gmail 特殊规则：域名是 gmail.com 时去掉用户名中的点号（`u.s.e.r@gmail.com` → `user@gmail.com`）。
+
+命令行：`emailnorm -input emails.txt -output normalized.txt -format json`。-input 每行一个邮箱地址，-output 写标准化结果。-format 支持 text（每行一个标准化后的地址）和 json（`[{"original":"...","normalized":"...","valid":true}]`）。
+
+格式不合法的标记出来：valid 字段为 false，normalized 字段保留原始输入不变，同时在 stderr 输出 `invalid: <原始地址>: <原因>`。合法性检查包括：必须有 @ 符号、@ 前后不能为空、域名部分至少有一个点。
+
+输入文件不存在报错退出码 1。空文件输出空数组或空文件。Go 标准库，go build 能编译通过，不依赖第三方库。主逻辑和辅助函数分文件写，至少拆成 normalizer.go（核心逻辑）、main.go（入口）。

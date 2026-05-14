@@ -1,4 +1,13 @@
-合规要求所有文件同步操作必须可审计，实际执行前得先预演。列出所有待执行的操作，不实际修改文件。
-有备份策略和备份记录，按策略自动执行备份。
-Go 标准库，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+合规要求所有文件同步操作必须可审计，实际执行前得先预演，不然出了问题说不清。列出所有待执行的操作但不实际修改文件，dry-run 输出的内容和实际执行时一样，只是不落盘。
+
+用法：`syncdry --src <源目录> --dst <目标目录> [--rules <规则文件>] [--report <输出文件>] [--backup-dir <目录>]`。
+
+输出每个操作：`COPY: <源相对路径> -> <目标相对路径> (size=N)`、`SKIP: <文件> (already exists, identical)`、`OVERWRITE: <文件> (size changed: old=N new=M)`。如果源文件比目标新但大小相同，输出 `TOUCH: <文件> (mtime updated)`。
+
+`--report` 生成 JSON 报告 `{"operations":[{"type":"COPY","src":"...","dst":"...","size":1234}],...}`。报告同时写入 `.syncdry-history.jsonl` 追加历史记录，每行一个 JSON 对象含时间戳。
+
+`--backup-dir` 指定备份目录，dry-run 时只显示会被备份的文件列表，不实际备份。备份策略：OVERWRITE 的文件先复制到备份目录保持原目录结构。
+
+源目录不存在时 stderr `ERROR: source not found: <路径>` 退出码 2。目标目录不存在自动创建（dry-run 时只报告会创建）。
+
+Go 标准库，go run . 能跑。代码分几个文件组织，别全写 main.go 里。

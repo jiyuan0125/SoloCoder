@@ -1,3 +1,11 @@
-项目里 os.Getenv 散落在各处，新来的人不知道要配哪些环境变量。Go 工具扫描源码中的 os.Getenv 调用，自动生成环境变量文档的 Markdown 表格。
+这个问题在团队扩张后变得很烦——项目里 os.Getenv 散落在几十个文件里，新来的人不知道要配什么环境变量，漏配了服务起不来还报一堆莫名其妙的错。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+1. 工具做的事：扫描指定目录下所有 .go 文件，找出 `os.Getenv("XXX")` 和 `os.LookupEnv("XXX", ...)` 调用，汇总每个环境变量的名称、出现次数、所在文件和行号，自动生成 Markdown 文档表格。
+
+2. 命令行：`envdoc -dir ./src -output ENV.md -template default`。-dir 扫描目录默认当前目录，递归扫描。-output 输出文件路径。-template 支持 default（标准表格）和 compact（紧凑表格去掉文件路径列）。加 `-json` 输出 JSON 格式方便其他工具消费。
+
+3. Markdown 表格列：变量名、类型（从上下文推断：用 strconv.Atoi 转的是 int，直接用是 string）、默认值（从旁边的 if 判断或 or 表达式提取）、描述（从上方注释提取 `// ENV_VAR: description` 格式）、文件路径、行号。推断不出的类型标 string。
+
+4. 同一变量多次出现合并成一行，文件路径用逗号分隔。加 `-check` flag 检查当前环境是否所有必需变量都已设置，未设置的标红输出 `MISSING: <VAR_NAME>`。
+
+扫描目录不存在输出 `error: directory not found: <path>` 退出码 1。没有找到任何 os.Getenv 输出 `no environment variables found` 退出码 0。Go 标准库实现，不依赖第三方包，go build 能编译通过。

@@ -1,5 +1,8 @@
-发布排期全靠 Excel 表，延期了也没人知道。SaaS 工具到量了收费太贵，Go 自己写。记录计划发布日期、版本号、负责人，查看即将到来的发布、提醒延期。
+发布排期全靠 Excel 表管理，谁改了什么根本追踪不到——上个版本延期两周没人发现，产品经理问的时候一脸懵。SaaS 工具到量了收费太贵，自己写一个。
 
-文件可能很大，超过内存要能处理。
+1. 命令行用 flag 包解析。添加发布：`releasecal add --version v2.3.0 --date 2025-02-15 --owner zhangsan --desc "新增支付模块"`。查看即将发布：`releasecal upcoming --days 30`，输出未来 30 天内的发布计划，按日期排序。查看延期：`releasecal overdue`，列出所有已过计划日期但未标记完成的项目。
+2. 数据存储用 JSON 文件（`--data` 指定路径，默认 ~/.releasecal.json），结构为 [{id, version, planned_date, owner, desc, status, actual_date}]。status 枚举值：planned、released、delayed、cancelled。
+3. 提醒功能：`releasecal remind --days 3`，列出未来 3 天内的发布，输出 "UPCOMING: v2.3.0 due 2025-02-15 owner=zhangsan"。
+4. 文件可能很大——超过内存要能处理，用流式 JSON decoder 逐条读取。ID 用自增整数。
 
 Go 标准库，命令行参数用 flag 包解析。

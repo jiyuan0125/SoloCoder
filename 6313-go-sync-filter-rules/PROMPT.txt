@@ -1,3 +1,9 @@
-日志目录里混杂了 debug 文件和临时文件，同步到备份服务器纯粹浪费带宽。加过滤规则，include/exclude 模式，支持通配符。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
-go build 出来就能用，第三方库一个不碰。
+备份服务器带宽有限，日志目录里 debug 文件和临时文件同步过去纯属浪费。加个过滤规则，只同步有价值的文件。
+
+工具读过滤规则文件（JSON 格式），对文件列表做 include/exclude 筛选。规则文件示例：`{"include": ["*.log", "*.json"], "exclude": ["*.debug", "*.tmp", "*.bak"]}`。支持 `*` 通配符，`?` 单字符匹配。Include 和 exclude 都支持，exclude 优先级高于 include——文件名同时匹配两条规则时被排除。
+
+CLI：`syncfilter filter --rules rules.json --source /var/log/app/ --output filtered-list.txt`。`filtered-list.txt` 每行一个通过过滤的文件绝对路径。`--dry-run` 模式只输出匹配结果不写文件。
+
+`syncfilter validate rules.json` 校验规则文件格式，无效的 glob 模式输出具体行号和原因。规则文件为空或不存在时输出 `error: rules file is empty or not found` 退出码 1。
+
+处理完主文件后自动生成摘要文件 `--summary summary.json`：`{"total_files": 200, "included": 150, "excluded": 50, "rules_applied": 5}`。源目录下无可匹配文件时摘要的 `included` 为 0，正常退出。摘要内容为空（无匹配）时跳过摘要文件写入。`go build` 出来就能用，第三方库一个不碰。

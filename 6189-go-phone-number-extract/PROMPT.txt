@@ -1,5 +1,7 @@
-医疗系统的文本报告里有大量电话号码需要提取，格式还不统一。Go 做电话号码提取。
-支持固定电话和手机。地区识别。
-去重后格式化输出。
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。
-不用第三方包，go build 通过就行。
+医疗系统每天几百份文本报告要提取电话号码，手机号 11 位、座机带区号、还有加国际区号的，格式五花八门。能自动识别并去重吗？
+
+`phone extract report.txt` 从单文件提取，`phone extract ./reports/ --recursive` 批量扫描。手机号匹配 `1[3-9]\d{9}`，固定电话匹配 `\d{3,4}-\d{7,8}`，国际号码匹配 `\+\d{1,3}-\d{6,14}`。提取结果默认去重，`--keep-dup` 保留重复项。`--format standard` 统一输出为 `+86-138-xxxx-xxxx` 格式，`--format raw` 保持原文。
+
+地区识别根据手机号前三位查表归属省份，输出增加 `region` 字段。数据流分四阶段：录入→清洗→校验→发布，校验失败的号码标注原因（位数不对、号段不存在、区号非法）退回清洗阶段。`phone validate numbers.json` 单独校验，输出 `{valid: 128, invalid: 7, reasons: [...]}`。
+
+结果默认 JSON 格式 `{file, numbers: [{raw, formatted, type, region, valid}]}`。`--csv` 切换为 CSV 输出。空文件输出空数组不报错。STDERR 显示进度 `extracted 42 numbers from report_03.txt`。不用第三方包，`go build` 通过就行。

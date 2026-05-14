@@ -1,3 +1,7 @@
-现成的包分析工具不支持自定义指标阈值，没法做我们自己的度量体系。包大小、依赖数、导出符号数都拉出来，和阈值对比。命令分几组：file convert、file check、file merge。
+现有的 Go 包分析工具只有 go list，输出太原始没法直接做度量判断。包大小、依赖数、导出符号数——都得拉出来跟阈值对比，超标的标红。
 
-纯标准库写的，go run . 能跑。
+`metric scan ./pkg/` 扫描所有 Go 包，输出表格 `PACKAGE | SIZE(KB) | DEPS | EXPORTS | STATUS`。STATUS 按阈值判定：`--max-size 500 --max-deps 20 --max-exports 50`，超过任意阈值标记 `⚠`，全在范围内标记 `✓`。`metric check ./pkg/ --config metrics.yaml` 用配置文件定义阈值，未达标包 exit 1。`--json` 输出 `{package, size_kb, deps, exports, violations: [{metric, threshold, actual}]}`。
+
+子命令分三组：`file convert`（格式转换）、`file check`（校验）、`file merge`（合并多个扫描结果）。`metric compare baseline.json current.json` 比较两次扫描结果，输出变化 `{package, metric, old, new, delta}`，delta 超过 20% 的标黄。
+
+`metric top --by size --limit 10` 输出 Top N 包。空包（main 除外）输出 `warning: empty package: <path>`。循环依赖检测到时标注 `circular dependency detected`。纯标准库写的，`go run .` 能跑。

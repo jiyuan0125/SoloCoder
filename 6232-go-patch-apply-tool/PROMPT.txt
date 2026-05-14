@@ -1,3 +1,1 @@
-线上打补丁经常翻车，回滚又没有好工具。Go 写个补丁应用工具：支持正向打补丁和反向回退，冲突时保留原始文件不动，不覆盖。
-
-删除一条补丁记录后要清理关联的索引，索引清理得遍历剩余记录。go build 能编译通过，不依赖第三方库。
+第一步 `patchtool apply <patch.json> --target <dir>` 执行补丁，第二步 `patchtool rollback <patch-id> --target <dir>` 回退，第三步 `patchtool list` 查看已应用的补丁。补丁文件格式是 JSON，顶层包含 id（字符串）、description、created_at（RFC3339）、files 数组，每个 file 对象有 path（相对路径）、action（create/modify/delete）、content（create/modify 时为文件完整内容的 base64 编码）和 original_sha256（modify 时的原始文件校验和）。正向打补丁时先校验 original_sha256，不匹配说明文件已被改动，输出 "conflict: file changed: <path>" 并跳过该文件，其余文件继续应用。补丁记录存在 `.patchtool/applied.json` 里，格式是 JSON 数组。回退时从记录中找到对应 patch-id 反向操作：create 的回退是删除文件，delete 的回退是恢复 base64 解码后的内容，modify 的回退是恢复 original_sha256 对应的内容。冲突文件保留原始不动，不覆盖。patch-id 不存在时 stderr 输出 "error: patch not found: <id>" 退出码 1。删除一条补丁记录后清理关联索引，索引清理需遍历剩余记录重建。go build 编译通过，不依赖第三方库。

@@ -1,3 +1,7 @@
-Sprint 结束了，文档里的 TODO 还有多少没做不清楚。统计任务列表完成比例，未完成的任务高亮标注。
-任务状态是排队→运行→暂停→完成，暂停后可以继续。
+Sprint 结束要回顾，但文档里的 TODO 和 checkbox 到底做了多少没人说得清。上周就是因为以为都做完了结果漏了两个关键项。写个工具统计 Markdown 任务列表的完成情况。
+
+命令是 `task-check scan --input sprint-notes.md --format text`，扫描文件中所有 `- [ ]` 和 `- [x]` 格式的任务项。输出格式由 `--format` 控制：`text` 输出可读文本，`json` 输出 JSON。JSON 结构是 `{"total":10,"completed":7,"pending":3,"completion_rate":70.0,"pending_items":["任务A","任务B","任务C"]}`。`text` 格式输出："完成: 7/10 (70.0%)"，换行后列出未完成任务，每行前缀 "☐ "。
+
+加 `--checklist` 参数，值是文件路径，读取一个 checklist 配置文件，格式每行一个必做任务关键词。如果扫描结果中缺少关键词匹配的任务，输出 "missing required task: {keyword}" 到 stderr，退出码 3。空文件返回零值统计 `{"total":0,"completed":0}`。没有任务列表的文件打印 "no task items found" 到 stderr，退出码 0。任务状态是排队→运行→暂停→完成，暂停后可以继续。
+
 go build 过了就行，全标准库写的。

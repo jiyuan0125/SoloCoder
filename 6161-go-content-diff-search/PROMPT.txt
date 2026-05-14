@@ -1,4 +1,11 @@
-两份数据报告对不上，得一行行看哪里新增了、哪里删了、哪里改了。Go 命令行做内容差异搜索。
-比如查找新增的、删除的、修改的行。
-结果标注差异类型。
-纯标准库实现，go run . 能跑。
+问题很简单：两份数据报告对不上，得一行行看哪里新增了、哪里删了、哪里改了。纯靠肉眼不现实，得写个 Go 命令行工具做内容差异搜索。
+
+用法：`diffsearch -old baseline.csv -new latest.csv -output result.json`。也可以不指定 `-output`，此时结果直接打印到 stdout，格式和文件输出一致。
+
+差异类型分三种：`added`（新文件有、旧文件无）、`removed`（旧文件有、新文件无）、`modified`（都有但内容不同）。输出 JSON 结构是 `{"diffs": [{"line": 42, "type": "added", "content": "...", "old_content": ""}]}`，`added` 和 `removed` 的 `old_content` 为空字符串，`modified` 才填旧内容。
+
+支持 `-format` 参数选择输出格式：`json`（默认）或 `table`。table 模式输出四列：行号、差异类型、旧内容（截断到 80 字符）、新内容（截断到 80 字符），用 tab 分隔。
+
+两个文件完全相同时，输出 `{"diffs": [], "summary": "identical"}` 到 stdout，exit 0。文件不存在时 stderr 输出 `error: file not found: {path}` 并 exit 1。空文件和正常文件对比，所有行标记为 `added` 或 `removed`。
+
+纯标准库实现，`go run .` 能跑。

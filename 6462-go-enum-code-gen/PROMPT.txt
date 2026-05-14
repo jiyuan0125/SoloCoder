@@ -1,5 +1,9 @@
-枚举值每次加一个都要手动写 String()、MarshalJSON()、解析函数，经常漏。自动生成这些方法，枚举值验证也加上。
+枚举值加一个字段要手写 String()、MarshalJSON()、Parse()、IsValid()，四个方法漏一个就是 bug。能不能从定义自动生成？
 
-同步分为：准备→扫描→传输→验证→完成，验证失败重试传输。
+你猜怎么用？在 Go 源码里用注释标记枚举类型 `//go:generate enum-gen -type Status`，然后 `go generate ./...` 自动生成 `status_enum.go`。或者直接 CLI：`enum-gen generate --type Status --values "draft,pending,approved,archived" -o status_enum.go`。
 
-不用第三方包，go build 通过就行。
+生成的代码包含：`String() string` 返回枚举名；`MarshalJSON()` 输出字符串而非数字；`ParseStatus(s string) (Status, error)` 解析字符串，不合法返回 `unknown value: <s>`；`IsValid() bool` 校验值是否在定义范围内。`--method Set` 额外生成 `ParseStatusSet(s string) (map[Status]bool, error)` 支持多选解析。
+
+枚举值验证：生成的 `AllStatus` 切片包含全部合法值，`StatusNames` map 提供值到名称的映射。输入类型不是 int 或 string 时 `error: unsupported enum base type: <type>` exit 1。输出文件已存在时覆盖并备份为 `.bak`。
+
+同步流程：准备→扫描→传输→验证→完成，验证失败重试传输。不用第三方包，`go build` 通过就行。

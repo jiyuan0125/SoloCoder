@@ -1,3 +1,1 @@
-同事说网络不稳定的机器上跑命令经常失败，要一个带重试的命令执行器。失败后按策略重试——固定间隔或指数退避都行。最大重试次数和单次超时都要能配，不然一个永远失败的命令会一直重试下去。
-
-Go 标准库，命令行参数用 flag 包解析。
+网络不稳定的机器上跑命令经常失败，手动重试太烦。Go 写 `retryexec --command "curl http://api/data" --max-retries 5 --interval 2s --backoff fixed|exponential --timeout 30s --output result.json`。fixed 模式每次间隔固定 --interval 时间，exponential 模式间隔按 2^n 倍增长（第一次 interval，第二次 2×interval，第三次 4×interval）但不超过 60 秒。`--timeout` 是单次命令执行超时，超时后终止进程并记为失败。命令退出码 0 表示成功，直接退出不重试。非零退出码触发重试，最后一次仍失败则整体退出码为该命令的退出码。`--output` 指定时写 JSON：{"command": "...", "attempts": N, "success": true|false, "last_exit_code": N, "total_duration_ms": N, "attempts_detail": [{"attempt": 1, "exit_code": N, "duration_ms": N}]}。命令为空字符串时 stderr 输出 "error: empty command" 退出码 1。Go 标准库，命令行参数用 flag 包解析。

@@ -1,3 +1,7 @@
-前端开发要 mock 接口但不想写一堆假数据。写个工具分两个模式：录制模式当代理把真实响应存下来，mock 模式按 URL 匹配返回之前存的响应。对接一次真实服务就够用了。
+前端开发要 mock 接口但不想写一堆假数据。对接一次真实服务就够用——录制模式下当代理把真实响应存下来，mock 模式按 URL 匹配返回之前存的响应。那具体怎么做？
 
-Go 实现，只用标准库，交叉编译友好。
+录制模式：`mocker record --target http://real-api:8080 --port 9090 --output ./recordings`。启动一个本地代理服务器监听 `:9090`，所有请求转发到 target 并把响应存到 output 目录。每个请求存一个文件，命名规则 `{METHOD}_{base64(url)}.json`，内容包含 `{"status":200,"headers":{...},"body":"..."}`。请求体也要存，方便后续匹配。
+
+Mock 模式：`mocker mock --port 9090 --input ./recordings`。收到请求后按 `METHOD + URL path + query string` 匹配已录制的响应。匹配到就返回录制的 status、headers、body。匹配不到返回 404，body 是 `{"error":"no recorded response for METHOD /path"}`。`--strict` 模式下还校验请求体一致。
+
+`--latency 50ms` 模拟真实延迟。`--cors` 自动添加 CORS 头。Ctrl+C 优雅关闭，输出统计：共处理 N 个请求，命中 N 个，未命中 N 个。Go 实现，只用标准库，交叉编译友好。

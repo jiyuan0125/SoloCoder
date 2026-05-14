@@ -1,3 +1,1 @@
-全量恢复太慢，只要 recover 一个 config 目录等了 3 小时。支持按路径模式匹配恢复，恢复到指定目录。
-扫描分初始化→扫描中→分析中→报告生成，分析发现问题标记为异常。
-go build 编译过就完事，不用第三方包。
+全量恢复一次要 3 小时，有时候只是要 recover 一个 config 目录等了半天。这个工具到底该怎么设计才实用？Go 写 `brestore <backup-dir> --pattern "config/*" --output /tmp/recover --dry-run --force`，从备份目录按 glob 模式匹配恢复文件。`--pattern` 支持多个，逗号分隔，用 path.Match 做匹配。`--output` 指定恢复目标目录，默认当前目录下的 restored/。`--dry-run` 只输出匹配到的文件列表不实际复制，每行格式 "src_path -> dst_path"，末尾输出 "total: N files matched"。`--force` 覆盖目标已存在文件，不加此 flag 则跳过。备份目录不存在时 stderr 输出 "error: backup directory not found" 退出码 1。目标目录已存在同名文件且无 --force 时输出 "warning: file exists, skipping: <path>" 跳过。扫描分四个阶段：init→scanning→analyzing→restoring，每个阶段切换时 stdout 输出 "phase: <name>"。分析阶段检查匹配结果，匹配为 0 个文件时输出 "warning: no files matched pattern" 退出码 0。恢复时保留原始文件的权限位和修改时间（用 os.Chtimes）。不用第三方包，go build 编译通过就行。

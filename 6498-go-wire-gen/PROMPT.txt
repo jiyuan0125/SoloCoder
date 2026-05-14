@@ -1,3 +1,9 @@
-provider 和 injector 的依赖关系全靠脑子记，改一个忘了另一个。定义 provider 和 injector，依赖图自动验证。任务状态：排队→运行→暂停→完成，暂停后可以继续。
+provider 和 injector 的依赖关系全靠脑子记，改一个忘了另一个，运行时才爆炸。这个工具定义 provider（`func NewXxx() *T`）和 injector（`func InitializeApp() *App`），自动分析依赖图，检测循环依赖和缺失 provider。
 
-不用第三方包，编译通过就行。
+用法：`wiregen <目录>` 扫描目录下所有 .go 文件。输出依赖图到 stdout，格式每行 `ProviderA -> ProviderB -> ProviderC`。检测到循环依赖时 stderr 输出 `ERROR: circular dependency: A -> B -> A`，退出码 1。缺失 provider 时输出 `WARN: no provider for type: *Xxx`。
+
+`wiregen check <目录>` 只做检查不输出图，退出码 0 通过，1 有错误。`wiregen graph <目录> --dot` 输出 DOT 格式可以用 Graphviz 渲染。
+
+任务状态：排队 → 运行 → 暂停 → 完成。状态存在 `.wire-tasks.json` 里，`{"task-001":{"status":"running","providers":["A","B"]}}`。暂停的任务 `wiregen resume <task-id>` 可以继续。
+
+不用第三方包，go build 通过就行。

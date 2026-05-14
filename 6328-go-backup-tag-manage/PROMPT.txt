@@ -1,3 +1,9 @@
-前同事留下的 Python 备份脚本没人维护了，标签系统还挺有用的。Go 重写：按标签搜索和恢复，自动标签 daily/weekly。
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。
-纯标准库写的，go build 通过就行。
+前同事的 Python 备份脚本没人敢动了，但标签搜索和自动打标的功能确实好用。用 Go 重写，接口要对齐。
+
+你用什么来管理备份标签？`tag list --backup-dir /backup/` 列出所有备份及其标签。`tag search --tag daily --after 2024-01-01` 按标签和时间范围搜索。`tag add <backup_id> --tag important` 手动打标。`tag auto --rule "daily:7d,weekly:30d"` 自动按规则打标签——7 天内的打 daily，30 天内的打 weekly。
+
+恢复操作：`tag restore <backup_id> --target /data/restore/`，恢复前校验备份完整性（checksum 比对），校验失败输出 `error: checksum mismatch for <file>` 并中止。恢复成功输出 `restored <N> files to <target>`。
+
+审批流程四阶段：提交→初审→复审→通过。初审不通过可修改后重新提交，状态回退到提交。`tag approve <backup_id> --stage review --action approve|reject --comment "reason"`。非审批状态调用 approve 返回 `error: invalid transition`。
+
+标签元数据存储在备份目录下的 `.tags.json`。纯标准库，`go build` 通过就行。

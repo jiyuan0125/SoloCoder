@@ -1,5 +1,7 @@
-改了一版 API 实现不知道快了还是慢了。同事要个工具并发请求两个端点，比较响应时间、吞吐量、错误率，输出对比表格。
+改了一版 API 实现但不确定性能是提升了还是退步了——需要同样的请求并发打到两个端点，对比响应时间分布和错误率。
 
-后台多个 goroutine 同时写结果文件。
+先执行压测：`perfcmp run --url-a http://localhost:8080/api/v1/users --url-b http://localhost:8081/api/v1/users --concurrency 50 --requests 1000`。并发请求两个端点，每个请求记录 `{url, status_code, latency_ms, error}`。后台用多个 goroutine 并发执行，结果通过 channel 汇聚写入共享结果文件，用 mutex 保护写操作。
 
-用 Go 标准库写，go run . 或 go build 都行。
+接着看对比输出：`TARGET | P50 | P90 | P99 | AVG | MAX | ERRORS | REQ/S`。两个端点各一行。`--json` 输出完整数据 `{a: {percentiles, throughput, errors}, b: {...}, diff: {p50_delta, throughput_delta}}`。`--baseline a` 以 A 为基准计算百分比变化。`--threshold 10%` 响应时间退化超过 10% 时 exit 1 并输出 `regression detected: P99 increased by 15.3%`。
+
+请求失败（连接超时、5xx）计入错误率但排除在延迟统计外。`--timeout 5s` 单个请求超时。两个端点不可达时 `error: endpoint unreachable: <url>` exit 2。Go 标准库实现，`go run .` 或 `go build` 都行。

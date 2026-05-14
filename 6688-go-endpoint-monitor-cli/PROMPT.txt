@@ -1,3 +1,7 @@
-API 端点挂了但没人发现，用户投诉了才知道。Go 工具定期发送请求，记录响应时间和状态码，异常时输出告警，数据存在本地文件可以回溯。
+API 挂了半小时才发现，用户投诉电话打爆了客服。需要一个轻量监控工具，定期请求端点，响应慢了或者状态码不对就告警，历史数据还能回溯排查。
+
+配置文件 endpoints.json 定义监控目标列表，每项包含：name（端点名称）、url、method（GET/POST 等）、interval（请求间隔如 10s）、timeout（超时如 5s）、expected_status（期望状态码如 200）、expected_body_contains（可选，响应体必须包含的字符串）。命令：ep-monitor -config endpoints.json 启动监控。启动后按各自间隔发送请求，每条结果记录到本地文件 monitor_YYYYMMDD.log，JSON Lines 格式，字段包含 timestamp、name、status_code、response_time_ms、error。
+
+告警规则：状态码不等于 expected_status、响应时间超过 -latency-warn 阈值（默认 2s）、连续 N 次失败（-fail-count 默认 3）。触发告警时输出到 stderr：[ALERT] login: status 503 (expected 200), response_time: 5200ms。-summary 模式输出最近一小时汇总：请求总数、成功率百分比、P50/P95/P99 响应时间。数据文件按天轮转，超过 30 天的自动清理。配置文件解析失败时输出具体错误行号并退出码 1。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

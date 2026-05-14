@@ -1,2 +1,9 @@
-复制文件到新服务器后不放心有没有传完整，每次要手动 md5sum 比对。Go 写批量复制校验：校验用哈希比对，不一致的重试一次，最终输出复制报告。
-任务状态是排队→运行→暂停→完成，暂停后可以继续。不用第三方包，go build 通过就行。
+复制文件到新服务器后不放心有没有传完整，每次要手动 md5sum 比对，几十个文件一个一个敲命令太痛苦了。Go 写一个批量复制校验工具，把复制和完整性验证合成一步。
+
+1. 命令行格式：`copy-verify --src /data/files --dst /backup/files --hash sha256 --report report.json`。`--hash` 支持 md5、sha1、sha256 三种算法，默认 sha256。`--workers 4` 控制并发数，默认 4。
+2. 每个文件复制完后立刻算源和目标的哈希比对。哈希不一致的自动重试一次，重试仍然不一致的在报告里标记为 FAILED 并记录两个哈希值。
+3. 任务状态流转：排队→运行→暂停→完成。`--pause` 传文件路径，写入该文件则暂停当前任务，删除文件继续执行。暂停状态下已完成文件不受影响。
+4. 最终报告输出 JSON，包含 total、success、failed、retried 四个计数字段，以及每个文件的 src、dst、status、hash_src、hash_dst、retry_count。
+5. 源目录不存在时退出码 1，打印 "source directory not found"。目标目录不存在则自动创建（mkdir -p）。空文件也要复制和校验。
+
+不用第三方包，go build 通过就行。

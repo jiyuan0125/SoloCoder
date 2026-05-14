@@ -1,3 +1,7 @@
-5 个同事各自写了一章文档，最后要合成一个 PDF。合并时自动调整标题层级，生成合并后的目录。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
-go build 通过就行，不用第三方包。
+5 个同事各自写了一章文档，最后要合成一个 PDF 前先合并 Markdown。合并时标题层级怎么调才不会乱？
+
+工具叫 `doc-merge`，用法是 `doc-merge merge --files ch1.md,ch2.md,ch3.md --output combined.md --toc`。`--files` 逗号分隔输入文件列表，至少两个文件否则报错 "at least 2 files required"，退出码 1。`--toc` 加上后自动在合并结果开头生成目录，目录格式是链接列表，用合并后的最终标题层级。`--order` 指定排序方式，支持 `name`（文件名字母序）和 `list`（按输入顺序，默认）。
+
+合并时每个文件的顶级标题（#）降为二级（##），二级降为三级，以此类推。内联代码块和代码围栏里的 # 不处理。文件之间用 `---` 分隔。某个文件不存在时打印 "file not found: {path}" 到 stderr 并退出码 1。空文件跳过并打印 warning 到 stderr。输出文件已存在时覆盖，不提示。合并后统计信息输出到 stdout："merged {n} files, {lines} lines, {headings} headings"。
+
+文档有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。go build 通过就行，不用第三方包。

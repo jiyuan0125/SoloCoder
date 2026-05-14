@@ -1,3 +1,9 @@
-20 个微服务每次升版本号要改七八个文件，grep+sed 出过错。Go 写个工具扫描源文件中的版本字符串统一更新，支持 semver、日期版本和自定义格式，更新完可以自动 commit。
+20 个微服务每次升版本号到底要改多少文件？上次用 sed 少改了一个导致构建失败查了半天。谁有耐心一个个 grep 出来再改？这个问题不值得人工做。
 
-Go 标准库，命令行参数用 flag 包解析。
+用法：`versionbump -bump patch -dry-run`。扫描当前目录下所有 .go、.mod、.yaml、.json 文件中的版本字符串。-bump 支持 major、minor、patch 三种，默认 patch。-dry-run 只展示会改什么不实际写入。版本格式支持 semver（v1.2.3）、带前缀的（release-20240115）、和自定义正则匹配（`-pattern "v\\d+\\.\\d+\\.\\d+"`）。
+
+扫描出的每个匹配项输出：`<file>:<line>: <旧版本> → <新版本>`。确认后批量替换。加 `-auto-commit` flag 自动 git commit，commit message 格式：`chore: bump version from <旧> to <新>`。没有 git 仓库时跳过 commit 输出 warning。
+
+日期版本格式 `-bump date` 使用 `YYYYMMDD` 格式（如 20240115），同一天多次 bump 追加 `-N` 后缀。semver 递增规则：patch +1 溢出进 minor，minor +1 溢出进 major，major +1 不溢出。
+
+没有找到任何版本字符串输出 `no version patterns found` 退出码 0。文件写入失败输出 `error: failed to write <file>: <原因>` 退出码 1。Go 标准库，flag 包解析参数。

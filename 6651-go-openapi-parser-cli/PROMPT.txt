@@ -1,5 +1,9 @@
-OpenAPI 3.0 规范文件越来越大，手动看接口列表眼睛都花了。Go 工具提取接口列表、请求/响应 schema、认证方式，验证规范完整性，输出 JSON 摘要。
+OpenAPI 3.0 的 yaml 文件已经 8000 多行了，手动找某个接口的参数定义要翻半天。前端同事天天问"这个字段是不是必填"，一键提取多省事。
 
-文件可能很大，超过内存要能处理。
+`oaparse` 是 Go 写的 OpenAPI 解析 CLI。`oaparse extract -f api.yaml` 解析 spec 文件，输出 JSON 摘要：`{"info":{"title":"","version":""},"endpoints":[{"method":"GET","path":"/users","params":[],"responses":{}}],"schemas":{},"security":[]}`。
 
-Go 实现，只用标准库，交叉编译友好。
+`oaparse validate -f api.yaml` 检查规范完整性：缺少 `info` 段报 `[MISSING] info block`，路径没有 `responses` 报 `[MISSING] responses for <method> <path>`，`$ref` 指向不存在的 schema 报 `[BROKEN-REF] <path>`。退出码 0 完整，1 有问题。
+
+`oaparse diff -f v1.yaml -f v2.yaml` 对比两个版本差异，列出新增/删除/修改的接口。
+
+大文件用流式解析，内存不超过 50MB。不支持 OpenAPI 2.x，遇到 `swagger: "2.0"` 报 `[UNSUPPORTED] OpenAPI 2.x` 退出码 2。Go 标准库实现，`go build` 生成单二进制。

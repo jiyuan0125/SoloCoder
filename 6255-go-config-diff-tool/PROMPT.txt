@@ -1,3 +1,9 @@
-两个环境的配置对比全靠人工，上次少了一个配置项导致线上故障。Go 重写配置差异对比：忽略注释和键的顺序差异，新增、删除、修改的配置项分类标注。
+上次配置漏了一个 timeout 参数，线上服务半天没响应，p0 事故。两个环境的配置对比全靠人眼，这次用 Go 写个靠谱的。
 
-构建流程：解析→编译→测试→打包，测试不过不打包。不用第三方包，go build 通过就行。
+用法：`cfgdiff -old prod.yaml -new staging.yaml -format yaml -output diff.txt`。支持 yaml 和 json 格式，按文件扩展名自动识别也可以 -format 强制指定。对比逻辑忽略注释行（# 开头）和空行，忽略 key 的出现顺序差异。差异分三类标注输出：`[+] <key>: <value>` 表示新增，`[-] <key>: <value>` 表示删除，`[~] <key>: <old> → <new>` 表示值变了。
+
+嵌套结构用点号路径表示，比如 `database.connection.timeout`。数组按索引逐项对比，数组长度不同时多余的项标为新增或删除。输出开头一行统计：`total: <N> changes (added: <A>, removed: <R>, modified: <M>)`。
+
+加 `-json` flag 输出 JSON 格式的差异报告：`{ "added": [...], "removed": [...], "modified": [{"key":"...","old":"...","new":"..."}] }`。完全相同输出 `no differences found` 退出码 0。
+
+文件不存在或格式解析失败输出 `error: <具体原因>` 退出码 1。构建流程：解析→编译→测试→打包，测试不过不打包。不用第三方包，go build 通过就行。

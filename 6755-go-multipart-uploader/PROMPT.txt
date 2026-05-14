@@ -1,3 +1,9 @@
-要往 S3 上传几百兆的文件，一次性传经常超时。写个分片上传的 CLI 工具，支持进度显示和断点续传，兼容 S3 协议和自定义服务端的分片上传。
+上周往 S3 传个 800MB 的文件，传到一半网络抖了一下，整个重来。S3 的分片上传 API 又不好直接调，得自己封装一个 CLI 工具支持断点续传。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+用法：mpupload --file bigfile.tar.gz --endpoint https://s3.amazonaws.com --bucket my-bucket --key uploads/bigfile.tar.gz --part-size 8388608。工具把文件按 --part-size 切成多个分片（默认 8MB），逐片上传，每片上传完记录进度到 .mpupload_progress.json。格式：{"file": "bigfile.tar.gz", "total_parts": 100, "completed_parts": [0,1,2,3], "upload_id": "xxx"}。
+
+如果中断了重新运行相同命令，工具读到进度文件，跳过已完成的分片继续上传。进度条实时显示在 stderr：[=====>    ] 45/100 parts (45%) 23.5MB/s。
+
+全部上传完自动调用 CompleteMultipartUpload 合并。--cleanup 标志在上传完成后删除进度文件。上传失败的单片最多重试 3 次，3 次全失败 exit code 1 并打印 ERROR: part 42 failed after 3 retries。文件不存在 exit code 1。
+
+兼容 S3 协议，也支持自定义服务端（不校验 SSL 用 --insecure）。Go 标准库实现，不依赖第三方包。go build 能编译通过。

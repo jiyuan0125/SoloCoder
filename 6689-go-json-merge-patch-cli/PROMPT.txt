@@ -1,3 +1,9 @@
-JSON Merge Patch（RFC 7396）每次手写 JSON patch 都要查规范。Go 工具支持部分更新、嵌套合并、null 删除字段，从文件读取 patch 和原始数据直接合并。
+上次配置中心做部分更新，同事手拼 JSON patch 漏了个花括号，线上全炸了。每次查 RFC 7396 规范头都大，干脆写个命令行工具，直接读文件做 merge patch。
 
-Go 实现，只用标准库，交叉编译友好。
+用法：`merge-patch -original config.json -patch patch.json -output result.json`。从两个文件分别读取原始 JSON 和 patch JSON，按 RFC 7396 规则合并。patch 里值为 null 的字段表示删除原始数据中对应字段，非 null 字段递归合并覆盖。嵌套对象的合并也要正确处理——不能把整个嵌套对象替换掉，而是逐字段合并。
+
+三个 flag 都是必填的，缺少任何一个打印 `error: -original, -patch, -output are required` 并退出码 1。输入文件不存在或不是合法 JSON 时输出 `error: failed to parse <filename>: <具体错误>` 退出码 1。合并结果写出到 -output 指定路径，JSON 缩进 2 空格格式化。
+
+边界情况要覆盖：原始数据有但 patch 没提到的字段保持不变，patch 里有但原始数据没有的字段直接添加，空对象 patch 等于原样拷贝。对数组整体替换不逐元素合并——这是 RFC 7396 的规定。
+
+Go 标准库实现，交叉编译友好，go build 直接出二进制。

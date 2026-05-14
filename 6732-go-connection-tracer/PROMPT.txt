@@ -1,3 +1,5 @@
-服务器上 TIME_WAIT 连接突然暴涨，要看看哪些进程占了连接。写个工具列出所有 TCP/UDP 连接及对应进程，能按状态过滤——LISTEN、ESTABLISHED、TIME_WAIT 这些。
+先说场景：服务器上 TIME_WAIT 突然暴涨到两万，要查哪个进程占连接。然后 ssh 上去 netstat 看半天，眼睛都花了，还得手动数。
 
-Go 标准库，命令行参数用 flag 包解析。
+Go 命令行工具列连接。子命令 list 列出所有 TCP/UDP 连接，默认列出全部，加 --proto tcp 或 --proto udp 过滤协议。--state 按状态过滤，支持 LISTEN/ESTABLISHED/TIME_WAIT/CLOSE_WAIT/FIN_WAIT2，可以逗号分隔传多个，比如 --state TIME_WAIT,CLOSE_WAIT。输出表格含 Protocol/Local Addr/Remote Addr/State/PID/Process Name 六列。加 --sort 按某列排序，--sort state 默认，可选 conn_count 按进程连接数排序。子命令 summary 汇总统计，按状态分组计数，按连接数降序排列，输出 "STATE: COUNT (PERCENT%)" 每行一条。加 --by-process 按进程分组显示每个进程的连接分布。子命令 watch 持续监控，--interval 指定刷新间隔秒数（默认 2），每屏刷新显示当前连接总数和各状态变化 delta。Ctrl+C 退出时打印汇总。无 root 权限时部分进程名显示为 "-"，不影响连接信息。没有连接输出 "no connections found" 到 stderr 并 exit 0。
+
+Go 标准库，命令行参数用 flag 包解析。go build 能过。主逻辑和辅助函数分文件。

@@ -1,4 +1,9 @@
-每个月发周报格式都不同，PM 要求统一。模板引擎支持变量、条件、循环，数据源从 JSON 或 YAML 读入。
-管理审批流程和流程实例：用户提交审批走已有流程。
-Go 标准库，go build 通过就行，不用第三方包。
-主逻辑和辅助函数分文件写。
+PM 每周发的周报格式总在变，新人不知道怎么写。定义一个模板，数据一填就出结果多好。
+
+`tmplengine` —— Go 文档模板引擎 CLI。`tmplengine render -t template.md -d data.json -o output.md` 从模板和数据生成文档。模板语法：`{{.variable}}` 变量、`{{if .cond}}...{{end}}` 条件、`{{range .items}}...{{end}}` 循环。数据源支持 JSON 和 YAML 简单子集。
+
+内置函数 `upper`、`lower`、`trim`、`date "2006-01-02"`、`default "N/A"`。语法错误精确定位：`[ERROR] template:3: unexpected {{end}}`。
+
+审批流程：`tmplengine flow create -f flow.yaml` 定义流程，`flow submit` 提交，状态 `draft→pending→approved→archived`，`--revert` 撤回。`tmplengine lint -t template.md` 检查语法不渲染。
+
+Go 标准库，主逻辑 `main.go`，辅助函数 `helpers.go`。`go build` 通过。退出码 0 成功，1 模板错误，2 数据错误，3 参数错误。

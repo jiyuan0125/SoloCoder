@@ -1,2 +1,7 @@
-空文件占着目录名，部署的时候还以为有内容。月底上线前先清理掉：Go 做空文件清理，列出文件路径让用户确认后删除，也可以选择移动到指定目录而不是删除。
-校验完成后自动生成报告，报告生成也要查询校验数据。不用第三方包，go build 通过就行。
+空文件到底有多危险？占着目录名，部署时以为有内容其实是空的，上次就因为一个空的 nginx 配置文件导致服务没起来。月底上线前得把这些空文件清理干净。
+
+命令行：`zeroclean scan --dir /var/www --recursive`。先列出所有 0 字节文件的路径和修改时间，让用户确认。确认方式：`--confirm` 交互式逐个确认（y/n），`--auto` 自动处理。处理策略：`--action delete` 直接删除，`--action move --dest /tmp/zerofiles` 移到指定目录。默认 move。
+
+校验完成后自动生成报告——报告内容包括扫描目录、扫描文件总数、空文件数、已处理数、跳过数。报告输出到 stdout，加 `--report report.json` 导出 JSON，字段为 {scanned, zero_byte, processed, skipped, files[{path, size, mtime, action}]}。报告生成也要查询校验数据——检查文件是否真的被删除或移动了，已删除的文件再次 stat 应返回 not found。
+
+目录不存在退出码 1。无空文件时打印 "no zero-byte files found" 退出码 0。符号链接指向的空文件也计入。`--exclude-dir .git` 跳过指定目录。不用第三方包，go build 通过就行。

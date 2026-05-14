@@ -1,7 +1,9 @@
-消息里没有 partition key，分区不均匀。之前用脚本管理太混乱了。
+消息队列里没有 partition key，分区严重不均匀——某个 partition 堆了 80% 的消息，消费者全卡在那。之前用脚本管理 partition key 太混乱了，需要从消息体里自动提取合适的字段做 key。
 
-消息重放（从指定偏移量重新消费），偏移量管理，重放范围控制。
+用法：`msgkey extract --input messages.json --field user_id --sample 1000`。`--field` 指定从消息体中取哪个字段做 partition key，支持嵌套路径如 order.user_id。`--sample` 只分析前 N 条消息做分布预估。输出当前 key 的分布统计：每个 key 值的消息数量、占比，并标注倾斜度——某 key 占比超 30% 标记 SKEWED。
 
-证书有申请→签发→生效→过期→续签的状态流转。
+消息重放功能：`msgkey replay --topic orders --offset 5000 --limit 1000 --field user_id`。从指定偏移量重新消费，偏移量管理和重放范围控制——`--offset` 起始位置，`--limit` 数量上限。重放过程中打印进度：已处理数/总数。
 
-Go 命令行工具，go build 能过就行。
+证书状态流转：申请→签发→生效→过期→续签。这个状态机用于管理消息签名证书，过期证书对应的消息标记为 "unverified"。
+
+输入为空退出码 1。`--format` 支持 json 和 text。Go 命令行工具，go build 能过就行。

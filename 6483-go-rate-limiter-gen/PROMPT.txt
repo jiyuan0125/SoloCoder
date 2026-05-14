@@ -1,3 +1,7 @@
-第三方 API 有 QPS 限制，超了就 ban。生成固定窗口和滑动窗口两种限流，按键限流。记录状态：草稿→待审→通过→归档，通过后可以撤回重新编辑。
+第三方 API 有严格的 QPS 限制，超过就返回 429 然后临时 ban 掉调用方 IP。限流逻辑散落在各处，不好统一管理。需要一个代码生成器，根据配置文件生成固定窗口和滑动窗口两种限流器。
 
-不用第三方包，go build 通过就行。
+1. 配置文件 `limiter.yaml`，格式：`rules` 数组，每条含 `name`（限流器名）、`type`（fixed_window/sliding_window）、`limit`（窗口内最大请求数）、`window`（窗口大小如 "1m" "10s"）、`key`（按什么维度限流：ip/user_id/api_key）。工具命令 `limitgen -config limiter.yaml -output ./ratelimit`，为每条规则生成独立的 `.go` 文件，文件名 `limiter_<name>.go`。生成的代码导出 `Allow(key string) bool` 函数和 `Remaining(key string) int` 函数。
+
+2. 状态管理：每个限流器记录的状态存储在内存 map 中，字段包括 key、计数器、窗口起始时间。状态有 draft→pending→approved→archived 四个阶段，approved 后可以撤回（`limitgen revert --rule <name>`）重新编辑配置再生成。
+
+3. 输出时如果目标目录已有文件，提示 "overwriting existing file: <name>"。配置文件语法错误报 "invalid config: <reason>" exit 1。不用第三方包，go build 通过。

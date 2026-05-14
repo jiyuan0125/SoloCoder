@@ -1,3 +1,11 @@
-要批量生成几十个配置文件，手动一个个填不现实。模板文件加数据文件直接输出代码，支持自定义函数。校验完成后自动更新统计信息，首次运行没有历史统计。
+要批量生成几十个配置文件，手动一个个填不现实。模板文件加数据文件直接输出代码，还得支持自定义函数——这才像正经的批量生成方案。
 
-不用第三方包，go build 通过就行。
+上周帮运维批量生成 Nginx 配置，20 个服务每个都不同，纯手工改到凌晨。模板渲染生成器就是来解决这种批量问题的。
+
+命令：`tplgen -template config.tpl -data services.json -output ./generated/ -func "env:os.Getenv,len:len,upper:strings.ToUpper"`。`-template` 和 `-data` 必填。模板使用 Go 标准库 `text/template` 语法。`-func` 用逗号分隔注入自定义函数，格式 `别名:包.函数`。
+
+`-data` 支持 JSON 和 YAML（文件扩展名判断），JSON 用标准库解析，YAML 简单处理键值对。数据是数组时模板对每个元素渲染一次，输出文件命名 `{template_name}_{index}.conf`。数据是对象时渲染一次。
+
+模板语法错误时 stderr 输出 `template error: {line}: {message}` 并 exit 1。数据格式错误输出 `data error: {message}` 并 exit 1。输出目录不存在自动创建。函数名冲突时 warning 并用后者。
+
+不用第三方包，`go build` 通过就行。

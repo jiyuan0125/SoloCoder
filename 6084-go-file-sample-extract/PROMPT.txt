@@ -1,2 +1,9 @@
-电商项目的数据集太大了，调试的时候只想抽一小部分测试。Go 做文件抽样提取：按百分比或固定数量抽样，保持目录结构。
-生成报告后自动发送邮件通知，有些环境没配邮件。不用第三方包，go build 通过就行。
+先有个大问题——电商项目的用户行为数据集 15GB，本地调试只需要一小部分。CSV、JSON、纯文本文件都要支持抽样。
+
+`sample-extract extract --source /data/logs/ --dest /data/sample/ --mode percent --value 10`，`--mode` 支持 `percent`（百分比抽样）和 `count`（固定数量），`--value` 是对应数值。百分比范围 0.1-100，count 最小 1。保持源目录的相对路径结构，比如 `source/a/b.csv` 抽样后是 `dest/a/b.csv`。
+
+对 CSV 文件抽样时保留表头行（第一行），从第二行开始按比例随机抽取。JSON 文件按行（每行一个 JSON 对象）抽样。纯文本按行抽样。二进制文件（图片、压缩包）整文件复制不做行级抽样。`--seed 42` 固定随机种子保证结果可复现，不指定则每次不同。
+
+目录不存在自动创建。源路径不存在报错 "source not found: {path}" 退出码 1。抽样结果为空时（比如 100 行文件抽 0.1% 可能 0 行）打印 warning "sample result is empty" 到 stderr 但正常退出。完成后输出统计："sampled {n} files, {lines} lines, {bytes} bytes"。
+
+不用第三方包，go build 通过就行。

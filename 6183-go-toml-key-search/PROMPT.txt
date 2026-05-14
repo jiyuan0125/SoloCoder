@@ -1,5 +1,9 @@
-工具链断了好几环，TOML 配置里 key 改了但哪些文件引用了根本不知道。Go 搞 TOML 键搜索。
-支持模糊匹配键名。
-多文件批量搜索。
-处理完每个目录后更新进度，空目录不用处理但计数要更新。
+工具链断了好几环——TOML 配置里某个 key 改了名字，但哪些文件引用了这个 key 根本不知道。上次改了 database.url 导致三个服务的配置没更新，全挂了。
+
+1. 命令行：`tomlkey search --dir ./configs --key "database.url" --fuzzy`。`--key` 精确匹配键名。`--fuzzy` 启用模糊匹配——允许大小写不同、下划线和连字符等价（database_url 匹配 database-url）。
+2. 多文件批量搜索：遍历 `--dir` 下所有 .toml 文件，支持 `--recursive`。结果输出：每条匹配打印 "文件路径:键路径:值:匹配类型(exact/fuzzy)"。
+3. 加 `--output json` 导出 [{file, key_path, value, match_type, line_number}]。`--table` 以表格形式输出，列宽自适应。
+4. 处理完每个目录后更新进度到 stderr："扫描 /configs/db: 3/10 files"。空目录不用处理但计数要更新，显示 "skipped empty dir: /configs/empty"。
+5. 无匹配结果退出码 1。TOML 解析失败跳过文件并在 stderr 输出 "parse error: filename"。
+
 不用第三方包，go build 通过就行。

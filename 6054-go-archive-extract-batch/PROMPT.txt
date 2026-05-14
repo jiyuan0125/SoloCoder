@@ -1,2 +1,5 @@
-之前用 Python 脚本批量解压 zip，环境一换就跑不了。换 Go 重写：解压到以压缩包名命名的子目录，密码保护的跳过并记录。
-管理代码模板和生成的项目，选一个模板生成新项目。不用第三方包，go build 通过就行，主逻辑和辅助函数分文件写。
+之前用 Python 批量解压 zip，环境一换就跑不了，依赖装半天。换 Go 重写，编译出来一个二进制丢哪都能用。
+
+子命令 extract 批量解压，--dir 指定包含压缩包的目录，--output 指定输出根目录。每个压缩包解压到以压缩包文件名（去掉扩展名）命名的子目录。支持 zip、tar.gz、tar.bz2 三种格式。密码保护的 zip 跳过，在结果里记录 "skipped: encrypted: FILENAME"。遇到损坏的压缩包输出 "error: corrupt archive: FILENAME" 到 stderr，继续处理下一个，不中断整个批处理。加 --threads 指定并行解压的 goroutine 数（默认 4），大文件并行处理提速。子命令 template 管理代码模板，--init 创建新模板目录，--list 列出已有模板，--generate 选一个模板生成新项目到 --output 路径。生成时模板变量用 {{.ProjectName}} 格式，从 --name 参数取值。变量未提供时输出 "error: missing variable: NAME" 并 exit 1。处理完输出汇总表格：成功 N 个、跳过 M 个、失败 K 个，分别列出文件名和耗时。空目录输出 "no archives found in DIR" 到 stderr 并 exit 0。
+
+不用第三方包，go build 通过就行，主逻辑和辅助函数分文件写。

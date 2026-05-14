@@ -1,4 +1,7 @@
-struct 增了字段但 JSON 标签忘了同步，序列化出来少字段，前端同事追到后端来。检查 struct 增删字段后 JSON 标签是否更新，标签和字段的不一致列出来。
+struct 增了字段但 JSON 标签忘了同步——上周发布后前端同事追到后端来问为什么返回的 JSON 里少了 email 字段。这种低级错误已经不是第一次了，得用工具检查。
 
-go build 能过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+用法：`tagsync check ./model/...`。扫描指定目录下所有 .go 文件，解析 struct 定义，比较字段名和 json tag 的一致性。不一致的情况包括：字段名已删除但 json tag 还在（orphan tag）、字段名新增但没有 json tag（missing tag）、json tag 和字段名拼写不匹配（mismatch）。
+
+每条不一致输出：文件:行号:struct 名:字段名:问题类型:描述。加 `--output json` 导出 [{file, line, struct_name, field, issue, message}]。`--fix` 模式自动修复——missing tag 时按字段名生成 json:"field_name"，orphan tag 删除整行 tag，mismatch 以字段名为准覆盖 tag。
+
+修复前显示 diff 预览，用户确认后写入。加 `--dry-run` 只显示不修改。扫描无 .go 文件打印 "no go files" 退出码 0。go build 能过，不依赖第三方库。主逻辑和辅助函数分文件写——至少 tagsync.go 做检查逻辑，fixer.go 做修复逻辑。

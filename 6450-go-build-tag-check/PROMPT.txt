@@ -1,5 +1,9 @@
-//go:build 的表达式写错了，CI 没跑对应平台的测试就上线了。检查 //go:build 格式是否正确，标签组合的逻辑也验证一遍。
+上次事故根因：`//go:build` 表达式写错了，CI 只跑了 linux/amd64 没发现，到了 darwin/arm64 编译直接报错。这种问题应该自动检测。
 
-转换完成后自动清理临时文件，某些场景下可能没有临时文件。
+Go CLI `tagcheck` 检查 build tag 格式和逻辑。`tagcheck scan -d ./pkg/` 递归扫描 `.go` 文件，提取 `//go:build` 和 `// +build` 行。语法错误报 `[SYNTAX] file.go:3 invalid expression "linux &&"`。
 
-只依赖标准库，go build 通过就行。
+`tagcheck validate -d ./pkg/ --available-tags "linux,darwin,amd64,arm64,cgo"` 验证 tag 是否在已知列表，未知报 `[UNKNOWN-TAG] file.go:5 tag="musl"`。`--check-combinations "linux/amd64,darwin/arm64"` 验证指定平台下哪些文件会被编译。
+
+`tagcheck fix -d ./pkg/` 把旧格式 `// +build` 转为 `//go:build`，自动备份 `.orig`，完成后清理（`--keep-orig` 保留）。无临时文件时不报错。
+
+标准库，`go build` 通过。退出码 0 无问题，1 发现错误，2 参数错误。

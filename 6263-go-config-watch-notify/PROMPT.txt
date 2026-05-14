@@ -1,3 +1,1 @@
-配置改了但服务没感知到，还是用的旧值。Go 做配置变更通知：变更内容以 diff 格式输出，支持多文件同时监控——一个进程盯住所有配置文件。
-
-构建流程：解析→编译→测试→打包，测试不过不打包。纯标准库实现，go run . 能跑。
+上周改了数据库连接池配置，服务没感知到，查了半天发现是配置热更新没生效。`cfgwatch --files config.yaml,db.yaml --interval 5s --command "kill -HUP $(cat app.pid)" --log .cfgwatch/changes.log`。每隔 --interval 检查一次 --files 指定的文件列表，检测方式比较文件 mtime 和上次记录值。变更时做三件事：stdout 输出 diff 格式的变更内容（+/- 前缀表示新增和删除的行，每行以 +/- 加空格开头），执行 --command 指定的通知命令（用 exec.Command 执行），记录变更日志到 `.cfgwatch/history.json`（每条包含 timestamp、file、diff_lines 数组）。多个文件同时变更时按文件名字母序逐个报告，每个文件独立输出一段 diff。`--command` 执行失败时 stderr 输出 "warning: notify command failed: exit code <n>"，不中断监控循环。文件被删除时 stderr 输出 "warning: file removed: <path>"，文件恢复后自动继续监控。第一次运行记录当前文件快照到 `.cfgwatch/snapshots/`，不触发 diff。Ctrl+C 优雅退出，stdout 输出 "shutting down, N changes detected in total"。构建流程：解析→编译→测试→打包，测试不过不打包。纯标准库实现，go run . 能跑。

@@ -1,3 +1,9 @@
-表驱动测试的 case 组合太多，手写容易漏。参数组合自动枚举，边界条件占位也加上。命令行格式：cli import --source csv --target db --filter 'age>18'。
+Go 的表驱动测试写起来不难，但参数组合一多就容易漏 case——特别是边界条件和错误路径。这个工具自动生成表驱动测试的 case 结构。
 
-不用第三方包，go build 通过就行。
+CLI 格式：`tdgen generate --source ./myfunc.go --func MyFunc --output myfunc_test.go --template table`。`--source` 指定待测函数所在文件，`--func` 指定函数名，`--template` 支持 `table`（标准表驱动）和 `map`（map-based case），默认 `table`。
+
+自动分析函数签名中的参数类型，为每个参数枚举：零值、典型值、边界值（数值类型的 min/max、字符串的空和超长、slice 的 nil/空/单元素）。参数间做笛卡尔积组合生成 case，但 `--max-cases 50` 可限制上限，超出时按参数优先级裁剪。
+
+生成的测试文件包含 `TestMyFunc` 函数，每个 case 有 `name` 字段描述场景，`wantErr` 标记是否期望错误。如果源文件中已有同名测试函数，`--force` 覆盖，否则跳过并输出提示。
+
+边界条件占位用 `// TODO: fill expected result` 标注，方便后续补全。生成的测试文件 package 与源文件一致，import 自动包含 `testing`。`--verbose` 模式输出每个参数的枚举值列表到 stderr，方便确认覆盖度。源文件解析失败（语法错误）时输出具体错误位置，退出码 1。不用第三方包，`go build` 通过就行。

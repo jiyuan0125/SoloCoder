@@ -1,5 +1,7 @@
-看到别人按句子搜索文本感觉挺好用的，中文分句比英文复杂多了。Go 做分句搜索。
-支持中英文句子边界。
-搜索结果返回完整句子。
-删除记录后清理关联索引，索引清理要遍历剩余记录。
-纯标准库实现，go run . 能跑。
+英文按句号分句很简单，中文呢？句号、问号、感叹号、省略号、甚至换行都可能是句子边界。想做一个支持中英文的分句搜索引擎。
+
+怎么分句？split --input article.txt 加载文本，按以下规则切句子：英文按 .!? 后跟空格或行尾；中文按 。，！？；…后面跟非引号字符也切；换行符也作为分隔。缩写（如 Mr. U.S.A. i.e.）不误切。输出 sentences.json：{"count": 42, "sentences": [{"index": 0, "text": "...", "start": 0, "end": 25}]}。
+
+怎么搜索？split search --input article.txt --query "关键词" 在分好的句子里搜索，返回包含关键词的完整句子。支持多关键词 AND/OR：--query "Go AND 并发" 或 --query "性能 OR 优化"。输出 search_result.json：{"query": "关键词", "matches": [{"sentence_index": 5, "text": "...", "highlight": "..."}]}，highlight 里关键词位置用 **标记。
+
+空文件输出空数组。搜索无结果输出空 matches，exit code 0。删除记录后要清理关联索引——索引存在内存 map 里，删除句子时遍历剩余记录更新倒排索引。纯标准库实现，go run . 能跑。

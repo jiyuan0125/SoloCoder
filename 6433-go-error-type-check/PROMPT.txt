@@ -1,4 +1,7 @@
-错误处理规范要求 sentinel error 和 custom error 分开用，error 必须是最后一个返回值。检查整个代码库的规范情况。
+上周 code review 发现项目里错误处理一团糟——有人在 error 接口上直接比较字符串，有人把自定义错误当 sentinel 用，还有函数把 error 放在第一个返回值。团队定了规范但没人遵守，得用工具自动检查。
 
-go build 能过，不依赖第三方库。
-代码分几个文件组织，别全写 main.go 里。
+用法：`errcheck scan ./... --rules sentinel,custom,return-order`。`--rules` 指定要检查的规则项。sentinel 规则检查是否用 errors.New 或 fmt.Errorf 创建了变量级错误（var ErrXxx = errors.New(...)），而不是每次调用都新建。custom 规则检查实现了 error 接口的类型是否有 Error() 方法。return-order 规则检查多返回值函数中 error 是否在最后一个位置。
+
+每条违规输出：文件路径:行号:规则名:描述。加 `--output json` 导出 [{file, line, rule, message}]。`--severity` 可以标记某些规则为 error（退出码 1）或 warning（退出码 0）。
+
+代码里没有任何函数定义时不报错退出码 0。扫描无 .go 文件打印 "no go files found"。go build 能过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里——至少有 scanner.go 负责规则检查，report.go 负责输出格式化。

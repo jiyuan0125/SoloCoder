@@ -1,3 +1,9 @@
-到海外节点的链路经常绕路，traceroute 看不出来是哪一跳的问题。写个工具发递增 TTL 的探测包，把每一跳的地址和延迟都记下来，输出一个路由路径图，能直观看到哪段慢。
+每次排查到海外节点的延迟问题都要 traceroute + ping 交替试，几十跳的输出肉眼看不出规律。要是能一步到位把每跳的延迟、丢包率、地理位置都标出来就好了。
 
-用 Go 标准库写，go run . 或 go build 都行。
+写个 Go CLI `hopper`，发送递增 TTL 的 ICMP/UDP 探测包追踪路由路径。`hopper trace -H <host> --max-hops 30 --timeout 2s` 逐步探测，每跳发 3 个包取平均延迟。输出表格格式：`HOP  ADDRESS          AVG_MS  LOSS%  ASN`， ASN 列通过内嵌 IP 归属数据库查询（小型嵌入数据即可）。
+
+`hopper trace -H <host> --json` 切换 JSON 输出：`{"hops":[{"ttl":1,"addr":"1.2.3.4","latency_ms":5.2,"loss_pct":0,"asn":4134},...]}`。`hopper compare -H <host> -H <host>` 同时 trace 两个目标，并排对比路径差异，共享路由段标绿，分叉段标黄。
+
+如果某一跳超时（3 个包全丢），显示 `* * *` 而不是报错中断，后续跳继续探测。`--output route.md` 导出 Markdown 格式报告，包含可视化路径图（ASCII 线条）。到达目标主机后立即停止不再发后续 TTL。
+
+Go 标准库实现，`go run .` 或 `go build` 都行。Linux/macOS 支持 raw socket（需要 root 或 `CAP_NET_RAW`），不支持则退化为 UDP 探测并打印 `[FALLBACK] using UDP probes`。退出码 0 成功，1 目标不可达，2 参数错误，3 权限不足。

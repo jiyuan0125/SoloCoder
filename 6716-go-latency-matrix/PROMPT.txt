@@ -1,3 +1,5 @@
-CDN 切换之前要对比各个边缘节点的延迟，手动 ping 二十几个节点记数据太累。写个工具从配置文件读目标列表，并发 ping 完直接输出一个延迟矩阵表格，谁快谁慢一目了然。
+CDN 切换之前要对比各个边缘节点的延迟——二十几个节点手动 ping 记数据太累了，数据还要整理成表格给老板看。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`latmatrix -config targets.yaml [-count 10] [-timeout 5s]`。配置文件格式 `targets: [{name: "US-East", host: "us-east.cdn.com"}, {name: "EU-West", host: "eu-west.cdn.com"}, ...]`。对每个目标并发发 ICMP echo（用标准库 net/http 做 HTTP GET 计时也行，加 `-method http`），每个目标 ping 10 次取平均。输出延迟矩阵表格——表头是目标名，每行一个来源（本机），单元格是平均延迟 ms。表格示例：`SOURCE | US-East | EU-West | AP-Tokyo\nlocal  | 45ms    | 120ms   | 85ms`。加 `-json` 输出 `{"targets": [{"name": "US-East", "avg_ms": 45, "min_ms": 38, "max_ms": 67, "loss": 0}]}`。
+
+超时的目标标记 `TIMEOUT`。所有目标不可达输出 `error: all targets unreachable` 退出码 1。配置文件格式错误输出 `error: invalid config at line N`。纯 Go 标准库，编译后单二进制可以直接跑。

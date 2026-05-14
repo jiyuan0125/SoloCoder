@@ -1,3 +1,9 @@
-客户给了几个 pcap 抓包文件让分析问题，Wireshark 打开太慢。写个工具直接读 pcap 文件，把 HTTP、DNS、TCP 流提取出来，支持按协议和地址过滤，输出摘要信息快速定位问题。
+客户甩过来几个 pcap 文件让排查网络问题，Wireshark 打开几个 GB 的文件直接卡死。总不能让客户一直等着吧——写个轻量的命令行工具直接解析 pcap 文件摘要，快速定位问题。
 
-Go 实现，只用标准库，交叉编译友好。
+用法：`pktanalyze -file capture.pcap -protocol http -filter "host 10.0.0.1" -output summary.json`。-file 指定 pcap 文件路径（只支持 pcap 格式不支持 pcapng）。-protocol 过滤协议类型支持 http、dns、tcp、udp，不指定则展示所有。-filter 过滤条件支持 `host <ip>`、`port <number>`、`src <ip>`、`dst <ip>`，多个条件逗号分隔 AND 关系。
+
+HTTP 流提取：展示每个请求的方法、URL、状态码、响应时间（从请求到第一个响应包的时间差）、Content-Length。DNS 流提取：展示查询域名、类型（A/AAAA/CNAME）、响应 IP、TTL。TCP 流提取：展示 src/dst IP:port、包数、字节数、重传次数、RST 标记。
+
+输出格式：默认表格（制表符分隔），加 `-json` 输出 JSON。统计摘要输出到 stderr：`total packets: <N>, filtered: <M>, streams: <K>`。
+
+文件不存在退出码 1。不是合法 pcap 文件输出 `error: invalid pcap file: bad magic number` 退出码 1。Go 实现，只用标准库，交叉编译友好。

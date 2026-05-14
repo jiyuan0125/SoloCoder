@@ -1,3 +1,7 @@
-想看网卡实际跑了多少流量、有没有丢包。写个工具把每个接口的收发字节数、包数、错误数、丢包数列出来，加个持续监控模式，每秒刷一次。
+线上有个服务偶尔抖动，怀疑是网络丢包但看不出来。运维同事说 /proc/net/dev 里有数据，但每次手动算差值太痛苦了。写个工具把网卡流量数据直接拉出来，一目了然。
+
+从 /proc/net/dev 读取每个网卡接口的统计数据：接收字节数、发送字节数、接收包数、发送包数、接收错误数、发送错误数、接收丢包数、发送丢包数。命令：iface-stats 单次快照输出表格，列名：Interface、RxBytes、TxBytes、RxPkts、TxPkts、RxErrs、TxErrs、RxDrop、TxDrop。加 -watch 1s 启用持续监控模式，每秒刷新一次，显示增量而非累计值。指定 -iface eth0 只显示特定网卡的数据。
+
+持续监控模式下按 Ctrl+C 退出时输出本次监控期间的汇总统计。输出支持 -json 格式，结构为 {"interfaces": [{"name": "eth0", "rx_bytes": 12345, "tx_bytes": 67890, ...}]}。网卡名称不存在时输出 "interface not found: xxx" 退出码 1。排序支持 -sort bytes 按流量排序、-sort errors 按错误数排序、-sort drops 按丢包数排序。数值超过 1024 的字节自动转换为 KB/MB/GB 显示，加 -raw 参数输出原始数值不做转换。
 
 纯 Go 标准库，编译后单二进制可以直接跑。

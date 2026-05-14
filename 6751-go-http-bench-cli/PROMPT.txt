@@ -1,3 +1,7 @@
-接口上线前要测能扛多少并发。写个 HTTP 压测工具，配好并发数、总请求数、QPS 上限，跑完输出响应时间分布（P50/P95/P99）、状态码统计、错误率。
+接口上线前要测能扛多少并发。现有的 wrk 安装麻烦，Go 自己写一个——`httpbench -url http://localhost:8080/api -c 50 -n 10000 -qps 200`，`-c` 并发数默认 10，`-n` 总请求数默认 1000，`-qps` 速率上限 0 表示不限，`-m` HTTP 方法默认 GET，`-H` 自定义 header 可重复，`-t` 超时秒数默认 10，`-body` 请求体字符串。
+
+跑完输出到 stdout：响应时间分布 P50/P95/P99（毫秒，保留两位小数）、状态码统计（每个状态码的计数和百分比）、总 QPS、错误率（非 2xx 视为错误）。输出格式是纯文本表格，有表头，列对齐。加 `--json` flag 切换 JSON 输出，字段名用 snake_case：`latency_p50`、`latency_p95`、`latency_p99`、`status_codes`（map[string]int）、`total_qps`、`error_rate`。
+
+`-qps` 限速用令牌桶算法控制发送速率。URL 缺少 scheme 时自动补 http://。连接被拒或 DNS 失败打印错误到 stderr 并立即退出码 1。`-c` 或 `-n` 传 0 或负数报错 "invalid parameter: must be positive"。Ctrl+C 优雅退出，输出已完成的统计结果。
 
 Go 实现，只用标准库，交叉编译友好。

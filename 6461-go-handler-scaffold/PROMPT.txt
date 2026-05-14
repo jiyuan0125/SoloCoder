@@ -1,3 +1,9 @@
-每个新接口都要写一遍请求参数解析和响应格式化，太机械了。生成请求参数解析、响应格式的骨架代码，中间件位置留好占位。导入数据后自动做一致性检查，一致性检查需要读取刚导入的数据。
+1. 每个新接口都要手写一遍请求解析和响应格式化，太机械了。上周新加了 5 个接口，复制粘贴改了半天还改错一个字段名。做个骨架代码生成器——定义好接口规格，自动生成 handler 骨架。
 
-标准库搞定，go run . 跑起来。
+用法：`scaffold generate --spec api.yaml --output ./handlers`。spec 文件格式：每行一个接口 `METHOD /path RequestType ResponseType`，比如 `POST /users CreateUser UserResp`。生成结果：每个接口一个 Go 文件，包含请求结构体、响应结构体、handler 函数骨架。handler 函数里请求解析写好了，响应格式化写好了，业务逻辑位置留 `// TODO: implement` 注释。
+
+中间件位置也留好：生成的代码里有个 `middlewares` 切片参数，注释说明在哪里插入认证、日志等中间件。导入数据后自动做一致性检查——验证 spec 文件里引用的类型都存在，不存在的输出 `[WARN] undefined type: XXX`。
+
+2. `--gin` 生成 Gin 框架风格，`--std` 生成标准库 `net/http` 风格，默认 std。spec 文件为空输出 "no endpoints defined" 退出码 1。
+
+3. 标准库搞定，go run . 跑起来。

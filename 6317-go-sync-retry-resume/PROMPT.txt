@@ -1,4 +1,9 @@
-VPN 经常断，大文件同步到一半就得重来。记录同步进度，中断后从断点继续，失败的文件自动重试。
-有分组规则和文件分组，按规则自动分组。
-Go 标准库，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+VPN 一断，正在同步的几个 GB 文件就得从头来，烦透了。搞个带断点续传的同步工具，记录每个文件已传输的字节偏移，中断后从断点继续，失败的文件自动重试 3 次，重试间隔递增（1s、2s、4s）。
+
+CLI 用法：`syncer --src <源目录> --dst <目标目录> --rules <分组规则文件>`。分组规则文件是 JSON，格式 `[{"pattern":"*.log","group":"logs"},{"pattern":"*.csv","group":"data"}]`。同步进度文件叫 `.sync-progress.json`，存在目标目录根下，格式 `{"files":{"相对路径":{"offset":12345,"checksum":"md5hex","retries":1}}}`。
+
+退出码：0 全部成功，1 部分失败（stderr 输出失败文件列表），2 参数错误。
+
+分组规则文件不存在或 JSON 格式错误时，stderr 输出 `ERROR: invalid rules file: <路径>` 并退出码 2。源目录不存在时退出码 2，stderr 输出 `ERROR: source directory not found: <路径>`。
+
+代码分 sync.go、progress.go、rules.go、main.go 几个文件组织。Go 标准库，go run . 能跑。

@@ -1,3 +1,9 @@
-怀疑本地 DNS 缓存返回了过期记录，需要一个工具能判断查询结果是从缓存来的还是真的递归查了。发两次查询对比响应时间，命中缓存的明显更快。支持递归和迭代查询做对照。
+先描述场景：部署了一套本地 DNS 缓存，怀疑它返回过期记录。症状是改了 DNS 记录后本地还是旧 IP。需要一个工具能判断查询结果到底是来自缓存还是真的递归查了权威 DNS。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+第一步 dnsprobe query --domain example.com --server 127.0.0.1:53 发第一次查询，记录响应时间和 Answer 里的 TTL。第二步等 1 秒后自动发第二次完全相同的查询，对比响应时间——如果第二次明显更快（比如不到第一次的 10%），大概率是命中了缓存。
+
+加上 --recursive 标志同时发一次直接到权威 DNS 的递归查询作为对照组。输出结果包含：query1_time_ms、query2_time_ms、cache_hit_probable（bool）、ttl_remaining（秒）、recursive_time_ms。
+
+--format json 输出 JSON，默认表格。--repeat 5 重复整个流程 N 次取平均值，减少网络抖动的影响。如果指定 --server 端口不可达，exit code 1 并打印 ERROR: cannot reach DNS server。
+
+TTL 为 0 的记录每次都应该重新查询，如果第二次还是很快就标 WARNING: unexpected cache behavior for zero-TTL record。纯 Go 标准库，编译后单二进制可以直接跑。

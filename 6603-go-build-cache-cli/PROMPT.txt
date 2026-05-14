@@ -1,5 +1,7 @@
-编译缓存占了 30G 磁盘空间，手动清理不知道该删什么。搞个工具显示缓存大小、按包路径过滤、分析缓存命中率，能安全地清理旧缓存。
+编译缓存悄悄吃了 30G 磁盘，`go clean -cache` 一刀切又怕影响编译速度。需要精确分析——按包路径查看缓存大小、命中率、最近使用时间，然后安全清理过期的。
 
-文件可能很大，超过内存要能处理。
+`cache stat` 显示总缓存大小、包数量、最早/最近构建时间。`cache list --filter "github.com/myorg/*"` 按包路径前缀过滤，输出表格 `PACKAGE | SIZE | LAST_BUILD | HIT_COUNT`。`cache clean --older-than 30d` 清理 30 天前的缓存条目，`--dry-run` 先列出将要删除的内容。`cache analyze` 输出命中率最低的 Top 10 包，排序字段用 `--sort size|hits|age`。
 
-用 Go 标准库写，go run . 或 go build 都行。
+大文件场景——缓存目录可能包含数百个子目录，遍历时用 filepath.Walk 而非一次性读入内存。单个缓存条目解析失败不影响其他条目，stderr 记录 `warning: skip corrupted cache entry: <path>`。
+
+输出格式默认表格，`--json` 切换为 JSON。无缓存时输出 `no build cache found` exit 0。路径不存在 `error: cache directory not found: <path>` exit 1。纯标准库，`go run .` 或 `go build` 均可。

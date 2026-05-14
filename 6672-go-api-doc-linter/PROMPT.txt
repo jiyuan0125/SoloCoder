@@ -1,5 +1,9 @@
-OpenAPI 文档里一半接口没描述，参数说明也是空的。SaaS 工具到量了收费太贵，Go 自己写：验证每个接口是否有描述、参数是否有说明、响应示例是否有效。
+先加载 OpenAPI 文档，再逐接口检查必填字段，最后输出报告——API 文档质量检查三步。
 
-输入可能包含乱码和特殊字符。
+命令行：`apidoclint -doc openapi.json -rules required_fields`。-doc 指定 OpenAPI 3.0 JSON/YAML。-rules 支持 required_fields（接口有 description、参数有 description、响应有 example）。加 `-severity warn` 将 error 降为 warning 不影响退出码。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+检查逻辑：遍历 paths 下每个方法（get/post/put/delete/patch），检查接口 description 非空、parameters 每 item 有 description、responses 200/201 有 content 示例、requestBody 有 example。
+
+输出 `<severity>: <method> <path> - <问题>`。如 `error: GET /users - missing operation description`。最后统计 `total: <N> issues (errors: <E>, warnings: <W>)`。有 error 退出码 1，全 warning 退出码 0。乱码特殊字符不 panic。解析失败输出 `error: failed to parse: <原因>` 退出码 1。
+
+加 `-json` 输出 JSON 报告。加 `-fix` 自动插入 `"TODO: add description"` 写回。纯 Go 标准库，编译后单二进制直接跑。

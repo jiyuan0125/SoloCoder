@@ -1,3 +1,15 @@
-海外节点的延迟一直不太稳定，想长期跟踪看看什么时段会恶化。定期测量目标延迟，存到 SQLite 里，支持查历史趋势和异常检测——突然飙升的那几个点要能看出来。
+海外节点的延迟一直不太稳定，想长期跟踪看看什么时段会恶化。定期 ping 或 HTTP 测量目标延迟，存到本地文件里，支持查历史趋势和异常检测——突然飙升的那几个点要能看出来。
+
+用法：`latency --target <host:port|URL> --interval 10s [--count 0] [--store <目录>] [--threshold <ms>]`。
+
+`--count 0` 无限测量直到 Ctrl+C，默认值。`--target` 是 URL 时做 HTTP GET 测量响应时间，是 host:port 时做 TCP 连接测量。
+
+每次测量结果追加写入 `<store>/latency-YYYYMMDD.jsonl`，每行 `{"ts":"2024-01-15T10:30:00Z","target":"...","latency_ms":45,"status":"ok|timeout|error","error":""}`。
+
+子命令 `latency stats --store <目录> [--from YYYY-MM-DD] [--to YYYY-MM-DD]` 输出统计：平均、P50、P95、P99、最大延迟，以及异常点列表（超过 `--threshold` 的记录，默认 200ms）。
+
+子命令 `latency report --store <目录> --format text|json` 输出按小时聚合的延迟报告，异常时段标记 `⚠ SPIKE`。
+
+target 无法连接时记录 status=error，不退出。连续 10 次超时 stderr 输出 `WARN: 10 consecutive timeouts`。
 
 用 Go 标准库写，go run . 或 go build 都行。

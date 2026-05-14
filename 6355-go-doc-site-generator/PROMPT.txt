@@ -1,3 +1,7 @@
-50 个 Markdown 文件手动写侧边栏导航太痛苦了。自动从目录结构生成侧边栏，支持多级目录。
-校验完成后自动生成报告，报告生成也要查询校验数据。
-go build 编译通过就完事，纯标准库。
+五十篇 Markdown 文档要生成一个可浏览的静态文档站，侧边栏导航手写太容易漏。工具自动扫描目录结构生成 `sidebar.json`，支持三层以上嵌套。
+
+命令 `docgen build -source ./docs -output ./site`。扫描 source 目录下所有 `.md` 文件，按目录层级组织成树状侧边栏。每个条目含 `title`（从文件首行 H1 提取，没有则用文件名）、`path`（相对路径）、`children`（子目录条目）。输出三个文件：`sidebar.json`（导航树）、`search-index.json`（文件名到标题映射）、每篇 Markdown 头部注入面包屑注释 `<!-- breadcrumb: a > b > c -->`。
+
+校验步骤不能省——扫描完先检查：链接引用的文件是否存在（`[text](missing.md)` 报 warning）、目录下是否有 `README.md`（没有也报 warning）。校验结果写 `report.json`，格式 `{"warnings": [{"file": "...", "message": "..."}], "errors": []}`。有 error 时 exit 1，只有 warning 时 exit 0。
+
+source 目录不存在时 exit 1 并打印 "source directory not found: <path>"。空目录（零 md 文件）输出 "no markdown files found" 然后 exit 0。纯标准库，go build 编译通过。

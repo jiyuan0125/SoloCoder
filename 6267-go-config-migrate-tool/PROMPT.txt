@@ -1,3 +1,9 @@
-配置格式从 v1 迁移到 v2，手动改了 50 个文件还是漏了几个。Go 写配置迁移工具：定义旧格式到新格式的转换规则，迁移前后自动对比验证。
+配置格式从 v1 迁移到 v2，50 个配置文件手动改了两天还漏了 3 个。机械性格式转换不该靠人肉。
 
-记录状态支持草稿→待审→通过→归档，通过后还能撤回重编辑。不用第三方包，go build 通过就行。
+`cfgmigrate` 是 Go 写的配置迁移工具。`cfgmigrate run -r rules.yaml -i config.v1.yaml -o config.v2.yaml` 按规则转换。规则格式：`transforms: [{path:"db.host",rename:"database.hostname"},{path:"debug",transform:"bool_to_string"}]`。
+
+迁移前自动备份为 `.bak`，`--no-backup` 跳过。迁移后验证字段数，少的报 `[MISSING] field <path> not handled`。`cfgmigrate diff -i old.yaml -o new.yaml` 展示 diff。
+
+批量迁移：`cfgmigrate batch -r rules.yaml -d ./configs/ --pattern "*.v1.yaml"`。文件状态：`draft→review→approved→archived`，`--revert` 撤回重编辑。`path` 支持 dot notation，`transform` 支持 `bool_to_string`、`int_to_string`、`rename_key`。
+
+不用第三方包，`go build` 通过就行。退出码 0 成功，1 规则错误，2 文件错误，3 验证失败。

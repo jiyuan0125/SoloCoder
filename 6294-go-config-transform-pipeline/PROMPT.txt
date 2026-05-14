@@ -1,3 +1,7 @@
-配置加载前要做一系列转换：解密、插值、覆盖默认值、验证——顺序写太乱了。Go 搞配置转换管道：多步转换按顺序串起来，每步可以自定义转换函数。
+配置加载前要做一串转换——解密、插值、覆盖默认值、验证——全写在 init() 里维护性极差。改成管道模式，每步独立，顺序可配。
 
-变更完成后触发关联更新，关联更新要查原记录的状态。不用第三方包，go build 通过就行。
+第一步定义管道：`pipeline.yaml` 描述执行顺序，`[{name: "decrypt", action: "aes-decrypt", key: "$SECRET_KEY"}, {name: "interpolate", action: "env-subst"}, {name: "defaults", action: "merge", base: "defaults.yaml"}, {name: "validate", action: "json-schema", schema: "config.schema.json"}]`。第二步执行：`config-pipe run pipeline.yaml --input config.enc.yaml -o config.yaml`。`--step decrypt` 只跑到指定步骤，方便调试。
+
+每个 transform 函数签名 `func([]byte) ([]byte, error)`，出错时管道中断，输出 `pipeline failed at step <name>: <error>` exit 1。某个 step 失败后可以 `--from interpolate` 从指定步骤重跑。`config-pipe validate pipeline.yaml` 只校验管道定义是否合法。
+
+变更完成后触发关联更新：如果管道修改了某个配置键，查询依赖该键的历史记录状态，只更新状态为 active 的记录。索引清理采用遍历重建方式。空输入文件输出空结果不报错。纯标准库，`go build` 通过就行。

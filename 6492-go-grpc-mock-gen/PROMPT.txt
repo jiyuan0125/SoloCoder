@@ -1,3 +1,7 @@
-集成测试需要 mock gRPC 服务，手写太麻烦。从服务定义生成 mock 实现，响应可以配置。写入结果的同时要更新索引，索引构建也要读取已有结果。
+集成测试要 mock 六个 gRPC 服务，手写 mock 实现大概要写 2000 行代码，接口一改又得全部更新。需要一个代码生成工具，从 `.proto` 文件或服务描述文件自动生成 mock 实现。
 
-只依赖标准库，go build 通过就行。
+命令 `grpcmockgen -proto api.proto -service UserService -output ./mocks`。解析 proto 文件中的 service 定义，为每个 method 生成一个 mock 函数。生成的 mock 支持通过配置文件设定返回值，配置文件 `mock-config.yaml` 格式：method 名到 response 的映射，每个 response 含 `status`（OK/ERROR）、`body`（JSON 字符串）、`delay`（模拟延迟如 "100ms"）。未配置的 method 默认返回空响应和 OK status。
+
+生成的同时要更新索引文件 `mock-index.json`，记录 service 名、method 列表、对应 mock 文件路径、生成时间戳。索引构建时也要读取已有的 mock 文件，避免覆盖手动定制的响应配置。
+
+proto 文件不存在或解析失败报 "failed to parse proto: <原因>" exit 1。-service 指定的服务在 proto 中不存在报 "service not found: <name>" exit 1。输出目录不存在自动创建。只依赖标准库，go build 通过。

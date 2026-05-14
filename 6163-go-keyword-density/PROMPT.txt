@@ -1,5 +1,7 @@
-SEO 分析要用关键词密度，手动数太累了。Go 做关键词密度统计。
-支持自定义词表。
-按频率排序输出。
-go build 能编译通过，不依赖第三方库。
-代码分几个文件组织，别全写 main.go 里。
+运营团队上周发了一篇文章，关键词堆得太密被搜索引擎降权了，之前也出现过关键词太少排名上不去的情况。需要一个密度分析工具，上传文章和关键词表就能看到每个词的频率和占比，帮忙在 SEO 和可读性之间找平衡。
+
+命令 `kwdensity analyze -file article.txt -keywords keywords.txt -top 20`。keywords.txt 每行一个关键词（支持中英文、短语）。对文件内容做分词统计，计算每个关键词的出现次数、密度百分比（出现次数/总词数 × 100）。输出文本表格：Keyword、Count、Density(%)、Rank。按密度降序排列，`-top` 控制显示条数。加 `-json` 输出 JSON 数组：`[{"keyword": "Go并发", "count": 12, "density": 3.2, "rank": 1}]`。
+
+自定义词表模式下，不在词表中的高频词（top 10）也单独列出标记为 `[unlisted]`，提示可能需要加入词表。文件为空输出 "empty file" exit 0。keywords 文件不存在报 "keywords file not found" exit 1。编码非 UTF-8 尝试自动检测（GBK→UTF-8），失败报 "unsupported encoding" exit 1。
+
+代码分文件组织：analyzer.go（分析逻辑）、parser.go（文本解析）、report.go（输出格式化）、main.go。go build 能编译通过，不依赖第三方库。

@@ -1,2 +1,13 @@
-之前买的批量文件管理 SaaS 到期了，续费报价翻了倍。Go 自建按模式批量移动：支持多个模式规则，冲突时自动重命名，移动失败的记录到日志。
-生成报告后自动发送邮件通知，有些环境没配邮件。纯标准库实现，go run . 能跑。
+之前买的批量文件管理 SaaS 到期了，续费报价翻了倍，直接自建。按文件名模式批量移动文件到目标目录，支持 glob 模式（`*.log`、`report-*.csv`），可以指定多条规则。
+
+用法：`mvbatch --src <源目录> --dst <目标目录> --pattern "*.log" [--pattern "*.tmp"] [--conflict rename|skip|overwrite] [--dry-run]`。
+
+冲突策略：rename（默认）自动加后缀 `_1`、`_2`...；skip 跳过，stdout 输出 `SKIP: <文件>`；overwrite 直接覆盖。
+
+移动失败的文件记录到 `<目标目录>/.mvbatch-errors.log`，格式 `时间  源文件  错误信息`。全部成功退出码 0，部分失败退出码 1，源目录不存在退出码 2。
+
+`--dry-run` 只输出会执行的操作不实际移动，每行 `MOVE: <源> -> <目标>`。
+
+`--report <文件>` 生成 JSON 报告 `{"total":100,"moved":95,"skipped":3,"failed":2,"details":[...]}`。如果配了 `--notify-email <地址>` 就发邮件通知，没配就跳过。没有 SMTP 配置时不报错，只输出 WARN。
+
+纯标准库实现，go run . 能跑。

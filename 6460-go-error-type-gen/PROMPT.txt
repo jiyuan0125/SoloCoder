@@ -1,3 +1,7 @@
-每个模块的错误码格式不一样，前端没法统一处理。生成错误码、错误消息、HTTP 状态码的映射，错误包装函数也一起生成。写入结果的同时要更新索引，索引构建也要读取已有结果。
+后端五个模块的错误码格式五花八门，有的用纯数字有的用字符串，前端根本没法做统一拦截。能不能定义一套规范，然后自动生成错误码映射和包装函数？
 
-零外部依赖，编译完直接跑。
+命令 `errgen -config errors.yaml -output ./errors`。配置文件格式：`modules` 数组，每个模块含 `name`（模块名）、`prefix`（错误码前缀如 "USR"）、`errors` 数组，每条有 `code`（数字如 1001）、`message`（中文描述）、`http_status`（对应 HTTP 状态码如 400）。生成两个文件：`error_codes.go` 导出常量 `Err<Prefix><Code>` 和字符串描述；`error_wrap.go` 导出 `WrapError(module, code int, detail string) error` 函数，返回包含模块名、错误码、HTTP 状态码、详情的结构化 error。
+
+生成完自动更新 `error-index.json` 索引文件，记录所有已生成的错误码、对应模块、生成时间。索引构建时也要读取已有的 error 文件，合并新旧条目，重复 code 报 "duplicate error code: <module>:<code>" exit 1。
+
+配置文件不存在 exit 1。yaml 格式错误打印具体字段和原因。http_status 不在有效范围（100-599）报 "invalid http_status" exit 1。零外部依赖，编译完直接跑。

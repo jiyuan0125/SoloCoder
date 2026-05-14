@@ -1,3 +1,7 @@
-dev/staging/production 三个环境的配置文件切来切去总搞混。写个小工具一键切换环境，自动建符号链接或复制，记住了当前是哪个环境。
+先看问题——开发、测试、生产三个环境各有一套配置文件，部署时手动 cp 总搞混，上次有人把 dev 配置推到了生产。做一个环境切换器，一条命令搞定，而且记住当前是哪个环境。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+第一步，`envswitch init` 在项目根目录创建 `.envs/` 目录结构：`dev.yaml`、`staging.yaml`、`production.yaml`，各含环境变量键值对。第二步，`envswitch use dev` 切换到开发环境——把 `.envs/dev.yaml` 的内容写入当前目录的 `config.yaml`（覆盖写），同时在 `.envs/.current` 文件记录当前环境名。第三步，`envswitch current` 读取 `.envs/.current` 并打印当前环境名。第四步，`envswitch diff staging` 对比当前配置和 staging 的差异，逐行显示哪些 key 的 value 不同。
+
+切换时如果目标环境的 yaml 不存在，报 "environment not found: <name>" exit 1。`init` 时如果 `.envs/` 已存在，提示 "already initialized, use --force to overwrite" exit 1。配置文件格式错误（非合法 YAML）报 "invalid config in <file>" exit 1。
+
+切换完成后自动备份旧配置到 `.envs/.backup/<timestamp>.yaml`。纯 Go 标准库，编译后单二进制直接跑。

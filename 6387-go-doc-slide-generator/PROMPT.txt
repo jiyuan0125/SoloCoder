@@ -1,3 +1,9 @@
-技术分享会要演示，PPT 太重。从 Markdown 生成 HTML 幻灯片，每个一级标题一页。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
+先用什么——技术分享会要演示，PPT 做起来太费时间。从 Markdown 直接生成 HTML 幻灯片，写文档顺便就把演示稿也出了。
+
+步骤 1：`slide-gen generate --input slides.md --output slides.html --theme light`，读取 Markdown 文件，每个一级标题（#）生成一页幻灯片，二级标题和正文作为该页内容。`--theme` 支持 `light`（默认，白底黑字）和 `dark`（深灰底白字）。生成的 HTML 是自包含的单文件，内联所有 CSS，无外部依赖。
+
+步骤 2：幻灯片导航用键盘方向键，通过内嵌的 JavaScript 实现。页面底部显示当前页码 "3 / 12" 格式。Markdown 支持**加粗**、*斜体*、`代码`、有序列表、无序列表的转换。代码围栏转成 `<pre><code>` 块，带等宽字体。图片链接 `<img>` 原样保留。
+
+步骤 3：空文件输出提示 "no content to generate slides" 退出码 0。只有一级标题没有正文的页面显示标题居中。Markdown 语法错误（如未闭合的代码围栏）打印 warning 到 stderr 但尽量继续生成。`--title "我的分享"` 设置 HTML 的 `<title>`，默认用文件名。记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
+
 go build 通过就行，纯标准库实现。

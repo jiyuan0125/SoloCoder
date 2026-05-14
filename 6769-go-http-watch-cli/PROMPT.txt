@@ -1,3 +1,17 @@
-第三方接口改了返回值格式但没通知我们。写个 URL 监控工具，定期请求指定 URL，对比响应内容差异，有变化输出 diff 和时间戳，可以设忽略字段避免误报。
+第三方接口改了返回值格式但没通知我们，前端炸了才发现。写个 URL 监控工具，定期请求指定 URL，对比响应内容差异，有变化立刻输出 diff。
+
+用法：`httpwatch --url <URL> [--interval 30s] [--ignore-fields id,timestamp,nonce] [--method GET] [--headers <JSON文件>] [--output <目录>]`。
+
+每次请求把响应存到 `<output>/snap-<序号>.json`。对比当前和上一次响应：JSON 响应做字段级 diff，非 JSON 做文本 diff。diff 输出到 stdout：`[2024-01-15 10:30:00] CHANGE DETECTED: +2 fields changed, -1 field removed`，紧接着输出具体变更行 `+ field: old_val -> new_val`、`- field: removed`。
+
+`--ignore-fields` 指定 JSON 响应中不参与对比的字段（如动态 timestamp、随机 nonce），避免误报。支持嵌套字段用点号 `metadata.ts`。
+
+HTTP 请求失败时 stderr `ERROR: request failed: <状态码或错误>`，不退出继续下一轮。非 200 状态码也算变更，记录到 diff。
+
+`--baseline <文件>` 指定基准响应文件，第一次运行时保存，后续每次跟基准对比。
+
+响应超过 1MB 时只对比前 1MB，stderr `WARN: response truncated to 1MB`。
+
+Ctrl+C 优雅退出，输出总请求数和变更次数。
 
 用 Go 标准库写，go run . 或 go build 都行。

@@ -1,3 +1,11 @@
-想换 DNS 服务商，但不确定哪家快。写个基准测试工具，同时测多家 DNS 服务器的解析速度，能自定义查询域名和次数，最后输出各家响应时间对比。
+想换 DNS 服务商但不确定哪家快，网上评测都是国外的数据。自己写个基准测试工具，测完心里有数。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+用法：dnsbench --servers 8.8.8.8,1.1.1.1,114.114.114.114 --domains example.com,google.com --count 100。对每个 DNS 服务器发 N 次 A 记录查询，记录每次的响应时间（毫秒，从发查询到收到响应）。
+
+输出结果到 stdout，默认表格格式：DNS服务器 | 查询域名 | 查询次数 | 平均耗时(ms) | 最小 | 最大 | P50 | P95 | P99 | 丢包率(%)。加上 --format json 改输出 JSON 数组，每条记录包含 server、domain、count、stats 对象。
+
+并发控制：--workers 5 控制同时发查询的 goroutine 数，默认 5。超时：--timeout 3s，单个查询超时计为失败，不计入平均耗时但计入丢包率。
+
+查询失败（SERVFAIL、超时）单独统计。所有查询全失败的服务器标 FAILED。--output result.json 可保存到文件。域名不存在（NXDOMAIN）不算失败，正常返回，在结果里标 nonexistent=true。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。主逻辑和 DNS 查询模块分文件写。--servers 和 --domains 必须至少各提供一个，缺失则 exit code 1 并打印用法提示。

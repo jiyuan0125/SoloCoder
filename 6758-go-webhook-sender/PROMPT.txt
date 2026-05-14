@@ -1,3 +1,11 @@
-对接第三方支付要发 webhook，对方说我们发的格式不对但又不给详细信息。写个工具从文件读 payload，支持 HMAC 签名和自定义 header，配上重试策略，发完把完整的请求和响应打印出来排查。
+对接第三方支付 webhook 调了两天，对方说签名不对又不给细节。HMAC 签名的拼接细节很容易搞错。
 
-Go 实现，只用标准库，交叉编译友好。
+`whksend` —— Go CLI webhook 发送工具。`whksend send -f payload.json -u https://pay.example.com/webhook --hmac-secret "sk_xxx" --hmac-algo sha256` 自动计算签名放入 `X-Signature` header。`--header "X-Custom: value"` 自定义 header。
+
+签名格式：`X-Signature: sha256=<hex>` 加 `X-Timestamp: <unix>`。`--hmac-format` 自定义。重试 `--retry 3 --retry-interval "1s,5s,30s"`。
+
+发送完打印完整请求响应：method、headers、body、status 全部输出。`--output result.json` 保存到文件。
+
+批量：`whksend batch -f webhooks.yaml`，格式 `webhooks: [{url:"",payload_file:"",hmac_secret:""}]`。`--dry-run` 只打印不发。
+
+Go 标准库，交叉编译友好。退出码 0 成功(2xx)，1 非2xx，2 签名错误，3 重试耗尽。

@@ -1,3 +1,7 @@
-构造函数参数太多，调用的时候经常传错位。生成链式调用 setter，必填和选填字段区分清楚。处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。
+上周线上事故就是因为构造函数参数传反了，排查了俩小时。Go 结构体字段一多，NewXXX(a, b, c, d, e) 调用的时候根本看不出来哪个是哪个。
 
-不用第三方包，go build 通过就行。
+写个命令行工具，从 Go 源文件读取结构体定义，给每个结构体生成链式调用的 Builder 代码。命令是 `builder-gen --input model.go --output model_builder.go --package main`。`--package` 不指定则从源文件推断。必填字段用 WithXxx() 强制调用，编译期不调就过不了；选填字段也是 WithYyy() 但可选。生成的 Builder 要有 Build() 方法返回目标结构体指针，必填字段未设置时 Build() 返回 error，错误信息格式是 "required field %s is not set"。
+
+`--required` 逗号分隔必填字段名，不指定则全部选填。处理主文件后自动扫描同目录其他 .go 文件，发现结构体定义则生成 `build_summary.json`，内容是结构体名、字段数、必填字段列表。没有可摘要内容的目录跳过不报错。空文件或语法错误打印 "WARN: skip {file}: {error}" 到 stderr 继续处理。退出码 0 成功，1 输入文件不存在或无法解析。
+
+纯标准库，go build 通过就行。

@@ -1,5 +1,11 @@
-一条消息要通知所有下游服务，不能漏掉任何一个。
+支付成功的消息必须通知到库存、物流、积分、通知四个下游服务，漏一个用户就投诉。现有方案是每个服务写一个消费者，新增下游经常忘记加。
 
-消息路由（基于内容/头信息分发），路由规则配置，路由失败处理。转换主流程中调用子转换，子转换也需要读同一份映射表。扫描多个目录要并行处理。
+写个 Go 工具 `msgbroadcast` 实现消息广播和路由。`msgbroadcast send -f payload.json -c config.yaml` 从文件读取消息，按配置文件中的规则分发到所有目标。配置文件格式：`targets: [{name: "inventory", url: "http://inv:8080/webhook", method: "POST"}, ...]`。
 
-Go 实现的命令行工具，go build 能过就行。
+消息路由：`msgbroadcast route -f payload.json --rule "header.type=='order' → inventory,logistics"` 基于消息内容或 header 字段分发到指定目标子集。路由失败（目标返回非 2xx）记录到失败队列文件 `failed.jsonl`，后台重试 3 次，间隔 1s/5s/30s，仍然失败打印 `[FAIL] target=<name> status=<code> attempts=3`。
+
+子转换机制：主路由规则可以嵌套子规则，子规则共享同一份字段映射表（`mappings.yaml`），避免重复定义。比如 `order.created` 触发主流程，其中物流子模块需要 `address.city` 字段，从映射表自动取值。
+
+扫描多个配置目录并行加载，用 `--workers N` 控制并发（默认 4）。每个目标独立超时（`--timeout 5s`），单个目标超时不影响其他目标。
+
+Go 实现的命令行工具，`go build` 能过就行。退出码 0 全部成功，1 部分失败，2 配置错误。

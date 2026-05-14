@@ -1,3 +1,7 @@
-合规要求数据转换过程必须有表达式审计。Go 命令行工具：条件映射满足条件走 A 否则走 B，表达式求值支持四则运算和字符串拼接，查找表丰富数据。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+合规审计下来一条：数据转换过程的映射规则必须有据可查，不能光靠代码里的硬编码。得有个工具把条件映射和表达式求值都管起来，每次转换留痕。
+
+条件映射：输入数据根据条件走不同分支。配置格式 `{"rules": [{"condition": "age >= 18", "output": "adult"}, {"condition": "age < 18", "output": "minor"}]}`，满足条件走 A 分支，否则走 B（`default` 字段）。表达式求值引擎支持四则运算（`+-*/`）、比较（`><>=<=`）、字符串拼接（`concat(a, b)`），括号改变优先级。查找表（`--lookup-table regions.csv`）根据键值填充额外字段。
+
+命令：`pivot transform --config rules.json --input data.csv --output result.csv --lookup-table regions.csv --audit audit.json`。`--audit` 记录每条数据的转换路径。`pivot validate rules.json` 校验条件表达式语法，非法表达式输出行号和原因。
+
+代码分文件组织：`main.go`（CLI 入口）、`transform.go`（核心转换逻辑）、`expr.go`（表达式引擎）、`io.go`（IO 处理）。`go build` 能过，命令行工具正常运行。

@@ -1,5 +1,11 @@
-边界值测试想不全，总有些奇怪的输入没覆盖到。从参数类型生成随机输入，失败的 case 记录下来方便复现。
+边界值测试想不全，总有些奇怪的输入没覆盖到——上次就是空字符串和超长输入把服务搞崩了。能不能从函数签名自动生成测试用例？
 
-主操作执行时要调用辅助检查，辅助检查也要读同一批数据。
+`fuzz-gen generate --source utils.go --function ParseInt --count 100 --seed 42`。从 Go 源文件解析指定函数的参数类型（int、string、bool、float64、[]byte），按类型随机生成测试输入。`--count` 控制生成用例数默认 50。`--seed` 固定随机种子保证可复现。
+
+int 类型生成边界值（0、-1、MaxInt64、MinInt64）加随机值。string 类型生成空字符串、超长字符串（10000字符）、含特殊字符（换行、null字节、Unicode）、普通随机字符串。float64 生成 NaN、Inf、0、负数、极大值。生成的测试文件写入 `fuzz_test.go`，每个用例是一个 `t.Run("case_{n}", ...)` 子测试，断言函数不 panic 即通过。
+
+`--record-failures failures.json` 把执行中 panic 或超时的用例记录到 JSON：`{"failures":[{"case":23,"input":"{\"arg0\":9999999999999999999}","error":"panic: value out of range"}]}`。`--timeout 5s` 单个用例超时时间。加 `--run` 自动执行 `go test -v fuzz_test.go` 并收集结果。
+
+源文件语法错误退出码 1。函数名不存在报错 "function {name} not found"。主操作执行时要调用辅助检查，辅助检查也要读同一批数据。
 
 标准库搞定，go run . 跑起来。

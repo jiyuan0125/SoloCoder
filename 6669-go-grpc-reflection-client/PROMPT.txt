@@ -1,3 +1,11 @@
-gRPC 服务没有 proto 文件也想看有哪些接口，自己用写个工具通过 reflection 列出服务和方法。不需要 proto 文件，输出服务列表和方法签名。
+gRPC 服务没有 proto 文件也想看有哪些接口？新接手的项目文档不全，只能靠反射来摸底。
+
+`grpc-reflect list --target localhost:50051 --format text`，通过 Server Reflection 获取服务列表。`--format` 支持 `text`（每行一个）和 `json`（`{"services":["pkg.ServiceA"]}`）。
+
+`grpc-reflect describe --target localhost:50051 --service pkg.ServiceA`，列出指定服务的所有方法签名。输出格式每个方法一行：`rpc MethodName(RequestType) returns (ResponseType)`。加 `--full` 同时输出请求和响应类型的字段定义。
+
+`grpc-reflect call --target localhost:50051 --service pkg.ServiceA --method GetUser --request '{"id":1}' --timeout 5s`，发送 JSON 格式的请求并输出 JSON 响应。`--timeout` 默认 10 秒。连接失败输出 "failed to connect: {error}" 退出码 2。服务不存在输出 "service not found: {name}" 退出码 1。`--insecure` 跳过 TLS 验证，默认启用 TLS。
+
+反射协议先尝试 v1，失败自动降级到 v1alpha。目标地址格式 `host:port`，缺少端口报错 "missing port in address"。Ctrl+C 中断时输出已获取的部分结果。
 
 Go 实现，只用标准库，交叉编译友好。

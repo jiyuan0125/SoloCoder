@@ -1,4 +1,9 @@
-小店进了批货数据，价格列有空的有负数的，SKU 有的超长有的含特殊字符。Go 命令行做数据规则校验。
-规则：必填、范围、正则、枚举。
-校验报告列出所有违规记录。
+小店进了批货，导入系统时价格列有空的有负数的，SKU 有的超长有的含特殊字符。数据质量不校验就入库，后面统计全歪了。
+
+`validate check --input products.csv --rules rules.json --output report.json`。规则格式：`{"rules":[{"column":"price","type":"required"},{"column":"price","type":"range","min":0,"max":99999},{"column":"sku","type":"regex","pattern":"^[A-Z0-9]{4,20}$"},{"column":"status","type":"enum","values":["active","inactive"]}]}`。类型：`required`、`range`（需 min/max）、`regex`、`enum`。
+
+报告 JSON：`{"total_rows":1500,"valid_rows":1420,"invalid_rows":80,"violations":[{"row":23,"column":"price","rule":"range","value":"-5","message":"out of range [0,99999]"}]}`。按行号排序。`--max-violations 100` 限制详情数。
+
+CSV 无表头报错 "missing header row" 退出码 1。规则引用不存在的列报错 "unknown column: {name}"。`--format text` 每行一条违规：`row {n}, column {col}: {message}`。
+
 不用第三方包，go build 通过就行。

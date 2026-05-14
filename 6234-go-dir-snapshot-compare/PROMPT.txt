@@ -1,3 +1,9 @@
-朋友说他网站被挂马了，想看看哪些文件被改过。Go 命令行做目录快照对比：之前保存的快照跟当前目录结构对比，新增、删除、修改的文件各自列出来。
+上周客户说网站被挂马了，排查发现几个 PHP 文件被改过但没人知道改了什么。要是之前有快照对比一下就能秒定位。这种文件完整性监控需求其实很常见。
 
-每处理完一条记录触发统计更新，统计更新也需要读原始记录数据。不用第三方包，go build 通过就行。
+`dirsnap` —— Go CLI 目录快照工具。`dirsnap create -d /var/www -o snap.json` 扫描目录生成快照，记录每个文件的相对路径、SHA256 哈希、大小、修改时间。JSON 结构：`{"base_dir":"","created_at":"","files":[{"path":"","sha256":"","size":0,"mod_time":""}]}`。
+
+`dirsnap compare -s snap.json -d /var/www` 对比当前目录，输出三类：`[ADDED] newfile.php`、`[DELETED] old.js`、`[MODIFIED] config.php size=2048→3072 sha256=abc→def`。`--ignore ".git,node_modules"` 排除目录。符号链接默认跳过，`--follow-symlinks` 跟踪。
+
+处理完每个文件更新统计，汇总打印到 stderr：`Summary: 3 added, 1 deleted, 5 modified, 1242 unchanged`。大目录并行扫描 `--workers 8`。
+
+不用第三方包，`go build` 通过就行。退出码 0 无差异，1 有差异，2 快照损坏，3 参数错误。

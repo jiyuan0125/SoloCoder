@@ -1,3 +1,9 @@
-隔壁组在做数据清洗，我们这边编码标准化还没人搞。Go 顺手做了：编码统一转 UTF-8，BOM 处理不能丢，非法字符替换策略可配。
-代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。
-go build 能过，命令行工具能正常运行。
+先扫描文件检测编码，再按规则转换输出，最后验证转换后能正常打开——编码标准化就这三步。隔壁组数据清洗发现编码没人管，Go 顺手解决。
+
+命令行：`renfield -input data.csv -output clean.csv -encoding utf-8 -bom strip -invalid replace`。-bom 策略：strip（去 BOM）、add（加 EF BB BF）、keep，默认 strip。-invalid：replace（U+FFFD 替换）、skip（丢弃）、abort（报错停），默认 replace。
+
+编码检测：读前 4KB 检查 BOM（EF BB BF=UTF-8, FF FE=UTF-16LE, FE FF=UTF-16BE），无 BOM 统计非 ASCII 字节分布猜测。结果输出 stderr `detected encoding: <name>`。
+
+逐行转换，完成后输出 `converted: <N> lines, <M> chars, <K> invalid <action>`。文件不存在退出码 1。不支持编码输出 `error: unsupported encoding: <name>` 退出码 1。abort 模式输出 `error: invalid char at line <N>, col <M>` 退出码 1。
+
+代码分文件：encoding.go（核心）、io.go（IO）、main.go（入口）。go build 能过，命令行工具能正常运行。

@@ -1,3 +1,7 @@
-文档从 /docs/v1 迁移到 /archive/docs/v1，内部链接全要改。路径引用自动更新，迁移完出个报告看哪些引用没改到。
-go build 能编译通过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+上周帮运维迁移文档目录，从 /docs/v1 搬到 /archive/docs/v1，结果一堆内部链接没更新，线上文档点了全 404。得有个工具自动处理这事。
+
+命令行用法：migrate --source ./docs/v1 --dest ./archive/docs/v1。工具扫描源目录下所有 .md 文件，把它们搬到目标路径，同时扫描文件内容里的相对路径引用（比如 ../api/readme.md）和绝对路径引用（比如 /docs/v1/guide.md），自动替换成新路径。替换规则：把包含旧路径前缀的引用整体替换为新前缀，比如 /docs/v1/xxx → /archive/docs/v1/xxx。
+
+替换完之后在当前目录生成 migration_report.json，里面列出每个文件处理了多少处引用、哪些引用没有被替换（比如引用了外部域名的链接跳过）。报告结构：{"total_files": N, "updated_refs": N, "unresolved_refs": [{"file": "xxx.md", "line": 42, "content": "原始引用文本"}]}。
+
+边界情况：如果目标目录已经存在同名文件，跳过并记录到报告的 skipped 数组。空文件正常处理。二进制文件（图片等）直接复制不做文本替换。go build 编译通过，纯标准库实现，主逻辑和辅助函数分文件写。

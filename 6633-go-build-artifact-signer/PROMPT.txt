@@ -1,3 +1,9 @@
-安全审计要求构建产物必须签名，但现在的流程没有。Go 写个工具支持 RSA/ECDSA 签名，生成签名文件，验证时检查签名是否匹配。
+安全审计要求构建产物必须签名，但现在的流程完全没覆盖这块。Go 写个签名工具，命令分两个子命令。
 
-用 Go 标准库写，go run . 或 go build 都行。
+`artifact-signer sign --key private.pem --algo rsa --input build/app.tar.gz`，`--algo` 支持 `rsa`（默认）和 `ecdsa`。签名算法 RSA 用 SHA256，ECDSA 用 P256 曲线。生成签名文件在输入文件同目录，文件名是 `{原文件名}.sig`，内容是 Base64 编码的签名值。同时生成 `{原文件名}.sha256` 文件，内容是文件的 SHA256 哈希值，格式和 `sha256sum` 命令输出一致。
+
+`artifact-signer verify --key public.pem --algo rsa --input build/app.tar.gz --sig build/app.tar.gz.sig`，验证签名是否匹配。匹配输出 "OK: signature valid" 到 stdout 退出码 0。不匹配输出 "FAIL: signature mismatch" 到 stderr 退出码 2。签名文件不存在输出 "sig file not found" 退出码 1。
+
+密钥文件用 PEM 格式，`--key` 缺失时报错 "key file required"。私钥文件无法解析时报错 "invalid key file: {error}" 退出码 1。支持 `--recursive` 递归签名目录下所有文件，跳过 .sig 和 .sha256 文件。输入是目录时必须有 `--recursive`，否则报错 "directory input requires --recursive"。
+
+Go 标准库写，go run . 或 go build 都行。

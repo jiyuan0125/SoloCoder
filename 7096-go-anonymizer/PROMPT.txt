@@ -1,3 +1,7 @@
-日期格式问题排查全靠 grep 日志，定位一个 bug 半天。Go 重写成自动化工具：日期格式自动识别转换，时区转换覆盖常用时区，相对日期计算。
-任务有注册→排队→执行→成功/失败→重试的状态。
-go build 能过，命令行工具能正常运行。
+日期格式问题排查全靠 grep 日志？上个 bug 定位了半天——日志里时间格式有四种，UTC 和本地时间混着用，timedelta 算了半天算错。能不能有个工具自动处理日期格式转换和计算？
+
+用法：`datefmt convert --input "Jan 15, 2025 3:00 PM" --from "Jan 02, 2006 3:04 PM" --to "2006-01-02T15:04:05Z07:00" --tz Asia/Shanghai`。`--tz` 支持常用时区：UTC、Asia/Shanghai、America/New_York、Europe/London、Asia/Tokyo。相对日期计算：`datefmt calc --base "2025-01-15" --op "+7d"` 或 `--op "-3h30m"`，支持天(d)、小时(h)、分钟(m)。
+
+任务状态机：注册→排队→执行→成功/失败→重试。每个日期转换/计算是一个任务，失败的任务记录原因并可选重试。`--retry 3` 最多重试 3 次。任务结果输出 JSON [{id, input, output, status, error}]。
+
+输入为空退出码 1。格式无法解析打印 "unsupported format: xxx" 退出码 2。时区无效打印 "unknown timezone: xxx" 退出码 2。go build 能过，命令行工具能正常运行。

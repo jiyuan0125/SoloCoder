@@ -1,4 +1,5 @@
-2TB 备份跑到 80% 断了，从头再来又要 6 小时。检查点机制：中断后从最近检查点恢复，检查点自动管理。
-管理审批流程和流程实例：用户提交审批走已有流程。
-纯标准库，go run . 能跑。
-主逻辑和辅助函数分文件写。
+2TB 备份跑到 80% 网络断了，从头再来又要 6 小时。得有检查点机制，中断后从最近的检查点恢复继续跑。
+
+第一步 `ckptbackup -src /data/ -dst /backup/ -ckpt-interval 100MB`。每拷贝 100MB 写一个检查点文件 `.checkpoint.json`，内容 `{"last_file": "reports/q4.xlsx", "last_offset": 45678912, "bytes_copied": 812345678, "timestamp": "2024-01-15T10:30:00Z", "total_files": 1500, "done_files": 1200}`。中断后重新运行同一命令，检测到检查点文件自动恢复：`resuming from checkpoint: 812MB/2048MB (39%), last file: reports/q4.xlsx offset: 45678912`。第二步加 `-reset` 清除检查点从头开始。第三步 `-status` 查看当前检查点状态不执行备份。
+
+审批流程管理：用户提交审批走已有流程，流程实例状态（pending→approved→rejected）也存检查点文件。主逻辑和辅助函数分文件：checkpoint.go 管理检查点读写，copy.go 处理文件拷贝，main.go 做参数解析和调度。纯标准库，go run . 能跑。

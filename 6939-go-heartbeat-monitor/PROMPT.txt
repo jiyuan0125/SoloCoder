@@ -1,3 +1,5 @@
-20 多个微服务，哪个活着哪个死了全靠人肉 ping。写个心跳监控，每个服务定期发心跳过来，超时没收到就标记不可用，触发告警通知。支持同时监控多个服务，每个服务的超时阈值可以不同。
+20 多个微服务，哪个活着哪个死了全靠人肉 ping，等到用户投诉才知道挂了——这事儿该结束了。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+Go 写心跳监控服务。每个被监控的服务定期 POST /heartbeat 到监控端，请求体 JSON 含 service_name（string）、timestamp（Unix 时间戳）、status（"healthy"/"degraded"/"down"）。监控端收到心跳更新最后活跃时间，超时未收到心跳的服务标记为 "unhealthy" 并触发告警。超时阈值按服务配置，用 JSON 配置文件，格式 {"service_name": {"timeout_seconds": 30, "alert_endpoint": "http://..."}}，每个服务可以不同。子命令 monitor 启动监控服务，--port 指定监听端口（默认 8080），--config 指定配置文件路径。子命令 status 查看所有服务状态，输出表格含 Service/Status/Last Heartbeat/Timeout Threshold 四列。加 --json 输出 JSON 数组。告警触发时 POST 到配置的 alert_endpoint，请求体 {"service":"NAME","status":"unhealthy","last_seen":"RFC3339","timeout_seconds":N}。历史心跳记录存到本地文件 heartbeat.log，每行一条 JSON。服务从未发过心跳显示 "NEVER"。
+
+Go 标准库实现，不依赖第三方包。go build 能编译通过。代码分文件。

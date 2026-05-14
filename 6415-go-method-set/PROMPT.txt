@@ -1,3 +1,9 @@
-客户追了三周了还没给，先把方法集分析出个能用的版本。值接收者和指针接收者的区别搞清楚，接口满足关系列出来。构建流程：解析→编译→测试→打包，测试失败不打包。
+客户追了三周了还没给，先把方法集分析出个能用的版本。值接收者和指针接收者的区别总有人搞混，接口满足关系也得列清楚。
 
-纯标准库，go run . 就行。
+用法：`methodset -type ./pkg/handler.Handler -verbose`。也支持包级分析：`methodset -pkg ./pkg/handler/ -output method_sets.json`。
+
+`-type` 分析单个类型：输出值（T）和指针（*T）各有哪些方法，标注接收者类型。格式：`{"type":"Handler","value_methods":["Handle(req) error (ptr receiver)"],"pointer_methods":["Handle(req) error","Close() error"],"interfaces_satisfied":{"value":[],"pointer":["io.Closer"]}}`。
+
+`-pkg` 分析整个包：遍历所有导出类型，输出方法集和接口满足关系。接口判断对比 `io.Reader`、`io.Writer`、`io.Closer`、`fmt.Stringer`、`error` 等标准接口。自定义接口暂不分析，输出 `note: custom interfaces not analyzed`。
+
+类型不存在时 exit 1 输出 `error: type not found: {name}`。包路径无效 exit 1。纯标准库，`go run .` 就行。

@@ -1,3 +1,13 @@
-离线环境要看文档，图片、样式、脚本散落在各个目录。打包成自包含的 HTML，离线浏览器直接打开。
-保存时要同步更新缓存，缓存加载需要读取存储的数据。
-go build 通过就行，标准库实现。
+离线环境要看文档，图片散落在 img/、样式在 css/、脚本在 js/，拷贝过去路径全断。能不能一键打包成自包含的 HTML，离线浏览器直接打开就能看？
+
+思路是这样的：遍历 HTML 文件，找到所有本地引用（`<img src="img/xxx.png">`、`<link href="css/style.css">`、`<script src="js/main.js">`），把引用的资源内联进去——图片转 base64 data URI，CSS 直接嵌入 `<style>` 标签，JS 嵌入 `<script>` 标签。
+
+命令：`docbundle -input ./docs/ -output bundle.html`。`-input` 可以是目录（打包目录下所有 HTML）或单个 HTML 文件。输出一个自包含 HTML 文件，外部引用全部内联。目录模式下多个 HTML 合并成一个，用 `<hr>` 分隔，开头生成目录锚点。
+
+图片超过 5MB 时跳过内联，保留原始路径并 stderr 输出 `warning: {file} exceeds 5MB, skipped`。找不到引用的资源时输出 `warning: resource not found: {path}` 并继续处理。
+
+`-input` 未指定时输出 usage 并 exit 1。输出路径不可写时 exit 1。成功后输出 `bundled {n} files, {m} resources inlined` 并 exit 0。
+
+打包时同步更新缓存记录（`.bundle.cache`），下次只重新处理变更过的文件。缓存文件损坏时忽略并全量重建。
+
+`go build` 通过就行，标准库实现。

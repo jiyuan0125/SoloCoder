@@ -1,5 +1,9 @@
-之前用的覆盖率 SaaS 一年续费八万，太贵了。自己搞一个，总体覆盖率和按包覆盖率都算出来，低覆盖率的包高亮显示。
+之前用的覆盖率 SaaS 一年续费八万，领导问能不能自建。需求不复杂——跑完 go test -coverprofile=coverage.out 后，解析覆盖率文件，算总体覆盖率和每个包的覆盖率，低覆盖率的包标红。
 
-任务状态：排队→运行→暂停→完成，暂停后可以继续。
+用法：covagg parse --file coverage.out --output report.json。go 的 coverprofile 格式每行是：filename:startline.startcol,endline.endcol statements covered。工具按文件路径的前两级目录聚合（比如 github.com/org/project/pkg/utils → pkg/utils），计算每个包的覆盖率百分比。
 
-go build 能过，不依赖第三方库。
+输出 report.json：{"total_coverage": 67.3, "packages": [{"name": "pkg/utils", "coverage": 89.2, "files": 5, "statements": 120}, ...]}。低于 50% 的包在 low_coverage 数组里单独列出。
+
+加上 --threshold 60 标志，如果有包低于阈值 exit code 1，stderr 打印 BELOW THRESHOLD: pkg/db coverage=23.1%。--format markdown 输出 Markdown 表格。--highlight 标志在终端输出时用 ANSI 红色标记低覆盖率包。
+
+任务管理状态：排队→运行→暂停→完成，暂停后可以继续（增量解析已有的部分结果）。covagg status 显示当前处理进度。go build 能过，不依赖第三方库。

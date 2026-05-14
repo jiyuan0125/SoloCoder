@@ -1,3 +1,9 @@
-老项目都没加健康检查，K8s 探针全靠猜。写个工具分析 Go 源码识别框架类型，自动注入健康检查代码，输出 patch 文件直接 apply。
+K8s 集群里跑了几十个服务，老项目都没加健康检查端点，liveness probe 全靠猜，经常误判重启。手动给每个项目加太麻烦，想让工具自动分析代码识别框架然后注入。
 
-用 Go 标准库写，go run . 或 go build 都行。
+hcinject analyze --dir ./mypkg 扫描 main.go 或 cmd/ 目录，识别用的是 net/http、Gin、Echo 还是 Fiber——通过 import 路径判断。识别结果输出到 stderr：Detected framework: net/http。
+
+hcinject generate --dir ./mypkg --output health.patch 根据识别的框架生成对应的健康检查代码。net/http 的加 http.HandleFunc("/health", func(w,r){w.WriteHeader(200);w.Write([]byte("ok"))})。Gin 的加 router.GET("/health", func(c){c.JSON(200, gin.H{"status":"ok"})})。生成的代码作为 unified diff patch 输出到 health.patch 文件。
+
+如果已有 /health 或 /healthz 路由注册，打印 INFO: health endpoint already exists, skipping 并 exit 0。识别不到框架 exit code 2，打印 ERROR: unrecognized framework。
+
+--dry-run 标志只打印将要生成的代码不写文件。--format json 改输出为 JSON 结构包含框架类型和生成代码。Go 标准库写，go run . 或 go build 都行。

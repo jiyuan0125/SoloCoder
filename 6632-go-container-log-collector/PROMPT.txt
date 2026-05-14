@@ -1,3 +1,9 @@
-线上问题排查要从十几台机器上 docker logs，手速跟不上。马上要用，先出一个能跑的：按容器名或标签过滤，输出到文件或 stdout，支持时间范围和日志级别过滤。
+线上出问题要从十几台机器上 docker logs，一台台 SSH 进去看手速跟不上，等到日志拉完了黄花菜都凉了。赶紧出一个能跑的容器日志收集工具。
 
-用 Go 标准库写，go run . 或 go build 都行。
+命令行：`logcollect -container nginx -since "2024-01-15T10:00:00" -until "2024-01-15T11:00:00" -level error -output nginx_errors.log`。-container 按容器名过滤支持模糊匹配（子串），加 `-label app=web` 按标签过滤，两者可以同时指定取交集。-since 和 -until 用 RFC3339 格式限定时间范围，只收集这个窗口内的日志。-level 支持 debug/info/warn/error，过滤掉级别低于指定的行。
+
+输出到 -output 指定文件，不指定则 stdout。每行日志前面加上来源信息格式 `[container:<name>] <原始日志>`。加 `-json` flag 输出 JSONL 格式：`{"container":"nginx","timestamp":"...","level":"error","message":"..."}`。
+
+容器不存在输出 `error: container not found: <name>` 退出码 1。Docker daemon 连不上输出 `error: cannot connect to docker daemon` 退出码 1。没有匹配的日志输出 `no logs matched filters` 退出码 0。
+
+加 `-follow` flag 持续跟踪新日志（类似 tail -f），Ctrl+C 停止。用 Go 标准库写，go run . 或 go build 都行。

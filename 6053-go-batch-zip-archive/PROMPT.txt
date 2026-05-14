@@ -1,2 +1,5 @@
-日志归档每天手动 zip，标准库的 archive/zip 够用不需要额外依赖。支持按日期、按类型、按大小分组，压缩级别可配置。
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。纯标准库实现，go run . 能跑。
+日志归档每天手动 zip 太烦了，标准库 archive/zip 够用不需要额外依赖。上回运维写了个脚本把磁盘打满了——全量打包 50GB 日志没有分组策略。
+
+`ziparch -src /var/log/app/ -dst /archive/ [-groupby date|type|size] [-level 6] [-max-size 500MB]`。`-groupby date` 按文件修改日期分到不同的 zip 文件，命名为 `app-2024-01-15.zip`。`-groupby type` 按扩展名分，`logs.zip`、`json.zip`。`-groupby size` 按累计大小切分，每 500MB 一个 zip（`-max-size` 控制）。`-level` 设置压缩级别 0-9，默认 6。每个文件压缩后输出 `archived: error.log -> app-2024-01-15.zip (2.3MB -> 0.8MB, ratio: 65%)`。最后汇总 `Total: 150 files, 5 archives, 12.5GB -> 4.1GB`。
+
+数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。这个管的是归档任务批次的状态，记录在 `.ziparch_state.json`。空目录输出 `warning: no files to archive`。源目录不存在退出码 1。纯标准库实现，go run . 能跑。

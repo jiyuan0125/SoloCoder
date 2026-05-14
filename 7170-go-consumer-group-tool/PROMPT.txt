@@ -1,5 +1,9 @@
-消费者组里有两个实例挂了，partition 全堆到剩下的。
+消费者组里突然有两个实例挂了，partition 全部堆到剩下的实例上，lag 飙到几十万。手动 rebalance 又怕影响在线服务。这种时候需要一个工具能看清楚分区分配情况，按需调整。
 
-消息采样（按比例/时间间隔抽取），采样统计分析，采样数据导出。导入完成自动更新索引，索引更新失败只记日志。扫描多个目录要并行处理。
+`cgrp` 是 Go 写的消费者组管理 CLI。`cgrp status -b <brokers> -g <group>` 输出当前分区分配表：`MEMBER_ID  ASSIGNED_PARTITIONS  LAG  LAST_OFFSET`。`cgrp rebalance -b <brokers> -g <group> --strategy range` 触发再平衡，支持 `range`（按范围）和 `roundrobin`（轮询）策略，执行前打印变更预览需确认。
 
-Go 命令行工具，go build 能过就行。
+消息采样功能：`cgrp sample -b <brokers> -t <topic> --rate 0.01` 按 1% 比例抽取消息，或 `--interval 5s` 每 5 秒抽一条。采样结果输出 JSON：`{"topic":"","partition":0,"offset":12345,"key":"","value":"","timestamp":""}`。`--export samples.jsonl` 导出到 JSONL 文件。
+
+导入完成后自动更新本地索引文件（记录 topic-partition-offset 映射），索引更新失败只记日志 `[WARN] index update failed: <error>` 不中断主流程。扫描多个 broker 目录并行处理，并发度用 `--workers N` 控制（默认 4）。
+
+Go 命令行工具，`go build` 能过就行。退出码 0 成功，1 broker 连接失败，2 参数错误。

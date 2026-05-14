@@ -1,4 +1,5 @@
-下游服务不稳定，调用失败需要重试但不想每次都手写。生成指数退避、最大重试次数、可重试错误判断。
+下游支付服务隔三差五超时，每个调用点都手写重试逻辑太烦了。先定义重试策略配置，再根据配置生成对应的 Go 代码片段，直接粘贴到项目里用，省得每次都复制粘贴改参数。
 
-go build 能过，不依赖第三方库。
-主逻辑和辅助函数分文件写。
+生成器接受 YAML 配置文件描述重试策略，字段包括：max_retries（默认 3）、initial_interval（默认 1s）、max_interval（默认 30s）、multiplier（默认 2.0）、retryable_errors（可重试的错误码或异常类型列表，为空则所有错误都重试）。命令：retry-gen -config retry.yaml -output retry.go。-config 指定输入配置文件路径，-output 指定生成的 Go 文件路径。生成的代码包含一个 Do(ctx context.Context, fn func() error) error 函数，内部实现指数退避算法：第 n 次重试等待时间为 min(initial_interval * multiplier^n, max_interval)。每次重试前检查 context 是否已取消，取消则立即返回 ctx.Err()。遇到 retryable_errors 列表之外的错误直接返回，不消耗重试次数。
+
+配置文件不存在或字段非法时输出具体错误信息并退出码 1。生成的代码里要附带单元测试文件，验证三项行为：重试次数不超过 max_retries、每次退避时间严格递增、context 取消后立即返回不继续重试。go build 能过，不依赖第三方库。主逻辑和辅助函数分文件写。

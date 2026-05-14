@@ -1,3 +1,5 @@
-分配内网 IP 段的时候算子网太费脑子了——能用的主机数、广播地址、网络地址这些。输入 IP 和掩码直接算出来，支持 CIDR 写法（比如 192.168.1.0/26），把可用主机范围和子网数量一并输出。
+难道每次分配内网 IP 段都要开个子网计算器网页？——能用的主机数、广播地址、网络地址、子网划分，这些完全可以在终端里算。
 
-Go 实现，只用标准库，交叉编译友好。
+Go 命令行工具。子命令 calc 接收 IP 和掩码，--ip 指定 IP 地址，--mask 指定子网掩码，支持两种写法：点分十进制（255.255.255.192）和 CIDR 前缀长度（26）。也支持直接传 CIDR 格式，比如 calc 192.168.1.0/26。输出信息包括：Network Address、Broadcast Address、Subnet Mask、First Usable Host、Last Usable Host、Number of Usable Hosts、CIDR Notation。加 --json 输出 JSON 格式，字段名用 snake_case。子命令 split 做子网划分，--ip 和 --mask 指定原始网段，--subnets 指定要划分成几个子网，输出每个子网的上述全部信息。划分不了（主机数不够）输出 "error: cannot split into N subnets: only M hosts available" 并 exit 1。IP 格式不合法输出 "error: invalid IP address: INPUT"。掩码不合法输出 "error: invalid subnet mask: INPUT"。加 --version 输出版本号。
+
+Go 实现，只用标准库，交叉编译友好。go build 能过。

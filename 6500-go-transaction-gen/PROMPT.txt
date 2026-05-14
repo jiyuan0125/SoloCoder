@@ -1,5 +1,9 @@
-数据库操作没有事务包裹，中间挂了数据就不一致。生成事务开始、提交、回滚的标准代码，嵌套事务也支持。
+上周生产事故：批量更新执行到一半服务挂了，1500 条数据改了一半，花了三小时手动回滚。根本原因就是这批操作没包事务。生成标准的事务模板代码，以后新模块直接复用。
 
-子命令结构：db migrate、db rollback、db status、db seed。
+Go 模板生成器：`txgen generate --db postgres --table orders -o orders_tx.go` 生成包含 `BeginTx`、`Commit`、`Rollback` 的标准事务代码。嵌套事务用 savepoint 实现：`Savepoint(name string)` 和 `RollbackTo(name string)`。`--template nested` 生成嵌套事务模式，`--template simple` 生成简单模式。
 
-零外部依赖，go run . 能跑。
+子命令结构：`db migrate` 生成迁移模板，`db rollback` 生成回滚脚本，`db status` 生成状态检查函数返回当前事务状态 `{active, savepoints: []}`，`db seed` 生成种子数据插入代码。
+
+生成的代码包含错误处理：操作失败自动 rollback 并返回 `tx failed at <operation>: <error>`。`txgen validate orders_tx.go` 校验已有代码是否正确使用了事务模式——检查每个写操作是否在事务上下文中执行。
+
+不支持的数据库类型 `error: unsupported driver: <name>` exit 1。表不存在 exit 2。零外部依赖，`go run .` 能跑。

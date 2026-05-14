@@ -1,5 +1,9 @@
-市场部那边的 CSV 数据到处是零宽字符和不可见空白，导入数据库经常出问题。Go CLI 做批量文本清理。
-零宽字符要清理。
-处理前后数量对比。
-构建流程是解析→编译→测试→打包。测试失败不打包。
+市场部那边的 CSV 数据到底有多脏？零宽字符藏在字段中间、行尾多了不可见空白、BOM 头莫名其妙出现——导入数据库三天两头报错，每次都是字符问题。能不能有个工具批量清理一下？
+
+命令行这样用：`text-trim --input data.csv --output clean.csv --trim zero-width,trailing-ws,bom --report stats.json`。`--trim` 指定清理项目，支持 zero-width（零宽字符 U+200B/U+FEFF）、trailing-ws（行尾空白）、bom（UTF-8 BOM）、leading-ws（行首空白），可以组合。默认全部启用。
+
+处理完后必须输出前后对比统计：每个清理项的命中次数、总清理字符数、受影响行数。`--report` 指定时写入 JSON 文件，字段为 [{rule, hits, chars_removed, lines_affected}]。不指定 `--report` 时统计打印到 stderr。
+
+构建流程是解析→编译→测试→打包，测试失败不打包——Makefile 里 test 步骤失败时 build 步骤不执行。输入文件不存在退出码 1，输出路径不可写退出码 2。空文件处理后还是空文件，报告里 hits 全为 0。`--encoding` 指定输入编码，默认 utf-8。
+
 不用第三方包，go build 通过就行。

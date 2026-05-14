@@ -1,3 +1,5 @@
-编译的时候磁盘 I/O 打满导致其他服务挂了，但一直没监控。Go 工具后台采集 CPU、内存、磁盘 I/O，构建完成后输出报告，看看到底是哪个环节吃资源。
+编译的时候磁盘 I/O 经常打满，其他服务跟着挂，但到底哪个编译阶段吃的资源谁也说不上来。需要一个后台监控工具，构建期间持续采集资源使用数据，构建完了出报告。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+`buildmon [-interval 500ms] [-o report.json] [-- make -j4 ./...`。在后台启动资源采集 goroutine，每 500ms 采样一次 CPU 使用率（/proc/stat 计算）、内存占用（RSS 从 /proc/self/status 读）、磁盘 I/O（读写字节数从 /proc/diskstats）。子命令在前景执行，子命令结束后停止采集，输出报告。报告包含：峰值 CPU、峰值内存、总磁盘读写量、分阶段资源趋势（按采集时间窗口每 5 秒一个采样点）。文本报告格式 `PEAK | CPU: 340% | MEM: 2.1GB | DISK_READ: 890MB | DISK_WRITE: 1.2GB`。
+
+`-json` 输出完整时序数据 `{"samples": [{"ts": "10:30:00", "cpu_pct": 340, "mem_mb": 2100, "disk_read_mb": 45, "disk_write_mb": 67}], "peak_cpu": 340, "peak_mem_mb": 2100, "duration_s": 120}`。子命令不存在输出 `error: command not found` 退出码 1。采集过程中程序被 SIGINT 中断也先 flush 已采集数据到报告再退出。Go 标准库实现，不依赖第三方包，go build 能编译通过。Linux 环境为主，macOS 基本兼容。

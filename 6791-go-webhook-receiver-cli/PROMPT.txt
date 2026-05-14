@@ -1,3 +1,11 @@
-调试第三方 webhook 回调的时候，对方说发了但我们没收到，互相扯皮。写个本地 webhook 接收服务，监听端口把收到的 POST 请求完整记录到文件，把详情甩给对方一看便知。
+调试第三方 webhook 回调的时候，对方说发了但我们没收到，互相扯皮半天。写个本地 webhook 接收服务，监听指定端口把收到的每个 HTTP 请求完整记录下来，包括 method、path、headers、query params、body，打上时间戳写入日志文件，把详情甩给对方一看便知。
+
+用法：`hookrecv [--port 8080] [--output <目录>] [--path <路径前缀>]`。默认监听 `:9090`，所有路径都接收。output 目录下每个请求生成一个 JSON 文件，命名 `YYYYMMDD-HHMMSS-<6位随机ID>.json`，内容 `{"timestamp":"...","method":"POST","path":"/webhook","headers":{...},"query":{...},"body":"..."}`。
+
+同时在 stdout 实时输出接收到的请求摘要：`[15:04:05] POST /webhook 200  body=1234bytes`。
+
+`--path /webhook` 只接收匹配该前缀的路径，其他路径返回 404。body 超过 1MB 时截断到 1MB，headers 中加 `X-Truncated: true`。
+
+响应固定返回 `200 OK`，body 是 `{"received":true,"id":"<文件ID>"}`。Ctrl+C 优雅关闭，输出总共接收了多少个请求。
 
 Go 实现，只用标准库，交叉编译友好。

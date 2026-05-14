@@ -1,7 +1,5 @@
-VIP 用户的消息和普通用户混在一起，VIP 感知不到优先。
+VIP 用户的消息和普通用户的混在同一个队列里，高峰期 VIP 感知不到任何优先处理，投诉率上升了 30%。能不能有个工具把优先级真正落地？
 
-消费延迟监控和预警，消费者健康检查，延迟趋势报告。
+`pqueue -config queue.yaml`。配置文件定义队列优先级：`queues: [{name: "vip", priority: 10, max_rate: 100}, {name: "normal", priority: 1, max_rate: 500}]`。实现加权优先级调度：每个 dequeue 周期按权重概率从队列取消息，priority=10 的队列被选中概率是 priority=1 的 10 倍。消息通过 stdin 输入，格式 `PRIORITY|QUEUE|PAYLOAD`。dequeue 通过 HTTP API `GET /dequeue` 返回 JSON `{"queue": "vip", "payload": "...", "wait_ms": 12}`。
 
-证书有申请→签发→生效→过期→续签的状态流转。
-
-Go 从零写的命令行工具，go build 能过就行。
+消费延迟监控：`GET /stats` 返回每个队列的 `pending_count`、`avg_wait_ms`、`max_wait_ms`。消费者 30 秒无 dequeue 请求标记 `UNHEALTHY`，`GET /health` 返回 `{"status": "unhealthy", "reason": "no consumer for 30s"}`。证书状态流转 `申请→签发→生效→过期→续签` 作为队列元数据管理。Go 从零写的命令行工具，go build 能过就行。

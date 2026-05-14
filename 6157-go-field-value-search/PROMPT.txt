@@ -1,5 +1,8 @@
-配置管理里经常要查某个字段在哪个配置文件里出现过，grep 太粗暴。Go 做结构化字段搜索。
-支持嵌套字段路径查询。
-结果展示匹配的完整记录。
-go build 能编译通过，不依赖第三方库。
-代码分几个文件组织，别全写 main.go 里。
+配置管理里经常要查某个字段在哪个配置文件里出现过，grep 太粗暴——把 JSON 和 YAML 混在一起搜，根本分不清结构层级。需要一个能理解字段路径的搜索工具。
+
+1. 命令行：`field-search --dir ./configs --field "database.host" --value "10.0.1.*"`。`--field` 支持点分嵌套路径，如 app.server.port。`--value` 支持 glob 通配符，不指定则只匹配字段名。`--format` 支持 json/yaml/toml 三种输入格式，不指定时按文件扩展名自动判断。
+2. 搜索结果展示匹配的完整记录，每条结果输出：文件路径、字段完整路径、字段值。加 `--output json` 时输出结构化 JSON，格式为 [{file, path, value, line_number}]。
+3. JSON 嵌套对象、YAML 多文档、TOML 表嵌套都要支持。数组里的对象也要遍历——字段路径用 [N] 表示数组索引，如 items[0].name。
+4. 没有匹配结果时退出码 1，打印 "no matches found"。目录不存在退出码 2。文件解析失败跳过并在 stderr 输出 "parse error: filename: reason"。
+
+go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里。

@@ -1,3 +1,9 @@
-100 多个 Markdown 文件的 front matter 格式不统一，有的有作者有的没有。批量添加、修改、删除元数据字段，按元数据筛选文档。
-变更完成后触发关联更新，关联更新要查原记录状态。
-go run . 能跑，不用第三方包。
+100 多个 Markdown 文件 front matter 乱成一锅粥——有的写了 author 有的没写，日期格式也不统一——批量管理需求很明确。
+
+三个子命令覆盖完整工作流：`docmeta list -dir ./docs -filter "author=missing"` 列出所有文档的元数据，支持 -filter 按 key=value 过滤（value=missing 表示字段缺失），输出表格含文件名和所有 front matter 字段。`docmeta set -dir ./docs -field author -value "张三" -filter "author=missing"` 批量设置字段值，只改匹配 filter 的文件。`docmeta delete -dir ./docs -field draft` 批量删除指定字段。
+
+front matter 格式支持 YAML（--- 包围）和 TOML（+++ 包围）。文件没有 front matter 时 list 命令仍然展示文件名但字段为空，set 命令自动创建 front matter 块。变更完成后触发关联更新——如果修改了 title 字段，自动更新同级目录下的 summary.json 中的对应条目。关联更新要查原记录状态，状态为 draft 的不更新 summary。
+
+输出格式：list 默认输出表格（制表符分隔列），加 `-json` 输出 JSON 数组。set 和 delete 输出变更统计：`updated: <N> files, skipped: <M> files`。
+
+文件读取失败输出 `error: failed to read <file>: <原因>` 跳过继续处理下一个。go run . 能跑，不用第三方包。

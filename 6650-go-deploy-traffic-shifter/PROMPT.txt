@@ -1,3 +1,13 @@
-灰度发布全靠手动改 Nginx 配置，切流量的时候手抖多切了。别人有个工具按百分比分步切换挺好用，Go 标准库自己也搞一个。
+灰度发布全靠手动改 Nginx 配置，上次切流量的时候手抖多切了 20%，线上炸了十分钟。别人有个工具按百分比分步切换挺好用，Go 标准库自己也搞一个。
 
-Go 标准库实现，不依赖第三方包。go build 能编译通过。
+到底要什么？给定旧版本和新版本的地址，按百分比逐步把流量从旧切到新，每步停留观察，出问题能回退。
+
+命令：`shift -old localhost:8081 -new localhost:8082 -steps "10,30,50,80,100" -interval 60s -port 8080`。工具在 `-port` 上启动反向代理，按 `-steps` 的百分比序列逐步切换到新版本，每步间隔 `-interval`。
+
+每步切换后输出 JSON 状态：`{"step":2,"percent":30,"old_requests":70,"new_requests":30,"errors":0,"elapsed":"2m0s"}`。`-health-check` 参数指定健康检查 URL（如 `http://localhost:8082/health`），切换前检查新版本健康，不健康时输出 `health check failed, aborting shift` 并 exit 2，流量停留在当前比例。
+
+`-rollback` 标志触发回退，逐步将流量切回旧版本。所有步骤完成输出 `shift completed: 100% → new version` 并 exit 0。
+
+旧/新地址不可达时 exit 1。steps 格式错误（非递增、不在 0-100）时 exit 1。
+
+Go 标准库实现，`go build` 能编译通过。

@@ -1,3 +1,9 @@
-每个模型都要写一遍增删改查，十个模型就是十遍重复代码。从 JSON 文件读模型定义，自动生成增删改查函数和测试。写入结果的同时要更新索引，索引构建也要读取已有结果。
+每个模型都要写一遍增删改查，十个模型十遍重复代码。从模型定义直接生成。
+
+`crud-gen generate --schema models.json --output ./generated --package api`。schema：`{"models":[{"name":"User","fields":[{"name":"ID","type":"int","primary":true},{"name":"Name","type":"string","required":true},{"name":"Email","type":"string","unique":true}]}]}`。
+
+每个模型生成 `{name}_create.go`（`Create{Name}(...)(int64,error)`）、`{name}_read.go`（`Get{Name}ByID(id int64)(*{Name},error)` + `List{Names}(page,pageSize)([]*{Name},error)`）、`{name}_update.go`（`Update{Name}(id,fields)error`）、`{name}_delete.go`（`Delete{Name}(id)error`）。
+
+用 `database/sql` 参数化查询防注入。Read 找不到返回 sql.ErrNoRows。`--db postgres`（`$1`）或 `--db mysql`（`?`），默认 postgres。写入时更新 `generated_index.json` 记录模型名和文件路径，增量追加。
 
 零外部依赖，go run . 能跑。

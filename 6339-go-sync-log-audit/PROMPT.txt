@@ -1,3 +1,7 @@
-合规审计要查每次同步操作的时间、源路径、目标路径、操作类型。日志可查询可导出。
-导入成功后自动通知下游系统，本地模式没有下游配置。
-go build 通过就行，第三方库零引入。
+先说背景：公司过等保三级，审计要求每次文件同步操作都要记录谁操作的、什么时间、从哪到哪、做了什么。现在同步日志散落在各个脚本里，查的时候翻半天。写个统一的同步审计日志工具，所有同步操作统一记录，支持按条件查询和导出。
+
+日志条目字段：id（UUID 自动生成）、timestamp（ISO 8601 格式）、source_path、target_path、action（COPY/MOVE/DELETE/SYNC 四种）、status（SUCCESS/FAILED）、file_count、total_bytes、error_message（仅失败时填写）。存储在本地 JSON Lines 文件，每行一条记录。命令用法：sync-audit log -source /a -target /b -action COPY -status SUCCESS -count 10 -bytes 2048 追加一条记录。sync-audit query -from 2024-01-01 -to 2024-01-31 -action COPY 按条件查询输出表格。sync-audit export -format csv -output audit.csv 导出为文件。
+
+查询支持的过滤参数：时间范围（-from/-to，ISO 日期格式）、操作类型（-action）、状态（-status）、路径前缀（-path-prefix）。导出格式支持 CSV 和 JSON 两种，通过 -format 指定。日志文件不存在时自动创建，目录不存在时也自动创建。query 无匹配结果时输出 "no records found" 退出码 0。
+
+导入成功后自动通知下游系统，本地模式没有下游配置。go build 通过就行，第三方库零引入。

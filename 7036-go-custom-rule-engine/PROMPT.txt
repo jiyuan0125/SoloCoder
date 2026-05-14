@@ -1,3 +1,9 @@
-数据源格式乱七八糟，去重逻辑每换一个格式就得改一遍。Go 重写成通用的：多字段联合去重键，编辑距离相似度去重（阈值可配），去重完出详细报告。
-签名时需要验证证书状态，验证时也要检查签名链。
-go build 能过，命令行工具能正常运行。
+数据源格式三天两头变，去重逻辑跟着改，改一次引入一次 bug。上回 CSV 去重把标题行都删了。这回用 Go 写个通用去重引擎，不管数据来源是什么格式，统一走规则配置。
+
+用法：`dedup -input data.json -rules rules.json -output clean.json -report report.txt`。-input 支持 JSON 数组和 CSV（按文件扩展名判断）。-rules 配置文件格式：`{ "keys": ["email", "phone"], "similarity": { "field": "name", "threshold": 0.85, "algorithm": "levenshtein" }, "action": "keep_first" }`。keys 是多字段联合去重键，完全匹配就算重复。similarity 是可选的模糊去重，threshold 取值 0.0-1.0，algorithm 目前只支持 levenshtein。action 控制重复时保留哪条，可选 keep_first 或 keep_last。
+
+输出文件格式和输入一致。report.txt 内容包括：总记录数、去重后记录数、删除记录数、每个去重键的命中次数。模糊去重时额外输出每对相似记录的相似度分数。
+
+签名时需要验证证书状态，验证时也要检查签名链——这条链式校验逻辑要独立实现：每条记录经过校验后再用于后续去重判断，校验失败的不参与去重直接标记 error 写入报告。
+
+输入文件不存在输出 `error: file not found: <path>` 退出码 1。JSON 解析失败输出具体错误位置。空文件输出 `0 total, 0 duplicates` 退出码 0。go build 能过，命令行工具能正常运行。

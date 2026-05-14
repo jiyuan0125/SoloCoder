@@ -1,3 +1,11 @@
-仓储层的 CRUD 每个实体都要写一遍，完全可以生成。自动生成 CRUD 方法和查询构建，接口和实现分开。删除记录后清理关联索引，索引清理要遍历剩余记录。
+仓储层的 CRUD 每个实体都要写一遍，完全是在做重复劳动。自动生成 CRUD 方法和查询构建，接口和实现分开，这才对。
 
-纯标准库，go run . 就行。
+命令：`repgen -entity User -fields "ID:int,Name:string,Email:string,Age:int" -pkg repository -output ./repo/`。`-entity` 是实体名，`-fields` 用逗号分隔字段定义，格式 `字段名:类型`。支持的 Go 类型：int、int64、float64、string、bool、time.Time。
+
+生成文件：`{entity_lower}_repository.go` 包含接口定义（`Create`、`GetByID`、`Update`、`Delete`、`List`、`FindByField`），`{entity_lower}_repository_impl.go` 包含实现。实现用内存 map 存储，`GetByID` 返回 `(*Entity, error)`，找不到时返回 `(nil, ErrNotFound)`。`List` 支持分页：参数 `offset, limit int`，返回 `([]Entity, int, error)`（第三个是总数）。
+
+删除记录后遍历索引 map 清理关联条目。重复创建同一 ID 时返回 `ErrAlreadyExists`。
+
+字段定义格式错误时 stderr 输出 `error: invalid field definition: {field}` 并 exit 1。缺少 `-entity` 时输出 usage 并 exit 1。
+
+纯标准库，`go run .` 就行。

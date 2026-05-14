@@ -1,3 +1,11 @@
 对接的服务端用了 SSE 推送，要验证推送的内容和频率。写个 SSE 客户端连上去，把收到的事件逐条输出，能按事件类型过滤，断了自动重连。
 
+上次线上推送延迟半小时才发现，要是有个实时监听工具就能第一时间发现。这工具就是干这个的。
+
+命令行：`sseclient -url http://localhost:8080/events -filter message,update -reconnect -max-retries 5`。`-url` 必填，`-filter` 用逗号分隔只输出的事件类型，不指定则输出全部。`-reconnect` 开启自动重连，默认关闭。`-max-retries` 控制最大重连次数，默认 3，设为 0 表示无限重试。
+
+每条事件输出一行 JSON：`{"id":"evt-123","event":"message","data":"hello","timestamp":"2024-01-15T10:30:00Z"}`。加了 `-verbose` 时额外输出 SSE 原始帧数据到 stderr。连接断开时输出 `connection lost, retrying ({n}/{max})...`，重连成功输出 `reconnected`。
+
+URL 无法连接时 stderr 输出 `error: failed to connect to {url}` 并 exit 1。达到最大重连次数后输出 `error: max retries exceeded` 并 exit 2。正常断开（服务端发完）exit 0。
+
 Go 标准库，命令行参数用 flag 包解析。

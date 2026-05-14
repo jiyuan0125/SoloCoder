@@ -1,3 +1,7 @@
-团队文档里同一个概念用了三种说法，新人都看蒙了。自动检测术语首次出现的位置，生成术语索引。
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。
-go build 编译通过就行，不用第三方包。
+先说场景——团队写了上百篇内部文档，同一个概念"发布流水线"在不同文档里分别叫 pipeline、流水线、部署流程，新人看得一头雾。需要一个工具自动管理术语表，检测文档里术语首次出现的位置，生成统一索引。
+
+第一步，用 `glossary init` 在当前目录创建 `glossary.yaml`，格式为术语列表，每条含 `term`（标准名称）、`aliases`（别名数组）、`description`（一句话解释）。第二步，`glossary scan ./docs` 扫描所有 Markdown 文件，找出术语和别名的首次出现位置。输出 `glossary-index.json`，结构是数组，每条含 `term`、`file`、`line`、`context`（该行前后各 20 字符的摘要）。第三步，`glossary check` 校验文档一致性：如果某个术语的别名在非首次出现时被使用，报 warning。
+
+审批流程走 `glossary submit`（提交术语变更）→ `glossary review --approve/--reject`（初审）→ `glossary finalize`（复审通过），初审不过可以修改后重新 submit。状态记录在 `.glossary-state.json`，字段包括 `status`（draft/pending/approved/archived）、`reviewer`、`timestamp`。
+
+术语文件为空时 `scan` 输出 "no terms defined" 并 exit 0。docs 目录不存在 exit 1。纯标准库，go build 编译通过。

@@ -1,3 +1,9 @@
-iota 用错了导致常量值全偏了一位，跑了两个月才发现。检查 iota 使用是否正确、常量类型是否一致，魔法数字也检测。生成报告后自动发送邮件通知，有些环境没配邮件。
+先说事故：iota 的常量组定义里中间插了个不带类型的常量，后面的值全偏了一位，跑了两个月才被 QA 发现。这种隐式依赖太危险了，需要静态检查。
 
-只依赖标准库，go build 通过就行。
+第一步 constcheck scan --dir ./pkg 递归扫描 .go 文件，用 go/parser 提取所有 const 声明块。第二步检查每个 const block 里 iota 的使用——如果有 iota，验证每一行的表达式是否显式写了值（带 iota 的显式表达式算通过，空行隐式继承标 WARNING）。第三步检查同组常量的类型是否一致，mixed types 标 WARNING: mixed types in const group at file.go:10。
+
+魔法数字检测：扫描函数体里的整数字面量（不在 const 声明里的），如果出现 0-10 范围外的数字且不是 for 循环索引，打印 INFO: magic number N at file.go:line。这个检测比较宽松，不算错误。
+
+输出 const_report.json：{"iota_warnings": [...], "mixed_type_warnings": [...], "magic_numbers": [...]}。加上 --strict 标志有 warning 就 exit 1，否则 exit 0。
+
+有些环境没配邮件，--notify 选项在无 SMTP 配置时打印 INFO: notification skipped, no SMTP config。只依赖标准库，go build 通过就行。

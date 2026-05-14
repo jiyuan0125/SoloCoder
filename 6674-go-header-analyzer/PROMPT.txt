@@ -1,3 +1,7 @@
-安全扫描说我们的 API 缺 CSP 和 HSTS header。新项目要求提测前自检，Go 工具检查缺失的安全 header 和不安全配置，输出修复建议。
+安全扫描说 API 响应头缺了 CSP 和 HSTS，提测前要自检一遍所有端点的安全 header。
 
-Go 实现，只用标准库，交叉编译友好。
+命令 `headercheck scan -url https://api.example.com -endpoints endpoints.txt`。endpoints.txt 每行一个路径，工具发 GET 请求检查响应头。检查项：CSP、HSTS、X-Frame-Options、X-Content-Type-Options、Referrer-Policy，每种判定为 `missing`、`insecure`（如 HSTS max-age < 31536000）或 `ok`。
+
+输出 `header-report.json`：`{"results": [{"endpoint": "/api/v1/users", "headers": {"CSP": {"status": "missing", "recommendation": "Add default-src 'self'"}}}], "summary": {"total": 5, "missing": 3, "ok": 6}}`。加 `-md` 输出 Markdown 格式。
+
+单端点超时（默认 5s，`-timeout` 可调）标记 `error` 不中断批量。endpoints 文件不存在 exit 1。URL 不可达报 "failed to connect: <url>" exit 1。零端点输出 "no endpoints to scan" exit 0。Go 标准库，交叉编译友好。

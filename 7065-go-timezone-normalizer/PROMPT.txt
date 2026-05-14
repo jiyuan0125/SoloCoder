@@ -1,3 +1,7 @@
-数据集合并全靠手动 cp 和 SQL JOIN，主键冲突经常漏处理。Go 搞自动化：多数据集合并关联，主键冲突策略可选覆盖/跳过/报错，合并完去重。
-转换主流程中调用子转换，子转换也需要读同一份映射表。
-go build 能过，命令行工具能正常运行。
+多个数据集合并这件事，手动 cp 加 SQL JOIN 太原始了，主键冲突还老忘处理，上次合并搞出几百条重复数据清洗了一整天。得自动化。
+
+CLI：`tznorm merge --sources "a.csv,b.csv,c.csv" --output merged.csv --key user_id --conflict overwrite --dedup`。多个 CSV 文件按指定主键列合并，冲突策略三选一：`overwrite`（后文件覆盖前文件）、`skip`（保留先出现的）、`error`（遇到冲突退出码 1 并输出冲突行）。`--dedup` 标志在合并完成后按主键去重，保留最后出现的记录。
+
+子转换机制：主合并流程中可以对单列值调用子转换函数。子转换读同一份映射表（`--mapping rules.json`），JSON 格式为 `{"column": "status", "rules": [{"from": "1", "to": "active"}, {"from": "0", "to": "inactive"}]}`。映射不到的值保持原样。
+
+输入 CSV 编码统一按 UTF-8 处理，遇到非法字节该行跳过并记录到 stderr，统计到 `skipped_lines` 字段。输出文件已存在时 `--force` 覆盖，否则输出 `error: output file exists, use --force` 退出码 1。空输入文件直接创建空输出。`tznorm validate rules.json` 校验映射表格式和字段名合法性。`go build` 能过，命令行工具正常运行。

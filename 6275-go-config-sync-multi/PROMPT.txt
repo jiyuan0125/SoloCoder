@@ -1,3 +1,13 @@
-十个微服务共享同一个数据库配置，改了一个忘了改另外九个。Go 命令行做多配置文件同步：共享配置项的值自动同步，冲突时有处理策略。
+十个微服务共享同一个数据库配置，改了一个忘了改另外九个，出了两次连接池爆满的事故。Go 做多配置文件同步，指定一个主配置文件和多个目标文件，共享配置项的值自动同步过去。
 
-记录状态支持草稿→待审→通过→归档，通过后还能撤回重编辑。纯标准库实现，go run . 能跑。
+用法：`cfgsync --master <主配置文件> --targets <目录或文件列表> [--keys <key列表>] [--strategy overwrite|merge|skip] [--dry-run]`。
+
+`--keys` 指定要同步的配置项，逗号分隔。不指定则同步所有在主配置中存在的 key。`--strategy`：overwrite 直接覆盖目标文件中对应 key；merge 只更新目标中已有的 key，不新增；skip 跳过有冲突的 key（两边值不同且目标非空）。
+
+配置文件格式支持 JSON 和 YAML，根据扩展名自动判断。
+
+冲突时 stdout 输出 `CONFLICT: <key> in <文件>: master=<值> target=<值>`。`--strategy skip` 下冲突项跳过，其他策略直接覆盖。
+
+记录状态文件 `.cfgsync-state.json`：`{"id":"...","status":"draft|pending|approved|archived","timestamp":"...","changes":[...]}`。approved 状态可以 `cfgsync rollback <id>` 撤回，恢复同步前的值。rollback 只能撤回最近一次。
+
+纯标准库实现，go run . 能跑。

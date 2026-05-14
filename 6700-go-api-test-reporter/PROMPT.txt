@@ -1,3 +1,9 @@
-十个服务的 API 测试结果分散在各处，每次汇总要手动粘贴。同事要个工具聚合多个测试结果文件，按接口统计通过率、平均响应时间、错误类型分布。
+十个微服务的 API 测试结果散在各自的 CI 日志里，每周开会前都要手动复制粘贴到 Excel，还经常漏。同事受不了了，要个自动聚合的工具。
 
-用 Go 标准库写，go run . 或 go build 都行。
+输入格式：reporter aggregate --results ./test-results/ --output report.json。工具读取目录下所有 .json 测试结果文件，每个文件的格式：{"service": "user-svc", "timestamp": "2024-01-01T10:00:00Z", "tests": [{"endpoint": "POST /api/users", "status": "pass", "response_ms": 42, "error": ""}]}。
+
+聚合后输出 report.json，按接口维度统计：total_requests、pass_count、fail_count、pass_rate（百分比保留一位小数）、avg_response_ms（整数）、error_types（错误分类计数，比如 timeout 3 次、500 2 次）。
+
+加上 --threshold 0.95 标志，如果有接口通过率低于 95%，exit code 1 并在 stderr 打印 FAIL: POST /api/users pass_rate=0.80。加上 --format table 输出终端表格而不是 JSON，列：接口 | 请求数 | 通过率 | 平均耗时 | 错误类型。
+
+空结果文件跳过并打印 WARNING。results 目录不存在 exit code 1。Go 标准库，go run . 或 go build 都行。

@@ -1,3 +1,3 @@
-开发环境的数据库在另一个网段，每次 ssh 隧道敲一堆命令太烦了。写个 TCP 代理工具，监听本地端口直接转发到远程地址，要有连接日志和流量统计，断了自动重连。
+先用起来再说：`tcpproxy --listen :3307 --remote 10.0.2.15:3306 --reconnect --log proxy.log`。监听本地 3307 端口，所有连接转发到远程 MySQL。断了自动重连，连接日志记到文件里方便排查。再也不用每次手动敲 ssh -L 了。
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+这是一个 TCP 代理工具。每建立一条连接，在 stderr 打印 `[时间] new connection from <客户端IP:端口> to <远程地址>`。每关闭一条连接打印 `[时间] connection closed, transferred X bytes up, Y bytes down, duration Zs`。加 `--stats` 参数后每 30 秒打印一次汇总到 stderr：当前活跃连接数、总连接数、总上下行流量。`--reconnect` 开启自动重连，远程不可达时每 5 秒重试，打印 `remote unreachable, retrying in 5s...`，不退出程序。监听端口被占用退出码 1 输出 `error: listen failed: address already in use`。SIGTERM 优雅关闭：停止接受新连接，等待现有连接完成或 10 秒超时后退出，打印 `shutting down, X active connections draining...`。纯 Go 标准库，编译后单二进制可以直接跑。

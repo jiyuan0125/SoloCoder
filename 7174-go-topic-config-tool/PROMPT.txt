@@ -1,3 +1,11 @@
-分区数设少了吞吐量上不去。新规还要求合规检查。
+分区数设少了吞吐量上不去，设多了又浪费资源。消息中间件的 Topic 配置需要根据流量特征来调，但每次改配置都靠 DBA 手动操作，效率太低。
 
-消息聚合（按时间窗口/数量阈值批量输出），聚合结果格式化，超时处理。安全扫描需要扫描策略，策略怎么配不提。Go 命令行工具，go build 能过就行。
+`topic-config apply --broker localhost:9092 --config topic.json`。配置格式：`{"topics":[{"name":"orders","partitions":12,"replication":3,"retention_ms":604800000,"cleanup_policy":"delete"}]}`。name 允许小写字母数字下划线（3-64），partitions 1-256，replication 1-5，cleanup_policy 是 `delete` 或 `compact`。
+
+消息聚合：`--aggregate --window 30s --batch-size 100`，按时间窗口或数量阈值批量输出。聚合结果格式化为 JSON 数组，每条包含 topic、partition_count、当前 offset。超时处理用 context.WithTimeout，窗口到期或数量达到阈值任一条件满足即输出。
+
+安全扫描模式：`topic-config scan --broker localhost:9092 --rules compliance.json`，扫描所有 Topic 检查是否合规，比如 `min_replication: 3` 要求副本数至少 3。不合规的 Topic 输出 "VIOLATION: topic {name} replication={actual}, required>={min}"。
+
+Broker 连接失败退出码 2，配置文件格式错误退出码 1。
+
+Go 命令行工具，go build 能过就行。

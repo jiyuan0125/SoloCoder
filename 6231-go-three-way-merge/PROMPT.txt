@@ -1,3 +1,7 @@
-三个人改同一份配置，合并不起来谁也不让步。Go 写三路合并工具：三份输入中能自动合并的部分直接出结果不加标记，冲突的地方标出来让人决定。
+三个人同时改同一份 YAML 配置，手动合并搞了两个小时还是冲突。写个三路合并工具，能自动合的合，合不了的标准出来让当事人定。
 
-每处理完一个目录更新进度，空目录跳过但进度计数照加。不用第三方包，go build 通过就行。
+`merge3 base.yaml ours.yaml theirs.yaml -o merged.yaml` 三路合并。三方输入中，只有一方修改的行自动采用，两方修改相同内容也自动合并。真正冲突的部分用 `<<<<<<< ours` / `=======` / `>>>>>>> theirs` 标记包围。`--no-markers` 模式下冲突行直接保留 base 版本不加标记，并在 stderr 输出 `conflict at line <N>: <detail>`。
+
+`merge3 check base.yaml ours.yaml theirs.yaml` 只检测不合并，输出冲突统计 `{total_lines, auto_merged, conflicts: [{line, reason}]}`。`merge3 diff ours.yaml theirs.yaml` 显示两方差异概览。空文件视为无修改，自动合并不报错。每处理完一个目录更新进度到 stderr `[merged] dir/sub/ (3/10)`，空目录跳过但进度计数照加。
+
+冲突未解决时 exit 1，全自动合并成功 exit 0。纯标准库，`go build` 编译通过。

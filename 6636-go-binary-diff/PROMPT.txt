@@ -1,3 +1,5 @@
-staging 和 production 的二进制到底是不是同一个构建？没人说得清。Python 对比脚本太慢了，Go 重写：检查编译参数、依赖版本、构建时间是否一致。
+staging 和 production 的二进制到底是不是同一个构建？上次上线后线上出了个诡异的 bug，排查半天发现两个环境的二进制编译参数不一样。Python 对比脚本跑一次要两分钟，太慢了，用 Go 重写。
 
-Go 标准库，命令行参数用 flag 包解析。
+CLI 用 flag 包解析，主命令 `bindiff`，接收两个文件路径：`bindiff -a bin/staging/app -b bin/production/app`。对比维度包括：Go 版本（runtime 版本字符串）、编译参数（从 `go version -m` 提取的 build settings）、依赖模块列表及版本（mod 总结）、编译时间戳、CGO 设置。每个维度输出一行对比结果，格式为 `DIMENSION: MATCH / DIFF (value_a vs value_b)`。全部一致退出码 0，有差异退出码 1，文件读不出来退出码 2。
+
+输出默认文本格式，加 `-json` flag 输出 JSON：`{"match": false, "diffs": [{"dimension": "go_version", "value_a": "go1.21.0", "value_b": "go1.21.3"}]}`。`-quiet` 模式只输出最终结论不打印过程。两个文件路径不存在时打印 `error: file not found: <path>` 到 stderr 并退出。文件不是 Go 二进制时提示 `error: not a Go binary: <path>`。纯标准库实现，go build 编译通过。

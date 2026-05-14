@@ -1,3 +1,9 @@
-Docker daemon 里攒了几百个镜像占满磁盘，手动 docker images | grep 效率太低。Go 工具直接列出镜像，按仓库/标签/大小/创建时间排序，过滤关键字段输出 JSON。
+Docker daemon 里攒了几百个镜像，`docker images` 输出没法排序过滤，手动 grep 效率太低。能不能一个命令搞定？
 
-纯 Go 标准库，编译后单二进制可以直接跑。
+`imgls` —— Go CLI 通过 Docker Engine API（`/var/run/docker.sock`）获取镜像列表。`imgls list` 输出表格：`REPOSITORY TAG SIZE_MB CREATED CONTAINERS`。`--sort size/created/name` 排序，`--filter "repository=nginx"` 或 `--filter "size>500"` 过滤。
+
+JSON 输出：`imgls list --format json` 输出 `[{"repository":"","tag":"","size_mb":0,"created":"","id":"","containers":0}]`。`imgls du` 汇总各仓库总空间。`imgls dangling` 只列悬空镜像。
+
+Docker 不可达报 `[ERROR] cannot connect to Docker daemon` 退出码 1。`--socket` 自定义路径，API 版本自动协商（v1.43→v1.41）。大仓库分页请求，`--timeout 10s`。
+
+纯 Go 标准库，`go build` 生成单二进制。退出码 0 成功，1 连接失败，2 参数错误。

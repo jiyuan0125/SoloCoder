@@ -1,3 +1,7 @@
-英文文档改了一节，中文和日文版的对应章节没跟上。检测缺失的翻译，结构变更自动传播到所有语言版本。
-审批流程：提交→初审→复审→通过，初审不过可以修改重提。
-go run . 就能跑，纯标准库写的。
+英文文档改了三节，中文和日文版还是旧的，用户按旧文档操作出了故障——这种事发生几次了？需要一个同步工具，自动检测各语言版本之间的结构差异，把源语言的变更传播到目标语言。
+
+命令 `m10nsync check -source en -targets zh,ja ./docs`，扫描源语言目录和每个目标语言目录的 Markdown 文件。比较维度：文件是否存在、标题层级（H1-H4）是否一致、段落数量是否匹配。输出 `sync-report.json`，结构：`{"missing_files": ["zh/api.md"], "structural_diffs": [{"file": "ja/config.md", "source_sections": 5, "target_sections": 3}], "up_to_date": 8}`。
+
+结构变更传播用 `m10nsync propagate -source en -target zh ./docs`，在目标语言文件中插入缺失的章节骨架（保留原文标题，正文加 `<!-- TODO: translate -->` 标记），不覆盖已有翻译内容。传播后自动更新 `sync-report.json`。
+
+审批状态管理：文件级状态存在 `.m10n-state.json`，字段 `status`（draft/pending/approved/archived），通过后可撤回（`m10nsync revert --file zh/api.md`）重新编辑。目标目录不存在时自动创建。源目录不存在 exit 1 并打印路径。纯标准库，`go run .` 即可运行。

@@ -1,3 +1,9 @@
-go.mod 里间接依赖越来越多，有没有循环依赖谁也不知道。Go 标准库解析 go.mod，输出直接和间接依赖关系图，自动检测循环、列出过时版本。
+go.mod 里间接依赖堆了三层深，有没有循环依赖谁也不知道，版本是不是最新的更不清楚。写个工具自动把这些理清楚，输出人和机器都能读的结果。
 
-Go 实现，只用标准库，交叉编译友好。
+这个工具解析 go.mod 文件，列出直接依赖和间接依赖的完整关系。命令：`depgraph -mod ./go.mod -format text`。`-format` 支持 text、json、dot 三种。text 模式每行输出 `{module} → {dependency} (direct|indirect)`，缩进表示层级。json 模式输出 `{"direct":[...],"indirect":[...],"cycles":[...]}`。dot 模式输出 Graphviz DOT 格式可以直接渲染。
+
+循环检测是重点：遍历依赖图时发现环路，`cycles` 数组列出环路路径如 `["A→B→C→A"]`，有循环时 exit 2 而不是 0。`-check-updates` 标志打开时，对每个依赖查询最新版本，过时的用 `(!)` 标记。
+
+go.mod 不存在时 stderr 输出 `error: go.mod not found at {path}` 并 exit 1。格式无效时输出 `error: failed to parse go.mod` 并 exit 1。无依赖时输出 `{"direct":[],"indirect":[],"cycles":[]}` 并 exit 0。
+
+Go 实现，只用标准库，`go build -o depgraph .` 交叉编译友好。

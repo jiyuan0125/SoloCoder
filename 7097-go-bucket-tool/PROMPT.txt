@@ -1,4 +1,9 @@
-Python 编码转换脚本碰到混合编码就崩。Go 重写稳健版：编码统一 UTF-8，BOM 处理，非法字符替换策略可配。
-索引有初始化→构建中→可用→重建→下线的状态。
-输出格式按常用的来。
-go build 能过，命令行工具能正常运行。
+Python 编码转换脚本碰到混合编码就崩——一个文件前半段 UTF-8 后半段 GBK 比想象中常见。Go 重写稳健版处理这些边界。
+
+命令行：`buckettool -input mixed.txt -output clean.txt -strategy segment -invalid replace`。-strategy：single（整文件一种编码）或 segment（逐行检测独立转换），默认 segment。-invalid：replace/skip/abort 同 renfield。
+
+segment 模式逐行处理：每行检测编码（先查 BOM，试 UTF-8，失败试 GBK→UTF-8），结果输出 stderr `line <N>: <编码>`。single 模式整文件统一转换，非法字节按 -invalid 策略处理。
+
+索引状态管理：处理前创建状态记录，处理中状态为构建中，完成变为可用，中断变为下线。写入 `.buckettool.state`：`{ "status": "available|building|offline", "lines_processed": 100, "lines_total": 500, "encoding_stats": {"utf-8":80,"gbk":20} }`。
+
+加 `-json` 输出 JSON 包装含 encoding_stats 和 total_lines。文件不存在退出码 1。go build 能过，命令行工具能正常运行。
