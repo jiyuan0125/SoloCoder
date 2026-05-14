@@ -1,5 +1,7 @@
-一批日文文档 Shift-JIS 编码，国内这边系统只认 UTF-8，转码工具找不到好用的。Go 命令行做字符集检测转换。
-支持 UTF-8、GBK、BIG5、Shift-JIS。
-检测结果写入报告。
-变更完成后触发关联更新，关联更新要查原记录状态。
-不用第三方包，go build 通过就行。
+一批日文文档 Shift-JIS 编码，国内系统只认 UTF-8，转码工具试了好几个都乱码。上个月合同变成乱码被法务打回来。Go 命令行做字符集检测和转换，必须做对。
+
+检测：`charset detect --input file.txt`，stdout 输出 `Shift-JIS (confidence: 0.95)`。支持 UTF-8（BOM 和无 BOM）、GBK、BIG5、Shift-JIS、ISO-8859-1。检测算法优先判断 UTF-8（合法 UTF-8 序列直接判定），然后按字节频率统计匹配其他编码。UTF-8 BOM 文件输出 `UTF-8-BOM (confidence: 1.00)`。
+
+转换：`charset convert --input file.txt --from Shift-JIS --to UTF-8 --output result.txt`。from 可省略（自动检测）。from 和 to 相同时输出 "already in target encoding" 到 stdout 并退出码 0。无法转换的字符用 `?` 替代，stderr 输出 "WARNING: N unconvertible characters at byte offset XXX"。
+
+批量：`charset batch --dir ./docs/ --to UTF-8 --pattern "*.txt"`，递归处理，原地替换（临时文件 + rename）。完成后 stdout 输出 "converted: 15, skipped: 3 (already UTF-8), failed: 1"。退出码 0 成功，1 输入错误，2 不支持的编码名。纯标准库，go build 能编译通过。

@@ -1,9 +1,9 @@
 日志按时间搜这件事怎么就这么难？有的服务打 epoch 秒，有的打 ISO 8601，还有自定义的 `2024/01/15-10:30:00` 格式，混在一起根本没法按时间范围过滤。
 
-这个工具自动识别时间戳格式并按时间范围搜索日志。支持的格式：Unix epoch（秒/毫秒，自动区分）、RFC3339/ISO 8601、`2006-01-02 15:04:05`、`2006/01/02-15:04:05`。每行日志的第一个可解析时间戳作为该行的时间戳，识别策略：尝试所有格式，取第一个解析成功的。
+自动识别时间戳格式并按时间范围搜索日志。支持格式：Unix epoch（秒/毫秒，自动区分——数值大于 1e12 判定为毫秒）、RFC3339/ISO 8601、`2006-01-02 15:04:05`、`2006/01/02-15:04:05`。每行取第一个可解析的时间戳，尝试所有格式取第一个成功。
 
-CLI：`tssearch search --file app.log --from "2024-01-15T00:00:00Z" --to "2024-01-15T23:59:59Z" --output matched.log`。`--from` 和 `--to` 支持 RFC3339 或 epoch 格式。`--exact "2024-01-15T10:30:00Z"` 搜索特定时刻（±1 秒容差）。输出只包含匹配的行，保留原始格式不变。
+CLI：`tssearch search --file app.log --from "2024-01-15T00:00:00Z" --to "2024-01-15T23:59:59Z" --output matched.log`。`--exact "2024-01-15T10:30:00Z"` 搜索特定时刻（±1 秒容差）。输出只包含匹配的行，保留原始格式。
 
-`--report report.json` 输出统计：`{"total_lines": 50000, "matched": 234, "format_detected": ["epoch_s", "rfc3339"], "time_range": {"from": "...", "to": "..."}}`。
+`--report report.json` 输出统计：`{"total_lines": 50000, "matched": 234, "format_detected": ["epoch_s", "rfc3339"], "time_range": {"from": "...", "to": "..."}}`。`--format csv` 输出 CSV（列：line_number, timestamp, content）。
 
-生成报告后尝试发送邮件通知（`--notify admin@example.com`），没配 SMTP 或发送失败只记 warning 不中断。无匹配行时输出空文件，退出码 0。`go build` 能编译通过，不依赖第三方库。
+生成报告后尝试发邮件通知（`--notify admin@example.com`），没配 SMTP 或发送失败只记 warning 不中断。无匹配行输出空文件，退出码 0。`go build` 能编译通过，不依赖第三方库。

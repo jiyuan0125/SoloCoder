@@ -1,2 +1,5 @@
-批处理工具不支持多文档 YAML，一个文件里用 --- 分隔的几段配置只能手动拆开处理。Go 写个 YAML 多文档处理器：按索引选择文档、按条件过滤，选出的文档合并输出或单独保存。
-命令行格式：cli import --source csv --target db --filter 'age>18'。go build 能编译通过，不依赖第三方库。
+批处理工具不支持多文档 YAML，一个文件里用 --- 分隔的几段配置只能手动拆开处理。能不能让工具自己识别文档边界，按需选择和过滤？
+
+Go 写个 YAML 多文档处理器。命令 `yamlmulti -i configs.yaml [--select 0,2] [--filter "kind=Deployment"] [-o output.yaml] [--split] [--count]`。不传选择参数时输出全部文档（用 --- 分隔）。--select 指定索引从 0 开始逗号分隔，输出选中文档。--filter 格式 "key=value" 对顶层键精确匹配，多个 --filter 是 AND 关系，key 支持点号路径如 "spec.replicas=3"。--split 时每个文档单独保存 doc_0.yaml、doc_1.yaml... 放在 -o 目录下。
+
+文档用 --- 分隔，每个文档独立处理。空文档跳过不计数。--select 越界时 stderr 输出 "index N out of range (total M documents)" 并 exit 1。stdout 输出时用 ---\n 连接。--count 时仅输出文档数量（整数加换行）。不传 -i 从 stdin 读。文件不存在 stderr 输出 "file not found" 并 exit 1。YAML 错误 stderr 输出 "parse error in document N: <details>" 并 exit 1。go build 能编译通过，不依赖第三方库。

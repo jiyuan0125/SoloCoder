@@ -1,5 +1,11 @@
-安全日志里要把所有 IP 地址提取出来做分析，老 Python 脚本不支持 IPv6。Go 重写 IP 地址提取。
-区分 IPv4 和 IPv6。
-去重并统计出现次数。
-生成报告后自动发送邮件通知，有些环境没配邮件。
+安全日志里要把所有 IP 地址提出来做威胁分析，老 Python 脚本只认 IPv4，现在 IPv6 地址越来越多。Go 重写一个能同时处理两种格式的 IP 提取工具，顺带按网段过滤和频率排序。
+
+1. 命令 `ipextract scan --file firewall.log --output ips.json`。IPv4 正则匹配标准 `x.x.x.x` 每段 0-255，排除版本号误匹配（前后不能是数字或点）。IPv6 匹配完整和缩写形式：`::1`、`fe80::1%eth0`、`2001:0db8::1`。`--only v4` 或 `--only v6` 只提取指定类型。
+
+2. 提取后去重统计出现次数，输出 `{"ipv4": [{"ip": "10.0.0.1", "count": 234, "first_line": 5, "last_line": 8901}], "ipv6": [...]}` 按出现次数降序。`--subnet "10.0.0.0/8"` 过滤只看指定网段，支持 CIDR 表示法，不支持的表达 `invalid CIDR: ...` 退出码 1。`--top 20` 只输出前 N 个。
+
+3. `--whois` 查 IP 归属，简单实现：调用系统 `whois` 命令，命令不存在则跳过并 stderr 记 `whois command not available`。`--notify admin@example.com` 尝试发邮件通知，没配 SMTP 或发送失败只记 warning 不中断。`--format csv` 输出 CSV 格式，列 `ip,type,count,first_line,last_line`。
+
+4. 文件不存在报 `file not found: ...` 退出码 1。零匹配输出空 JSON 退出码 0。输入不是文本文件（二进制检测前 512 字节含 NULL）报 `binary file detected: filename` 退出码 2。
+
 纯标准库实现，go run . 能跑。

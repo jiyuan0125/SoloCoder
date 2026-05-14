@@ -1,2 +1,5 @@
 V2 的数据结构改成嵌套 JSON 了，但下游的 BI 工具只认扁平 CSV。月底上线前得先把嵌套 JSON 拆成多张 CSV 表——每层嵌套一张，外层保留外键引用，外键字段自动生成。
-校验完成后自动更新统计信息，首次运行没有历史统计。纯标准库实现，go run . 能跑。
+
+命令 `json2multicsv -i data.json -o ./output/ [--id-field id] [--fk-prefix _ref_]`。处理逻辑：顶层对象作为主表输出到 main.csv。遇到嵌套对象或对象数组时，拆成独立的 CSV 文件，文件名取字段名（如 items.csv，文件名冲突时加后缀 _2）。外键自动生成：子表加 parent_id 列指向父表的主键，默认主键字段 --id-field 是 id，不存在时用 crypto/rand 生成 v4 UUID 字符串。数组中对象的索引用 _index 列保留（从 0 开始）。
+
+多层嵌套递归拆分，比如 user.address.city 会生成 address.csv（带 user_id 外键）。空数组输出只有表头的空 CSV 文件。null 字段写空字符串，布尔值写 true/false。输入不是 JSON 数组时 stderr 输出 "root must be JSON array" 并 exit 1。-i 文件不存在时 stderr 输出 "file not found: <path>" 并 exit 1。-o 目录不存在时自动创建（os.MkdirAll）。CSV 字段含逗号或换行时用双引号包裹。处理完成后 stderr 输出 "tables: N, rows: M"。纯标准库实现，go run . 能跑。

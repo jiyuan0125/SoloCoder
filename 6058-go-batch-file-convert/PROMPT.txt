@@ -1,2 +1,7 @@
-群里有人问批量文件编码转换怎么做，我寻思 Go 搞一个不难。源编码和目标编码通过参数指定，二进制文件自动跳过。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。go build 能编译通过，不依赖第三方库。
+群里有人问批量文件编码转换怎么做，现成的工具要么太重要么不好集成到 CI。Go 搞一个轻量的。
+
+命令：`batchconv --dir ./data/ --from GBK --to UTF-8 --ext .txt,.csv --skip-binary --output-dir ./converted/`。`--from` 和 `--to` 指定编码（UTF-8/GBK/GB2312/BIG5/Shift-JIS），`--from auto` 自动检测。`--ext` 过滤扩展名，逗号分隔。`--skip-binary` 跳过二进制文件（检测前 512 字节含 `\x00`），stderr 输出 `binary skipped: <filename>`。`--recursive` 递归处理保持相对路径。
+
+转换失败不中断流程，stderr 记录 `conversion failed: <filename> (reason: <cause>)`。汇总到 stdout：`done: 45, failed: 2, skipped: 3`。`--fail-fast` 遇到第一个错误即停。`--output-dir` 省略则原地覆盖（先写临时文件再 rename）。
+
+子命令：`convert csv json --input x --output y`、`convert yaml toml --input x --output y`、`validate json --file x` 校验格式、`diff json --left a --right b` 差异对比。`go build` 能编译通过，不依赖第三方库。

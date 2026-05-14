@@ -1,5 +1,9 @@
-两份 CSV 要按某个字段关联起来看，Excel VLOOKUP 数据多了就卡。Go 做 CSV 关联搜索。
-按指定列关联。
-结果包含匹配和不匹配两部分。
-导入数据后自动做一致性检查，一致性检查需要读取刚导入的数据。
+两份 CSV 要关联——`users.csv` 有 user_id/name/email，`orders.csv` 有 order_id/user_id/amount，按 user_id 关起来看谁下了多少单。Excel VLOOKUP 数据量一大就卡死，而且多列关联它根本搞不定。
+
+命令 `csvjoin join --left users.csv --right orders.csv --key user_id --type inner --output joined.csv`。`--type` 三种：`inner` 只输出匹配行、`left` 左表全保留右表没匹配填空、`outer` 两边全保留，默认 inner。多列关联 `--key user_id,region` 逗号分隔，全部匹配才算命中。
+
+关联结果自动处理列名冲突——右表重复列名加 `_right` 后缀。输出 CSV 含两表所有列，列顺序是左表列在前右表列在后。`--unmatched left.csv right.csv` 分别导出左右表未匹配的行。关联完成自动做一致性检查：两表 key 列有没有空值（空值行记入 stderr `null key: filename: line N`）、数据类型是否一致（一边数字一边字符串算不一致）。一致性检查读刚关联的数据，结果输出到 stderr。
+
+key 列不存在输出 `column not found: user_id` 退出码 1。文件编码统一 UTF-8，首行当表头，非 UTF-8 报 `encoding error: filename` 退出码 2。大文件超过 100 万行用流式处理不全部加载到内存——流式模式下也支持所有关联类型。`--header` 默认开启，`--no-header` 表示没有表头用列序号 `_col0,_col1` 命名。
+
 纯标准库实现，go run . 能跑。

@@ -1,5 +1,9 @@
-医疗那边数据报送要求列顺序必须跟模板一致，我们导出来的列顺序每次都不一样。Go 搞 CSV 列重排。
-指定新的列顺序。未指定的列丢弃。
-也可以只指定要移动的列和目标位置。
-构建流程是解析→编译→测试→打包。测试失败不打包。
-纯标准库实现，go run . 能跑。
+直接说需求——CSV 列顺序必须跟模板一致，导出来的列每次不一样，退回两次了。Go 工具做列重排和校验，两个功能一个命令搞定。
+
+用法一，模板重排：`reorder --input data.csv --template template.csv --output result.csv`。template.csv 只有表头行，列顺序即目标顺序。工具按模板列顺序重排数据列。未在模板中出现的列丢弃，数据文件缺少模板要求的列用空字符串填充，stderr 输出 "WARNING: missing columns: col_a, col_b"。
+
+用法二，移动指定列：`reorder --input data.csv --move "email=1,phone=3" --output result.csv`，把 email 移到第 1 列（0-indexed），phone 移到第 3 列，其余列保持相对顺序。--move 和 --template 互斥，同时指定报错退出码 2 并 stderr 输出 "cannot use --move and --template together"。
+
+校验模式：`reorder check --input data.csv --template template.csv`，不输出文件。匹配输出 "PASS" 到 stdout，不匹配输出 "FAIL" 并列出差异到 stdout，格式 "extra columns: x, y" 或 "missing columns: a, b"。
+
+退出码 0 成功，1 输入文件不存在或格式错误，2 参数冲突或列名不存在。纯标准库，go run . 能跑。

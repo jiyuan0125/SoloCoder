@@ -1,1 +1,7 @@
-隔壁组做了一份数据分析结果在 CSV 里，我们这边一直是 JSON 格式存的。需要一个工具能双向同步这两种格式的数据。同步的时候按 id 字段匹配，同一条数据两边都可能改，改了不同字段要合并，改了相同字段以后来者为准。新增记录各自有自己的 id 范围。同步完生成一个变更报告。go build 能编译，纯标准库。
+上次跨组协作又出事了——隔壁组分析结果在 CSV 里，我们一直是 JSON，两边各改各的，最后合并不上。Go 写双向同步工具。命令：`csvjsync --csv data.csv --json data.json --direction csv-first --output merged.json`。
+
+按 `--key` 字段匹配（默认 `id`）。改了不同字段合并（CSV 改 name，JSON 改 age，两个都最新）。改了同字段以后来者为准——`csv-first` 或 `json-first`。冲突 stderr 输出 `conflict at id=42 field=name: csv="张三" json="李四", winner=csv`。
+
+新增记录用 ID 范围区分：`--csv-id-range 1000-1999 --json-id-range 2000-2999`。ID 冲突 stderr 输出 `id collision: <id>`，跳过。
+
+同步完生成 `sync_report.json`：`{"merged": N, "conflicts_resolved": N, "csv_added": N, "json_added": N, "conflicts": [{"id": "42", "field": "name", "winner": "csv", "csv_value": "...", "json_value": "..."}]}`。输入无 `id` 列 stderr 输出 `missing key column: id in <filename>`，退出码 4。空输入退出码 3，输出不可写退出码 2，成功退出码 0。`go build` 能编译，纯标准库。

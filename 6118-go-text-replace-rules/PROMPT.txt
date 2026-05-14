@@ -1,5 +1,7 @@
-那套 Python 批量替换脚本三年没人维护了，Python 版本都升了两轮。Go 重写规则化文本替换。
-规则文件每行一个：旧文本→新文本。支持正则。
-替换优先级按规则顺序。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-go build 能编译通过，不依赖第三方库。
+那套 Python 批量替换脚本三年没人维护了，Python 版本升了两轮，运行时各种依赖冲突。上个月替换规则写错了一行正则，线上数据全乱了。Go 重写规则化文本替换，得把这件事做稳。
+
+规则文件是纯文本，每行一条，格式 `旧文本→新文本`（用箭头分隔）。旧文本以 `regex:` 开头视为正则，如 `regex:error\[(\d+)\]→warning[$1]` 把 error[404] 变成 warning[404]。规则按文件顺序执行，先写的先匹配，匹配过的文本不会被后续规则再替换——避免链式意外。
+
+三个子命令：`replace run --input file.txt --rules rules.txt --output result.txt` 执行替换，stdout 输出 "replaced: 47 matches in 12 rules"；`replace check --rules rules.txt` 校验所有规则，正则不合法报行号和错误到 stderr，格式 "line 3: invalid regex: 具体错误"；`replace preview --input file.txt --rules rules.txt` 输出将要替换的位置，格式 "line 15: 'old_text' → 'new_text'"，不修改文件。
+
+空规则文件不报错，输出与输入一致。规则文件不存在报错退出码 1 并 stderr 输出 "rules file not found: rules.txt"。正则语法错误退出码 2。输入输出同路径时原地替换（先写临时文件再 rename）。`--encoding utf-8` 指定编码，默认 UTF-8。纯标准库，go build 能编译通过。

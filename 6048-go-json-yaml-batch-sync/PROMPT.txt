@@ -1,2 +1,9 @@
-配置管理平台要同步 JSON 和 YAML 两种格式的文件，之前用 Python 脚本做的，环境依赖太多不好迁移。Go 重写：检测哪边更新时间更晚，以新的为准覆盖旧的，不支持转换的格式跳过。
-多级命令：config get、config set、config list、config env switch。不用第三方包，go build 通过就行。
+先读取配置文件列表，然后逐个检测更新时间，以新的为准覆盖旧的——这就是配置同步的基本逻辑。之前用 Python 脚本做的，环境依赖太多迁移不了，Go 重写。
+
+命令：`sync --dir ./configs/ --dry-run`。扫描目录下所有 `.json` 和 `.yaml`/`.yml` 文件，同名的配对（比如 `db.json` 和 `db.yaml`），比较修改时间（精确到秒），以更晚的为准覆盖另一方。`--dry-run` 只输出计划不执行：`would overwrite db.yaml with db.json (newer by 2h)`。同名文件只有一个（无配对）跳过，stderr 输出 `unpaired: <filename>`。
+
+转换规则：JSON 对象 ↔ YAML 映射，数组 ↔ 序列，数字/字符串/布尔直转，null ↔ `~`。JSON 的浮点数 3.0 转为 YAML 时写 `3.0` 不省略小数点。YAML 多行字符串保留换行不转义。不支持转换的类型（如 YAML 的锚点/别名合并后结果不确定）跳过该对，stderr 输出 `skipped pair: <name> (unsupported type at <path>)`。同步完成输出统计：`synced: N pairs, skipped: N, errors: N`。
+
+`--watch` 参数持续监控目录，文件变更自动触发同步（轮询间隔 2 秒）。`--backup` 同步前将旧文件备份到 `.sync_backup/` 目录。
+
+子命令：`config get <key>`、`config set <key> <value>`、`config list`、`config env switch <name>`。不用第三方包，`go build` 通过就行。

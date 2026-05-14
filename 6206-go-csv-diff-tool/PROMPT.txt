@@ -1,3 +1,11 @@
-每周对着两份 CSV 找差异，Excel VLOOKUP 搞不定跨行增删的情况。Go 写个 CSV 数据对比工具：按主键列匹配行，逐单元格标注差异，新增的、删除的、修改的行各分一组列出来。
+每周对着两份 CSV 找差异，Excel VLOOKUP 搞不定跨行增删的情况——行数变了、中间插了一行、删了几行，VLOOKUP 全乱了。Go 写个 CSV 数据对比工具，按主键列匹配行，逐单元格标注差异，新增的、删除的、修改的行各分一组列出来。
 
-对比完成以后把结果记到日志，优先写数据库，数据库连不上就写本地文件兜底。纯标准库实现，go run . 能跑。
+1. 命令 `csvdiff compare --file-a users_v1.csv --file-b users_v2.csv --key user_id --output diff_report.json`。`--key` 指定主键列（必填），列不存在报 `key column not found: user_id` 退出码 1。多列主键 `--key user_id,region` 逗号分隔。按主键匹配行，匹配上逐单元格比较。
+
+2. 结果分三组：`{"added": [{"user_id": "105", "name": "新用户", "source": "b"}], "removed": [{"user_id": "103", "name": "离职用户", "source": "a"}], "modified": [{"user_id": "101", "changes": {"name": {"old": "张三", "new": "张三丰"}, "email": {"old": "old@mail.com", "new": "new@mail.com"}}}]}`。`--columns name,email` 只比较指定列，其他列差异忽略。
+
+3. `--format table` 表格输出，`--format csv` 输出 CSV 方便再处理。`--summary` 统计到 stderr：新增 N 行、删除 N 行、修改 N 行、未变化 N 行。`--ignore-case` 字符串比较忽略大小写。`--trim` 自动去除单元格首尾空白再比较。
+
+4. 两份 CSV 列名不一致报 `column mismatch: file_b missing columns: xxx` 退出码 1。文件编码 UTF-8 首行表头。空文件输出 `empty file: filename` 退出码 1。完全相同输出 `files are identical` 退出码 0。
+
+对比结果记到 `.csvdiff.log`（本地 JSON 文件），每次对比追加一条记录含时间戳和摘要。纯标准库实现，go run . 能跑。

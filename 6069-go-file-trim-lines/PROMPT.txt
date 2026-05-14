@@ -1,2 +1,7 @@
-开源的批量文本处理工具太重了，我们就需要一个简单的按模式处理文件行的功能。Go 从零写：可以只处理匹配模式的部分文件，处理前后文件行数对比输出。
-命令格式是 tool action target options，比如 tool scan dir --depth 3。不用第三方包，go build 通过就行。
+上次处理 Nginx 日志的时候，awk 和 sed 嵌了好几层，换个同事完全看不懂。我们组需要一个简单的文件行裁剪工具，按模式匹配文件后批量处理——Go 从零写，不用第三方包。
+
+CLI 格式：`trim <target> --pattern <正则> --action <keep|remove|trim> --dry-run`。target 可以是单个文件或目录，目录时递归扫描所有 `.txt/.log/.csv` 文件。`--pattern` 用 Go 标准库 regexp 语法，匹配的行按 action 处理：keep 只保留匹配行，remove 删掉匹配行，trim 去掉匹配行的首尾空白（不仅仅是行首行尾空格，还包括 `\t`）。`--dry-run` 只输出每个文件会改多少行，不实际修改。
+
+处理前后输出对比报告（表格格式，制表符分隔）：`文件名\t原始行数\t处理后行数\t变化量`。目录模式下最后输出一行汇总：`total\t原始总行数\t处理后总行数\t总变化量`。空文件跳过不报错，二进制文件（检测到 `\x00` 字节）也跳过并在报告里标记 `skipped: <filename> (binary)`。匹配 0 行的文件原样不动。
+
+`--encoding utf-8|gbk` 指定输入编码（默认 utf-8），编码错误跳过该文件并在 stderr 输出 `encoding error: <文件名>`。`--output` 参数指定输出文件路径（单文件模式），目录模式原地覆盖。退出码 0 成功，1 参数错误或文件读取失败。错误格式：`error: <具体原因>`。`go build` 能编译通过，不依赖第三方库。

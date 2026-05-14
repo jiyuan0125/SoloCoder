@@ -1,2 +1,7 @@
-存储迁移要把整个目录树搬到新机器上，文件太多怕漏。Go 做目录树迁移：迁移过程记录日志，验证迁移完整性。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。模板变更后，用该模板生成的文件要标记为需要重新生成。go build 能编译通过，不依赖第三方库。
+存储迁移最怕什么？怕漏文件——上次从旧 NAS 搬了 200 万个文件到新机器，搬完发现少了 3 个目录不知道哪步丢了，找了好几天才定位到问题。这次必须用 Go 写一个完整的目录树迁移工具，每一步都有记录，搬完还能验证，杜绝文件丢失。
+
+流程分三步——scan：扫描源目录树，生成文件清单 manifest.json，每条记录包含 path（相对路径）、size（字节）、sha256、mtime（Unix 时间戳）。copy：按清单逐文件复制到目标，每复制完一个文件 stdout 输出 `copied: N/M <相对路径>`（N 为当前序号，M 为总数）。复制失败的文件记到 errors.json（含 path、error 字段），不中断整体流程。verify：扫描目标目录，与 manifest.json 逐条比对（size + SHA-256），不一致的列到 verify_errors.json。
+
+命令：`migrate <源> <目标> --step scan|copy|verify|all --workers 4 --retry 2`。--step all 按顺序执行三步。--workers 并发复制数，默认 1（串行）。--retry 单个文件复制失败重试次数，默认 0。
+
+已存在的目标文件如果大小和 SHA-256 一致则跳过，输出 `skip: <路径> (already exists and verified)`，支持断点续传。源目录为空时 stdout 输出 "warning: source directory is empty" 但不报错，退出码 0。目标目录已有文件且与源冲突时，默认覆盖，加 --skip-existing 跳过。退出码 0 全部成功，9 部分失败，1 参数错误（源路径不存在）。go build 能编译通过，不依赖第三方库。

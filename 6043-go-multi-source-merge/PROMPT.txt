@@ -1,2 +1,9 @@
-工具链断了好几个环节——JSON、YAML、CSV 各管各的，合并全靠人工。Go 搞个多源合并转换：支持 JSON + YAML + CSV 混合输入，合并策略是同名字段后者覆盖前者、数组拼接。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。go build 能编译通过，不依赖第三方库。
+工具链断了好几个环节——JSON 配置、YAML 环境变量、CSV 测试数据各管各的，合并全靠人工复制粘贴，漏了字段都不知道。Go 搞一个多源合并转换工具。
+
+命令：`merge --inputs config.json,override.yaml,extra.csv --output merged.json --strategy last-wins`。合并策略：同名字段后者覆盖前者（`last-wins`），数组类型字段直接拼接（`array-concat`）。字段类型冲突（比如一边是字符串一边是数字）时 stderr 输出 `type conflict at <path>: string vs number, using last-wins`。
+
+输入格式自动检测（扩展名优先），不支持的格式跳过并 stderr 输出 `skipped: <filename> (unsupported format)`。至少需要一个有效输入，全部跳过则退出码 4。`--output-format json|yaml` 指定输出格式（默认 json）。CSV 输入时首行作表头，各文件列不同时缺失列填空字符串。合并后字段顺序按首次出现的文件中的顺序排列。
+
+深层嵌套冲突逐级处理：`{"a": {"b": 1}}` 和 `{"a": {"c": 2}}` 合并为 `{"a": {"b": 1, "c": 2}}`，不覆盖整个 `a` 对象。`--max-depth` 限制合并嵌套深度（默认无限制），超出部分用最后一个源的值覆盖。
+
+命令组：`file convert --input x --output y`、`file check --input x` 校验格式、`file merge --inputs a,b,c --output o`。`go build` 能编译通过，不依赖第三方库。

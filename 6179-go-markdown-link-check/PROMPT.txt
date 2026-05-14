@@ -1,5 +1,11 @@
-文档仓库里一堆 Markdown，外部链接有好多 404 的，内部引用也有路径错误的。Go 做 Markdown 链接检查。
-内部链接检查文件是否存在。外部链接检查 HTTP 状态。
-结果按有效/无效分类。
-校验完成后自动生成报告，报告生成也要查询校验数据。
+文档仓库的链接常年没人维护——内部链接指向已经删掉的页面，外部链接域名过期。Go 做个链接检查工具，跑一遍就知道哪些链接还活着。
+
+1. 命令 `mdcheck scan --dir ./docs/ --timeout 10s --output report.json`。递归扫描 `.md` 文件，提取 `[text](url)` 和 `![alt](url)` 两种链接语法。提取用正则，匹配括号内的完整 URL。
+
+2. 内部链接（不以 `http` 开头）检查目标文件是否存在，相对路径基于 md 文件位置解析。内部链接指向目录（没有文件名）算无效，输出 `invalid: directory target`。外部链接发 HTTP HEAD 请求，超时由 `--timeout` 控制默认 10 秒。外部链接 5xx 自动重试一次，重试间隔 1 秒。`--external-only` 只检查外部链接，`--internal-only` 只检查内部。
+
+3. 结果分两组：`{"valid": [{"source":"README.md","link":"./api.md","type":"internal"}], "invalid": [{"source":"README.md","link":"https://expired.example.com","type":"external","status":404}]}`。`--format table` 表格输出，列名 `source | link | type | status`。
+
+4. 校验完成后自动生成摘要报告，含总数、有效数、无效数、外部链接超时数。摘要输出到 stderr，格式 `summary: total=N valid=N invalid=N timeout=N`。全部链接有效退出码 0，有无效链接退出码 1。
+
 纯标准库实现，go run . 能跑。

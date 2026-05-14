@@ -1,5 +1,9 @@
-人事系统的数据是多层嵌套 JSON，想查「工资大于 2 万且部门是技术部」的记录。Go 标准库做嵌套 JSON 查询。
-支持嵌套条件、数组过滤。
-查询语法简洁直观。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。
+上次处理人事数据碰到个头疼事——工资信息藏在五层嵌套的 JSON 里，想筛「工资大于 2 万且部门是技术部」的记录，手动写解引用代码写到手酸。做一个 Go 工具专门查嵌套 JSON，表达式语法直观，不用学新 DSL。
+
+命令 `njq query --expr 'department=="技术部" AND salary>20000' --file employees.json --output result.json`。表达式用 `.` 访问子字段 `address.city=="北京"`、`[*]` 遍历数组 `projects[*].status=="active"`。逻辑运算 AND/OR/NOT 和括号分组都支持。字符串比较用双引号，数字直接写，布尔值 true/false。`--expr-file filters.txt` 从文件加载多条表达式，每行一条，结果取交集。
+
+输出匹配记录组成的 JSON 数组，`--fields name,salary` 只输出指定字段。`--count` 只输出数量。`--format csv` 把结果转成 CSV 输出，字段名取 `--fields` 指定的列。
+
+语法错误输出 `parse error at position N: unexpected token` 退出码 1。JSON 解析失败输出 `invalid json: filename: reason` 退出码 1。零匹配输出空数组 `[]` 退出码 0。表达式里引用了不存在的路径返回 `null`，null 参与比较永远为 false。审批流程标记：结果里每条记录加 `_status` 字段，值 `submitted→reviewing→approved→rejected`，方便团队协作筛选。
+
 纯标准库实现，go run . 能跑。

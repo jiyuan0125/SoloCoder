@@ -1,3 +1,11 @@
-手工一条条 sha256sum -c 效率太低了，几百个文件验证完眼睛都花了。Go 写个哈希验证工具，批量读 .md5 或 .sha256 校验文件自动核对。通过的、失败的、找不到的，汇总输出。
+手工一条条 `sha256sum -c` 效率太低——几百个文件验证完眼睛都花了。Go 写个批量哈希验证工具，读 `.md5` 或 `.sha256` 校验文件自动核对，结果分三类汇总，一眼看完。
 
-校验规则和结果要有管理能力——按规则执行校验后，结果落盘记录下来，下次能查。不依赖第三方库，go build 通过就行。主逻辑和辅助函数分开写。
+命令 `hashver verify --file checksums.sha256 --dir ./release/ --report report.json`。自动识别格式（`.md5` 走 md5，`.sha256` 走 sha256），也支持 `--algo md5` 强制指定。校验文件每行 `hash  filename` 或 `hash *filename` 两种格式都认。
+
+验证结果三类汇总：`{"passed": [{"file": "a.bin", "hash": "abc..."}], "failed": [{"file": "b.bin", "expected": "abc...", "actual": "def..."}], "missing": ["c.bin"]}`。退出码：全通过 0、有失败 1、有缺失 2。`--strict` 模式缺失也算失败退出码 1。
+
+`hashver history --file checksums.sha256` 查历史验证记录，结果落盘到 `.hashver.db`（JSON 文件），每次验证追加记录含时间戳和结果摘要。`hashver diff --old v1.sha256 --new v2.sha256` 对比两版差异——新增、删除、哈希变更的文件，输出 `{"added": [...], "removed": [...], "changed": [...]}`。
+
+校验文件不存在报 `file not found: ...` 退出码 1。校验文件为空报 `empty checksum file` 退出码 1。`--dir` 下文件找不到记入 missing 不报错。`--parallel 4` 并行验证默认单线程。
+
+不依赖第三方库，go build 通过就行。主逻辑和辅助函数分开写。

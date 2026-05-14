@@ -1,2 +1,7 @@
-部署完发现文件权限不对——配置文件 777，日志目录 600，每次都要手动 chmod。Go 做文件权限修复：目录和文件分别设置不同的权限，符号链接跳过。
-支持嵌套命令：project create、project build、project test run、project test coverage。纯标准库实现，go run . 能跑。
+先设定目标权限，然后递归扫描目录，最后生成修复报告。部署完发现文件权限乱七八糟——配置文件 777，日志目录 600，每次手动 chmod 改到手软。Go 写权限批量修复工具。
+
+命令：`permfix --dir /app/ --file-mode 0644 --dir-mode 0755 --skip-symlinks --dry-run`。`--file-mode` 和 `--dir-mode` 用八进制（3 或 4 位）。`--skip-symlinks` 跳过符号链接（默认开启），`--follow-symlinks` 跟随修改目标权限。`--dry-run` 只显示有变更的条目：`secret.key: 100777 → 100644`。
+
+权限已正确的跳过不输出。无权限修改 stderr 输出 `permission denied: <path>`，不中断流程。`--exclude` 排除路径模式（glob）。执行完摘要：`fixed: 23, skipped: 5, errors: 1`。`--report` 生成 JSON 报告：`{"fixed": [{"path": "secret.key", "old": "100777", "new": "100644"}], "errors": [...]}`。
+
+子命令：`project create --name x`、`project build`、`project test run --verbose`、`project test coverage --output cover.html`。纯标准库，`go run .` 能跑。目录不存在退出码 2，权限参数格式错误退出码 3。

@@ -1,5 +1,11 @@
-CSV 文件里某列有哪些唯一值、出现频率怎样，想知道数据分布。Go 做 CSV 唯一值统计。
-频率分布。高频和低频标记。
-结果输出为摘要报告。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
+拿到一份 CSV，想快速看某列值分布——哪些值出现最多、哪些只出现一两次、有没有异常。Excel 透视表能做但每次要点好几下，Go 命令行一敲就出结果。
+
+1. 命令 `csvuniq analyze --file data.csv --column city --output summary.json`。`--column` 指定列名（必填），列不存在报 `column not found: xxx` 退出码 1。分析结果含每个唯一值的出现次数和频率百分比。高频 = 出现次数占总数 10% 以上，低频 = 只出现 1 次。`--top 10` 只输出前 N 个高频值。`--threshold 5` 自定义高频阈值（≥N 次算高频）。
+
+2. 输出摘要 `{"column": "city", "unique_count": 47, "total_rows": 1000, "high_freq": [{"value": "北京", "count": 230, "percent": "23.0%"}], "low_freq": [{"value": "拉萨", "count": 1, "percent": "0.1%"}], "distribution": "skewed"}`。distribution 取值 `uniform`（方差小）、`skewed`（集中少数值）、`sparse`（大量低频值）。
+
+3. `csvuniq compare --column city --file a.csv --file b.csv` 对比两份 CSV 同列差异：只出现在 A 的、只出现在 B 的、两边都有的，输出 `{"only_in_a": [...], "only_in_b": [...], "in_both": [...]}`。`csvuniq export --column city --output uniq.txt` 导出纯唯一值列表每行一个。
+
+4. `--format table` 表格输出，`--format csv` 输出可再导入的 CSV。文件编码 UTF-8，首行表头。空文件报 `empty file` 退出码 1。
+
 不用第三方包，go build 通过就行。

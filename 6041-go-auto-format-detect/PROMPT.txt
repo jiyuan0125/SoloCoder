@@ -1,2 +1,7 @@
-财务部那边收到各分公司发来的数据文件，JSON、YAML、CSV、TOML 各种格式都有，先得判断是啥格式再处理。Go CLI 做格式自动检测：基于文件扩展名和内容特征，不确定的格式报错让用户指定。
-命令有好几个子命令，每个子命令又有自己的参数。比如 sync local、sync remote、sync status。纯标准库实现，go run . 能跑。
+财务部收到的文件格式五花八门——JSON、YAML、CSV、TOML 全有，先判断格式再处理，人工识别太容易出错。Go CLI 做格式自动检测，干脆利落。
+
+命令：`fmtdetect --file data.bin --verbose`。检测逻辑分两层——先看扩展名（`.json`/`.yaml`/`.csv`/`.toml`），再看内容特征：首字符 `{` 或 `[` → JSON，首行 `---` 或 `...` → YAML，首行含逗号且后续行逗号数一致 → CSV，存在 `[section]` → TOML。两者矛盾以内容为准，`--verbose` 时 stderr 输出 `extension suggests <X>, content detected as <Y>, using content`。
+
+置信度评分规则：扩展名匹配加 0.3 分，内容特征完全匹配加 0.7 分，部分匹配按比例加分。总分低于 0.5 输出 `unknown format`，退出码 4，提示 `use --format <json|yaml|csv|toml> to specify`。文件为空退出码 3，输出 `empty file`。
+
+子命令：`sync local --source ./dir` 本地检测（递归扫描目录）、`sync remote --url http://...` 远程检测（下载前 8192 字节判断）、`sync status` 显示上次检测结果缓存（存储在 `~/.fmtdetect_cache.json`）。检测耗时超过 1 秒 stderr 输出 `slow detection: <filename> took <duration>`。纯标准库，`go run .` 能跑。

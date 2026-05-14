@@ -1,1 +1,7 @@
-线上的日志文件有大有小，想按大小分级处理。小文件（1MB以下）直接全部读进内存处理，中等文件（1-100MB）按块读，大文件（100MB以上）流式逐行处理。分级标准可以通过配置文件调整。处理结果按级别统计数量和总大小。输出到标准输出就行。Go 写，不依赖第三方库。
+线上日志大小差异太大——最小 2KB 最大 4GB，统一处理要么 OOM 要么太慢。同事用 ioutil.ReadAll 处理大文件把容器搞挂了。Go 写个文件大小分类工具，不同级别走不同 handler。
+
+命令：`sizeclassify <目录> --config rules.json --action list|process --output result.json`。rules.json 如 {"small":{"max_mb":1,"handler":"memory"},"medium":{"max_mb":100,"handler":"chunk"},"large":{"handler":"stream"}}，不指定默认阈值 1MB/100MB。action list 只分类输出级别和大小，action process 调用 HandleMemory/HandleChunk/HandleStream（逻辑留空搭框架）。
+
+小文件 memory 一次读入 []byte；中等 chunk 按 4MB 块读取；大文件 stream 用 bufio.Scanner 逐行。result.json 数组每条含 path、size_bytes、level（small/medium/large）、handler、status（classified/processed/error）。stdout 汇总：`summary: small=N (Xb), medium=M (Yb), large=K (Zb)`。
+
+配置 JSON 语法错误退出码 1，stderr 输出 "config error: <行号>: <原因>"。目录为空输出 "no files found" 退出码 0。无读权限 status 标记 error。go build 编译通过，不依赖第三方库。

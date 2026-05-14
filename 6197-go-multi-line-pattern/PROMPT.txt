@@ -1,11 +1,7 @@
-先解决一个实际问题：日志里 Java 的异常堆栈跨了好几行，用单行 grep 只能抓到 `Exception` 那一行，后面的 `at com.foo.Bar(Bar.java:42)` 全丢了。得多行模式搜索。
+上次排查一个线上问题，Java 异常堆栈跨了好几行，单行 grep 只抓到 `Exception` 那一行，后面的 `at com.foo.Bar(Bar.java:42)` 全丢了。多行匹配才能真正还原完整错误上下文。
 
-1. 命令：`mlgrep search --pattern "Exception.*\n\s+at\s+" --file app.log --output matches.txt --multiline`。
-2. `--multiline` 启用多行模式，`^` 和 `$` 匹配每行的开头结尾。支持正则多行模式，`.` 默认不匹配换行，`--dotall` 标志让 `.` 也匹配 `\n`。
-3. 匹配结果包含完整的多行内容，不同匹配之间用空行分隔，并在行首标注 `-- match N (line 42-47) --`。
-4. `--context 2` 显示匹配前后各 2 行上下文。
-5. `--count` 模式只输出匹配数量不输出内容。
+命令：`mlgrep search --pattern "Exception.*\n\s+at\s+" --file app.log --output matches.txt --multiline`。`--multiline` 启用多行模式，`^` 和 `$` 匹配每行的开头结尾。支持正则多行模式，`.` 默认不匹配换行，`--dotall` 标志让 `.` 也匹配 `\n`。`--context 2` 显示匹配前后各 2 行上下文。`--count` 模式只输出匹配数量不输出内容。
 
-数据管道有四个阶段：录入→清洗→校验→发布。录入阶段读取文件，清洗阶段合并连续空行为单个空行，校验阶段检查正则语法（非法正则输出 `invalid pattern: ...` 退出码 1），发布阶段写输出。校验不过退回清洗（比如文件编码异常时尝试不同编码重新读取）。
+匹配结果包含完整的多行内容，不同匹配之间用空行分隔，并在行首标注 `-- match N (line 42-47) --`。`--format json` 输出 JSON 数组，每个元素含 `match_number`、`start_line`、`end_line`、`content`。空文件零匹配输出空数组。
 
-`--format json` 输出 JSON 数组，每个元素含 `match_number`、`start_line`、`end_line`、`content`。空文件零匹配输出空数组。纯标准库实现，`go run .` 能跑。
+数据管道四个阶段：录入→清洗→校验→发布。录入阶段读取文件，清洗阶段合并连续空行为单个空行，校验阶段检查正则语法（非法正则输出 `invalid pattern: ...` 退出码 1），发布阶段写输出。校验不过退回清洗阶段重试（比如文件编码异常时尝试 UTF-8 和 GBK 两种编码）。纯标准库实现，`go run .` 能跑。

@@ -1,2 +1,7 @@
-之前买的 SaaS 转换服务到期了，续费报价翻了一倍。我们只处理 XML 命名空间，不需要别的功能。Go 自建：用户指定要处理的命名空间，其他忽略，输出 JSON 时命名空间前缀保留或去除可配置。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。不用第三方包，go build 通过就行。
+XML 文档里命名空间前缀把解析搞得一团糟——`ns:element` 有时指向 `xmlns:ns="http://a"`，有时又指向别的 URI，之前的转换服务到期后续费翻倍。Go 写一个命名空间处理工具。
+
+用法：`xmlns process --input data.xml --namespaces ns1=http://a,ns2=http://b --strip-prefix true --output result.json`。`--namespaces` 格式 `前缀=URI`，多个逗号分隔，没列出的命名空间整块忽略。`--strip-prefix` true 去掉前缀只留本地名，false 保留 `ns:name`。默认命名空间用 `_default=URI`。
+
+输出 JSON 结构：`{"root": {"name": "...", "namespace": "...", "attributes": {}, "children": []}}`，文本节点用 `{"#text": "content"}`。元素保持文档顺序，命名空间声明不出现在 attributes。
+
+处理完在同目录生成 `.summary.json`：`{"namespaces": {"ns1": {"elements": 5}}, "total_matched": 8}`。无匹配元素不生成摘要，stdout 输出 `no matching namespaces found`。解析失败 stderr 输出 `error: <行号>: <原因>`，退出码 1。文件不存在退出码 2，成功退出码 0。不用第三方包，`go build` 通过。

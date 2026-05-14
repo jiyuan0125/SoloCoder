@@ -1,5 +1,9 @@
-前端的 key 用 camelCase，后端用 snake_case，数据中台两边都要对接。Go 做 JSON 键名大小写统一。
-支持 camelCase、snake_case、PascalCase。
-嵌套对象的键名也要统一。
-导入成功后自动通知下游系统，本地模式没有下游配置。
-不用第三方包，go build 通过就行。
+前端的 key 用 camelCase，后端用 snake_case，上次有个接口漏改了一个字段联调两天才发现——这种低级错误还要犯几次？Go 做 JSON 键名大小写统一，跑一遍命令就把所有格式对齐。
+
+`keycase convert --input data.json --from camel --to snake --output result.json`。from/to 支持 camel（camelCase）、snake（snake_case）、pascal（PascalCase）。六种组合全支持：连续大写如 "XMLParser" 转 snake 得 "xml_parser" 而不是 "x_m_l_parser"。
+
+嵌套对象和数组内对象的键名递归转换，数组中原始值（字符串、数字）不动。键名冲突时（转换后两键相同）stderr 输出 "WARNING: key conflict: 'old_key' and 'other_key' both map to 'new_key', keeping latter"，保留后者。
+
+自动检测：`keycase detect --input data.json` 输出 "camel"、"snake"、"pascal" 或 "mixed"。mixed 时输出 "mixed: camel=60%, snake=30%, pascal=10%"。检测逻辑：统计所有键名中各风格占比，最高占比超 80% 判定为该风格。
+
+退出码 0 成功，1 输入文件错误，2 不支持的格式参数。纯标准库，go build 能编译通过。

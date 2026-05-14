@@ -1,6 +1,7 @@
-几个 GB 的代码文件全文搜索太慢了，得建索引。现成的搜索工具编码支持又不够。Go 自己写文件内容索引。
-索引支持快速关键词查询。
-文件变更后增量更新索引。
-构建流程是解析→编译→测试→打包。测试失败不打包。
-目录结构变了以后，缓存的路径映射要刷新。
-go build 能编译通过，不依赖第三方库。
+先建索引再查——几 GB 的代码文件全文搜索，等 grep 跑完天都亮了。自己建个倒排索引，头一次慢点但后面秒出结果，比现成工具中文编码支持好。
+
+步骤一：`indexctl build --dir ./src/ --store .index/` 扫描目录建倒排索引。`--ext .go .py .java` 过滤文件类型，默认索引所有文本文件。索引存储用简单的文本格式：每行一个关键词，后面跟文件路径和行号列表。步骤二：`indexctl query --keyword "TransactionHandler" --store .index/` 查询，输出 `filepath:line_number: line_content`。多关键词空格分隔表示 AND 关系——结果必须包含所有关键词。步骤三：文件改了以后 `indexctl update --dir ./src/ --store .index/` 增量更新，只重新索引 mtime 变化的文件。全量重建加 `--full`，删除的文件自动清理索引条目。
+
+查询走内存加载索引文件，启动时读 `.index/` 下数据。索引文件不存在报 `index not found, run build first` 退出码 1。空目录建索引输出 `no files indexed` 退出码 0。`--keyword` 未指定报 `no keyword specified` 退出码 1。关键词为空字符串跳过不报错。索引文件损坏报 `corrupt index: ...` 退出码 2，需要重新 build。
+
+构建流程：解析→编译→测试→打包，测试失败不打包。go build 能编译通过，不依赖第三方库。

@@ -1,2 +1,9 @@
-大文件要分割上传，Go 的 html/template 思路可以用到这里。支持按行数和按字节数两种模式，分割后生成一个 manifest 文件记录顺序。
-构建流程是解析→编译→测试→打包，测试失败不打包。目录结构变了以后，缓存的路径映射要刷新。go build 能编译通过，不依赖第三方库。
+先确定分割模式——按行数还是按字节数，然后分割并生成 manifest，最后可以合并回来。大文件上传经常需要这样的工具。
+
+命令：`fsplit --input bigfile.log --mode lines --size 10000 --output-dir ./chunks/`。`--mode lines` 按行数分割，`--mode bytes` 按字节数分割。文件命名 `part_001`、`part_002`，`--prefix` 自定义前缀。分割后生成 `manifest.json`：`{"source": "bigfile.log", "source_size": 104857600, "chunks": [{"index": 0, "file": "part_001", "size": 10485760}], "checksum": "sha256:abc..."}`。
+
+合并用 `fsplit merge --manifest ./chunks/manifest.json --output restored.log`，校验 checksum 一致。不匹配 stderr 输出 `checksum mismatch: expected abc..., got def...`，退出码 5。
+
+按字节数分割不保证行边界切割，残行保留。按行数分割保证每块完整行，最后一块可不足指定行数。
+
+构建流水线：解析参数→编译配置→测试分割结果→打包输出。测试失败不生成 manifest，stderr 输出 `test failed: chunk N checksum mismatch`。`go build` 能编译通过，不依赖第三方库。

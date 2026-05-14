@@ -1,3 +1,11 @@
-接口返回的 JSON 跟预期对不上，嵌套好几层手动展开检查太费劲。Go 写一个 JSON 深度对比：嵌套对象递归下去比，数组按索引逐项比，差异的位置用点号路径标出来，比如 root.users[2].name 这样。
+接口返回的 JSON 跟预期对不上，嵌套好几层手动展开检查太费劲——对象套数组套对象，肉眼根本对不齐。Go 写一个 JSON 深度对比工具，嵌套对象递归下去比，数组按索引逐项比，差异位置用点号路径标出来，一眼看清哪里不一样。
 
-命令行设计参考这个格式：cli import --source csv --target db --filter 'age>18'，子命令加参数的方式。不用第三方包，go build 通过。
+命令 `jsondiff compare --file-a expected.json --file-b actual.json --output diff_report.json`。对比规则：对象逐 key 递归，数组按索引逐项，null 和缺失区分处理（缺失 = key 不存在，null = key 存在值为 null）。差异路径格式 `root.users[2].name`，数组用 `[N]` 标注索引。
+
+结果分四类：`{"added": [{"path": "root.users[5]", "value": {...}}], "removed": [{"path": "root.settings.theme", "value": "dark"}], "changed": [{"path": "root.users[2].name", "old": "alice", "new": "bob"}], "type_changed": [{"path": "root.count", "old_type": "number", "new_type": "string"}]}`。`--ignore-order` 数组忽略顺序按内容匹配（先排序再比），默认按索引严格比较。`--tolerance 0.01` 数值差异在容差范围内不算变化。
+
+`--path "root.users"` 只比较指定路径下的子树。`--format table` 表格输出，列 `type | path | old | new`。`--stat` 只输出统计：added/removed/changed/type_changed 各多少条。
+
+完全一致输出 `json objects are identical` 退出码 0。JSON 解析失败报 `invalid json: filename: reason` 退出码 1。`--file-a` 或 `--file-b` 不存在报 `file not found: ...` 退出码 1。顶层类型不同（比如一个是数组一个是对象）报 `type mismatch: root is array vs object` 但仍输出差异。
+
+不用第三方包，go build 通过。

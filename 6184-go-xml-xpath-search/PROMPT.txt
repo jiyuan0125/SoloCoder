@@ -1,5 +1,11 @@
-安全审计要查 XML 配置里有没有明文密码和过期配置，几十个文件手动翻不行。Go 命令行做 XML XPath 搜索。
-支持属性选择器和命名空间。
-结果序列化为文本输出。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。
+安全审计要查 XML 配置里有没有明文密码、过期 SSL 证书、开放端口——几十个文件手动翻根本不现实。用 XPath 表达式一把梭，想查什么写个表达式就行。
+
+命令 `xpathgrep search --expr '//property[@name="password"]' --dir ./config/ --output results.txt`。XPath 支持 `/` 路径、`//` 递归、`[@attr='val']` 属性选择、`text()` 文本节点、`|` 联合选择。带命名空间的 XML 需 `--ns 'ns=http://example.com'` 注册前缀，可多次使用注册多个。`--file` 搜单个文件。
+
+默认纯文本输出 `filename: expr -> matched_value`。`--format json` 输出 `{"matches": [{"file":"db.xml","path":"/config/property[3]","value":"plaintext_pw"}]}`。`--count` 只输出每个文件匹配数量，格式 `filename: N matches`。`--files-with-matches` 只输出有匹配的文件名。`--context 2` 匹配节点前后各输出 N 层父级路径。
+
+命名空间未注册就用在表达式中报 `unregistered namespace prefix: ns` 退出码 1。XPath 语法错误报 `invalid xpath: ...` 退出码 1。零匹配退出码 0 输出空结果。XML 文件解析失败报 `parse error: filename: reason` 到 stderr 跳过该文件。`--expr` 未指定报 `no xpath expression provided` 退出码 1。
+
+内置快捷模式 `--check passwords` 等价于预设一组搜索密码字段的 XPath 表达式。搜索规则可以保存和复用——`--save-rule name` 保存当前表达式，`--load-rule name` 加载已保存的规则。
+
 go build 能编译通过，不依赖第三方库。

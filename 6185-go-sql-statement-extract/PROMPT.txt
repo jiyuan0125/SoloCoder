@@ -1,5 +1,11 @@
-shell 脚本里拼 SQL 太痛苦了，不如直接从日志里把 SQL 语句提取出来。Go 做 SQL 语句提取。
-识别 SELECT、INSERT、UPDATE、DELETE。
-语句按类型分类输出。
-主操作执行时要调用辅助检查，辅助检查也要读同一批数据。
+为什么 shell 脚本里拼 SQL 这么痛苦？单引号双引号转义来转义去，出问题了还得从日志里把 SQL 语句抠出来。做个 SQL 语句提取工具，直接从文本文件里识别出完整 SQL，省得肉眼找。
+
+1. 命令 `sqlextract scan --file app.log --output sql_result.json`。识别 SELECT/INSERT/UPDATE/DELETE 四种 DML，`--include-ddl` 额外识别 CREATE/ALTER/DROP。提取逻辑：匹配到 SQL 关键词开头，逐行拼接直到遇到分号 `;` 或下一个非 SQL 关键词开头的行。`--dir ./logs/` 递归扫描目录。
+
+2. 语句按类型分类输出 `{"SELECT": [{"statement": "SELECT * FROM users WHERE id=1", "line": 42, "file": "app.log"}], "INSERT": [...]}`。`--type SELECT,INSERT` 只提取指定类型，逗号分隔。`--stats` 额外输出统计到 stderr：各类型数量、最频繁的表名（从 FROM/INTO/UPDATE 后提取）。提取的语句自动去除前后空白，多行压缩为单行但保留原始行号范围 `line_start-line_end`。
+
+3. 提取后自动跑辅助语法检查——验证括号是否匹配、字符串引号是否闭合、有没有未关闭的注释。辅助检查读同一批提取数据，问题标 `syntax warning: filename:line N: unclosed string`。
+
+4. 空文件输出空 JSON `{}`。SQL 关键词出现在字符串字面量内的不算（简单处理：忽略引号内的关键词）。`--min-length 20` 过滤掉太短的片段（比如 `select 1` 这种健康检查）。
+
 纯标准库实现，go run . 能跑。

@@ -1,5 +1,7 @@
-不同系统导出来的日期格式完全不一样，有的 2024/01/02 有的 Jan 2nd 还有「二〇二四年一月」。Go 写个统一工具。
-支持 yyyy/mm/dd、mm-dd-yyyy、中文年月日等。
-有歧义的日期（01/02/2024）怎么处理要有个默认策略。
-处理完每个目录后更新进度，空目录不用处理但计数要更新。
-go build 能编译通过，不依赖第三方库。
+不同系统导出来的日期格式有多离谱？2024/01/02、Jan 2nd, 2024、「二〇二四年一月」全混在一起。数据分析师花两天清洗日期列还有漏网之鱼。Go 写个日期格式统一工具，各种格式都能转。
+
+支持的输入格式：yyyy/MM/dd、yyyy-MM-dd、MM/dd/yyyy、dd-MM-yyyy、中文「二〇二四年一月二日」（支持〇和零）、英文月份（Jan/January 2nd, 2024，支持 st/nd/rd/th 后缀）、Unix 时间戳（秒 10 位/毫秒 13 位）、ISO 8601（2024-01-02T15:04:05Z）。--to 指定输出格式，默认 yyyy-MM-dd，可选 unix-seconds、iso8601、chinese。
+
+歧义处理：01/02/2024 默认当 MM/dd/yyyy，加 --day-first 切换 dd/MM/yyyy。解析失败原样保留，stderr 输出 "parse failed: <原始值>: unsupported format"。
+
+命令：`dateunify <输入.csv> --column date --to yyyy-MM-dd --day-first --report report.json`。report.json 每条含 original、converted、status（converted/unchanged/failed）、detected_format（如 "yyyy/MM/dd"）。空值跳过但计数更新。输出 CSV 保持原列顺序，日期列替换。退出码 0 成功，1 参数错误，12 部分失败。go build 编译通过，不依赖第三方库。

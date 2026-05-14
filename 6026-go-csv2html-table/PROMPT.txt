@@ -1,2 +1,5 @@
-产品组下周要看数据报表，得先出个能跑的 CSV 转 HTML 表格的工具。超长内容截断加 title 属性，表头用 <th> 标签，支持指定 CSS 类名方便套他们的样式。
-任务状态是排队→运行→暂停→完成，暂停后可以继续。纯标准库实现，go run . 能跑。
+产品组下周要看数据报表，得先出个能跑的 CSV 转 HTML 表格工具。上周用 Excel 导出 HTML 样式太丑，自己写一个可控的。
+
+Go 做 CSV 转 HTML。命令 `csv2html -i data.csv [-o output.html] [--class mytable] [--truncate 50] [--header-row] [--strip-html]`。--class 给 <table> 加 class 属性如 <table class="mytable">，默认不加。--truncate 指定单元格最大字符数（rune 计数），超长截断并加 title="完整内容" 属性，默认 0 不截断。--header-row 时第一行用 <thead><tr><th> 包裹，其余 <tbody><tr><td>。不加则全用 <td>。
+
+输出完整 HTML：<!DOCTYPE html>\n<html>\n<head><meta charset="UTF-8"></head>\n<body>\n<table>...\n</table>\n</body>\n</html>。特殊字符转义：<→&lt;、>→&gt;、&→&amp;、"→&quot;。空单元格 <td></td>。--strip-html 去除单元格 HTML 标签。字段数少于表头缺失列补空 <td></td>，多于表头拼入最后一列。文件不存在 stderr 输出 "file not found" 并 exit 1。正常 exit 0。纯标准库实现，go run . 能跑。

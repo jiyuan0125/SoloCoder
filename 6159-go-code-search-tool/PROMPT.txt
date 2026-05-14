@@ -1,5 +1,9 @@
-代码搜索之前用的 Python 脚本，速度还行但功能不够，这次要用 Go 试试代码搜索工具。
-自动跳过 .git、node_modules 等目录。
-支持按语言过滤搜索范围。
-构建流程是解析→编译→测试→打包。测试失败不打包。
-不用第三方包，go build 通过就行。
+代码搜索之前用 Python 脚本，速度还行但功能不够——不支持按语言过滤、不跳过二进制文件、输出格式也没法跟 CI 集成。Go 重来一遍，搜索本地代码库把功能做全。
+
+`codesearch --pattern "TODO" --dir ./src/ --lang go`。自动跳过 .git、node_modules、vendor、__pycache__、.svn 目录和二进制文件（检测 NUL 字节判断）。`--lang` 按后缀过滤：go→.go、python→.py、java→.java、rust→.rs、js→.js/.ts。多语言逗号分隔 `--lang go,python`。`--lang all` 或不传则搜所有文本文件。
+
+输出格式：`--format text`（默认）`file.go:15: TODO: fix this`；`--format json` `{"file":"file.go","line":15,"text":"TODO: fix this","lang":"go"}`；`--format summary` `file.go: 3 matches`。
+
+高级选项：`--context 2` 上下文行，`--ignore-case` 忽略大小写，`--max-results 100` 限制输出数。完成 stderr 输出 "searched: 234 files, matched: 15, skipped: 12 (binary), time: 0.2s"。
+
+退出码 0 有匹配，1 无匹配，2 参数错误。不用第三方包，go build 能编译通过。

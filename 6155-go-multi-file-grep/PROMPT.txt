@@ -1,5 +1,9 @@
-日志平台的搜索功能太弱了，多文件并行搜索都做不到，还得一台台 grep。Go 做多文件并行搜索。
-利用多核加速。结果按匹配数排序。
-支持排除特定文件和目录。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-纯标准库实现，go run . 能跑。
+先说场景：十几台机器的日志要搜一遍，SSH 进去 grep 再拷回来，一上午就没了。日志平台搜索功能太弱连多文件并行都做不到。Go 做多文件并行搜索，多核不用白不用。
+
+`mgrep --pattern "timeout" --dir ./logs/ --workers 8 --sort-by count`。多核并发搜索，每个 worker 处理一个文件。结果汇总排序：count（匹配数从多到少）、name（文件名字典序）、mtime（修改时间倒序）。
+
+排除机制：`--exclude "*.gz,*.bak"` 跳过后缀，`--exclude-dir ".git,node_modules,archive"` 跳过目录，`--exclude-glob "access_log_*"` 通配符排除，`--max-size 100M` 跳过大文件。`--include "*.log"` 只搜特定后缀。
+
+输出：每文件一段 "logs/app.log (23 matches)" 后跟匹配行。`--summary` 只输出文件名和匹配数。`--format json` 输出 `[{"file":"logs/app.log","matches":23,"results":[{"line":15,"text":"timeout connecting"}]}]`。
+
+完成 stderr 输出 "scanned: N files (M skipped), matched: K, time: Xs"。退出码 0 有匹配，1 无匹配，2 参数错误。纯标准库，go run . 能跑。

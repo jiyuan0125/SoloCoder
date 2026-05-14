@@ -1,5 +1,7 @@
-用 Go 写一个数字格式转换。各种数字格式互转：科学计数法、千分位、中文大写。
-千分位分隔符支持逗号和空格。
-NaN 和 Infinity 的处理。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-纯标准库实现，go run . 能跑。
+数据导出时数字格式天天出问题——财务看不懂 1.23E+5，运营要千分位 1,234,567.89，政府报表要中文大写「壹万贰仟叁佰」。三种格式来回转，手工不现实。Go 写个数字格式转换工具搞定互转。
+
+命令：`numfmt convert <输入.csv> --column amount --from auto --to plain --output <输出.csv> --report report.json`。--from（auto|scientific|thousands|chinese|plain），auto 按正则检测：含 E/e 是科学计数法，含逗号或空格千分位是 thousands，含壹贰叁是 chinese。--to（plain|scientific|thousands|chinese|percent）。
+
+转换：1.23E+5 → plain: 123000, thousands: 123,000, chinese: 十二万三千。千分位 1,234,567 → plain: 1234567。中文大写「壹万贰仟叁佰」→ plain: 12300（支持零〇壹贰叁肆伍陆柒捌玖拾佰仟万亿）。千分位分隔符支持逗号和空格。percent：0.15 → "15%"。
+
+NaN/Infinity 原样保留标 special。转换失败原样保留标 failed，error_msg 记录 "invalid number: <值>"。report.json 含 total、converted、skipped、failed 计数。小数最多 6 位（第 7 位四舍五入）。子命令：numfmt convert、numfmt detect、numfmt batch（多列转换）。纯标准库，go run . 能跑。退出码 0 成功，1 参数错误。

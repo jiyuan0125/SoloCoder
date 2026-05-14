@@ -1,5 +1,9 @@
-客服团队维护的那批 INI 配置文件，想找某个 key 在哪些 section 出现过，手动翻太慢。Go CLI 做 INI 键值搜索。
-支持跨 section 搜索。
-通配符匹配键名。
-go build 能编译通过，不依赖第三方库。
-代码分几个文件组织，别全写 main.go 里。
+客服团队维护的那批 INI 配置文件，总得找某个 key 在哪些 section 出现过、值是什么。手动翻几十个文件？别闹了。上次数据库连接串改了，运维说「就改了一个 max_connections」，结果十个 INI 文件里有八个都有这个 key，漏改了两个导致连接池爆了。
+
+命令 `inisearch find --key "max_connections" --dir ./config/ --output result.json`。默认搜所有 section，`--section production` 限定在指定 section。通配符匹配键名 `--key "db_*"` 匹配 `db_host`、`db_port`、`db_name`。`--value "3306"` 按值搜索，找到所有值为 3306 的 key。`--file` 和 `--dir` 二选一。
+
+输出格式 `{"matches": [{"file": "app.ini", "section": "production", "key": "max_connections", "value": "100", "line": 23}]}` 按文件名排序。`--value-only` 只输出值。`--format table` 表格输出，列 `file | section | key | value | line`。`--count` 只输出匹配条数。
+
+key 不存在输出 `no matches found` 退出码 0。INI 格式不合法（section 声明残缺、等号缺失）在 stderr 记 `malformed ini: filename: line N` 跳过该文件继续处理。`--key` 未指定报 `no key specified` 退出码 1。目录不存在报 `directory not found: ...` 退出码 1。搜索结果为空输出空数组 `{"matches": []}`。
+
+go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里。

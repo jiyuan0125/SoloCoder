@@ -1,2 +1,5 @@
-群里有人吐槽配置 diff 只能看文本对比，嵌套 JSON 的差异完全看不出来。我寻思 Go 做一个差异用 JSON Patch 格式输出的工具应该不难。数组按索引对比，对象按键名对比，嵌套差异递归展示。
-有备份策略和备份记录，按策略自动执行备份。纯标准库实现，go run . 能跑，代码分几个文件组织，别全写 main.go 里。
+群里有人吐槽配置 diff 只能看文本对比，嵌套 JSON 的差异完全看不出来。做个差异用 JSON Patch 格式输出的工具——数组按索引对比，对象按键名对比，嵌套差异递归展示。
+
+命令 `jsondiff -old base.json -new current.json [-o patch.json] [--format patch|summary]`。--format patch 时输出 RFC 6902 JSON Patch 数组，每条含 op（"add"/"remove"/"replace"）、path（JSON Pointer 如 /users/0/name）、value（add/replace 时的新值，remove 无此字段）。--format summary 时输出 {"added":3,"removed":1,"changed":5,"details":[{"path":"...","action":"add","old_value":null,"new_value":...}]}。
+
+对象按键名逐一对比：old 有 new 没有→remove，new 有 old 没有→add，都有但值不同且非对象/数组→replace。数组严格按索引对比（不做模糊匹配），长度不同时多出为 add、缺少为 remove。嵌套递归，path 用 / 层层拼接。完全相同时输出空数组 [] 并 exit 0。-old 或 -new 不存在时 stderr 输出 "file not found: <path>" 并 exit 1。非法 JSON 时 stderr 输出 "invalid JSON: <path>" 并 exit 1。纯标准库实现，go run . 能跑，代码分文件组织。

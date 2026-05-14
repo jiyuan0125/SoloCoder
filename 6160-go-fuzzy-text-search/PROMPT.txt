@@ -1,6 +1,9 @@
-用户搜索经常打错字，精确匹配搜不到东西，得做模糊搜索。Go 写模糊文本搜索。
-基于编辑距离的模糊度。
-模糊度阈值可配。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。
-分组规则变了以后，已分组的项目要重新分配。
-go build 能编译通过，不依赖第三方库。
+先处理用户打错字的搜索问题，再考虑更复杂的方案。"aple" 搜不到 "apple"，"recieve" 找不到 "receive"，产品经理说要上模糊搜索——但 Elasticsearch 太重了，Go 写个基于编辑距离的模糊搜索就够了。
+
+1. 单文件：`fuzzy --query "aple" --file dictionary.txt --threshold 2`，输出所有编辑距离 ≤ 2 的行，按距离排序，格式 `apple (distance: 1)`。`--limit 10` 只返回前 10 个
+2. 批量目录：`fuzzy --query "recieve" --dir ./docs/ --recursive --threshold 2`，逐行搜索输出 `docs/email.txt:47: please receive the package (distance: 2)`
+3. 算法：默认 Levenshtein，`--algorithm damerau` 切换 Damerau-Levenshtein（相邻交换距离 1 而非 2）。超过阈值的计算提前剪枝终止
+
+搜索 10000 行文本 1 秒内完成。完成 stderr 输出 "scanned: N lines, matched: M, time: Xs"。
+
+退出码 0 有匹配，1 无匹配，2 参数错误（如 threshold < 0 stderr 输出 "threshold must be >= 0"）。纯标准库，go build 能编译通过。

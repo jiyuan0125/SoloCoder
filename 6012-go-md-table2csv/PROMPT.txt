@@ -1,3 +1,7 @@
-文档从 Excel 迁到 Markdown 之后，下游的数据处理流程还吃 CSV，得做个反向转换。文件里可能有多个表格，之前用脚本只导出了第一个，后面的全丢了。
-Go 做 Markdown 表格转 CSV。文件里可能有多个表格按顺序导出，分隔行（---）自动跳过。
-写入结果的同时要更新索引，索引构建也要读取已有结果。不用第三方包，go build 通过就行。
+文档从 Excel 迁到 Markdown 之后，下游的数据处理流程还吃 CSV。文件里可能有多个表格，之前用脚本只导出了第一个，后面的全丢了——这就是痛点。
+
+命令 `md2csv -i readme.md [-o output.csv] [--index N] [--delimiter ","]`，不传 --index 导出所有表格到 output_1.csv、output_2.csv...（文件名基于 -o 参数，不传 -o 则用输入文件名前缀），传 --index 2 只导出第 2 个表格到 -o 指定的文件。识别 Markdown 表格规则：竖线分隔的行，紧跟 |---|---| 或 |:---:| 等对齐分隔行的是表头，分隔行跳过不输出。单元格前后空格 trim，连续的 | 视为列分隔符，|| 之间为空值。非表格内容（代码块 ``` 包裹的、非表格段落、列表）直接跳过。代码块内的竖线行不算表格。
+
+--index 超出实际表格数量时 stderr 输出 "table index N out of range (found M tables)" 并 exit 1。文件不含任何表格时 stderr 输出 "no tables found" 并 exit 1。正常 exit 0。--delimiter 指定 CSV 分隔符默认逗号。单元格含分隔符或双引号时用双引号包裹，内部双引号转义为两个双引号。
+
+写入每个 CSV 的同时在同目录生成对应的 .meta.json，记录 start_line（表格起始行号）、row_count（数据行数，不含表头）、col_count（列数）。不用第三方包，go build 通过就行。

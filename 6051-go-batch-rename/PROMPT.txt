@@ -1,2 +1,7 @@
-服务器上的日志文件命名不统一，批量重命名靠脚本写正则容易出错。Go 标准库的 filepath.Walk 遍历目录很方便，模板里的 {index} 可以指定起始数字和步长，重命名之前先预览确认后再执行，遇到重名文件自动加后缀。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。不用第三方包，go build 通过就行。
+服务器上日志文件命名一团糟——有 `app.log.20240101` 的，有 `log_app_01_01` 的，还有纯时间戳的。写脚本正则又容易误杀。Go 用 `filepath.Walk` 搞一个批量重命名工具。
+
+命令：`rename --dir ./logs/ --pattern "app_{date}.{ext}" --start-index 1 --step 1 --dry-run`。模板变量：`{index}` 带起始数字和步长、`{date}` 修改日期 `YYYYMMDD`、`{ext}` 原扩展名（含 `.`）、`{original}` 原文件名去扩展名。`--dry-run` 预览：`app.log.20240101 → app_20240101.log`。
+
+重名文件自动加 `_1`、`_2` 后缀，stderr 输出 `duplicate target: <name>, renamed to <name>_1`。隐藏文件默认跳过。`--recursive` 递归处理不改变层级。`--ext-filter` 只处理指定扩展名：`--ext-filter .log,.txt`。执行完统计：`renamed: N, skipped: N, duplicates: N`。
+
+记录状态流转：草稿→待审→通过→归档。通过后可撤回到草稿，stderr 输出 `recall: <filename> reverted to draft`。不用第三方包，`go build` 通过就行。

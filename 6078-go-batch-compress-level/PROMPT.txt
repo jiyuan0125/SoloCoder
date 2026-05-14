@@ -1,2 +1,7 @@
-日志归档脚本维护不动了，而且压缩级别写死了，小文件和大文件用同一级压缩不合理。Go 搞个分级压缩：小文件快速压缩，大文件高压缩比，输出压缩报告。
-支持嵌套命令：project create、project build、project test run、project test coverage。不用第三方包，go build 通过就行。
+日志归档的压缩策略凭什么一刀切？1KB 调试日志和 2GB 访问日志用同一个 gzip level 6，要么浪费时间要么浪费空间。Go 写个按文件大小自动选压缩级别的工具。
+
+命令：`compress <目录> --size-rules rules.json --output ./archive --report report.json`。rules.json 如 {"small":{"max_mb":1,"level":1},"medium":{"max_mb":100,"level":6},"large":{"min_mb":100,"level":9}}，不指定默认小/中/大 level 1/6/9，分界线 1MB/100MB。输出为 .gz 文件保持原目录结构。
+
+report.json 是数组，每条含 source_path、original_size、compressed_size、ratio（如 "45.2%"）、elapsed_ms、gzip_level。stdout 输出 `total: N files, original: Xb, compressed: Yb, ratio: Z%, time: Tms`。
+
+源文件不存在退出码 1，stderr 输出 "error: source not found: <路径>"。输出目录不可写退出码 1。单个文件失败 stderr 输出 "compress failed: <文件>: <错误>" 并跳过。退出码 0 全部成功，3 部分失败。子命令：compress batch、compress report、compress verify。go build 编译通过，不依赖第三方库。

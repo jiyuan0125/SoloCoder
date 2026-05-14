@@ -1,2 +1,7 @@
-新项目要按固定模板建目录结构，每次手动 mkdir 太繁琐。Go 做批量目录创建：模板支持变量替换（日期、序号、名称），已存在的目录跳过不报错。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。纯标准库实现，go run . 能跑。
+部门每接一个新客户就要建一套固定结构的目录——合同、发票、报告、沟通记录，十几个文件夹手动建太蠢了，新来的同事漏建了一个目录差点导致发票没法归档。用 Go 写个模板化的目录批量生成工具，先定义模板，然后一行命令把整个结构拉起来。
+
+模板文件是 JSON 格式，里面用 {{.Date}}、{{.Seq}}、{{.Name}} 这些占位符。比如模板定义了 "reports/{{.Date}}/{{.Name}}/draft" 这样的路径，执行时替换成 "reports/2024-01-15/客户A/draft"。命令行用法：`mktemplate generate --template template.json --vars name=客户A --output ./clients`，其中 --vars 可以多次指定 key=value 对。
+
+已存在的目录静默跳过，不报错，输出 "skipped: <路径>"。文件和目录权限 0755，创建失败时 stderr 输出具体原因。--list 模式显示模板里定义的所有路径（替换后的预览），每行一个路径，前面标序号。--validate 模式检查模板语法是否合法（JSON 格式、占位符是否闭合），不合法时输出 "invalid template: <行号>: <错误描述>" 并退出码 1。
+
+没有 --template 参数时退出码 1 并 stderr 输出 "error: --template is required"，模板文件不存在退出码 1 并输出 "error: template file not found: <路径>"。正常退出码 0。支持嵌套子命令：mktemplate generate、mktemplate validate、mktemplate list。纯标准库实现，go run . 能跑。

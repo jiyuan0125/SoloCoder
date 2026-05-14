@@ -1,2 +1,10 @@
-之前用 Python 写过一个 JSON 展平脚本，速度还行但部署环境装不了 Python，只好换 Go 重写。数组层级用 [index] 表示，反向操作也要支持——把展平的 key-value 还原成嵌套结构。
-导入成功后自动通知下游系统，本地模式没有下游配置。go build 能编译通过，不依赖第三方库。
+先说场景：之前用 Python 写过一个 JSON 展平脚本，速度还行但部署环境装不了 Python，只好换 Go 重写。
+
+步骤如下：
+1. 命令 `jsonflat -i nested.json -o flat.json [--sep .] [--array-style bracket]`，默认分隔符是点号，数组层级用 [index] 表示，比如 users[0].name。
+2. --array-style 可选 bracket（默认，用 [0]）或 dot（用 .0），影响数组索引的表示方式。
+3. 展平后输出 JSON 对象，key 是展平路径字符串，value 是原始叶节点值。null 值保持 null，空对象 {} 的 key 跳过不输出，空数组 [] 的 key 也跳过。布尔值保持 true/false，数字保持原始类型。
+4. 输入不是合法 JSON 时 stderr 输出 "invalid JSON" 并 exit 1。输入是 JSON 数组（非对象）时 stderr 输出 "root must be object" 并 exit 1。输入是空对象 {} 时输出 {}。
+5. 也支持反向操作 --unflatten，把展平的 key-value 还原成嵌套结构。--unflatten 时的分隔符和数组风格必须与展平时一致才能正确还原。
+
+展平完成后 stderr 输出 "flattened: N keys"，N 是展平后的键值对数量。分隔符含方括号时不合法，stderr 输出 "invalid separator" 并 exit 1。go build 能编译通过，不依赖第三方库。

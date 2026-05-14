@@ -1,6 +1,11 @@
-二十几个分公司的 CSV 要合成一份，列名还不完全一样。Go 做纵向合并数据。
-多个 CSV 文件纵向合并。
-列名不同的只保留公共列或全部保留（空值填充）。
-合并去重可选。
-同步分为：准备→扫描→传输→验证→完成。验证失败重试传输。
-go build 能编译通过，不依赖第三方库。
+二十几个分公司的 CSV 要合成一份，列名还不完全一样，有的叫"销售额"有的叫"sale_amount"。手工合并每次都是灾难——先定合并策略，再 Go 写纵向合并一步步搞定。
+
+合并命令：`vmerge --files "branch_*.csv" --output merged.csv --strategy common`。strategy 决定列名不一致时的处理：common 只保留交集列，all 保留并集列（缺少的填空字符串）。默认 common。
+
+去重：`--dedup --dedup-column "order_id"` 按指定列去重保留首次出现。完成后 stderr 输出 "removed 23 duplicates based on column: order_id"。
+
+校验模式：`--validate` 不合并只检查，stdout 输出每个文件 "branch_shanghai.csv: 15 cols, 4521 rows" 和总体 "total: 23 files, 34 cols (intersection: 12), 98432 rows"。
+
+文件列表用通配符 `--files "path/*.csv"` 或 `--list filelist.txt`。空文件（只有表头）跳过不报错，统计中标 skipped。--dedup-column 指定的列不存在时报错 "column not found: xxx" 退出码 2。
+
+退出码 0 成功，1 输入文件不存在，2 参数错误。纯标准库，go run . 能跑。

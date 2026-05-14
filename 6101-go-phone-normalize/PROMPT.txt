@@ -1,5 +1,7 @@
-现在用的那个 Python 脚本不支持自定义规则，自己加太麻烦，不如 Go 写个手机号标准化。
-去掉+86、去掉空格和横线。非大陆号码保留国际区号。
-无效号码标记出来。
-校验完成后自动更新统计信息，首次运行没有历史统计。
-纯标准库实现，go run . 能跑。
+运营每周导一份用户手机号报表，同一个用户在三个系统里存的格式都不一样——+86 138-0013-8000、13800138000、(86)13800138000，去重时全算不同人。Python 脚本不支持自定义规则还跑得慢。Go 重写一个，快且灵活。
+
+命令：`phonenorm <输入文件> --output <输出文件> --format e164|national|international --country default:CN --report report.json`。输入 CSV，手机号在第一列（或 --column 指定列名/列号，从 1 开始）。--format 控制：e164 输出 +8613800138000，national 输出 13800138000，international 输出 +86 138 0013 8000。
+
+处理规则：去掉 +86/0086 前缀、空格、横线、括号。11 位纯数字以 1 开头且第二位 3-9 视为有效大陆号码。非大陆号码保留国际区号。无效号码原样保留，--report 标记 status: invalid 附原因（"too_short"不足 11 位、"too_long"超 13 位、"non_numeric"含非数字、"invalid_prefix"不以 1 开头）。
+
+stdout 输出 `summary: N total, M valid, K invalid`。输出 CSV 手机号列替换为标准结果，新增 normalization_status 列（valid/invalid）。输入不存在或 CSV 列数不一致退出码 1。纯标准库，go run . 能跑。

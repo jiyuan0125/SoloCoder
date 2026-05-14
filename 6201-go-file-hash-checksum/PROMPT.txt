@@ -1,5 +1,9 @@
-上次交付的固件包有两个文件被运维不小心覆盖了，排查了半天才定位到。加一个文件哈希校验工具，Go 写，以后每个交付件都带校验清单。
+先说背景：上次交付固件包，两个文件被运维不小心覆盖了，排查半天才定位到——没有校验机制就是裸奔。Go 写个文件哈希校验工具，以后每个交付件都带校验清单，验一下就知道有没有被改过。
 
-单个文件算哈希，目录批量算也行。结果输出成标准 .sha256 格式，能直接拿 sha256sum 命令验证。工具内部用模板机制管理文件生成逻辑，用户选一个模板就能产出对应的校验文件。
+步骤一：生成校验清单。`hashchk generate --dir ./release/ --algo sha256 --output release.sha256`。`--algo` 支持 md5、sha1、sha256，默认 sha256。单文件也行 `hashchk generate --file firmware.bin --algo sha256`。输出标准格式 `hash  filename` 每行一条，能直接拿 `sha256sum -c` 验证。`--depth 3` 控制递归深度默认无限制，`--exclude "*.log,tmp/"` 跳过匹配的文件和目录。
 
-纯标准库，go build 能编译通过。代码别堆 main.go 里，拆几个文件。
+步骤二：验证。`hashchk verify --file release.sha256` 逐条核对，通过的打 `OK`，失败标 `MISMATCH: filename expected=xxx got=yyy`，找不到标 `MISSING: filename`。退出码：全通过 0、有失败 1、有缺失 2。`--json` 输出 `{"passed": [...], "failed": [...], "missing": [...]}`。`--strict` 模式缺失也算失败。
+
+步骤三：对比。`hashchk diff --old v1.sha256 --new v2.sha256` 对比两版差异，输出新增、删除、哈希变更的文件列表。
+
+校验文件格式不对（行里没有空格分隔 hash 和 filename）报 `invalid checksum format: line N` 退出码 1。纯标准库，go build 能编译通过。代码别堆 main.go 里，拆几个文件。

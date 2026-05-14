@@ -1,2 +1,7 @@
-展平后的 JSON 要还原回去，Go 的 filepath.Walk 思路可以用到递归遍历上。数组索引 [0]、[1] 要还原成数组，展平和还原要能循环——还原的结果再展平应该得到同样的数据。
-管理数据源和数据转换流程，每个流程绑定一个数据源。纯标准库实现，go run . 能跑，主逻辑和辅助函数分文件写。
+展平后的 JSON 要还原回去，这活看着简单其实陷阱不少。数组索引 [0]、[1] 要还原成 JSON 数组，连续索引缺失的补 null。Go 的递归遍历正好合适。
+
+怎么确保还原正确？展平和还原要能循环——还原的结果再展平应该得到同样的 key-value 集合（忽略 null 差异）。命令 `jsonunflat -i flat.json -o nested.json [--sep .] [--array-style bracket]`，默认分隔符点号，bracket 风格下 [0] [1] 解析为数组索引。dot 风格下 .0 .1 解析为数组索引，区分方式和 --array-style 一致。
+
+解析逻辑：按分隔符拆分 key，遇到 [N] 片段时该层创建数组（方括号内的值必须是连续非负整数，非法索引如 [abc] 或 [-1] 时 stderr 输出 "invalid array index: <key>" 并 exit 1）。对象和数组可以交替嵌套，比如 a[0].b.c 还原为 {"a":[{"b":{"c":...}}]}。数组索引不连续时中间位置填 null，比如有 [0] 和 [2] 则 [1] 为 null。叶节点值类型保持原始 JSON 类型（字符串、数字、布尔、null），不额外转换。
+
+输入根不是 JSON 对象时 stderr 输出 "root must be object" 并 exit 1。输入不是合法 JSON 时 stderr 输出 "invalid JSON" 并 exit 1。纯标准库实现，go run . 能跑，主逻辑和辅助函数分文件写。

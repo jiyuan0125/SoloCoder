@@ -1,5 +1,9 @@
-日志里的日期格式乱七八糟，「昨天」「3天前」「2024年1月」都有，批量解析太痛苦。Go 从零写日期批量解析。
-支持中文日期、相对日期（3天前）。
-无法解析的标记出来。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-go build 能编译通过，不依赖第三方库。
+日志里的日期格式乱七八糟，「昨天」「3天前」「2024年1月」都有，光统一日期格式就花了一整天。你说这种重复劳动还要做多久？Go 从零写日期批量解析，把各种奇葩格式都收拾了。
+
+支持格式：ISO 8601（2024-01-15T10:30:00Z）、常见格式（2024/01/15、2024-01-15、01/15/2024）、中文日期（2024年1月15日）、相对日期（昨天、前天、3天前、上周一）、时间戳（1705309800，秒级）。相对日期基于参考时间点，默认当前时间，`--reference "2024-03-01"` 指定。
+
+`dateparse --input dates.txt --output parsed.json`，输入每行一个日期，输出 JSON 数组：`{"original":"3天前","parsed":"2024-01-12T00:00:00Z","format":"relative"}`。无法解析的行 parsed 填 null，format 填 "unknown"。
+
+CSV 批量：`dateparse --file data.csv --column "date" --output result.csv`，新增 parsed_date 列，原列不动。无法解析的行 parsed_date 填空字符串。
+
+完成 stderr 输出 "parsed: 200/230, unknown: 30"。退出码 0 成功，1 输入文件不存在。纯标准库，go build 能编译通过。

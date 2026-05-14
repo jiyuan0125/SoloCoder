@@ -1,3 +1,5 @@
-安全审计那边要求所有接口的入参都要过一遍 Schema 校验，Go 标准库的 encoding/json 刚好够用。之前用在线工具校验，结果格式各不相同不好统一，自己写一个输出格式可控。
-Go 做 JSON Schema 验证。验证结果输出到文件，列出所有不符合的字段和原因。嵌套校验、数组项校验、枚举值校验都要支持。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。分组规则变了以后，已分组的项目要重新分配。go build 能编译通过，不依赖第三方库。
+安全审计那边要求所有接口的入参都要过一遍 Schema 校验。之前用在线工具校验结果格式各不相同不好统一，自己写一个输出格式可控。
+
+Go 做 JSON Schema 验证工具。命令 `schemacheck -data payload.json -schema schema.json [-o report.json]`，不传 -o 输出到 stdout。report 是 JSON 对象，字段 valid（布尔值）、errors（数组，每个含 path 如 "$.user.email"、message、value 三个字段）。valid 为 true 时 errors 为空数组。校验关键字：type、required、enum、minimum/maximum、minLength/maxLength、items（数组元素 schema）、properties（嵌套对象 schema）。additionalProperties 默认允许额外字段。
+
+-data 文件不存在时 stderr 输出 "data file not found" 并 exit 1。-schema 文件不存在时 stderr 输出 "schema file not found" 并 exit 1。schema 本身不合法（如 type 值不在允许列表）时 stderr 输出 "invalid schema: <details>" 并 exit 2。嵌套校验错误路径逐层拼接，如 $.users[0].name。go build 能编译通过，不依赖第三方库。

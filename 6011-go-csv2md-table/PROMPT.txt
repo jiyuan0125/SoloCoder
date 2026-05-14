@@ -1,3 +1,5 @@
-上周部署出了个事故——配置表转 Markdown 的时候格式乱了，评审会上的表格列全没对齐，老板当场脸就黑了。现在不允许再手工排版了，工具生成必须一步到位。
-Go 做 CSV 转 Markdown 表格。对齐列宽，数字右对齐文本左对齐。表头自动加分隔行。
-校验完成后自动生成报告，报告生成也要查询校验数据。纯标准库实现，go run . 能跑。
+上周部署出了个事故——配置表转 Markdown 的时候格式乱了，评审会上的表格列全没对齐，老板当场脸就黑了。现在不允许再手工排版，工具生成必须一步到位。
+
+Go 做 CSV 转 Markdown 表格。命令 `csv2md -i data.csv [-o output.md] [-align auto|left|center|right] [-d ","]`，不传 -o 输出到 stdout。-d 指定分隔符默认逗号，支持 tab 和分号。表头行下面自动加 |---|---| 分隔行，列数跟表头对齐。-align 为 auto 时：纯数字列（所有非空单元格都能被 strconv.ParseFloat 解析）右对齐，其余左对齐。-align 为 left/center/right 时所有列统一对齐，center 用 :---:，right 用 ---:，left 用 ---。每个单元格前后加空格，竖线分隔，首尾竖线保留。单元格内容含竖线 | 时转义为 \|，换行符替换为 `<br>`，回车符删除。空行跳过不输出。
+
+表头为空（第一行全是空字段）时用 Col1, Col2, Col3... 自动命名。数据行字段数少于表头时缺失列填空字符串，多于表头时多出的字段拼入最后一列。输入文件不存在时 stderr 输出 "file not found" 并 exit 1。输入为空文件时 stderr 输出 "empty input" 并 exit 1。正常 exit 0。输出完成后自动生成 summary.md（与输出同目录），内容为 "Rows: N, Columns: M"。纯标准库实现，go run . 能跑。

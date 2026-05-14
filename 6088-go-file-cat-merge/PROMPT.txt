@@ -1,2 +1,5 @@
-日志文件按小时切割的，排查问题要合并好几天的文件才能看到完整链路。Go 做文件拼接合并：可以在文件之间插入分隔符，每个文件的内容前后加标记注释。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。分组规则变了以后，已分组的项目要重新分配。go build 能编译通过，不依赖第三方库。
+排查线上问题的时候，日志按小时切割成了 app.log.2024-01-15-00 到 app.log.2024-01-15-23 共 24 个文件，一个请求的链路分散在好几个文件里，grep 一个关键词得开 24 个终端。那天晚上熬到凌晨四点才拼完一份完整的链路日志。后来用 Go 写了个文件拼接合并工具，给每个文件的内容加上标记，一条命令搞定。
+
+命令：`catmerge <文件或目录> --output merged.log --separator "========" --header true --sort name|time`。输入可以是多个文件路径（空格分隔）或一个目录。目录模式时 --sort 控制文件顺序：name 按文件名字典序，time 按修改时间升序。--separator 在每个文件内容之间插入分隔行，默认 "========"。--header true 时每个文件内容前加一行 `# source: <文件名> (N lines, <大小>bytes)` 的标记注释。
+
+空文件也要写入标记头（标注 0 lines）。合并后的文件总行数在结尾输出到 stderr：`merged N files, total M lines, size S bytes`。输出文件已存在时 stderr 输出 "warning: <路径> already exists, overwriting" 并覆盖。输入文件不存在时退出码 1，stderr 输出 "error: file not found: <路径>"。输出目录不可写退出码 1。正常退出码 0。审批模式：--approve 时先列出所有待合并文件让用户确认，格式 "merge N files? [y/N]: "，输入 y 才执行。go build 能编译通过，不依赖第三方库。

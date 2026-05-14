@@ -1,5 +1,9 @@
-备份记录太多了，Excel 管不过来，想按正则模式搜一下哪些备份包含特定关键字。Go 做正则搜索工具。
-支持命名捕获组提取。
-搜索结果输出为 JSON，包含文件名、行号、匹配内容。
-多级命令：config get、config set、config list、config env switch。
-纯标准库实现，go run . 能跑。
+备份记录太多 Excel 管不过来，想按正则模式搜一下哪些备份包含特定关键字。这类事情用数据库也行，但有时候就是要在文件堆里直接找。Go 做正则搜索工具，核心是命名捕获组提取。
+
+`rxsearch --pattern "backup_(?P<date>\\d{8})_(?P<type>full|incr)\\.tar\\.gz" --path ./backups/`，输出 JSON 数组：`{"file":"backups/backup_20240115_full.tar.gz","line":1,"match":"backup_20240115_full.tar.gz","groups":{"date":"20240115","type":"full"}}`。无命名捕获组时 groups 为 `{}`。
+
+搜索范围：`--recursive` 递归子目录，`--include "*.log"` 文件过滤，`--max-depth 5` 递归深度。输出格式 `--format json`（默认）、`--format csv`（列：file, line, match, group1, group2, ...）、`--format text`（grep 风格 `file:line: match`）。
+
+`--replace "archive_${date}/${type}.bak"` 搜索替换预览，stdout 输出替换后内容不修改原文件。`--stats` 末尾 stderr 输出 "scanned: 234 files, matched: 12, time: 0.3s"。
+
+正则语法错误 stderr 输出 "invalid pattern: 具体错误"。退出码 0 有匹配，1 无匹配，2 正则错误。纯标准库，go run . 能跑。

@@ -1,3 +1,11 @@
-最近在搞文件处理，后端返回的 JSON 配置要转成 YAML 给运维填。手转了两三次就发现缩进格式经常不统一，有的 2 空格有的 4 空格，审核的人看着头疼。
-Go 实现 JSON 转 YAML，缩进统一用 2 空格，字符串加引号的情况按 YAML 规范处理。大文件要注意内存占用。
-子命令结构：db migrate、db rollback、db status、db seed。go build 能编译通过，不依赖第三方库。
+先说说背景：后端返回的 JSON 配置要转成 YAML 给运维填，手转了两三次就发现缩进格式经常不统一，有的 2 空格有的 4 空格，审核的人看着头疼。
+
+步骤如下：
+1. 命令 `json2yaml -i input.json -o output.yaml`，也可 stdin/stdout 模式：不传 -i 读 stdin，不传 -o 写 stdout。
+2. 缩进统一 2 空格，不允许 tab。字符串只在必要时加引号（含冒号、#、特殊字符或空行开头的值）。
+3. null 值输出为 null，布尔值输出 true/false 不加引号。数字保持原样，大整数不用科学计数法。
+4. 输入不是合法 JSON 时 stderr 输出 "invalid JSON" 并 exit 1。大文件（超过 10MB）要用流式处理，不能全量加载到内存——用 json.Decoder 逐 token 读取。
+5. 输出文件不可写时 stderr 输出 "cannot write to output path" 并 exit 2。
+6. 输入是 JSON 数组时输出 YAML 流式文档格式，每个元素用 --- 分隔。
+
+子命令结构：db migrate 执行迁移、db rollback 回滚最近一次、db status 显示迁移版本、db seed 用初始数据填充表。go build 能编译通过，不依赖第三方库。

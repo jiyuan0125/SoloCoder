@@ -1,5 +1,7 @@
-一批老数据从 Windows 迁过来全是乱码，GBK 被当成 UTF-8 读的那种。Go 命令行修复工具。
-常见乱码模式（UTF-8被当GBK解码等）自动修复。
-修复不了的原样保留。
-写入结果的同时要更新索引，索引构建也要读取已有结果。
-不用第三方包，go build 通过就行。
+一批老数据从 Windows 迁过来，GBK 被当 UTF-8 读进数据库，全变成「涓嶅仛閭ｄ簺浜嬩簡」。运维手动修了一周才 200 个文件还剩 3000 个，这种体力活必须自动化。Go 写个编码修复工具，自动识别乱码模式批量处理。
+
+能处理的乱码——UTF-8 被当 GBK 读（中文变「涓嶅仛」），GBK 被当 UTF-8 读（出现 \xef\xbf\xbd），UTF-8 被当 Latin1 读（中文变多字节 Latin1）。修复策略：反向编码再重新解码。修复不了的（双重编码、不可逆）标 unrepairable 原样保留。
+
+命令：`encfix <文件或目录> --mode auto --output <输出路径> --dry-run --report report.json`。--mode 可选 auto|utf8-as-gbk|gbk-as-utf8|utf8-as-latin1。auto 尝试所有模式选合法 UTF-8 比例最高的。--dry-run 每行输出 `<状态> <文件名> (mode: <模式>)`。
+
+每文件 stdout 输出一行状态。同时更新输出目录下 index.json，记录 original_encoding、target_encoding、status（fixed/unrepairable/skipped）。索引支持增量：已有 status: fixed 的跳过。退出码 0 成功，1 参数错误，13 部分失败。不用第三方包，go build 通过。

@@ -1,5 +1,7 @@
-日志数据好几百万条，按时间排完还要按级别排，Excel 直接卡死。Go 命令行做多字段排序。
-每列可以指定升序或降序。支持中文排序。
-数字列按数值排序不是字符串排序。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-不用第三方包，go build 通过就行。
+日志数据好几百万条，按时间排完还要按级别排，Excel 直接卡死——上周运营催着要一份按时间+地区+级别的三维排序报表，Excel 光打开文件就花了四十分钟，排序直接无响应。有没有一种方法能快速对 CSV 做多字段排序？Go 命令行做一个多字段排序工具，彻底解决这个问题。
+
+命令行接口：`sorter --input data.csv --output sorted.csv --fields "time:desc,level:asc,region:asc"`。--fields 参数用逗号分隔多个排序字段，每个字段后面跟冒号加 asc 或 desc 指定升降序。输入输出都是 CSV 格式，首行为表头。退出码 0 成功，1 输入文件不存在或格式错误（非 CSV、列数不一致），2 字段名不在表头中（stderr 输出 "error: field '<字段名>' not found in header"）。
+
+排序逻辑——数字列按数值大小排序（用 strconv.ParseFloat 判断，能解析为数字的按数值排，避免 "9" 排在 "10" 前面的字符串排序错误），纯文本列按 Unicode 码点排序。多字段排序按 --fields 参数顺序确定优先级，第一字段相同的按第二字段排，以此类推。空值（空字符串）统一排到最后，升序降序都一样。
+
+输入文件只有表头没有数据行时，直接输出空 CSV（只含表头）。输出文件已存在则覆盖，不提示确认。额外支持 --mode json（输出 JSON 数组，每个元素是对象，键名取自 CSV 表头）和 --mode yaml（输出 YAML 格式）。纯标准库实现，go build 能编译通过，不依赖第三方库。

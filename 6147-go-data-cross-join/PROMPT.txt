@@ -1,5 +1,11 @@
-日志文件散落在几十台机器上，手动 grep 效率太低了。Go 做数据交叉合并。
-结果行数 = A行数 × B行数。超过限制时警告。
-可以指定关联条件做条件连接。
-校验完成后自动生成报告，报告生成也要查询校验数据。
-不用第三方包，go build 通过就行。
+上周做用户画像要把标签表和维度表做笛卡尔积，SQL 跑了二十分钟还没出结果。日志文件散落在几十台机器上，手动 grep 效率太低了。Go 做数据交叉合并，得能处理笛卡尔积也得能做条件连接。
+
+笛卡尔积模式：`crossjoin --left a.csv --right b.csv --output result.csv --type cartesian`，结果行数 = A 行数 × B 行数。如果预估结果超过 100 万行（可通过 `--limit 1000000` 配置），在 stderr 输出警告 "result will exceed 1000000 rows (estimated: 5000000), use --force to proceed" 并且退出码 4。加 `--force` 强制执行。
+
+条件连接模式：`crossjoin --left users.csv --right orders.csv --output result.csv --type inner --on "user_id"`，只保留左右两个表中 user_id 相等的行组合。支持 inner（内连接）、left（左连接，右表无匹配时填空）。
+
+输出列名冲突时，右表的重复列加后缀 `_right`，比如两个表都有 name 列，输出为 name 和 name_right。
+
+退出码 0 成功，1 输入错误，2 列名不存在，4 结果超限。处理完成后 stderr 输出 "joined: 100 × 200 = 20000 rows (inner), 0 dropped"。
+
+不用第三方包，go build 能编译通过。

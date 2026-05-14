@@ -1,6 +1,9 @@
-代码仓库从 Windows 迁到 Linux，CSV 文件的换行符全乱了，\r\n 和 \n 混着来。Go 写个 CSV 换行符修复。
-引号内的换行要保留。
-记录修复了多少处。
-数据有录入→清洗→校验→发布四个阶段，校验不过退回清洗。
-数据源schema变更后，已有的转换规则要适配新schema。
-go build 能编译通过，不依赖第三方库。
+代码仓库从 Windows 迁到 Linux，CSV 换行符全乱了，\r\n 和 \n 混着来，解析器各种报错。上周数据导入因为这个问题丢了两百条记录——这问题不能再手动修了，Go 自动化搞定。
+
+核心逻辑：扫描 CSV，统一换行符，但引号内的 \r\n 不能动（CSV 标准允许引号字段含换行）。转义双引号 "" 要正确处理。
+
+命令：`fixlf --input data.csv --mode unix --output fixed.csv`，mode 可选 unix（\n）、windows（\r\n）、mac（旧式 \r），默认 unix。`fixlf --input data.csv --detect` 只检测不修复，stdout 输出 "mixed: CRLF=342, LF=58, CR=0" 或 "uniform: LF"。全是同一种换行符时输出 uniform。
+
+修复完成 stderr 输出 "fixed: 342 CRLF → LF, 0 inside quotes (preserved)"。空文件直接输出空文件。输入输出同路径时原地修复（临时文件 + rename）。
+
+批量：`fixlf --dir ./data/ --pattern "*.csv" --mode unix` 递归处理，完成 stdout 输出 "scanned: 45, fixed: 12, unchanged: 33"。退出码 0 成功，1 文件不存在，2 CSV 解析失败。纯标准库，go build 能编译通过。

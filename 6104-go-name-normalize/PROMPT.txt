@@ -1,5 +1,7 @@
-HR 系统里的姓名格式乱得离谱，有「张 三」有「三,张」还有英文名「Zhang San」。Go 从零写姓名数据标准化。
-英文姓名按「名 姓」或「姓, 名」格式统一。
-复姓要识别。
-多级命令：config get、config set、config list、config env switch。
-纯标准库实现，go run . 能跑。
+先拿到 HR 系统的员工名单，姓名列简直是灾难——「张 三」「三,张」「ZHANG San」「欧阳 明」各种格式全有，英文有的 Last, First 有的 First Last。然后 Go 写个姓名标准化工具统一格式。最后验证：导入数据库后重名检测终于准了。
+
+中文姓名：去空格（「张 三」→「张三」），识别复姓（内置欧阳、司马、上官、诸葛、东方、皇甫、令狐、独孤、慕容、公孙）正确拆分姓和名。英文姓名：「Last, First」→「First Last」，「Last, First Middle」→「First Middle Last」。混合姓名保持原样标记 mixed，无法识别标记 unknown。
+
+命令：`namenorm <输入.csv> --column name --output <输出.csv> --report report.json --surname-file surnames.txt`。--surname-file 自定义姓氏表（每行一个），不填用内置表。输出新增 normalized_name 和 parse_status（parsed/mixed/unknown）两列。
+
+report.json 含 summary：total、chinese、english、compound_surname、mixed、unknown 数量。还有 top_surnames 前 10 姓氏及次数。单字姓名原样保留标 parsed，超 4 字汉字标 unknown。退出码 0 成功，1 参数错误。纯标准库，go run . 能跑。

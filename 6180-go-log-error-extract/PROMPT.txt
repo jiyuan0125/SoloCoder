@@ -1,5 +1,11 @@
-凌晨三点的告警邮件堆了几百封，得先把错误信息提取出来看。Go 命令行做日志错误提取。
-支持 ERROR、FATAL、Exception 等关键词。
-错误信息去重后按频率排序。
-扫描分初始化→扫描中→分析中→报告生成。分析发现问题标记为异常。
+凌晨三点的告警邮件堆了几百封，光看标题根本分不清哪些是同一个问题。先把错误信息抽出来、去重、按频率排，一眼看出哪个问题炸得最狠——这就是这个工具要做的事。
+
+1. 命令 `logerr extract --file app.log --keywords ERROR,FATAL,Exception --output errors.json --top 20`。`--keywords` 自定义关键词列表逗号分隔，默认 `ERROR,FATAL,Exception,PANIC,WARN`。`--top N` 只输出频率最高的 N 条。`--file` 和 `--dir` 二选一，`--dir ./logs/` 递归扫描 `.log` 文件。
+
+2. 错误去重：提取关键词所在行完整内容做 MD5 去重，用 crypto/md5 标准库。去重后按出现频率降序输出，格式 `{"errors": [{"pattern": "connection timeout", "count": 47, "first_seen": "line 102", "last_seen": "line 8923", "sample": "2024-01-15 ERROR connection timeout to db host 10.0.0.1"}]}`。
+
+3. 分析发现异常模式——同一错误 10 分钟内超 100 次标记为 `critical`，在输出中加 `"severity": "critical"` 字段。`--since "2024-01-15T00:00:00Z"` 只提取该时间之后的行，时间格式必须是 RFC3339。`--until` 配合 `--since` 指定结束时间。
+
+4. 空文件输出空数组 `{"errors": []}` 退出码 0。关键词为零个报 `no keywords specified` 退出码 1。文件不存在报 `file not found: ...` 退出码 1。`--output` 指定的目录不存在自动创建。
+
 不用第三方包，go build 通过就行。

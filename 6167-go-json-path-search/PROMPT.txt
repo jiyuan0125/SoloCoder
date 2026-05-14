@@ -1,5 +1,9 @@
-季度代码质量数据散在一堆 JSON 文件里，按路径查某个字段太麻烦。Go 做 JSON 路径搜索。
-支持条件过滤、通配符。
-匹配结果带路径信息。
-命令行格式：cli import --source csv --target db --filter 'age>18'。
+季度代码质量数据散在一堆 JSON 文件里，按路径查某个字段太麻烦了，每次都要写脚本。直接做个 Go CLI 工具，给路径表达式就能搜。
+
+命令 `jqgrep search --path 'users[*].name' --filter 'age>18' --dir ./data/ --output result.json`。`--path` 支持 `*` 通配符匹配任意键和 `[*]` 数组遍历，比如 `config.*.host` 或 `items[*].id`。路径不支持 `..` 父级回溯，遇到就报错。`--filter` 支持比较 `>` `<` `==` `!=` 和字符串包含 `~=`，多条 filter 逗号分隔表示 AND。过滤表达式里字符串值用双引号包裹，数字直接写。
+
+匹配结果带完整路径，输出 `{"matches": [{"path": "users[2]", "key": "name", "value": "alice"}]}`。`--count` 只输出匹配数量不输出详细内容。递归搜索 `--dir` 下所有 `.json` 文件，也支持 `--file single.json` 搜单个文件。`--ext .json .jsonl` 过滤文件后缀，默认只处理 `.json`。
+
+路径语法错误输出 `invalid path expression: ...` 退出码 1。JSON 解析失败跳过该文件并在 stderr 记 `parse error: filename: reason`，退出码仍为 0。空目录零匹配输出空数组 `{"matches": []}`。遇到非 UTF-8 编码的文件跳过并在 stderr 记 `encoding error: filename`。`--output` 未指定时结果写到 stdout，指定后写到文件，文件写入失败退出码 1。
+
 纯标准库实现，go run . 能跑。

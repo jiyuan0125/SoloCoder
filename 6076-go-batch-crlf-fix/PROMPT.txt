@@ -1,2 +1,7 @@
-Windows 和 Linux 之间传文件，换行符 CRLF 和 LF 混着来，shell 脚本跑起来报错。Go 做换行符批量修复：自动检测当前换行符类型，二进制文件自动跳过。
-写入结果的同时要更新索引，索引构建也要读取已有结果。go build 能编译通过，不依赖第三方库。
+从 Windows 传过来的脚本在 Linux 上跑报 "/bin/bash^M: bad interpreter"，CI 直接红了。CRLF 换行符，跨平台协作的老大难。Go 写个批量修复换行符的工具，先搞检测再修复，自动跳过二进制文件不误伤。
+
+检测逻辑：读文件前 8KB 统计 \r\n 出现次数，超 10% 判定为 CRLF，全为 \n 判定为 LF，检测到 \0 字节判定为二进制跳过。修复逻辑：把所有 \r\n 替换为 \n，也支持反向 --mode crlf 把 LF 转成 CRLF，默认 mode lf。
+
+命令：`crlfix <路径> --mode lf|crlf --dry-run --recursive --backup`。--dry-run 输出 `<文件>: <CRLF|LF|binary>`。--backup 修复前备份为 <原文件名>.bak。二进制文件 stdout 输出 "binary skipped: <文件名>"。
+
+输出修复报告到 stdout：`summary: N total, M fixed, K skipped`。--report report.json 每条记录含 path、original_type（CRLF/LF/binary）、action（converted/skipped/binary_skipped）、converted_size。混合换行符文件也修复，统一为目标格式。退出码 0 全部成功，1 参数错误，2 部分失败（stderr 输出 "fix failed: <文件>: <错误>"）。不用第三方包，go build 通过就行。

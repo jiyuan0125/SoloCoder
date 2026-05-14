@@ -1,5 +1,7 @@
-电商发货的时候地址格式乱七八糟，有的繁体有的简体，有的带全角数字。用 Go 写个地址清洗。
-简繁体统一。英文地址保持不变。
-无法识别的地址标记异常。
-支持嵌套命令：project create、project build、project test run、project test coverage。
-不用第三方包，go build 通过就行。
+电商发货前地址清洗是刚需——用户填的地址什么格式都有，繁体简体混着来，全角半角数字夹杂，还有带 emoji 的，物流解析不了直接打回。上周 5000 单因地址格式被拒收，损失不小。Go 写个地址标准化工具统一处理。
+
+处理规则——全角数字字母转半角（０→0、Ａ→A），繁体转简体（臺→台、東→东、區→区），连续空格压缩为一个，去掉 emoji 和 U+1F000 以上 Unicode 符号。英文地址检测后保持不变。无法识别的（全乱码、长度 < 4 字符、不含省市区县关键词）标记 exception 原样保留。
+
+命令：`addrclean <输入.csv> --output <输出.csv> --column address --report report.json --dict custom_dict.json`。--column 指定地址列默认 address。--dict 加载自定义省市区映射（JSON，key 原始写法 value 标准写法）。report.json 每条含 original、cleaned、changes 数组（如 ["fullwidth_to_halfwidth","traditional_to_simplified"]）、status（cleaned/unchanged/exception）。
+
+空行跳过保留占位。支持 GBK 和 UTF-8 自动检测（读前 4 字节判断 BOM 和编码特征）。退出码 0 成功，1 文件错误，11 部分异常。不用第三方包，go build 通过。

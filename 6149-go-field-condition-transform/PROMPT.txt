@@ -1,5 +1,9 @@
-代码质量报告里要根据不同条件转换字段值，大于100的标红、空的填 N/A 之类的。Go 命令行做条件字段转换。
-条件可以是字段值、类型或位置。
-一个字段可以有多条规则。
-纯标准库实现，go run . 能跑。
-代码分几个文件组织，别全写 main.go 里。
+代码质量报告里要根据不同条件转换字段值——大于 100 的标红、空的填 N/A、类型不匹配的标黄，手工一个个改根本不现实。Go 命令行做条件字段转换，规则定义得足够灵活才能覆盖各种场景。
+
+规则用 JSON 配置文件定义。每条规则的结构：`{"field": "score", "condition": ">100", "action": "set", "value": "HIGH"}`。condition 支持 >、<、>=、<=、==、!=、empty、not_empty、contains、regex 六种操作符。action 支持 set（设固定值）、replace（正则替换）、prefix（加前缀）、suffix（加后缀）、map（值映射，value 是一个 map）。一个字段可以有多条规则，按顺序执行，前一条的输出是后一条的输入。
+
+命令行 `transform --input data.csv --rules rules.json --output result.csv`。`--dry-run` 输出前 10 条变更记录到 stdout，格式 "row 5, field score: 120 → HIGH (rule: score > 100)"。
+
+条件中引用其他字段用 `${field_name}` 语法，比如 `{"field": "status", "condition": "==${target}", "action": "set", "value": "MATCH"}`。字段不存在时该行跳过不报错。
+
+退出码 0 成功，1 输入错误，2 规则语法错误。纯标准库实现，go run . 能跑。代码分几个文件组织，别全写 main.go 里。

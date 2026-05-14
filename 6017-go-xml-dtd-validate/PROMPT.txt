@@ -1,3 +1,5 @@
-运维那边有一批 XML 配置要上线前过 DTD 校验，之前没校验直接推上去结果元素顺序错了，服务起不来。想用 Go 练手写一个，编译成单文件扔到 CI 里跑。
-元素顺序、属性必填、嵌套规则都要检查，不合法的地方标注行号。
-命令有好几个子命令，每个子命令又有自己的参数。比如 sync local、sync remote、sync status。纯标准库实现，go run . 能跑。
+运维那边有一批 XML 配置上线前要过 DTD 校验——之前没校验直接推，元素顺序错了服务起不来。想用 Go 练手写一个，编译成单文件扔到 CI 里跑。
+
+命令 `xmldtd -xml config.xml -dtd schema.dtd [-o report.txt]`，不传 -o 结果写到 stdout。校验内容分三类：元素顺序是否符合 DTD 定义（(a,b,c) 中 b 在 a 前面算错）、必填属性（DTD 中 #REQUIRED 声明的属性）是否都存在、嵌套层级是否合法（子元素是否在父元素的 content model 允许范围内）。每个错误标注文件名和行号，格式 "ERROR line 15: element 'server' missing required attribute 'port'"，多个错误按行号排序输出。
+
+通过时输出单行 "VALID" 并 exit 0，有错误时输出错误列表、末尾输出 "Total errors: N" 并 exit 1。DTD 文件不存在时 stderr 输出 "DTD file not found: <path>" 并 exit 2。XML 文件不存在时 stderr 输出 "XML file not found: <path>" 并 exit 1。XML 不是 well-formed（标签未闭合、属性引号缺失等）时 stderr 输出 "XML parse error: <details>" 并 exit 1，不再进行 DTD 校验。属性值校验：枚举类型 (a|b|c) 的值不在列表中时报错。纯标准库实现，用 encoding/xml，go run . 能跑。

@@ -1,3 +1,5 @@
-隔壁部门上线了个 API 文档系统，我们这边对接要同时做一件事：把环境变量文件转成 YAML 配置。运维那边 .env 文件格式千奇百怪，有带 export 前缀的、有值带引号的，手动清理太费劲。
-Go 做 .env 转 YAML。注释行和空行跳过，带引号的值去掉引号，export 前缀要去掉。
-处理完每个目录后更新进度，空目录不用处理但计数要更新。不用第三方包，go build 通过就行。
+隔壁部门上线了个 API 文档系统，我们这边对接要把环境变量文件转成 YAML 配置。运维那边的 .env 文件格式千奇百怪——有带 export 前缀的、有值带引号的、有注释混在中间的，手动清理太费劲。
+
+怎么让这些乱七八糟的格式都能正确解析？命令 `env2yaml -i .env -o config.yaml [--prefix APP_] [--indent 2]`。解析规则：export 前缀自动去掉（export DB_HOST=→DB_HOST），值的单引号和双引号剥掉（引号内的 # 不作为注释分隔符），# 开头的注释行跳过，空行跳过，行尾注释用第一个未被引号保护的 # 分隔。--prefix APP_ 只输出 APP_ 开头的变量并去掉前缀，APP_PORT 变成 port，键名统一转小写。不带 --prefix 时保留原始键名不做大小写转换。
+
+键名中的点号和双下划线 __ 都转成 YAML 嵌套层级：DATABASE.HOST 变成 {"database":{"host":"..."}}，DATABASE__HOST 效果相同。无等号的行 stderr 输出 "skip invalid line N" 并跳过该行。文件不存在 stderr 输出 "file not found: <path>" 并 exit 1。输出不可写 exit 2。--indent 指定缩进默认 2。多行值（用引号包裹含换行的内容）保留换行符。不用第三方包，go build 通过就行。

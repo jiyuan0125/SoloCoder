@@ -1,6 +1,11 @@
-日志里有大量 URL，需要提取出来验证哪些是有效的。Excel 管不过来。Go 做 URL 提取验证。
-支持 http、https、ftp。
-结果按域名分组。
-记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
-模板变更后，用该模板生成的文件要标记为需要重新生成。
+先读日志文件把所有 URL 提取出来，按域名分组，再逐个验证能不能访问。一步到位，省得三个工具串着用。
+
+1. 命令 `urlextract scan --file access.log --verify --timeout 5s --output urls.json`。URL 提取用正则匹配 `http://`、`https://`、`ftp://` 开头的完整 URL 含 query string 和 fragment。`--verify` 启用 HTTP 验证：http/https 发 HEAD 请求查状态码，ftp 检查 dial 连接。`--timeout` 单请求超时默认 5 秒。不带 `--verify` 只提取不验证。`--dir ./logs/` 递归扫描目录。
+
+2. 结果按域名分组 `{"groups": {"example.com": [{"url": "https://example.com/api", "status": 200, "valid": true}], "broken.site": [{"url": "http://broken.site/page", "status": 0, "valid": false, "error": "connection refused"}]}}`。`--top 10` 按域名出现频率只输出前 N 个。
+
+3. `--status-filter 200,301,302` 只保留指定状态码的结果。提取的 URL 标记状态：未验证标 `pending`、验证通过标 `approved`、验证失败标 `failed`。`--revoke` 把已通过的标回 pending 重新验证。
+
+4. 文件不存在报 `file not found: ...` 退出码 1。零匹配输出空 JSON 退出码 0。`--verify` 时网络全部不可达报 `network unreachable` 退出码 2。`--output` 指定的目录不存在自动创建。
+
 go build 能编译通过，不依赖第三方库。

@@ -1,5 +1,7 @@
-上游系统又改字段名了，下游十二个服务全要跟着改。Go 写个字段批量重命名。
-映射规则通过配置文件指定。
-支持正则替换字段名。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。
-go build 能编译通过，不依赖第三方库。
+上游系统又改字段名了，下游十二个服务全要跟着改，每次都是体力活。上周 user_name 变成 user_account，一下午都在改配置。用 Go 写一个字段批量重命名工具，一次配置解决。
+
+这个工具的核心是映射规则。规则通过 JSON 配置文件指定，格式为 `{"mapping": {"old_field": "new_field", ...}}`。同时支持正则替换：规则中如果值以 `regex:` 开头，表示用正则匹配和替换，比如 `{"user_\\w+": "account_$0"}` 可以把 user_name 变成 account_name。正则和非正则规则可以混用，先执行正则再执行精确匹配。
+
+CLI 设计为多命令组结构：`rename file --input data.csv --rules mapping.json --output renamed.csv` 处理单个文件；`rename batch --dir ./data/ --rules mapping.json --pattern "*.csv"` 批量处理目录下所有匹配文件；`rename check --rules mapping.json` 校验规则文件语法，stdout 输出 "OK" 或 "ERROR: line N: 具体原因"。退出码 0 成功，1 输入文件不存在，3 规则文件语法错误。正则语法错误在 check 中输出 "ERROR: invalid regex in key 'xxx': 具体正则引擎报错"。
+
+找不到映射的字段保持原名。输出格式跟输入一致（CSV 进 CSV 出，JSON 进 JSON 出）。空文件直接输出空文件。批量模式完成时 stderr 输出 "processed: N files, renamed: M fields"。纯标准库，go build 能编译通过。

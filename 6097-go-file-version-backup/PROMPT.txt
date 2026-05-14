@@ -1,2 +1,7 @@
-安全审计要求配置文件的每次变更都要保留历史版本，现在全靠手动备份。Go 做文件版本备份：版本号递增，保留最近 N 个版本，可以恢复到任意版本。
-命令有好几个子命令，每个子命令又有自己的参数。比如 sync local、sync remote、sync status。处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。go build 能编译通过，不依赖第三方库。
+文件版本备份这事不上心真不行——上次安全审计开了重大不符合项，生产环境配置改了什么完全查不到，出了问题不知道回滚到哪个版本。从那以后写了个 Go 工具，每次变更自动留痕，改了什么什么时候改的一查便知。
+
+子命令：`versionbak save <文件> --message "修改了数据库连接池"`、`versionbak list <文件>`、`versionbak restore <文件> --version 3`、`versionbak diff <文件> --v1 2 --v2 5`。版本号从 1 递增，存储在 <文件>.versions/ 目录下，命名为 v001、v002，元数据 metadata.json 含字段 version、timestamp、message、size、sha256。
+
+--max-versions 10 保留最近 N 个版本，超出时自动删除最老的，删除前输出 "pruning: v001"。save 时自动对比最新版本 SHA-256，没变化跳过并输出 "no changes, skipped"。list 输出表格（版本号|时间|备注|大小），tab 对齐。restore 恢复指定版本到原路径，当前文件先自动备份。diff 输出逐行差异（< 删除 > 新增，类似 diff -u 格式）。
+
+目录不存在自动创建 .versions/。原文件删除后 .versions/ 仍保留。无权限写备份目录退出码 1，stderr 输出 "error: cannot write to <路径>: <错误>"。退出码 0 成功，10 部分失败。go build 编译通过，不依赖第三方库。

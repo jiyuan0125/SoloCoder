@@ -1,6 +1,12 @@
-批处理那套工具递归目录都做不好，全角半角空白也不统一。Go 写个空白字符标准化。
-全角空格转半角，Tab 转空格。
-连续空白合并成一个。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。
-分组规则变了以后，已分组的项目要重新分配。
-go build 能编译通过，不依赖第三方库。
+先说问题：批处理那套工具全角半角空白不统一，上次因为全角空格导致字段匹配失败查了一下午 bug。Go 写个空白字符标准化工具，把这些破事一次性解决。
+
+具体规则——全角空格 U+3000 转半角 U+0020，Tab U+0009 转空格 U+0020，然后连续空格合并为一个。换行符不处理。行首行尾空白去除。
+
+1. 单文件：`wsnorm --input file.txt --output clean.txt`
+2. 递归目录：`wsnorm --dir ./data/ --pattern "*.txt" --recursive`，原地修改
+3. 预览模式：`wsnorm --input file.txt --dry-run`，stdout 输出每处变更 "line 15: 3 spaces → 1 space"，不修改文件
+4. CSV 模式：`wsnorm --input data.csv --column 3`，只对指定列标准化，其余列和表头不动
+
+完成 stderr 输出 "processed: 23 files, modified: 15, unchanged: 8, total_normalizations: 1247"。空文件算 processed 不算 modified。
+
+退出码 0 成功，1 输入文件不存在，2 目录不存在。纯标准库，go build 能编译通过。

@@ -1,5 +1,7 @@
-日志时间范围查询那套 Python 脚本太慢了，10GB 的日志文件要跑十几分钟。Go 重写日志时间范围搜索。
-自动识别常见时间格式。
-二分查找优化大文件搜索性能。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。
-不用第三方包，go build 通过就行。
+10GB 日志文件跑 Python 搜索脚本十几分钟，上周排查线上故障等了二十分钟结果都还没出来——这种效率怎么救火？Go 重写日志时间范围搜索，大文件必须用二分查找。
+
+`logsearch --file app.log --from "2024-01-15 10:00:00" --to "2024-01-15 11:00:00" --output result.log`。自动识别日志时间格式：ISO 8601（2024-01-15T10:30:00Z）、Nginx（15/Jan/2024:10:30:00 +0800）、常见格式（2024-01-15 10:30:00）。`--format` 强制指定格式。无法识别时 stderr 输出 "unable to detect timestamp format, use --format to specify" 退出码 3。
+
+二分查找：采样确定格式和大致范围，seek + 二分定位起始位置，线性扫描到结束。10GB 文件 5 秒内返回（前提文件按时间有序）。非时间有序降级全量扫描 stderr 输出 "file is not time-ordered, falling back to full scan"。
+
+完成 stderr 输出 "found: 15234 lines, scanned: 0.8% of file (binary search), time: 1.2s"。--from 和 --to 格式不支持时报错退出码 2。退出码 0 有结果，1 无结果。纯标准库，go build 能编译通过。

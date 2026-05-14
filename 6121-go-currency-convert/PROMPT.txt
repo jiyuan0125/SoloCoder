@@ -1,6 +1,9 @@
-财务报销金额格式五花八门，有人写「壹万贰仟叁佰」有人写「12,300.00」。Go 做金额格式转换。
-支持人民币大写、千分位、角分表示。
-负数和零的处理。
-文件处理有这几个阶段：待处理、处理中、校验中、已完成。校验失败回到处理中。
-源文件内容变了以后，基于它的索引和缓存也要更新。
-go build 能编译通过，不依赖第三方库。
+先用 Go 写一个金额格式互转工具，再处理财务那堆五花八门的报销单。支持人民币大写（壹万贰仟叁佰元整）、千分位（12,300.00）、纯数字（12300.00）三种格式互转。
+
+单条转换：`currency --input "12,300.00" --from comma --to uppercase` 输出「壹万贰仟叁佰元整」。反过来 `currency --input "壹万贰仟叁佰元整" --from uppercase --to number` 输出 `12300.00`。from/to 参数值：comma（千分位）、uppercase（大写）、number（纯数字）。不支持 from 和 to 相同，此时报错 "source and target format are the same" 退出码 1。
+
+负数大写前面加"负"字，如"负壹万贰仟叁佰元整"。零统一输出"零元整"。小数精确到分，超过两位小数四舍五入并 stderr 输出 "WARNING: rounded to 2 decimal places"。
+
+批量模式：`currency batch --file amounts.csv --column 3 --from comma --to uppercase --output result.csv`，对 CSV 指定列转换，其余列原样保留。无法识别的金额保持原值，stderr 输出 "WARNING: line N: unrecognized amount 'xxx'"。
+
+内部用整数（分）存储避免浮点误差。超过亿级正确转换。退出码 0 成功，1 参数错误，2 无法解析金额。纯标准库，go build 能编译通过。

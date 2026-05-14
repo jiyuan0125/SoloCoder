@@ -1,5 +1,9 @@
-数据组那批文本大小写完全乱了，有的是全大写有的是驼峰有的是混合。Go CLI 做文本大小写转换。
-支持全大写、全小写、首字母大写、驼峰。
-中文不受影响。
-支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
-纯标准库实现，go run . 能跑。
+数据组那批文本大小写完全乱了，"uSER_nAME" 这种混合体都有，三个系统导出来的数据命名规范各不相同。Go CLI 做文本大小写转换——这类格式统一的事不该手动做。
+
+`textcase --input file.txt --mode upper --output result.txt`。mode 支持 upper、lower、title、camel、snake、kebab。中文字符不受影响原样保留。词边界判断：空格、下划线、短横线、驼峰转换都算，如 "helloWorld" 转 snake 得 "hello_world"，"hello-world" 转 camel 得 "helloWorld"。title 模式下标点符号紧跟的字母也大写。
+
+批量：`textcase batch --dir ./data/ --mode upper --pattern "*.txt"` 原地处理。`--column 2` 只对 CSV 指定列转换其余不动，表头行也转换。
+
+不支持的 mode stderr 输出 "unsupported mode: xxx, use: upper, lower, title, camel, snake, kebab" 退出码 2。空文件直接输出空文件不报错。批量完成 stderr 输出 "processed: 12 files, modified: 8"。
+
+退出码 0 成功，1 输入文件不存在，2 不支持的 mode。纯标准库，go run . 能跑。

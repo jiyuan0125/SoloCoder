@@ -1,2 +1,7 @@
-文档管理从 Excel 迁到自研系统，数据格式要在 CSV 和 JSON 之间来回转。通过子命令切换方向：csv2json 和 json2csv，来回转换后数据和原始数据要一致。
-命令行格式：cli import --source csv --target db --filter 'age>18'。纯标准库实现，go run . 能跑。
+怎么在 CSV 和 JSON 之间来回转还不丢数据？文档管理从 Excel 迁到自研系统，格式来回转了好几轮，总出问题。
+
+命令行通过子命令切换方向：`convert csv2json --input data.csv --output data.json` 和 `convert json2csv --input data.json --output data.csv`。csv2json 时首行作为字段名，后续每行转成 `{"col1": "val1", "col2": "val2"}`，整个输出是 JSON 数组，用 2 空格缩进。数字字段自动识别：`"42"` → `42`，`"3.14"` → `3.14`，布尔值 `"true"/"false"` → `true/false`。json2csv 时从数组中提取所有键作为 CSV 表头，按首次出现顺序排列，缺少该字段的记录填空字符串。值含逗号或换行时自动加双引号转义，双引号本身转义为 `""`。
+
+round-trip 一致性：先 csv2json 再 json2csv，结果必须和原始 CSV 逐字节一致（换行符统一 `\n`）。不一致时 stderr 输出 `round-trip mismatch at row N`，退出码 5。
+
+通用参数：`cli import --source csv --target db --filter 'age>18'`。`--filter` 支持简单条件（`字段>值`、`字段=值`、`字段!=值`）。`--encoding` 指定 CSV 编码（默认 UTF-8）。纯标准库实现，`go run .` 能跑。输入不存在退出码 2，格式错误退出码 3。

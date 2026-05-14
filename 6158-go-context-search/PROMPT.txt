@@ -1,5 +1,9 @@
-搜日志关键字光看到匹配行不够，前后上下文才有意义，grep -A -B 凑合能用但输出不好看。Go 做上下文搜索。
-上下文行数可配。跨行匹配支持。
-多个匹配结果之间用分隔线。
-同步分为：准备→扫描→传输→验证→完成。验证失败重试传输。
-纯标准库实现，go run . 能跑。
+grep -A -B 凑合能用但输出不好看，多个匹配挤在一起分不清谁是谁。搜日志关键字光看到匹配行不够，前后上下文才有意义。Go 做上下文搜索，输出格式也得做好。
+
+`ctxgrep --pattern "panic" --context 5 --file app.log`，每个匹配及其上下各 5 行。多个匹配区域间用 `════════════════════`（20 个等号）分隔。匹配行高亮显示（ANSI 红色加粗）。行号右对齐格式 `  152 | some log line`。
+
+跨行匹配：`--multiline --pattern "start.*?end"` 支持 DOTALL 模式。上下文与上一匹配重叠时自动合并不重复输出。
+
+递归搜索：`--recursive --dir ./logs/`，行号前加文件名 `app.log:  152 |`。`--context` 默认 2 行，`--context 0` 只输出匹配行。`--output result.txt` 时不加 ANSI 颜色码。`--stats` 末尾 stderr 输出 "matches: 47, files scanned: 12, time: 0.8s"。
+
+正则语法错误 stderr 输出 "invalid pattern: 具体错误"。退出码 0 有匹配，1 无匹配。纯标准库，go run . 能跑。

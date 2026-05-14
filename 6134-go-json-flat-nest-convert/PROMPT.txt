@@ -1,5 +1,9 @@
-V2 要把嵌套 JSON 展平成 CSV 给下游用，试了 jq 但处理大数据太慢。Go CLI 做 JSON 层级转换。
-展平用点号分隔键名。
-数组保持原样。
-同步完成后自动记录同步日志到数据库，数据库不可用时写本地文件。
-纯标准库实现，go run . 能跑。
+V2 要把嵌套 JSON 展平成 CSV 给下游用，jq 处理大数据太慢，50MB 跑了三分钟。Go CLI 做 JSON 层级转换——展平和嵌套两个方向都要支持。
+
+展平：`flatten --input nested.json --output flat.csv --separator "."`。嵌套键用点号连接，`{"user":{"name":"张三","age":30}}` 变成 `user.name,user.age` 两列。数组保持原值不拆分，如 `"tags":["a","b"]` 输出为 `["a","b"]`。数组内对象也展平，索引入键名 `items.0.name`。
+
+嵌套（反向）：`nest --input flat.csv --output nested.json --separator "."`，点号分隔的键名还原为嵌套结构。
+
+JSON 数组输入时每个对象变 CSV 一行，所有对象键名并集为表头。缺少的键填空字符串。展平完成后 stderr 输出 "flattened: N objects, M unique keys"。
+
+空数组输入输出只有表头的 CSV。JSON 解析失败 stderr 输出 "parse error at byte offset N: 具体原因" 退出码 1。输出路径不可写退出码 2。退出码 0 成功。纯标准库，go run . 能跑。

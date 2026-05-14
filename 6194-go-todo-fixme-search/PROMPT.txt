@@ -1,5 +1,11 @@
-代码里的 TODO 和 FIXME 积了一堆没人处理，想统计一下到底有多少。Go 做 TODO FIXME 搜索。
-结果按标记类型分类。
-统计每个标记出现的文件和行号。
-任务状态是排队→运行→暂停→完成。暂停后可以继续。
+代码里的 TODO 和 FIXME 积了一大堆没人管，每次说「下周清理」然后就没然后了。得先量化到底有多少、分布在哪些文件，再决定优先处理哪些。Go 做个标记扫描器，统计加定位一步到位。
+
+1. 命令 `todofinder scan --dir ./src/ --output todos.json`。识别 TODO、FIXME、HACK、XXX、NOTE 五种标记，大小写不敏感（`todo` 和 `TODO` 等价）。`--tags TODO,FIXME` 自定义只搜指定标记。也支持 `--file main.go` 扫单个文件。匹配逻辑：标记后面跟冒号或空格都算，比如 `TODO:` 和 `TODO add` 都命中，但 `TODAY` 不算。
+
+2. 结果按标记类型分组 `{"TODO": [{"file": "handler.go", "line": 42, "content": "TODO: add input validation", "author": ""}], "FIXME": [...]}`。`--summary` 输出统计：每类标记数量、涉及文件数、最密集文件 Top 10（按每千行标记数排序）。`--by-author` 从 git blame 提取作者信息，用 `git blame --line-porcelain` 命令，失败跳过不阻塞，author 字段填空字符串。
+
+3. 大目录可 `--pause` 暂停、`--resume` 从上次位置继续，状态存 `.todofinder.state`。`--since "2024-01-01"` 只统计该日期后新增的标记，基于 git log 时间戳，非 git 仓库按文件 mtime。输出同时写 stdout 和文件。
+
+4. 零标记输出空 JSON 退出码 0。`--dir` 不存在报 `directory not found: ...` 退出码 1。`--tags` 指定了不存在的标记名不报错，输出空结果。
+
 纯标准库实现，go run . 能跑。

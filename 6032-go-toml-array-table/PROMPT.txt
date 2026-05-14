@@ -1,2 +1,9 @@
-TOML 的数组表语法在其他格式里没有直接对应，转 JSON 的时候容易搞错。我们只需要这个特定功能，不需要那些功能花哨的转换工具。Go 写一个：数组表转成 JSON 数组，每个元素是对象，支持嵌套数组表的递归解析。
-多级命令：config get、config set、config list、config env switch。纯标准库实现，go run . 能跑。
+上个季度配置迁移，TOML 里的 [[products]] 数组表转 JSON 时被当成了普通对象，线上出了事故。Go 写一个专门处理这件事的小工具，别搞花哨的通用转换。
+
+核心功能就一个：把 TOML 数组表（`[[table]]`）递归转成 JSON 数组，每个元素是对象。嵌套的数组表（比如 `[[table.sub]]`）也要递归解析，产出正确的嵌套 JSON 结构。命令行用法：`toml2json --input config.toml --output result.json`，`--input` 必填，`--output` 省略则输出到 stdout。
+
+类型映射规则：纯文本值→JSON 字符串，整数→number（不转 float），浮点数→number，布尔→boolean，TOML 的 date/datetime/time→ISO 8601 字符串（如 `2024-01-15T10:30:00+08:00`），内联数组→JSON 数组，内联表→JSON 对象。纯数字键名的表按数值排序而非字典序。
+
+解析失败 stderr 输出 `parse error: line N: <具体原因>`，退出码 1。输入文件不存在退出码 2，输出目录不可写退出码 3。空 TOML 文件输出 `{}`，退出码 0。输出 JSON 用 2 空格缩进美化格式，键名按 TOML 文件中出现顺序排列。
+
+子命令结构：`config get <key>` 查询配置值，`config set <key> <value>` 修改，`config list` 列出全部，`config env switch <name>` 切换环境。纯标准库实现，`go run .` 能跑，`go build` 编译通过。

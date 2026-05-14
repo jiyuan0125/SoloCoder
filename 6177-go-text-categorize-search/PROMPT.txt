@@ -1,6 +1,9 @@
-一批文本要按内容自动归类，比如「技术」「产品」「运营」，手动标太慢。Go 做文本分类搜索。
-按文本内容的关键词自动分类。
-分类规则由用户定义。
-结果按类别分组输出。
-不用第三方包，go build 通过就行。
-代码分几个文件组织，别全写 main.go 里。
+能不能有个工具，往里扔一堆文本自动分类？运维日志标「系统」、产品需求标「产品」、营销文案标「运营」。不是 AI 分类，是关键词规则驱动的——谁都能定义自己的规则，跑一遍就出结果。
+
+分类规则用户自己定义：`catrule add --name 技术 --keywords "Go,HTTP,数据库,API,微服务" --file rules.json`，关键词逗号分隔，大小写不敏感。`catrule classify --file articles.txt --rules rules.json --output result.json` 执行分类。也支持 `--dir ./articles/` 递归扫描 `.txt` 文件。分类逻辑：一条文本匹配到哪个规则的关键词最多就归哪类，平局按规则添加顺序取第一个。`--multi` 允许一条文本归多个类。
+
+输出按类别分组，格式 `{"技术": [{"text": "...", "matched_keywords": ["Go","API"]}], "产品": [...]}`。`--summary` 输出统计：每类多少条、未分类多少条、关键词命中率。未分类归入 `uncategorized`。`--threshold 2` 至少匹配 N 个关键词才算归入该类，低于阈值归 uncategorized。
+
+规则文件不存在报 `rules file not found` 退出码 1。空文件输入报 `empty input` 退出码 1。规则名重复覆盖旧规则并输出 stderr `rule overwritten: 技術`。输入文件编码不支持（非 UTF-8）报 `encoding error: filename` 退出码 2，跳过该文件。`--rules` 指定多个规则文件用逗号分隔，后面的覆盖前面同名规则。
+
+不用第三方包，go build 通过就行。代码分几个文件组织，别全写 main.go 里。

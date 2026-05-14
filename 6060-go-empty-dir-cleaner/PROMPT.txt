@@ -1,2 +1,9 @@
-项目目录里空文件夹一层套一层，删又不敢删怕有 .gitkeep。Go 做空目录清理：只包含隐藏文件的目录也算空目录，删除前列出要删的目录让用户确认。
-子命令结构：db migrate、db rollback、db status、db seed。不用第三方包，go build 通过就行。
+项目目录里空文件夹一层套一层——构建产物清了之后留下一堆空壳，想删又怕里面有 `.gitkeep`。Go 做空目录清理工具。
+
+判断"空"的规则：目录下没有非隐藏文件就算空。`--keep-gitkeep` 时含 `.gitkeep` 的目录不算空，不加则一并删除。`--keep-hidden` 保留含隐藏文件的目录。
+
+命令：`cleanempty --dir ./project/ --keep-gitkeep --dry-run`。`--dry-run` 列出将被删除的目录（从最深层开始）：`[dry-run] would remove: ./project/obj/debug/sub/`。删除从最深层往外删，实际删除前二次检查是否仍为空。目录变非空跳过，stderr 输出 `skipped: <path> (directory not empty after scan)`。
+
+无空目录输出 `no empty directories found`，退出码 0。`--exclude` 排除目录名（逗号分隔）：`--exclude node_modules,.git`。`--max-depth` 限制深度。统计：`removed: N dirs, skipped: N, errors: N`。
+
+子命令：`db migrate`、`db rollback`、`db status`、`db seed`。不用第三方包，`go build` 通过就行。

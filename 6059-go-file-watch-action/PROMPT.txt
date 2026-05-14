@@ -1,2 +1,7 @@
-文件到了之后要自动移动到指定目录、重命名、甚至触发命令，现在全靠人盯着。Go 做文件监控触发：操作可以是移动、复制、重命名、执行命令，已经处理过的文件不重复触发。
-工具分几个命令组：file convert、file check、file merge，每组下面有具体操作。纯标准库实现，go run . 能跑。
+问题出在哪？文件到了之后要手动移动、重命名、甚至触发脚本——全靠人盯着，忘了就耽误事。Go 做文件监控触发工具。
+
+命令：`watch --dir ./incoming/ --rules watch.json`。规则 JSON 数组：`[{"pattern": "*.csv", "action": "move", "target": "./processed/"}, {"pattern": "*.log", "action": "exec", "command": "python3 analyze.py {{file}}"}]`。四种 action：`move`、`copy`、`rename`（支持 `{date}` `{ext}` 变量）、`exec`（`{{file}}` 替换为绝对路径）。
+
+已处理文件通过 SHA256 哈希避免重复触发，记录在 `.watch_history.json`。文件写入未完成不触发，连续两次采样（500ms 间隔）大小一致才认为完成。pattern 支持 glob 语法。exec 超时 30 秒自动终止，stderr 输出 `command timeout: <command>`。多个规则匹配同一文件按配置顺序执行。
+
+子命令组：`file convert --input x --output y`、`file check --input x` 校验、`file merge --inputs a,b --output c`。纯标准库实现，`go run .` 能跑。目录不存在退出码 2，规则文件格式错误退出码 3。

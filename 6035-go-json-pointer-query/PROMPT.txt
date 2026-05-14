@@ -1,2 +1,8 @@
-试了三个现成方案都不支持批量 JSON Pointer 查询，每次只能查一个路径，太慢了。Go 自己写：支持批量查询多个 Pointer，结果按顺序输出。Pointer 不存在时返回 null 还是报错由工具决定。
-管理同步源和同步任务，用户创建同步任务关联到同步源。纯标准库实现，go run . 能跑，代码分几个文件组织，别全写 main.go 里。
+先读取输入文件，解析所有 pointer 参数，逐个查询提取值，最后统一输出结果——流程就是这样。三个现成的 JSON Pointer 库都只能单条查询，查 50 个路径得调 50 次，太慢。Go 写一个批量查询工具。
+
+1. 用法：`jpquery --input data.json --pointer /users/0/name --pointer /meta/total --output result.json`。多个 `--pointer` 批量查询，结果按参数顺序输出为 JSON 数组，每个元素格式为 `{"pointer": "/users/0/name", "value": "Alice"}`。
+2. 路径不存在时 value 返回 `null`，stderr 输出 `pointer not found: /path`，不中断后续查询。加 `--strict` 则路径不存在时报错退出码 4。
+3. 转义规则遵循 RFC 6901：`~1` 表示 `/`，`~0` 表示 `~`。数组索引超出范围视为不存在。根路径 `""` 返回整个文档。
+4. 工具内部管理同步源和同步任务：`source add <name> <path>` 注册同步源，`task create --source <name> --pointer <path>` 创建查询任务关联到源。任务结果缓存在内存 map，相同 pointer 重复查询直接返回缓存值。
+
+代码分几个文件组织：主入口 main.go、查询引擎 query.go、任务管理 task.go，别全写 main.go 里。输入文件不存在退出码 2，JSON 解析失败退出码 3，成功退出码 0。纯标准库实现，`go run .` 能跑。

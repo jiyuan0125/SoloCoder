@@ -1,2 +1,7 @@
-代码统计一直是手动 wc -l，不同文件类型混在一起看不出来。Go 做批量行数统计：统计目录下所有代码文件的行数，按文件类型分类，排除空行和注释行，输出汇总报告。
-审批流程：提交→初审→复审→通过。初审不过可以修改重提。不用第三方包，go build 通过就行。
+wc -l 打出来的数字对我们来说太粗糙了——Go 文件、JS 文件、Markdown 全混一起，空行注释行也算进去了。我需要一个能按语言分类统计代码行数的工具，纯标准库实现。
+
+命令行：`linecount <目录路径> --lang go,js,py --exclude vendor,node_modules --format table|json|csv`。按扩展名识别语言（.go→Go、.js/.ts→JS/TS、.py→Python、.java→Java、.rs→Rust），--lang 限定只统计哪些语言，不填统计全部。排除空行和单行注释行（Go 的 //、Python 的 #、Java 的 //），多行注释里的行按普通行算。
+
+输出按语言分组，每组：文件数、总行数、代码行数、注释行数、空行数、代码占比百分比（保留一位小数如 72.3%）。最后输出汇总行，格式与分组一致。--format table 输出对齐文本表格（列用 | 分隔，第二行 ---|---|--- 分隔线），--format json 输出 JSON 数组（字段：language、files、total_lines、code_lines、comment_lines、blank_lines、code_ratio），--format csv 逗号分隔首行为表头。
+
+目录不存在退出码 1，stderr 输出 "error: cannot access directory: <path>: <具体错误>"。无权限读取的文件跳过，stderr 输出 "warning: skip <文件>: permission denied"。正常退出码 0。go build 编译通过，不依赖第三方库。

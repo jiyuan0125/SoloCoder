@@ -1,2 +1,7 @@
-教育项目的数据源比较杂，有的用管道符分隔，有的是固定宽度，CSV 标准库根本没法用。Go 搞一个自定义分隔符解析器：支持固定宽度、制表符、分号、管道符、自定义字符，自动检测分隔符类型。
-处理完主文件后自动生成摘要文件，有些文件可能没有可摘要的内容。go build 能编译通过，不依赖第三方库。
+教育项目的数据源太杂了——有些用管道符分隔，有些是固定宽度字段，Go 标准库的 `encoding/csv` 根本没法用。搞一个自定义分隔符解析器。
+
+命令：`cspars --input data.txt --delimiter pipe --output result.csv --auto-detect`。五种模式：`comma`、`tab`、`semicolon`、`pipe`（`|`）、`fixed:W`（固定宽度，W 是每列字节数）。`--auto-detect` 统计前 100 行各分隔符频率，选标准差最小的，stderr 输出 `detected delimiter: pipe (confidence: 0.95)`。置信度低于 0.6 追加 `warning: low confidence`。
+
+固定宽度模式字段超长截断，stderr 输出 `truncated at row N col M: expected W bytes, got K`。字段不足右填充空格。空行跳过。
+
+处理完生成 `.summary`（JSON）：`{"total_rows": 1500, "total_cols": 8, "columns": [{"name": "col_0", "type": "numeric"}, {"name": "col_1", "type": "string"}]}`。类型推断：全数字→numeric，否则→string，混合→mixed。无数据不生成摘要，stdout 输出 `empty input, no summary generated`。`go build` 能编译通过，不依赖第三方库。

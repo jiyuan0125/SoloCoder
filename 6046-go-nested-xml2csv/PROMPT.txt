@@ -1,2 +1,11 @@
-上个月备份恢复的时候发现 XML 配置和 CSV 对不上，配置嵌套了好几层直接拉平丢信息。Go 做嵌套 XML 展平成 CSV：嵌套元素展平成多列，列名用路径表示，同名兄弟元素用后缀区分。
-支持嵌套命令：project create、project build、project test run、project test coverage。go build 能编译通过，不依赖第三方库。
+上个月备份恢复发现 XML 配置和 CSV 对不上——XML 嵌套了三四层，直接拉平丢了一半信息。Go 做嵌套 XML 展平成 CSV。
+
+命令：`xml2csv --input config.xml --output result.csv --separator .`。展平规则：嵌套元素用分隔符拼接成列名，比如 `server.host.name`、`server.host.port`。同名兄弟元素按出现顺序用数字后缀区分：`item_1.name`、`item_2.name`，数字从 1 开始。`--separator` 默认 `.`，可换成 `_` 或 `/`。
+
+属性也要展平，列名加 `@` 前缀：`server@id`。文本节点和混合内容（既有文本又有子元素）时，文本内容列名用 `#text` 后缀：`server#text`。CDATA 段落内容当作文本节点处理，XML 注释跳过不导出。
+
+输出 CSV 首行是列头，每行一个最外层元素。不同外层元素结构不同时，列头取所有元素列的并集，缺失列填空字符串。`--flatten-depth` 限制展平嵌套深度（默认无限制），超出部分作为 JSON 字符串保留在单元格中。
+
+空 XML 或无子元素输出空文件，stderr 输出 `no data rows generated`。XML 解析失败退出码 3。输出编码 UTF-8，换行符 `\n`，字段含逗号或换行时双引号转义。
+
+子命令：`project create --name x`、`project build`、`project test run`、`project test coverage`。`go build` 能编译通过，不依赖第三方库。

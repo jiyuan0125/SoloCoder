@@ -1,2 +1,5 @@
-文件扩展名千奇百怪——.JPEG、.jpeg、.JPG 混着来，下游工具识别不了。Go 做扩展名标准化：自定义映射规则通过配置文件，大小写统一。
-系统管理模板和基于模板生成的文件，用户可以用模板生成新文件。go build 能编译通过，不依赖第三方库，代码分几个文件组织。
+设计系统交付了一千多张素材图，扩展名 .JPEG、.jpeg、.JPG、.PNG 全混着来，CDN 刷新漏了一大堆，缓存命中率掉到 40%。同事用 rename 命令跑，结果大小写没统一反倒搞乱了。Go 工具把扩展名标准化彻底搞定。
+
+用法：`extnorm <目录> --config rules.json --dry-run --recursive`。rules.json 映射如 {"jpeg":"jpg","JPEG":"jpg","JPG":"jpg","tif":"tiff"}，key 原始扩展名 value 目标。不加 --config 默认全部转小写。--recursive 递归子目录，默认只处理一层。--dry-run 只输出 `RENAMED: <原路径> → <新路径>` 不动真格。
+
+输出每条操作一行。重命名冲突（目标已存在）stderr 输出 "conflict: <目标路径> already exists" 并跳过，退出码改为 2。符号链接跳过。隐藏文件（. 开头）默认跳过，加 --include-hidden 才处理。无扩展名文件跳过。--report report.json 每条含 original_path、new_path、status（renamed|skipped|conflict）。退出码 0 全部成功，2 部分失败。纯标准库，go run . 能跑，代码至少分 main.go、config.go、walker.go 三个文件。

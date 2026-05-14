@@ -1,2 +1,7 @@
-API 返回的 JSON 字段太多，传给前端之前要过滤掉敏感字段和不必要的内部字段。Go 命令行工具做 JSON 字段过滤：支持通配符和点号路径，数组中的每个对象都过滤同样的字段。
-多级命令：config get、config set、config list、config env switch。go build 能编译通过，不依赖第三方库。
+问题出在哪？后端 API 返回 200 个字段，前端只要 20 个，剩下 180 个里还有手机号、内部 ID 这些敏感信息，直接传过去安全审计过不了。需要一个 JSON 字段过滤工具。
+
+命令：`jfilter --input response.json --keep "id,name,email,orders[*].id" --output filtered.json`。`--keep` 白名单保留指定字段，`--drop` 黑名单剔除，两者互斥不能同时用（同时指定退出码 5，stderr 输出 `--keep and --drop are mutually exclusive`）。支持通配符 `*` 和点号路径 `a.b.c`，数组中的每个对象统一应用同样的规则。嵌套对象中的字段也过滤：`address.city` 只保留 city 不保留 address 下其他字段。`--depth` 限制递归深度（默认无限制，0 表示只过滤顶层）。
+
+`--drop` 模式下被删除的叶子字段位置不留下 null。`--keep` 模式下如果指定的路径父级不存在，该路径静默跳过。字段路径不存在不报错。输入不是合法 JSON 退出码 3，stderr 输出 `invalid JSON: offset <位置>`。文件不存在退出码 2。成功退出码 0。
+
+多级子命令：`config get <key>`、`config set <key> <value>`、`config list` 列出全部、`config env switch <env>` 切换当前环境配置。`go build` 能编译通过，不依赖第三方库。

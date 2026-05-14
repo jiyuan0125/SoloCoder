@@ -1,6 +1,9 @@
-压缩包里的日志也想直接搜，不想先解压再搜。Go 命令行做压缩文件搜索。
-支持 zip 和 gzip。
-匹配的文件列出压缩包内的路径。
-任务状态是排队→运行→暂停→完成。暂停后可以继续。
-主配置修改后，引用该配置的子配置要同步更新。
+问题很简单——压缩包里的日志想直接搜，谁有闲工夫先解压？Go 命令行做压缩文件搜索，zip 和 gzip 都得支持。上次运维排查问题解压了 2GB 的 zip 才搜了一条日志，太蠢了。
+
+1. 命令 `zgrep search --pattern "ERROR|FATAL" --archive logs.zip --output matches.txt`。`--type zip|gz` 指定格式，不指定按文件后缀自动判断（`.zip` 走 zip，`.gz` 走 gzip）。gzip 文件当单文件流处理，zip 文件遍历内部所有条目。结果标注压缩包内路径：`[archive.zip]/inner/dir/error.log:42: ERROR connection timeout`。zip 里的目录条目自动跳过。`--ext .log .txt` 只搜压缩包内指定后缀。
+
+2. `--context 2` 匹配行前后各输出 N 行上下文。`--count` 只输出每个内部文件的匹配数量汇总。大文件搜索可 `--pause` 暂停、`--resume` 继续，状态持久化到 `.zgrep.state` 文件。暂停后 resume 从上次断点继续。
+
+3. 正则语法错误输出 `invalid regex: ...` 退出码 1。压缩包损坏输出 `corrupt archive: filename` 退出码 2。零匹配正常退出码 0，输出空文件。`--archive` 指定的文件不存在报 `file not found: ...` 退出码 1。支持的压缩格式只有 zip 和 gzip，其他后缀报 `unsupported format: .rar` 退出码 1。
+
 go build 能编译通过，不依赖第三方库。
