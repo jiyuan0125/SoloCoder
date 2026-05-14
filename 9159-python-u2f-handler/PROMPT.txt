@@ -1,0 +1,12 @@
+U2F 认证处理器，处理旧版 FIDO U2F 协议的注册和认证流程。
+
+虽然 U2F 已经被 FIDO2 取代了，但我们还有些老设备只支持 U2F，需要兼容处理。
+
+Python 工具：
+- 生成 U2F 注册请求（包含 challenge、appId、version）
+- 解析 U2F 注册响应，提取公钥和 keyHandle
+- 生成 U2F 认证请求，验证认证响应中的签名
+- 支持 U2F 协议版本 v1 和 v2
+
+本地 JSON 存储凭证数据。用法：python u2f_handler.py register-request --app_id https://example.com
+能正常运行，不依赖外部库。

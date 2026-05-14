@@ -1,0 +1,3 @@
+需要从流量中提取 TLS 握手信息做安全审计。Go 写一个 TLS 握手解析工具。
+
+从 TCP 流或 pcap 中识别 TLS 记录层：解析 TLS Record 头（类型、版本、长度）；解析 ClientHello 和 ServerHello 消息（协议版本、 cipher suites、扩展）；提取证书链信息（从 Certificate 消息中解析 DER 编码的证书基本信息）；识别使用的密码套件和密钥交换方式。CLI 工具，Go 标准库，go build 通过。

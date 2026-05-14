@@ -1,0 +1,8 @@
+写个服务识别工具，Go 实现。
+
+扫到开放端口后还想知道上面跑的是什么服务、什么版本。类似于 nmap 的服务检测功能。
+
+功能：对开放端口发送探测数据；根据响应特征匹配服务类型（HTTP、SSH、FTP、MySQL、Redis 等）；展示检测到的服务名和可能的版本号；内置常见协议的探测规则。
+
+用法：service-detector detect -host 192.168.1.1 -ports 22,80,3306,6379、service-detector detect -host 10.0.0.1 -ports 1-1024 -timeout 5s
+Go 标准库实现，go build 能编译。

@@ -1,0 +1,11 @@
+写一个 OAuth2 客户端库，Go 实现。
+
+我们系统需要对接第三方 OAuth2 登录（GitHub、Google），想自己写一个轻量客户端。
+
+需要做到：
+- 实现 Authorization Code 授权码流程：生成授权 URL、处理回调、用 code 换 token
+- 支持 PKCE 扩展：自动生成 code_verifier 和 code_challenge（S256 方式）
+- Token 管理：自动刷新过期的 access_token，支持安全存储 refresh_token
+- 提供一个简单的 CLI 示例：启动本地 HTTP 服务器接收回调，完成完整的 OAuth2 登录流程
+
+Go 标准库，go build 编译通过。

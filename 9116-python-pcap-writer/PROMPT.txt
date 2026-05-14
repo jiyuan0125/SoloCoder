@@ -1,0 +1,5 @@
+帮我写一个 PCAP 文件生成库，能程序化构造网络抓包文件。
+
+提供 API 让用户创建以太网帧、IP 包、TCP/UDP 段、ICMP 包、DNS 查询这些常见协议的数据包，然后写入标准 pcap 文件格式。支持自定义各层字段的值（MAC 地址、IP、端口、payload 等）。
+
+附几个示例：构造一个 TCP 三次握手的 pcap、构造一个 HTTP 请求响应的 pcap。生成的文件能用 tcpdump 或 Wireshark 打开。Python 3 标准库 struct 打包二进制。

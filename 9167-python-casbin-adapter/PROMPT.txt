@@ -1,0 +1,13 @@
+Casbin 策略适配器，用来把 Casbin 格式的访问控制策略导入导出和查询。
+
+项目里用了 Casbin 做权限控制，策略数据散落在各种地方，需要统一管理。
+
+Python 工具：
+- 解析 Casbin 的策略文件格式（policy.csv：p, sub, obj, act）
+- 支持策略的增删查，按 subject、object、action 过滤
+- 策略冲突检测：找出互相矛盾的规则（比如同一资源既有 allow 又有 deny）
+- 导出为 Casbin CSV 格式和 JSON 格式
+
+用法：python casbin_adapter.py load policy.csv --check-conflicts
+python casbin_adapter.py add --sub alice --obj data1 --act read
+不依赖 casbin 库，自己解析 CSV。

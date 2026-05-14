@@ -1,0 +1,3 @@
+局域网里有 ARP 欺骗攻击，需要分析 ARP 流量。Go 写一个 ARP 协议解析和检测工具。
+
+解析 ARP 报文格式（硬件类型、协议类型、操作码、发送方/目标 MAC 和 IP）；从 pcap 文件提取所有 ARP 包；检测 ARP 欺骗迹象：同一 IP 出现多个不同 MAC、MAC 地址频繁变化、异常的 gratuitous ARP。输出 ARP 映射表和可疑活动告警。Go 标准库实现，go build 通过。

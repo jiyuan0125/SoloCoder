@@ -1,0 +1,8 @@
+做一个 X.509 证书解析工具，Go 写的命令行程序。
+
+排查 TLS 问题的时候经常需要看证书的详细字段，openssl x509 -text 输出太杂了。想有个工具能结构化地展示证书的关键信息。
+
+功能：解析 PEM 或 DER 格式的证书文件；展示主题、颁发者、有效期、序列号、SAN、密钥用法、基本约束等字段；检测证书是否过期，计算剩余天数。
+
+用法：cert-parser parse -file server.crt、cert-parser check -file server.crt（显示是否过期和剩余天数）
+Go 标准库 crypto/x509 就够了，go build 能编译。

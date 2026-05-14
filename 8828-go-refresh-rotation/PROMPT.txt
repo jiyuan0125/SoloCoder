@@ -1,0 +1,11 @@
+写一个 Refresh Token 轮转实现，Go 语言。
+
+OAuth2 里 refresh_token 如果被偷了就麻烦了，想做轮转机制：每次用 refresh_token 换新 token 时，旧的就作废。
+
+需要做到：
+- Refresh Token 轮转：每次刷新时生成新的 refresh_token，旧的立即失效
+- 重放检测：如果有人用过期的 refresh_token 来刷新，说明 token 泄露，自动吊销该用户所有 token
+- Token 家族追踪：记录 token 派生关系，一旦检测到重放，整条链全部作废
+- 本地存储 token 记录，包含创建时间、过期时间、关联用户、父 token 等信息
+
+Go 标准库，go build 能编译。

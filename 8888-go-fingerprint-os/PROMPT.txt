@@ -1,0 +1,8 @@
+写个操作系统指纹识别工具，Go 实现。
+
+做网络资产梳理时想知道目标机器跑的是什么系统。通过 TCP/IP 协议栈的差异来猜测，类似 nmap -O。
+
+功能：发送精心构造的 TCP/ICMP 探测包；分析 TTL 初始值、TCP 窗口大小、DF 位、IP ID 模式等特征；根据特征组合判断操作系统类型（Linux/Windows/macOS）及大致版本。
+
+命令：fingerprint-os detect -host 192.168.1.1、fingerprint-os detect -host 10.0.0.1 -verbose
+Go 标准库 net 加部分 syscall，go build 通过。需要适当权限。

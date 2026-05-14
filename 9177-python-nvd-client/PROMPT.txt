@@ -1,0 +1,13 @@
+NVD（国家漏洞数据库）数据客户端，从 NVD API 拉取和缓存 CVE 数据。
+
+安全团队每天都要关注新披露的漏洞，手工去 NVD 网站看太麻烦。做一个自动化的数据获取工具。
+
+Python 命令行工具：
+- 调用 NVD API（api.nist.gov）获取指定 CVE 的详情，或按关键词/日期范围搜索
+- 本地 JSON 文件缓存已查询过的 CVE 数据，避免重复请求
+- 支持 API 限流处理（NVD 有请求频率限制，没有 API key 的话要控制间隔）
+- 导出为 CSV 格式，包含 CVE ID、描述、CVSS v3.1 分数、发布日期
+
+用法：python nvd_client.py get CVE-2024-1234
+python nvd_client.py search --keyword "apache log4j" --days 30
+能跑起来，网络不通时用缓存数据演示也行。

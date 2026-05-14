@@ -1,0 +1,11 @@
+帮我用 Go 实现一个 CSRF Token 生成与校验工具。
+
+上次面试被问到 CSRF 防护的实现细节，我想写个完整版加深理解。
+
+这个工具需要：
+- 生成加密安全的 CSRF Token（用 crypto/rand），token 关联到 session ID 和时间戳
+- 支持校验：验证 token 是否匹配、是否在有效期内（默认 1 小时）
+- 提供 HTTP middleware 形式：自动在响应中设置 token，在 POST/PUT/DELETE 请求中校验 token
+- 包含一个简单的演示 HTTP 服务器，展示表单提交时的 CSRF 保护流程
+
+Go 标准库，go build 编译通过。

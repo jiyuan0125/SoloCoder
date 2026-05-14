@@ -1,0 +1,14 @@
+vcpkg 依赖解析器，解析 C++ vcpkg 包管理器的依赖清单。
+
+vcpkg 的依赖声明在 vcpkg.json 配置文件里，installed/ 目录下记录了已安装的包信息。需要解析这些文件来了解 C++ 项目的依赖状况。
+
+Python 实现：
+- 解析 vcpkg.json（清单模式配置），提取 dependencies 和 overrides
+- 扫描 vcpkg_installed/ 目录下的包信息（从每个包的 vcpkg/ 目录读取元数据）
+- 支持特性（features）依赖解析
+- 提取三元组（triplet）信息：x64-linux、x64-windows 等
+- 输出已安装包列表：名称、版本、描述、三方组
+
+用法：python vcpkg_parser.py parse vcpkg.json
+python vcpkg_parser.py installed ./vcpkg_installed
+vcpkg.json 是标准 JSON，版本格式有 version、version-date、version-string 几种。

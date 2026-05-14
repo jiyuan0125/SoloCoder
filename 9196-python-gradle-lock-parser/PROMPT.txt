@@ -1,0 +1,14 @@
+Gradle 锁文件解析器，解析 Gradle 构建系统的依赖锁文件。
+
+Gradle 的 gradle.lockfile 记录了 Java 项目的精确依赖版本，格式简单但有些特殊的标记需要处理。
+
+Python 实现：
+- 解析 gradle.lockfile 格式：每行 group:name:version=classifiers（如空、runtimeClasspath）
+- 提取每个依赖的 groupId、artifactId、version 和配置分类
+- 按配置分类分组：compileClasspath、runtimeClasspath、testCompileClasspath 等
+- 检测版本冲突：同一个 groupId:artifactId 出现在不同配置中但版本不同
+- 输出依赖报告：总依赖数、各配置分类数量、冲突列表
+
+示例：python gradle_lock_parser.py parse gradle.lockfile
+python gradle_lock_parser.py conflicts gradle.lockfile
+注意空行和注释行（以 # 开头）的处理。

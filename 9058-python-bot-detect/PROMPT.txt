@@ -1,0 +1,1 @@
+网站被爬虫搞得头疼，需要一个爬虫/机器人检测工具。用 Python 实现，分析 HTTP 请求头中的 User-Agent、Accept-Language 等特征，结合请求频率模式（短时间大量相同路径请求），判断是否为自动化机器人。内置常见爬虫 UA 库（Googlebot、Scrapy、python-requests 等），输出检测结果和置信度。纯 Python，不依赖 Web 框架。

@@ -1,0 +1,5 @@
+想写个操作系统指纹识别工具，通过网络探测来判断目标机器的操作系统。
+
+Python 实现，综合多种探测方式来判断目标的操作系统。方法包括：TTL 值分析（不同 OS 默认 TTL 不同）、TCP 窗口大小、TCP 选项顺序、ICMP 响应特征、HTTP User-Agent（如果是 Web 扫描）、SMB 协议特征。综合多个指标给出最可能的操作系统判断和置信度。内置常见的 OS 指纹规则（Windows、Linux、macOS、FreeBSD 等）。
+
+python3 命令行工具，输入目标 IP 进行探测。

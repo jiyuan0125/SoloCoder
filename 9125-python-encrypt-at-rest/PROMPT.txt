@@ -1,0 +1,5 @@
+写一个文件静态加密工具，保护磁盘上的敏感数据。
+
+提供加密和解密两个主要功能。加密时：读入文件 → 用 AES-256-GCM 加密 → 密钥派生用 PBKDF2（用户输入的密码 + 随机 salt）→ 输出 .enc 文件（包含 salt + IV + 密文 + auth tag）。解密时反向操作。
+
+CLI 使用方式：python encrypt.py lock secret.txt → 输入密码 → 生成 secret.txt.enc；python encrypt.py unlock secret.txt.enc → 输入密码 → 恢复原文。Python 3，用 cryptography 库。

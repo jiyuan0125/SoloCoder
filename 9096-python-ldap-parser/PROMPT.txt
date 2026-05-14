@@ -1,0 +1,1 @@
+LDAP 查询流量也需要做安全审计。用 Python 写一个 LDAP 协议解析器，解析 LDAP 消息的 BER 编码格式，识别操作类型（BindRequest、SearchRequest、SearchResponse、ModifyRequest 等），提取关键信息（绑定 DN、搜索过滤条件、搜索范围、返回的属性值）。输出解析后的 LDAP 操作摘要，命令行工具。

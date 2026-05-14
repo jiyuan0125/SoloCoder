@@ -1,0 +1,1 @@
+K8s 里的 RBAC 权限越来越乱，需要一个审计工具。用 Python 写一个 RBAC 审计工具，解析 K8s 的 Role、RoleBinding、ClusterRole、ClusterRoleBinding 配置（YAML 格式），分析权限分配情况：找出权限过大的角色（比如有 * 资源的 verbs）、识别谁可以操作 secrets、检测特权提升路径。输出权限图谱和风险点，命令行工具。

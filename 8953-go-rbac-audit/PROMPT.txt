@@ -1,0 +1,3 @@
+我需要审计 K8s 集群的 RBAC 配置，找出权限过大的 ServiceAccount。写个 Go CLI 工具，读取 Kubernetes RBAC 相关资源（Role、ClusterRole、RoleBinding、ClusterRoleBinding）的 YAML/JSON 定义。
+
+主要功能：列出每个 ServiceAccount 绑定了哪些权限，识别能操作 secrets、pods/exec 等高危资源的账号，检测是否有 wildcard(*) 权限。结果按风险等级排序输出。只用 Go 标准库，go build 能过。

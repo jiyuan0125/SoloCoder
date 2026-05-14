@@ -1,0 +1,5 @@
+帮小团队写个简易的 OAuth2 授权服务器，给内部几个服务之间的认证用。
+
+Python 实现，能处理 authorization code grant 和 client credentials grant。需要能注册 client（分配 client_id 和 client_secret）、发放授权码、用授权码换 token、验证 token 有效性。token 用 JWT 格式签发。支持 scope 权限控制。数据存在 JSON 文件或者 SQLite 里都行。
+
+python3 能跑就行，不要用 Django/Flask 这些大框架，用标准库的 http.server 就好。

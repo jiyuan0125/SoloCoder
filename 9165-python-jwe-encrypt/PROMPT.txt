@@ -1,0 +1,14 @@
+JWE（JSON Web Encryption）加密工具，实现 JSON 数据的加密和解密。
+
+有些敏感信息需要在传输过程中加密，比如用户的身份证号，用 JWE 标准格式封装。
+
+Python 实现：
+- 使用 AES-256-GCM 对 JSON payload 进行内容加密
+- 用 RSA-OAEP 或 AES-GCM（密钥包装模式）加密内容加密密钥
+- 生成 Compact Serialization 格式的 JWE token（5段式：header.cek.iv.ciphertext.tag）
+- 解密 JWE token，还原原始 payload
+
+示例：
+python jwe_encrypt.py encrypt --payload '{"ssn":"123456789"}' --key-path public.pem
+python jwe_encrypt.py decrypt --jwe <token> --key-path private.pem
+用 cryptography 库或纯标准库都行，能正确加解密。

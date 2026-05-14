@@ -1,0 +1,5 @@
+想搭一个 OpenID Connect Provider，给几个内部应用做统一登录。
+
+用 Python 写一个简易 OIDC Provider。在 OAuth2 授权码流程基础上加上 id_token 的签发，id_token 用 JWT 格式包含用户基本信息（sub、name、email）。支持 /.well-known/openid-configuration 发现端点、userinfo 端点、nonce 验证。支持 RS256 签名。
+
+命令行启动一个 HTTP 服务，python3 运行，尽量用标准库。

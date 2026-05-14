@@ -1,0 +1,1 @@
+程序 core dump 了需要分析。用 Python 写一个 core dump 分析工具，解析 ELF core 文件格式：读取 ELF 头和 Program Header，提取 NOTE 段中的寄存器状态（NT_PRSTATUS）、线程信息（NT_PRPSINFO）、以及内存映射（NT_AUXV）。输出崩溃线程的寄存器值、信号类型、以及加载的共享库列表。纯 Python 解析 ELF 二进制格式。

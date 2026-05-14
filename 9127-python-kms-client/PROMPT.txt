@@ -1,0 +1,5 @@
+写一个密钥管理服务（KMS）的客户端库，模拟对接云厂商 KMS 的操作。
+
+提供 generate_data_key（生成数据密钥，返回明文和密文版本）、encrypt（用 KMS 密钥加密小块数据）、decrypt（解密）、create_key（创建主密钥）这些接口。本地用 AES 实现一个简易的 KMS 后端（不用真的连云）。
+
+支持密钥的启用/禁用、自动轮换记录。所有密钥材料用文件存储。Python 3，面向接口编程，方便以后换真实后端。python kms_client.py demo 跑一个演示。

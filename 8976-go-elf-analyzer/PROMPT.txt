@@ -1,0 +1,3 @@
+分析 Linux 上的 ELF 二进制文件，需要个趁手的工具。Go 实现一个 ELF 格式分析器。
+
+解析 ELF header（magic、类型、架构、入口点）；提取 program headers 和 section headers；列出动态链接依赖（.dynamic 段的 NEEDED 条目）；解析符号表（.symtab/.dynsym）；识别安全相关特性（NX、PIE、RELRO、Stack Canary）。输入 ELF 文件路径，输出分析报告。Go 标准库，go build 编译通过。

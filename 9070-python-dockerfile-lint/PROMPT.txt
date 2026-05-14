@@ -1,0 +1,1 @@
+团队写的 Dockerfile 质量参差不齐，想做个自动检查工具。用 Python 写一个 Dockerfile Linter，解析 Dockerfile 内容，检查最佳实践：是否用了特定基础镜像 tag（不用 latest）、是否合理利用了构建缓存（COPY 顺序）、是否有不必要的包安装、是否定义了 HEALTHCHECK、是否用非 root 用户、镜像层数是否过多。输出问题列表和修改建议，命令行使用。

@@ -1,0 +1,12 @@
+合规性检查工具，自动扫描代码仓库和配置文件，发现违反安全规范的项。
+
+每周安全团队都要检查各项目的配置是否合规，什么密钥硬编码啦、HTTPS 没开啦、日志级别不对啦，手工查太慢。
+
+Python 实现：
+- 扫描指定目录，检查常见合规问题：硬编码密钥/密码、HTTP 链接（非 HTTPS）、不安全的依赖版本声明、debug 模式开启
+- 读取 YAML/JSON/ENV 配置文件，检查关键安全配置项
+- 按严重级别分类：Critical（硬编码密钥）、Warning（HTTP 链接）、Info（建议优化）
+- 输出检查报告，每条包含文件路径、行号、问题描述、建议修复方式
+
+示例：python compliance_checker.py scan ./my-project --output report.json
+能跑起来，误报率别太高。

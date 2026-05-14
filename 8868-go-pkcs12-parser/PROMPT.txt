@@ -1,0 +1,8 @@
+写个 PKCS#12（.p12/.pfx）文件解析工具，Go 实现。
+
+运维经常从 Windows 服务器导出 .pfx 文件，需要从中提取证书和私钥转到 Nginx 用。每次查 openssl 命令太麻烦。
+
+功能：解析 .p12/.pfx 文件，支持密码保护；提取其中的证书链和私钥；分别输出为 PEM 格式的证书文件和私钥文件；显示证书基本信息（主题、有效期）。
+
+用法：pkcs12-parser extract -file cert.pfx -pass "password"、pkcs12-parser info -file cert.pfx -pass "password"（只显示信息不导出）
+用 Go 标准库 crypto/pkcs12，go build 能编译通过。

@@ -1,0 +1,8 @@
+做个 CSP（Content-Security-Policy）构建工具，Go 写的。
+
+每次配 CSP 头都记不住指令怎么写，script-src、connect-src 这些指令老搞混。想有个交互式的工具帮忙生成 CSP 头。
+
+功能：通过命令行参数组合各条指令（script-src、style-src、img-src 等）；支持预设模板（strict、moderate、development）；输出完整的 CSP 头字符串；检查指令之间是否有冲突。
+
+用法：csp-builder build -scripts "'self' cdn.example.com" -styles "'self'" -images "'self' data:"、csp-builder template strict -report-uri "/csp-report"
+Go 标准库实现，go build 能编译通过。

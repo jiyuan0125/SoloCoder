@@ -1,0 +1,5 @@
+做一个代理服务器检测工具，判断请求是否经过代理。
+
+检测方法：检查 HTTP 头里的 Via、X-Forwarded-For、X-Proxy-Id 等代理特征头；分析 IP 的反向 DNS 是否包含 proxy/vpn/tunnel 关键词；用外部服务获取 IP 的真实地理位置和时区，对比请求头里的时区信息；TCP 指纹分析（TTL 值异常）。
+
+给一个 IP 或分析一条 HTTP 请求，返回是否疑似代理及置信度。Python 3，用 requests 做外部查询。python proxy_detect.py check 1.2.3.4。

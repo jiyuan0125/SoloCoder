@@ -1,0 +1,1 @@
+.env 文件经常被误提交到仓库里。写一个 Go 专门的 .env 泄露扫描器：扫描指定目录（包括 git 历史）中的 .env、.env.local、.env.production 等环境变量文件。识别高价值敏感变量名：DATABASE_URL、SECRET_KEY、API_KEY、PASSWORD、TOKEN 等。输出扫描结果按风险等级排序。支持忽略 .env.example 这类模板文件。go build 编译通过。

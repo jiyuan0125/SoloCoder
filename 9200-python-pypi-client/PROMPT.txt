@@ -1,0 +1,15 @@
+PyPI 客户端工具，查询 Python 包索引上的包信息和版本数据。
+
+做依赖审计的时候需要查 PyPI 上某个包的最新版本、有哪些版本、依赖声明是什么。不想每次都打开浏览器查。
+
+Python 命令行工具：
+- 查询 PyPI 包信息：包名、最新版本、作者、许可证、摘要、项目 URL
+- 列出某个包的所有已发布版本（包括预发布版本）
+- 查询特定版本的依赖声明（requires_dist）
+- 本地缓存查询结果（JSON 文件），减少网络请求
+- 检查本地 requirements.txt 中的包是否有过期版本（有新版本可升级）
+
+示例：python pypi_client.py info requests
+python pypi_client.py versions flask
+python pypi_client.py check-updates requirements.txt
+用 PyPI JSON API（pypi.org/pypi/{name}/json），网络不通时用缓存也能展示数据。

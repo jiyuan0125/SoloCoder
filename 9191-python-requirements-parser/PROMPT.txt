@@ -1,0 +1,14 @@
+Python requirements.txt 解析器，把各种 requirements 文件格式解析成结构化数据。
+
+requirements.txt 看着简单，实际上格式变化挺多的：带版本约束的、带 extras 的、带环境标记的、从 git/pip 安装的，需要统一解析。
+
+Python 实现：
+- 解析标准 requirements.txt 格式：包名、版本约束（==、>=、<=、~=、!=、<、>）
+- 处理特殊行：注释（#）、-r 引用其他文件、-e 可编辑安装、--index-url 等 pip 选项
+- 解析 extras 语法（requests[security]）和环境标记（; python_version >= "3.8"）
+- 输出结构化 JSON：每个依赖的名称、版本约束列表、extras、标记、来源
+- 统计功能：依赖总数、带版本约束的比例、来源分布
+
+用法：python requirements_parser.py parse requirements.txt --format json
+python requirements_parser.py stats requirements.txt
+能正确处理各种边界情况（空行、续行\、内联注释）。

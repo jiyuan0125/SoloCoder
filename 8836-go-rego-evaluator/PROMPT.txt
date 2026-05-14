@@ -1,0 +1,12 @@
+写一个 Rego 策略评估器，Go 实现。
+
+在学 OPA/Rego 策略语言，想写一个简易版的 Rego 解释器来理解它的工作原理。
+
+要实现：
+- 解析简化的 Rego 策略语法：package、import、rule（allow/deny）、基本条件表达式
+- 支持基本的 Rego 特性：= 赋值、== 比较、集合操作、some 量词
+- 输入 JSON 数据作为查询上下文，评估策略规则返回 true/false
+- 支持内置函数：count、contains、startswith、endswith、lower、upper
+- 命令行：`./rego-eval --policy=auth.rego --data=input.json --query="data.authz.allow"`
+
+Go 标准库，go build 编译通过。

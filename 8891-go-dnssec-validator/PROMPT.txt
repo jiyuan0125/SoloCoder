@@ -1,0 +1,8 @@
+写个 DNSSEC 验证工具，Go 实现。
+
+DNSSEC 给 DNS 响应加了签名防篡改，但验证链路比较复杂。想有个工具能从头到尾验证一个域名的 DNSSEC 是否配置正确。
+
+功能：从根域开始沿 DS → DNSKEY 链路验证信任链；检查 RRSIG 签名是否有效（未过期、算法正确）；报告链路中哪个环节有问题（缺 DS、签名过期、算法不匹配等）。
+
+命令：dnssec-validator validate -domain example.com、dnssec-validator validate -domain example.com -verbose、dnssec-validator validate -domains list.txt -json
+Go 标准库 net 和 crypto，go build 通过。

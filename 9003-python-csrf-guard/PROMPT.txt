@@ -1,0 +1,5 @@
+最近在搞 Web 安全加固，想做一个 CSRF 防护的命令行验证工具。
+
+用 Python 实现，能检查 HTTP 请求中是否包含有效的 CSRF 防护令牌。功能包括：生成加密安全的 CSRF token、验证 token 的有效性和过期时间、支持 SameSite cookie 策略检查、能校验 Referer 和 Origin 头。还要能批量分析一组请求头，输出哪些请求缺少 CSRF 防护。
+
+命令行用起来方便点，python3 运行。

@@ -1,0 +1,5 @@
+帮我做一个 CSP 策略校验工具，输入一条 CSP 字符串，分析它的安全性。
+
+解析 Content-Security-Policy 头里各个 directive，检查有没有不安全的配置：script-src 里的 'unsafe-inline' 'unsafe-eval'、default-src 为 none 但没有补全其他指令、img-src 或 connect-src 配了 * 之类的问题。对每条指令给出安全等级和建议。
+
+如果传入一个 URL 而不是原始字符串，就自动去抓取那个页面的 CSP 头来分析。Python 3，依赖尽量少。

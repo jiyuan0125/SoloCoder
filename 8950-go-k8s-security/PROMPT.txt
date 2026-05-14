@@ -1,0 +1,1 @@
+Kubernetes 集群的安全配置需要检查。用 Go 写一个 K8s 安全审计工具，扫描 YAML 格式的资源清单文件（Pod、Deployment、Service、ConfigMap）。检查：容器是否以 root 运行、是否有特权模式、是否挂载了宿主机敏感目录、资源限制是否设置、ConfigMap 中是否有敏感数据明文、Service 类型是否为 NodePort 暴露过多。输出审计报告。标准库实现，go build 通过。

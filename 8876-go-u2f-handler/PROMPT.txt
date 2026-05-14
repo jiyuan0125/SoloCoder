@@ -1,0 +1,8 @@
+写个 U2F 认证数据解析工具，Go 实现。
+
+旧版 FIDO U2F 协议虽然逐步被 WebAuthn 取代了，但有些系统还在用。需要能解析 U2F 的注册和认证消息。
+
+功能：解析 U2F 注册响应（提取公钥、密钥句柄、证书）；解析 U2F 认证响应（提取签名数据、计数器）；验证认证签名。
+
+命令：u2f-handler parse-register -data <hex>、u2f-handler parse-auth -data <hex>、u2f-handler verify-auth -data <hex> -pubkey <hex> -challenge <hex>
+Go 标准库 crypto 库，go build 能编译。

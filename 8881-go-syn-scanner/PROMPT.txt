@@ -1,0 +1,8 @@
+帮我写个 SYN 半开扫描工具，Go 实现。
+
+普通 TCP connect 扫描会留下完整连接日志，SYN 扫描只发 SYN 包不完成三次握手，更隐蔽。当然这是用于授权的安全测试。
+
+功能：构造原始 TCP SYN 包发送到目标端口；监听 SYN-ACK 响应判断端口开放；标记无响应为 filtered；支持自定义源 IP 和端口。
+
+命令：syn-scanner scan -target 192.168.1.1 -ports 22,80,443、syn-scanner scan -target 10.0.0.1 -ports 1-1024 -workers 200
+需要原始套接字，Go 标准库 net 包加 syscall，go build 通过。注意需要 root 权限运行。

@@ -1,0 +1,8 @@
+写个 SSH 密钥管理工具，Go 实现。
+
+手上一堆 SSH 密钥，有 rsa 的有 ed25519 的，指纹也不记得了。想有个工具快速查看密钥信息、生成新密钥、转换格式。
+
+功能：解析 SSH 公钥和私钥，显示类型、长度、指纹（SHA256）；生成新的 SSH 密钥对（支持 rsa/ed25519/ecdsa）；公钥格式转换（PEM 转 SSH 格式或反过来）。
+
+用法：ssh-key-tool info -file id_ed25519.pub、ssh-key-tool gen -type ed25519 -comment "user@host"、ssh-key-tool fingerprint -file id_rsa.pub
+Go 标准库 crypto/ssh，go build 能编译。

@@ -1,0 +1,8 @@
+写个 Argon2id 密码哈希的 CLI 工具，Go 实现。
+
+Argon2 是密码哈希竞赛冠军，现在是 PHC 推荐的方案。想有个工具帮后端服务生成和校验 Argon2id 哈希，不用每次都集成库。
+
+功能：用 Argon2id 做密码哈希，支持自定义时间、内存、并行度参数；输出 PHC 格式字符串（$argon2id$v=19$m=65536,t=1,p=1$salt$hash）；验证密码是否匹配。
+
+命令：argon2-tool hash -pass "mypass"、argon2-tool hash -pass "mypass" -memory 131072 -time 3 -threads 4、argon2-tool verify -pass "mypass" -hash "<phc_string>"
+用 Go 的 golang.org/x/crypto/argon2，go build 能编译。

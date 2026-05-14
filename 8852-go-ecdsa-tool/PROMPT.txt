@@ -1,0 +1,8 @@
+写个 ECDSA 椭圆曲线签名的命令行工具，Go 实现。
+
+现在项目里经常碰到 JWT 签名用 ES256 的情况，想有个独立小工具能生成 ECC 密钥、做签名和验证，不用每次都写测试代码。
+
+功能要求：支持 P-256/P-384/P-521 三条曲线生成密钥对，导出 PEM；对文件或字符串做签名（输出 base64）；验证签名是否有效。
+
+命令格式：ecdsa-tool keygen -curve P256、ecdsa-tool sign -key priv.pem -data "test"、ecdsa-tool verify -key pub.pem -data "test" -sig <base64>
+只依赖 Go 标准库，go build 通过即可。

@@ -1,0 +1,5 @@
+写一个 TLS 会话重组工具，从 pcap 文件里提取 TLS 流并重新组装。
+
+读取 pcap 文件，过滤出 TLS 流量，按 TCP 四元组分组，追踪每个流的消息序列。能识别 TLS 握手阶段（ClientHello、ServerHello、证书交换等）和应用数据阶段。对未加密的握手消息做详细解析，展示协议版本、密码套件、证书信息。
+
+输出每个 TLS 会话的摘要信息。Python 3，用 dpkt 或 scapy 解包。python tls_reassemble.py capture.pcap。

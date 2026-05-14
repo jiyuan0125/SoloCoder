@@ -1,0 +1,8 @@
+写个 HOTP 事件型验证码生成器，Go 实现。
+
+有些场景用 HOTP（基于计数器）而不是 TOTP（基于时间），比如一些硬件令牌。需要能根据计数器生成验证码。
+
+功能：输入 Base32 密钥和计数器值，生成 HOTP 码；支持 6 位和 8 位模式；可以批量生成从某个计数器开始的连续多个验证码。
+
+命令：hotp-generator gen -secret "JBSWY3DPEHPK3PXP" -counter 0、hotp-generator gen -secret "JBSWY3DPEHPK3PXP" -counter 0 -digits 8、hotp-generator range -secret "xxx" -start 0 -count 10
+Go 标准库实现，go build 通过。

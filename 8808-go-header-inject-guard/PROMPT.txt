@@ -1,0 +1,11 @@
+写一个 HTTP 头注入防护库，Go 语言。
+
+最近审计代码发现好多地方直接把用户输入塞进 HTTP header，可能导致 CRLF 注入和响应拆分。
+
+要实现的功能：
+- 检测并过滤 header 值中的 CR(\r) 和 LF(\n) 字符，防止响应拆分攻击
+- 校验常见的用户可控 header：Host、Referer、X-Forwarded-For、Location 等
+- 对 Cookie 值进行安全编码，防止通过 Cookie 注入
+- 提供一个 HTTP 中间件，自动清洗所有响应 header 中的危险字符
+
+Go 标准库，go build 通过。

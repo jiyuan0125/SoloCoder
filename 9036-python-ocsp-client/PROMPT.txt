@@ -1,0 +1,5 @@
+证书在线状态查询用 OCSP 比查 CRL 更及时，写个 OCSP 客户端工具。
+
+Python 实现一个 OCSP 客户端。能构造 OCSP 请求查询证书的吊销状态。从待查证书中提取 OCSP 响应器 URL，构建请求并发送。解析 OCSP 响应，展示证书状态（good/revoked/unknown）、响应时间、签名者信息。支持检查 OCSP 响应的签名有效性。超时和错误要有合理处理。
+
+命令行使用，python3 实现。

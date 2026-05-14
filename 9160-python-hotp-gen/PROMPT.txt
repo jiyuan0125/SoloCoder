@@ -1,0 +1,13 @@
+HOTP 一次性密码生成器，实现基于 HMAC 的一次性密码算法（RFC 4226）。
+
+我们需要给内部系统加一层动态验证码，类似银行那种每按一次生成新密码的令牌。
+
+用 Python 实现：
+- 根据共享密钥和计数器生成 6 位或 8 位 HOTP 验证码
+- 支持密钥的 Base32 编码输入输出
+- 实现计数器递增和同步机制
+- 验证用户输入的验证码是否正确，支持窗口验证（允许计数器有一定偏移）
+
+用法：python hotp_gen.py generate --secret JBSWY3DPEHPK3PXP --counter 0
+python hotp_gen.py verify --secret JBSWY3DPEHPK3PXP --counter 0 --code 348921
+核心用 hmac 模块，能跑起来。

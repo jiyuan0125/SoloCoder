@@ -1,0 +1,11 @@
+帮我实现一个 JWT 校验器，Go 语言。
+
+最近在做一个 API 网关，需要严格校验上游服务颁发的 JWT token，市面上库很多但我想从底层理解整个流程。
+
+功能需求：
+- 解析 JWT，校验签名（支持 HS256/HS384/HS512 和 RS256/RS384/RS512）
+- 校验标准声明：exp（过期时间）、nbf（生效时间）、iat（签发时间）、iss（签发者）、aud（受众）
+- 支持 JWKS 方式获取公钥进行 RS 系列算法校验
+- 命令行工具：`./jwt-validator verify --token=xxx --secret=xxx` 或 `./jwt-validator decode --token=xxx`
+
+Go 标准库 + crypto 包，go build 编译通过。

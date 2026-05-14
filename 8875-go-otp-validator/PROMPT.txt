@@ -1,0 +1,8 @@
+做一个 OTP 验证工具，Go 写的，同时支持 TOTP 和 HOTP。
+
+后端验证用户提交的二次验证码时需要服务端也计算一遍做比对。需要一个通用工具来验证 OTP 是否正确。
+
+功能：验证 TOTP 码，支持时间窗口容差（允许前后各 N 个步长的码）；验证 HOTP 码，指定计数器值；验证结果返回通过或失败；显示服务端预期值和用户输入值的对比。
+
+命令：otp-validator totp -secret "JBSWY3DPEHPK3PXP" -code "123456"、otp-validator totp -secret "xxx" -code "123456" -window 1、otp-validator hotp -secret "xxx" -code "123456" -counter 5
+Go 标准库，go build 编译通过。

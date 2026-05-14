@@ -1,0 +1,5 @@
+在做一个消息防篡改的功能，需要用 HMAC 来做完整性校验。
+
+写一个 Python HMAC 工具。支持 HMAC-SHA256、HMAC-SHA384、HMAC-SHA512 三种算法。能对文件或字符串计算 HMAC 值、验证给定消息和 HMAC 是否匹配。密钥可以手动指定也可以随机生成。输出格式支持十六进制和 Base64。还要支持 HMAC-based 一次性密码（HOTP）的生成。
+
+命令行使用，python3 实现。

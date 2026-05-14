@@ -1,0 +1,5 @@
+写个 Python 脚本批量检查网站安全响应头的完整性。
+
+支持的检查项包括：X-Content-Type-Options、X-Frame-Options、X-XSS-Protection、Content-Security-Policy、Referrer-Policy、Permissions-Policy 等。每个头给出是否存在、值是否合理的判断。
+
+输入可以是一个 URL 也可以是文件（一行一个 URL），输出一张表格显示每个 URL 各个安全头的状态（✓/✗/⚠），最后给一个总分。Python 3 写，不用框架，pip install 装好依赖直接能跑。

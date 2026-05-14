@@ -1,0 +1,1 @@
+日志里要检测的攻击模式太多了，想用 Sigma 规则来管理。用 Python 写一个 Sigma 规则引擎的简化版，能解析 Sigma YAML 规则文件，将规则中的检测条件（selection、condition、detection 部分）转换为对日志数据的匹配操作。支持基本的逻辑运算符（AND、OR、NOT）和字段匹配，对输入的日志（JSON 格式）做检测并输出告警。命令行工具。

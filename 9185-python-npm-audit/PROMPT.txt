@@ -1,0 +1,13 @@
+NPM 依赖安全审计工具，检查 package-lock.json 中 Node.js 依赖的已知漏洞。
+
+前端项目的 npm audit 有时候跑不通或者网络有问题，需要一个本地化的检查方案。
+
+Python 实现：
+- 解析 package-lock.json（v2/v3 格式），提取所有依赖的包名和版本
+- 对比本地漏洞数据库，检查每个包版本是否有已知安全问题
+- 支持检查 devDependencies 和 dependencies 的开关
+- 输出审计结果：漏洞包名、当前版本、漏洞级别、CVE、建议升级版本
+- JSON 格式输出方便集成到 CI
+
+用法：python npm_audit.py check package-lock.json --db npm_vulns.json --include-dev
+重点是解析 package-lock.json v2/v3 的树形结构，把所有嵌套依赖都提取出来。

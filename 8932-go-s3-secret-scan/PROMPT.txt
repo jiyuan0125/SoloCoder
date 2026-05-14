@@ -1,0 +1,1 @@
+S3 Bucket 的访问策略配错了可能会暴露敏感文件。用 Go 写一个 S3 配置审计工具（不实际连接 AWS，基于配置文件分析）：读取 S3 Bucket 的策略 JSON 文件，检查常见的配置问题：Principal 设为 *（公开访问）、Action 权限过宽、缺少加密配置、没有版本控制。输出每个 Bucket 的安全评分和具体问题。用标准库的 encoding/json 解析。go build 通过。

@@ -1,0 +1,8 @@
+做个 X.509 证书规范检查工具（类似 zlint），Go 写的。
+
+CA 签发的证书经常有一些小问题不符合 RFC 5280 或者 CA/Browser Forum 的基线要求，需要自动检查。
+
+检查项：证书版本号、序列号是否够长、签名算法是否过时（如 SHA1）、有效期是否超 398 天、SAN 是否包含 CN、密钥长度是否达标、基本约束和密钥用法是否正确设置。
+
+命令：x509-lint check -file server.crt、x509-lint check -file server.crt -format json（JSON 格式输出结果）
+按严重程度分级报告：error/warn/info。Go 标准库实现，go build 通过。

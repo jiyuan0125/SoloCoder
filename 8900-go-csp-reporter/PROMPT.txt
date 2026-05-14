@@ -1,0 +1,8 @@
+做个 CSP 违规报告收集服务，Go 实现。
+
+浏览器检测到 CSP 违规会往 report-uri 发 POST 请求，需要一个服务来接收和展示这些报告，方便调试 CSP 策略。
+
+功能：启动一个 HTTP 服务接收 CSP 违规报告（/csp-report 端点）；解析报告中的 violated-directive、document-uri、blocked-uri 等字段；在控制台实时打印报告摘要；支持把报告保存为 JSON 文件供后续分析。
+
+命令：csp-reporter serve -port 8080、csp-reporter serve -port 8080 -output reports.json、csp-reporter reports -file reports.json（查看已收集的报告）
+Go 标准库 net/http，go build 能编译通过。

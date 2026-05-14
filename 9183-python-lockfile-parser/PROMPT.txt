@@ -1,0 +1,14 @@
+锁文件解析器，统一解析各种语言的锁文件格式。
+
+不同包管理器的锁文件格式五花八门——Pip 的 requirements.txt、NPM 的 package-lock.json、Cargo 的 Cargo.lock、Go 的 go.sum——需要一把"万能钥匙"来解析。
+
+Python 实现：
+- 支持 pip requirements.txt、npm package-lock.json、yarn yarn.lock、cargo Cargo.lock、go go.sum 五种格式
+- 统一输出格式：包名、版本号、来源（registry/git/path）、哈希/完整性校验值
+- 自动检测输入文件类型（根据文件名和内容格式判断）
+- 支持批量处理目录下所有锁文件
+
+用法：python lockfile_parser.py parse package-lock.json
+python lockfile_parser.py parse Cargo.lock --format json
+python lockfile_parser.py detect ./project-dir
+解析逻辑要正确处理各格式的特殊情况（比如 optional dependencies、workspace dependencies）。

@@ -1,0 +1,8 @@
+做个 WebAuthn 认证数据处理工具，Go 实现。
+
+现在越来越多的网站支持 Passkey/WebAuthn 登录，调试时需要解析浏览器发的 authenticator 数据。
+
+功能：解析 WebAuthn attestation 对象（提取凭证ID、公钥、签名等）；解析 assertion 响应（提取 authenticatorData、签名、clientDataJSON）；验证签名和 challenge 是否匹配。
+
+命令：webauthn-handler parse-attestation -file attestation.json、webauthn-handler parse-assertion -file assertion.json、webauthn-handler verify -challenge <hex> -origin "https://example.com" -data <base64>
+Go 标准库加 encoding/json，go build 通过。

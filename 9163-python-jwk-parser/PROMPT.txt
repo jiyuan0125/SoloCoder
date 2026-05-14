@@ -1,0 +1,13 @@
+JWK（JSON Web Key）解析工具，用于读取和处理 JSON 格式的密钥信息。
+
+我们的认证服务需要对接多个外部系统，它们各自提供 JWK 格式的公钥用于验证 JWT 签名。需要一个工具来解析这些密钥。
+
+Python 实现：
+- 解析 JWK JSON 结构，支持 RSA 和 EC 密钥类型
+- 从 JWK 中提取公钥参数（n, e 对于 RSA；x, y 对于 EC）
+- 将 JWK 转换为 PEM 格式，方便其他工具使用
+- 验证 JWK 结构的完整性（必填字段是否存在）
+- 支持解析 JWK Set（多个密钥的集合）
+
+示例：python jwk_parser.py parse --input key.json --format pem
+纯标准库，能跑。

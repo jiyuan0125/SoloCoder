@@ -1,0 +1,3 @@
+Go 程序性能有问题，想分析 pprof 的 CPU profile 数据。用 Go 写一个安全分析用的 profiler 工具。
+
+解析 pprof protobuf 格式的 profile 数据：提取采样信息（函数名、文件名、行号、采样次数）；计算每个函数的 CPU 占用百分比；找出热点函数（top N）；生成简化的火焰图数据（文本格式，每行是调用栈和采样值）。输入是 pprof 文件路径，输出分析报告。Go 标准库，go build 通过。

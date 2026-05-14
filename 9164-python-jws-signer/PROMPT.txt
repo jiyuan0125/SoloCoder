@@ -1,0 +1,14 @@
+JWS（JSON Web Signature）签名和验证工具，实现 RFC 7515 核心Signing流程。
+
+需要在服务间通信时对消息做签名保证完整性，用 JWS 标准格式。
+
+Python 命令行工具：
+- 用 HMAC-SHA256（HS256）对 JSON payload 进行签名，输出 Compact Serialization 格式的 JWS
+- 验证 JWS 签名是否有效
+- 支持 RS256（RSA签名）—— 用内置 RSA 密钥对演示
+- 解析 JWS token，提取 header 和 payload（不验证签名）
+
+用法：
+python jws_signer.py sign --payload '{"sub":"user123"}' --key secret123 --alg HS256
+python jws_signer.py verify --jws <token> --key secret123 --alg HS256
+核心用 hmac/rsa 模块，base64 编解码要正确处理 padding。

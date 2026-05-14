@@ -1,0 +1,13 @@
+CIRCL（CVE Search）平台客户端，从 CIRCL.lu 的 CVE 搜索服务获取漏洞信息。
+
+CIRCL 提供了一套免费的 CVE 查询 API，比 NVD 的好用一些，但我们需要封装成命令行工具方便集成到 CI 流程里。
+
+Python 实现：
+- 调用 CIRCL CVE Search API（cve.circl.lu）查询 CVE 详情、关联的 CAPEC 和 CWE 信息
+- 按产品名和版本查询已知漏洞（如查询 nginx 1.18 的所有 CVE）
+- 本地缓存机制，减少重复网络请求
+- 输出结构化的漏洞报告（JSON格式）
+
+示例：python circl_client.py cve CVE-2024-1234
+python circl_client.py product --name nginx --version 1.18
+API 返回 404 或超时时要有优雅的降级处理。

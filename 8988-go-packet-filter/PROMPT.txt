@@ -1,0 +1,3 @@
+抓了一大堆包，只想看感兴趣的流量。Go 写一个数据包过滤工具。
+
+从 pcap 文件读取数据包，按条件过滤后写入新的 pcap 文件。过滤条件：源/目的 IP 或网段、TCP/UDP 端口、协议类型、时间范围、包长度范围。支持多条件组合（AND/OR）。命令行指定过滤规则，比如 `pkt-filter -i input.pcap -o output.pcap --dst-port 80,443 --proto tcp`。Go 标准库，go build 通过。

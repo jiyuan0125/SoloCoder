@@ -1,0 +1,5 @@
+我想要一个 CSP（Content-Security-Policy）策略生成器。
+
+用户通过命令行参数或配置文件指定自己网站用到的资源来源：比如脚本只从 self 和 cdn.example.com 加载、图片允许 data: 和 https:、样式允许 inline style 等。工具根据这些输入生成一条完整的 CSP 头字符串，同时给出对应的 meta 标签版本。
+
+最好能支持几个预设模板（strict、moderate、legacy），让用户在模板基础上微调。Python 3，标准库就行。python csp_builder.py --template strict --add-script cdn.example.com 这样用。

@@ -1,0 +1,5 @@
+写一个 DHCP 协议解析工具，从 pcap 文件中提取 DHCP 交互信息。
+
+解析 DHCP 包的各种消息类型（Discover、Offer、Request、ACK、NAK、Release）、请求和分配的 IP 地址、子网掩码、网关、DNS 服务器、租期等选项字段。追踪完整的 DHCP 四步交互过程。
+
+能够检测异常：未授权的 DHCP 服务器（Offer 来源不是已知服务器）、重复 IP 分配、异常短租期。Python 3 写，用 scapy 或 dpkt 解析 pcap。

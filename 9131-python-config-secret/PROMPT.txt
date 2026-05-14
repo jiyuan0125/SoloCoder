@@ -1,0 +1,5 @@
+我需要一个配置文件中的密钥检测工具，防止敏感信息意外提交到代码仓库。
+
+扫描指定目录或文件，找出配置文件（.env、*.yaml、*.json、*.conf、*.ini）里可能包含的密钥：API key、数据库密码、OAuth token、私钥等。用正则匹配常见的密钥模式（如 AWS access key 的 AKIA 前缀、GitHub token 的 ghp_ 前缀、JWT 格式等）。
+
+也支持基于熵值检测高随机性字符串（可能是随机生成的密码/token）。输出文件名、行号、匹配内容和密钥类型。可以生成 .gitignore 建议或 pre-commit hook。Python 3 标准库。

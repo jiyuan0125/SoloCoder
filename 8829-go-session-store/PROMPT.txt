@@ -1,0 +1,12 @@
+帮我写一个服务端 Session 存储引擎，Go 实现。
+
+不想用 Redis 跑额外服务了，需要一个轻量的本地 session 管理方案。
+
+功能：
+- Session CRUD：创建、读取、更新、删除 session，每个 session 有唯一 ID 和关联数据
+- 过期自动清理：后台 goroutine 定期扫描并移除过期 session
+- 支持 Cookie 和 Header 两种 session 传递方式
+- 数据存储支持内存模式（快速）和文件模式（持久化）
+- 提供 HTTP 中间件，自动从请求提取 session、注入到 context
+
+Go 标准库，go build 通过。

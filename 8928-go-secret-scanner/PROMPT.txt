@@ -1,0 +1,1 @@
+代码仓库里可能不小心提交了 API Key 和密码之类的敏感信息。用 Go 写一个秘密扫描工具，递归扫描指定目录下的所有文本文件，用正则匹配常见敏感信息模式：AWS Access Key、GitHub Token、私钥头（BEGIN RSA PRIVATE KEY）、数据库连接串、硬编码密码（password=xxx）。输出文件路径、行号和匹配到的内容。支持 .gitignore 式的排除规则。go build 通过。

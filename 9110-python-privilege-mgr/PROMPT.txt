@@ -1,0 +1,5 @@
+我需要一个简单的权限提升管理工具，用来检测和记录系统上的 sudo 配置风险。
+
+解析 /etc/sudoers 文件和 /etc/sudoers.d/ 目录下的配置，找出危险的权限分配：NOPASSWD 条目、通配符命令（如 /usr/bin/*）、能执行 shell 的命令（sudoedit、find、vim 等）。也支持通过 -u 参数检查某个用户拥有的 sudo 权限。
+
+输出按风险等级排序，给出具体的配置行和建议修复方式。Python 3 纯标准库，python priv_mgr.py analyze 就能用。

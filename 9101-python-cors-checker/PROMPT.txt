@@ -1,0 +1,5 @@
+帮我写一个 Python 命令行工具，用来检测网站的 CORS 配置是否安全。
+
+给一个 URL，工具发请求检查响应头里的 Access-Control-Allow-Origin、Allow-Methods、Allow-Headers 这些字段。主要看有没有把 origin 设成 * 或者反射任意 Origin 的问题，还有允不允许 credential 模式下配通配符。
+
+输出要按安全等级分类：高危（任意 origin + credential）、中危（反射 Origin）、低危（配置不规范但暂无直接风险）。Python 3 标准库 + requests 就行，pip install 能装好依赖，python main.py 能跑。

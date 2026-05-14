@@ -1,0 +1,5 @@
+写一个 Heartbleed 漏洞（CVE-2014-0160）检测工具。
+
+对目标主机的 TLS 服务发送特制的 Heartbeat 请求包，根据响应判断是否存在漏洞。能处理端口指定、超时等情况。如果目标返回了比请求更多的数据，就说明存在信息泄露。
+
+工具要支持批量扫描（从文件读 IP 列表），输出每个目标的检测结果（ vulnerable / safe / error），如果 vulnerable 还要展示泄露数据的前几十个字节做证据。Python 3，用标准库 socket 构造 TLS 握手和 heartbeat 包。

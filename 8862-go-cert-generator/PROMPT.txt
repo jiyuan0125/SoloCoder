@@ -1,0 +1,8 @@
+写个自签名证书生成器，Go 实现。
+
+本地开发 HTTPS 服务每次都要手敲 openssl 命令生成证书，参数老忘。做一个更简单直接的工具。
+
+要求：生成 RSA 或 ECDSA 自签名证书；支持指定域名（SAN）、有效期、密钥长度；同时输出证书和私钥的 PEM 文件；可以选择是否生成 CA 证书链。
+
+命令：cert-generator gen -domain "localhost,myapp.local" -days 365 -keytype rsa -bits 2048、cert-generator gen -domain "example.com" -keytype ecdsa -curve P256
+纯 Go 标准库 crypto/x509，go build 通过。

@@ -1,0 +1,1 @@
+有些老站点还在用 iframe 嵌入别的页面，安全审计要求确认 X-Frame-Options 头配置正确。写一个 Go 命令行工具，接收一个 URL 列表，逐个检查响应头里的 X-Frame-Options 值。判断是 DENY、SAMEORIGIN 还是 ALLOW-FROM，对缺失或配置不当的（比如 ALLOW-FROM 后面没跟具体域名）给出警告。同时检查 CSP 里的 frame-ancestors 指令作为补充。go build 编译通过即可。

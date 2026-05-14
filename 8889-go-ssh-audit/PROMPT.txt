@@ -1,0 +1,8 @@
+做个 SSH 服务审计工具，Go 写的。
+
+加固服务器时需要检查 SSH 配置是否安全，比如是否还支持旧算法、是否允许 root 登录。类似 ssh-audit 那个工具。
+
+功能：连接 SSH 服务器获取支持的算法列表（密钥交换、加密、MAC、压缩）；检查是否使用弱算法（如 diffie-hellman-group1-sha1）；检查服务器密钥类型和长度；给出安全建议。
+
+命令：ssh-audit audit -host 192.168.1.1 -port 22、ssh-audit audit -host 192.168.1.1 -json（输出 JSON 报告）
+Go 标准库 crypto/ssh，go build 能编译通过。

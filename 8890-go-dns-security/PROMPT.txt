@@ -1,0 +1,8 @@
+写个 DNS 安全检查工具，Go 实现。
+
+排查域名安全问题的时候需要检查 DNS 是否配了 DNSSEC、有没有 DNS 放大攻击风险、是否容易被劫持。
+
+功能：查询域名的 DNS 记录（A、AAAA、MX、NS、TXT）；检查是否有 SPF、DMARC、DKIM 记录；检测是否存在 DNSSEC 部署；报告缺少的安全配置。
+
+命令：dns-security check -domain example.com、dns-security check -domain example.com -verbose、dns-security check -domains domains.txt -json
+Go 标准库 net 包做 DNS 查询，go build 编译通过。

@@ -1,0 +1,5 @@
+帮我写一个字典攻击测试工具，用于安全评估时测试密码强度。
+
+加载一个密码字典文件（每行一个密码），对目标服务做认证尝试。支持几种常见协议：HTTP Basic Auth、SSH、FTP。控制尝试速率避免触发封禁（可配置每秒请求数和间隔）。
+
+注意这只是安全测试用的，要在授权范围内使用。输出每个尝试的结果，统计成功率、平均耗时。Python 3，用 paramiko 做 SSH、requests 做 HTTP、ftplib 做 FTP。python dict_attack.py --target ssh://host --user admin --wordlist rockyou.txt。

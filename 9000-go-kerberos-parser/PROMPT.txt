@@ -1,0 +1,3 @@
+排查 Kerberos 认证问题，需要解析 Kerberos 报文。Go 写一个 Kerberos 协议解析工具。
+
+解析 ASN.1 编码的 Kerberos 消息：识别消息类型（AS-REQ、AS-REP、TGS-REQ、TGS-REP、AP-REQ）；提取关键字段：realm、cname/sname、till 时间、etype 加密类型列表、ticket 信息；解析 PAC（如果未加密部分可读）。从 pcap 提取 TCP/UDP 88 端口数据包。输出认证流程摘要和异常检测（如弱加密类型、异常 realm）。Go 标准库，go build 通过。

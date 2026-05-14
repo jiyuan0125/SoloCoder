@@ -1,0 +1,3 @@
+日志里需要用 Sigma 规则来检测可疑行为，需要一个 Sigma 规则引擎。用 Go 实现一个简化版的 Sigma 检测引擎。
+
+能解析 Sigma YAML 规则（detection 段的 selection 条件、condition 逻辑），然后对日志条目（JSON 格式）进行匹配。支持常见的 Sigma 操作符：contains、startswith、endswith、base64、正则匹配、数值比较。输出匹配的规则标题和日志内容。Go 标准库，go build 通过。

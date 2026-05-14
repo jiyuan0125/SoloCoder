@@ -1,0 +1,5 @@
+写一个 SSH 服务安全审计工具，类似 ssh-audit 的简化版。
+
+连上目标 SSH 服务器（默认 22 端口），获取 banner、支持的密钥交换算法、加密算法、MAC 算法、压缩算法列表。然后对照已知的不安全算法（比如 diffie-hellman-modp512、3des-cbc、hmac-md5 这些）标出哪些该淘汰。
+
+输出分三列：算法类型、当前配置、安全评价（好/警告/危险）。Python 3，用 paramiko 或者直接 socket 解析 SSH 握手都行。python ssh_audit.py target.host 能跑就行。

@@ -1,0 +1,1 @@
+代码仓库里偶尔会不小心提交密钥和 token，需要一个扫描工具。用 Python 写一个 secrets 扫描器，扫描指定目录下的所有文本文件，用正则匹配常见敏感信息模式：AWS Access Key、GitHub Token、私钥头（BEGIN RSA PRIVATE KEY）、数据库连接串、JWT token 等。输出匹配的文件路径、行号和匹配内容（部分遮蔽显示）。支持 .gitignore 过滤，命令行使用。

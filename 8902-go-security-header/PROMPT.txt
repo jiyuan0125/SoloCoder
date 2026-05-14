@@ -1,0 +1,1 @@
+最近在做安全加固，需要批量扫描线上服务的安全响应头。写个 Go CLI 工具，接收一个域名列表文件，对每个域名发 HTTPS 请求，检查常见安全头（X-Content-Type-Options、X-XSS-Protection、Content-Security-Policy、Referrer-Policy 等）是否存在。输出一份简单的报告，列出每个域名缺失了哪些头。用 Go 标准库，go build 编译通过。

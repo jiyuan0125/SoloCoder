@@ -1,0 +1,8 @@
+做一个 Heartbleed 漏洞检测工具，Go 写的。
+
+虽然 Heartbleed（CVE-2014-0160）是很老的漏洞了，但内网老系统有时候还有。需要能快速批量检测。
+
+功能：构造 Heartbleed 探测包（TLS heartbeat extension）；发送到目标服务器的 443 端口；分析响应判断是否存在漏洞；支持批量扫描多个目标；输出结果显示是否有漏洞和泄漏的数据大小。
+
+命令：heartbleed check -host 192.168.1.1:443、heartbleed check -hosts targets.txt、heartbleed check -host example.com:443 -verbose
+Go 标准库 net/crypto，go build 通过。

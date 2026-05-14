@@ -1,0 +1,8 @@
+帮我写一个 RSA 密钥对的命令行工具，用 Go 标准库实现。
+
+平时做开发经常需要临时生成 RSA 密钥对、用公钥加密私钥解密，或者做签名验签。想有个轻量工具直接在终端里搞定这些事。
+
+主要功能：生成指定长度的 RSA 密钥对（2048/4096），输出 PEM 格式；用公钥加密一段文本，私钥解密还原；支持 PKCS#1v15 签名和验签。
+
+用法示例：rsa-tool genkey -bits 2048、rsa-tool encrypt -pubkey pub.pem -msg "hello"、rsa-tool sign -key priv.pem -msg "hello"
+纯 Go 标准库，go build 能编译通过就行。

@@ -1,0 +1,14 @@
+NuGet 锁文件解析器，解析 .NET 项目的 packages.lock.json。
+
+.NET Core 3.0+ 支持锁文件模式，packages.lock.json 记录了精确的 NuGet 包版本。需要解析它来审计 .NET 项目依赖。
+
+Python 实现：
+- 解析 packages.lock.json 格式，提取版本号和各目标框架下的依赖
+- 按 .NET 目标框架分组：.NETCoreApp、.NETStandard、.NETFramework 等
+- 区分直接依赖和传递依赖（type 字段：Direct/Transitive）
+- 检测跨框架版本不一致（同一个包在不同框架下版本不同）
+- 输出依赖清单和统计信息
+
+用法：python nuget_lock_parser.py parse packages.lock.json
+python nuget_lock_parser.py diff old_lock.json new_lock.json
+JSON 格式比较标准，重点是多框架结构要正确处理。

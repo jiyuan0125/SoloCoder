@@ -1,0 +1,12 @@
+帮我写一个 ReBAC（关系型访问控制）引擎，Go 语言。
+
+看了 Google Zanzibar 论文觉得很有意思，想实现一个简化版的关系权限模型，用"用户-关系-资源"三元组来做授权。
+
+核心功能：
+- 定义关系元组（tuple）：user:alice#member@group:eng 表示 alice 是 eng 组的 member
+- 关系查询：检查某用户是否通过直接或间接关系拥有对某资源的某权限
+- 关系推导：支持嵌套关系传递，比如 group:eng 的 member 也是 group:all-eng 的 member
+- Write 和 Read 接口：写入关系元组、查询用户权限、检查特定关系是否存在
+- 内存存储，支持从 JSON 文件加载初始关系数据
+
+Go 标准库，go build 能编译。

@@ -1,0 +1,12 @@
+一个简易的 Rego 策略评估器，能执行 Open Policy Agent 风格的策略规则判断。
+
+OPA 用 Rego 语言写策略很强大，但引入完整 OPA 太重了。我们只需要一些简单的规则判断，比如"管理员可以访问所有资源"、"普通用户只能访问自己部门的"。
+
+Python 实现：
+- 解析简化版 Rego 规则（支持 allow/deny、条件判断、=、!=、contains 等基本操作符）
+- 输入 JSON 格式的策略文件和查询上下文（用户信息、资源信息等）
+- 评估所有规则，输出最终决策（allow 或 deny）及匹配的规则列表
+- 支持默认策略（当没有任何规则匹配时的行为）
+
+示例：python rego_evaluator.py eval --policy rules.rego --input context.json
+不需要实现完整的 Rego 语法，子集即可。

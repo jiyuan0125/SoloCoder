@@ -1,0 +1,3 @@
+排查 DNS 问题需要看 pcap 里的 DNS 查询和响应。Go 实现一个 DNS 协议解析器。
+
+解析 DNS 报文格式：Header（ID、标志、问题数、回答数）；Question 段（查询域名、类型、class）；Answer 段（解析各类资源记录：A、AAAA、CNAME、MX、NS、TXT、SOA）；支持域名压缩指针解析。从 pcap 提取 UDP 53 端口的数据包进行解析，输出查询统计和域名列表。Go 标准库，go build 通过。

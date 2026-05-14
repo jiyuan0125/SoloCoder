@@ -1,0 +1,12 @@
+权限矩阵管理工具，用二维矩阵来定义和检查"谁能做什么"。
+
+我们的后台系统有十几个角色、几十个操作，需要一种直观的方式管理和查询权限。RBAC 那套角色继承搞太复杂了，用简单的矩阵就行。
+
+Python 实现：
+- 从 YAML 配置文件加载权限矩阵（行是角色，列是操作，值为 allow/deny）
+- 检查某个角色是否拥有某项操作的权限，支持多角色取并集
+- 查询某角色拥有的所有权限，或某操作允许的所有角色
+- 权限变更时输出 diff（新增了什么、删除了什么）
+
+示例：python permission_matrix.py check --role editor --action article:publish --config perms.yaml
+能运行，YAML 配置用 PyYAML 或手写解析都行。

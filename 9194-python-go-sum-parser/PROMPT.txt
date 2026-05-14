@@ -1,0 +1,14 @@
+Go go.sum 解析器，解析 Go 模块校验和文件。
+
+go.sum 记录了 Go 项目所有依赖模块的哈希值，用来验证完整性。需要解析它来获取依赖清单和校验信息。
+
+Python 实现：
+- 解析 go.sum 格式：每行 module_path version/go.mod h1:hash
+- 区分模块哈希和 go.mod 哈希（两条记录分别对应）
+- 提取模块路径、版本、哈希算法和哈希值
+- 检测异常：同一个模块+版本出现不同的哈希值（可能被篡改）
+- 统计功能：模块总数、去重后数量、版本重复情况
+
+示例：python go_sum_parser.py parse go.sum
+python go_sum_parser.py verify go.sum
+哈希值是 base64 编码的 SHA-256，格式要正确解析。

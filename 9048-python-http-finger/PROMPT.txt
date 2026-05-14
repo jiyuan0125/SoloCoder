@@ -1,0 +1,5 @@
+想做个 Web 服务器指纹识别工具，能根据 HTTP 响应特征判断对方用的什么技术栈。
+
+Python 实现。向目标 URL 发送 HTTP 请求，分析响应中的指纹特征：Server 头、X-Powered-By 头、Set-Cookie 格式、特定响应头的存在、响应体中的特征字符串（比如 meta generator 标签）。内置一个常见 Web 服务器和框架的指纹库（Apache、Nginx、IIS、Tomcat、Express、Django、Flask 等）。输出识别结果和匹配的指纹特征。
+
+python3 命令行工具，支持单个 URL 和批量文件输入。

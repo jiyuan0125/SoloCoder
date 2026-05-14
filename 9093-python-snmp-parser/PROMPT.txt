@@ -1,0 +1,1 @@
+网络设备用的是 SNMP 协议，想分析 SNMP 流量。用 Python 写一个 SNMP 协议解析器，解析 SNMP v1/v2c/v3 的报文（BER 编码），提取 PDU 类型（Get/GetNext/Set/Response/Trap）、community string、OID 和绑定的值。能处理基本的 BER 编解码（INTEGER、OCTET STRING、OID、SEQUENCE、NULL）。输出解析后的结构化信息，命令行工具。

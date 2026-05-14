@@ -1,0 +1,8 @@
+写个 CRL 证书吊销列表解析工具，Go 实现。
+
+有些内网 PKI 环境还在用 CRL 做证书吊销检查，需要能解析 CRL 文件看看哪些证书被吊销了。
+
+功能：解析 PEM 或 DER 格式的 CRL 文件；展示颁发者、更新时间、下次更新时间；列出所有被吊销的证书序列号和吊销日期、吊销原因。
+
+命令：crl-parser parse -file ca.crl、crl-parser check -crl ca.crl -serial 0x1234（检查某个序列号是否被吊销）
+Go 标准库 crypto/x509 里有 CRL 解析支持，go build 通过。

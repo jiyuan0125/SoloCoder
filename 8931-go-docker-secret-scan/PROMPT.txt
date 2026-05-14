@@ -1,0 +1,1 @@
+Docker 镜像构建时可能把密钥 COPY 进去了。写一个 Go 工具扫描 Docker 相关文件中的敏感信息：检查 Dockerfile 里的 ENV、ARG、COPY 指令是否包含密码或密钥文件路径。检查 docker-compose.yml 里的环境变量是否明文存储密码。检查 .dockerignore 是否排除了敏感文件。输出风险条目和修复建议。go build 编译通过。

@@ -1,0 +1,5 @@
+帮我做一个 Kubernetes NetworkPolicy 可视化和审计工具。
+
+解析 Kubernetes NetworkPolicy 的 YAML 定义，分析每个策略的入站和出站规则（from/to 的 podSelector、namespaceSelector、ipBlock）。判断某个 Pod 是否被正确隔离、有没有端口暴露到不应该访问的地方。
+
+支持两个模式：审计模式（检查策略是否合理）和查询模式（给定源 Pod 和目标 Pod，判断网络是否可达）。输出文本报告。Python 3 + PyYAML。

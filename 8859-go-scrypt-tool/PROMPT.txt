@@ -1,0 +1,8 @@
+帮我做一个小工具，用 scrypt 算法做密码哈希，Go 写的。
+
+scrypt 比 PBKDF2 更抗 GPU 暴力破解， Litecoin 也在用它。需要一个命令行工具来生成和验证 scrypt 密码哈希。
+
+功能：生成 scrypt 哈希，参数 N/r/p 可调，默认 N=32768 r=8 p=1；输出格式包含参数和 salt 方便存储；验证密码与哈希是否匹配。
+
+用法：scrypt-tool hash -pass "secret123"、scrypt-tool hash -pass "secret123" -N 65536 -r 8 -p 2、scrypt-tool verify -pass "secret123" -hash "<encoded>"
+Go 标准库 crypto/scrypt，go build 编译通过。

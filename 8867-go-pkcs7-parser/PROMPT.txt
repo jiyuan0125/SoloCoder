@@ -1,0 +1,8 @@
+帮我写个 PKCS#7 消息解析工具，Go 实现。
+
+处理签名邮件、S/MIME 或者一些银行的加解密对接时会遇到 PKCS#7 格式。需要能看看里面包含什么内容。
+
+功能：解析 DER 或 PEM 格式的 PKCS#7 消息；识别消息类型（signedData、envelopedData 等）；提取签名证书列表；展示签名信息和摘要算法。
+
+命令：pkcs7-parser parse -file message.p7b、pkcs7-parser certs -file message.p7b（提取里面嵌套的证书）
+可以参考 Go 标准库，go build 编译通过。

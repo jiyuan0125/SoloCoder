@@ -1,0 +1,8 @@
+做一个 UDP 端口扫描工具，Go 写的。
+
+有些重要服务跑在 UDP 上，比如 DNS(53)、SNMP(161)、mDNS(5353)，TCP 扫描扫不到它们。
+
+功能：发送 UDP 探测包到指定端口；根据是否有 ICMP port unreachable 响应判断端口状态（open/filtered/closed）；支持常见服务的 payload（DNS 查询、NTP 请求等）辅助判断。
+
+命令：udp-scanner scan -host 192.168.1.1 -ports 53,161,5353、udp-scanner scan -host 10.0.0.1 -ports 1-1024 -timeout 3s
+Go 标准库 net 包，go build 通过。

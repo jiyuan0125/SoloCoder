@@ -1,0 +1,3 @@
+怀疑服务器被装了 rootkit，需要个检测工具。Go 写一个 rootkit 检测器，检查 Linux 系统上的常见 rootkit 痕迹。
+
+检测项：/etc/ld.so.preload 是否存在可疑条目、检查已知 rootkit 特征文件路径、/proc 目录下异常的隐藏进程、内核模块列表中的可疑模块、系统调用表完整性检查（对比 /proc/kallsyms）。内置一个 rootkit 特征库（YAML/JSON 格式）。CLI 工具，输出检测报告，go build 通过。

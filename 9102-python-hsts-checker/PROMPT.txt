@@ -1,0 +1,5 @@
+我需要一个小工具检查网站有没有正确开启 HSTS。
+
+输入一个域名列表（文件或命令行参数），逐个检查 Strict-Transport-Security 响应头是否存在、max-age 值是否足够大（建议至少 31536000 秒）、有没有带 includeSubDomains 和 preload。缺少 HSTS 头或者 max-age 太短的都算不合规。
+
+最终输出一份简要报告，标出每个域名的 HSTS 状态和具体问题。纯 Python 3，用标准库的 http.client 或 requests 都行。python main.py example.com 直接跑。

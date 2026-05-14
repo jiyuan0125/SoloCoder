@@ -1,0 +1,8 @@
+做个 FIDO2 挑战-响应测试工具，Go 写的。
+
+开发 FIDO2 相关功能时需要模拟服务器端的挑战生成和响应验证流程，方便前后端联调。
+
+功能：生成 FIDO2 注册和认证的 challenge（随机 nonce）；构造 PublicKeyCredentialCreationOptions 和 RequestOptions 的 JSON；验证 authenticator 返回的签名是否匹配 challenge。
+
+命令：fido2-challenge register-challenge -rp "example.com" -user "testuser"、fido2-challenge auth-challenge -credid <base64>、fido2-challenge verify -type register -challenge <base64> -response <json>
+Go 标准库，go build 编译通过。

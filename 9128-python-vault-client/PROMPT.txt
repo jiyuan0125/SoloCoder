@@ -1,0 +1,5 @@
+帮我做一个 HashiCorp Vault 的客户端封装工具。
+
+封装 Vault 的常见操作：写入密钥（kv v2）、读取密钥、删除密钥版本、列出密钥路径。支持通过 AppRole 和 Token 两种认证方式。能处理 Vault 的 lease 续租。
+
+提供一个 CLI 工具：vault-tool read secret/data/myapp、vault-tool write secret/data/myapp key=value、vault-tool list secret/metadata。也提供 Python SDK 接口。Python 3，用 hvac 库或者 requests 直接调 Vault API。配置从环境变量读。

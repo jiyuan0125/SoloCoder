@@ -1,0 +1,14 @@
+Yarn yarn.lock 解析器，解析 Yarn 包管理器的锁文件。
+
+yarn.lock 是自定义格式（不是 JSON 也不是 YAML），解析起来有点麻烦。需要正确处理它的多 key 语法和嵌套结构。
+
+Python 实现：
+- 解析 yarn.lock v1 格式（Yarn Classic）
+- 处理多 key 行："@scope/pkg@^1.0.0", "pkg@>=2.0.0" 开头的条目块
+- 提取每个条目的 version、resolved、integrity、dependencies
+- 支持查询：按包名搜索、查看某个包的所有解析版本
+- 检测幽灵依赖（被引用但未在 package.json 中声明的包）
+
+用法：python yarn_lock_parser.py parse yarn.lock
+python yarn_lock_parser.py query yarn.lock --package lodash
+yarn.lock 格式特殊，注意引号包裹的 key 和缩进块的解析。

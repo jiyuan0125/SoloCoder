@@ -1,0 +1,12 @@
+帮我写一个 JWE（JSON Web Encryption）加密工具，Go 实现。
+
+需要在微服务之间传递敏感数据（比如用户身份证号），用 JWE 规范做内容加密。
+
+功能要求：
+- 实现 JWE Compact Serialization：支持 RSA-OAEP（密钥加密）+ A256GCM（内容加密）的组合
+- 加密流程：生成随机 CEK → 用公钥加密 CEK → 用 CEK 加密明文 → 拼装 JWE token
+- 解密流程：解析 JWE token → 用私钥解密 CEK → 用 CEK 解密密文
+- 也支持 AES-GCM 对称加密方式（A256KW + A256GCM）
+- 命令行：`./jwe-encrypt encrypt --data=hello --pubkey=pub.pem` 和 `./jwe-encrypt decrypt --token=xxx --privkey=priv.pem`
+
+Go 标准库 crypto 包，go build 能通过。

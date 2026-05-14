@@ -1,0 +1,12 @@
+Token 吊销管理工具，维护一个已吊销的 JWT 或 OAuth token 黑名单。
+
+场景：用户登出、修改密码、或者管理员强制下线时，我们需要让已发出的 token 立刻失效。但 JWT 本身是无状态的，所以需要一个吊销列表。
+
+Python 实现：
+- 接收 token 或 token ID（jti），加入吊销列表，记录吊销时间和原因
+- 检查某个 token 是否已被吊销（在黑名单中且未过期）
+- 自动清理已过期的吊销记录（token 原本就过期了就没必要再吊销）
+- 支持按用户批量吊销所有 token
+
+数据存本地 SQLite 或 JSON。示例：python token_revocation.py revoke --jti abc123 --reason "user_logout"
+能正常运行。

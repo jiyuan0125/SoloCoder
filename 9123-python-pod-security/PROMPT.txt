@@ -1,0 +1,5 @@
+写一个 Kubernetes Pod 安全策略检查工具。
+
+输入一个 Kubernetes manifest 文件（YAML），分析 Pod 和容器的安全配置。检查项包括：是否以 root 运行（runAsNonRoot）、有没有设 readOnlyRootFilesystem、是否允许特权模式（privileged）、capabilities 有没有限制、hostNetwork/hostPID/hostIPC 是否开启。
+
+对照 NSA/CISA 的 Kubernetes 安全加固指南给每个检查项打分，输出一个合规报告，标出不合规项和建议值。Python 3，用 PyYAML 解析 manifest。

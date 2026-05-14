@@ -1,0 +1,5 @@
+做一个 Sealed Secrets 的实现，类似 Bitnami 的 sealed-secrets 方案。
+
+公钥加密、私钥解密。流程：用户在本地用公钥加密一个 Secret → 得到 SealedSecret（可以安全提交到 Git）→ 控制器用私钥解密还原出原始 Secret。我只需要本地命令行版本。
+
+工具分两个命令：seal（读 Kubernetes Secret YAML，用公钥加密输出 SealedSecret YAML）和 unseal（用私钥解密还原）。密钥对用 RSA-4096 生成。Python 3，用 cryptography 库做加密。

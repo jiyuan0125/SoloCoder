@@ -1,0 +1,11 @@
+写一个 Cookie 安全加固工具，Go 实现。
+
+发现好多项目的 Cookie 设置得特别随意，没有 HttpOnly、没有 Secure、SameSite 随便设，写个工具帮团队统一加固。
+
+需要实现：
+- Cookie 安全配置检查：扫描 HTTP 响应中的 Set-Cookie header，检查安全属性是否齐全
+- 安全 Cookie 生成器：自动设置 HttpOnly、Secure、SameSite=Strict/Lax、Path、Domain
+- Cookie 加密签名：对敏感 Cookie 值用 HMAC-SHA256 签名，防止客户端篡改
+- 提供 HTTP 中间件自动为所有 Cookie 加上安全属性
+
+Go 标准库，go build 编译通过。

@@ -1,0 +1,14 @@
+CycloneDX SBOM 文件处理工具，解析和操作 CycloneDX 格式的软件物料清单。
+
+收到供应商的 CycloneDX SBOM 文件后，需要验证完整性、提取组件信息、和漏洞数据库做对比。
+
+Python 实现：
+- 解析 CycloneDX JSON 和 XML 两种格式的 SBOM 文件
+- 提取所有组件信息：名称、版本、purl（包URL）、许可证、哈希
+- SBOM 对比：比较两个版本的 SBOM，找出新增、删除、变更的组件
+- 验证 SBOM 完整性：必填字段检查、组件哈希验证
+- 统计组件许可证分布
+
+示例：python cyclonedx.py parse sbom.json --list-components
+python cyclonedx.py diff old_sbom.json new_sbom.json
+能正确解析标准 CycloneDX 格式。

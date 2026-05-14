@@ -1,0 +1,8 @@
+做个 Banner 抓取工具，Go 写的。
+
+渗透测试前期收集信息时，很多服务连上去会主动发 banner，从 banner 能知道软件名和版本，用来找已知漏洞。
+
+功能：连接目标端口，读取服务返回的 banner 文本；支持设置等待超时；对 banner 做基本的关键字匹配识别服务类型；批量抓取多个端口的 banner。
+
+命令：banner-grabber grab -host 192.168.1.1 -ports 21,22,25,80,110,143,3306、banner-grabber grab -host 10.0.0.1 -ports 1-1024 -timeout 5s
+Go 标准库 net，go build 通过。

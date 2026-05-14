@@ -1,0 +1,1 @@
+抓到的 TCP 流里想还原 HTTP 请求和响应。用 Python 写一个 HTTP 流重组工具，从重组后的 TCP 流数据中解析 HTTP 请求（方法、URL、头部、Body）和响应（状态码、头部、Body），支持 HTTP/1.1 的分块传输编码和 Content-Length。能正确处理一个 TCP 连接中的多个 HTTP 请求（pipeline），输出格式化的 HTTP 会话内容。命令行工具。

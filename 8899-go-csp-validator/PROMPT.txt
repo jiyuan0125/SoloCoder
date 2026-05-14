@@ -1,0 +1,8 @@
+写个 CSP 策略验证工具，Go 实现。
+
+写完 CSP 头后需要验证它是否合法、有没有语法错误、防护力度够不够。像 CSP Evaluator 那样给出建议。
+
+功能：解析 CSP 头字符串，检查语法正确性；检测不安全的指令值（如 'unsafe-inline'、'unsafe-eval'、*）；检查是否缺少必要的指令（如 default-src）；评估整体安全等级，给出改进建议。
+
+命令：csp-validator check -header "default-src 'self'; script-src 'self' cdn.example.com"、csp-validator check -header @policy.txt、csp-validator check -url https://example.com（从响应中提取 CSP 验证）
+Go 标准库，go build 编译通过。

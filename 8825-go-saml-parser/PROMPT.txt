@@ -1,0 +1,12 @@
+帮我写一个 SAML 断言解析器，Go 实现。
+
+对接企业客户的 SSO 时需要解析他们 IdP 发过来的 SAML Response，但 SAML 的 XML 格式实在太复杂了。
+
+功能：
+- 解析 SAML 2.0 Response：提取 Assertion 中的 NameID、AttributeStatement、Conditions
+- 验证 SAML 签名：使用 XML-DSIG 验证 Response/Assertion 的签名（支持 SHA256）
+- 校验 Conditions：检查 NotBefore、NotOnOrAfter 时间有效性，校验 Audience 限制
+- 处理 SAML 重定向绑定：从 URL 参数中解压（inflate）SAMLRequest/SAMLResponse
+- 命令行：`./saml-parser parse response.xml` 和 `./saml-parser verify response.xml --cert=idp.pem`
+
+Go 标准库，go build 编译通过。

@@ -1,0 +1,5 @@
+写一个服务端模板注入（SSTI）检测和防御工具。
+
+检测功能：对用户输入点发送 SSTI 测试 payload（如 {{7*7}}、${7*7}、<%= 7*7 %>），根据响应判断是否执行了表达式。支持检测 Jinja2、Mako、Django Template、Twig、Freemarker 等模板引擎。
+
+防御功能：提供一个模板渲染的安全封装，自动转义危险语法。CLI 工具：ssti_check http://target.com --param name。Python 3，用 requests 发测试请求。

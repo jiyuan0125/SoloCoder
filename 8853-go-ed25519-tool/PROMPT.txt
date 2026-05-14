@@ -1,0 +1,8 @@
+做个 Ed25519 签名工具，Go 写的命令行程序。
+
+Ed25519 在现代协议里用得越来越多了，SSH 密钥、区块链签名很多都是它。需要一个能快速生成 Ed25519 密钥、签名消息、验证签名的小工具。
+
+要求：生成 Ed25519 密钥对并保存为 PEM；对任意文本或文件内容签名；验证签名，返回通过或不通过。密钥用 PKCS8 格式编码。
+
+用法：ed25519-tool generate、ed25519-tool sign -key priv.pem -msg "hello"、ed25519-tool verify -key pub.pem -msg "hello" -sig <hex>
+Go 标准库就够了，go build 编译通过。

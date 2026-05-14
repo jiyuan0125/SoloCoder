@@ -1,0 +1,1 @@
+帮我写个 Git 仓库的敏感信息扫描工具。用 Python 实现，遍历 Git 仓库的所有 commit 历史，检查每个 commit 的 diff 内容，查找是否包含密码、API Key、Token 等敏感字符串。支持指定扫描深度（最近 N 个 commit 或全部），输出泄露的 commit hash、文件名、行号和敏感内容摘要。能处理大仓库不卡死就行，命令行工具。

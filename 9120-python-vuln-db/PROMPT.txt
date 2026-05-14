@@ -1,0 +1,5 @@
+我需要一个本地漏洞数据库管理工具。
+
+能从 NVD 的公开数据（JSON 格式）导入 CVE 信息到本地 SQLite 数据库。支持按 CVE 编号查询、按关键词搜索、按 CVSS 评分范围筛选、按影响的产品/版本过滤。定期更新数据库（增量导入最新的 CVE）。
+
+提供 CLI 接口：vuln-db search <keyword>、vuln-db show CVE-2024-xxxxx、vuln-db update。输出包含 CVE 编号、描述、CVSS 评分、影响版本范围。Python 3，用 sqlite3 + requests。

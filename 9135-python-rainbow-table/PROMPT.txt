@@ -1,0 +1,5 @@
+做一个彩虹表生成和查询工具，帮助理解密码哈希破解的原理。
+
+生成模式：指定字符集（小写字母、数字等）和长度范围，用 reduce 函数把哈希映射回明文空间，反复 哈希→归约 生成链，存到 SQLite 数据库。查询模式：给定一个哈希值，在彩虹表中查找对应的明文。
+
+支持 MD5 和 SHA-1 两种哈希。可以指定链长度和生成数量。命令行工具：rainbow gen --algo md5 --min-len 4 --max-len 6、rainbow lookup --algo md5 --hash abc123。Python 3 + sqlite3。

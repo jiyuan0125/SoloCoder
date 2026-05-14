@@ -1,0 +1,3 @@
+监控网络设备需要解析 SNMP 协议。Go 写一个 SNMP 报文解析工具。
+
+解析 SNMP 报文（BER/DER 编码）：支持 SNMPv1/v2c 的 GET/GETNEXT/SET/RESPONSE/TRAP PDU；解析 PDU 字段（community string、request ID、error status、variable bindings）；解码常见 MIB 变量的 OID 和值（System、Interface、IP 统计等）；从 pcap 文件提取 UDP 161/162 端口数据包。Go 标准库，go build 编译通过。

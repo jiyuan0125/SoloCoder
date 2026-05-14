@@ -1,0 +1,12 @@
+补丁检查工具，扫描系统安装的软件版本，对比已知安全补丁看哪些没打上。
+
+服务器上跑着各种软件，安全团队需要知道哪些还缺安全补丁。手工查太慢了，得自动化。
+
+Python 命令行工具：
+- 扫描本地安装的软件包及其版本（支持 apt dpkg、rpm、pip list 输出格式）
+- 对比安全公告数据库（本地 JSON 文件，包含软件名、受影响版本范围、修复版本）
+- 列出未打补丁的软件，按严重程度排序
+- 输出建议命令：apt upgrade xxx 或 pip install xxx==版本号
+
+示例：python patch_checker.py scan --source dpkg --advisory security_advisory.json
+数据用模拟的，关键是对比逻辑要准，版本号比较要正确处理语义化版本。

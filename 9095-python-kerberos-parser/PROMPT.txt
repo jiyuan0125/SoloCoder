@@ -1,0 +1,1 @@
+AD 域环境下的 Kerberos 认证需要分析。用 Python 写一个 Kerberos 协议解析器，解析 Kerberos 消息的 ASN.1 编码格式，识别消息类型（AS-REQ、AS-REP、TGS-REQ、TGS-REP、AP-REQ、AP-REP），提取关键字段（realm、cname/sname、etype 加密类型列表、ticket 结构）。输出格式化的解析结果，命令行工具，自己实现基本的 ASN.1 DER 解码。

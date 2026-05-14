@@ -1,0 +1,13 @@
+Python Poetry 依赖安全审计，扫描 poetry.lock 文件检查已知漏洞。
+
+团队新项目用 Poetry 管理依赖，poetry.lock 格式和 requirements.txt 不太一样，需要专门的解析。
+
+Python 实现：
+- 解析 poetry.lock TOML 文件，提取所有依赖的名称、版本、哈希
+- 解析 pyproject.toml 提取直接依赖声明（tool.poetry.dependencies 部分）
+- 对比漏洞数据库，检查已知安全问题
+- 区分 main dependencies 和 dev dependencies
+- 输出审计报告和升级建议
+
+示例：python poetry_audit.py check poetry.lock --db py_vulns.json
+poetry.lock 是 TOML 格式，每条记录在 [[package]] 下。版本可能包含 * 等通配符。

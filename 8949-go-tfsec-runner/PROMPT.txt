@@ -1,0 +1,1 @@
+Terraform 代码的安全审查太费时间。用 Go 写一个 Tfsec 风格的扫描器，解析 Terraform HCL 文件（简化版解析，识别 resource 和关键属性）。内置检测规则：S3 Bucket 未开启版本控制、RDS 未启用加密、安全组入站规则过于宽松、IAM 策略过宽、未启用日志。规则支持启用/禁用配置。输出每个问题的 resource 地址、严重程度和修复建议。go build 通过。

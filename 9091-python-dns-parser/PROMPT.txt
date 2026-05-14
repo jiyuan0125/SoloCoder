@@ -1,0 +1,1 @@
+写个 DNS 协议解析器，从网络流量或 pcap 文件中提取 DNS 数据包并解析。用 Python 实现二进制 DNS 报文解析：解析 DNS 头部（ID、标志、计数）、Question 段、Answer 段（支持 A、AAAA、CNAME、MX、NS、TXT、SOA 记录类型）。输出易读的 DNS 问答信息。不用第三方 DNS 库，自己解析二进制字节，命令行工具。

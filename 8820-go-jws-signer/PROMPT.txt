@@ -1,0 +1,12 @@
+写一个 JWS（JSON Web Signature）签名工具，Go 实现。
+
+需要给一批 API 接口加上请求签名，选了 JWS 规范，但不想依赖第三方库。
+
+功能：
+- 实现 JWS Compact Serialization 格式的签名和验证
+- 支持的算法：HS256、HS384、HS512（HMAC）和 RS256、RS384、RS512（RSA）
+- 签名流程：Base64URL(header) + "." + Base64URL(payload) + "." + Base64URL(signature)
+- 验证流程：解析 JWS token，根据 header 中的 alg 选择验证方式
+- 命令行：`./jws-signer sign --data=payload.json --key=secret --alg=HS256` 和 `./jws-signer verify --token=xxx`
+
+Go 标准库，go build 编译通过。

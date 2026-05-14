@@ -1,0 +1,3 @@
+要处理 STIX 格式的威胁情报数据，但手头没有好用的解析工具。用 Go 写一个 STIX 2.1 JSON 格式的解析器。
+
+能做：解析 STIX Bundle 对象，提取所有 Indicator、Malware、AttackPattern、ThreatActor 等核心对象；支持按类型过滤查询；解析 killing-chain 关系和 targeting 关系；输出为可读的摘要报告。输入是 STIX JSON 文件，支持命令行参数控制输出。纯标准库，go build 通过。

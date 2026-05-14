@@ -1,0 +1,5 @@
+做一个信封加密方案的实现，用来安全保护数据密钥。
+
+流程是这样的：生成一个随机数据密钥（DEK）→ 用 DEK 加密实际数据 → 用主密钥（KEK）加密 DEK → 把加密后的 DEK 和密文一起存储。解密时用 KEK 解密 DEK，再用 DEK 解密数据。
+
+提供 encrypt(data, kek) 和 decrypt(encrypted_blob, kek) 两个接口，KEK 可以是密码派生的也可以是外部传入的密钥字节。Python 3，用 cryptography 库的 AES-GCM。

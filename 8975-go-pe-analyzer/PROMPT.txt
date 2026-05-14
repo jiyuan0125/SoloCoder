@@ -1,0 +1,3 @@
+拿到一个可疑的 PE 文件，想快速分析它的基本信息。用 Go 写一个 PE（Windows 可执行文件）格式分析器。
+
+解析 PE header：DOS header、PE signature、COFF header、Optional header；提取节区（sections）信息（名称、大小、属性）；解析导入表（Import Table）看它调用了哪些 DLL 和函数；解析导出表（Export Table）。输入是 PE 文件路径，输出结构化分析报告。Go 标准库，go build 通过。

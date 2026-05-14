@@ -1,0 +1,3 @@
+分析 LDAP 查询行为，看看谁在查什么目录信息。Go 实现 LDAP 协议解析器。
+
+解析 LDAP 报文（ASN.1 BER 编码）：识别操作类型（BindRequest、SearchRequest、SearchResult、ModifyRequest 等）；从 SearchRequest 提取 base DN、过滤条件、请求属性；从 SearchResult 提取返回的条目和属性值。从 pcap 提取 TCP 389 端口流解析，输出查询摘要统计。Go 标准库，go build 通过。

@@ -1,0 +1,3 @@
+Snort 规则维护太混乱了，需要个工具来统一管理。Go 实现一个 Snort 规则解析和管理 CLI。
+
+能做的事：解析 Snort 规则的各个字段（action、proto、src_ip、src_port、direction、dst_ip、dst_port、options）；验证规则的语法正确性；按 sid、类别、rev 排序和查重；统计规则分布（按协议、按动作类型）；支持从文件批量导入并去重。标准库实现，go build 通过。

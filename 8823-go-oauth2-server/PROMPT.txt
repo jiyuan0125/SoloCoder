@@ -1,0 +1,12 @@
+帮我实现一个 OAuth2 授权服务器，Go 语言。
+
+想从零理解 OAuth2 的完整授权流程，包括 token 的签发、校验和刷新机制。
+
+核心功能：
+- 支持 Authorization Code 和 Client Credentials 两种授权模式
+- 实现 token 端点：签发 access_token（JWT 格式）和 refresh_token
+- 客户端管理：注册 client_id/client_secret，配置允许的 redirect_uri 和授权类型
+- Token 刷新：用 refresh_token 换新的 access_token，旧的 refresh_token 自动失效
+- 包含一个演示用的授权页面和资源 API
+
+Go 标准库，go build 能编译通过。

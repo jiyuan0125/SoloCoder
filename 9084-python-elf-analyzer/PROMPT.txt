@@ -1,0 +1,1 @@
+Linux 下也需要分析可疑 ELF 文件。用 Python 写一个 ELF 文件分析器，解析 ELF 格式：读取 ELF 头、Program Header、Section Header，提取动态链接依赖（NEEDED 库）、符号表（Symbol Table）中的函数名，检查是否有异常（比如 ET_DYN 类型的文件却有可执行的 stack）。输出分析报告，纯 Python 解析二进制，命令行工具。

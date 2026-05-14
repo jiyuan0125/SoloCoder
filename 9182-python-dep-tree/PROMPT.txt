@@ -1,0 +1,14 @@
+依赖树可视化工具，解析项目的依赖关系并生成树形结构。
+
+排查依赖冲突或者安全问题时，需要看清依赖的层级关系。A 依赖 B，B 依赖 C，C 有漏洞，影响链是怎样的？
+
+Python 实现：
+- 解析 requirements.txt 或 package.json，获取直接依赖
+- 递归解析子依赖（调用 PyPI API 或 npm registry 获取依赖信息）
+- 构建依赖树，输出 ASCII 树形图（类似 tree 命令的输出）
+- 标记重复依赖和版本冲突（同一包出现多个版本）
+- 支持限制深度（--depth 3）
+
+示例：python dep_tree.py requirements.txt --depth 3
+python dep_tree.py package.json --highlight-conflicts
+网络不通时用模拟数据，关键是树形渲染要好看。

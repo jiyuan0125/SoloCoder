@@ -1,0 +1,8 @@
+写个 PBKDF2 密码哈希工具，Go 实现。
+
+用户密码存储需要用 PBKDF2 做慢哈希，想有个独立工具能生成和验证密码哈希，方便在注册登录流程里使用。
+
+要求：用 PBKDF2-HMAC-SHA256 对密码做哈希；自动生成随机 salt；输出格式为 iterations$salt_hex$hash_hex，方便存数据库；能验证密码是否匹配已有哈希。
+
+命令：pbkdf2-tool hash -pass "mypassword" -iter 100000、pbkdf2-tool verify -pass "mypassword" -hash "100000$abcdef$123456"
+纯 Go 标准库，go build 通过。

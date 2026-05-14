@@ -1,0 +1,8 @@
+做个 Shamir 秘密分享工具，Go 写的。
+
+把一个密钥或密码分成多份交给不同人保管，凑够指定人数才能恢复。比如把恢复密钥分给 5 个管理员，任意 3 个就能恢复。
+
+功能：将任意字符串拆分为 n 份（阈值 k），任意 k 份可恢复原始内容；支持指定总份数和阈值；每份输出为 hex 或 base64 编码。
+
+用法：shamir-secret split -secret "my-master-key" -total 5 -threshold 3、shamir-secret combine -shares "share1,share2,share3"
+Go 实现，数学运算用标准库 big.Int，go build 编译通过。

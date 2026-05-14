@@ -1,0 +1,5 @@
+做一个 XML 外部实体注入（XXE）检测工具。
+
+构造包含外部实体引用的 XML payload（读取 /etc/passwd、SSRF 到内网地址、DoS 攻击 billion laughs），发送到目标的 XML 解析接口，根据响应判断是否存在 XXE 漏洞。支持检测常规 XXE、Blind XXE（通过 OOB 带 out-of-band 数据）。
+
+同时提供一个安全的 XML 解析封装函数，默认禁用外部实体和 DTD。CLI：python xxe_check.py http://target.com/api/xml --param data。Python 3，标准库 xml.etree 和 requests。

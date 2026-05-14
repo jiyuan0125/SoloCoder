@@ -1,0 +1,8 @@
+写个 CSR（证书签名请求）解析工具，Go 实现。
+
+收到客户提交的 CSR 需要审核里面的字段是否正确，比如域名、组织信息、密钥类型。手动 openssl req -text 太麻烦。
+
+功能：解析 PEM 格式的 CSR 文件；展示主题信息（CN、O、OU、C 等）；列出所有 SAN 域名和 IP；显示签名算法和公钥类型；验证 CSR 签名是否有效。
+
+命令：csr-parser parse -file request.csr、csr-parser verify -file request.csr（检查签名完整性）
+Go 标准库 crypto/x509，go build 通过。

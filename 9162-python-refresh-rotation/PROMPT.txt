@@ -1,0 +1,13 @@
+Refresh Token 轮换机制实现，防止 token 被盗用后长期有效。
+
+问题是这样的：refresh token 如果固定不变，一旦泄露攻击者就能一直刷新获取新的 access token。所以每次用 refresh token 换新 access token 时，也要换一个新的 refresh token，旧的作废。
+
+Python 实现：
+- 签发 access token（简化版 JWT，包含用户ID和过期时间）和 refresh token（随机字符串）
+- 使用 refresh token 换取新的 token 对，同时旧 refresh token 加入废弃列表
+- 检测重放攻击：如果有人用了已废弃的 refresh token，说明可能被窃取，立刻吊销该用户所有 refresh token
+- 本地 JSON 文件存储 token 状态
+
+用法：python refresh_rotation.py issue --user user_001
+python refresh_rotation.py refresh --token <old_refresh_token>
+能跑起来就行。

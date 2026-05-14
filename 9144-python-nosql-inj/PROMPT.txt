@@ -1,0 +1,5 @@
+做一个 NoSQL 注入检测和防御库，保护 MongoDB 等 NoSQL 数据库的查询。
+
+分析传入的查询参数，检测典型的 NoSQL 注入模式：$where 里的 JavaScript 代码、$gt/$ne 等操作符被用来绕过认证、嵌套对象注入（传 {"$gt": ""} 来匹配所有记录）。提供 sanitize 函数递归清理输入。
+
+也做一个 WAF 中间件，拦截 HTTP 请求中的疑似注入 payload。支持 Flask/Django 集成。Python 3，不依赖特定数据库驱动，纯输入检测。

@@ -1,0 +1,3 @@
+DHCP 服务异常，需要分析 DHCP 报文。Go 写一个 DHCP 协议解析工具。
+
+解析 DHCP 报文：识别消息类型（Discover、Offer、Request、ACK、NAK、Release）；提取 Options 字段（租约时间、子网掩码、路由器、DNS 服务器、请求 IP 等）；统计 DHCP 交互流程，检查是否有异常（重复分配、租约冲突）。从 pcap 文件提取 UDP 67/68 端口的数据包解析。Go 标准库，go build 通过。

@@ -1,0 +1,8 @@
+写个 ChaCha20-Poly1305 加解密工具，Go 语言实现。
+
+ChaCha20 在移动端和现代协议里性能很好，TLS 1.3 也在用它。想有个独立的 CLI 工具体验下这个加密算法。
+
+要求：用 ChaCha20-Poly1305 做 AEAD 加密解密；支持从文件读取明文，加密后写文件；密钥可以是 hex 字符串传入，也可以随机生成后打印出来。
+
+命令：chacha20-tool keygen > key.hex、chacha20-tool encrypt -key key.hex -in msg.txt -out enc.bin、chacha20-tool decrypt -key key.hex -in enc.bin -out dec.txt
+Go 标准库 crypto/chacha20poly1305，go build 编译通过。

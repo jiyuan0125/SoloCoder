@@ -1,0 +1,8 @@
+做一个 DNS 重绑定 检测工具，Go 写的。
+
+DNS 重绑定是种前端安全攻击，恶意域名先解析到公网 IP 通过检查后重新绑定到内网 IP。需要检测域名是否存在这种风险。
+
+功能：持续监控指定域名的 DNS 解析结果变化；检测同一域名的 A 记录是否在公网 IP 和内网 IP 之间切换；标记 RFC1918 地址（10.x/172.16-31.x/192.168.x）；报告检测到的重绑定行为。
+
+命令：dns-rebinding check -domain evil.example.com -duration 60s -interval 1s、dns-rebinding check -domains list.txt -json
+Go 标准库 net 包，go build 编译通过。

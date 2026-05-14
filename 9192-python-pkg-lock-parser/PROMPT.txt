@@ -1,0 +1,14 @@
+NPM package-lock.json 解析器，提取和查询 NPM 锁文件中的依赖信息。
+
+package-lock.json 文件结构嵌套很深，v2 和 v3 格式还有差异。需要统一解析提取所有包信息。
+
+Python 实现：
+- 解析 package-lock.json v2 和 v3 格式（v3 用 packages 扁平结构，v2 用 dependencies 嵌套结构）
+- 提取每个包的名称、版本、resolved URL、integrity 哈希、是否 devDependency
+- 支持 queries 查询：按包名搜索、按版本搜索、查找所有 dev 依赖
+- 检测重复版本（同一个包出现多个版本）和 peer 依赖缺失
+- 输出依赖统计：总包数、dev 包数、注册源分布、包大小估算
+
+示例：python pkg_lock_parser.py parse package-lock.json --list
+python pkg_lock_parser.py query package-lock.json --name lodash
+v3 的 packages 字段 key 格式是 node_modules/xxx，要正确处理。

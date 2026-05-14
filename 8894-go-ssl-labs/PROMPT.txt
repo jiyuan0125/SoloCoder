@@ -1,0 +1,8 @@
+做个 SSL Labs 风格的 TLS 评估工具，Go 写的。
+
+类似 SSL Labs 的在线检测但本地运行，对目标做全面的 TLS 安全评估。
+
+功能：检测协议版本支持（TLS 1.0 到 1.3）；评估密码套件强度等级（强/中/弱）；检查证书链、OCSP stapling、HSTS；检测已知漏洞（如 POODLE、BEAST）；综合评分 A+ 到 F。
+
+命令：ssl-labs grade -host example.com:443、ssl-labs grade -host example.com:443 -verbose -json
+Go 标准库 crypto/tls 实现，go build 通过。

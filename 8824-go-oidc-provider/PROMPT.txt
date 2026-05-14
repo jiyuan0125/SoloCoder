@@ -1,0 +1,12 @@
+写一个 OIDC（OpenID Connect）Provider，Go 实现。
+
+公司需要搭建自己的统一身份认证服务，基于 OIDC 协议，让各个子系统用 SSO 登录。
+
+要实现：
+- OIDC Discovery：提供 /.well-known/openid-configuration 端点返回配置信息
+- ID Token 签发：JWT 格式的 ID Token，包含 sub、iss、aud、exp 等标准声明
+- UserInfo 端点：返回认证用户的基本信息（姓名、邮箱、头像）
+- 支持Authorization Code 流程，包含简单的登录页面和授权确认页面
+- Session 管理：登录状态跟踪、单点登出
+
+Go 标准库，go build 通过。

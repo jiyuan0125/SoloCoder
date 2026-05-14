@@ -1,0 +1,1 @@
+K8s 集群的安全配置需要定期检查。用 Python 写一个 Kubernetes 安全审计工具，解析 K8s YAML 清单文件（Pod、Deployment、Service 等），检查安全配置：是否设置了 securityContext（runAsNonRoot、readOnlyRootFilesystem）、是否有资源限制（limits/requests）、是否使用了 hostNetwork/hostPID、ServiceAccount 是否自动挂载 token。输出合规报告，命令行使用。

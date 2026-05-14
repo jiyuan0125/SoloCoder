@@ -1,0 +1,8 @@
+写个 age 加密工具，Go 实现。
+
+age 是现代的文件加密工具，比 GPG 简单很多。想自己实现一个兼容 age 格式的加解密工具。
+
+功能：生成 age 密钥对（X25519）；用公钥加密文件或文本，输出 age 格式密文；用私钥解密还原。也支持用密码加密（scrypt 派生密钥）。
+
+命令：age-encrypt keygen > key.txt、age-encrypt encrypt -recipient "pubkey..." -in secret.txt -out secret.age、age-encrypt decrypt -identity key.txt -in secret.age -out recovered.txt
+Go 标准库 crypto 库实现，go build 通过。

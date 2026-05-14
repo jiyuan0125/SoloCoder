@@ -1,0 +1,11 @@
+写个 XML 注入和 XXE 防护工具，Go 实现。
+
+之前看到某金融系统解析用户上传的 XML 配置文件，完全没禁外部实体，SSRF + 任意文件读取一气呵成。
+
+需要：
+- 安全的 XML 解析器：默认禁用 DTD、外部实体、ENTITY 声明，防止 XXE 攻击
+- 检测 XML 中的危险模式：<!DOCTYPE、<!ENTITY、SYSTEM、PUBLIC 关键词
+- 提供 XML 清洗功能：移除或转义潜在的注入载荷，保留安全的 XML 数据
+- 命令行模式：`./xml-guard check file.xml` 检测文件，`./xml-guard sanitize file.xml` 清洗输出
+
+Go 标准库（encoding/xml），go build 通过。

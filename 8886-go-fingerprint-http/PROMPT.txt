@@ -1,0 +1,8 @@
+写个 HTTP 指纹识别工具，Go 实现。
+
+做安全评估的时候需要识别目标 Web 服务器和框架，比如 Nginx 还是 Apache、有没有用 WordPress。通过 HTTP 响应头和页面特征来判断。
+
+功能：发送 HTTP 请求获取响应头和部分页面内容；匹配 Server、X-Powered-By 等头的特征；通过常见路径和文件判断框架（如 wp-login.php → WordPress）；输出识别到的技术栈。
+
+命令：fingerprint-http detect -url https://example.com、fingerprint-http detect -url https://example.com -verbose、fingerprint-http detect -urls urls.txt -json
+Go 标准库 net/http，go build 编译通过。

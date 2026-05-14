@@ -1,0 +1,12 @@
+帮我实现一个 JWK（JSON Web Key）解析器，Go 写的。
+
+做 OIDC 对接的时候需要从 JWKS endpoint 拉公钥来验证 JWT 签名，想把这个过程搞清楚。
+
+要实现：
+- 解析 JWK 和 JWKS（JSON Web Key Set）格式：支持 RSA、EC、Oct（对称密钥）三种密钥类型
+- 从 JWKS JSON 中根据 kid（Key ID）查找对应的公钥
+- 将 JWK 转换为 Go 原生的 crypto 公钥对象（*rsa.PublicKey、*ecdsa.PublicKey）
+- 支持从远程 JWKS endpoint 获取密钥集，带缓存和自动刷新
+- 命令行：`./jwk-parser parse key.json` 或 `./jwk-parser fetch https://example.com/.well-known/jwks.json`
+
+Go 标准库，go build 通过。

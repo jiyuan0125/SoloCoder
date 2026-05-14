@@ -1,0 +1,8 @@
+写个 Passkey 数据处理工具，Go 实现。
+
+Passkey 底层就是 WebAuthn，但有些用户数据格式要额外处理。需要一个能生成注册和认证挑战、处理响应的工具。
+
+功能：生成随机 challenge（base64url 编码）；解析 Passkey 导出的 JSON 数据；验证签名链路是否完整（challenge → clientData → authenticatorData → 签名）。
+
+命令：passkey-handler challenge（生成一个随机挑战）、passkey-handler verify-registration -challenge <base64> -response <json-file>、passkey-handler verify-auth -challenge <base64> -response <json-file> -credential <base64-pubkey>
+Go 标准库实现，go build 能编译通过。

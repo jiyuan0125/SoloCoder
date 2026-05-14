@@ -1,0 +1,14 @@
+Maven 依赖安全审计，扫描 Java 项目的 pom.xml 和依赖树输出。
+
+Java 项目的依赖树很深，一个 Spring Boot 项目可能有几百个传递依赖。需要检查这些依赖有没有安全问题。
+
+Python 实现：
+- 解析 Maven dependency:tree 的文本输出（或者直接解析 pom.xml 提取直接依赖）
+- 提取 groupId:artifactId:version 格式的坐标
+- 对比本地漏洞数据库（基于 groupId+artifactId 匹配）
+- 检测依赖冲突（同一 artifact 出现多个版本）
+- 输出安全审计报告和依赖冲突报告
+
+示例：python maven_audit.py check pom.xml --db maven_vulns.json
+python maven_audit.py check --tree dep_tree.txt
+pom.xml 解析要处理 properties 变量替换（${spring.version}）。

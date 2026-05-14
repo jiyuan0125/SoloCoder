@@ -1,0 +1,12 @@
+FIDO2 认证挑战生成器，用于 WebAuthn 注册和认证流程中的挑战值管理。
+
+我们要在登录系统里加入无密码认证，需要生成和管理 FIDO2 协议要求的挑战值（challenge）。
+
+Python 工具：
+- 生成符合 WebAuthn 规范的随机 challenge（至少 16 字节的 URL-safe Base64 编码字符串）
+- 支持 注册阶段和认证阶段的不同 challenge 生成
+- 管理 challenge 的生命周期：生成、存储、验证、过期清理
+- 输出 JSON 格式的 challenge 信息，包含 challenge 值、创建时间、过期时间、用途
+
+示例：python fido2_challenge.py generate --type registration --ttl 300
+纯 Python 实现，能跑起来。

@@ -1,0 +1,5 @@
+帮我写一个依赖漏洞扫描器，查询 OSV（Open Source Vulnerabilities）数据库。
+
+用户提交一个 requirements.txt、package.json 或 go.mod 文件，工具解析出所有依赖和版本号，然后批量查询 OSV API（api.osv.dev）检查是否有已知漏洞。对每个有漏洞的依赖显示：漏洞 ID、严重程度、受影响版本范围、修复建议（升级到哪个版本）。
+
+输出支持终端表格和 JSON 两种格式。Python 3，用 requests 调 OSV API。python osv_scan.py requirements.txt。
