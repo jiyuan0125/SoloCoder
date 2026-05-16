@@ -9,3 +9,4 @@
 4. 空项目零依赖输出空 JSON `{}` 退出码 0。`--dir` 不存在报 `directory not found: ...` 退出码 1。文件编码非 UTF-8 跳过并 stderr 记 `encoding error: filename`。import 语句语法不标准（比如跨行的 Java import）尽力解析，解析失败的归 `unknown`。
 
 go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

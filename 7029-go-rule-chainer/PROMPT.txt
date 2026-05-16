@@ -5,3 +5,4 @@ Go 命令行工具 `rule-chainer` 实现校验规则版本管理。`rule-chainer
 数据库操作通过 REST 风格路径访问：`tables/{table}/rows/{id}/columns/{col}`。字段值遇到格式异常不中断，记录到 `parsing_errors` 数组，包含行号、列名、原始值、错误原因。
 
 CLI 输出统一 JSON 格式，退出码 0 成功 1 规则冲突 2 输入异常。纯标准库实现，go build 能过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

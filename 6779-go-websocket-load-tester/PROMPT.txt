@@ -9,3 +9,4 @@ WebSocket 服务上线前压测，得知道能撑多少连接、消息延迟多�
 连接建立失败打印 "connection <n> failed: <error>"，失败数超过 50% 提前终止。Ctrl+C 优雅关闭所有连接。
 
 项目拆至少 3 个源文件：main.go、loadgen.go、stats.go。Go 标准库。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

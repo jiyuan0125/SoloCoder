@@ -9,3 +9,4 @@
 4. 错误处理：SQL 语法错误时 stderr 输出错误位置（行号、列号）和具体原因，退出码 2。字段不存在时提示 "unknown column: xxx"。不支持的操作符直接报 "unsupported operator"。
 
 Go 标准库实现，go run . 或 go build 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

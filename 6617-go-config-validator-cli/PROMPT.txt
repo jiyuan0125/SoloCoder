@@ -1,3 +1,4 @@
 你有没有遇到过这种情况——配置文件少个逗号或缩进错了一位，本地开发正常但部署到 staging 才炸？上周就因为 YAML 缩进问题导致服务挂了 20 分钟。需要一个能在 CI 里跑的校验工具，提交配置文件前就把问题拦住。
 
 工具读取配置文件后按流水线处理：读取文件内容、解析为目标格式（YAML/JSON/TOML 由文件扩展名自动判断，也支持 `--format` 手动指定）、按规则校验、输出结果。校验规则从 JSON 文件加载，用法：`cfgcheck validate --file config.yaml --rules rules.json`。规则文件格式：`[{"path":"server.port","type":"integer","min":1,"max":65535,"required":true},{"path":"database.url","type":"string","pattern":"^postgres://","required":true}]`。支持四种校验类型：`integer`（检查 min/max）、`string`（检查 pattern 正则和 min_length/max_length）、`enum`（检查值是否在 allowed_values 列表中）、`required`（检查字段是否存在，不支持嵌套 null）。校验失败时输出每个错误的路径、规则描述、实际值，格式为 `ERROR: server.port = -1 (must be between 1 and 65535)`。全部通过时输出 `All checks passed`，退出码 0。有错误时退出码 1。规则文件解析失败退出码 2。文件处理流水线每步独立报错，不因某步失败跳过后续步骤。Go 标准库，命令行参数用 flag 包解析。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -7,3 +7,4 @@ unused scan --dir ./mypkg 分析指定目录下所有 .go 文件。用 go/parser
 扫描流程有状态：初始化→扫描中→分析中→报告生成，每阶段在 stderr 打印进度。分析出问题的标为异常。如果扫描的目录没有 .go 文件，exit code 1 并打印 ERROR: no Go source files found。
 
 入口函数 main 和 init 永远不算 unused。实现接口的方法不算 unused。标准库搞定，go run . 跑起来。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

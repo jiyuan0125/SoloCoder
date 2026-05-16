@@ -7,3 +7,4 @@
 并发下载用 goroutine 池，`-concurrency` 控制池大小。下载进度实时显示：`[#3] downloading file.zip 45.2% (2.3MB/5.1MB)`。完成后 `✓ [#3] file.zip 5.1MB 12.3s`。
 
 文件路径用 filepath.Walk 扫描已有文件避免重复下载，已完成文件跳过并标记 `[SKIP]`。磁盘空间不足打印 "disk full: cannot write <filename>" 并暂停队列。`-proxy socks5://proxy:1080` 支持代理下载。`go build` 编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

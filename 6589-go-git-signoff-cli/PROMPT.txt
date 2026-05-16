@@ -9,3 +9,4 @@
 不要修改非 HEAD 分支的历史，除非加了 `-force` 标志。未加 `-force` 时操作非当前分支的 commit 退出码 1 打印 "refusing to rewrite history on non-HEAD branch, use -force"。
 
 Go 标准库，flag 包解析。`go build -o signoff-cli .`。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

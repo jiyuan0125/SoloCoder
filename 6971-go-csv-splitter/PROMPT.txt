@@ -5,3 +5,4 @@
 空文件或行数不足 size 时，输出单个完整文件不报错。文件编码统一按 UTF-8 处理，遇到 BOM 头自动跳过。输入文件不存在时 stderr 输出 "error: input file not found" 并 exit 1。分隔符默认逗号，通过 `-sep` 参数可改为 tab 或其他字符。进度信息输出到 stderr，不污染 stdout 的管道。每个输出文件切完后 stderr 打一行 "created output_00N.csv (X rows)"。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

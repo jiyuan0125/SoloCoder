@@ -9,3 +9,4 @@ HMAC 签名和验证：`pemparse sign --key-file hmac.key --algo sha256 --input 
 输出格式：签名和验证结果默认 JSON，`--raw` 标志切换到纯文本。错误信息始终到 stderr。
 
 `go build` 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

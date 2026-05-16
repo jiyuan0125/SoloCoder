@@ -9,3 +9,4 @@ CRL 管理：`escrow crl-init --output ca.crl.pem`。`escrow crl-revoke --serial
 转换主流程调用子转换？签发流程是多步骤：解析 CSR→生成序列号→签发→写入文件。每步错误独立捕获。输出格式默认 JSON 详情到 stdout。
 
 `go build` 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

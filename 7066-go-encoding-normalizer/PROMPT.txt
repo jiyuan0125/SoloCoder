@@ -3,3 +3,4 @@
 日期转换：`encoding-normalizer convert-date --input mixed.csv --column date --target-format "2006-01-02" --output unified.csv`，自动检测源格式，`--target-format` 按 Go time 格式串。时区转换 `convert-tz --input data.csv --column created_at --from Local --to UTC --output out.csv`，`--from`/`--to` 用 IANA 时区名。相对日期 `relative --base 2024-06-15 --expr "-3d" --output result.txt`，expr 支持 Nd（天）、Nw（周）、Nm（月），如"7d前""2w后""3m前"。
 
 输入 CSV/JSON/TSV 按扩展名自动识别，有 BOM 也能处理。日期列无法解析时原样保留 + stderr `warning: row N column xxx unparseable: "value"`。输出统一 UTF-8 无 BOM。空文件输出空文件退出码 0。列不存在报 `error: column not found` 退出码 1。无效时区报 `error: unknown timezone` 退出码 1。go build 能过，纯标准库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

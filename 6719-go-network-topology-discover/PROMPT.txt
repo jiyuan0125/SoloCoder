@@ -7,3 +7,4 @@
 还支持 `--snmp-community public --snmp` 开关，开启后会尝试用 SNMP 查交换机的 sysName、ifDescr 等信息，把设备名称标注在节点上。SNMP 查不到就退化为用 IP 显示。
 
 输出 dot 文件后 `dot -Tpng topology.dot -o topology.png` 直接画图。traceroute 权限不足退化为 UDP 模式，stderr 打 warning。targets.txt 为空退出码 1。纯 Go 标准库，编译后单二进制可以直接跑。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

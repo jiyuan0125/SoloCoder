@@ -9,3 +9,4 @@ SSE 和 NDJSON 这种流式响应，用 curl 看不到实时处理效果，数�
 URL 无效时 exit 1 并输出 `error: invalid url`。超时到达时输出 `timeout after {n}s, received {m} lines` 并 exit 2。服务端返回非 200 时 exit 3 并输出状态码。正常结束 exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

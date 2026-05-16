@@ -1,3 +1,4 @@
 团队的编码规范文档写了没人看，不如写成可配置的检查规则，直接在 CI 里跑。比起靠人审查，机器检查更靠谱。上次一个函数里 12 个 defer，代码审查愣是没人提。
 
 `customvet` 是一个可配置的 Go 代码风格检查工具。用法：`customvet --dir ./pkg --rules rules.yaml --severity error`。规则配置文件格式 YAML，每条规则包含 `id`（规则编号）、`pattern`（要匹配的代码模式，支持简单的字符串匹配）、`message`（违规提示文字）、`severity`（error/warn/info）。示例规则：`- id: R001, pattern: "defer.*Close()", message: "defer in loop may cause resource leak", severity: warn`。输出按严重程度排序，每条结果格式：`<severity> <文件路径>:<行号>: <message> [rule:<id>]`。加 `--format json` 输出 JSON 数组。有 error 级别问题退出码 1，只有 warn/info 退出码 0。规则文件不存在退出码 1 输出 `error: rules file not found: <path>`。规则文件 YAML 解析失败退出码 1 输出 `error: invalid rules file: <错误信息>`。同步完成后自动记录运行日志到当前目录 `customvet.log`，日志写失败不中断程序只打印 warning。`go build` 能过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

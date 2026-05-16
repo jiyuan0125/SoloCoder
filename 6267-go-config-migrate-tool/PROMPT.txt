@@ -7,3 +7,4 @@
 批量迁移：`cfgmigrate batch -r rules.yaml -d ./configs/ --pattern "*.v1.yaml"`。文件状态：`draft→review→approved→archived`，`--revert` 撤回重编辑。`path` 支持 dot notation，`transform` 支持 `bool_to_string`、`int_to_string`、`rename_key`。
 
 不用第三方包，`go build` 通过就行。退出码 0 成功，1 规则错误，2 文件错误，3 验证失败。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

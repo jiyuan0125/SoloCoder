@@ -3,3 +3,4 @@
 先用聚合：`lookup-enricher aggregate --input data.csv --group-by region --metric sum:amount,avg:price,count:* --output agg.json`，`count:*` 表示计数所有行。然后窗口函数：`window --input data.csv --column amount --function rolling_avg --window-size 7 --partition-by region --output windowed.json`，`--partition-by` 先按维度分组再计算窗口，function 选 rolling_avg、cumulative_sum、rank。最后透视 `pivot --input agg.json --row region --column metric --value result --output pivot.csv`，逆透视 `unpivot --input pivot.csv --id-columns region --variable metric --value result --output unpivoted.json`。
 
 输入 CSV/JSON，输出按参数决定格式。空分组输出空对象。窗口 partition-by 列不存在报错退出码 1。聚合字段非数值 skip + stderr warning。透视时 value 列有多条取最后一条。用 database/sql 预处理语句。go build 能过，纯标准库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

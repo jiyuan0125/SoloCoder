@@ -5,3 +5,4 @@
 从有效号码提取：出生日期（yyyy-MM-dd，验证日期合法性）、性别（第 17 位奇男偶女）、省份（前两位对应码表）。15 位默认 19xx 年，日期在未来则改 20xx。
 
 输出新增列：valid（true/false）、error_msg（"invalid_length"/"invalid_checksum"/"invalid_date"/"invalid_region"）、birth_date、gender（男/女）、province。空行跳过 valid 留空。退出码 0 成功，1 文件错误。不用第三方包，go build 通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

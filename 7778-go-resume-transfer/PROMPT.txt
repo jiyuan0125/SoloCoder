@@ -11,3 +11,4 @@ resume-transfer 用 Go 标准库实现，`go build -o resume-demo ./cmd/resume` 
 并发传输：文件分片并行传输，分片大小可配（默认 1MB）。传输速率限制 `--limit 10MB/s`，避免占满带宽。进度展示：已传/总大小、速率、ETA。
 
 API：`rt := resume.New(src, dst)`、`rt.Transfer()`、`rt.Resume()`。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

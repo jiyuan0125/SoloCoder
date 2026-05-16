@@ -7,3 +7,4 @@
 3. 指纹计算阶段：将 ClientHello 的关键字段（cipher suites 拼接、extensions 列表、elliptic curves）按 JA3 规则拼接成字符串，计算 MD5 哈希作为指纹。输出格式为 `JA3: <md5hash>` 一行，后面跟完整的分解字段。
 
 加 `-json` flag 输出 JSON 格式包含所有字段。加 `-verbose` 输出完整证书链 PEM。Go 标准库，flag 包解析参数。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

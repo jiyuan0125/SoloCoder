@@ -3,3 +3,4 @@
 Go 写模糊去重工具。子命令 scan 扫描数据，--file 指定 CSV 文件，--columns 指定去重目标列（逗号分隔）。扫描分四个阶段：初始化（读文件、建索引）→扫描中（逐行比对）→分析中（聚类相似记录）→报告生成（输出结果）。每个阶段打印 "phase: NAME... done (Ns)" 到 stderr。相似度用编辑距离算法计算，--threshold 设阈值（0 到 1 之间，默认 0.8），低于阈值的才算相似。大小写不敏感模式用 --ignore-case 开启。重复组合并成一条记录，合并策略用 --strategy 选择：first 保留第一条（默认）、longest 保留最长值、most-common 保留出现最多的值。子命令 report 生成去重报告，输出 JSON 格式 {"total_rows":N,"unique_rows":N,"duplicate_groups":N,"details":[{"group_id":1,"records":[...],"merged_value":"X"}]}。分析发现的问题记录标 is_anomaly: true。空文件输出 "warning: empty file" 到 stderr 并 exit 0。编码非 UTF-8 的文件输出 "error: unsupported encoding" 并 exit 1。
 
 不用第三方包，go build 通过就行。纯标准库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

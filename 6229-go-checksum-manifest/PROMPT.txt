@@ -10,3 +10,4 @@
 — 增量模式下输出统计：`total: N, unchanged: M, updated: K, new: L`
 
 命令格式参考 `tool action target options`，比如 `tool scan dir --depth 3`。校验完自动更新统计信息，首次跑没有历史统计要创建新文件。go build 能编译通过，不依赖第三方库。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

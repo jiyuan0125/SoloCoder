@@ -9,3 +9,4 @@ OCSP：`distr ocsp-check --cert server.pem --issuer ca.pem --responder http://oc
 表结构变更后查询和报告要更新？CRL 格式升级后旧格式自动迁移。输入文件编码不确定？CRL/证书都是 PEM 格式，不存在编码问题。
 
 `go build` 能过，命令行工具能正常运行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -5,3 +5,4 @@
 2. 文件状态：queued → processing → completed|failed。处理失败的重入队列，最多 3 次，超过后标记 `dead` 并输出 `DEAD_LETTER: <path> retries=3 last_error=<reason>`。`queue retry --file <path>` 手动重试 dead 文件。
 
 3. 构建流程是解析→编译→测试→打包，测试失败不打包，输出 `TEST_FAILED: <case>`。目录结构变了以后缓存的路径映射 `.path-cache.json` 要刷新。队列持久化到 `.queue-state.json`，进程重启后恢复未完成任务。编译 `go build`，标准库，不用第三方包。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

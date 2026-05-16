@@ -16,3 +16,4 @@ ADR 实体有 ID、标题、状态（proposed/accepted/deprecated/superseded）�
 - `config set --default-participants <names>`
 
 Go 标准库实现，go build 通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

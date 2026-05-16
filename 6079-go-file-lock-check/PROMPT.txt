@@ -3,3 +3,4 @@
 `lockcheck -dir /data/processing [-wait 30s] [-skip]`。扫描指定目录下所有文件，检测是否有进程持有文件锁。锁定的文件输出 `LOCKED | <filepath> | PID: <pid> | <process_name>`，未锁定的输出 `FREE | <filepath>`。`-wait` 模式下持续轮询直到所有文件释放或超时，超时输出 `timeout: N files still locked after 30s` 退出码 1。`-skip` 模式直接跳过锁定文件只报告可用的。处理完每个目录后更新进度 `[3/10] /data/processing (15 files scanned, 2 locked)`。空目录不扫描但计数更新 `[1/10] /data/empty (0 files)`。
 
 检测方式：Linux 下尝试 `flock(2)` 非阻塞排他锁，Windows 下尝试 `CreateFile` with exclusive access。go build 能编译通过，不依赖第三方库。未找到锁定的文件退出码 0，有锁定文件退出码 1。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

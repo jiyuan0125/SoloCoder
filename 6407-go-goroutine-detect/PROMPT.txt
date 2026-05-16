@@ -7,3 +7,4 @@
 3. 覆盖 `go func()`、`go method()`、匿名函数。行尾 `//nolint:goroutine` 跳过。
 
 无 Go 文件 `NO_SOURCES: <dir>`。无问题 `CLEAN: no leaks`。纯标准库，`go run .`。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

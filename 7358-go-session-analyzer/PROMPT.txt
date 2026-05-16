@@ -7,3 +7,4 @@ Token 内省（RFC 7662）实现标准的 introspection endpoint 调用——发
 刷新 Token 轮换要实现每次刷新后旧 refresh_token 立即失效、颁发新的 refresh_token 的机制。如果检测到已失效的 refresh_token 被使用（说明可能被盗用），自动吊销该 refresh_token 关联的所有 token。
 
 认证检查要查角色，角色检查也要验证认证状态——不能查着查着忘了确认 session 还有没有效。安全扫描需要扫描策略，策略怎么配不做限制。代码按三个文件组织。go build 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

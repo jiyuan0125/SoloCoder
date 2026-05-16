@@ -7,3 +7,4 @@
 — 空的 zip 文件（只有 Central Directory 没有条目）输出 `empty archive` 并退出码 0
 
 CLI 同时支持多种操作模式，格式参考 `convert csv json`、`convert yaml toml`、`validate json`、`diff json` 这种风格。不用第三方包，`go build` 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

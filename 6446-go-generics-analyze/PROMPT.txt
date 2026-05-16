@@ -1,3 +1,4 @@
 Go 1.18 上泛型快一年了，翻了一下团队代码，发现类型参数约束要么 `any` 啥都接受，要么写了一堆没必要的 union type。该严的不严，该宽的不宽，用得挺混乱的。没人做过全面审查，也不知道泛型到底被实例化了几次，有没有写了没人用的。
 
 写个分析工具 `genanalyze` 专门检查泛型使用质量。用法：`genanalyze --dir ./pkg`。它解析 Go AST，提取所有类型参数定义及其约束，检查三类问题：约束为 `any` 的标记为过宽（`warning: type param T in <函数名> uses 'any' constraint, consider narrowing`），union 约束中有重复类型的标记为冗余，实例化时实际类型与约束不匹配的标记为错误。同时统计每个泛型函数的实例化次数，零实例化的打印 `info: generic function <名> is defined but never instantiated`。加 `--json` 输出 JSON 格式报告，结构为 `{"warnings":[...],"errors":[...],"stats":{"total_generic_funcs":X,"instantiated":Y,"unused":Z}}`。退出码：有 error 级别问题返回 1，否则 0。目录不存在退出码 1 输出 `error: directory not found`。零外部依赖，`go run . --dir .` 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -5,3 +5,4 @@
 命令：`encfix <文件或目录> --mode auto --output <输出路径> --dry-run --report report.json`。--mode 可选 auto|utf8-as-gbk|gbk-as-utf8|utf8-as-latin1。auto 尝试所有模式选合法 UTF-8 比例最高的。--dry-run 每行输出 `<状态> <文件名> (mode: <模式>)`。
 
 每文件 stdout 输出一行状态。同时更新输出目录下 index.json，记录 original_encoding、target_encoding、status（fixed/unrepairable/skipped）。索引支持增量：已有 status: fixed 的跳过。退出码 0 成功，1 参数错误，13 部分失败。不用第三方包，go build 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

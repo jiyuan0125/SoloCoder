@@ -5,3 +5,4 @@
 输出文本表格：列包括 Package、Avg(ms)、StdDev(ms)、Min(ms)、Max(ms)、Rank。默认按 Avg 降序排列。加 `-json` 输出 JSON 数组，每条含 `package`、`avg_ms`、`stddev_ms`、`min_ms`、`max_ms`、`rank`。加 `-top 10` 只显示最慢的 10 个包。
 
 项目路径不存在报 "project directory not found" exit 1。`go build` 本身失败时，打印编译错误并 exit 1，不输出耗时统计。N < 1 报 "n must be >= 1" exit 1。用 Go 标准库写，`go run .` 或 `go build` 都行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

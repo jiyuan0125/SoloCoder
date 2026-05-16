@@ -11,3 +11,4 @@ tmpfile-mgr 用 Go 标准库实现，`go build -o tmpfile-demo ./cmd/tmpfile` �
 清理策略：程序退出时通过 `defer` 或信号处理触发清理。也可以定期清理超过 N 小时的临时文件（`--max-age 24h`）。清理时跳过还被打开的文件。清理结果记录日志。
 
 API：`mgr := tmpfile.New()`、`f := mgr.Create("prefix-")`、`mgr.Cleanup()`。也支持临时目录 `mgr.TempDir("prefix-")`。自动注册 `runtime.SetFinalizer` 作为兜底清理。`go test ./...` 跑测试。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

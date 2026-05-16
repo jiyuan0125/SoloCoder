@@ -1,3 +1,4 @@
 甲方安全审计红头文件下来了：所有备份数据必须 AES-256 加密存储，密钥不能和备份文件放一起。上次审计不通过就是因为备份是明文的。
 
 写一个备份加密工具 `bkcrypt`。用法：`bkcrypt encrypt --dir ./backups --key-file ./keys/backup.key --output ./encrypted`。加密流程：读取密钥文件（32 字节原始二进制），对每个文件使用 AES-256-GCM 加密，输出文件加 `.enc` 后缀。解密：`bkcrypt decrypt --dir ./encrypted --key-file ./keys/backup.key --output ./restored`，自动识别 `.enc` 文件并解密恢复。密钥文件不存在退出码 1 输出 `error: key file not found: <path>`。密钥文件不是 32 字节退出码 1 输出 `error: invalid key length: expected 32 bytes, got <N>`。解密时密钥不匹配输出 `error: decryption failed: authentication error` 退出码 2。加密完成后在同目录生成 `manifest.json`，记录每个文件的原始名、加密后文件名、SHA256 校验和。索引构建时读取已有 manifest 续传，损坏时打印 `warning: manifest corrupted, regenerating`。Go 标准库实现，`go build` 能编译通过，不依赖第三方库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

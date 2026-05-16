@@ -7,3 +7,4 @@
 输入文件编码：UTF-8 直接读，GBK 和 GB18030 用 `golang.org/x/text/encoding/simplifiedchinese` 自动检测并转换，检测失败输出 `WARN encoding detect failed, fallback to UTF-8`。预测结果 `--format json|table|chart`，chart 模式用 ASCII 字符画趋势图。
 
 Go CLI 工具，go build 能过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

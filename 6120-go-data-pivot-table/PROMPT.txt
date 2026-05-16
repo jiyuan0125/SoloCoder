@@ -5,3 +5,4 @@
 3. 合并完成后自动删除源文件，加 `-keep` 保留模式不删除。
 
 输入文件为空输出 `error: no data rows` 退出码 0。指定列不存在输出 `error: column not found: <name>` 退出码 1。值字段含非数值做 sum 时输出 `warning: non-numeric value at row N: "abc", skipped`。不用第三方包，go build 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -7,3 +7,4 @@
 路径语法错误输出 `invalid path expression: ...` 退出码 1。JSON 解析失败跳过该文件并在 stderr 记 `parse error: filename: reason`，退出码仍为 0。空目录零匹配输出空数组 `{"matches": []}`。遇到非 UTF-8 编码的文件跳过并在 stderr 记 `encoding error: filename`。`--output` 未指定时结果写到 stdout，指定后写到文件，文件写入失败退出码 1。
 
 纯标准库实现，go run . 能跑。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

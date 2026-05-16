@@ -7,3 +7,4 @@
 `-pkg` 分析整个包：遍历所有导出类型，输出方法集和接口满足关系。接口判断对比 `io.Reader`、`io.Writer`、`io.Closer`、`fmt.Stringer`、`error` 等标准接口。自定义接口暂不分析，输出 `note: custom interfaces not analyzed`。
 
 类型不存在时 exit 1 输出 `error: type not found: {name}`。包路径无效 exit 1。纯标准库，`go run .` 就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

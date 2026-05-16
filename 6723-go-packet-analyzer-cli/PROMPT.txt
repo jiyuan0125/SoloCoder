@@ -7,3 +7,4 @@ HTTP 流提取：展示每个请求的方法、URL、状态码、响应时间（
 输出格式：默认表格（制表符分隔），加 `-json` 输出 JSON。统计摘要输出到 stderr：`total packets: <N>, filtered: <M>, streams: <K>`。
 
 文件不存在退出码 1。不是合法 pcap 文件输出 `error: invalid pcap file: bad magic number` 退出码 1。Go 实现，只用标准库，交叉编译友好。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

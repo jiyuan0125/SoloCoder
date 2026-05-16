@@ -1,3 +1,4 @@
 API 改了个参数类型上线后客户端全崩了，提前检测 breaking change 就不会出这种事。Python diff 工具跑一次好几秒，Go 重写快得多。
 
 对比两个 OpenAPI/Swagger JSON，标记破坏性变更。命令行 `apidiff diff --old api-v1.json --new api-v2.json --format markdown`。检测规则：(1) 删除的接口——old 有 new 没有的 path+method，标记 `BREAKING: removed endpoint DELETE /api/users/{id}`；(2) 参数类型变更——同一参数类型从 integer 变 string，标记 `BREAKING: parameter 'id' type changed from integer to string`；(3) 新增 required 字段——请求体新增 required=true 字段，标记 `BREAKING: new required field 'email' in POST /api/users`；(4) 非破坏性变更（新增接口、可选字段、描述修改）标记 `[INFO]`。`--format` 支持 `markdown`（分级列表）和 `json`（`{"breaking":[...],"info":[...]}` 结构）。`--output` 写文件，省略输出到 stdout。无 breaking 退出码 0，有 breaking 退出码 1。文件解析失败退出码 2。纯 Go 标准库，`go build` 能编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

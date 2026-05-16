@@ -9,3 +9,4 @@ concurrent-scheduler 用 Go 标准库实现，`go build -o scheduler-demo ./cmd/
 任务优先级：高/中/低三档。高优先级插入队列头部（用双端队列模拟），低优先级追加尾部。同一优先级按提交顺序。
 
 API：`s := scheduler.New(10)`（10 个 worker）、`s.Submit(task)`、`s.SubmitWithPriority(task, High)`、`s.WaitAll()`。每个任务返回 `TaskResult` 包含执行时间、错误信息。`s.Stats()` 返回队列深度、活跃 worker 数、已完成数。`go test ./...` 跑测试。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@ conditional-render 用 Go 标准库实现，`go build -o cond-render ./cmd/cond-
 从代码注释提取文档的功能也集成——源码中的条件编译标签（Go 的 `//go:build`）自动映射到文档条件块。支持多种注释格式。代码变更时标记需要更新的条件内容。输出为 Markdown，根据指定环境变量值过滤后只剩满足条件的内容。
 
 多种子命令处理不同操作：`render <file> --env production` 按环境渲染；`check <file>` 检查条件语法是否正确；`diff <file> --env dev --env prod` 对比两个环境下的输出差异；`list-conditions <file>` 列出文档中所有条件块及其判断条件。数据存本地 JSON。`go test ./...` 跑测试。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -7,3 +7,4 @@ CLI 接口：`avro-read -file data.avro -fields name,age,email -filter 'age>25' 
 文件不存在 exit 1 并 stderr 输出 "error: failed to open file"。文件内容不是合法 Avro 格式时 stderr 输出 "error: invalid avro format" 并 exit 3。空文件同样报错 exit 1。字段名在 schema 中找不到时，该字段跳过并在 stderr 警告。
 
 纯 Go 标准库，编译后单二进制可以直接跑。Avro 的二进制编码按规范手写解析，不支持压缩格式（deflate/snappy）——文档里说清楚这个限制。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

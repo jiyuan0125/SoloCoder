@@ -5,3 +5,4 @@ NLP 项目要拿句子做情感分析，结果发现分句这一步就卡住了�
 搜索：`split search --input article.txt --query "关键词"` 在分好的句子里搜索，返回包含关键词的完整句子。支持多关键词 AND/OR：--query "Go AND 并发" 或 --query "性能 OR 优化"。输出 search_result.json：{"query": "关键词", "matches": [{"sentence_index": 5, "text": "...", "highlight": "..."}]}，highlight 里关键词位置用 **标记。
 
 空文件输出空数组。搜索无结果输出空 matches，exit code 0。删除记录后要清理关联索引——索引存在内存 map 里，删除句子时遍历剩余记录更新倒排索引。纯标准库实现，go run . 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

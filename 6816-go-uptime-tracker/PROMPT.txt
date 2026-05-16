@@ -7,3 +7,4 @@
 `uptimetrack report --month 2024-01 --output report.txt` 生成月度报告，包含总运行时长、重启次数、最长连续运行、最短连续运行、可用性百分比。支持多个终端同时操作同一个数据目录。处理流程是初始化→扫描→处理→完成。命令行参数支持 `tool verb resource --filter key=value` 格式。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

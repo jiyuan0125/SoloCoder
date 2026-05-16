@@ -17,3 +17,4 @@
 输入文件不存在 "file not found: <path>" 退出码 1。输入无 Go struct "no struct definitions found" 退出码 0。
 
 `go build` 能过，不依赖第三方库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

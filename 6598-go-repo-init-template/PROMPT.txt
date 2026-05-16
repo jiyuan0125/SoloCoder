@@ -9,3 +9,4 @@ basic 模板文件：`README.md` 含 `# {{PROJECT_NAME}}` 和描述；`LICENSE` 
 目录已存在且非空退出码 1 打印 "directory not empty: %s, use -force"。license 不支持退出码 1 打印 "unsupported license: %s, allowed: MIT, Apache-2.0, GPL-3.0"。成功退出码 0 打印 "initialized %s with %d files"。
 
 Go 纯标准库，`go build -o repo-init .`。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

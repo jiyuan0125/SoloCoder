@@ -7,3 +7,4 @@ task-queue 用 Go 标准库实现，`go build -o taskq-demo ./cmd/taskq` 编译�
 文件操作相关：任务结果持久化到本地 JSON 文件，用原子操作写入。支持文件变更监听，外部程序可以监控任务进度。
 
 API：`q := taskq.New(taskq.WithWorkers(5))`、`id := q.Submit(task)`、`q.Wait()`、`results := q.Results()`。支持上下文取消。`go test ./...` 跑测试。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -7,3 +7,4 @@ CLI：goreval --rules rules.json --data records.csv --output report.json。每�
 去重：goreval dedup --input data.csv --keys "email,phone" --output-clean clean.csv --output-report dedup_report.json。保留 first 出现的记录。
 
 报告：{"rules":{"total":5,"passed":3,"failed":1,"warned":1},"conflicts":0,"records":10000,"details":[...]}。百万行 30 秒内。规则语法错误跳过打 warning。空数据退出码 0 空报告。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

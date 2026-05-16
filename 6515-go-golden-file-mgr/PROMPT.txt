@@ -5,3 +5,4 @@ golden file 比对模式好用，但管理这些 golden 文件本身就够烦的
 `goldmgr check --dir ./testdata`，遍历所有 `.golden` 文件，找同名无后缀的实际输出做 diff。输出 "PASS <name>" 或 "[FAIL] <name>: X lines differ"，汇总 "12 passed, 3 failed"。`goldmgr approve --dir ./testdata --name response`，用实际输出覆盖 .golden，输出 "approved: response.golden"。不传 `--name` 则 approve 所有 failed 文件。`goldmgr reject --name response`，保留原 golden，输出 "rejected: response.golden"。`goldmgr diff --name response`，显示详细 diff（格式同 `diff -u`）。`.golden` 不存在时自动创建标记 `[NEW]`。无 golden 文件输出 "no golden files found in <dir>" exit 1。`--json` 输出 `{"passed":["a"],"failed":[{"name":"c","diff_lines":5}]}`。approve 时实际输出不存在输出 "actual output not found: <path>" exit 2。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

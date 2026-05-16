@@ -7,3 +7,4 @@ PM 每周发的周报格式总在变，新人不知道怎么写。定义一个�
 审批流程：`tmplengine flow create -f flow.yaml` 定义流程，`flow submit` 提交，状态 `draft→pending→approved→archived`，`--revert` 撤回。`tmplengine lint -t template.md` 检查语法不渲染。
 
 Go 标准库，主逻辑 `main.go`，辅助函数 `helpers.go`。`go build` 通过。退出码 0 成功，1 模板错误，2 数据错误，3 参数错误。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

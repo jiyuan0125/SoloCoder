@@ -11,3 +11,4 @@ multiselect 用 Go 标准库实现，`go build -o multiselect-demo ./cmd/multise
 输出格式：返回选中的值列表 `[]string`。JSON 输出 `["service-a", "service-c", "service-f"]`，方便管道传递给其他命令。也支持逗号分隔的纯文本格式。
 
 API：`ms := multiselect.New("Select services:", opts...)`、`ms.WithMax(5)`、`selected, err := ms.Run()`。终端宽度不够时长文本自动截断。输出到 stderr，结果到 stdout。`go test ./...` 跑测试。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

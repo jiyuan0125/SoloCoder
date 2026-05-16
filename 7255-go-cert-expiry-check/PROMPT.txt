@@ -9,3 +9,4 @@ SAN：`certexp san --cert server.pem` 列出 DNS/IP/Email 类型的 SAN，JSON �
 TLS 配置生成：`certexp gen-tls-config --cert server.pem --key server.key --output tls.json`。根据证书类型推荐密码套件和最低版本。处理分阶段：解析→检查→生成，每阶段错误独立捕获。
 
 `go build` 能过，命令行工具能正常运行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

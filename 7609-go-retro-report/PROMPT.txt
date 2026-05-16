@@ -13,3 +13,4 @@ Report 实体有 ID、Sprint 名称、日期、状态（open/closed）。open �
 - `export <report-id> --format md|csv`：导出，Markdown 包含完整条目和投票数，CSV 每行一条目
 
 跨迭代对比用 `compare <report-id-1> <report-id-2>`，输出两个迭代的 action 完成情况对比（需要 action 条目有状态字段 done/pending，`action-done <report-id> <item-id>` 标记完成）。按时间范围筛选加 `--from` 和 `--to` 参数。数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

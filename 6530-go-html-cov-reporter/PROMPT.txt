@@ -9,3 +9,4 @@ HTML 结构：顶部汇总区域显示总覆盖率百分比、文件数量、总
 profile 文件不存在时输出 `error: file not found: {path}` 退出码 1。profile 格式非法时输出解析错误到 stderr 退出码 2。`-source` 目录不存在时退出码 1。HTML 中不内嵌外部资源，纯内联 CSS，浏览器直接打开即可。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

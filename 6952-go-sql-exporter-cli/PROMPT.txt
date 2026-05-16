@@ -5,3 +5,4 @@
 5. 错误处理：数据库文件不存在输出 "database file not found: XXX" 到 stderr 退出码 1；SQL 语法错误输出 "query error: " 加 sqlite 错误信息到 stderr 退出码 2；查询结果为空输出 "no rows returned" 到 stderr 但退出码 0。6. `-db` 参数必填，缺失打印 usage 到 stderr 退出码 1。7. 大结果集（>10000 行）CSV 模式下流式输出，不全部加载到内存。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -6,3 +6,4 @@
 错误处理：目标文件已存在且没加 `-force` 标志时报错退出码 1 并打印 "output file already exists: %s, use -force to overwrite"；当前目录不是 git 仓库时退出码 1 打印 "not a git repository"；`-format` 值不是 zip 或 tar.gz 时退出码 1 打印 "unsupported format: %s"。成功时退出码 0，打印 "archived %d files to %s"。
 
 Go 标准库实现，flag 包解析参数。`go build -o git-archive-plus .` 编译。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

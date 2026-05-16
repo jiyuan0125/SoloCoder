@@ -7,3 +7,4 @@
 3. `file merge --source-a dir1/ --source-b dir2/ --output merged/ --symlink preserve` 合并两个目录，冲突文件保留较新的。
 
 `file check` 无断裂链接时输出 `no broken symlinks found` 退出码 0。目录不存在时输出 `error: directory not found` 退出码 1。循环链接（A→B→A）检测到后输出 `error: symlink loop detected` 并跳过。`go build` 能编译通过，第三方库零依赖。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

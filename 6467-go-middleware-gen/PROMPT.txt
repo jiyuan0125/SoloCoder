@@ -9,3 +9,4 @@ auth 从 `Authorization` header 提取 Bearer token，非空后调用用户验�
 缺 `-middlewares` 时输出 usage 并 exit 1。`-framework` 不支持时输出 `error: unsupported framework "{name}"` 并 exit 1。本地模式跳过通知逻辑不报错。
 
 零外部依赖，`go run .` 能跑。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

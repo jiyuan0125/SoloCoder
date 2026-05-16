@@ -9,3 +9,4 @@ Shamir 分片：`env-enc split --input master.key --threshold 3 --shares 5`。GF
 密码哈希：`env-enc hash-password --password "xxx" --algo bcrypt` 输出标准模块字符串。bcrypt cost 默认 12，scrypt 用标准参数。
 
 数据转换需要映射模板？本工具只处理密钥和分片，不做通用数据转换。`go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

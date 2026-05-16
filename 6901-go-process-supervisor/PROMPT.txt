@@ -5,3 +5,4 @@
 重启控制：达 max_restarts 后标记 stopped，stderr 输出 "process {name} exceeded max restarts"。`supervisor reload` 热加载配置。所有事件写入 event.log，格式 `timestamp|event_type|process_name|detail`。子进程输出重定向到 `{name}.stdout.log` 和 `{name}.stderr.log`。收到 SIGTERM 先向子进程发 SIGTERM 等 10 秒再 SIGKILL。
 
 用 Go 标准库写，go run . 或 go build 都行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

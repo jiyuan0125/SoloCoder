@@ -7,3 +7,4 @@
 加密：`--encrypt --keyfile key.pem`，密钥导入方式由调用方保证（配置文件或环境变量 `ENCRYPTION_KEY`）。签名链验证：`--verify-chain --ca-cert ca.pem`，签名时检查证书是否过期，验证时沿证书链向上校验。文件可能好几 GB，流式处理，内存不超过 `--memory-limit 256MB`。
 
 Go 命令行工具，go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

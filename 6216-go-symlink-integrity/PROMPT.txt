@@ -5,3 +5,4 @@
 `symlink fix /data/links/ --target-base /new/path/` 批量修复断裂链接，将旧路径前缀替换为新路径，`--dry-run` 先预览修复效果。`symlink report /data/links/ -o report.json` 生成完整性报告。
 
 链接指向的文件不存在标记 `broken`，reason 填 `target not found`。权限不足标记 `permission_denied`，不 crash。空目录输出 `no symlinks found` exit 0。删除一条记录后清理关联索引数据——遍历剩余记录重建受影响的索引项。纯标准库，`go build` 通过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

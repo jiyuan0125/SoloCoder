@@ -7,3 +7,4 @@ Go 实现 YAML 转 CSV。只有数组类型的 YAML 才能转，对象的值如�
 支持多种操作模式：convert csv json、convert yaml toml、validate json、diff json。
 如果输入文件有多段数据（多文档 YAML 或者多个根元素），每段独立转换。
 错误信息要包含文件名、行号、原因。go build 编译，不引第三方包，能跑就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

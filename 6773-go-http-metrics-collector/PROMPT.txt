@@ -9,3 +9,4 @@ Prometheus 格式指标暴露在 `-metrics-path`（默认 /metrics）：`http_re
 代理本身健康检查 `GET /health` 返回 200 OK。目标不可达返回 502，加上 `X-Proxy-Error: upstream unreachable`。`-max-requests 10000` 达到后自动退出并输出最终报告。Ctrl+C 优雅关闭，打印最终统计。
 
 Go 标准库，`go run .` 或 `go build` 都行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

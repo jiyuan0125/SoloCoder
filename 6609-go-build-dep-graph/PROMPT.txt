@@ -7,3 +7,4 @@ go.mod 里间接依赖堆了三层深，有没有循环依赖谁也不知道，�
 go.mod 不存在时 stderr 输出 `error: go.mod not found at {path}` 并 exit 1。格式无效时输出 `error: failed to parse go.mod` 并 exit 1。无依赖时输出 `{"direct":[],"indirect":[],"cycles":[]}` 并 exit 0。
 
 Go 实现，只用标准库，`go build -o depgraph .` 交叉编译友好。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

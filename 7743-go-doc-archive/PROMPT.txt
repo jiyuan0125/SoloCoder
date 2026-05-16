@@ -9,3 +9,4 @@ doc-archive 用 Go 标准库实现，`go build -o doc-archive ./cmd/doc-archive`
 评分维度用于判断文档质量——完整性、可读性、示例覆盖率各独立评分。质量分高的文档即使时间到了也建议保留，归档报告里会标注。
 
 子命令：`scan <dir>` 扫描并列出待归档文件；`archive <dir>` 执行归档操作；`restore <file>` 从归档恢复文件到原位；`report` 输出归档统计。配置文件 `.archiverc.json` 设置阈值和排除规则。数据存本地 JSON 文件记录归档历史。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

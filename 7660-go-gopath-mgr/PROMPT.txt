@@ -15,3 +15,4 @@ Profile 实体有名称、GOPATH 路径、GOBIN 路径、关联的项目列表�
 - `project link <name> --profile <profile>`：关联项目到 Profile
 
 Go 标准库实现。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

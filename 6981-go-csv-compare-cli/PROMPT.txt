@@ -7,3 +7,4 @@
 主键列不存在时 stderr 报错 "error: key column 'xxx' not found" 并 exit 1。列名不一致时 stderr 报错 "error: column mismatch" 并列出差异列，exit 2。完全相同输出 "no differences found"，exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 辅助操作：`pagebreak preview --input <file>` 预览分页位置（输出每个分页点的行号和标题），`pagebreak index --input <file>` 只生成索引不修改文件，`pagebreak adjust --input <file> --after <line> --push` 手动在指定行后插入分页。
 
 连续标题之间没有内容的空章节输出 `EMPTY_SECTION: line=<n> title="<text>"`。处理完主文件后生成摘要 `<basename>.summary.md`，包含总页数和每页标题。无标题的文件不生成摘要，输出 `NO_HEADINGS: <file>`。分页点落在表格或代码块内部时自动移到块结束后。`go run .` 直接跑，不用装任何依赖。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

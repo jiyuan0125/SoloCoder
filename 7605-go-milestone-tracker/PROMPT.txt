@@ -5,3 +5,4 @@
 里程碑的状态由关联任务驱动。创建或更新任务时自动算完成率（已完成任务数 / 总任务数），达到 100% 自动标记 completed。目标日期过了但完成率不到 100%，标记为 overdue。
 
 命令有：`ms add <project> --name <text> --due <date>`、`ms list <project>`（显示完成率）、`task add <ms-id> --title <text> --hours <n>`、`task approve <task-id> --approver <name>`、`task complete <task-id>`、`report <project> --from <date> --to <date>`。report 支持两种导出格式：`--format csv` 输出 CSV（每行一个里程碑，列包括名称、状态、完成率、任务数、目标日期），`--format md` 输出 Markdown 表格。不指定格式默认终端输出。数据存当前目录 JSON 文件，Go 标准库实现，go build 通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

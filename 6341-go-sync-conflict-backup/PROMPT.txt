@@ -1,3 +1,4 @@
 说个真事：上次 git merge 把同事两天写的配置文件覆盖了，双方都以为自己的版本是对的，吵了一下午才发现是合并策略的问题。冲突文件不应该被直接覆盖，双方版本都得留着，让当事人自己决定留哪个。
 
 写个同步冲突保护工具 `conflictcp`。用法：`conflictcp sync --source ./new --dest ./current --conflict-dir ./conflicts`。同步文件时，如果目标文件已存在且内容不同（通过 SHA256 比较），冲突文件自动重命名保存：目标文件重命名为 `<原文件名>.conflict.<时间戳>.<原扩展名>`，如 `config.yaml.conflict.20240115-143000.yaml`，然后源文件正常写入。冲突副本同时拷贝到 `--conflict-dir` 目录。同步完成后打印统计：`synced: X files, conflicts: Y files`。无冲突不创建冲突目录。冲突解决用 `conflictcp resolve --keep <文件路径>` 保留指定版本并删除其他冲突副本。校验完成后自动更新 `sync_stats.json`（含 synced/conflicts/last_run 字段），首次运行没有历史统计则从零开始。源目录不存在退出码 1 输出 `error: source directory not found: <path>`。`go run . sync --source ./a --dest ./b` 能跑，标准库写的。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 每 10 秒（`--health-interval` 可调）对后端做健康检查——发 HTTP GET 到后端根路径，连续 3 次失败（超时 2 秒或非 2xx 响应）则标记为 `unhealthy`，自动从可用列表剔除。恢复后自动加回。`--status-port :9090` 暴露状态页面，JSON 格式输出每个后端的 `address`、`status`（healthy/unhealthy）、`active_conns`、`total_requests`、`last_check`。
 
 命令：`meshproxy --config mesh.json --listen :8080 --status-port :9090`。路由找不到匹配时返回 404 `{"error": "no route matched"}`。所有后端都挂了返回 503 `{"error": "all backends down"}`。Go 标准库实现，交叉编译友好。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -9,3 +9,4 @@ sitemap-gen 用 Go 标准库实现，`go build -o sitemap-gen ./cmd/sitemap-gen`
 代码片段管理也集成进来——如果文档中有引用代码文件，代码文件的变更时间也纳入 lastmod 计算。每个代码片段有语言标签和描述，导出为 Markdown 格式方便审查。
 
 输出标准 sitemap XML，文件超过 50000 个 URL 自动切分成 sitemap index + 多个 sitemap 文件。XML 中特殊字符正确转义。`--base-url` 必填，指定站点根路径。子命令还包括 `stats` 显示 URL 统计。`go test ./...` 跑测试，`go build` 编译通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

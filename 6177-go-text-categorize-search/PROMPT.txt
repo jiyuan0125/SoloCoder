@@ -7,3 +7,4 @@
 规则文件不存在报 `rules file not found` 退出码 1。空文件输入报 `empty input` 退出码 1。规则名重复覆盖旧规则并输出 stderr `rule overwritten: 技術`。输入文件编码不支持（非 UTF-8）报 `encoding error: filename` 退出码 2，跳过该文件。`--rules` 指定多个规则文件用逗号分隔，后面的覆盖前面同名规则。
 
 不用第三方包，go build 通过就行。代码分几个文件组织，别全写 main.go 里。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

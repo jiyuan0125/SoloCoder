@@ -9,3 +9,4 @@ Shamir 密钥分片：`kstretch split --input master.key --threshold 3 --shares 
 密码哈希：`kstretch hash-password --password "xxx" --algo scrypt`。bcrypt cost 默认 12（范围 4-31），scrypt 用 N=32768 r=8 p=1。哈希输出标准模块字符串格式。证书续签后 TLS 配置同步更新？本工具不涉及 TLS。CA 初始化？不涉及。
 
 `go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

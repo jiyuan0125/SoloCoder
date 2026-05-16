@@ -7,3 +7,4 @@ CSR 处理：`renewer create-csr --cn "client.example.com" --org "MyOrg" --san "
 证书链验证：`renewer verify-chain --cert leaf.pem --intermediate intermediate.pem --root root.pem`。逐级验证签名、有效期、Key Usage。失败报告具体原因。
 
 CA 怎么初始化？`renewer init-ca --org "Root CA" --years 20 --output-dir ./ca/` 生成自签名根证书。输出格式默认 JSON 详情到 stdout。`go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

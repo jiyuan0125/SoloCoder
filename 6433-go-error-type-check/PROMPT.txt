@@ -5,3 +5,4 @@
 每条违规输出：文件路径:行号:规则名:描述。加 `--output json` 导出 [{file, line, rule, message}]。`--severity` 可以标记某些规则为 error（退出码 1）或 warning（退出码 0）。
 
 代码里没有任何函数定义时不报错退出码 0。扫描无 .go 文件打印 "no go files found"。go build 能过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里——至少有 scanner.go 负责规则检查，report.go 负责输出格式化。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

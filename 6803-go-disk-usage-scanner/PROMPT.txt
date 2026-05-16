@@ -7,3 +7,4 @@
 `--output report.json` 输出 JSON 结构：`[{"path":"/data/logs","size":5368709120,"files":1283,"dirs":45},...]`。`--exclude "*.tmp,node_modules,.git"` 排除匹配的目录名。
 
 使用 encoding/xml 包处理配置。数据导入后自动更新关联的索引文件。纯 Go 标准库，编译后单二进制可以直接跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

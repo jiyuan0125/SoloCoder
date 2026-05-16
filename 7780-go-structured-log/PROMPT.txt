@@ -9,3 +9,4 @@ structured-log 用 Go 标准库实现，`go build -o slog-demo ./cmd/slog` 编�
 请求链路 ID——`log.WithTraceID("abc-123")` 给后续所有日志打上追踪 ID，方便关联同一请求的所有日志。错误包装——`log.Error("query failed", "err", err)` 自动提取错误类型和消息。
 
 输出到 stderr 或 `--log-file` 指定文件。文件输出支持轮转和压缩。`Close()` 刷新缓冲区并关闭文件。API：`l := slog.New()`、`l.Info("msg", "k1", "v1")`、`l.Close()`。`go test ./...` 跑测试。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

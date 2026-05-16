@@ -3,3 +3,4 @@
 工作流定义 workflow.json：有 name、steps 数组，每步有 id、type（task/parallel/condition）、command（task 类型执行命令）、branches（condition 类型，每项有 expression 和 target_step_id）、sub_steps（parallel 类型，包含子步骤数组）、depends_on（前置步骤 ID 数组，空则立即执行）。状态持久化到 workflow_state.json，每步状态为 pending/running/success/failed/skipped，记录 start_time 和 end_time。CLI：`wfengine run -config workflow.json` 执行工作流，每步状态变化输出 "[step:{id}] {status}"。condition 步骤执行 expression 中的 shell 命令，exit code 0 走 true 分支，非 0 走 else 分支。parallel 步骤的子步骤并发执行，全部完成才算该步完成。任何步骤 failed 则跳过后续依赖它的步骤（标记 skipped），工作流退出码 1。`wfengine resume -config workflow.json` 从上次中断点恢复。`wfengine show -config workflow.json` 打印工作流 DAG 结构。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

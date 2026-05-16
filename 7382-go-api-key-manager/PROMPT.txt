@@ -5,3 +5,4 @@
 Claims 通过 JSON 文件或 --claim key=value 命令行参数传入。工具自动添加 iat 和 jti，exp 和 nbf 可配。Token 输出到标准输出或指定文件。
 
 搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}，可以做字段级精确查询。日志里不能打印密钥和密码等敏感信息，遇到这类字段做脱敏处理。输出 JSON 格式。go build 能过，命令行工具能正常运行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

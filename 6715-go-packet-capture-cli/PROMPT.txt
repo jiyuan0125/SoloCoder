@@ -5,3 +5,4 @@
 每个包解析至少输出这些层的信息——Ethernet（src/dst MAC、EtherType）、IP（src/dst IP、协议号、TTL、总长度）、TCP（src/dst 端口、seq、ack、flags、window size）、UDP（src/dst 端口、长度）。`--verbose` 模式下逐包打印，格式如 `[ETH] aa:bb:cc:dd:ee:ff → 11:22:33:44:55:66 (IPv4) [IP] 192.168.1.1 → 10.0.0.1 proto=TCP ttl=64 len=60 [TCP] :54321 → :80 flags=[SYN] seq=0 win=64240`。不传 verbose 则只显示汇总统计：按协议分类的包计数、总字节数、捕获时长。
 
 `--output` 文件名支持用户自定义，默认 `capture.pcap`。pcap 文件头用标准格式（magic number 0xa1b2c3d4、version 2.4、snaplen 65535、linktype ETHERNET=1）。需要 root 权限，非 root 退出码 1，stderr 打 "error: root privileges required"。interface 不存在退出码 1。用 Go 标准库写，go run . 或 go build 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

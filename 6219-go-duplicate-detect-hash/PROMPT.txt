@@ -7,3 +7,4 @@ CLI：`hashdup scan --dirs "/project-a,/project-b,/backups" --output dupes.json 
 输出 JSON：`{"groups": [{"hash": "a1b2c3...", "size": 4096, "files": ["/project-a/main.go", "/backups/main.go"]}], "summary": {"total_files": 500, "duplicate_groups": 12, "wasted_bytes": 204800}}`。
 
 记录状态流转：草稿→待审→通过→归档。通过后可撤回（`hashdup recall --group 3`）重新编辑备注。`hashdup report dupes.json --format table` 以表格形式展示。目录不存在输出 `error: directory not found: /path` 退出码 1。符号链接跟随目标。不用第三方包，`go build` 通过就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -5,3 +5,4 @@ Go 命令行 `coherence-validator` 帮他们搞个正经的。`check --primary m
 输入文件不存在打印 "file not found: {path}" 退出码 2，外键列不存在打印 "foreign key column not found" 退出码 2。
 
 输出 JSON：`{ "total": N, "valid": N, "violations": [...], "suggestions": [...], "affected_queries": [...] }`。退出码 0 通过 1 有违规 2 配置错误。纯标准库实现，go build 能过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

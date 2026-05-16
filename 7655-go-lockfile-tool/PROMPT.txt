@@ -15,3 +15,4 @@ LockProfile 实体有 ID、项目名、Go 版本、依赖列表（每个依赖�
 - `export --profile <id>`：导出为 JSON 文件供 CI 使用
 
 Go 标准库实现。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

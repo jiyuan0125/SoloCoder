@@ -5,3 +5,4 @@
 round-trip 一致性：先 csv2json 再 json2csv，结果必须和原始 CSV 逐字节一致（换行符统一 `\n`）。不一致时 stderr 输出 `round-trip mismatch at row N`，退出码 5。
 
 通用参数：`cli import --source csv --target db --filter 'age>18'`。`--filter` 支持简单条件（`字段>值`、`字段=值`、`字段!=值`）。`--encoding` 指定 CSV 编码（默认 UTF-8）。纯标准库实现，`go run .` 能跑。输入不存在退出码 2，格式错误退出码 3。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

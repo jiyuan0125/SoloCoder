@@ -9,3 +9,4 @@ CLI 子命令结构：`log-redact namespace resource action`，比如 `log-redac
 处理空文件不报错，输出空文件。输入文件不存在退出码 1，提示 `input file not found: <path>`。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

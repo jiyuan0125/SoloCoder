@@ -5,3 +5,4 @@
 每个 endpoint 生成两个测试函数：Test<Method><PathSlug>_Success 发送完整参数请求验证 2xx 和 Content-Type 含 application/json；Test<Method><PathSlug>_BadRequest 缺少 required 参数验证返回 400。生成的代码用 net/http.Client 发请求，json.Unmarshal 解析响应，t.Errorf("expected %d, got %d") 报告失败。
 
 输出文件名 api_<method>_<path_slug>.go，路径 `/` 替换为 `_`，`{param}` 替换为 `by_<param>`。`--base-url` 注入到 baseURL 变量。spec 不是合法 YAML 时 stderr 输出 "error: invalid OpenAPI spec" 退出码 1。output 目录不存在自动创建。Go 实现，只用标准库，交叉编译友好。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

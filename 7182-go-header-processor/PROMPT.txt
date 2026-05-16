@@ -5,3 +5,4 @@
 死信队列管理：`hdrproc dlq list --store dlq.db` 查看死信消息表格（ID、原因、原始 header、时间）。`hdrproc dlq retry --id 5` 重发指定死信。`hdrproc dlq discard --id 5` 丢弃。死信原因分类统计 `hdrproc dlq stats`：`{"missing_trace_id": 45, "invalid_format": 12, "duplicate_id": 3}`。自动重发策略：`--retry-interval 30s --max-retries 3`，超过次数标记为 `dead`。
 
 处理完自动生成报告（`--report report.json`），报告模板不存在（`--template` 指定）就跳过生成只写 JSON 统计。输入 header 中有乱码行（非 ASCII 且非 UTF-8）和空行时跳过该行不崩溃，记到 warning。Go 标准库写个 CLI 工具，`go build` 能过就行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

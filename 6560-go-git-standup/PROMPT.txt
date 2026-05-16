@@ -7,3 +7,4 @@
 没有 commit 时输出 `## Done\n(no commits in this period)`。`-author "zhangsan"` 只统计指定作者的 commit。`-output standup.md` 写文件，否则 stdout。`-format slack` 输出 Slack 格式（去掉 Markdown 标记用纯文本缩进）。不在 git 仓库内的路径跳过并在 stderr 输出 `skipping non-git path: xxx`。
 
 Go 标准库实现，`go build` 编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -9,3 +9,4 @@ CLI：jschemaval --schema rules.json --data input.json --output report.json。$r
 跨字段：if/then/else、dependencies、crossField {"field":"$.end_date","op":"gt","compare_to":"$.start_date"}。
 
 报告：{"valid":false,"errors":[{"path":"$.orders[2].end_date","keyword":"crossField","message":"end_date must be after start_date"}]}。多目录 --dirs --parallel 4 并行。退出码：0=通过，1=失败，2=schema 错误。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

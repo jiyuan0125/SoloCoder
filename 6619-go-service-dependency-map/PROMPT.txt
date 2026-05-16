@@ -7,3 +7,4 @@
 3. 扫描完成后输出 `scanned 52 services, found 187 dependencies`。无依赖输出 `no dependencies found` exit 0。循环依赖输出 `warning: circular dependency detected: A→B→C→A` 到 stderr。dot 文件生成后提示 `use: dot -Tpng deps.dot -o deps.png`。
 
 用 Go 标准库写，`go run .` 或 `go build` 都行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

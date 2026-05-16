@@ -7,3 +7,4 @@ CLI 子命令组织为三级：`log-corr group command subcommand`。比如 `log
 文件状态有四种：新增、处理中、已完成、归档。处理完后可以归档：已完成的记录移到 `.archive/` 目录。源文件缺失时退出码 1，stderr 提示 `source file not found: <path>`。关联键在某个源文件中不存在时，该源跳过，不报错，但在输出的 `skipped_sources` 字段中记录。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

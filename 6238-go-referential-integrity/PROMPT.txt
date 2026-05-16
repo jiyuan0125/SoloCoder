@@ -7,3 +7,4 @@
 CSV 模式：`refcheck csv --master users.csv --master-key id --child orders.csv --child-key user_id`，首行当列名。空外键默认跳过，`--strict` 下报错。
 
 `go build` 通过，不依赖第三方库。退出码 0 无悬挂，1 发现悬挂，2 文件错误，3 重试耗尽。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

@@ -5,3 +5,4 @@
 过滤：`--include "*.go"` 只搜特定后缀，`--exclude-dir ".git,node_modules,vendor"` 排除目录，`--case-insensitive` 或 `-i` 忽略大小写。`--max-count 10` 每文件最多 10 条匹配。`--count-only` 只输出每文件匹配数 `file.txt: 5`。
 
 搜索完成 stderr 输出 "searched: N files, matched: M files, time: Xs"。`--workers 4` 控制并发数默认 CPU 核数。退出码 0 有匹配，1 无匹配，2 参数错误。纯标准库，go build 能编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

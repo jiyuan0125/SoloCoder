@@ -5,3 +5,4 @@
 `batch --sql queries.sql --db app.db --output results/` 批量执行 SQL 文件中的查询（一行一条），每个查询结果保存为独立 JSON 文件。错误处理策略：`--on-error stop`（默认，遇到错误停止）、`--on-error skip`（跳过继续）、`--on-error retry --retry-count 3`（重试 3 次）。汇总文件 `summary.json` 记录总数/成功/失败/跳过。
 
 密钥路径支持多层 `keys/{algorithm}/{key_id}/versions/{ver}`。任务状态：waiting → running → success / failed，状态变更写日志。源库和目标库表数差异超过 20% 时打印警告。go build 能过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

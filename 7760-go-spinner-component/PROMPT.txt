@@ -11,3 +11,4 @@ spinner-component 用 Go 标准库实现，`go build -o spinner-demo ./cmd/spinn
 库支持嵌套子命令——每个子命令的长时间操作可以独立显示 spinner。帮助信息按子命令分组。未知子命令给出建议。
 
 额外功能：计时器——停止时显示总耗时。颜色自定义——`WithColor("cyan")`。输出到 stderr。并发安全。API：`s := spinner.New("msg")`、`s.Start()`、`s.Stop()`。`go test ./...` 跑测试，`go build` 编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

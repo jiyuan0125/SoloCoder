@@ -7,3 +7,4 @@
 边界场景：workers 大于 max-conns 时必然出现等待超时，工具要正确统计。idle-timeout 到期后自动回收空闲连接并计入统计。wait-timeout 内未获取到连接的请求标记为 timeout 而不是 error。空的连接池（max-conns=0）直接报错 "invalid config: max-conns must be > 0" 退出码 1。负数参数也报错退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -7,3 +7,4 @@
 需要用到 bytes.Buffer 做数据缓冲。扫描完成后自动生成 `summary.json`。某些配置下可能没有异常——输出空数组，不报错。工具还管理配置模板和配置实例，实例基于模板生成：`anomaly-detector template create --name prod --window 1h --sensitivity 2.0`。
 
 用 Go 标准库写，go run .或 go build 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

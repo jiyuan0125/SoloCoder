@@ -9,3 +9,4 @@ summary 模式输出可读文本：按文件分组，每组列出错误，最后
 输入为空时输出 `{"errors":[],"groups":{},"duplicates":0}` 并 exit 0。无法解析的行 stderr 输出 `warning: unparseable line {n}: {content}` 并跳过。
 
 Go 实现，只用标准库，`go build -o errparse .` 交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -7,3 +7,4 @@
 查询走内存加载索引文件，启动时读 `.index/` 下数据。索引文件不存在报 `index not found, run build first` 退出码 1。空目录建索引输出 `no files indexed` 退出码 0。`--keyword` 未指定报 `no keyword specified` 退出码 1。关键词为空字符串跳过不报错。索引文件损坏报 `corrupt index: ...` 退出码 2，需要重新 build。
 
 构建流程：解析→编译→测试→打包，测试失败不打包。go build 能编译通过，不依赖第三方库。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

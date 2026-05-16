@@ -3,3 +3,4 @@
 `business-rule-simulator profile --input data.csv --output report.json` 实现数据画像分析。分布统计计算每列 min/max/mean/median/stddev，数值列输出直方图分桶（`--bins 10`）。TopN 统计 `--top-n 20` 列出高频值及占比，基数估算 HyperLogLog。`--expected baseline.json` 对标偏差，超过 `--tolerance 0.1` 的字段标红。认证场景：用户角色通过 `--roles-file roles.yaml` 加载，定义角色名和权限列表，未配置时所有数据均可分析。搜索索引更新引用计数时检查索引完整性——索引文件 header 的 checksum 与内容 CRC32 不一致时报 "index corrupted"。
 
 输出格式默认 JSON，加 `--format table` 输出终端表格。输出 JSON：`{ "columns": [...], "statistics": {...}, "deviations": [...], "index_health": "ok|corrupted" }`。退出码 0 成功 1 偏差超限 2 输入错误。纯标准库实现，go build 能过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

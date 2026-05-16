@@ -6,3 +6,4 @@
 5. --left 不存在 stderr 输出 "left file not found: <path>" 并 exit 1。--right 不存在 exit 2。关联列不存在 stderr 输出 "column not found: <col> in <left|right>" 并 exit 3。
 
 处理完 stderr 输出 "matched: N, left_only: M, total: K"。不用第三方包，go build 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

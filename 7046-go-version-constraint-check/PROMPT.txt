@@ -5,3 +5,4 @@ Go 命令行工具 `version-constraint-check dedup --input data.csv --output rep
 令牌状态机：created → active → refreshed → expired → revoked，状态持久化到 `.version-constraint-tokens.json`。令牌过期后自动拒绝使用，返回 "token expired" 错误。错误处理：输入文件不存在退出码 2 打印 "file not found: {path}"，字段不存在退出码 2 打印 "field not found: {name}"，阈值越界退出码 2 打印 "threshold must be between 0 and 1"。
 
 输出 JSON：`{ "total": N, "exact_duplicates": N, "fuzzy_duplicates": N, "groups": [{ "records": [...], "similarity": F }] }`。退出码 0 成功 1 有重复 2 输入错误。纯标准库实现，go build 能过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

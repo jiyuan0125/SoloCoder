@@ -7,3 +7,4 @@ report JSON：`{"deadlocks":[{"threads":["Thread-1","Thread-2"],"type":"circular
 
 
 用 Go 标准库写，go run .或 go build 都行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

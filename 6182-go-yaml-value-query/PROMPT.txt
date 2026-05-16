@@ -3,3 +3,4 @@
 子命令 query 用路径表达式定位值，语法是点号分隔的 key 路径，比如 query server.timeout --file config.yaml 返回 "30s"。数组用 [N] 索引，比如 servers[0].port。路径不存在输出 "not found: PATH" 到 stderr 并 exit 1。匹配结果把路径和值一起输出，格式为 "PATH = VALUE"，每行一条。加 --format json 输出 JSON 数组 [{"path":"x","value":"y"}]。加 --recursive 递归扫描目录下所有 .yaml/.yml 文件，批量查询同一路径。子命令 sync 做同步，同步完成后自动记录同步日志到 SQLite 数据库（--db 指定路径，默认 sync.db），记录时间戳、文件路径、变更内容。数据库不可用时降级写本地文件 sync_fallback.log，每行一个 JSON。空 YAML 文件跳过不报错。解析失败的文件输出 "error: parse failed: FILE: REASON" 到 stderr，继续处理其他文件。
 
 纯标准库实现，go run . 能跑。flag 包解析命令行参数。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -7,3 +7,4 @@ CLI 用法：`log-enricher enrich --input access.log --output enriched.json --lo
 数据导入后自动更新 `lookup-index.json` 索引文件。新导入的数据还没建立关联时，enriched 字段输出 null，不报错。查询配置引用了不存在的数据源名时，启动报错退出码 2，提示 `data source not found: <name>`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

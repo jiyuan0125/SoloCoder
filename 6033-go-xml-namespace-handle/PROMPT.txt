@@ -5,3 +5,4 @@ XML 文档里命名空间前缀把解析搞得一团糟——`ns:element` 有时
 输出 JSON 结构：`{"root": {"name": "...", "namespace": "...", "attributes": {}, "children": []}}`，文本节点用 `{"#text": "content"}`。元素保持文档顺序，命名空间声明不出现在 attributes。
 
 处理完在同目录生成 `.summary.json`：`{"namespaces": {"ns1": {"elements": 5}}, "total_matched": 8}`。无匹配元素不生成摘要，stdout 输出 `no matching namespaces found`。解析失败 stderr 输出 `error: <行号>: <原因>`，退出码 1。文件不存在退出码 2，成功退出码 0。不用第三方包，`go build` 通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

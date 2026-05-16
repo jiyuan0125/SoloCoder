@@ -7,3 +7,4 @@
 魔数规则覆盖常见类型至少 100 种：PNG（`\x89PNG`）、JPEG（`\xFF\xD8\xFF`）、GIF（`GIF8`）、PDF（`%PDF`）、ZIP/JAR/APK/DOCX（`\x50\x4B\x03\x04`）等。扩展名和实际类型不一致时输出 `[MISMATCH] filename.ext declared=jpg actual=png`。文件小于 2 字节无法判断，输出 `[SKIP] filename reason=too_small`。
 
 纯标准库，`go run .` 能跑。退出码 0 全部匹配，1 检测到不匹配，2 参数错误，3 扫描被中断。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

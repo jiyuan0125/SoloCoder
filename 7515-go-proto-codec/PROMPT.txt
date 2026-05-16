@@ -5,3 +5,4 @@
 check 和 validate 有依赖：validate 内部先调 check 解析 wire format，再和 proto 定义比对。convert 成功后自动触发 validate 检查输出合法性。空输入返回空消息。非标准格式（比如未知 wire type、字段号超出范围）在 check 时报告但不停止，继续解析后面的字节。
 
 Go 标准库，`google.golang.org/protobuf` 用标准库替代的话，就用 `encoding/protobuf` 或自己解析 varint。纯 CLI 工具，`go build`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

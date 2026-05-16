@@ -5,3 +5,4 @@ rebase todo 手动改，把 pick 写成了 eit 整条链崩掉。更常见的是
 输出到 stdout（`> .git/rebase-merge/git-rebase-todo` 重定向）或 `-output file` 写文件。`-validate` 只检查格式，不合法输出 `LINE {n}: invalid action "{xxx}"` 退出码 1。空输入输出空文件。特殊字符行原样保留并在 stderr 警告。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

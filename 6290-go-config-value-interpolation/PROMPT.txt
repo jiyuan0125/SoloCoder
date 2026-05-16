@@ -8,3 +8,4 @@
 - `interpolate explain --file config.yaml --key "server.url"` 展示某个值的插值过程 "server.url = 'http://' + server.host + ':' + server.port → http://localhost:8080"
 
 转换完成后自动清理临时文件，没有临时文件则正常跳过。纯标准库实现，go run . 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

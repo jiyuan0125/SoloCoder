@@ -5,3 +5,4 @@
 `capmgr template -name web-service -caps "cap_net_bind_service,cap_net_raw"` 生成 JSON 配置。`capmgr apply -pid 1234 -template web-service.json` 按模板设置。不支持的 capability 名输出 "unknown capability: XXX" 退出码 1。pid 不存在输出 "process not found: PID" 退出码 2。无权限输出 "permission denied" 退出码 3。不加 -pid 默认查自身进程。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -5,3 +5,4 @@
 子命令分三组：`file convert`（格式转换）、`file check`（校验）、`file merge`（合并多个扫描结果）。`metric compare baseline.json current.json` 比较两次扫描结果，输出变化 `{package, metric, old, new, delta}`，delta 超过 20% 的标黄。
 
 `metric top --by size --limit 10` 输出 Top N 包。空包（main 除外）输出 `warning: empty package: <path>`。循环依赖检测到时标注 `circular dependency detected`。纯标准库写的，`go run .` 能跑。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

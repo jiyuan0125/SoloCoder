@@ -7,3 +7,4 @@ docsite-gen 用 Go 标准库实现，`go build -o docsite-gen ./cmd/docsite-gen`
 导航自动从目录结构生成面包屑和侧边栏。支持多级标题，新增文档自动纳入下次生成。`--watch` 模式监听文件变更自动重新生成变更的页面。笔记支持标签和分类，搜索支持全文检索和按标签筛选。
 
 子命令：`gen <src-dir> -o <out-dir>` 生成站点；`serve <out-dir>` 启动本地预览服务器；`search <keyword>` 测试搜索功能。数据存本地 JSON 文件。`go test ./...` 跑测试，`go build` 通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

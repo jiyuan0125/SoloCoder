@@ -1,3 +1,4 @@
 前端说接口字段没变，后端说 schema 已经改了，谁也说服不了谁。问题出在没有一个明确的变更记录。
 
 写个 Go 工具 `gqldiff`，对比两个 GraphQL schema 文件，输出结构化的变更报告。用法：`gqldiff --old schema_v1.graphql --new schema_v2.graphql`。解析两个文件后，按类型（Type）、输入类型（Input）、枚举（Enum）、接口（Interface）分别对比。检测三类变更：新增（`+` 前缀）、删除（`-` 前缀）、修改（`~` 前缀）。输出格式如 `~ Type User: field "email" type changed String → String!`，`+ Enum Status: value "ARCHIVED" added`，`- Type OldModel removed`。加 `--format json` 输出 JSON，结构是 `{"changes":[{"type":"modified","target":"Type User","detail":"field email type changed"}]}`。任一输入文件不存在退出码 1 输出 `error: file not found: <path>`。两个文件内容相同输出 `no changes detected` 退出码 0。Go 标准库，命令行参数用 flag 包解析。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

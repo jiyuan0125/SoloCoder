@@ -7,3 +7,4 @@
 main.go 自动依赖注入——repository 注入 service，service 注入 handler，注册到 HTTP 路由 `/api/v1/users`。加 `-with-mock` 生成 mock_test.go，加 `-with-config` 生成 config.go 从环境变量读配置。
 
 目录已存在输出 `error: directory already exists: <path>` 退出码 1。完成后记录日志到 scaffold.db（服务名、时间、层数），db 不可用写 scaffold.log。纯标准库，go run . 就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

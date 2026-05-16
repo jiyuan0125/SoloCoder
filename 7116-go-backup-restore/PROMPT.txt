@@ -3,3 +3,4 @@
 用 Go 从零写一个。备份命令：`dbbak backup --db orders.db --output ./backups/ --compress`，生成 {dbname}_{timestamp}.sql.gz，默认全量 dump。恢复：`dbbak restore --input orders_20240115.sql.gz --db orders.db --verify`，恢复后自动对比行数，不一致输出 "verification failed: expected X rows got Y" 退出码 2。表对比：`dbbak diff --db1 a.db --db2 b.db --table orders`，逐行对比标记 INSERT/DELETE/MODIFY，输出同步 SQL 脚本到 stdout。大文件分批读，每批 10000 行，内存不超过 64MB。加密场景：`--encrypt --key-file secret.key` 加密备份，加密完自动删除原文件，删除失败只记 warning 继续执行。路径处理要做目录遍历防护，`../` 这种路径直接拒绝。空数据库备份输出 "nothing to backup" 退出码 0。
 
 Go 命令行工具，go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

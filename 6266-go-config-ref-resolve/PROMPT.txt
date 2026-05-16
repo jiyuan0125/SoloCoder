@@ -5,3 +5,4 @@ Go 命令行做配置引用解析。用法：`cfg-resolve resolve --input config
 循环引用检测是关键：如果 A 引用 B，B 又引用 A，输出 "circular reference detected: <key1> -> <key2> -> <key1>" 退出码 1。引用不存在的 key 输出 "unresolved reference: ${<key>} at path <路径>" 退出码 2。加 `--strict` 未解析的引用直接报错，不加则保留原始 `${...}` 不替换。
 
 加 `--output result.yaml` 写到文件，默认输出到 stdout。加 `--show-resolved` 列出所有被替换的引用及其目标值，格式 `resolved: <引用路径> -> <目标值>`。环境变量引用用 `${ENV:VAR_NAME}` 语法，找不到环境变量时替换为空字符串并打 stderr 警告 "env var not found: <VAR_NAME>"。自引用 `${.key}` 在同一对象内引用其他字段也支持。解析完成后输出统计 "resolved N references, N unresolved, N circular"。每处理完一条记录触发统计更新。纯标准库实现，`go run .` 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

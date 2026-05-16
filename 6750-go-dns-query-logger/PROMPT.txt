@@ -11,3 +11,4 @@ duration 到期后输出统计报告。报告分三部分：1) 查询最多的�
 无权限抓包时 stderr 输出 `ERROR: permission denied, run with sudo or CAP_NET_RAW` 退出码 3。网卡不存在时 stderr 输出 `ERROR: interface not found: <名称>` 退出码 2。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

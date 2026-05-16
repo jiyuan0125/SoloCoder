@@ -9,3 +9,4 @@ CSR：`certgen create-csr --cn "client" --org "MyOrg" --key-file client.key --ou
 格式转换：`certgen to-p12 --cert c.pem --key k.pem --ca ca.pem --output c.p12 --password "xxx"`。`certgen to-p8 --key rsa.pem --output k.p8`。操作记录输出 JSONL。
 
 `go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

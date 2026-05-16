@@ -11,3 +11,4 @@ stdin/stdout 处理：`--input -` 读 stdin，`--output -` 写 stdout。默认 s
 解密 `ed25519 dec --key-file aes.key --input data.tar.enc --output data.tar`。加 `--hmac` 标志时加密文件额外包含 HMAC-SHA256 认证标签，解密时验证完整性。
 
 `go build` 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

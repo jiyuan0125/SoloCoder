@@ -3,3 +3,4 @@ V2 版本月底上线，旧版本的数据文件要先归档。几十 GB 的历�
 Go 命令行工具做文件按龄归档。子命令 archive 执行归档，--source 指定源目录，--dest 指定归档根目录。按文件最后修改时间组织，目标结构为 DEST/YYYY/MM/FILENAME。最近 N 天内修改的文件不归档，--grace-days 指定保护期（默认 30）。归档方式用 --method 选择：move 直接移动（默认）、copy 复制后手动删、zip 压缩后删原文件。加 --dry-run 只列出要归档的文件不实际操作。子命令 list 查看归档目录内容，--year 和 --month 过滤，输出文件列表含 Filename/Size/Archived Date。子命令 restore 从归档恢复，--file 指定归档中的文件路径，--to 指定恢复目标目录，压缩过的自动解压。源目录不存在 exit 1 并输出 "error: source not found: PATH"。空目录输出 "no files to archive" 并 exit 0。
 
 另外配了多级命令管理配置：config get KEY、config set KEY VALUE、config list、config env switch ENV_NAME。go build 能编译通过，不依赖第三方库。纯标准库。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

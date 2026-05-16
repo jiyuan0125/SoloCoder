@@ -5,3 +5,4 @@
 CLI 设计为多命令组结构：`rename file --input data.csv --rules mapping.json --output renamed.csv` 处理单个文件；`rename batch --dir ./data/ --rules mapping.json --pattern "*.csv"` 批量处理目录下所有匹配文件；`rename check --rules mapping.json` 校验规则文件语法，stdout 输出 "OK" 或 "ERROR: line N: 具体原因"。退出码 0 成功，1 输入文件不存在，3 规则文件语法错误。正则语法错误在 check 中输出 "ERROR: invalid regex in key 'xxx': 具体正则引擎报错"。
 
 找不到映射的字段保持原名。输出格式跟输入一致（CSV 进 CSV 出，JSON 进 JSON 出）。空文件直接输出空文件。批量模式完成时 stderr 输出 "processed: N files, renamed: M fields"。纯标准库，go build 能编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

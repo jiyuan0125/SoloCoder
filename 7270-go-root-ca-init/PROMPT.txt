@@ -7,3 +7,4 @@ OCSP 检查：`rootca ocsp-check --cert server.pem --issuer ca.pem --responder h
 吊销原因全程可追溯：命令行输出带原因文本。CRL 导出按吊销时间倒序。扫描规则更新后重新评估历史扫描结果的严重级别？如果吊销原因变更（比如从 unspecified 改为 keyCompromise），之前基于 CRL 的检查结果要重新评估。
 
 `go build` 能过，命令行工具能正常运行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -6,3 +6,4 @@
 5. 输出 JSON 对象，键保持原始顺序（Go 1.12+ 的 map 有序遍历或者用有序结构）。值为 null 的键不存在于 Properties 中时不出现在输出里。
 
 文件不存在时 stderr 输出 "file not found: <path>" 并 exit 1。解析失败（如续行后文件突然结束）exit 1 并 stderr 输出 "unexpected end of file at line N"。纯标准库实现，go run . 能跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

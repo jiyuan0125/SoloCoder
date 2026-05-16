@@ -7,3 +7,4 @@
 批量模式：`currency batch --file amounts.csv --column 3 --from comma --to uppercase --output result.csv`，对 CSV 指定列转换，其余列原样保留。无法识别的金额保持原值，stderr 输出 "WARNING: line N: unrecognized amount 'xxx'"。
 
 内部用整数（分）存储避免浮点误差。超过亿级正确转换。退出码 0 成功，1 参数错误，2 无法解析金额。纯标准库，go build 能编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

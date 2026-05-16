@@ -3,3 +3,4 @@
 命令 `log2json -i access.log --format apache [-o output.json] [--template "<custom>"] [--strict]`，支持 --format apache（Combined Log Format）、nginx（默认格式同 apache）、syslog 三种预设。自定义模板用 --template，{} 占位符定义字段名，如 "{ip} - - [{time}] \"{method} {path}\" {status}"，占位符间分隔符严格匹配。每行输出一条 JSON 对象，字段名统一小写。解析失败行保留在 raw 字段并加 "parse_error":true 和 "line":N。
 
 时间字段转 ISO 8601。IP 保持字符串，状态码和字节数转 int。空行跳过。-i 不存在时 stderr 输出 "file not found" 并 exit 1。--format 和 --template 都不提供时 stderr 输出 "specify --format or --template" 并 exit 1。--strict 时解析失败立即 exit 1，否则跳过继续。-o 不可写 exit 2。输出 JSON 数组，每条一行。处理完 stderr 输出 "parsed: N, failed: M"。不用第三方包，go build 通过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

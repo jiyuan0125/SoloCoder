@@ -7,3 +7,4 @@
 压缩策略细节：ERROR 和 WARN 级别无条件保留，不考虑 sample。INFO 级别 keep-ratio=10 时不看内容均匀采样，保留第 1 条然后每隔 10 条保留一条。DEBUG 级别默认 keep-ratio=100（几乎全丢）。采样是确定性的——相同输入文件多次运行产生相同输出。压缩后的文件头部加一行注释 # compacted by logcompact, original_lines=XXX, kept_lines=YYY, ratio=ZZ%。
 
 用 Go 标准库写，go run . 或 go build 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

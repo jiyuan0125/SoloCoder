@@ -7,3 +7,4 @@ Cloudflare 迁 Route53 之后的第二天，前端说有个子域打不开了。
 单域名查询超时 `-timeout 5s`，批量查询带进度显示 `processing 123/5000: sub.example.com`。某个域名查失败不中断，记为 error 继续下一个，最后汇总失败数。差异记录数太多时 `-limit 100` 限制输出条数，超出部分只显示总数。
 
 Go 标准库，`go run .` 或 `go build` 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

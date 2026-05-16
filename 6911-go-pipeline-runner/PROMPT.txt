@@ -7,3 +7,4 @@ CI 流程里一串处理步骤，上一步输出是下一步输入。中间挂�
 `pipeline validate --config build.yaml` 校验：循环依赖报 "circular dependency at step: {name}"，未知 depends_on 报 "unknown dependency"。`pipeline list` 显示步骤和依赖关系。
 
 纯 Go 标准库，编译后单二进制直接跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@ Go 写配置依赖图工具。用法：`cfg-dep build --dir ./configs/` 扫描�
 子命令：`cfg-dep build` 构建依赖图，`cfg-dep query --key database.host` 查谁依赖了这个键，`cfg-dep check --dir ./configs/` 检测循环依赖。循环依赖输出 "circular: A → B → C → A" 退出码 1。加 `--format dot` 输出 Graphviz DOT 格式，可以画图。
 
 `query` 输出分两层：直接依赖和间接依赖，格式 `direct: [cache.yaml, worker.yaml]` / `indirect: [app.yaml]`。空目录扫描输出 "no config files found" 退出码 0。配置文件解析失败报 "parse error: <文件>: <原因>" 跳过继续扫描其他文件。处理完主文件生成摘要，无内容场景正常跳过。不用第三方包，`go build` 通过就行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

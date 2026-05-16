@@ -5,3 +5,4 @@
 没有 tag 的仓库怎么办？支持 `-from-commit abc123 -to-commit def456` 模式跳过 tag 直接用 commit 范围，输出标题用 commit 前 8 位哈希。commit message 不是 Conventional Commits 格式的归入「其他」。`-output changelog.md` 写文件，不指定则 stdout。`-template tpl.md` 支持自定义 Markdown 模板，占位符 `{{.Version}}` `{{.Date}}` `{{.Sections}}`。
 
 Go 标准库，命令行参数用 flag 包解析。tag 解析按 semver 排序，非 semver 格式的 tag 忽略并在 stderr 输出警告。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

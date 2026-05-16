@@ -10,3 +10,4 @@
 不是 git 仓库时退出码 1 打印 "fatal: not a git repository"。worktree 目录不存在时退出码 1 打印 "worktree not found: %s"。成功退出码 0。
 
 Go 纯标准库，交叉编译友好。`go build -o wt .`。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -5,3 +5,4 @@
 流水线步骤：读取→解析→校验→转换→输出，每步独立失败，解析失败的行计入 `log_parse_errors_total`。任务状态 pending→running→completed，running 失败可重试。`tool serve --config rules.toml --port 9090` 启动 HTTP 服务，`/metrics` 端点实时输出指标。Ctrl+C 优雅退出。
 
 Go 标准库实现，go run . 或 go build 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

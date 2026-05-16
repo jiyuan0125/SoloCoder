@@ -5,3 +5,4 @@
 已处理文件通过 SHA256 哈希避免重复触发，记录在 `.watch_history.json`。文件写入未完成不触发，连续两次采样（500ms 间隔）大小一致才认为完成。pattern 支持 glob 语法。exec 超时 30 秒自动终止，stderr 输出 `command timeout: <command>`。多个规则匹配同一文件按配置顺序执行。
 
 子命令组：`file convert --input x --output y`、`file check --input x` 校验、`file merge --inputs a,b --output c`。纯标准库实现，`go run .` 能跑。目录不存在退出码 2，规则文件格式错误退出码 3。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

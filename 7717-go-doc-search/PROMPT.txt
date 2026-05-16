@@ -5,3 +5,4 @@ doc-search 用 Go 标准库实现，`go build -o doc-search ./cmd/doc-search` �
 索引构建过程：扫描指定目录下所有 `.md` 文件，提取正文内容分词建倒排索引。每条文档记录有标题、标签数组、分类、正文、创建和修改时间。分词对中文按字切分英文按空格，停用词过滤掉常见虚词。索引数据存在 `.doc-search/index.json`，增量更新只重新处理修改时间有变化的文件。属性变更——比如文档改了标题或标签，索引自动刷新，搜索结果的排序和匹配项也随之更新。
 
 搜索接口：`doc-search search <keyword>` 基本全文检索；`search --tag go --tag concurrency` 按标签筛选，多个标签取交集；`search --category tutorial` 按分类过滤。结果按相关度排序，匹配词在输出中高亮，附上下文片段。搜索支持布尔表达式——`go AND http` 要求同时包含，`go OR rust` 任一即可，`go -http` 排除。数据存本地 JSON 文件 `~/.doc-search/docs/<id>.json`。子命令还包括 `index` 手动建索引、`rebuild` 全量重建、`tags` 列出所有标签。`go test ./...` 跑测试，`go build` 通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

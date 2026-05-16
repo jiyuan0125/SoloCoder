@@ -5,3 +5,4 @@
 输出格式：每行一条记录，`<name> <type> <ttl> <value>`。用 `-o output.json` 切 JSON 格式，结构为 `{"domain":"...","records":[{"name":"...","type":"...","ttl":...,"value":"..."}]}`。日志里记每次查询的完整参数（域名、类型、服务器、耗时）。
 
 AXFR 失败不算错，只是降级到枚举模式，打印 "AXFR failed, falling back to enumeration"。域名不存在打印 "NXDOMAIN: <domain>"，网络不通打印 "DNS timeout: <server>"，两者 exit 1。枚举过程中每找到一条记录实时打印。Go 标准库，不依赖第三方包，`go build` 能编译。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

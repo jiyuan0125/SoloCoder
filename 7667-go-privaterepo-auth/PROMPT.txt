@@ -13,3 +13,4 @@ AuthConfig 实体有 ID、仓库域名、认证方式（token/ssh/https-embedded
 - `export --format json`：导出配置（脱敏）
 
 Go 标准库实现，go build 通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

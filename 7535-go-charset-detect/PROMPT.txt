@@ -7,3 +7,4 @@
 关键：Go 标准库只支持 UTF-8 和少量编码，GBK 等编码需要用 `golang.org/x/text` 的 `encoding` 子包。如果严格只用标准库，就支持 UTF-8/UTF-16（BOM 检测）和 Latin-1 这些标准库能处理的。
 
 Go 标准库。`go build`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

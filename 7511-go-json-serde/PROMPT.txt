@@ -9,3 +9,4 @@ API 网关那边的日志都是大 JSON 文件，几十 MB 甚至上百 MB 一�
 输出保持合法 JSON 格式，`format` 默认两空格缩进，`--indent` 可调。`minify` 去掉所有多余空白但保持 UTF-8 编码正确。
 
 Go 标准库，`encoding/json` 和 `os`。纯 CLI，`go build`。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

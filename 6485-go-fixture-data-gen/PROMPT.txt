@@ -5,3 +5,4 @@
 输出 JSON 数组，每项是一个生成的对象。字段名优先使用 struct 的 JSON tag，没有 tag 用原始字段名（首字母转小写）。支持自定义规则文件 -rules rules.json，可以覆盖默认生成策略，比如指定某个字段只能从枚举值 ["active","inactive"] 中随机选取。struct 在文件中不存在时输出 "struct Xxx not found in file" 退出码 1。输出文件已存在时覆盖写入。
 
 标准库搞定，go run . 跑起来。代码分几个文件组织，别全写 main.go 里。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

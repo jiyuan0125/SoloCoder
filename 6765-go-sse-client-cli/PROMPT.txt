@@ -9,3 +9,4 @@
 URL 无法连接时 stderr 输出 `error: failed to connect to {url}` 并 exit 1。达到最大重连次数后输出 `error: max retries exceeded` 并 exit 2。正常断开（服务端发完）exit 0。
 
 Go 标准库，命令行参数用 flag 包解析。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

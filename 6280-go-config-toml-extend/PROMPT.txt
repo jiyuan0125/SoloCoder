@@ -9,3 +9,4 @@
 extend 链最多支持 5 层嵌套，超出报 "extend chain too deep: exceeded 5 levels"。循环引用（A extend B, B extend A）检测到报错退出码 2，输出 "circular extend detected: A → B → A"。合并后的完整配置用 `config get --file staging.toml --resolved` 查看，--resolved 表示展示合并后的最终值而非原始文件内容。
 
 go build 编译通过，不依赖第三方库。代码组织成 extend.go / merge.go / commands.go / main.go。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

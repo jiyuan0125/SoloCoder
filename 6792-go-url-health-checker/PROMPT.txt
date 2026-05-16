@@ -7,3 +7,4 @@ healthcheck run --config urls.json 并发检查所有 URL。每个请求记录�
 加上 --interval 60 每 60 秒重复检查一次。--on-fail "sendmail admin@co.com" 在有失败时执行指定命令（健康检查结果通过 stdin 传入）。
 
 所有 URL 都 OK exit 0，有失败 exit 1。配置文件不存在 exit code 2。--format table 终端输出表格：URL | 状态码 | 耗时 | 结果。Go 实现，只用标准库，交叉编译友好。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

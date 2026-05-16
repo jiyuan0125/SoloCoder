@@ -9,3 +9,4 @@ SQL 执行失败时 stderr 输出 "error: query execution failed: <具体错误>
 加 `-pretty` 参数输出格式化 JSON（缩进两空格），不加则输出压缩 JSON。字段类型自动转换：INTEGER → number，REAL → number，TEXT → string，NULL → null。
 
 Go 实现，只用标准库，交叉编译友好。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -5,3 +5,4 @@
 2. 状态管理：每个限流器记录的状态存储在内存 map 中，字段包括 key、计数器、窗口起始时间。状态有 draft→pending→approved→archived 四个阶段，approved 后可以撤回（`limitgen revert --rule <name>`）重新编辑配置再生成。
 
 3. 输出时如果目标目录已有文件，提示 "overwriting existing file: <name>"。配置文件语法错误报 "invalid config: <reason>" exit 1。不用第三方包，go build 通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

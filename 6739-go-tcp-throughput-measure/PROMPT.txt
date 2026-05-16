@@ -7,3 +7,4 @@
 `--csv throughput.csv` 每秒一条记录导出时间序列数据，字段：`timestamp,bytes_sent,throughput,connections_active`。服务端没收到数据超过 5 秒自动退出。
 
 客户端连不上服务端 3 秒超时报 "connection refused" 退出码 1。`--mode` 不指定也报错 "must specify --mode server or client"。纯 Go 标准库，编译后单二进制可以直接跑。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

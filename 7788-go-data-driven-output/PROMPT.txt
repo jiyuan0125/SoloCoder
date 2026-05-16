@@ -11,3 +11,4 @@ data-driven-output 用 Go 标准库实现，`go build -o ddo-demo ./cmd/ddo` 编
 格式切换：`--format json`/`--format table`/`--format yaml`。也可以通过 `OUTPUT_FORMAT` 环境变量。默认格式表格。输出到 stdout，`--output file` 重定向到文件。
 
 API：`out := output.New(data)`、`out.Render("json", os.Stdout)`、`output.Register("csv", csvRenderer)`。子命令 `formats` 列出所有可用格式。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

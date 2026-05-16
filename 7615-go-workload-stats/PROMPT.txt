@@ -17,3 +17,4 @@
 - `export --format csv|md [--from <date> --to <date>]`
 
 数据存当前目录 JSON 文件。Go 标准库实现，go build 通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

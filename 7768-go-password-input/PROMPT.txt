@@ -9,3 +9,4 @@ password-input 用 Go 标准库实现，`go build -o password-input-demo ./cmd/p
 交互细节：支持退格删除，Ctrl+U 清空整行，Ctrl+C 取消退出。最小长度和最大长度可配置——`MinLength(8)`、`MaxLength(128)`。复杂度检查：必须包含大小写字母、数字、特殊字符中的几种，不满足时给出具体提示。
 
 确认模式：`Confirm(true)` 要求输入两次，不一致提示重新输入。API：`pwd, err := password.Read("Enter password:")`、`password.ReadConfirm("Password:", "Confirm:")`。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

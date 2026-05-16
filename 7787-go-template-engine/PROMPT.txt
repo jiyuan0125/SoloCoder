@@ -9,3 +9,4 @@ template-engine 用 Go 标准库实现，`go build -o tmpl-demo ./cmd/tmpl` 编�
 并发任务处理：多个模板并行渲染，任务队列支持最大并发数限制。失败自动重试，次数可配。所有渲染完成后输出汇总报告——每个模板的渲染时间和输出大小。
 
 子命令：`render <template> --data data.json` 渲染单个模板；`batch <dir>` 批量渲染目录下所有模板；`validate <template>` 检查模板语法；`funcs` 列出所有可用函数。输出到 stdout 或 `--output` 指定文件。`go test ./...` 跑测试。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

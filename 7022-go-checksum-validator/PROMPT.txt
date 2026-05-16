@@ -3,3 +3,4 @@
 子命令 score 评估 CSV 数据质量，--file 指定文件，--columns 指定要评估的列（逗号分隔，不指定就全部列）。每列从四个维度打分：完整性（1 - 空值率）、唯一性（唯一值数/总行数）、格式合规性（通过正则 --regex 校验的行占比）、一致性（同列值类型的统一程度）。综合分加权平均，权重用 --weights "0.3,0.2,0.3,0.2" 配置。输出表格含 Column/Completeness/Uniqueness/Format/Consistency/Overall 六列，分数 0-100。加 --output json 输出 JSON。统计异常检测用 Z-score 方法，偏离均值超过 2 个标准差的值标 "ANOMALY: VALUE (z-score=N.NN)"。子命令 report 生成完整报告，--format text 或 html（默认 text），输出到 --output 文件。空文件输出 "error: empty file: PATH" 并 exit 1。列不存在输出 "error: column not found: NAME" 并 exit 1。
 
 代码组织成多个文件，核心逻辑、IO 处理、命令行入口分开。go build 能过，命令行工具能正常运行。纯标准库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -7,3 +7,4 @@
 请求体从 `-d @body.json` 读取。超时 `-timeout 10s`。`-headers "Authorization: Bearer xxx"` 添加头。输入含乱码时用 base64 编码：`-d-base64 <encoded>`。
 
 Go 标准库，flag 包解析参数。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

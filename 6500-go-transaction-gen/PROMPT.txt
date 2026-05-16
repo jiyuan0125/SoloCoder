@@ -7,3 +7,4 @@ Go 模板生成器：`txgen generate --db postgres --table orders -o orders_tx.g
 生成的代码包含错误处理：操作失败自动 rollback 并返回 `tx failed at <operation>: <error>`。`txgen validate orders_tx.go` 校验已有代码是否正确使用了事务模式——检查每个写操作是否在事务上下文中执行。
 
 不支持的数据库类型 `error: unsupported driver: <name>` exit 1。表不存在 exit 2。零外部依赖，`go run .` 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

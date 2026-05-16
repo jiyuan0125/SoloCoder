@@ -5,3 +5,4 @@
 `unitgen validate --file my-app.service` 校验：缺 ExecStart 报 "missing required field"，Restart 非法报 "invalid Restart value"。缺 --name 报 "flag --name is required" 退出码 1。文件已存在未传 --force 报 "file already exists" 退出码 1。name 含空格报 "invalid unit name" 退出码 2。
 
 Go 标准库，flag 包解析参数。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -7,3 +7,4 @@
 状态文件格式：`{"old_bin":"./app-v1","old_pid":1234,"new_bin":"./app-v2","new_pid":5678,"status":"upgrading","started_at":"2024-01-01T00:00:00Z"}`。任何参数缺失打印 usage 到 stderr 并退出码 1。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

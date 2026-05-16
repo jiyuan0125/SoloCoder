@@ -7,3 +7,4 @@
 结果实时写入 `dns_result.csv`，字段：timestamp,query_type,domain,server,latency_ms,status(ok/timeout/servfail)。测试结束后打印摘要：总查询数、成功率、P50/P95/P99 延迟。多个 goroutine 并发写结果文件需要加锁或用 channel 汇总。QPS 为 0 或负数打印 "invalid qps" 并 exit 1。
 
 递归模式直接向目标 DNS 服务器发查询，迭代模式从根服务器开始逐级解析。`-protocol udp|tcp` 选择传输协议，默认 UDP。实时进度打印 "sent: 5000, received: 4987, errors: 13, elapsed: 5s"。Go 标准库，`go run .` 或 `go build` 都行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

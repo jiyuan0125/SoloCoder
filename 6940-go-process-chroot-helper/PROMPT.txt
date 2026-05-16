@@ -5,3 +5,4 @@ CLI：`chrootool run --root /opt/chroot/env --bind /usr,/lib,/bin -- command arg
 执行流程：校验 root 目录存在且可写 → 创建必需的 dev 节点（null、zero、random）→ 执行 bind mount → chroot 并运行命令 → 收集退出码 → 清理挂载点。每个步骤失败都输出具体原因到 stderr，退出码 1。命令退出码透传给调用方。
 
 `chrootool validate --root /opt/chroot/env` 检查环境是否完备：必需目录和二进制是否存在，输出检查清单表格。`--dry-run` 模式只显示将要执行的操作不实际执行。用户无 root 权限时输出 `error: root privileges required` 并退出。Go 标准库实现，交叉编译友好。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

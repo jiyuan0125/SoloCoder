@@ -5,3 +5,4 @@
 3. 大文件处理：CSV 按行流式读取，内存占用不超过 100MB。编码自动检测覆盖 UTF-8、GBK、Big5。
 
 CLI 入口：`encoding-validator dedup --input data.csv --output result.json --key-fields name,id_card --similarity-threshold 0.85`。输出 JSON 结构包含 total_count、duplicate_groups（每组列出相似记录的行号和相似度）。退出码 0 表示成功，1 表示输入错误，2 表示处理异常。纯标准库实现，go build 能过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

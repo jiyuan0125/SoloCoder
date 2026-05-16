@@ -6,3 +6,4 @@ review 代码发现校验逻辑散落在十几个文件里，改一个漏一个�
 2. 输出格式默认 JSON，加 `--format table` 输出终端表格，列包含 Field、Rule、Status、Message。
 
 CLI 输出：`{ "valid": bool, "errors": [{ "path": "...", "keyword": "...", "message": "..." }] }`。退出码 0 通过 1 校验失败 2 schema 语法错误。纯标准库实现，go build 能过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

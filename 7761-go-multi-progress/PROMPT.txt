@@ -9,3 +9,4 @@ multi-progress 用 Go 标准库实现，`go build -o multi-progress-demo ./cmd/m
 调整后相关的汇总也要更新——所有任务完成后自动显示汇总：总任务数、成功/失败数、总耗时、平均速度。汇总信息替换进度条区域，不用滚动翻找。
 
 API 设计：`mp := multi.New()`、`bar1 := mp.AddBar(100, "Task A")`、`bar1.Inc()`、`mp.Wait()`。最多同时显示 20 条进度条，超出折叠显示。输出到 stderr。终端宽度不足时自动缩短描述文本。`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

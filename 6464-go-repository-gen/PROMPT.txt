@@ -9,3 +9,4 @@
 字段定义格式错误时 stderr 输出 `error: invalid field definition: {field}` 并 exit 1。缺少 `-entity` 时输出 usage 并 exit 1。
 
 纯标准库，`go run .` 就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -9,3 +9,4 @@ JSON Schema：schemaval --schema rules.json --data input.json --output report.js
 XML：--format xml --schema order.xsd --ns "ord=http://example.com/order"。
 
 报告：{"valid":false,"errors":[{"path":"...","keyword":"...","message":"..."}],"summary":{"total":100,"passed":95,"failed":5}}。空文件退出码 0。格式错误退出码 2。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

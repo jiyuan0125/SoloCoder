@@ -9,3 +9,4 @@ CLI 设计：`report generate --input /var/log/app/ --format table`，`--format`
 窗口内没有任何日志行时，该窗口的 lines_per_sec=0，其他指标标为 null。空目录直接报 "no log files found" 退出码 1。
 
 Go 标准库实现，go run . 或 go build 都行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

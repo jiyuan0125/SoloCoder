@@ -3,3 +3,4 @@
 分几步走：第一步，`constraint-extract pull --db orders.db --format json` 从 SQLite 提取所有约束信息（主键、唯一索引、外键、CHECK 约束），输出 JSON 结构：每个表一个对象，包含 table_name、constraints 数组，每个约束有 name、type、columns、reference_table、reference_columns。第二步，`constraint-extract format --file query.sql --highlight` 对 SQL 做格式化并在终端输出 ANSI 高亮（关键字蓝色、字符串绿色、注释灰色），`--no-highlight` 关闭高亮。同时计算查询复杂度评分（嵌套层数 × 2 + JOIN 数量 × 3 + 子查询数 × 5），输出到 stderr。第三步，`constraint-extract diff --db1 a.db --db2 b.db` 逐行对比两张同名表的数据，标记差异行。数据库操作支持多层路径 `tables/{table}/rows/{id}/columns/{col}`。
 
 Go 命令行工具，go build 能过就行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

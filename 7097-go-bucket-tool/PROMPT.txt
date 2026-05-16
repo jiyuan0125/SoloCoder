@@ -7,3 +7,4 @@ segment 模式逐行处理：每行检测编码（先查 BOM，试 UTF-8，失�
 索引状态管理：处理前创建状态记录，处理中状态为构建中，完成变为可用，中断变为下线。写入 `.buckettool.state`：`{ "status": "available|building|offline", "lines_processed": 100, "lines_total": 500, "encoding_stats": {"utf-8":80,"gbk":20} }`。
 
 加 `-json` 输出 JSON 包装含 encoding_stats 和 total_lines。文件不存在退出码 1。go build 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

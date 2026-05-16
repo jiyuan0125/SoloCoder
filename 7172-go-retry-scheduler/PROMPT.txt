@@ -5,3 +5,4 @@
 子命令 resend 重发指定消息，--id 传消息 ID，--all 重发全部失败消息。自动重发策略用指数退避，初始间隔 1 秒，上限 60 秒，最大重试次数用 --max-retries 指定（默认 5）。超过上限的消息自动标记 discarded，输出 "discarded: ID (exceeded max retries: N)" 到 stderr。
 
 子命令 stats 统计死信原因分类，按 error_type 分组计数，输出 JSON 格式 {"error_type": count}。签名验证这块，签名时验证证书状态（expired/revoked/valid），验证时也检查签名链完整性，链断裂输出 "error: certificate chain broken at depth N"。输入消息有乱码行或空行直接跳过，打印 "skipped invalid line N" 到 stderr 并继续。Go 命令行工具，go build 能过就行，纯标准库实现。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

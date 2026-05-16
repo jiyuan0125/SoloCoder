@@ -7,3 +7,4 @@ check 不修改文件。convert 才写入。validate 在 convert 后运行。修
 空输入返回空结果。非标准格式（比如 Terraform 0.12 之前的老语法、HCL2 的新特性）给警告。变量插值里的表达式语法要正确解析，`var.name` 和 `local.name` 的引用关系要能追踪。
 
 Go 标准库。`go build`。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

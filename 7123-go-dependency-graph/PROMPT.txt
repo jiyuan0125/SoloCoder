@@ -3,3 +3,4 @@
 直接定义接口：`depgraph parse --file query.sql` 解析 SQL 输出依赖树，JSON 格式 {root: {type, name, children: [{type, name, children: [...]}]}}，type 是 table/subquery/view。`depgraph format --file query.sql --indent 2` 格式化 SQL 输出到 stdout，`--highlight` 开启终端 ANSI 高亮（关键字蓝色、字符串绿色、注释灰色、数字黄色）。`depgraph score --file query.sql` 输出复杂度评分，规则：嵌套层数 × 3 + JOIN 数 × 2 + UNION 数 × 4 + 子查询数 × 2，超过 20 分标 "high complexity" 标黄。`depgraph visual --db orders.db --format dot|mermaid` 生成整库表关系图。消息发送需要 topic，topic 创建方式不限。日志里绝对不能打印密钥和密码等敏感信息——碰到这些字段用 `***` 替代。SQL 文件不存在输出 "file not found: xxx" 退出码 1。
 
 Go 命令行工具，go build 能过就行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -7,3 +7,4 @@ CLI 格式：`tdgen generate --source ./myfunc.go --func MyFunc --output myfunc_
 生成的测试文件包含 `TestMyFunc` 函数，每个 case 有 `name` 字段描述场景，`wantErr` 标记是否期望错误。如果源文件中已有同名测试函数，`--force` 覆盖，否则跳过并输出提示。
 
 边界条件占位用 `// TODO: fill expected result` 标注，方便后续补全。生成的测试文件 package 与源文件一致，import 自动包含 `testing`。`--verbose` 模式输出每个参数的枚举值列表到 stderr，方便确认覆盖度。源文件解析失败（语法错误）时输出具体错误位置，退出码 1。不用第三方包，`go build` 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

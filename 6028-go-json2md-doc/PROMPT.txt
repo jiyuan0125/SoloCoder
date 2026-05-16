@@ -5,3 +5,4 @@
 CLI 用法：`j2md convert input.json -o output.md --depth 4`，`--depth` 控制最大嵌套展开层级，超出部分以 JSON 原文块输出。`j2md batch ./logs/ -o ./docs/` 批量转换目录下所有 `.json` 文件。数组为空时输出 `*（无数据）*` 而非空表格。字段值包含 `|` 或换行符时在表格中用反引号包裹。
 
 邮件通知用 `--notify admin@example.com` 触发，SMTP 未配置时打印警告 `[WARN] SMTP not configured, skipping notification` 不退出。转换成功 exit 0，文件读取失败 exit 1 并输出 `error: cannot read file: <path>: <reason>`。架构上分三层：parser.go 解析 JSON 为中间结构，renderer.go 转成 Markdown 文本，notifier.go 处理邮件（可选）。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

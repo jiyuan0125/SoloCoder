@@ -3,3 +3,4 @@ flaky test 藏了两周才复现这种事遇到过吧？就因为不知道当时
 工具叫 `seedrun`——`seedrun run --test TestConcurrentMap --package ./pkg/map --count 100 --timeout 10s --seed-start 1`。每次运行用 `math/rand` 的 `rand.Seed(seed)` 设置不同种子（从 `--seed-start` 开始递增），然后执行 `go test -run <test> <package>`。成功的不输出细节，只计数。失败时输出 "[FAIL] seed=42 output: <test output>"，把种子值和完整的测试输出都打出来。`--stop-on-fail` 遇到第一个失败就停止。运行完输出汇总："ran 100 times, 2 failures\nfailing seeds: 42, 87"。`--json` 输出 JSON 格式：`{"total":100,"failures":2,"failed_seeds":[42,87],"details":[{"seed":42,"output":"panic: concurrent map write"}]}`。测试编译失败输出 "compilation failed: <error>" exit 1。`--count` 为 0 或负数输出 "count must be positive" exit 2。整个批次被 `--total-timeout 5m` 控制，超时停止并输出已有结果，exit code 3。`--replay --seed 42` 用指定种子只跑一次，复现失败场景。
 
 Go 标准库，`go run .` 或 `go build` 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

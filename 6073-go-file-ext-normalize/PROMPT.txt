@@ -3,3 +3,4 @@
 用法：`extnorm <目录> --config rules.json --dry-run --recursive`。rules.json 映射如 {"jpeg":"jpg","JPEG":"jpg","JPG":"jpg","tif":"tiff"}，key 原始扩展名 value 目标。不加 --config 默认全部转小写。--recursive 递归子目录，默认只处理一层。--dry-run 只输出 `RENAMED: <原路径> → <新路径>` 不动真格。
 
 输出每条操作一行。重命名冲突（目标已存在）stderr 输出 "conflict: <目标路径> already exists" 并跳过，退出码改为 2。符号链接跳过。隐藏文件（. 开头）默认跳过，加 --include-hidden 才处理。无扩展名文件跳过。--report report.json 每条含 original_path、new_path、status（renamed|skipped|conflict）。退出码 0 全部成功，2 部分失败。纯标准库，go run . 能跑，代码至少分 main.go、config.go、walker.go 三个文件。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

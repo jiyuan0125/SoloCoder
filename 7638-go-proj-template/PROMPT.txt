@@ -15,3 +15,4 @@ Template 实体有 ID、名称、描述、类型（service/library/cli/webapp）
 - `show <id>`：模板详情含审批状态和关联链
 
 Go 标准库，go build 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

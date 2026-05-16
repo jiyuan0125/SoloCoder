@@ -5,3 +5,4 @@
 Mock 模式：`mocker mock --port 9090 --input ./recordings`。收到请求后按 `METHOD + URL path + query string` 匹配已录制的响应。匹配到就返回录制的 status、headers、body。匹配不到返回 404，body 是 `{"error":"no recorded response for METHOD /path"}`。`--strict` 模式下还校验请求体一致。
 
 `--latency 50ms` 模拟真实延迟。`--cors` 自动添加 CORS 头。Ctrl+C 优雅关闭，输出统计：共处理 N 个请求，命中 N 个，未命中 N 个。Go 实现，只用标准库，交叉编译友好。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -9,3 +9,4 @@ example-verify 用 Go 标准库实现，`go build -o example-verify ./cmd/exampl
 验证环境：每个代码片段在独立的临时目录中执行，不影响主项目。超时 30 秒强制终止。有副作用的代码（网络请求、文件写入）跳过执行只做语法检查。代码块头部支持 `// verify:skip` 注释跳过验证。
 
 子命令：`verify <file>` 验证单文件；`verify-dir <dir>` 批量验证；`report` 输出验证结果汇总——通过数、失败数、跳过数。输出格式终端彩色文本，`--format json` 切换。验证结果缓存到 `.example-verify/results.json`。支持多种注释格式。`go test ./...` 跑测试。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -7,3 +7,4 @@
 3. 操作模式：`convert csv json`、`convert yaml toml`、`validate json --file <p>`、`diff json --left <f> --right <f>`。
 
 空目录 `NO_DOCS: <dir>`。无问题 `CLEAN: <file>`。标准库，`go run .` 跑起来就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

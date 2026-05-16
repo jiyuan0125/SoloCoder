@@ -5,3 +5,4 @@
 生成完自动更新 `error-index.json` 索引文件，记录所有已生成的错误码、对应模块、生成时间。索引构建时也要读取已有的 error 文件，合并新旧条目，重复 code 报 "duplicate error code: <module>:<code>" exit 1。
 
 配置文件不存在 exit 1。yaml 格式错误打印具体字段和原因。http_status 不在有效范围（100-599）报 "invalid http_status" exit 1。零外部依赖，编译完直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

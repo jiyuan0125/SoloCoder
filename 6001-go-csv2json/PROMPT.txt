@@ -3,3 +3,4 @@ CSV 导进来的数据要喂给下游的 JSON 接口，手动转了一周发现�
 Go 写个 CSV 转 JSON 的命令行工具。用法 `csv2json -i data.csv -o result.json [-d delimiter] [-nested]`，-d 支持逗号(默认)、tab、分号，只接受单个字符。加 -nested 后列名的点号展开成嵌套对象，比如 address.city 变成 {"address":{"city":"值"}}，a.b.c 逐层嵌套。类型自动推断：纯数字先 strconv.Atoi 转 int，失败用 strconv.ParseFloat 转 float64，"true"/"false"（不区分大小写）转布尔，其余保持字符串。空字段输出 JSON null，空行跳过。输入文件不存在时 stderr 输出 "input file not found" 并 exit 1，输出路径不可写 exit 2。结果是 JSON 数组，每行 CSV 一条对象。表头列名前后空格 trim，重复列名取最后一个。
 
 处理完主文件后自动生成摘要文件 summary.json（与输出文件同目录），记录 total（总行数，不含表头）、success（成功转换行数）、fail（跳过的无效行数）三个整数字段，输入文件只有表头无数据行时写 {"total":0,"success":0,"fail":0}。go build 编译通过，纯标准库实现不依赖第三方包。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -9,3 +9,4 @@ alert-notify 用 Go 标准库实现，`go build -o alert-notify-demo ./cmd/alert
 告警去重：相同标题+级别的告警在 N 分钟内只发一次（默认 5 分钟），避免刷屏。频率阈值可配——超过阈值后提升告警级别（WARN→ERROR）。
 
 多种子命令处理不同操作：`alert send --level ERROR --title "disk full"` 发送告警；`alert history` 查看告警历史；`alert config` 管理通知渠道配置；`alert test` 发送测试告警验证渠道。`go test ./...` 跑测试。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

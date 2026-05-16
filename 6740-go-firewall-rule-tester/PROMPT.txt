@@ -7,3 +7,4 @@
 输入文件为空或只有 header 时输出 `no rules to test` 到 stderr，退出码 0。规则格式错误时输出具体行号和原因，退出码 1。无权限执行网络测试的规则标记为 `skipped`，不计入 passed/failed。
 
 支持 `--parallel 10` 控制并发测试数，默认 5。Go 标准库实现，交叉编译友好。`fwtest validate matrix.yaml` 可以只校验规则文件格式不执行测试。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

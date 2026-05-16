@@ -3,3 +3,4 @@
 YAML 格式示例：commands 下面是一个数组，每项有 name、cmd（命令字符串）、env（键值对 map）、timeout（秒，默认 60）、retry（次数，默认 0）、workdir（工作目录）。cmd 中 ${VAR} 形式的变量从 env 字段和系统环境变量中替换。执行时按数组顺序串行跑，每条命令执行前输出 ">>> {name}: {cmd}"。超时到达后 SIGKILL 终止进程，标记为 timeout。重试只在 exit code 非 0 时触发，每次重试输出 "retry {n}/{max}: {name}"。全部执行完输出汇总表，列为 name、status（success/failed/timeout）、exit_code、duration、retries。任一命令最终状态为 failed 或 timeout 则工具退出码 1，全部 success 退出码 0。`-dry-run` 参数只解析 YAML 和变量替换，打印要执行的命令但不实际运行。YAML 解析失败输出 "invalid config: {msg}" 退出码 2。
 
 用 Go 标准库写，go run . 或 go build 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

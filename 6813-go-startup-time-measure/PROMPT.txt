@@ -9,3 +9,4 @@ systemd-analyze 只给个总启动时间，想知道的是每个服务到底启�
 有可能一次导入上万条数据。文件状态有新增、处理中、已完成、归档，处理完后可以归档。命令行参数支持 `tool verb resource --filter key=value` 格式。
 
 解析 journalctl 或 /var/log/syslog。Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

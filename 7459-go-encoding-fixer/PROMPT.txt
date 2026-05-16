@@ -11,3 +11,4 @@ Diff 应用——拿一个 patch 文件应用到原始文件。patch 格式就�
 搜索路径支持多层 indexes/{name}/docs/{doc_id}/fields/{field}，逐级查找定位到具体字段。
 
 go build 能过，命令行工具能正常运行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

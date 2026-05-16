@@ -1,3 +1,4 @@
 每次发版要手动 sha256sum 每个构建产物，漏了一个就被运维打回来。五个平台八个文件，算完还要格式化成校验文件，纯体力活。上次漏了一个 .exe 没算，部署脚本校验不过，发版延迟了两小时。
 
 写个工具 `checksumgen` 批量生成校验文件。用法：`checksumgen --dir ./release --algorithms md5,sha256 --output checksums.txt`。它扫描 `--dir` 下所有文件（不含子目录），对每个文件计算指定的哈希值，输出格式兼容 `sha256sum` 命令：`<hash>  <filename>`（两个空格分隔，每行一条）。支持 `--algorithms` 参数指定算法，可选 md5 和 sha256，逗号分隔，不指定默认 sha256。加 `--recursive` 递归扫描子目录，文件路径用相对路径。空目录输出空文件不报错退出码 0。输出文件已存在时直接覆盖。文件读取出错（权限不足等）打印 `error: cannot read file: <path>: <系统错误>` 跳过继续。最终在 stderr 打印 `generated checksums for X files`。`--dir` 不存在退出码 1 输出 `error: directory not found: <path>`。Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -14,3 +14,4 @@ go.mod 里 indirect 标记的依赖堆了五十多个，上次 Log4j 那种供�
 - `list-deps [--type direct|indirect]`：列出依赖
 
 Go 标准库实现。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

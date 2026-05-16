@@ -5,3 +5,4 @@
 list 时如果没有发现任何网络接口（不太可能但处理边界）输出 "no network interfaces found" exit 0。test 时接口名不存在报 "interface not found: <name>" exit 1。target 地址格式错误（不含端口）报 "invalid target, expected host:port" exit 1。bind 执行命令超时（`-timeout 30s`）杀掉子进程并报告 "command timed out"。
 
 生成的绑定报告写 `bind-report.json`，记录接口名、测试目标、连通状态、延迟、时间戳。用 Go 标准库写，`go run .` 或 `go build` 都行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

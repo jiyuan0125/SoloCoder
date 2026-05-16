@@ -5,3 +5,4 @@ Emoji 处理比想象中复杂——一个 emoji 可能是多个 Unicode 码点�
 Unicode 规范化处理：emoji 的修饰符序列（比如 👦+🏻 = 👦🏻）在 NFC 和 NFD 下可能不同。工具要处理 NFC/NFD/NFKC/NFKD 四种形式，两个视觉上一样的 emoji 序列要识别为同一个。emoji 序列的解析要按 Unicode 标准的最大匹配原则——优先匹配最长的合法序列。
 
 Go 标准库实现。`go build`。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

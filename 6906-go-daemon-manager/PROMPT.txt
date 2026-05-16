@@ -5,3 +5,4 @@ CLI 覆盖完整生命周期：`daemon install --name my-worker --command "/usr/
 PID 文件管理：启动时写 PID 停止时删。加 `--check-port 8080` 时通过端口探测防重复启动。`daemon remove --name` 先停再清配置。`daemon log --name my-worker --lines 100 --follow` 查看日志。
 
 用 Go 标准库写，go run . 或 go build 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

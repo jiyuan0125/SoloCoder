@@ -5,3 +5,4 @@
 接着看对比输出：`TARGET | P50 | P90 | P99 | AVG | MAX | ERRORS | REQ/S`。两个端点各一行。`--json` 输出完整数据 `{a: {percentiles, throughput, errors}, b: {...}, diff: {p50_delta, throughput_delta}}`。`--baseline a` 以 A 为基准计算百分比变化。`--threshold 10%` 响应时间退化超过 10% 时 exit 1 并输出 `regression detected: P99 increased by 15.3%`。
 
 请求失败（连接超时、5xx）计入错误率但排除在延迟统计外。`--timeout 5s` 单个请求超时。两个端点不可达时 `error: endpoint unreachable: <url>` exit 2。Go 标准库实现，`go run .` 或 `go build` 都行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

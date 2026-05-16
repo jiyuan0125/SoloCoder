@@ -7,3 +7,4 @@
 心跳：每 ttl/2 秒扫描，last_heartbeat 超 ttl*2 标 unhealthy，超 ttl*5 删除。`registry health --name user-service` 查健康详情。`registry list` 列出所有服务。`registry dump --output backup.json` 导出。并发写用文件锁保护。同名同地址注册不报错只更新 last_heartbeat。
 
 Go 标准库实现，go build 编译通过，无第三方依赖。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

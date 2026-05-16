@@ -7,3 +7,4 @@
 mmdb 文件不存在退出码 1 打印 "database file not found"。IP 格式无效退出码 2 打印 "invalid IP: xxx"。批量模式空行跳过，重复 IP 只查一次缓存结果。
 
 纯 Go 标准库（mmdb 解析用 os.ReadFile + binary 读取），编译后单二进制可以直接跑。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

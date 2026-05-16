@@ -9,3 +9,4 @@ Dockerfile 结构：第一阶段 FROM golang:*-alpine AS builder，COPY go.mod g
 无 go.mod "go.mod not found" 退出码 1。--base 格式不对退出码 1。已存在需 `--force`。
 
 `go build` 能过，不依赖第三方库。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 CLI 命令 `profcmp`，`profcmp diff --before cpu1.prof --after cpu2.prof --type cpu --top 20`，解析出每个函数的 flat/cum 时间和百分比。对比两份结果，计算每个函数的差值和百分比变化，按差值降序排列输出表格：FUNCTION | BEFORE(FLAT) | AFTER(FLAT) | DELTA | DELTA%。`--type cpu|mem` 区分对比类型，mem 模式解析 `go tool pprof -text --inuse_space` 的输出。`--top 20` 只显示前 N 个差异最大的函数。`--format folded` 输出 folded stack 格式（`funcA;funcB <samples>`），可以直接喂给 flamegraph.pl 画图。`--format json` 输出 `[{"function":"main.foo","before_flat":"120ms","after_flat":"250ms","delta":"+130ms","delta_pct":"+108%"}]`。输入文件为空或格式异常输出 "invalid pprof text input at line <N>" exit 1。文件不存在 exit 2。
 
 Go 标准库，`go run .` 或 `go build` 都行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -7,3 +7,4 @@
 5. 符号链接跟随目标文件。无权限读取的文件跳过，记到 stderr：`skipped: /path/to/file (permission denied)`。
 
 文件处理状态机：待处理→处理中→校验中→已完成。校验失败（哈希计算出错）退回处理中重试，最多重试 3 次后标记为 `failed`。`dupfind summary dupes.csv` 输出统计：总文件数、重复组数、可释放空间。纯标准库实现，`go run .` 能跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

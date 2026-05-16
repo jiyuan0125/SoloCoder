@@ -11,3 +11,4 @@ file-watcher 用 Go 标准库实现，`go build -o fwatch-demo ./cmd/fwatch` 编
 防抖机制：短时间内同一文件多次变更只触发一次回调（默认 100ms 防抖窗口）。大文件写入完成才触发（检测文件大小是否还在变化）。工作目录临时文件自动忽略。
 
 API：`w := watcher.New()`、`w.Add("./src", handler)`、`w.Start()`、`w.Wait()`。用 `fsnotify` 不行就回退到轮询模式。`go test ./...` 跑测试，`go build` 编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

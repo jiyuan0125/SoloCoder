@@ -5,3 +5,4 @@ DELETE 了 100 万条数据磁盘空间一点没少——这种事发生过三�
 `import --file data.csv --table users --db app.sqlite` 支持 CSV 导入，自动检测分隔符（逗号/制表符/分号），第一行作为列名。数据校验失败（类型不匹配、必填为空）输出警告行号继续执行，导入完成后打印成功/失败/跳过计数。
 
 REST 风格的数据操作路径 `tables/{table}/rows/{id}/columns/{col}` 用于程序内部组织。支持常见输入格式。go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

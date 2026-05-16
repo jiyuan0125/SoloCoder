@@ -7,3 +7,4 @@
 --format json 输出 JSON，默认表格。--repeat 5 重复整个流程 N 次取平均值，减少网络抖动的影响。如果指定 --server 端口不可达，exit code 1 并打印 ERROR: cannot reach DNS server。
 
 TTL 为 0 的记录每次都应该重新查询，如果第二次还是很快就标 WARNING: unexpected cache behavior for zero-TTL record。纯 Go 标准库，编译后单二进制可以直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -5,3 +5,4 @@ collab-annotate 用 Go 标准库实现，`go build -o collab-annotate ./cmd/coll
 批注状态可流转：待处理→已解决或已忽略。`resolve <id>` 标记为已解决，`ignore <id>` 标记为忽略。处理完成后自动归档到 `.annotations/archive.json`。同时，工具对文档质量打分——完整性、可读性、示例覆盖率三个维度独立评分，批注密度也作为质量指标（批注多的文档可能质量差需要重写），每个维度给出行级改进建议。
 
 子命令：`annotate` 新增批注；`list <file>` 列出文件的所有批注；`resolve <id>` 解决批注；`stats` 统计各作者批注数和解决率。数据存 `~/.collab-annotate/annotations.json`，文件写入用原子操作。输出 Markdown 格式。`go test ./...` 跑测试。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

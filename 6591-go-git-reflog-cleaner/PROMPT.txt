@@ -15,3 +15,4 @@ reflog 几千条了，仓库越来越胖，清理一下能省不少空间。但�
 `-before` 日期格式必须为 `YYYY-MM-DD`，格式错误退出码 1 打印 "invalid date: %s, expected YYYY-MM-DD"。不是 git 仓库时退出码 1。dry-run 退出码 0。执行后退出码 0。
 
 Go 标准库，`go run .` 或 `go build` 均可。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

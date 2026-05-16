@@ -1,3 +1,4 @@
 上次磁盘坏了才发现备份是三个月前的，增量备份根本没跑起来。痛定思痛，这次要把备份和检查都自动化。
 
 Go CLI 工具 `queryrun`。子命令 `dump`：`--db app.sqlite --output backup.sql` 做 SQL dump，输出 INSERT 语句，`--compress` 可选 gzip 压缩。`incr-backup` 做增量备份：`--db app.sqlite --since last_backup.timestamp` 只导出上次备份后变更的行（基于 rowid 或 update_time），`--manifest manifest.json` 记录备份清单。`verify` 子命令恢复验证：`--backup backup.sql --test-db /tmp/test.sqlite` 导入到临时库，逐表对比行数和抽样 checksum。`lint` 子命令 SQL 静态检查：`--input queries/` 扫描目录下所有 .sql 文件，揪出未使用索引（有 WHERE 字段但该字段无索引）、SELECT *（列出具体文件和行号）、缺失 WHERE 的 UPDATE/DELETE（标记为高危）。数据转换需要映射模板，模板怎么定义你看着办，JSON 配置文件就行。每个子命令退出码 0 成功 1 参数错 2 执行失败。纯标准库，季度末赶着上线，go build 能编译能跑就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

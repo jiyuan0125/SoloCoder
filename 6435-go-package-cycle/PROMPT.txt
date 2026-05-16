@@ -5,3 +5,4 @@
 打破循环的建议逻辑：对每个环，找出被环内多个包共同导入的类型或函数，提示抽取到独立包，比如 "consider extracting shared types from pkg/a and pkg/c to pkg/types"。只分析项目内包之间的依赖关系，不涉及标准库和第三方包。-ignore internal/test 排除指定包路径不参与分析，支持多个。无循环时输出 "no import cycles detected" 退出码 0。发现循环依赖时退出码 1 并列出所有环路。
 
 导入成功后自动通知下游系统，本地模式没有下游配置。只依赖标准库，编译完直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

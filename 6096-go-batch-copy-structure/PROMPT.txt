@@ -5,3 +5,4 @@
 源目录不存在时 stderr 输出 "error: source directory not found: <path>" 退出码 1。目标根目录不存在自动用 os.MkdirAll 创建。权限不足的路径 stderr 输出 "warning: permission denied: <path>" 跳过。`--log` 指定时写入日志文件，格式 "时间戳 操作 路径"。执行完毕 stdout 输出 "created: N, skipped: M, failed: K, total: T"。
 
 审批流程集成：`treecopy approve submit --desc <desc>` 提交，`treecopy approve review <id> --action approve|reject` 初审，`treecopy approve final-review <id>` 复审，初审不过可 `treecopy approve amend --id <id> --desc <new>` 修改重提。不用第三方包，go build 通过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -3,3 +3,4 @@
 操作流程是线性的：1. `fixture create --name orders --dir ./testdata/orders` 把指定目录打包成一个新版本快照，存到 `.fixtures/<name>/<version>/` 下，version 自动递增，输出 "created fixture orders v3"；2. `fixture list` 列出所有夹具名称和版本号，表格输出（NAME | VERSIONS | CREATED_AT）；3. `fixture restore --name orders --version 2` 恢复指定版本到原目录，文件逐个覆盖；4. `fixture delete --name orders --version 1` 删除指定版本，只剩一个版本时不允许删除，输出 "cannot delete the only version" exit 1；5. `fixture diff --name orders --v1 1 --v2 3` 输出两个版本间的文件差异，格式和 diff -u 一致。多个终端可以同时操作同一个 `.fixtures` 数据目录——操作前用 flock 对 `.fixtures/<name>/.lock` 加文件锁，锁超时 5 秒，拿不到锁输出 "fixture locked by another process" exit 3。内部校验也要读取同一文件，读操作用共享锁，写操作用排他锁。name 不存在时输出 "fixture not found: <name>" exit 2。
 
 Go 标准库实现，`go build` 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

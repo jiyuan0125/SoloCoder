@@ -5,3 +5,4 @@
 输出分三块：第一，逐次请求的详细结果表格（序号、状态码、耗时ms、Content-Length、是否缓存命中 304）。第二，汇总统计——总请求数、304 次数、命中率百分比、平均响应时间、最快/最慢响应时间。第三，缓存头验证——ETag 是否每次一致、Last-Modified 是否保持不变。
 
 `--output` 指定时写 JSON 格式。全部请求返回 200 说明缓存没生效，stderr 输出 "warning: no 304 responses, cache may not be working"。连接失败或超时 stderr 输出 "error: request failed: <error>" 退出码 1。用 Go 标准库写，go run . 或 go build 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

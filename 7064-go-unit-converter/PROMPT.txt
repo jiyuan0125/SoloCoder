@@ -3,3 +3,4 @@
 条件映射：`unit-converter conditional-map --input data.csv --condition "age>18" --true-mapping adult.json --false-mapping minor.json --output result.csv`，condition 支持 `>`、`<`、`==`、`!=`、`>=`、`<=`、`contains(field,"text")`、`startsWith(field,"prefix")`，条件解析失败报 `error: invalid condition: xxx` 退出码 1。表达式求值 `eval --input data.csv --expression "price*quantity" --as total --output result.csv`，新增 total 列，四则运算支持 `+`、`-`、`*`、`/` 和括号，字符串拼接用 `concat(field1,"-",field2)`，除零时该行结果填 null 并 stderr warning。查找表 `lookup --input data.csv --table ref.csv --key product_id --fetch category,brand --output enriched.csv`，key 匹配不到新列填 null。
 
 CSV/JSON 均支持，同格式输出。映射文件格式错误报错退出码 1。错误自行合理处理。go build 能过，纯标准库。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -5,3 +5,4 @@
 `--drop` 模式下被删除的叶子字段位置不留下 null。`--keep` 模式下如果指定的路径父级不存在，该路径静默跳过。字段路径不存在不报错。输入不是合法 JSON 退出码 3，stderr 输出 `invalid JSON: offset <位置>`。文件不存在退出码 2。成功退出码 0。
 
 多级子命令：`config get <key>`、`config set <key> <value>`、`config list` 列出全部、`config env switch <env>` 切换当前环境配置。`go build` 能编译通过，不依赖第三方库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -7,3 +7,4 @@
 3. 正则语法错误输出 `invalid regex: ...` 退出码 1。压缩包损坏输出 `corrupt archive: filename` 退出码 2。零匹配正常退出码 0，输出空文件。`--archive` 指定的文件不存在报 `file not found: ...` 退出码 1。支持的压缩格式只有 zip 和 gzip，其他后缀报 `unsupported format: .rar` 退出码 1。
 
 go build 能编译通过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

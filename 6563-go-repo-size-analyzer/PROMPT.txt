@@ -5,3 +5,4 @@
 `-ext ".log,.tmp"` 按扩展名过滤只显示指定类型。`-threshold 1MB` 只显示超过阈值的文件。`-deleted-only` 只统计已在当前 HEAD 中不存在但历史中存在过的文件。`-format json` 输出 JSON `{"files":[{"path","max_size","versions","still_exists"}],"extensions":[{"ext","count","total_size","percentage"}],"total_repo_size":12345}`。不在 git 仓库内时报错退出码 1。
 
 Go 标准库实现，`go build` 编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

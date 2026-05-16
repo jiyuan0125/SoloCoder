@@ -7,3 +7,4 @@
 实时打印每秒的瞬时速率，格式 `[1s] sent 120MB, throughput 960.0 Mbps`。测试过程中 Ctrl+C 提前结束也要输出已完成部分的结果，不要丢数据。
 
 端口被占用退出码 1，stderr 打 "listen failed: {error}"。客户端连不上服务端退出码 1，stderr 打 "connect failed: {error}"。host 或子命令参数不对退出码 1。Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

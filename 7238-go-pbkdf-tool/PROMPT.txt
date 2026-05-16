@@ -9,3 +9,4 @@ AES-256-CTR 流式加密：`pbkdf enc --key-file aes.key --input plaintext --out
 解密：`pbkdf dec --key-file aes.key --input ciphertext --output plaintext`。从密文前 16 字节读 IV，剩余部分送进 CTR 解密器。如果密钥不正确，CTR 模式不会报错——解密出来的是乱码。如果需要完整性验证，加 `--hmac` 标志，加密时在 IV 前面额外放一个 HMAC-SHA256（密文+IV 的认证标签）。
 
 `go build` 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

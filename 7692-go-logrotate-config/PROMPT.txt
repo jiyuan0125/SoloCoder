@@ -15,3 +15,4 @@ LogConfig 实体有 ID、日志文件路径（glob 模式支持）、轮转条�
 - `env export <name>` / `env import <file>`
 
 Go 标准库实现。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

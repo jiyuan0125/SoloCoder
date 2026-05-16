@@ -7,3 +7,4 @@ NFS 挂载点 stale 的时候最坑了——df 还显示旧数据，等你写入
 stale handle 检测方法：stat() 返回 ESTALE 即为 stale。读写速度阈值：读超过 100ms 标记 SLOW，写超过 200ms 标记 SLOW。超时设 5 秒，超时标记 ERROR。输出支持 --json 格式。遇到无权限的挂载点跳过并标注 PERMISSION_DENIED。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -7,3 +7,4 @@
 枚举值验证：生成的 `AllStatus` 切片包含全部合法值，`StatusNames` map 提供值到名称的映射。输入类型不是 int 或 string 时 `error: unsupported enum base type: <type>` exit 1。输出文件已存在时覆盖并备份为 `.bak`。
 
 同步流程：准备→扫描→传输→验证→完成，验证失败重试传输。不用第三方包，`go build` 通过就行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

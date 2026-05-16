@@ -3,3 +3,4 @@
 工具名 `slicecost`，扫描 Go 源码找出所有 `append` 调用中目标 slice 没有预分配的情况——比如 `var s []int` 后面紧跟 `s = append(s, ...)` 循环调用，而不是 `s := make([]int, 0, estimatedCap)`。统计每个函数体内的 append 调用次数，超过 5 次的标记为高频扩容嫌疑。输出建议格式：`文件名:行号: slice '<变量名>' appended X times without pre-allocation, consider make([]T, 0, cap)`。
 
 用法：`slicecost --dir ./pkg --top 10`，只显示问题最严重的前 N 个。加 `--json` 输出 JSON 格式：`[{"file":"main.go","line":42,"variable":"items","append_count":15}]}`。扫描完成后打印总计：`scanned X files, found Y potential optimizations`。目录不存在退出码 1 输出 `error: directory not found`。无 Go 文件退出码 0 输出 `no Go source files found`。`go build` 能过，不依赖第三方库。代码分几个文件组织：AST 解析一个文件、建议生成一个文件、主逻辑一个文件。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -3,3 +3,4 @@
 Go 做 CSV 类型推断工具。命令 `csvinfer -i data.csv [-sample 100] [-o schema.json] [--delimiter ","]`，-sample 指定采样行数默认 100，传 0 表示全量扫描。--delimiter 指定分隔符默认逗号。输出 JSON 数组，每列一个对象，字段包括 name（列名）、type（string/int/float/date/bool）、sample_values（前 3 个非空样本值组成的数组）、null_ratio（空值比例，0.0 到 1.0 之间精确到小数点后两位）。
 
 推断规则严格按优先级——bool：值只在 true/false/yes/no/0/1 中（不区分大小写）；int：全部非空样本能被 strconv.Atoi 解析成功且不丢失精度；float：能被 strconv.ParseFloat 解析但不是 int；date：匹配 YYYY-MM-DD 或 YYYY/MM/DD 两种格式（用 time.Parse 尝试）；混合类型时降级为 string。一列全部为空值时 type 为 string、sample_values 为空数组。输入文件只有表头无数据行时输出每列 type 为 string、sample_values 为 []、null_ratio 为 1.0。文件不存在 stderr 输出 "file not found: <path>" 并 exit 1。纯标准库实现，go run . 能跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

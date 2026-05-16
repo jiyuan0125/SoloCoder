@@ -7,3 +7,4 @@ Shamir 分片：`fp-enc split --input master.key --threshold 3 --shares 5`。GF(
 验证：`fp-enc verify share_2.json` 检查 JSON 完整性——index 范围、base64 合法、threshold ≤ total。输出 `{valid, index, threshold}`。
 
 密钥存储 `~/.fp-enc/` 按 key 名称组织。`go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -7,3 +7,4 @@
 完成后汇总：`total_requests: 6000, avg_latency_ms: 15, p99_ms: 42, error_rate: 0.001`。连接失败记录为 error 继续。不可达时 3 次重试后 exit 2。权重和为 0 时 exit 1 并输出 `error: total weight must be positive`。
 
 纯 Go 标准库，编译后单二进制直接跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -11,3 +11,4 @@ CRL 管理：`fp crl-init --ca-cert intermediate.pem --ca-key intermediate.key`�
 消息发送需要 topic？本工具不做消息。处理分阶段：解析→匹配→验证→输出，每阶段错误独立捕获。
 
 `go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

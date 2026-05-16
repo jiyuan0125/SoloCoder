@@ -7,3 +7,4 @@
 密钥轮换：`--key-dir /keys/`，轮换后旧密钥保留 7 天，旧密钥加密的数据用 `--decrypt-with all` 自动尝试所有密钥解密。日志脱敏：消息体中匹配 `password=xxx`、`token=xxx`、`secret=xxx` 的值替换为 `***`。
 
 Go 标准库的 encoding/base64 刚好能用，写个命令行工具。go build 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

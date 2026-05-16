@@ -1,3 +1,4 @@
 上周迁移脚本把生产表的三个列给删了，DBA 差点背锅。现在用的迁移工具不支持自定义规则，得换一个。
 
 Go 写个 SQLite schema 迁移版本化管理工具叫 `sqlmigrate`。子命令 `init` 在当前目录创建 `migrations/` 目录和一张 `_migrations` 元表（字段 id int 自增主键、version varchar 唯一、applied_at datetime）。`up` 执行所有未应用的迁移脚本（按文件名排序，文件名格式 `001_create_users.sql`），每个脚本包在一个事务里，失败回滚当前脚本并停止，stderr 输出失败的具体 SQL。`down` 回滚最近 N 个迁移，`--steps 3` 指定回滚几个，需要对应的 down 脚本。`status` 显示哪些已执行哪些待执行，已执行的标 `[x]`，待执行的标 `[ ]`。`seed` 子命令从 CSV 导数据：`--file data.csv --table users --conflict skip|overwrite|error`，用 database/sql 预处理语句。证书快过期要发通知，通知失败不中断续签流程。文件可能好几 GB，用 bufio.Scanner 流式逐行处理。go build 能过，命令行正常运行，退出码 0 成功 1 参数错 2 执行失败。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

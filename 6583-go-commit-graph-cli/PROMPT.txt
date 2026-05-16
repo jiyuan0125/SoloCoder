@@ -19,3 +19,4 @@ dot 模式输出标准 Graphviz：`digraph { "a1b2c3d" -> "i7j8k9l"; ... }`，�
 不是 git 仓库时退出码 1 打印 "not a git repository"。仓库没有任何 commit 时退出码 1 打印 "empty repository, no commits found"。成功退出码 0。
 
 纯 Go 标准库，编译后单二进制。`go build -o commit-graph .`。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

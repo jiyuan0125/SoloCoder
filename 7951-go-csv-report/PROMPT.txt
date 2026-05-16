@@ -7,3 +7,4 @@ CSV 报表生成工具。从 CSV 或 JSON 文件读取原始数据。数据透�
 输出格式：`report pivot data.csv --row department --col month --value amount --agg sum`。支持多值字段同时输出。排序参数 --sort 可按任意列排序。Go 标准库。
 
 CSV 输出编码可配（UTF-8/GBK），分隔符可配（逗号/制表符/分号），引号规则可配。大数据量支持流式输出（边计算边写文件，不在内存中构建完整结果）。CSV 输出编码支持 UTF-8 with BOM（方便 Excel 打开不乱码）。日期格式可配。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

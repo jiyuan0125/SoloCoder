@@ -3,3 +3,4 @@
 `fmtcheck -file data.csv -rules rules.yaml [-o report.txt]`。规则文件定义检查项：列名必须匹配（`required_columns: [id, name, email]`）、字段类型约束（`email` 列必须含 `@`、`age` 列必须是正整数）、值范围约束（`age: {min: 0, max: 150}`）、编码必须是 UTF-8。每条规则检查后输出 `PASS|FAIL | RULE_NAME | DETAIL`，如 `FAIL | required_columns | missing column: email` 或 `FAIL | type_check | row 42: age="abc" not integer`。最后汇总 `Total: 5 rules, 3 passed, 2 failed`。
 
 不合规项按严重程度分类：ERROR（数据缺失、格式错误）和 WARNING（编码不一致、尾部空行）。`-strict` 模式下 WARNING 也算失败。合并完成后自动删除源文件，但 `-keep` 保留模式下不删。规则文件语法错误输出 `error: invalid rules at line N`。不用第三方包，go build 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

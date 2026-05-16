@@ -5,3 +5,4 @@
 `merge3 check base.yaml ours.yaml theirs.yaml` 只检测不合并，输出冲突统计 `{total_lines, auto_merged, conflicts: [{line, reason}]}`。`merge3 diff ours.yaml theirs.yaml` 显示两方差异概览。空文件视为无修改，自动合并不报错。每处理完一个目录更新进度到 stderr `[merged] dir/sub/ (3/10)`，空目录跳过但进度计数照加。
 
 冲突未解决时 exit 1，全自动合并成功 exit 0。纯标准库，`go build` 编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

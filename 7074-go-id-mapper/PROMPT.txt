@@ -7,3 +7,4 @@
 查找 `lookup --input data.csv --lookup ref.csv --key sku --fetch category --output enriched.csv`，key 匹配不到新列填 null。
 
 CSV/JSON 均支持。condition 语法错误报 `error: invalid condition` 退出码 1。eval 引用不存在的列报 `error: column not found: xxx` 退出码 1。用 archive/zip 读写。go build 能过，纯标准库。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

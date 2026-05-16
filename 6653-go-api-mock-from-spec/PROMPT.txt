@@ -3,3 +3,4 @@
 用法：`mockgen -spec api.yaml -port 8090 [-delay 200ms]`。读取 spec 后为每个 path + method 组合注册 handler。如果 operation 有 `responses.200.content.application/json.example`，直接返回该 example；没有的话根据 schema 类型自动生成占位值——string 生成 `"string"`，integer 生成 `0`，array 生成一个元素。`-delay` 参数模拟延迟，每个请求 sleep 指定时长再返回。生成后的 mock server 作为一个独立的 Go HTTP server 直接跑起来，日志输出每个请求的 `GET /api/users -> 200 (3ms)` 格式。
 
 如果 spec 文件路径不存在，输出 `error: spec file not found` 到 stderr 并退出码 1。spec 解析失败输出 `error: invalid OpenAPI spec: <reason>` 并退出码 1。`-port` 默认 8090。请求路径不在 spec 中返回 404 和 `{"error": "path not found"}`。纯标准库，go build 交叉编译友好。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

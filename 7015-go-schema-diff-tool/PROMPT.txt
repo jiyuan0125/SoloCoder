@@ -9,3 +9,4 @@ CLI：yamcheck check --schema types.yaml --data config.yaml --output report.json
 合并逻辑：后者覆盖前者，数组覆盖不合。合并结果过 schema。
 
 报告：{"valid":false,"errors":[{"path":"$.server.port","expected":"integer","actual":"string '8080'"}],"warnings":[...]}。文件不存在/权限不可读退出码 2。空 YAML {"valid":true,"warnings":["empty config"]}。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

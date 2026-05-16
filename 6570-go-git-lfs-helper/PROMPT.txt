@@ -7,3 +7,4 @@ LFS 缓存悄悄吃了 50GB 磁盘空间，清理的时候完全不知道哪些�
 清理时先验证对象在远程存在（`git lfs ls-files` 检查），不存在的对象不删并在 stderr 输出 `warning: {oid} not on remote, skipping`。没有 LFS 对象时输出 `No LFS objects found`。不在 git 仓库或未启用 LFS 时报错退出码 1。
 
 Go 标准库实现，`go build` 编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

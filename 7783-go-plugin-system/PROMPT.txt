@@ -11,3 +11,4 @@ plugin-system 用 Go 标准库实现，`go build -o plugin-demo ./cmd/plugin` �
 插件间通过共享 Context 对象传递数据。可以注册事件回调，其他插件触发时收到通知。加载顺序通过 Priority() 控制。
 
 子命令：`list` 显示已加载插件；`load <path>` 手动加载；`call <plugin> <method>` 测试。API：`pm := plugin.NewManager()`、`pm.LoadDir("./plugins")`。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

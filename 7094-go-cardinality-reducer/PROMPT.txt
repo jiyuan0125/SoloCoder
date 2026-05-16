@@ -1,3 +1,4 @@
 你有没有遇到过这种情况——业务方天天催条件映射和表达式计算，排不上期，最后自己周末加班写了个临时脚本，结果下周需求又变了？
 
 别再临时凑合了，做个正经的 Go CLI 工具 `cardreduce`。子命令 `condmap` 条件映射：`--rules rules.json` 指定规则文件，每条规则 `{"condition":"age>60","then":"senior","else":"regular"}`，从上到下匹配，第一个命中就停，全部没命中则保留原值。子命令 `calc` 表达式求值：`--expr "salary * 12 + bonus"` 四则运算，`--expr "first_name + ' ' + last_name"` 字符串拼接，除以零返回 `NaN` 不崩，括号嵌套也要支持。子命令 `lookup` 查找表丰富数据：`--table ref.csv --key product_id --add category,brand`，查不到的 key 对应新增字段填空字符串。安全扫描需要扫描策略，策略怎么配不提。认证检查要查角色，角色检查也要验证认证状态，两者互相依赖。字段值格式千奇百怪要容错——数字带逗号、前后空格、空值 null，统一清洗后再参与计算。输入输出 stdin/stdout，`--format` 指定 json/csv。go build 能过，命令行正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@
 3. 接口嵌入（interface 里 embed 另一个 interface）也要展开检查——被嵌入接口的方法全部列出。空接口（无方法）标记为 `EMPTY_INTERFACE: <name>` 不报错但记录。结构体嵌入了接口但只实现了部分方法时，列出缺失方法。
 
 4. 无接口定义输出 `NO_INTERFACES: <dir>`。所有接口都已实现输出 `ALL_IMPLEMENTED: <count> interfaces checked`。`go build` 能过，不依赖第三方库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

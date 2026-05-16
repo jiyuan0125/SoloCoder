@@ -15,3 +15,4 @@ Bug 状态流转：open → assigned → fixing → verified → closed，以及
 - `stats`：按严重级别统计各状态的 Bug 数量
 
 数据存当前目录 JSON 文件，每次操作立刻持久化。Go 标准库实现，go build 能编译就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

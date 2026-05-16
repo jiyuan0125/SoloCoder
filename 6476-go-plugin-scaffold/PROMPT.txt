@@ -5,3 +5,4 @@
 `plscaffold list` 扫描 plugins 目录列出所有已注册插件：名称、版本（从 config.yaml 读）、状态。扫描流程状态机：initializing → scanning → analyzing → report_generated，analysis 阶段发现问题则标记为 `anomaly`，正常则标记为 `healthy`。
 
 `plscaffold validate -dir ./plugins/myplugin` 检查插件是否正确实现了接口：方法签名匹配、config.yaml 格式正确、无编译错误。验证失败打印具体问题：缺少哪个方法、config 哪个字段非法。同名插件已存在报 "plugin already exists: <name>" exit 1。纯标准库，`go run .` 就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

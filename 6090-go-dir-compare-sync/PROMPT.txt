@@ -5,3 +5,4 @@
 同步功能可选方向：--sync a-to-b 把 A 的内容同步到 B（B 多余的删、缺少的补、不同的覆盖），--sync b-to-a 反过来。同步前必须 --dry-run 先预览，不加 --dry-run 直接同步时每个操作输出一行 `COPY <src> → <dst>` 或 `DELETE <路径>`。
 
 符号链接跟随一次后按常规文件比较。权限不可读的文件标记 `PERMISSION_ERROR: <路径>` 并跳过。--output report.json 导出对比结果为 JSON 数组，每条记录含 path、status（A_ONLY/B_ONLY/DIFF/SAME）、size_a、size_b、mtime_a、mtime_b。A 或 B 目录不存在退出码 1。退出码 0 全部一致或同步成功，8 存在差异或部分失败。不用第三方包，go build 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -7,3 +7,4 @@
 3. 模板：`template save --name <n> --file <p>`，`template apply --name <n> --output <p> --vars '{"k":"v"}'`，变量语法 `{{.key}}`。
 
 纯标准库，`go run .` 能跑，至少拆 main.go、converter.go、template.go、stats.go。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

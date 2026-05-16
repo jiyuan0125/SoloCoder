@@ -3,3 +3,4 @@
 服务列表通过 lifecycle.json 配置，是个有序数组，每项有 name、init（初始化命令，如创建目录）、start（启动命令）、health_check（健康检查命令，返回 0 视为健康）、stop（停止命令）、start_timeout（启动超时秒，默认 30）、stop_timeout（停止超时秒，默认 15）。CLI：`slcm -config lifecycle.json start` 按数组顺序依次执行 init→start→health_check，每阶段输出 "[{name}] {phase}: {status}"。health_check 最多重试 3 次，间隔 5 秒。任一阶段失败输出 "[{name}] {phase} failed: {error}" 并停止后续服务启动，已启动的按反序执行 stop，退出码 1。`slcm -config lifecycle.json stop` 按数组反序执行 stop。`slcm -config lifecycle.json status` 输出每个服务当前状态："{name}: {initialized|running|stopped|unknown}"。全部启动成功输出 "all services ready ({n})" 退出码 0。
 
 Go 实现，只用标准库，交叉编译友好。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@
 删除原始文件？默认不删。`--replace` 模式下解码成功后删掉 `.qp` 文件，删除后如果有关联的元数据文件（比如 `.qp.meta`）也一并清理。这是可选项，安全第一。
 
 Go 标准库，`mime/quotedprintable` 和 `path/filepath`。`go build`。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

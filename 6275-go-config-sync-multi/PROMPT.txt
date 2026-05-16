@@ -11,3 +11,4 @@
 记录状态文件 `.cfgsync-state.json`：`{"id":"...","status":"draft|pending|approved|archived","timestamp":"...","changes":[...]}`。approved 状态可以 `cfgsync rollback <id>` 撤回，恢复同步前的值。rollback 只能撤回最近一次。
 
 纯标准库实现，go run . 能跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

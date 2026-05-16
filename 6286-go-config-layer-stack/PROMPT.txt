@@ -9,3 +9,4 @@ SRE 同事说线上超时了，查了半天发现运维覆盖层里把 timeout �
 - `project test coverage --name myapp` 报告每层 key 覆盖率
 
 go build 编译通过，不依赖第三方库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -3,3 +3,4 @@ JSON Patch（RFC 6902）每次手写操作数组太痛苦，少个引号就解�
 `jsonpatch apply --target config.json --patch patch.json --output result.json` 从文件读 patch 操作数组应用到目标 JSON。支持六种操作：`add`（path 位置插入 value，path 是对象键则创建，是数组索引则在该位置插入）、`remove`（删除 path 指向的值，path 不存在时报错退出码 1）、`replace`（替换已有值）、`move`（从 from 移到 path，原位置删除）、`copy`（复制 from 值到 path，原位置保留）、`test`（检查 path 处值是否等于 value，不匹配则整个 patch 回滚，输出 `test failed: /status != "active"`，退出码 4）。
 
 path 用 JSON Pointer（RFC 6901），`/` 分隔，`~1` 转义 `/`，`~0` 转义 `~`。`--dry-run` 输出结果不写文件。不支持的 op 报错 `unsupported operation: <op>` 退出码 3。JSON 解析失败退出码 2。成功退出码 0。纯 Go 标准库，`go build` 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

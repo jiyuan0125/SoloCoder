@@ -7,3 +7,4 @@
 3. 校验：`mirror verify --source broker-a --target broker-b --topic orders.paid`，对比两边 offset 和消息数，不一致输出 `MISMATCH: topic=<t> source_offset=<a> target_offset=<b>`。
 
 校验完自动生成报告，`--report-dir ./reports/`，模板不存在跳过报告生成只打 INFO。任务状态：waiting → running → succeeded | failed。Go CLI 工具，go build 能过就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

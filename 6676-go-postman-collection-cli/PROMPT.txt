@@ -9,3 +9,4 @@ Postman Collection 有 200 个请求，手动转成 curl 要转一天。这个�
 Collection 文件解析失败时 stderr 输出 `ERROR: invalid collection format` 退出码 1。环境变量文件不存在时退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

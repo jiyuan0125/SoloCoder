@@ -5,3 +5,4 @@
 `etl validate -config pipeline.json` 校验配置不执行。`etl dry-run` 打印每步行数预览。执行过程打印进度：`[extract] read 1000 rows\n[transform:filter] 1000→850 rows\n[load] wrote 850 rows`。任一步失败输出 "pipeline failed at step [name]: [error]" 到 stderr 退出码 1。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

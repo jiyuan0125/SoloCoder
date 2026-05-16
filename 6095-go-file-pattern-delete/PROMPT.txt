@@ -3,3 +3,4 @@
 CLI 命令 `fpdelete`，支持 glob 模式匹配：`fpdelete -pattern "*.log" -pattern "*.tmp" /data/logs /tmp/build`。多个 `-pattern` 是 OR 关系，多个路径目录依次扫描（递归）。先预览模式（默认行为），列出将要删除的文件，每行一个，显示文件大小和修改时间，最后汇总 "共 N 个文件，总大小 X MB，使用 -confirm 执行删除"。加 `-confirm` flag 才真正执行删除，否则只是预览。加 `-dry-run` 输出 JSON 格式：`{"files": [{"path": "...", "size": 1234, "mod_time": "..."}], "total": 5, "total_size": 5678}`。
 
 空目录扫描后无匹配文件输出 "no files matched" 然后 exit 0。删除失败的文件单独列出，不中断批量操作，最后报 "N files deleted, M errors"。权限不足时错误消息包含文件路径。处理完每个目录更新进度：`[2/5] scanning /tmp/build...`。纯标准库，`go run .` 能跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

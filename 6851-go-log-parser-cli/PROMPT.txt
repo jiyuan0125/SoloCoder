@@ -9,3 +9,4 @@ Nginx 日志一种格式、Java logback 又一种、还有自己打的纯文本�
 Nginx combined 解析字段：remote_addr、time_local、request、status、body_bytes_sent、http_referer、http_user_agent。Java logback 解析字段：timestamp、level、logger、thread、message。JSON 格式直接透传。
 
 纯 Go 标准库，编译后单二进制可以直接跑。go build -o logparse。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

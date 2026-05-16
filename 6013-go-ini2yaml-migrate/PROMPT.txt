@@ -3,3 +3,4 @@
 命令 `ini2yaml -i app.ini -o config.yaml [--keep-comments] [--indent 2]`。INI 的 [section] 变成 YAML 的键，key=value 变成子键。加 --keep-comments 时分号 ; 和 # 开头的注释追加到对应键上方作为 YAML 注释（# 开头）。全局作用域（第一个 section 之前的键）放在 YAML 顶层。值前后的空格 trim，空值输出为空字符串。重复键后者覆盖前者并 stderr 打印 "duplicate key: <key> at line N"。等号只在第一次出现时分割键值，值里可以含等号。section 名含点号时（如 [database.primary]）转成 YAML 嵌套层级。
 
 --indent 指定缩进空格数，默认 2，只接受正整数，非法值 exit 1。输入文件不存在时 stderr 输出 "file not found: <path>" 并 exit 1。输出路径不可写时 stderr 输出 "output not writable" 并 exit 2。YAML 输出的字符串值含冒号、#、或以特殊字符开头时自动加双引号。多行值（行尾反斜杠续行）正确拼接，去掉反斜杠和换行符，下一行前导空格保留一个。go build 能编译通过，不依赖第三方库。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

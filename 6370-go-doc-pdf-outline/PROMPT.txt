@@ -1,3 +1,4 @@
 上周产品发了份 120 页的技术白皮书 PDF，客户说找不到第三章那个架构图在哪。PDF 大纲导航栏是空的，内容根本没法定位。市场部催着修，PDF 源文件又不是我们写的，只能从成品里提取信息重新做索引。
 
 做一个 PDF 大纲提取工具 `pdfoutline`。用法：`pdfoutline --input whitepaper.pdf --output outline.md`。它解析 PDF 文件的书签树（Bookmark/Outline），按层级关系输出为 Markdown 标题格式，每个标题后面标注对应页码，如 `## 3. 系统架构设计 ... page 45`。支持的最大层级深度为 6 级，对应 Markdown 的 h1-h6。没有书签的 PDF 打印 `warning: no bookmarks found in <filename>` 退出码 0，输出文件只包含一行 `No outline available.`。加 `--format tree` 输出 ASCII 树形格式，用 `├──` 和 `└──` 表示层级关系。转换完成后如果产生临时文件自动清理，没产生临时文件也不报错。输入文件不存在退出码 1 输出 `error: file not found: <path>`。加 `--pages` 在每个书签后同时输出该节覆盖的页码范围。`go build` 能过，不用第三方库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

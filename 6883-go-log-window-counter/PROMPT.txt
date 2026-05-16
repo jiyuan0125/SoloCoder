@@ -9,3 +9,4 @@ CLI：`window-counter count --input stream.log --window 5m --slide 1m --output c
 空窗口（窗口内无日志）也要输出，`total` 为 0。输入为空文件时输出空 windows 数组。退出码 0 成功，1 文件读取错误，2 参数无效（比如 window 格式不对，需要是 `1m`/`5m`/`1h` 这样的格式）。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

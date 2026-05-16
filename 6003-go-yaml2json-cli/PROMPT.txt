@@ -3,3 +3,4 @@ Kubernetes 配置文件全是 YAML，但配置中心只收 JSON——上周有�
 命令 `yaml2json [-i input.yaml] [-o output.json]`，不指定 -i 从 stdin 读取，不指定 -o 输出到 stdout。YAML 的锚点 & 和别名 * 必须正确展开后再转 JSON，不能保留引用标记。日期时间类型转成 ISO 8601 字符串（如 "2024-01-15T10:30:00Z"），纯日期转 "2024-01-15" 格式。YAML 的 ~ 和 null 统一转 JSON null，Yes/No/True/False/On/Off 这些 YAML 布尔拼写转 JSON 的 true/false。多文档 YAML（用 --- 分隔）只处理第一个文档，遇到后续文档时 stderr 输出 "warning: multi-document YAML, only first document processed"。
 
 输入不是合法 YAML 时 stderr 输出 "parse error: invalid YAML at line N" 并 exit 1。解析 stdin 时遇到 EOF 无数据则 exit 1 并提示 "empty input"。正常退出 exit 0。不用第三方包，go build 通过就行。记录有草稿→待审→通过→归档几种状态，通过后可以撤回重新编辑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

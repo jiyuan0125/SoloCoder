@@ -6,3 +6,4 @@ nginx 配置用 include 引了 upstream/*.conf、locations/*.conf，主文件看
 - `include check --file nginx.conf` 只检查循环和文件是否存在，文件不存在报 "file not found: conf.d/missing.conf at line 15" 退出码 1
 
 展开时在被 include 内容前后加标记 `# BEGIN included: conf.d/api.conf`。路径相对主文件目录解析。不用第三方包，go build 通过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

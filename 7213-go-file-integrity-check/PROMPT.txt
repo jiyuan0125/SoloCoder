@@ -9,3 +9,4 @@ HMAC 签名：`fic sign --key-file secret.key --algo sha256 --input data.bin`。
 处理分阶段：读密钥→初始化 HMAC→流式处理→输出。每阶段错误分别捕获：密钥读不到（phase 1）、文件打不开（phase 2）、签名不匹配（phase 3）。CA 签发需要 CA？不涉及。
 
 `go build` 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

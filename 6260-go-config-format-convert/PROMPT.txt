@@ -5,3 +5,4 @@ Go 做配置格式转换。命令：`cfgconv convert --input config.yaml --outpu
 注释保留策略：YAML→YAML 保留注释（解析时记录注释位置），跨格式转换注释丢弃但输出提示 "comments discarded: N comments"。
 
 加 `--check` 只做兼容性检查不实际转换，输出不兼容的字段列表和原因，格式 `<字段路径>: <不兼容原因>`。加 `--indent 2` 指定缩进空格数（默认 2）。输入文件不存在报 "file not found: <路径>" 退出码 1。格式不合法报 "parse error in <文件>: line <N>: <原因>" 退出码 2。空文件转换输出空文件不报错。转换完成后输出摘要 "converted <源格式> -> <目标格式>, N keys preserved, M comments handled"。每个转换流程绑定数据源配置。纯标准库实现，`go run .` 能跑。代码拆文件写。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

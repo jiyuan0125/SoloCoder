@@ -11,3 +11,4 @@
 源目录不存在时 stderr `ERROR: source not found: <路径>` 退出码 2。目标目录不存在自动创建（dry-run 时只报告会创建）。
 
 Go 标准库，go run . 能跑。代码分几个文件组织，别全写 main.go 里。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

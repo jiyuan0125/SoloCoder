@@ -7,3 +7,4 @@ transform 支持：trim、int/float（类型转换）、date_format、conditiona
 `-validate` 只检查配置合法性不执行。`-dry-run` 打印前 5 行预览。源字段不存在且无默认值输出 warning 但不中断。输入不存在退出码 1，mapping 格式错误输出 "invalid mapping: [reason]" 退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

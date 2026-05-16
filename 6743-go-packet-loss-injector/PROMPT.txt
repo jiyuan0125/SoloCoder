@@ -5,3 +5,4 @@
 inject 时先把当前 qdisc 配置保存到临时文件 /tmp/pkt-loss-<iface>.bak，恢复时从备份还原。程序收到 SIGINT 或 SIGTERM 信号时自动执行恢复逻辑，防止丢包规则残留。支持过滤条件：-src-port 8080 只对目标端口丢包，-protocol tcp 只对 TCP 生效，可组合使用。status 输出包含：丢包率、过滤条件、已持续时间和剩余时间。非 root 执行时输出 "permission denied, require root" 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

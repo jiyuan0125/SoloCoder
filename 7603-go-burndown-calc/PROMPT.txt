@@ -10,3 +10,4 @@
 4. `calc <sprint-id>`：计算并输出对比结果，包含每日的理想值和实际值，最后给个偏差总结
 
 Sprint 到期时如果还有未完成的任务（remaining > 0），calc 命令输出提示这些任务应该移到下一个 Sprint，并在日志中标记 carry-over。`report <sprint-id>` 生成文字版 Sprint 报告：总任务数、完成率、延期率、平均每日完成速度。报告可以导出为 Markdown 格式（`--format md`），内容包含文本表格。`export <sprint-id> --format csv` 把理想线和实际线输出成 CSV 文件，第一列日期，第二列理想值，第三列实际值。Go 标准库实现，go build 通过即可。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -7,3 +7,4 @@ CLI：csvlint check data.csv，--config rules.yaml 指定规则。缺省自动�
 异常检测用 Z-score，数值列超 3σ 标记 outlier。日期列检测未来和 1900 前日期。
 
 多目录：csvlint check ./dir1 ./dir2 --parallel 4。单文件最大 500MB，编码 UTF-8/GBK。空文件打 warning 不报错。报告含每列类型、各维度分数、异常值行号。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

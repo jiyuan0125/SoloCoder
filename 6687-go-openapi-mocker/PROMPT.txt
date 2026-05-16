@@ -8,3 +8,4 @@
 4. 输出 JSON 数组，每个元素符合 schema 结构。
 
 `apimock validate api.yaml` 校验 spec 文件格式，解析失败输出具体错误位置和原因，退出码 1。spec 中无 paths 定义时输出 `no endpoints found` 退出码 0。必填字段（required）在 mock 中必须出现，可选字段有 50% 概率包含。用 Go 标准库写，`go run .` 或 `go build` 都行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

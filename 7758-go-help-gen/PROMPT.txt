@@ -11,3 +11,4 @@ help-gen 用 Go 标准库实现，`go build -o help-gen-demo ./cmd/help-gen` 编
 用法行自动生成：`Usage: app [OPTIONS] COMMAND [ARGS]...`，根据参数定义动态拼出正确的用法模板。示例文本可以通过 `Example` 字段手动指定。
 
 API：`helpGen := New()`、`helpGen.AddCommand(cmd)`、`helpGen.AddOption(opt)`、`helpGen.Render()`。零依赖纯标准库。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

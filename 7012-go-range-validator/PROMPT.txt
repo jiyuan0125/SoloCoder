@@ -7,3 +7,4 @@ CLI：csvqual check data.csv --output quality.json。不加配置就自动推断
 异常检测：--anomaly zscore（默认）或 iqr。Z-score 算 |x-μ|/σ > 3 标异常。IQR 算 Q1-1.5*IQR 和 Q3+1.5*IQR 范围外标异常。"anomalies" 数组列列名、行号、值、分数。
 
 批量：csvqual batch ./dir --pattern "*.csv" --parallel 4，按文件名字典序汇总。单文件 100 万行以内，编码 UTF-8/GBK。空文件 {"score":0,"warning":"empty file"} 退出码 0。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

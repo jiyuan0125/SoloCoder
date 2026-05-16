@@ -11,3 +11,4 @@ Hook 链式执行：前一个 hook 的输出作为下一个 hook 的输入，类
 上下文传递：hook 和主操作共享 `Context` 对象。可以存取任意键值对，用于在 hook 间传递数据。
 
 API：`h := hook.New()`、`h.Before("validate", func(ctx) error { ... })`、`h.After("log", func(ctx) { ... })`、`h.Execute(mainFn)`。零依赖纯标准库。`go test ./...` 跑测试，`go build` 编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -9,3 +9,4 @@
 SQL 文件目录不存在时 exit 1。文件命名不规范时 warning 但跳过。status 输出表格：版本号 | 文件名 | 状态（applied/pending）| 执行时间。
 
 纯 Go 标准库，`go build -o migrate .` 编译后单二进制直接跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

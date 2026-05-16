@@ -5,3 +5,4 @@
 子命令 `bucket` 做连续值离散化，`--column age --ranges "0-18,19-35,36-60,60+"` 按范围分桶，边界值归下界，不在任何范围内的归入 `other`。子命令 `condmap` 做条件映射，`--rules rules.json` 指定映射规则文件，规则里 condition 是表达式（支持 `==`、`!=`、`>`、`<`、`contains`），then 和 else 分别指定目标值。
 
 密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。模板引擎用 text/template 的自定义函数，扩展 `upper`、`lower`、`trim`、`default` 四个函数。输入输出都支持 stdin/stdout，`--format` 指定 json 或 csv。go build 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

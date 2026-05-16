@@ -11,3 +11,4 @@ TLS 配置生成：`ksm gen-tls --cert server.pem --key server.key --output tls.
 消息处理后自动确认？本工具不做消息。消息格式升级兼容？证书解析要兼容 PEM 和 DER 两种输入，自动检测。
 
 `go build` 能过，命令行工具能正常运行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

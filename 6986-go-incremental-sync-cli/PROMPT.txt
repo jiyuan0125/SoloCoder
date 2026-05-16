@@ -9,3 +9,4 @@ CLI：`incr-sync -source source.csv -target target.csv -key id -track timestamp 
 state 文件损坏时 stderr 报错 "error: corrupted state file, use -full-reset to restart"，exit 3。source 文件不存在 exit 1。同步完成后 stdout 输出统计：`synced: +N new, ~M updated (Xms)`。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

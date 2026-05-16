@@ -5,3 +5,4 @@ AsciiDoc 比 Markdown 功能强不少——表格合并、条件包含、属性�
 `asciidoc-tool convert` 转 Markdown 或 HTML。嵌套列表、表格和代码块的解析要正确处理——列表里可以嵌套代码块，表格单元格里可以有内联格式。输出保持语义等价但格式标准化。`asciidoc-tool check` 检查格式——标题层级是否连续、表格语法是否正确、属性是否已定义。
 
 Go 标准库实现。`go build`。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -7,3 +7,4 @@
 空配置输出 `error: no flags defined` 退出码 1。超时 kill 子进程记 `TIMEOUT`。编译失败记 EXIT_CODE 标注 `(compile failed)`。超过 `-max-time 30m` 停止，输出 `stopped: {done}/{total} combos, max time exceeded`。
 
 Go 标准库，命令行参数用 flag 包解析。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

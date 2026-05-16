@@ -7,3 +7,4 @@
 报告格式：JSON 输出包含 summary（总数/各类型数）、events（事件数组，每条有 timestamp/type/user/source/detail/severity 字段）、anomalies（可疑事件数组）。纯文本输出用表格。无权限读日志文件时输出 warning 继续，不中断。
 
 用 Go 标准库写，go run . 或 go build 都行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

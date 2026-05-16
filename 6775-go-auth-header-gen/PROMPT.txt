@@ -7,3 +7,4 @@
 所有子命令支持 `-curl` flag 输出完整 curl 命令：`curl -H "Authorization: Basic ..." https://api.example.com`。`-copy` 输出到剪贴板。
 
 缺少必要参数打印 "missing required: -key for HMAC" 并 exit 1。Go 标准库，flag 包。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

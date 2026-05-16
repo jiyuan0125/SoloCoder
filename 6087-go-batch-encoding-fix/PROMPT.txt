@@ -5,3 +5,4 @@
 命令：`encfix <目录> --target-encoding utf-8 --dry-run --recursive --report report.json`。--target-encoding 默认 utf-8。--dry-run 只输出检测结果不修改文件，每行格式 `<文件>: <detected> → <target>`。report.json 每个文件一条记录：path、detected_encoding、target_encoding、status（converted|skipped|unknown）。
 
 stdout 实时输出处理进度，每处理一个文件一行。最终汇总：`summary: N total, M converted, K skipped (already UTF-8), U unknown`。支持嵌套子命令：encfix detect（只检测不修复，输出检测结果到 stdout）、encfix convert（执行修复）、encfix report（读取 report.json 输出上次报告摘要）。不用第三方包，go build 通过就行。退出码 0 全部成功，1 参数错误，14 部分失败。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -11,3 +11,4 @@ doc-tmpl-var 用 Go 标准库实现，`go build -o doc-tmpl-var ./cmd/doc-tmpl-v
 自动探测能力：从 `go.mod` 提取模块名和版本、从 `git describe` 提取版本号、从 `git log` 提取最近提交日期、从环境变量读取配置值。探测不到的变量交互式提示用户输入。
 
 子命令：`scan <dir>` 扫描提取所有变量；`fill <file>` 填充变量生成最终文档；`list` 显示所有变量定义；`set <name> <value>` 手动设置变量值。数据存 `.tmpl-vars.json`。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

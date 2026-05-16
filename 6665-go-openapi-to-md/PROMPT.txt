@@ -5,3 +5,4 @@ OpenAPI spec 文件几千行 JSON，产品经理和运营看不了这个。上�
 3. 加 `-group-by tag` 按标签分组，没标签的放"Uncategorized"。加 `-skip-deprecated` 跳过 deprecated 的接口。
 
 spec 文件不存在输出 `error: spec not found: <path>` 退出码 1。解析失败输出 `error: invalid spec: <detail>`。输出目录不存在自动创建。纯 Go 标准库，编译后单二进制可以直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -7,3 +7,4 @@
 `fingerprint diff --table users --source db1.db --target db2.db` 做表数据逐行对比，差异行标记为 inserted/deleted/modified，输出行 ID 和变更内容。表结构变更后依赖该表的查询和报告要通过 `--dependents-file deps.json` 自动更新。
 
 空表哈希为空字符串的 MD5。文件读写失败 exit code=1。错误处理你自己定。go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

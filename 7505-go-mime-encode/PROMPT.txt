@@ -7,3 +7,4 @@
 空输入和空 part 要能正常处理，不 panic。碰到非标准格式（比如缺少 MIME-Version 头、boundary 里带了特殊字符）给警告但继续处理。输入从文件或 stdin 读取。
 
 Go 标准库，`mime`、`mime/multipart`、`encoding/base64` 这些包。纯 CLI，`go build`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

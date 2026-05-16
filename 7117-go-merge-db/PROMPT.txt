@@ -3,3 +3,4 @@
 直接上命令：`dbmerge analyze --db1 orders_a.db --db2 orders_b.db --db3 orders_c.db`，对比三个库的 schema 差异，输出 Markdown 表格报告包含：表级差异（只存在于某个库的表）、字段级差异（同名字段类型不同）、索引差异。`dbmerge sync --source orders_a.db --target orders_b.db --dry-run` 生成同步 SQL 脚本但不执行，`--apply` 才真正执行。表关系描述用 DOT 格式生成依赖图。索引使用统计：`dbmerge stats --db orders.db --top 10` 输出最活跃的索引和从未使用的索引。批量查询：`dbmerge query --dir ./sqls/ --db target.db --parallel 4` 从 SQL 文件批量执行，`--parallel` 控制并发数。证书续签后依赖该证书的 TLS 配置要同步更新。处理分多个阶段：analyze → transform → validate → apply，每阶段输出是下阶段输入，任何阶段失败就停止。
 
 Go 命令行工具，go build 能过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

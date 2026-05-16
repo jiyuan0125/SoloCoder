@@ -12,3 +12,4 @@
 策略值只允许 ours/theirs/union/custom，非法值退出码 1 打印 "unknown strategy: %s, allowed: ours, theirs, union, custom"。import JSON 失败退出码 1 打印 "invalid import file: %s"。成功退出码 0。
 
 Go 标准库，flag 包解析。`go build -o merge-strategy .`。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

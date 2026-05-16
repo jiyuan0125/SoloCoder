@@ -14,3 +14,4 @@
 - `config set --per-person-limit <n>`：调整负载上限
 
 生成的 CHANGELOG.md 包含版本号（自动递增）、日期、变更列表。Go 标准库实现。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

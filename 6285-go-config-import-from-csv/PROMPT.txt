@@ -6,3 +6,4 @@ CLI 格式 `tool action target options`：
 - `tool validate csv --source params.csv --mapping columns.yaml` 校验 CSV 数据，类型不匹配的行报错 "row 23: expected integer for column 'port', got 'abc'"
 
 映射文件 columns.yaml 格式：csv_column: config.path，如 "端口号: server.port"。CSV 编码支持 UTF-8 和 GBK，自动检测 BOM。空行跳过不报错。源文件不存在退出码 1，映射文件解析失败退出码 2。不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

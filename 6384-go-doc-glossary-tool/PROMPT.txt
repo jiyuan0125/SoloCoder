@@ -5,3 +5,4 @@
 术语变更要走流程：`glossary submit` 提交 → `glossary review --approve/--reject` 初审 → `glossary finalize` 复审通过。初审不过可以修改后重新 submit。状态存在 `.glossary-state.json` 里，字段 `status`（draft/pending/approved/archived）、`reviewer`、`timestamp`。
 
 术语文件为空时 `scan` 输出 "no terms defined" 并 exit 0。docs 目录不存在 exit 1。纯标准库，go build 编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

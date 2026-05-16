@@ -6,3 +6,4 @@
 4. 工具内部管理同步源和同步任务：`source add <name> <path>` 注册同步源，`task create --source <name> --pointer <path>` 创建查询任务关联到源。任务结果缓存在内存 map，相同 pointer 重复查询直接返回缓存值。
 
 代码分几个文件组织：主入口 main.go、查询引擎 query.go、任务管理 task.go，别全写 main.go 里。输入文件不存在退出码 2，JSON 解析失败退出码 3，成功退出码 0。纯标准库实现，`go run .` 能跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

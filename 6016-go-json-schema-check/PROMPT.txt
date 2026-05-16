@@ -3,3 +3,4 @@
 Go 做 JSON Schema 验证工具。命令 `schemacheck -data payload.json -schema schema.json [-o report.json]`，不传 -o 输出到 stdout。report 是 JSON 对象，字段 valid（布尔值）、errors（数组，每个含 path 如 "$.user.email"、message、value 三个字段）。valid 为 true 时 errors 为空数组。校验关键字：type、required、enum、minimum/maximum、minLength/maxLength、items（数组元素 schema）、properties（嵌套对象 schema）。additionalProperties 默认允许额外字段。
 
 -data 文件不存在时 stderr 输出 "data file not found" 并 exit 1。-schema 文件不存在时 stderr 输出 "schema file not found" 并 exit 1。schema 本身不合法（如 type 值不在允许列表）时 stderr 输出 "invalid schema: <details>" 并 exit 2。嵌套校验错误路径逐层拼接，如 $.users[0].name。go build 能编译通过，不依赖第三方库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

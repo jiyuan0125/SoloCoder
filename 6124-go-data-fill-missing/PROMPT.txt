@@ -7,3 +7,4 @@
 加上 --report 标志在 stderr 输出报告：原始点数、缺失点数、填充点数、填充比例。输出超过 50% 缺失的时段打印 WARNING: high missing ratio in interval [start, end]。
 
 输入文件不存在 exit code 1。空文件输出空。连续超过 10 个缺失点停止填充，打印 WARNING: gap too large at timestamp。某些环境没配邮件，--notify email 选项在没配 SMTP 的情况下打印 INFO: email not configured, skipping notification 而不是报错。go build 能编译通过，纯标准库。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

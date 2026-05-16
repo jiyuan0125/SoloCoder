@@ -9,3 +9,4 @@ CLI：`normalize -input messy.csv -config rules.json -output clean.csv`。规则
 空值不处理直接保留。规则文件格式错误时 stderr 报错 "error: invalid rules config" 并 exit 1。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

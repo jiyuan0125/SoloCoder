@@ -14,3 +14,4 @@ Git 配置分布在三个地方——全局 .gitconfig、仓库级 .git/config�
 - `summary`：全局配置概览
 
 Go 标准库实现，go build 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

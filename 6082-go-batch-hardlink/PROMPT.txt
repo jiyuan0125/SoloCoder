@@ -5,3 +5,4 @@
 命令：`hardlink <目录> --dry-run --min-size 1024 --report report.json`。--min-size 只处理大于该字节数的文件，默认 0 表示不限制。--dry-run 只输出报告不实际操作，每行格式 `LINK: <文件> → <原文件> (saved N bytes)`。report.json 里记录每组重复：original_path、linked_paths（数组）、saved_bytes（节省空间字节数）。
 
 stdout 输出汇总：`result: scanned N files, found M duplicate groups, saved S bytes`。处理大量文件时每 1000 个文件输出一次进度 "processed: N files, found M groups"。软链接和硬链接文件（nlink > 1 的）跳过不处理。空文件（0 字节）跳过。退出码 0 成功，5 部分失败（stderr 输出 "hardlink failed: <文件>: <错误>"）。go build 能编译通过，不依赖第三方库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

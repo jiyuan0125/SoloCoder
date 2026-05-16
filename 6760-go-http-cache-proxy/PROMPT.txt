@@ -9,3 +9,4 @@
 请求转发失败返回 502 并打印 "upstream error: <message>"。缓存存储方式用内存 map 即可，不需要持久化。启动时打印 "cache proxy listening on <addr>, forwarding to upstream, TTL=<duration>"。Ctrl+C 优雅关闭，打印缓存统计（命中率、总请求数）。
 
 项目拆至少 3 个源文件：main.go、proxy.go、cache.go。纯 Go 标准库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

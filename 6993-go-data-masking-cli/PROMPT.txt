@@ -7,3 +7,4 @@ CLI：`mask -input users.csv -config mask_rules.json -output masked_users.csv`�
 field 不在输入列时 stderr 警告并跳过。未知 type 时 stderr 报错 "error: unknown mask type 'xxx'" 并 exit 2。输入为空输出空文件。加 `-validate` 只检查未脱敏的敏感数据不修改文件，发现敏感数据时 exit 1。
 
 Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

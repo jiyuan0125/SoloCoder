@@ -9,3 +9,4 @@ CSR：`acme create-csr --cn "client" --org "MyOrg" --output request.csr`。`acme
 数据转换需要映射模板？本工具只处理证书。证书状态 `applied`→`issued`→`active`→`expired`→`renewed`，但本工具不做状态管理，只做签发和验证。输出 JSON 到 stdout。
 
 `go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 二分查找：采样确定格式和大致范围，seek + 二分定位起始位置，线性扫描到结束。10GB 文件 5 秒内返回（前提文件按时间有序）。非时间有序降级全量扫描 stderr 输出 "file is not time-ordered, falling back to full scan"。
 
 完成 stderr 输出 "found: 15234 lines, scanned: 0.8% of file (binary search), time: 1.2s"。--from 和 --to 格式不支持时报错退出码 2。退出码 0 有结果，1 无结果。纯标准库，go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -11,3 +11,4 @@ type-convert 用 Go 标准库实现，`go build -o typeconv-demo ./cmd/typeconv`
 自定义转换器：`Register("MyType", func(s string) (interface{}, error))`。
 
 API：`conv.ToInt("42")`、`conv.ToDuration("1h30m")`、`conv.To("int", "42")`。零依赖。`go test ./...` 跑测试，`go build` 编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

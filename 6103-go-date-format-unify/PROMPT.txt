@@ -5,3 +5,4 @@
 歧义处理：01/02/2024 默认当 MM/dd/yyyy，加 --day-first 切换 dd/MM/yyyy。解析失败原样保留，stderr 输出 "parse failed: <原始值>: unsupported format"。
 
 命令：`dateunify <输入.csv> --column date --to yyyy-MM-dd --day-first --report report.json`。report.json 每条含 original、converted、status（converted/unchanged/failed）、detected_format（如 "yyyy/MM/dd"）。空值跳过但计数更新。输出 CSV 保持原列顺序，日期列替换。退出码 0 成功，1 参数错误，12 部分失败。go build 编译通过，不依赖第三方库。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

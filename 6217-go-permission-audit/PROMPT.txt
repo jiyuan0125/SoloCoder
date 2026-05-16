@@ -9,3 +9,4 @@
 — Windows 环境下权限位不可靠，输出 `warning: permission bits may not reflect actual ACL on Windows` 但继续执行
 
 审计完主文件后自动生成摘要报告，包含扫描文件总数、合规数、不合规数、各 severity 数量。如果某个目录的文件权限都合规、没有可摘要的内容，摘要文件不创建，工具正常退出。go build 能编译通过，不依赖第三方库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

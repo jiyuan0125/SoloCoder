@@ -7,3 +7,4 @@
 全部上传完自动调用 CompleteMultipartUpload 合并。--cleanup 标志在上传完成后删除进度文件。上传失败的单片最多重试 3 次，3 次全失败 exit code 1 并打印 ERROR: part 42 failed after 3 retries。文件不存在 exit code 1。
 
 兼容 S3 协议，也支持自定义服务端（不校验 SSL 用 --insecure）。Go 标准库实现，不依赖第三方包。go build 能编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

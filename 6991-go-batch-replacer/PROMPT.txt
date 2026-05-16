@@ -7,3 +7,4 @@ CLI：`batch-replace -path ./data/ -rules replacements.json -dry-run`。规则�
 替换 0 处时 stdout 输出 "no replacements made"，exit 0。规则文件 JSON 格式错误时 stderr 报错 "error: invalid rules format" 并 exit 1。正则语法错误时 stderr 输出 "error: invalid regex pattern" 并 exit 2。field 为 `*` 时匹配所有列。
 
 Go 标准库，命令行参数用 flag 包解析。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

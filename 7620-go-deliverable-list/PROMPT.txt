@@ -15,3 +15,4 @@ Sprint 有 ID、名称、时间范围、状态（active/closed）。Deliverable 
 - `report <sprint-id>`：完成率、各类型交付物数量、延期率
 
 Sprint 报告包含完成率、延期率。数据存 JSON 文件，Go 标准库实现。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

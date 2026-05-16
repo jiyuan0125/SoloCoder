@@ -3,3 +3,4 @@
 命令行入口是 `di-gen`，子命令 `scan ./...` 扫描目录下所有 .go 文件，提取带 `New` 前缀的函数作为构造函数，输出依赖关系到 stdout（JSON 格式，字段包括 name、params、returns）。`generate --output container.go --pkg main` 生成容器代码，输出的 .go 能直接 `go build` 通过。遇到循环依赖时打印 "circular dependency detected: A→B→C→A" 并以 exit code 1 退出，exit code 0 表示成功。每个生成的组件带 `Init()` 和 `Close()` 方法，Close 按 Init 的逆序调用。支持嵌套命令：`project create --name myapp` 创建项目骨架，`project build` 执行构建，`project test run -v` 运行全部测试，`project test coverage --threshold 80` 检查覆盖率不达标则 exit 1。如果 .go 文件解析失败，输出 "parse error in <filename>: <detail>" 并 exit 2。所有配置也可以通过 JSON 文件传入，`--config` 指定路径。
 
 标准库搞定，`go run .` 跑起来，不依赖任何第三方代码生成框架。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

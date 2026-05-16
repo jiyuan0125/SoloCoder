@@ -9,3 +9,4 @@ redirect-mgr 用 Go 标准库实现，`go build -o redirect-mgr ./cmd/redirect-m
 验证功能：`validate` 检查映射表中有没有循环重定向（A→B→C→A）、链式重定向超过 3 层、目标路径本身也是重定向源。检测到问题标红报 error。
 
 子命令：`add /old-path /new-path` 新增映射；`list` 展示所有映射，支持 `--tag` 过滤；`search <keyword>` 搜路径和备注；`remove <source-path>` 删除（需 `--confirm`）；`export` 输出为 Nginx rewrite 格式或 JSON；`validate` 检查映射合法性。文件读写用 flock 互斥。`go test ./...` 跑测试，`go build` 通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

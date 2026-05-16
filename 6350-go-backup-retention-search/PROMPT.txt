@@ -1,3 +1,4 @@
 备份了 2000 个文件，隐约记得有个 nginx 配置在里面，文件名不记得，只记得里面有 `upstream` 这个关键词。备份目录翻了半小时没找到。要是能像 grep 一样搜备份内容就好了，搜到还能一键恢复。
 
 做一个备份检索和恢复工具 `bksearch`。两个核心命令：`bksearch find --dir ./backups --name "*.conf" --content "upstream"` 按文件名 glob 和内容关键词搜索，`bksearch restore --id 3 --to ./restore/` 把找到的文件恢复到指定位置。搜索结果是带编号的表格，列包括编号、文件路径、匹配行号、匹配内容预览（前 40 字符）。同步分五个阶段执行：准备→扫描→传输→验证→完成，每个阶段打印 `[阶段名] 进行中...` 和 `[阶段名] 完成`。验证阶段检查文件 SHA256，失败则重试传输一次，仍失败打印 `verify failed after retry: <file>` 跳过继续。空备份目录打印 `warning: no files found in <dir>` 退出码 0。搜索无结果打印 `no matches found` 退出码 0。恢复时目标目录不存在自动创建。`go run . find --dir ./data --content "error"` 能跑，全标准库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

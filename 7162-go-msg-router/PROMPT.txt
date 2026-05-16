@@ -5,3 +5,4 @@
 路由规则定义在 routes.json：`[{match: {topic: "order.*"}, target: "order-queue"}, ...]`。匹配不到任何规则的消息进 DLQ，原因为 `no_route`。自动重发策略：`--retry 3 --backoff 5s`，3 次重发仍失败进 DLQ，原因为 `timeout`。输入乱码行跳过并 stderr 记录 `warning: skip malformed line <N>`，空行直接跳过不计数。
 
 索引更新：消息处理完自动更新路由索引，索引更新失败只写日志 `error: index update failed for <msg_id>` 不阻塞主流程。消息处理完输出 `routed <msg_id> → <queue>`。Go 命令行工具，`go build` 能过就行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -9,3 +9,4 @@ default-handler 用 Go 标准库实现，`go build -o default-handler-demo ./cmd
 插件注册自己的命令和选项。每个插件可以定义：命令名、选项列表、默认值 Resolver、处理函数。框架自动合并所有插件的选项，生成统一的帮助信息。
 
 子命令：`resolve <key>` 测试某个参数的默认值解析过程（显示经过了哪些 Resolver）；`list` 显示所有已注册的 Resolver；`plugins` 列出已加载的插件。`--verbose` 输出解析链路详情。`go test ./...` 跑测试。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

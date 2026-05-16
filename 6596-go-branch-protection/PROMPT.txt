@@ -9,3 +9,4 @@ GitHub 和 GitLab 的分支保护规则格式完全不一样，团队约定又�
 配置文件不存在或 JSON 无效退出码 1 打印 "invalid config: %s"。platform 不支持退出码 1 打印 "unsupported platform: %s"。成功退出码 0。
 
 Go 纯标准库，`go build -o branch-protection .`。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

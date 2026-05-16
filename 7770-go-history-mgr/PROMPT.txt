@@ -7,3 +7,4 @@ history-mgr 用 Go 标准库实现，`go build -o history-demo ./cmd/history` �
 `history stats` 输出统计：总命令数、最常用命令 Top10、平均执行间隔。会话分组——同一个终端会话的命令归为一组，`--session` 按组查看。时间范围过滤：`--since "2024-01-01"` `--until "2024-01-31"`。`history export --format json` 导出历史数据，`history clear --keep 100` 只保留最近 100 条。
 
 API：`h := history.New("~/.app-history")`、`h.Record(cmd, args, exitCode)`、`h.Search(keyword)`。并发安全写入。`go test ./...` 跑测试。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

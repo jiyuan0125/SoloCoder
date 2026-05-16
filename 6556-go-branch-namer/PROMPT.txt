@@ -5,3 +5,4 @@
 自定义模板 `-template "{type}/{ticket}-{desc}"` 支持占位符 `{type}` `{ticket}` `{desc}` `{date}` `{author}`。`-config .branch-namer.yaml` 读配置文件设置永久规则。没有提取到 ticket 编号时 desc 必须非空，否则输出 `error: cannot generate branch name, provide ticket or description` 退出码 1。分支名含空格或中文自动转 kebab-case。输出到 stdout，可直接 `$(branch-namer ...)` 嵌入 git checkout -b。
 
 用 Go 标准库写，`go run .` 或 `go build` 都行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

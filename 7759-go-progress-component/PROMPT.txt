@@ -9,3 +9,4 @@ progress-component 用 Go 标准库实现，`go build -o progress-demo ./cmd/pro
 渲染方式：`[████████░░░░░░░░░░░░] 40% 200/500 items`。百分比分整数和小数模式，`--precision 1` 显示一位小数。速率显示：`2.5 items/s`。预计剩余时间：`ETA: 01:23`。输出到 stderr 不影响 stdout 的管道。
 
 子命令：`demo` 跑一个示例进度条看效果；`config` 查看当前配置。库形式使用：`bar := progress.New(500)`、`bar.Inc()`、`bar.Done()`。并发安全——多个 goroutine 可以同时 Inc。`go test ./...` 跑测试，`go build` 编译通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

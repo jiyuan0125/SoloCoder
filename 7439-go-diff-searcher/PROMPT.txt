@@ -9,3 +9,4 @@
 用 encoding/xml 的 Marshal/Unmarshal 处理 XML 格式的配置文件和搜索结果。搜索结果支持导出为 XML 格式——Marshal 时字段用 XML tag 标注。读取 XML 配置文件时用 Unmarshal 解析到结构体，解析失败给明确错误信息。
 
 go build 能过，命令行工具能正常运行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -7,3 +7,4 @@
 - `ns shared set --key "cache.ttl" --value 300` 写入共享配置
 
 存储用文件系统——每命名空间一个目录 namespaces/tenant-a/。租户写 shared 报错退出码 3 "cannot write to shared namespace from tenant"。扫描流程：初始化→扫描→分析隔离性→报告，发现问题标记异常。不用第三方包，go build 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

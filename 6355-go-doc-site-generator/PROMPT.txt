@@ -5,3 +5,4 @@
 校验步骤不能省——扫描完先检查：链接引用的文件是否存在（`[text](missing.md)` 报 warning）、目录下是否有 `README.md`（没有也报 warning）。校验结果写 `report.json`，格式 `{"warnings": [{"file": "...", "message": "..."}], "errors": []}`。有 error 时 exit 1，只有 warning 时 exit 0。
 
 source 目录不存在时 exit 1 并打印 "source directory not found: <path>"。空目录（零 md 文件）输出 "no markdown files found" 然后 exit 0。纯标准库，go build 编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

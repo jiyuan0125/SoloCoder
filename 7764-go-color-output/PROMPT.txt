@@ -9,3 +9,4 @@ color-output 用 Go 标准库实现，`go build -o color-output-demo ./cmd/color
 API 风格两种：函数式 `color.Red("error")` 和链式 `color.New().Red().Bold().Sprint("message")`。支持格式化：`color.Greenf("Done in %d seconds", 5)`。
 
 主题支持：预定义几套颜色主题（亮色终端/暗色终端/无颜色），`--theme` 切换。自定义主题用 JSON 文件配置语义颜色（error=red、success=green、warning=yellow、info=cyan）。`go test ./...` 跑测试。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

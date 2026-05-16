@@ -9,3 +9,4 @@
 7. 隐藏文件（`.` 开头）默认跳过，加 `--include-hidden` 才纳入
 
 CLI 分几个命令组：`file convert`、`file check`、`file merge`，每组下有具体操作。不用第三方包，go build 通过就行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -5,3 +5,4 @@
 2. `cli import --source csv|json --target db|file --filter '<expr>'` 筛选（支持 `field>value`），`cli export --format csv|json --output <path>` 导出。引用自动识别：相对路径、HTTP URL、锚点。外部 URL HEAD 检查超时 3s。
 
 空目录 `NO_DOCS: <dir>`。无引用 `NO_REFS: <file>`。`go build` 能过，不用第三方包。退出码 0=全部有效，1=有失效引用。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

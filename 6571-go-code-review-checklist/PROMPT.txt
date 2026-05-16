@@ -5,3 +5,4 @@ code review checklist 靠记忆，数据库迁移忘了检查索引，并发代�
 输出 Markdown：`## Code Review Checklist\n- [ ] 检查数据库索引 (triggered by: schema.sql)\n- [ ] 确认并发安全 (triggered by: worker.go)\n...`。`-config rules.yaml` 自定义规则（匹配条件+推荐检查项+触发说明）。`-output checklist.md` 写文件，否则 stdout。空 diff 输出 `No changes to review`。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

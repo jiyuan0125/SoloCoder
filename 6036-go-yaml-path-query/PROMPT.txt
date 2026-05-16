@@ -7,3 +7,4 @@
 文件为空或不是合法 YAML 跳过，stderr 输出 `skipped: <filename> (<原因>)`。`--output-file` 参数指定输出路径，省略则 stdout。`--depth` 限制匹配嵌套层数（默认无限制）。目录不存在退出码 2。
 
 子命令：`scan --dir <path>` 仅扫描统计不输出详细结果，stdout 返回 `matched: N files, M paths`。不用第三方包，`go build` 通过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

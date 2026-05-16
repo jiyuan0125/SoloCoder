@@ -14,3 +14,4 @@ LocaleConfig 实体有 ID、名称（如 zh_CN.UTF-8、en_US.UTF-8）、LANG、L
 - `config delete <id>`：删除并解除关联
 
 Go 标准库实现。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

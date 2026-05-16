@@ -7,3 +7,4 @@ changelog-gen 用 Go 标准库实现，`go build -o changelog-gen ./cmd/changelo
 条目有多个标签，一条提交可能同时影响多个模块。按标签聚合显示时，同一提交可能出现在多个分类下。标签支持层级——比如 `feature/auth` 和 `feature/cache` 都属于 `feature`。版本号从最新的 git tag 提取，如果没有 tag 则标记为 "Unreleased"。
 
 状态流转：草稿→已发布→已归档。`generate` 命令生成草稿，用户编辑确认后 `publish` 发布到 `CHANGELOG.md`。输出格式支持 Markdown 和 JSON，`--format` 切换。`--since <tag>` 指定起始版本，`--until <tag>` 指定截止版本。输出到 stdout 或 `--output` 指定文件。纯 Go 标准库，`go test ./...` 跑单测。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

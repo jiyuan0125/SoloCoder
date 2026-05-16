@@ -3,3 +3,4 @@
 子命令设计参考 `db migrate`、`db rollback`、`db status`、`db seed` 这种结构：`wsdiff diff <file1> <file2> [--mode trailing|all|significant]`。`--mode trailing` 只忽略行尾空白差异；`--mode all` 忽略所有空白变动（包括缩进变化、连续空行合并）；`--mode significant` 忽略纯空白行的增删但保留缩进差异。文本输出统一 diff 格式，只显示有实质性差异的行，上下文默认各 3 行。加 `--stat` 输出统计：`<文件>：新增 N 行，删除 M 行，净变化 K 行`，并计算空白忽略节省的行数。`--output json` 输出含 additions 数组和 deletions 数组，每项含 line_number 和 content。退出码：0 无差异 / 1 有差异 / 2 文件不存在。二进制文件（含 `\x00` 字节）报错 `binary file, skipping` 退出码 2。
 
 纯标准库实现，`go run .` 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

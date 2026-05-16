@@ -7,3 +7,4 @@ CLI：reconcile --source source.csv --target target.csv --key "order_id" --outpu
 JSON 报告：{"summary":{"total":100,"matched":95,"mismatched":3,"source_only":1,"target_only":1},"details":[{"key_value":"...","field":"price","source_value":"10","target_value":"10.5"}]}。
 
 两个文件各 10 万行以内。空行跳过，主键为空报 warning 继续。退出码：0=全部匹配，1=有差异，2=输入错误。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

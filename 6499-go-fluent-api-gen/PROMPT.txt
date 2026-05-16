@@ -3,3 +3,4 @@
 记录有四种状态：draft→pending→approved→archived，通过 Filter().Status("approved").Sort("created_at", "desc").Limit(20).Execute() 这种链式查询。approved 状态可以调用 Revoke() 撤回重新编辑，撤回后回到 draft。非法状态转换（比如 draft 直接 archive）返回错误 "invalid transition: draft→archived"。模板变更后，用该模板生成的所有文件标记 need_regen=true，查询时 IsStale() 返回 true。
 
 CLI 子命令：`fluent query --filter 'status=approved' --sort created_at --limit 20`，输出 JSON 数组。`fluent template update --name user_report --file new_template.json` 触发关联标记。`fluent show --id 123` 显示单条详情。输入参数非法时 stderr 输出错误信息并 exit 1，空结果输出空数组 `[]` 不报错。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

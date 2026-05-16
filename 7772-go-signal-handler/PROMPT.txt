@@ -9,3 +9,4 @@ signal-handler 用 Go 标准库实现，`go build -o signal-handler-demo ./cmd/s
 延迟退出机制：第一次 Ctrl+C 开始优雅退出，设置超时（默认 10 秒）。超时后强制退出。第二次 Ctrl+C 在超时内直接强制退出。退出前输出已完成的和未完成的任务清单。
 
 上下文传递：信号处理器通过 `context.Context` 向各 goroutine 传播取消信号。API：`h := signal.NewHandler()`、`h.On(syscall.SIGINT, func(ctx) { ... })`、`h.Wait()`。`go test ./...` 跑测试。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

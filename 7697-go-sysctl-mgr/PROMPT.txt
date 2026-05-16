@@ -15,3 +15,4 @@ SysctlParam 实体有 ID、参数路径（如 net.core.somaxconn）、当前值�
 - `export --format sysctl`
 
 Go 标准库实现，go build 通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

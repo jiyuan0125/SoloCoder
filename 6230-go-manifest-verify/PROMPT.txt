@@ -3,3 +3,4 @@
 命令：`manifest-verify verify <manifest.json> <目录> [--output text|json]`。验证逻辑：遍历清单中的每条记录，检查对应文件是否存在、大小是否一致、哈希值是否匹配；再遍历目录中所有文件，不在清单里的标记为新增。文本输出分三段——`[MISSING]`（清单有但文件不存在）、`[MISMATCH]`（文件存在但哈希或大小不一致，标明哪个字段不匹配）、`[UNLISTED]`（文件存在但清单没记录）。JSON 输出 `{"manifest": "<路径>", "missing": [...], "mismatch": [...], "unlisted": [...], "summary": {"total_in_manifest": N, "verified": N, "missing": N, "mismatch": N, "unlisted": N}}`。退出码：0 全部一致 / 1 存在不一致 / 2 清单文件不存在或格式错误。
 
 内部同步流程设计为：准备→扫描→传输→验证→完成，验证失败重试传输。纯标准库实现，`go run .` 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

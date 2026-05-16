@@ -6,3 +6,4 @@
 5. 也支持反向操作 --unflatten，把展平的 key-value 还原成嵌套结构。--unflatten 时的分隔符和数组风格必须与展平时一致才能正确还原。
 
 展平完成后 stderr 输出 "flattened: N keys"，N 是展平后的键值对数量。分隔符含方括号时不合法，stderr 输出 "invalid separator" 并 exit 1。go build 能编译通过，不依赖第三方库。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

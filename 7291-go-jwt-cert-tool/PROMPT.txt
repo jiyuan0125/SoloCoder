@@ -11,3 +11,4 @@ PKCS12：`jwtcert to-p12 --cert c.pem --key k.pem --output c.p12`。`jwtcert fro
 搜索深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`？用 `filepath.Walk` 递归查找证书文件。消息发送需要 topic？不适用。
 
 `go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

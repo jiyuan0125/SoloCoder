@@ -7,3 +7,4 @@
 5. 文本输出 passed 绿、failed 红、warned 黄，汇总行。
 
 空规则 "error: no rules defined" 退出码 1。空数据退出码 0。语法错误跳过打 warning。CSV 流式。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

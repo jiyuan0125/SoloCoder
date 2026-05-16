@@ -7,3 +7,4 @@
 `-verbose` 时额外打印请求头和响应头到 stderr。没加 `-url` 时输出 usage 并 exit 1。URL 无法连接时 stderr 输出 `error: connection failed: {url}` 并 exit 1。非 2xx 时 exit 2 并输出状态码。成功 exit 0。超时默认 10 秒，`-timeout` 可调。
 
 纯 Go 标准库，`go build -o comptest .` 编译后单二进制直接跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

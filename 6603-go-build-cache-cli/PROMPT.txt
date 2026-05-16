@@ -5,3 +5,4 @@
 大文件场景——缓存目录可能包含数百个子目录，遍历时用 filepath.Walk 而非一次性读入内存。单个缓存条目解析失败不影响其他条目，stderr 记录 `warning: skip corrupted cache entry: <path>`。
 
 输出格式默认表格，`--json` 切换为 JSON。无缓存时输出 `no build cache found` exit 0。路径不存在 `error: cache directory not found: <path>` exit 1。纯标准库，`go run .` 或 `go build` 均可。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

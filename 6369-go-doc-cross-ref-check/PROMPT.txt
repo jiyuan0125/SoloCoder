@@ -5,3 +5,4 @@
 子命令分工：`check links --file <p>` 单文件，`check all --dir <d>` 全目录，`check external --file <p>` 外部 URL 可达性（HEAD 超时 5s，不可达 `UNREACHABLE: <url> status=<code>`），`check anchors --dir <d>` 锚点检查。
 
 报告 text 逐行列出，JSON 为 `{"file": "p", "issues": [{"line": 10, "type": "broken_link", "target": "..."}]}`。无问题 `ALL_CLEAR: <file>`。空目录 `NO_FILES: <dir>`。`go build` 一下就过，不用第三方包。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -7,3 +7,4 @@
 密钥文件用 PEM 格式，`--key` 缺失时报错 "key file required"。私钥文件无法解析时报错 "invalid key file: {error}" 退出码 1。支持 `--recursive` 递归签名目录下所有文件，跳过 .sig 和 .sha256 文件。输入是目录时必须有 `--recursive`，否则报错 "directory input requires --recursive"。
 
 Go 标准库写，go run . 或 go build 都行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

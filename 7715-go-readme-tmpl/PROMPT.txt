@@ -9,3 +9,4 @@ readme-tmpl 用 Go 标准库实现，`go build -o readme-tmpl ./cmd/readme-tmpl`
 比较两个版本时高亮差异——模板变量替换后和现有 README 对比，新增绿色标注，删除红色标注，修改黄色标注。并排格式输出，方便审查改了什么。修改主体内容后关联的目录和链接也同步更新。
 
 子命令：`init` 选择模板生成 README；`diff` 对比当前 README 和模板生成的版本；`update` 用最新探测结果刷新 README 中可自动填充的部分。输出到 stdout 或 `--output` 指定文件。`go test ./...` 跑测试，`go build` 编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

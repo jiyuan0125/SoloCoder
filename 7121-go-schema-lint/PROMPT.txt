@@ -3,3 +3,4 @@
 这是个 Go CLI 工具，`schema-lint diff --dev dev.db --prod prod.db` 对比两个库的 schema 差异：缺表、缺列、类型不匹配、缺索引，输出 Markdown 报告。`schema-lint check --db target.db` 检查常见 schema 问题：缺少主键、没有索引的大表（>1000 行估算）、外键没有索引、TEXT 列无长度约束，每条结果标 warning/error。`schema-lint migrate --db target.db --up` 执行 schema 版本化迁移，`--down` 回滚，碰到冲突输出 "migration conflict" 停止。CSV 导入：`schema-lint import-csv --file data.csv --db target.db --table users --on-conflict skip`，自动建表（`--create-if-missing`），自动类型推断。转换完自动写入目标数据库，目标不可用时静默跳过只记日志不报错。`schema-lint sync --source dev.db --target prod.db --dry-run` 生成同步 SQL。空数据库报 "nothing to check" 退出码 0。
 
 Go 标准库，go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

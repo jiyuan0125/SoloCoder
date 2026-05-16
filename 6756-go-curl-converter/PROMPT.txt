@@ -7,3 +7,4 @@
 生成代码：import 只引实际用到的标准库，`net/http.Client` 带 10 秒超时，`defer resp.Body.Close()`，打印状态码和 body。能 `go build` 通过。
 
 不认识的参数输出 `// TODO: unsupported flag: <flag>` 不报错。输入为空打印 `error: empty input` 退出码 1。Go 标准库，flag 包解析参数。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -7,3 +7,4 @@
 JSON 输出：`{"violations":[{"file":"handler.go","line":15,"name":"user_id","rule":"camel","message":"use camelCase: userId"}]}`。text 模式每行 `handler.go:15: user_id violates camel`。无违规输出 `no violations found` 并 exit 0。有违规 exit 1。目录不存在 exit 2。跳过 `_test.go` 和 `vendor/`。
 
 状态流转：Queued → Running → Paused → Done。`-pause-after 50` 每扫 50 文件暂停，`-continue` 恢复。标准库，`go run .` 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

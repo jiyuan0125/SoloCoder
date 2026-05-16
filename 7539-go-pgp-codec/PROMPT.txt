@@ -7,3 +7,4 @@
 encode 暂时只做最简单的——把明文包装成 PGP 字面数据 packet（Literal Data Packet，tag 11），不做加密和签名。够用于测试和调试了。
 
 Go 标准库，`go build` 能过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

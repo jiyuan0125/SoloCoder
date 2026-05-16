@@ -7,3 +7,4 @@
 响应时间提取：Nginx 格式从 request_time 字段取，JSON 格式从 latency/duration 字段取，纯文本格式用正则匹配 (\d+)ms。无法提取响应时间的行不计入延迟统计。空文件输出 "no data to analyze" 到 stderr，exit 0。实时模式：--follow 跟踪文件末尾，持续输出统计。
 
 用 Go 标准库写，go run . 或 go build 都行。支持 --json 输出。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

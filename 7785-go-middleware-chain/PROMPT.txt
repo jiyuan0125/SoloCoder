@@ -11,3 +11,4 @@ middleware-chain 用 Go 标准库实现，`go build -o mw-demo ./cmd/mw` 编译�
 最后输出。帮助信息按子命令分组展示。未知子命令给出最接近的建议（Levenshtein 距离）。每个中间件有独立的帮助说明。
 
 API：`c := chain.New()`、`c.Use(mw1, mw2)`、`c.Handle(businessHandler)`。零依赖。`go test ./...` 跑测试，`go build` 编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

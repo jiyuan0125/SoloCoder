@@ -11,3 +11,4 @@ error-collector 用 Go 标准库实现，`go build -o errcol-demo ./cmd/errcol` 
 报告格式：终端表格输出，按严重程度排序（fatal→error→warning）。每条错误一行：序号、操作、错误类型、消息。汇总行：总错误数、fatal 数、error 数、warning 数。JSON 格式输出给后续处理。
 
 API：`ec := errcol.New()`、`ec.Add(op, err)`、`ec.Warn(op, msg)`、`ec.Report()`。也支持 `ec.Try(func() error { ... })` 自动收集。`go test ./...` 跑测试。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

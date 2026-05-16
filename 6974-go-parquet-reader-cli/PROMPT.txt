@@ -9,3 +9,4 @@ JSON 输出格式是数组，每个元素一行记录。CSV 输出带 header 行
 纯 Parquet 格式解析，不依赖外部 Parquet 库——用 Go 标准库手写解析 row group 的 page 数据。只支持 PLAIN 编码，Snappy 压缩不在此范围。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

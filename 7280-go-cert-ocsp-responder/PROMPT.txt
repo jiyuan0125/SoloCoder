@@ -7,3 +7,4 @@ OCSP 检查：`ocsp-resp ocsp-check --cert server.pem --issuer ca.pem --responde
 规则修改后校验结果重新计算？吊销原因变更后基于 CRL 的检查结果要重评估。用 `regexp` 命名捕获组匹配 CRL 中的序列号格式。
 
 `go build` 能过，命令行工具能正常运行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

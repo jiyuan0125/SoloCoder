@@ -23,3 +23,4 @@ rules:
 多个配置文件用 `-config dir/` 指定目录，并行加载所有 yaml 文件。配置语法错误打印 "config error in <file>: <line>: <message>" 并 exit 1。
 
 Go 标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

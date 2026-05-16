@@ -9,3 +9,4 @@
 退化：行数减少、列数变化、CRC32 变化列 "regressions"：{"regressions":[{"metric":"rows","previous":50000,"current":49800,"change":-200}]}。
 
 文件不存在退出码 1，编码错误打 warning 继续，快照损坏忽略做全量。空文件 {"rows":0} 退出码 0。100MB 内全量，超了走流式。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

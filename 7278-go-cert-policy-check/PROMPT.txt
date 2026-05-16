@@ -7,3 +7,4 @@ TLS 配置生成：`policy gen --cert server.pem --key server.key --min-version 
 协议版本建议：`policy suggest --cert server.pem`。ECDSA P-384 → TLS 1.3，RSA-2048 → TLS 1.2+。
 
 权限路径 `resources/{type}/{id}/actions/{action}`？本工具无权限系统。可能处理上万条？配置检查是纯内存操作，很快。`go build` 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

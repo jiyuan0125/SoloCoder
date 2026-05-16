@@ -9,3 +9,4 @@
 空文件 `[WARN] empty file` 不报错。列数不一致 `[MALFORMED] line=N expected=5 actual=3`。
 
 `go build` 能过。退出码 0 通过，1 校验失败，2 参数错误。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

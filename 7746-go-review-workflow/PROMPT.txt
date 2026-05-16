@@ -9,3 +9,4 @@ review-workflow 用 Go 标准库实现，`go build -o review-workflow ./cmd/revi
 权限控制：提交者不能同时是审阅者。文档作者只能提交审阅请求，不能批准自己的文档。至少一个审阅者通过才能标记为已通过。所有审阅者拒绝则标记为已拒绝。
 
 子命令：`submit <file> --reviewer alice,bob` 提交审阅请求；`approve <id>` 通过；`reject <id> --reason "缺少安全说明"` 拒绝；`status` 查看所有进行中的审阅；`history <file>` 查看某文档的完整审阅历史。数据存本地 JSON 文件 `~/.review-wf/reviews.json`。`go test ./...` 跑测试，`go build` 通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

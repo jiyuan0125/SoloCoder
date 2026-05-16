@@ -7,3 +7,4 @@
 JSONPath 实现范围：支持 $.field、$.nested.field、$.array[0]、$.array[*] 四种写法，不支持过滤器表达式和递归下降。非 JSON 行跳过并在 stderr 输出行号。查询结果为空的字段输出 null。--output-format table/json/csv 三选一，默认 json。
 
 Go 标准库，命令行参数用 flag 包解析。大文件逐行处理，内存占用不超过 100MB。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

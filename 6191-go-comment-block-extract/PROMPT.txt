@@ -7,3 +7,4 @@
 `--lang go,python` 只扫描指定语言，按后缀映射。输出格式：默认 JSON，`--format csv` 输出 CSV 列 `file,type,line,content`。空目录零注释输出 `{"files": []}` 退出码 0。`--dir` 不存在报 `directory not found: ...` 退出码 1。编码非 UTF-8 的文件跳过并 stderr 记 `encoding error: filename`。
 
 纯标准库实现，go run . 能跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

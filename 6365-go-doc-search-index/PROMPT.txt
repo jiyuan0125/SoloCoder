@@ -9,3 +9,4 @@
 首次运行没有历史统计，build 完成后输出 `indexed {n} files, {m} lines, {k} tokens`。后续 build 增量更新，输出 `updated: +{a} new, ~{b} modified, -{c} deleted`。
 
 标准库写的，`go run .` 一把跑通。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -3,3 +3,4 @@ benchmark 跑完了，ns/op 波动了 8%，到底是代码回归还是机器噪�
 先说输入格式——直接喂 `go test -bench . -benchmem` 的标准输出文本就行。`benchcmp compare --before old.txt --after new.txt --threshold 5` 是主命令，解析两份 benchmark 输出，提取每个函数的执行次数（`N`）、ns/op、B/op（每次操作的堆分配字节）、allocs/op（每次操作的堆分配次数）。对比结果按差值绝对值降序排列，输出文本表格：FUNCTION | BEFORE | AFTER | DELTA% | STATUS。delta 超过 `--threshold`（默认 5%）的标记 `[REGRESSION]`，改善的标记 `[IMPROVED]`。`--json` 输出 JSON 数组，每个元素含 name、before、after、deltaPercent、status 五个字段。某个函数只在一份结果里出现则标记 `[NEW]` 或 `[REMOVED]`，不计入 delta。文件不存在输出 "benchmark file not found: <path>" exit 1。格式非法输出 "invalid benchmark format at line <N>: <content>" exit 2。没有可对比的函数（两份结果无交集）输出 "no matching benchmark functions found" exit 3。`--sort name|delta` 控制排序方式，默认按 delta 降序。
 
 Go 实现，只用标准库，`go build` 交叉编译友好。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

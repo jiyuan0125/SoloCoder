@@ -5,3 +5,4 @@ Token 处理要能解析 OAuth2 的 Access Token 和 Refresh Token。Access Toke
 Scope 验证要支持层级 scope——read 和 read:write 的关系、admin 隐含 user 的权限。验证请求的 scope 是否在 token 允许的 scope 范围内，不在就拒绝。Scope 匹配要精确，不能因为 scope 名字有前缀匹配就放行。
 
 扫描过程有五个状态：排队→扫描中→分析中→报告生成→完成。代码按三个文件组织：Token 解析和刷新逻辑、Scope 验证逻辑、命令行入口。go build 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

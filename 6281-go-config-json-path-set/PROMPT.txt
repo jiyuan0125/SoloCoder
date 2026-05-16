@@ -7,3 +7,4 @@
 - `jpath summary <file>` — 输出摘要：顶层 key 个数、最大嵌套深度、总 key 数量，格式 `top_keys:5 max_depth:3 total_keys:12`
 
 空 JSON 文件（只有 {} 或完全空）各种操作都正常处理不 panic。操作完保留原文件格式风格（缩进用 tab 还是 space 跟原来一致）。纯标准库实现，go run . 能跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

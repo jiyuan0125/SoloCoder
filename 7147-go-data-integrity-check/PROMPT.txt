@@ -5,3 +5,4 @@
 3. `integrity-check scan --dir ./dbs --parallel 4`：扫描多个数据库文件，并行处理。每个文件独立输出结果，汇总报告包含通过/失败文件数。
 
 消息发送需要 topic，topic 怎么创建不提。支持多层路径 `rules/{group}/{name}/{version}` 管理检查规则。检查失败 exit code=1，全部通过 exit code=0。单文件超过 500MB 打印进度。go build 能过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

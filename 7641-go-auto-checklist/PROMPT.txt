@@ -17,3 +17,4 @@
 - `stats --period week|month`
 
 数据存 JSON 文件。Go 标准库实现。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -3,3 +3,4 @@
 CLI 用法：`bindiff <file1> <file2> [--context 16] [--max-diff 100] [--output text|json]`。默认上下文显示差异前后各 16 字节。`--max-diff` 限制最多输出多少段差异，超出部分截断并打印 `... truncated, N more differences`。文本输出每段差异格式：偏移量（十六进制 `0x00000000` 格式）、文件 A 十六进制 + ASCII、文件 B 十六进制 + ASCII，不可打印字符用 `.` 替代。JSON 输出数组，每项含 offset（十进制）、length、bytes_a（十六进制字符串数组）、bytes_b（十六进制字符串数组）。退出码：0 文件完全一致 / 1 存在差异 / 2 文件不存在或无法读取。文件大小不一致时先报 `size mismatch: file1=N file2=M`，然后只比较共同长度部分，多余部分单独列出。空文件之间比较输出 `both files empty` 退出码 0。
 
 另外要管理记录状态：草稿→待审→通过→归档，通过后还能撤回重编辑。纯标准库实现，`go run .` 能跑。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

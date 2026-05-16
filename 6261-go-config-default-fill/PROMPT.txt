@@ -5,3 +5,4 @@
 3. 默认值文件中某个字段标记 `@required: true` 时，如果目标文件缺少这个字段且没有默认值，报错 `required field missing: <路径>` 退出码 1。
 
 目标文件不存在则直接复制默认值文件。两个文件格式不一致（一个 YAML 一个 JSON）报 "format mismatch" 退出码 2。空目标文件视为全空全部填充。命令格式参考 `tool action target options` 比如 `tool scan dir --depth 3`。填充完自动更新统计到 `.cfg-fill-stats.json`，首次没有这个文件就创建。不用第三方包，`go build` 通过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

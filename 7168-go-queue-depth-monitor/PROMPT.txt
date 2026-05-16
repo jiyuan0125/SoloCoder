@@ -5,3 +5,4 @@
 `filter --input queue_dump.jsonl --blacklist blacklist.yaml --output clean.jsonl`：黑名单过滤，匹配的消息不进入统计。`--whitelist` 模式只保留匹配的消息。过滤统计实时输出。`--track-over-time` 持续模式，每 `--interval 30s` 采样一次，输出各分类的趋势变化。
 
 规则修改后引用该规则的历史校验结果要重新计算（`--recalculate` 触发）。校验完自动生成报告（`--report-template report.tmpl`），模板不存在跳过报告生成只输出 JSON。一次处理上万条记录时显示进度。消息体无法解析（JSON 格式错误）归入 parse_error 分类不丢弃。go build 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

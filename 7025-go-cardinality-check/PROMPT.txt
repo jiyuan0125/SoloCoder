@@ -3,3 +3,4 @@
 转换主流程调用子转换时，子转换读同一份映射表，映射表缓存到内存避免重复加载。转换完自动写入目标目录，目标路径不可写时不报错只打 warning 日志到 stderr。空输入文件（0 行数据）视为合法，返回全部校验通过。
 
 CLI 用法：`cardinality-check check --config schema.yaml --data input.yaml [--snapshot baseline.json]`。输出 JSON 格式报告，包含 checked_count、passed_count、failed_count、每条失败的详细信息（字段路径 field_path、期望类型 expected、实际值 actual）。`--verbose` 开启详细模式输出每条校验结果。正常退出码 0，校验失败退出码 1，配置文件语法错误退出码 2。空文件输入视为合法，返回全部通过。输入文件编码不确定时尝试 UTF-8 和 GBK 自动检测，检测失败报 "encoding detection failed" 退出码 2。纯标准库实现，go build 能过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

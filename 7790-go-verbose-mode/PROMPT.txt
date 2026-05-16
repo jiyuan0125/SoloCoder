@@ -7,3 +7,4 @@ Level 1 输出基本进度信息，每个主要步骤的开始和完成。Level 
 库支持嵌套子命令，每个子命令有独立的帮助信息说明 verbose 模式的输出内容，未知子命令给出最接近的建议。
 
 API：`v := verbose.New(1)`、`v.Info("step done")`、`v.Debug("value: %v", val)`、`v.Trace("internal state: %+v", state)`。`go test ./...` 跑测试，`go build` 编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

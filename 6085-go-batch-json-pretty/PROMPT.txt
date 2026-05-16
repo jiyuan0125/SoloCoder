@@ -5,3 +5,4 @@
 非法 JSON 文件不能直接跳过就完事，要记录下来。stdout 按行输出：`formatted: <文件名>` 或 `error: <文件名>: <解析错误信息>`。最后输出统计：`summary: N formatted, M errors, K skipped (already compliant)`。
 
 空文件不算错误，标记为 skipped，原样保留不动。JSON 文件里有 BOM 头（EF BB BF）的自动去除后再处理。处理后的文件保持原文件权限不变（用 os.Stat 获取原权限再 os.Chmod 恢复）。.jsonl（JSON Lines）文件跳过不处理，不报错，在统计中计入 skipped。退出码 0 全部成功，7 部分失败（有解析错误），1 参数错误（路径不存在）。不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

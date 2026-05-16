@@ -7,3 +7,4 @@
 缺少必要参数打印 "missing required flag: <name>" 并 exit 1。非法值打印 "invalid <field>: <value>"。发送失败打印 "send failed: <error>"。注意需要 raw socket 权限，无权限时提示 "permission denied: need root/cap_net_raw"。
 
 纯 Go 标准库，编译后单二进制直接跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

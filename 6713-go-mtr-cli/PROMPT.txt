@@ -7,3 +7,4 @@
 JSON 输出：`{ "target": "8.8.8.8", "hops": [{ "hop": 1, "ip": "192.168.1.1", "sent": 50, "recv": 50, "loss_pct": 0.0, "rtt": { "min_ms": 0.5, "avg_ms": 0.8, "max_ms": 2.1 } }, { "hop": 2, "ip": "10.0.0.1", "sent": 50, "recv": 48, "loss_pct": 4.0, "rtt": { "min_ms": 1.2, "avg_ms": 1.5, "max_ms": 5.3 } }] }`。
 
 ICMP 权限不足时退化为 UDP traceroute，stderr 打 "warning: no ICMP permission, using UDP mode"。host 不传或格式错误退出码 1。Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

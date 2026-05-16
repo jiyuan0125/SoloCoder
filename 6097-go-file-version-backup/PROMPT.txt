@@ -5,3 +5,4 @@
 --max-versions 10 保留最近 N 个版本，超出时自动删除最老的，删除前输出 "pruning: v001"。save 时自动对比最新版本 SHA-256，没变化跳过并输出 "no changes, skipped"。list 输出表格（版本号|时间|备注|大小），tab 对齐。restore 恢复指定版本到原路径，当前文件先自动备份。diff 输出逐行差异（< 删除 > 新增，类似 diff -u 格式）。
 
 目录不存在自动创建 .versions/。原文件删除后 .versions/ 仍保留。无权限写备份目录退出码 1，stderr 输出 "error: cannot write to <路径>: <错误>"。退出码 0 成功，10 部分失败。go build 编译通过，不依赖第三方库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

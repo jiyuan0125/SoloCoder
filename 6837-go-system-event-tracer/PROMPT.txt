@@ -9,3 +9,4 @@ PID 不存在报 `"error: process not found"` exit 1。无事件产生输出空�
 命令支持多级子命令，比如 `tool resource action param --flag` 这种格式。数据导入后自动更新关联的索引文件。新导入的数据可能还没建立关联。
 
 用 Go 标准库写，go run .或 go build 都行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

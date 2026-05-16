@@ -5,3 +5,4 @@
 构建流程四步：解析（parse 接口定义）→编译（验证生成的代码能通过 `go vet`）→测试（生成基本测试文件验证 mock 可用）→打包（输出到目标路径）。测试失败则不生成最终文件，打印 "generated code failed validation: <error>" exit 1。
 
 接口名在文件中不存在报 "interface not found: <name>" exit 1。源文件不存在 exit 1。输出目录不存在自动创建。标准库搞定，`go run .` 跑起来。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

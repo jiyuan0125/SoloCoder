@@ -3,3 +3,4 @@
 第一步日期识别：`nest-flat parse --input data.csv --column created_at --auto-detect --output out.csv`，`--auto-detect` 自动识别 yyyy-MM-dd、MM/dd/yyyy、unix timestamp 等格式，统一转为 `--format` 指定的目标格式（默认 `2006-01-02`）。第二步时区转换：`convert-tz --input data.csv --column created_at --from Asia/Shanghai --to UTC --output out.csv`，`--from`/`--to` 必须是 IANA 标准时区名。第三步相对日期：`relative --base "2024-01-15" --expr "3天前" --output result.txt`，支持"Nd前/Nw后/Nm后/上个月末/本周一/本季度初"等中文表达。
 
 输入 CSV/JSON，输出同格式。日期列无法解析时该行原样保留，stderr 报 `warning: unparseable date in row N: "xxx"`。时区名无效报 `error: unknown timezone: xxx` 退出码 1。文件大于 1GB 用流式处理不能 OOM。空文件输出空文件退出码 0。go build 能过，纯标准库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

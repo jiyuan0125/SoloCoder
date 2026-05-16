@@ -7,3 +7,4 @@
 不支持的 mode stderr 输出 "unsupported mode: xxx, use: upper, lower, title, camel, snake, kebab" 退出码 2。空文件直接输出空文件不报错。批量完成 stderr 输出 "processed: 12 files, modified: 8"。
 
 退出码 0 成功，1 输入文件不存在，2 不支持的 mode。纯标准库，go run . 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -9,3 +9,4 @@ CLI：`log-export export --input app.log --fields "timestamp,level,user_id,reque
 处理完成后自动写入 `export-stats.json`，包含 `total_lines`、`exported_lines`、`failed_extractions`（各字段提取失败的次数）。退出码 0 成功，1 读取错误，2 字段名无效或格式不支持。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -3,3 +3,4 @@ JMeter 装一次半天才搞定，wrk 只能打 HTTP GET。实际业务需要 PO
 1. `loadgen run --config api.yaml --ramp-from 10 --ramp-to 200 --step 20 --duration 30s`，config 文件是 YAML 格式，包含 `url`、`method`（GET/POST/PUT/DELETE）、`headers`（map）、`body`（字符串，JSON 模板支持 `{{rand_int}}`、`{{rand_string 8}}` 占位符）。2. 阶梯加压：从 10 并发起步，每 30s 增加 20 并发，直到 200 并发，每级记录 QPS、P50/P95/P99 延迟、错误率。3. 输出每级的统计到 stdout 表格：STAGE | CONCURRENT | QPS | P50 | P95 | P99 | ERRORS。4. `--output result.json` 同时写 JSON 文件，结构为 `{"stages":[{"concurrent":10,"qps":500,"p50":"12ms","p95":"45ms","p99":"120ms","errors":2},...]}`。5. 整个过程被 `--total-timeout 5m` 控制，超时则停止并输出已收集的数据，exit code 2。目标服务连接失败输出 "connection refused: <url>" exit 1。配置文件解析失败输出具体 YAML 错误行号和原因 exit 3。
 
 纯 Go 标准库，编译后单二进制直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

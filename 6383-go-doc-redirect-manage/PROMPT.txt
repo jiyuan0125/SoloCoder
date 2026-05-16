@@ -7,3 +7,4 @@
 3. 命令行格式 `cli import --source csv|json --target redirects.json --filter '<expr>'` 批量导入映射，`cli export --format csv|json --output <path>` 导出。filter 支持按路径前缀筛选。
 
 4. 空映射文件输出 `NO_REDIRECTS: <file>`。from 路径重复时输出 `DUPLICATE: /old/path` 退出码 1。纯标准库实现，`go run .` 能跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

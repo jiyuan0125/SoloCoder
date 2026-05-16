@@ -3,3 +3,4 @@
 健康检查端点 `GET /health` 返回 200 和 `{"status":"ok","uptime_seconds":1234}`。请求转发失败返回 502 和 `{"error":"upstream unreachable","detail":"connection refused"}`。upstream 超时默认 30 秒，通过 config 的 `timeout_seconds` 配置。日志每行格式：`[时间] [TRACE-ID] [IN|OUT] 方法 路径 状态码 耗时ms`。配置文件不存在返回退出码 1 并打印 "config file not found" 到 stderr。
 
 Go 实现，只用标准库，交叉编译友好。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

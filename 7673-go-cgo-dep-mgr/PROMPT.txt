@@ -14,3 +14,4 @@ CGODep 实体有 ID、库名称、头文件路径（多个）、库文件路径�
 - `merge --source <file> --source <file> --output <file> [--append]`
 
 Go 标准库实现。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

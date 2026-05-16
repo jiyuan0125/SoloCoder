@@ -11,3 +11,4 @@
 4. 错误处理：配置文件格式错误报行号和原因，退出码 1。任务 command 不存在时 status=failed，exit_code=-1。磁盘空间不足无法写日志时 stderr 警告但调度器不停。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

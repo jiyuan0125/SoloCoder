@@ -7,3 +7,4 @@
 导入成功后自动通知下游系统——通过 HTTP POST 调用 `--webhook` 指定的 URL，请求体为 {"files_searched":N,"matches":N,"timestamp":"..."}。本地模式没有配置 `--webhook` 时跳过通知，不报错。
 
 目录不存在退出码 1，关键字为空退出码 2。文件数超过 1000 时打印进度到 stderr。不用第三方包，go build 通过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

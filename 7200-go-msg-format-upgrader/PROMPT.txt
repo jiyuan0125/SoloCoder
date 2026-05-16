@@ -5,3 +5,4 @@
 采样验证：`--sample rate=0.01` 抽 1% 做 round-trip 校验——先升级再降级，和原始数据对比，不一致输出 `VERIFY_FAIL: id=<id> field=<f> expected=<a> got=<b>`。搜索深层路径 `indexes/<name>/docs/<doc_id>/fields/<field>`，迁移后更新索引。
 
 规则变更：迁移规则文件修改后，之前所有用该规则迁移的结果标记为 `stale`，需要 `format-upgrade revalidate --output report.json` 重新校验。多目录并行：`--dir /data/a --dir /data/b`，每个目录一个 goroutine。Go 命令行工具，go build 能过就行。迁移完了能不能自动生成一份变更摘要报告？
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

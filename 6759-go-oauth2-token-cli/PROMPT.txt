@@ -7,3 +7,4 @@ CI 流水线拿 token 调 API 这事，shell 脚本写了一版又来一版，�
 `-scope "read write"` 指定权限范围。`-output json` 打印完整 token 信息，`-output header` 直接输出 `Authorization: Bearer xxx`（方便管道接到 curl）。token 端点返回非 200 打印 "token request failed: HTTP <code>: <body>" 并 exit 1。
 
 Go 标准库，`go run .` 或 `go build` 都行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

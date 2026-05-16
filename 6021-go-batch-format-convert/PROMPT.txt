@@ -3,3 +3,4 @@
 命令 `batchconvert -i ./input_dir -o ./output_dir --from json --to yaml [--recursive] [--continue-on-error] [--jobs 4]`。--recursive 递归扫描子目录，输出结构镜像输入。--continue-on-error 让失败文件不中断流程，失败清单写到 output_dir 根目录的 errors.json，每条记录 path（相对路径）、error（错误信息）。不加此标志遇到第一个错误即停止并 exit 1。--jobs 控制并发数默认 1（串行）。
 
 支持的转换对：json↔yaml、json↔csv（仅平坦数据，嵌套 JSON 转 CSV 忽略非叶节点）、yaml↔csv。源格式和目标格式相同时 stderr 打印 "skip: same format: <path>" 并跳过。输出文件用原始文件名改扩展名，data.json 变 data.yaml。空文件（0 字节）跳过，记录到 skip.json，每条含 path 和 reason 字段。--from 和 --to 不在支持列表时 stderr 输出 "unsupported format: <value>" 并 exit 1。-i 目录不存在 exit 1。-o 不存在时自动创建。不用第三方包，go build 通过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

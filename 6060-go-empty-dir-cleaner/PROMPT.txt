@@ -7,3 +7,4 @@
 无空目录输出 `no empty directories found`，退出码 0。`--exclude` 排除目录名（逗号分隔）：`--exclude node_modules,.git`。`--max-depth` 限制深度。统计：`removed: N dirs, skipped: N, errors: N`。
 
 子命令：`db migrate`、`db rollback`、`db status`、`db seed`。不用第三方包，`go build` 通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -3,3 +3,4 @@
 第一步，`partool diff -source source.csv -target target.csv -key id`，按指定 key 列逐行对比，输出三类差异：仅源表有（INSERT）、仅目标表有（DELETE）、两表都有但字段不同（UPDATE）。差异输出格式 `OPERATION | KEY_VALUE | FIELDS`，如 `UPDATE | 42 | name,age`。第二步，`partool sql -diff diff.txt -table users`，读取 diff 结果生成 SQL 语句，INSERT 生成完整 INSERT INTO，UPDATE 只 SET 变更字段，DELETE 按 key 删。SQL 写到 stdout 或 `-o patch.sql`。
 
 空文件或只有 header 行输出 `no data rows found` 并退出码 0。key 列不存在输出 `error: key column not found: <col>` 退出码 2。源文件和目标文件列数不一致报 `error: column count mismatch` 退出码 1。Go 命令行工具，go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

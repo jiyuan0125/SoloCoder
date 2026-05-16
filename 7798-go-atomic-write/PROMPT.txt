@@ -13,3 +13,4 @@ atomic-write 用 Go 标准库实现，`go build -o atomic-demo ./cmd/atomic` 编
 额外功能：备份写入——`WriteWithBackup(path, data)` 写入前先备份原文件到 `.bak`。校验写入——写入后重新读取对比，确保数据一致。权限保留——新文件继承原文件的权限模式。
 
 API：`aw := atomic.New()`、`aw.WriteFile("config.json", data)`、`aw.WriteWithBackup("config.json", data)`。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

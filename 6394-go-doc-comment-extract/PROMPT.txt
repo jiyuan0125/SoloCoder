@@ -5,3 +5,4 @@
 2. 输出格式：文本模式（默认）按文件分节，每条一行 `file.go:42 [TODO] 这段逻辑需要优化`。加 `-json` 输出 JSON 数组：`[{"file": "handler.go", "line": 42, "type": "TODO", "content": "...", "function": "handleRequest"}]`。加 `-group-by type` 按注释类型而非文件分组。
 
 3. 处理完每条记录后触发统计更新：统计每个类型的数量、涉及文件数、按月份分布（从 git blame 获取注释添加时间，blame 失败则跳过不阻塞）。统计也需要读取原始注释记录数据。扫描零匹配输出 "no matching comments found" exit 0。目录不存在 exit 1。编译过就行，go build，标准库。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

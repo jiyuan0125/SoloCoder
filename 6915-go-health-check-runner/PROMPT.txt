@@ -7,3 +7,4 @@ http 型发 GET 匹配 expected_status（默认 200）和可选 expected_body。
 `checker status` 输出 ASCII 表格（Check/Status/LastCheck/FailCount）。`checker history --name http-api --last 50` 查记录。`checker run --once` 跑一轮退出。timeout 未完成标 failed。配置 target 格式错报 "invalid target" 退出码 1。
 
 纯 Go 标准库，编译后单二进制直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

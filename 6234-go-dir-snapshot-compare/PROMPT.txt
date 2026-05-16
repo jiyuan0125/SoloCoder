@@ -7,3 +7,4 @@
 处理完每个文件更新统计，汇总打印到 stderr：`Summary: 3 added, 1 deleted, 5 modified, 1242 unchanged`。大目录并行扫描 `--workers 8`。
 
 不用第三方包，`go build` 通过就行。退出码 0 无差异，1 有差异，2 快照损坏，3 参数错误。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

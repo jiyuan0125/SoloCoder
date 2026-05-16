@@ -7,3 +7,4 @@ CLI：`klogmon -source dmesg -level err,crit,alert,emerg -watch -keyword "OOM,pa
 级别映射 emerg=0, alert=1, crit=2, err=3, warn=4, notice=5, info=6, debug=7。source 文件不存在报错 `"error: cannot open ..."` exit 1。空日志输出空结果集。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

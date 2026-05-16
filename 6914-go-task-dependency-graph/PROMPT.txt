@@ -5,3 +5,4 @@
 执行完生成 timeline.json：`{ "tasks": [{ "id": "...", "status": "success/failed/timeout/skipped", "started_at": "...", "duration_ms": N }] }`。`dag timeline --format gantt` ASCII 甘特图，`--format table` 表格，最慢的标 bottleneck。某任务失败后依赖它的标 skipped，`--stop-on-failure` 控制是否继续。`dag validate` 只校验不执行。`dag graph --output deps.dot` 输出 DOT 格式。
 
 Go 标准库实现，go run . 或 go build 都行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

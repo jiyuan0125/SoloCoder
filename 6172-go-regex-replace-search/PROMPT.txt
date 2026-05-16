@@ -7,3 +7,4 @@
 正则语法错误时 stderr 输出 `error: invalid regex: <detail>` 并 exit 2。无匹配输出 `no matches found` 并 exit 0。替换完成输出统计：`replaced 42 occurrences in 7 files`。生成报告后尝试邮件通知，未配置 SMTP 时仅打印 `notification skipped: SMTP not configured`。
 
 主逻辑放 regex.go，文件遍历放 walker.go，输出格式化放 reporter.go。纯标准库，`go build` 编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

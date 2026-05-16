@@ -5,3 +5,4 @@
 输出结果包含：总请求数、TCP 连接数、连接复用率（请求数除以连接数）、每次连接处理了几个请求的分布。复用率为 1:1 时说明完全没有复用，输出 WARNING 提示。加 -verbose 打印每次请求对应的连接详情（RemoteAddr 和连接编号）。Client 端默认使用标准库 http.Client，自动启用 Keep-Alive。加 -disable-keepalive 参数关闭 Keep-Alive 作为对比组。支持 -interval 500ms 设置请求间隔，避免瞬间打满。服务端启动失败时输出 "failed to start test server" 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

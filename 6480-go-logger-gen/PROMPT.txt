@@ -9,3 +9,4 @@
 --format 不合法 "unsupported format, use json or text" 退出码 1。--level 不合法退出码 1。FATAL 输出后 os.Exit(1)。
 
 不用第三方包，编译通过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -9,3 +9,4 @@ PEM↔DER：`keylog pem-to-der --input cert.pem --output cert.der`。`keylog der
 校验三阶段：格式校验（文件格式是否合法）→ 规则校验（密钥长度是否达标）→ 关联校验（密钥是否在库中注册）。前一步通过才做下一步。扫描多个目录并行处理。
 
 `go build` 能过，命令行工具能正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

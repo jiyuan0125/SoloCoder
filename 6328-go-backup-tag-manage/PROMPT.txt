@@ -7,3 +7,4 @@
 审批流程四阶段：提交→初审→复审→通过。初审不通过可修改后重新提交，状态回退到提交。`tag approve <backup_id> --stage review --action approve|reject --comment "reason"`。非审批状态调用 approve 返回 `error: invalid transition`。
 
 标签元数据存储在备份目录下的 `.tags.json`。纯标准库，`go build` 通过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

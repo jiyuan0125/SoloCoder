@@ -5,3 +5,4 @@
 新增记录用 ID 范围区分：`--csv-id-range 1000-1999 --json-id-range 2000-2999`。ID 冲突 stderr 输出 `id collision: <id>`，跳过。
 
 同步完生成 `sync_report.json`：`{"merged": N, "conflicts_resolved": N, "csv_added": N, "json_added": N, "conflicts": [{"id": "42", "field": "name", "winner": "csv", "csv_value": "...", "json_value": "..."}]}`。输入无 `id` 列 stderr 输出 `missing key column: id in <filename>`，退出码 4。空输入退出码 3，输出不可写退出码 2，成功退出码 0。`go build` 能编译，纯标准库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

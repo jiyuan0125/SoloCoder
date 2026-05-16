@@ -7,3 +7,4 @@ JSON 输出：`imgls list --format json` 输出 `[{"repository":"","tag":"","siz
 Docker 不可达报 `[ERROR] cannot connect to Docker daemon` 退出码 1。`--socket` 自定义路径，API 版本自动协商（v1.43→v1.41）。大仓库分页请求，`--timeout 10s`。
 
 纯 Go 标准库，`go build` 生成单二进制。退出码 0 成功，1 连接失败，2 参数错误。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

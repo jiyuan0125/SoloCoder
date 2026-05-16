@@ -9,3 +9,4 @@ arg-parser 用 Go 标准库实现，`go build -o arg-parser-demo ./cmd/arg-parse
 输出格式支持多种：JSON、YAML、表格。格式通过 `--format` 参数切换。数据驱动设计——传入结构体定义，自动渲染解析结果到对应字段。结构体 tag 标注参数名和默认值。
 
 帮助信息自动生成，包含所有参数的名称、类型、默认值、说明。`--help` 触发。版本信息通过 `--version` 输出。API 设计简洁：`parser := New()`、`parser.Add(...)`、`result, err := parser.Parse(os.Args)`。`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

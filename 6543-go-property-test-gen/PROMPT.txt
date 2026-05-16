@@ -9,3 +9,4 @@
 `-count 100` 随机迭代次数，默认 100。`-strategy simple|exhaustive` exhaustive 包含边界值（int 最大最小、空字符串、nil slice）。生成文件要 `go test` 直接运行。无 struct 输出 `no struct definitions found` 退出码 0。文件不存在 `error: file not found` 退出码 1。
 
 Go 标准库实现。go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -7,3 +7,4 @@ AES-GCM 加密：`mhash encrypt --password "xxx" --input data.db`，PBKDF2 派�
 信封加密（RSA+AES）：`mhash envelope-encrypt --pubkey pub.pem --input data.tar`。RSA 加密随机 AES 会话密钥，适合多用户场景。
 
 所有操作流式读取，内存不超过几 MB。进度可选 `--progress`。`go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

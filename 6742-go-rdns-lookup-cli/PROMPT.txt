@@ -5,3 +5,4 @@
 加 `-csv` 输出 CSV 格式：`ip,domain,status`，适合 Excel 打开。加 `-filter ok` 只输出有结果的记录。结束后打印汇总：`Total: 2000 | Resolved: 1800 | No record: 150 | Timeout: 50`。
 
 输入文件不存在 exit 1。文件为空输出 "no IPs to resolve" exit 0。非法 IP 格式跳过并在 stderr 打印 "invalid IP: <addr>"。Go 标准库实现，go build 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -7,3 +7,4 @@
 3. `export --input sampled.jsonl --format csv --output stats.csv`：采样数据导出为 CSV 或 JSON。统计维度包括消息类型分布、时间分布、字段值频次。
 
 认证通过后自动记日志（`audit.log`），日志写入失败不影响结果。审计日志按多层路径 `audits/{year}/{month}/{day}/{id}` 组织。支持 JSON、CSV、JSONL 输入格式。输入为空输出空文件不报错。offset 超范围 exit code=2。go build 能过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

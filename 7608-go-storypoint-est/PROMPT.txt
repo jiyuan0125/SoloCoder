@@ -13,3 +13,4 @@
 - `export --from <date> --to <date> --format csv|md`：按时间范围导出，Markdown 表格或 CSV 格式
 
 导出内容每行一个任务，列包括标题、最终 SP、参与估算人数、最大偏差百分比。Go 标准库实现，go build 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

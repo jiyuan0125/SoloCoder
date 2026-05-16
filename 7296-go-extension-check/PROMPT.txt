@@ -9,3 +9,4 @@
 规则校验需要规则组？续签策略就是规则组——threshold-days、days、notify-webhook 组成一个策略。`extchk policy show` 显示当前策略。
 
 `go build` 能过，命令行工具能正常运行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

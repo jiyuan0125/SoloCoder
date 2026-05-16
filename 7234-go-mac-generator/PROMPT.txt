@@ -7,3 +7,4 @@
 元数据管理：`meta list` 显示所有密钥版本和状态，`meta show --file config.enc` 显示文件元数据，`meta export` 导出全部。批量加密用 4 goroutine 并行。
 
 `go build` 能过，命令行工具能正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

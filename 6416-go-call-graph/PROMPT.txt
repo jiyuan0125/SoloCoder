@@ -5,3 +5,4 @@
 输出三种格式。终端模式：缩进表示调用层级，每行显示 funcName (depth:N, calls:M)，递归调用后标注 RECURSIVE。-dot 输出 Graphviz DOT 格式，节点是函数名，边是调用关系，递归调用用红色边标记，方便在图形工具里一眼看到。-json 输出完整结构化数据，包含 nodes 数组（每项有 name、depth、callers、callees、call_count）和 edges 数组。没有调用关系的孤立函数标记 ORPHAN 单独列出。-hot 只显示被调用次数最多的前 10 个热点函数。目录下没有 .go 文件时输出 "no Go files found" 退出码 0。
 
 审批流程：提交→初审→复审→通过，初审不过可以修改重提。只依赖标准库，go run . 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

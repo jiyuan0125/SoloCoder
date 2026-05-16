@@ -11,3 +11,4 @@ leveled-logging 用 Go 标准库实现，`go build -o log-demo ./cmd/logger` 编
 输出目标：默认 stderr。可以同时输出到文件 `--log-file app.log`。文件输出支持按大小轮转（默认 100MB）和按天轮转。历史文件保留 N 个（默认 5），超出自动删除。
 
 API：`log := logger.New(logger.WithLevel(INFO))`、`log.Info("msg")`、`log.With("key", "val").Info("msg")`。`go test ./...` 跑测试。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

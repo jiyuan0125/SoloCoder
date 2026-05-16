@@ -6,3 +6,4 @@
 - `strict diff --schema schema.yaml --config app.yaml` 列出差异：缺失 key / 多余 key / 类型不匹配
 
 schema 文件格式：每个 key 声明 type（string/int/float/bool）和 required（true/false），支持嵌套。exit code：0 通过，1 失败，2 schema 解析错误。记录状态管理：配置头部注释标记状态 草稿→待审→通过→归档，`strict approve --config app.yaml` 推进状态，`strict revoke` 撤回重编辑。不用第三方包，go build 通过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@ Go 做配置段管理，用法：`cfg-section add --file app.ini --section cache
 每次变更自动备份原文件到 `.bak`，加 `--no-backup` 跳过。重命名 section 时如果目标 section 已存在且非空，报 "section already exists: <名字>" 退出码 1 除非加 `--merge`。删除非空 section 必须加 `--force`，否则报 "section not empty, use --force" 退出码 1。移动不存在的 key 报 "key not found: <key> in section <section>" 退出码 2。
 
 全局 section（无名字的 section）用 `--section global` 表示。操作输出 `OK <操作> <目标>` 到 stdout。变更完成后触发关联更新，关联更新要查原记录的状态。`go build` 能编译通过，不依赖第三方库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

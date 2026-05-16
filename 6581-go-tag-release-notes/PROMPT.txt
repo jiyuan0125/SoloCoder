@@ -7,3 +7,4 @@ release notes 每次手动整理太浪费时间——对比前一个 tag 差异�
 Markdown 输出：`## v2.1.0 (2024-06-01)` 下按段列 bullet。json 输出：`{"tag":"v2.1.0","date":"2024-06-01","features":[...],"fixes":[...],"breaking":[...],"other":[...]}`。
 
 tag 不存在退出码 1 打印 "tag not found: %s"。无上一个 tag 时以第一个 commit 为起点。纯 Go 标准库，`go build -o tag-release-notes .`。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

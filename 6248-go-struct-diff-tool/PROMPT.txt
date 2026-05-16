@@ -8,3 +8,4 @@ CLI 用法分三步走：
 差异标注分两类：结构变化（`STRUCTURE_ADDED` / `STRUCTURE_REMOVED` / `TYPE_CHANGED`）和值变化（`VALUE_CHANGED`），输出 JSON 数组，每项 `{"path": "a.b.c", "changeType": "TYPE_CHANGED", "detail": "string -> int", "severity": "breaking|compatible"}`。`severity` 的判断规则：删除字段或类型变化是 breaking，新增字段是 compatible。
 
 空文件对比视为全量新增。null 值和缺失字段要区分——null 算有字段值为空，缺失算没有这个字段。嵌套深度超过 20 层报 "max depth exceeded at path: <path>" 并停止递归。合并完成后自动删除源文件，保留模式下不删。纯标准库实现，`go run .` 能跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

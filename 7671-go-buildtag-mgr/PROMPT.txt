@@ -15,3 +15,4 @@ BuildTag 实体有 ID、标签表达式（如 "linux"、"darwin && !cgo"）、�
 - `archive`：归档 unused 标签
 
 数据存当前目录 JSON 文件。Go 标准库实现。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

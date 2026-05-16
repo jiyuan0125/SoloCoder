@@ -9,3 +9,4 @@ CLI 用子命令组织：logsearch search、logsearch index，支持三级。数
 性能：索引模式下按行号二分查找，非索引模式逐行 grep。--max-results 1000 限制输出数量，防止匹配太多撑爆终端。没找到匹配输出 "no match found" 到 stderr，exit 0。目录不存在 exit 1。
 
 Go 标准库，命令行参数用 flag 包解析。go build -o logsearch。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -11,3 +11,4 @@ filter 支持 eq/ne/gt/lt/contains/exists 操作。多个 filter 之间是 AND �
 规则文件 JSON 不合法时 stderr `ERROR: invalid rules: <信息>` 退出码 2。输入 JSON 解析失败 stderr `ERROR: invalid input JSON at line N` 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

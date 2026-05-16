@@ -7,3 +7,4 @@
 证书管理：归档用的 TLS 证书快过期（<7天）在 stdout 打印 `CERT_EXPIRY_WARNING: days_left=<N>`，通知失败不阻塞归档流程。代码结构：`archive.go`（归档逻辑）、`io.go`（读写压缩）、`main.go`（CLI 入口）。
 
 Go 标准库写个命令行工具，go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

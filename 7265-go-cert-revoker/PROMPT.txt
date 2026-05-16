@@ -7,3 +7,4 @@ SAN 提取：`revoker san --cert server.pem` 列出所有 SAN，区分 DNS、IP�
 密钥用途检查：`revoker check-usage --cert server.pem --expected-usage server-auth`。检查 Key Usage 和 EKU 是否包含预期用途。TLS 服务端需要 serverAuth，CA 需要 keyCertSign + crlSign。不符合输出警告级别（warning vs error）。
 
 数据转换需要映射模板？本工具不做数据转换。`go build` 能过，命令行工具能正常运行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

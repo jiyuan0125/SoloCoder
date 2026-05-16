@@ -7,3 +7,4 @@
 深层嵌套冲突逐级处理：`{"a": {"b": 1}}` 和 `{"a": {"c": 2}}` 合并为 `{"a": {"b": 1, "c": 2}}`，不覆盖整个 `a` 对象。`--max-depth` 限制合并嵌套深度（默认无限制），超出部分用最后一个源的值覆盖。
 
 命令组：`file convert --input x --output y`、`file check --input x` 校验格式、`file merge --inputs a,b,c --output o`。`go build` 能编译通过，不依赖第三方库。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -13,3 +13,4 @@ cherry-pick 到第三个 commit 冲突了，后面两个也被堵住，整个过
 state 文件格式（JSON）：`{"pending": ["hash1", "hash2"], "branch": "feature/target"}`。
 
 纯 Go 标准库，编译后单二进制。`go build -o cherry-pick-batch .`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

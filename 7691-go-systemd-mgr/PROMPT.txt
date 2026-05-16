@@ -16,3 +16,4 @@ ServiceConfig 实体有 ID、名称、文件路径、类型（simple/forking/one
 - `diff <name>`：管理配置 vs 磁盘文件
 
 Go 标准库实现。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

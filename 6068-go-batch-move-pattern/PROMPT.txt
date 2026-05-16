@@ -11,3 +11,4 @@
 `--report <文件>` 生成 JSON 报告 `{"total":100,"moved":95,"skipped":3,"failed":2,"details":[...]}`。如果配了 `--notify-email <地址>` 就发邮件通知，没配就跳过。没有 SMTP 配置时不报错，只输出 WARN。
 
 纯标准库实现，go run . 能跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

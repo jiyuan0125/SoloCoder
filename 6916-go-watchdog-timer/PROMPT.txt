@@ -5,3 +5,4 @@
 on-timeout 用 exec 执行（非 shell），结果写 watchdog.log 格式 `timestamp|event|command|exit_code`。`--max-timeouts 5` 达到后 watchdog 退出。`--cooldown 120s` 两次触发最小间隔。`watchdog status` 显示 last_heartbeat、距超时秒数、已触发次数。`watchdog test` 测试模式只打印不执行。PID 文件不存在给宽限期 `--grace 30s`。收到 SIGTERM 优雅退出不触发超时。
 
 纯 Go 标准库，编译后单二进制直接跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

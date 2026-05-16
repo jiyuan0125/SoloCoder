@@ -3,3 +3,4 @@
 直接说功能：`trigmgr list --db orders.db` 列出所有触发器，输出 table 格式包含 trigger_name、table、event（INSERT/UPDATE/DELETE）、timing（BEFORE/AFTER）、sql。`trigmgr show --db orders.db --name trg_update_status` 显示触发器完整定义。`trigmgr diff --db1 dev.db --db2 prod.db` 对比两个库的触发器差异。SQL 静态检查：`trigmgr lint --file triggers.sql` 检查未使用索引、SELECT *、缺失 WHERE、危险操作（DROP/ALTER），输出 JSON [{rule, level, line, message}]。互相验证：校验时查关联表的规则状态，查关联表时也校验触发方状态，缺一不可。规则修改后所有引用该规则的校验结果重新计算。一次可能处理上万条记录，`--batch-size 5000` 分批处理。触发器定义里有循环依赖时输出 "circular trigger dependency detected" 退出码 2。空数据库输出 "no triggers found" 退出码 0。
 
 Go 标准库 io 包，命令行工具，go build 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

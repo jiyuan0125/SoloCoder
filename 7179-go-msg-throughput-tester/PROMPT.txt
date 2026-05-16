@@ -7,3 +7,4 @@ Topic 管理：`tp-tester topic create --partitions 8 --replication-factor 3`，
 处理完自动 ACK，ACK 失败静默跳过只记 `DEBUG ack fail`。关联操作（如写入指标）和主消费共享同一个 offset 指针，关联操作失败不影响 offset 推进。多目录并行扫描用 `--dir` 多次指定。
 
 Go 命令行工具，go build 能过就行。压测结果除了 JSON，还能 `--format table` 输出对齐的表格方便贴到文档里吗？
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

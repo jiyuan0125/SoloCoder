@@ -6,3 +6,4 @@ NAS 上的代码和本地对不上——NAS 改了忘同步，本地改了忘推
 - `sync resolve --left /local --right /nas --file src/main.go --choose left` 手动选版
 
 冲突文件保留 file.txt.left 和 file.txt.right 两个版本。大文件同步显示进度，符号链接跳过并警告。命令嵌套：`project create --name myproj`，`project build` 执行同步，`project test run` 校验一致性。纯标准库，go run . 能跑。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

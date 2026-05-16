@@ -16,3 +16,4 @@ ProxyConfig 实体有 ID、环境名（local/ci/production）、代理服务器�
 - `inject --var <name> --from-env <ENV_VAR>`
 
 Go 标准库实现，go build 通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

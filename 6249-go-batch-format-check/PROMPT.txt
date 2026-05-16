@@ -5,3 +5,4 @@
 文件类型识别靠扩展名和内容嗅探：扩展名优先，没有扩展名读前几行判断。支持类型：`.json` `.yaml` `.yml` `.xml` `.csv` `.toml`。报告输出每个文件的检查结果——有效/无效/跳过，无效的要给出行号和错误描述，格式类似 `file.json:12: unexpected token '}'`。
 
 退出码：0 全部有效，1 有无效文件，2 参数错误或目录不存在。空文件输出 "empty file: <path>" 标记为 skipped 不算错误。编码不是 UTF-8 的文件报 "encoding error: <path>" 也跳过。扫描完成后输出汇总行 "total: N, valid: N, invalid: N, skipped: N" 到 stdout。加 `--ext .json,.yaml` 限制只检查指定类型文件。加 `--output results.json` 把检查结果保存到 JSON 文件方便后续 report 命令使用。多级子命令设计：`scan`、`check`、`report` 各自独立参数。不用第三方包，`go build` 通过就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

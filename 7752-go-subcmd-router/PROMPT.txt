@@ -9,3 +9,4 @@ subcmd-router 用 Go 标准库实现，`go build -o subcmd-router-demo ./cmd/sub
 主流程完成后自动生成关联记录——每个子命令的执行结果存入 `~/.subcmd-router/history.json`，包含命令名、参数、执行时间、结果状态。下次执行时可以快速查看历史。
 
 子命令定义方式：`router.Register("deploy", deployHandler)`。支持别名——`router.Alias("d", "deploy")`。帮助信息按子命令分组展示，`--help` 输出全局帮助，`<cmd> --help` 输出子命令帮助。嵌套子命令也支持——`app service restart`。`go test ./...` 跑测试。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

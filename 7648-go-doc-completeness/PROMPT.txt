@@ -16,3 +16,4 @@
 - `threshold <project> --value <percent>`
 
 数据存 JSON 文件。Go 标准库实现。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

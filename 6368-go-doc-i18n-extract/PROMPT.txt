@@ -5,3 +5,4 @@
 支持 front matter 跳过（YAML 头部的 --- 之间内容不提取）。空文档或无可翻译内容时输出 "no translatable content" 退出码 0。输出格式通过 -format 指定，支持 json（默认）和 csv。CSV 格式三列：source、location、type。提取的文本片段在原文中用序号占位符标记如 {1}、{2}，方便翻译完成后回填。
 
 合并完成后自动删除源文件，保留模式不删除。纯标准库，go run . 就完事。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

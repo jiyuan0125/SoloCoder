@@ -11,3 +11,4 @@ validate-framework 用 Go 标准库实现，`go build -o validate-demo ./cmd/val
 错误收集策略：默认收集所有错误一次返回。也可以 `FailFast()` 遇到第一个错误就停。错误按字段分组，每个字段可能有多个违规。
 
 API：`v := validate.New()`、`errs := v.Struct(myStruct)`、`errs := v.Var(email, "required,email")`。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

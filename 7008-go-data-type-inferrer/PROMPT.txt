@@ -9,3 +9,4 @@ CLI：datainteg check --input data.csv --output integrity.json。--baseline last
 退化对比：行数减少、列数变化、MD5 变化列入 "regressions"。
 
 关联规则：--rules rules.yaml 定义跨文件约束。上万条流式处理，内存不超 100MB。空文件 {"rows":0} 退出码 0。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

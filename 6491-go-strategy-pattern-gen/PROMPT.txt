@@ -7,3 +7,4 @@
 状态管理：`type Status string`，常量 `Draft → Pending → Approved → Archived`。Approved 可 `Revoke()` 回到 Draft。非法转换返回 `invalid transition: {from} → {to}`。
 
 缺 `-name` 或 `-strategies` 时输出 usage 并 exit 1。纯标准库，`go run .` 就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

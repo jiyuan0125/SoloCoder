@@ -7,3 +7,4 @@
 输出：任务列表表格（含 ES/EF/LS/LF/TF/FF 六列），关键路径用红色高亮，浮动不足 2 天的任务黄色警告。子命令：`float calc project.json` 计算全部，`float critical project.json` 只看关键路径。Go 标准库。
 
 数据存 JSON 文件。所有操作有完整审计日志。工具不依赖外部服务，单二进制分发。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

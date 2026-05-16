@@ -5,3 +5,4 @@
 重名文件自动加 `_1`、`_2` 后缀，stderr 输出 `duplicate target: <name>, renamed to <name>_1`。隐藏文件默认跳过。`--recursive` 递归处理不改变层级。`--ext-filter` 只处理指定扩展名：`--ext-filter .log,.txt`。执行完统计：`renamed: N, skipped: N, duplicates: N`。
 
 记录状态流转：草稿→待审→通过→归档。通过后可撤回到草稿，stderr 输出 `recall: <filename> reverted to draft`。不用第三方包，`go build` 通过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 生成的同时要更新索引文件 `mock-index.json`，记录 service 名、method 列表、对应 mock 文件路径、生成时间戳。索引构建时也要读取已有的 mock 文件，避免覆盖手动定制的响应配置。
 
 proto 文件不存在或解析失败报 "failed to parse proto: <原因>" exit 1。-service 指定的服务在 proto 中不存在报 "service not found: <name>" exit 1。输出目录不存在自动创建。只依赖标准库，go build 通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

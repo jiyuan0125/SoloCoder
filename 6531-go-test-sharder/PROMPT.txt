@@ -5,3 +5,4 @@ pipeline 跑了 40 分钟，其中 35 分钟在等一个分片——其他 7 个
 `-format text` 每行一个包名，用于 `go test $(cat shard1.txt)`。`-format json` 输出上述 JSON。没有历史数据时按包数均分，输出 `warning: no timing data, using equal distribution`。包少于分片数时空分片不输出。`-n` 默认 2 最大 50。
 
 纯 Go 标准库，编译后单二进制直接跑。flag 包解析参数。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

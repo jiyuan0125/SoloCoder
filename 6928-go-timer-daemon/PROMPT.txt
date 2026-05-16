@@ -3,3 +3,4 @@
 任务通过 tasks.json 配置，每项有 id（唯一标识）、type（once/repeat/cron）、command（要执行的命令）、schedule（once 类型是 "2024-01-15T10:00:00"，repeat 类型是间隔如 "30m"、"1h"，cron 类型是标准 5 段表达式）。CLI：`timerd -config tasks.json` 启动，启动时输出 "loaded {n} tasks"。任务触发时执行 command，输出 "task fired: {id} ({command})" 和执行耗时。once 类型执行后自动标记为 completed 不再触发。repeat 类型到点就执行，不限次数。任务执行失败输出 "task error: {id}, {error}" 不影响其他任务。`timerd -config tasks.json -list` 列出所有任务和下次触发时间，格式 "{id}\t{type}\t{schedule}\tnext: {time}"。执行记录写入 tasks.log 文件，每行一条 JSON：{"id":"x","fired_at":"...","status":"success|failed","duration_ms":120}。收到 SIGTERM 输出 "stopping, pending tasks: {n}" 后等待当前任务完成再退出。
 
 Go 标准库，命令行参数用 flag 包解析。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

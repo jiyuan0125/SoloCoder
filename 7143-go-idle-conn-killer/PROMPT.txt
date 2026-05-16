@@ -5,3 +5,4 @@
 第二步 connkill kill --dsn ... --idle-threshold 300s --dry-run 列出将要杀掉的连接，确认后去掉 --dry-run 执行 KILL CONNECTION。每杀一个记录到 kill_log.json。杀连接失败（比如权限不够）打印 ERROR 并继续下一个，最后 exit code 1。
 
 扫描状态五步：排队→扫描中→分析中→报告生成→完成，每步在 stderr 打印进度。SQL 格式化和高亮是单独功能：connkill format --sql "SELECT * FROM users WHERE id=1" 输出语法高亮（ANSI）的格式化 SQL。Go 标准库，go build 能过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

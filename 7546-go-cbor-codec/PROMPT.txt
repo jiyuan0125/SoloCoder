@@ -7,3 +7,4 @@ check 只读不修改。convert 才写文件。validate 在 convert 之后自动
 空输入返回空结果。非标准格式（比如未注册的 tag 值、非规范的整数编码）check 时给警告但不停止。CBOR 的简单值 true/false/null 要正确映射到 JSON。
 
 Go 标准库。`go build`。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

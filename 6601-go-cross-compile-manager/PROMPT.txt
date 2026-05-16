@@ -7,3 +7,4 @@ xbuild run --config crosscompile.json 遍历每个 target，设置 GOOS 和 GOAR
 xbuild summary 读取 build_result.json 输出表格：平台 | 状态 | 大小 | 耗时。全部成功 exit 0，有失败 exit 1。
 
 xbuild clean 清空 output_dir。flag 包解析命令行参数，--config 默认读当前目录的 crosscompile.json。文件不存在 exit 1。Go 标准库实现。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

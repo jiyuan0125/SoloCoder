@@ -11,3 +11,4 @@ interactive-confirm 用 Go 标准库实现，`go build -o confirm-demo ./cmd/con
 输出格式支持多种：JSON、YAML、表格。格式通过参数切换。数据驱动，传入结构体自动渲染确认结果。
 
 API：`ok, err := confirm.Ask()`、`ok := confirm.Run()`（忽略错误直接返回布尔值）。可以链式设置选项：`New("msg").Default(true).WithTimeout(30*time.Second).Ask()`。`go test ./...` 跑测试。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

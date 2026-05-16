@@ -7,3 +7,4 @@
 错误处理：结构体不存在时 stderr 输出 `error: type "{name}" not found` 并 exit 1；输出目录不可写时输出 `error: cannot write to "{path}"` 并 exit 1；未指定 `-type` 时输出 usage 并 exit 1。成功 exit 0。
 
 纯标准库，`go build -o serializer-gen .` 编译完直接跑。不需要邮件通知功能——本地模式跳过通知逻辑，不报错。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

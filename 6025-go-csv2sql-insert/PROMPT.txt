@@ -3,3 +3,4 @@
 命令 `csv2sql -i data.csv --table users [--columns "id,name,email"] [--date-format "2006-01-02"] [--batch 100] [-o insert.sql]`。--table 必填，缺失时 stderr 输出 "table name required" 并 exit 1。--columns 列名映射逗号分隔，数量不等于 CSV 列数时 stderr 输出 "column count mismatch" 并 exit 1，不传用第一行。输出每行一条 INSERT INTO users (id,name,email) VALUES (1,'Alice','alice@example.com');
 
 字符串用单引号包裹，内部单引号转义为两个 ''。数字不加引号。空字段输出 NULL。布尔 true/false 输出 1/0。日期按 --date-format 用 time.Parse 解析后输出 'YYYY-MM-DD'，解析失败输出原始值并 stderr 警告 "warning: date parse failed at line N, column <name>"。--batch 每 N 条包事务 BEGIN;...COMMIT;，默认 0 不加。文件不存在 stderr 输出 "file not found" 并 exit 1。go build 能编译通过，不依赖第三方库。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

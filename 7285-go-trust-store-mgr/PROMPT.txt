@@ -9,3 +9,4 @@ SAN 提取和显示：`trustmgr san --cert server.pem` 列出所有 SAN 条目�
 本工具不做 CA 初始化，不做加密——只做证书信息读取和展示。输出 JSON 到 stdout，错误信息到 stderr。
 
 `go build` 能过，命令行工具能正常运行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

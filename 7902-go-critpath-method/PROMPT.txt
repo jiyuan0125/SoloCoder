@@ -5,3 +5,4 @@
 处理完的项目自动归档到 .archive 子目录，原文件保留但头部追加已处理标记。如果检测到循环依赖，报错并列出参与循环的全部任务 ID，不让你猜问题在哪。工期可以为零，用来表示里程碑节点。
 
 CLI 交互方式：`cpm analyze project.json` 输出关键路径和时序参数，`cpm list project.json` 列出所有任务的 ES/EF/LS/LF/TF 表格，`cpm critical project.json` 只输出关键路径上的任务。支持 --format json 以结构化格式输出，方便接入其他脚本。支持管道输入。Go 标准库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

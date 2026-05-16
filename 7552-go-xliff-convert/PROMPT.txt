@@ -7,3 +7,4 @@ XLIFF 的 XML 结构比 PO 复杂得多——有 `<trans-unit>`、`<source>`、`
 字符编码：遇到无法识别的编码尝试 UTF-8 → Latin-1 → Shift-JIS 的顺序自动检测。输出保持原始换行结构（LF 或 CRLF）。
 
 Go 标准库。`go build` 通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

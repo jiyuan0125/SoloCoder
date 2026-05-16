@@ -16,3 +16,4 @@ InterfaceConfig 实体有 ID、接口名（eth0、wlan0 等）、IP 地址（静
 - `export --format interfaces|netplan|nmcli`
 
 Go 标准库实现。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

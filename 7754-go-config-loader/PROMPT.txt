@@ -9,3 +9,4 @@ config-loader 用 Go 标准库实现，`go build -o config-loader-demo ./cmd/con
 变更时自动通知下游——注册了 `OnChange(name string, fn func(old, new Value))` 回调的调用方在配置变更时收到通知。支持嵌套配置——`database.host`、`database.port` 用点号路径访问。
 
 配置合并策略：文件配置 + 环境变量覆盖 + 命令行参数覆盖。环境变量名映射规则：`DATABASE_HOST` → `database.host`。API 简洁：`loader := New(configDef)`、`loader.Load()`、`loader.GetString("database.host")`。`go test ./...` 跑测试。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

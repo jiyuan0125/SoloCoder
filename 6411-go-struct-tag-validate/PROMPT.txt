@@ -11,3 +11,4 @@
 `--notify <URL>` 检查完成后 POST JSON `{"file":"...","errors":N,"warnings":N}` 到该 URL。没配就跳过。通知失败只 stderr WARN 不影响退出码。
 
 零外部依赖，go build 通过即可。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

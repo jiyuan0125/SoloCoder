@@ -9,3 +9,4 @@ opt-complete 用 Go 标准库实现，`go build -o opt-complete-demo ./cmd/opt-c
 长时间操作显示已用时间和预估剩余时间（ETA）。输出不破坏终端当前行——进度信息用 `\r` 覆盖当前行而不是换行。组件在后台启动一个 goroutine 定期刷新显示。
 
 输出格式：`opt-complete generate bash` 生成 Bash 补全脚本到 stdout；`generate zsh` 生成 Zsh 格式；`generate fish` 生成 Fish 格式。补全脚本内容根据注册的选项定义自动生成，不需要手写。集成方式：`eval "$(mytool completion bash)"`。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

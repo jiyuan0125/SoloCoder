@@ -7,3 +7,4 @@
 2. `--gin` 生成 Gin 框架风格，`--std` 生成标准库 `net/http` 风格，默认 std。spec 文件为空输出 "no endpoints defined" 退出码 1。
 
 3. 标准库搞定，go run . 跑起来。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -7,3 +7,4 @@
 `--threshold 10` 负载超过 10 时 stderr 告警 "WARNING: load average XX exceeds threshold"。JSON Lines 格式：`{"ts":"...","load_1":2.5,"load_5":3.1,"load_15":3.8}`。
 
 读取 /proc/loadavg。Go 实现，只用标准库，交叉编译友好。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

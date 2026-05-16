@@ -7,3 +7,4 @@
 文件本身已标准化时输出 "already normalized" 到 stderr 并退出码 0。有变更时输出 "normalized: 47 characters changed" 到 stderr。
 
 退出码 0 成功，1 输入文件不存在，2 不支持的 form。纯标准库，go build 能编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

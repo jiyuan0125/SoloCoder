@@ -13,3 +13,4 @@
 target 无法连接时记录 status=error，不退出。连续 10 次超时 stderr 输出 `WARN: 10 consecutive timeouts`。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

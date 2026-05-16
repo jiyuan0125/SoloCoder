@@ -7,3 +7,4 @@
 key 列不存在输出 `column not found: user_id` 退出码 1。文件编码统一 UTF-8，首行当表头，非 UTF-8 报 `encoding error: filename` 退出码 2。大文件超过 100 万行用流式处理不全部加载到内存——流式模式下也支持所有关联类型。`--header` 默认开启，`--no-header` 表示没有表头用列序号 `_col0,_col1` 命名。
 
 纯标准库实现，go run . 能跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

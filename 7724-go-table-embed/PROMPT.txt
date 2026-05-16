@@ -7,3 +7,4 @@ table-embed 用 Go 标准库实现，`go build -o table-embed ./cmd/table-embed`
 数据源转换：`from-csv <file>` 把 CSV 转成 Markdown 表格输出；`from-json <file>` 把 JSON 数组转表格，`--columns name,age` 指定列；`embed <md-file> --csv data.csv --name users` 把 CSV 数据嵌入到 Markdown 文件指定位置。链接检查也集成进来——表格中的链接字段发 HTTP 请求验证可达性，内部链接检查文件存在。
 
 输出格式默认终端表格，`--format markdown` 输出 Markdown 格式，`--format json` 输出 JSON。`fmt <file>` 格式化文件中所有表格使其对齐。并发处理多个文件时用 goroutine pool 控制并发数。`go test ./...` 跑测试。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

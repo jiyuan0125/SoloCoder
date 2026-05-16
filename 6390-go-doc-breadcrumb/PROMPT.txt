@@ -5,3 +5,4 @@
 生成后自动记录操作日志。日志结构：`{"file": "...", "breadcrumb": "...", "level": 4, "timestamp": "..."}`。数据库不可用（如 SQLite 文件写锁）时回退写本地文件 `breadcrumb.log`，格式每行一条 JSON。
 
 配置文件 `breadcrumb.yaml` 可自定义：`home_label`（首页显示名称，默认"首页"）、`separator`（分隔符，默认 " > "）、`max_depth`（最大显示层级，超过则省略中间层用 "..." 表示）。dir 不存在 exit 1 并打印路径。零 md 文件输出 "no markdown files found" exit 0。go build 过了就完事，不用第三方包。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

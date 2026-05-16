@@ -5,3 +5,4 @@
 超限请求返回 429 Too Many Requests，响应头加 X-RateLimit-Limit、X-RateLimit-Remaining、X-RateLimit-Reset（Unix 时间戳）。路径匹配用 filepath.Match 规则，匹配顺序按数组顺序，第一个命中的规则生效。没有规则命中则不限制，直接转发。
 
 proxy 转发时透传请求头和响应头，添加 Via: traffic-shaper 头。upstream 不可达时返回 502 Bad Gateway，stderr 输出 "error: upstream unreachable: <url>"。rules.json 文件变更后自动热加载，stdout 输出 "info: rules reloaded"。Go 标准库，命令行参数用 flag 包解析。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

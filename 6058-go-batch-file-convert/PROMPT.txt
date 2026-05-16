@@ -5,3 +5,4 @@
 转换失败不中断流程，stderr 记录 `conversion failed: <filename> (reason: <cause>)`。汇总到 stdout：`done: 45, failed: 2, skipped: 3`。`--fail-fast` 遇到第一个错误即停。`--output-dir` 省略则原地覆盖（先写临时文件再 rename）。
 
 子命令：`convert csv json --input x --output y`、`convert yaml toml --input x --output y`、`validate json --file x` 校验格式、`diff json --left a --right b` 差异对比。`go build` 能编译通过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

@@ -11,3 +11,4 @@ publish-approve 用 Go 标准库实现，`go build -o publish-approve ./cmd/publ
 文档版本对比集成——比较两个版本的文档，高亮差异部分。差异包括新增、删除、修改，并排对比格式输出。审批者可以清晰看到改了什么再决定是否通过。
 
 子命令：`submit <file>` 提交发布；`approve <id>` 审批通过；`reject <id> --reason "..."` 拒绝；`publish <id>` 执行发布；`rollback <version>` 回滚。数据存 `~/.publish-approve/` 目录。`go test ./...` 跑测试，`go build` 编译通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

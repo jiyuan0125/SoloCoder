@@ -5,3 +5,4 @@
 已存在的目录静默跳过，不报错，输出 "skipped: <路径>"。文件和目录权限 0755，创建失败时 stderr 输出具体原因。--list 模式显示模板里定义的所有路径（替换后的预览），每行一个路径，前面标序号。--validate 模式检查模板语法是否合法（JSON 格式、占位符是否闭合），不合法时输出 "invalid template: <行号>: <错误描述>" 并退出码 1。
 
 没有 --template 参数时退出码 1 并 stderr 输出 "error: --template is required"，模板文件不存在退出码 1 并输出 "error: template file not found: <路径>"。正常退出码 0。支持嵌套子命令：mktemplate generate、mktemplate validate、mktemplate list。纯标准库实现，go run . 能跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

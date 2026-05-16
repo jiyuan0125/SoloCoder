@@ -5,3 +5,4 @@
 `--dry-run` 预览移动计划：`photo.jpg → images/photo.jpg`。目标目录不存在自动创建。同名文件加序号：`photo_1.jpg`。`--watch` 持续监控（轮询 1 秒）。无匹配规则留在原位，stderr 输出 `no rule matched: <filename>`。
 
 管理模板和生成文件：`template create --name x --path y`，`template generate --name x --output z`。不用第三方包，`go build` 通过就行，代码分几个文件组织。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

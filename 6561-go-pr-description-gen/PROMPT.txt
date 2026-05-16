@@ -5,3 +5,4 @@ PR 描述就三个字 "fix bug"，review 的人打开 PR 一脸懵。分支上�
 输出 Markdown 格式：`## Summary\n{从 feat/fix commit 提取的一句话总结}\n\n## Changes\n### New Features\n- feat: add user login (abc1234)\n### Bug Fixes\n- fix: resolve timeout (def5678)\n\n## Files Changed\n| File | +/- | Status |\n|------|-----|--------|\n| src/auth.go | +120 -30 | MODIFIED |\n| src/login.go | +85 -0 | NEW |\n\n## Test Plan\n- {从 commit 中提取 test 相关变更建议}`。`-output pr.md` 写文件，否则 stdout。base 分支不存在报错 `error: branch xxx not found` 退出码 1。两个分支无差异输出 `No changes between branches`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

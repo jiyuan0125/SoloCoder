@@ -14,3 +14,4 @@ CLI 工具子命令越来越多，flag 解析逻辑散落在 main.go 各处，�
 配置文件不存在 "config file not found" 退出码 1。YAML 格式错误 "invalid config: <行号> <错误>" 退出码 1。
 
 纯标准库，`go build` 通过就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

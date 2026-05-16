@@ -5,3 +5,4 @@
 `lag-tool report --input lag_samples.json --output report.html --period 1h`：生成延迟趋势报告，包含每个 topic-partition 的最大/最小/平均延迟、延迟突增时间点。报告输出为 HTML 表格。`lag-tool health --brokers localhost:9092 --group my-consumer`：消费者健康检查，验证消费者组是否存在、成员是否活跃、是否有消费者掉线。
 
 签名场景：签名时验证证书状态（是否吊销/过期），验证时检查完整签名链（root → intermediate → leaf）。任务状态：waiting → running → success / failed。采样数据用 JSON Lines 格式持久化（`--persist lag_data.jsonl`）。之前的报告格式太不统一了，这次重写。go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

@@ -7,3 +7,4 @@
 `xmlmapper validate mapping.yaml` 校验配置文件格式和类型转换是否合法。`xmlmapper diff --config mapping.yaml --input sample.json` 对比一条样本数据的映射前后差异。
 
 转换完自动写入目标文件，目标路径不可写时输出 `warning: cannot write to target, result printed to stdout`，不报错退出码仍为 0。输入 JSON 解析失败退出码 1，输出具体解析错误位置。`go build` 能过，命令行工具正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

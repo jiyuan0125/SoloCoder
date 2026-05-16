@@ -5,3 +5,4 @@ Go CLI 工具，用法：`config-merge merge -f base.yaml -f override1.yaml -f o
 合并规则：标量值后者覆盖前者，对象递归合并，数组按策略处理。冲突字段无法自动合并时输出警告 "conflict at path <路径>: kept value from <文件名>"，不静默丢弃。加 `--dry-run` 只输出合并结果不写文件。`--show-source` 在每个字段旁标注来源文件。
 
 输出失败时退出码 1 并输出 "error: cannot write to <路径>: <原因>"。输入文件不存在报 "file not found: <路径>" 退出码 2。空文件视为空配置参与合并不报错。合并完成后输出统计 "merged N keys from M files, conflicts: K"。自动通知下游系统，本地开发模式没有下游配置就跳过通知。支持 YAML 和 JSON 格式自动检测（通过文件扩展名），混合格式报 "mixed formats not supported" 退出码 3。纯标准库实现，`go run .` 能跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

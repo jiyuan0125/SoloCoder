@@ -15,3 +15,4 @@ CronJob 实体有 ID、名称、时间表达式（cron 格式）、命令、用�
 - `export --format crontab`
 
 Go 标准库实现，go build 通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

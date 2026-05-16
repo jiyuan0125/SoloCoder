@@ -3,3 +3,4 @@
 `rollback-plan -deploy deploy.json [-o rollback.md]`。deploy.json 记录当前部署状态：`[{"service": "api-gateway", "version": "v2.3.1", "depends_on": ["user-service", "order-service"]}, ...]`。工具分析依赖图，按拓扑逆序生成回滚步骤的 Markdown 文档：先回滚无下游依赖的服务，最后回滚基础服务。Markdown 每个步骤包含服务名、当前版本、目标版本、前置依赖、回滚命令占位。
 
 输入文件为空或只有 header 行时输出 `warning: no deployment data, generating empty plan`。JSON 解析失败输出 `error: invalid deploy.json: <reason>` 退出码 1。检测到循环依赖输出 `error: circular dependency detected: A -> B -> C -> A` 退出码 2。正常生成退出码 0。Go 标准库，命令行参数用 flag 包解析。`-target-version` 指定回滚目标版本，不指定则用前一版本。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

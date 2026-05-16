@@ -5,3 +5,4 @@
 置信度评分规则：扩展名匹配加 0.3 分，内容特征完全匹配加 0.7 分，部分匹配按比例加分。总分低于 0.5 输出 `unknown format`，退出码 4，提示 `use --format <json|yaml|csv|toml> to specify`。文件为空退出码 3，输出 `empty file`。
 
 子命令：`sync local --source ./dir` 本地检测（递归扫描目录）、`sync remote --url http://...` 远程检测（下载前 8192 字节判断）、`sync status` 显示上次检测结果缓存（存储在 `~/.fmtdetect_cache.json`）。检测耗时超过 1 秒 stderr 输出 `slow detection: <filename> took <duration>`。纯标准库，`go run .` 能跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

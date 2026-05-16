@@ -5,3 +5,4 @@
 `sidebar check ./docs/ sidebar.json` 校验侧边栏引用是否都指向真实文件，断裂引用输出 `broken link: "getting-started" → docs/getting-started.md not found`。`sidebar diff old.json new.json` 比较两个版本差异，显示新增/删除/修改的菜单项。
 
 输出 JSON 结构：`[{title, path, children: [{title, path}]}]`。空目录跳过不生成菜单项。文件名含特殊字符（空格、中文）用 URL 编码。`--prefix /docs/` 给所有路径加前缀。纯标准库，`go run .` 能跑。命令格式 `tool action target options`，比如 `tool scan dir --depth 3`。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

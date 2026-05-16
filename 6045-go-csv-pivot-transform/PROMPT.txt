@@ -13,3 +13,4 @@
 输入文件不存在 stderr `ERROR: file not found: <路径>` 退出码 2。指定列名不存在 stderr `ERROR: column not found: <名称>` 退出码 2。
 
 不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

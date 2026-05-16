@@ -7,3 +7,4 @@
 加密字段：`--encrypt-fields phone,email --keybase keyfile`，AES-256-GCM 加密，加密完自动 `os.Remove` 原文，删除失败打 WARN 但继续。任务状态：waiting → running → succeeded | failed，失败后 `--retry-count 2` 重试。退出码 0 全部完成，1 部分失败，2 参数错误。
 
 Go 命令行工具，go build 能过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

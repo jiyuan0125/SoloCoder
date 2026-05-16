@@ -8,3 +8,4 @@ Go CLI 做 JSON 转 XML。根节点名称可以通过参数指定，默认 root�
 合并完成后自动删除源文件，保留模式不删除。
 纯 Go 标准库，go build 编译。10MB 以下全量读取没问题，超过的话用 bufio.Scanner 逐行处理。
 字符串处理注意 Unicode——Go 的 string 是 UTF-8 编码的 byte slice，按 rune 遍历才安全。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

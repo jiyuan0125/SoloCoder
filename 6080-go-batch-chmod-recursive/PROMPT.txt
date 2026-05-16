@@ -5,3 +5,4 @@
 先遍历目录收集所有文件和子目录，按规则算目标权限。--dry-run 输出变更计划 `<路径> <当前权限如0777> → <目标权限如0644>`，不加则实际修改输出 `changed: <路径> <旧> → <新>`。符号链接跳过。权限已是目标的不输出。
 
 stdout 输出 `summary: N files changed, M dirs changed, K skipped`。无权限修改的 stderr 输出 "permission denied: <路径>" 并跳过。退出码 0 全部成功，4 部分失败。子命令：chmodr apply、chmodr check（只检查不修改）、chmodr rollback（按日志恢复原权限）。纯标准库实现，go run . 能跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

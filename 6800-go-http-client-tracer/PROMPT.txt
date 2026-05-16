@@ -5,3 +5,4 @@
 `--count 10` 连续发 10 个请求取统计值。每个阶段输出 P50/P95/P99/Max。`--output trace.json` 导出详细 JSON，每条请求一个对象：`{"dns_ms":12,"tcp_ms":45,...,"total_ms":668}`。`--compare https://api2.example.com/users` 同时测两个 URL 并排对比输出。
 
 `--header "Authorization: Bearer xxx"` 自定义请求头。非 HTTP/HTTPS URL 报错 "unsupported protocol" 退出码 1。DNS 查找失败单独标注 `[DNS FAIL]` 并记录错误信息。纯 Go 标准库，编译后单二进制可以直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

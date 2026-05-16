@@ -5,3 +5,4 @@
 输出格式：通过时 stdout 输出 `OK` 退出码 0；不通过时逐行列出违规项，每项格式 `LINE {n}: {rule} — {具体原因}`（如 `LINE 1: format — must match type(scope): subject`），退出码 1。空输入（空文件或空 stdin）输出 `error: empty commit message` 退出码 2。输入有但只有空白字符同理。
 
 用 Go 标准库写，`go run .` 或 `go build` 都行，退出码 0 通过 1 违规 2 输入错误。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

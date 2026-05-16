@@ -9,3 +9,4 @@
 目标地址用 `-base-url http://localhost:8080` 替换原始 URL 的 host 部分，方便本地复现。文件不存在或格式错误打印 "invalid input file: <error>" 并 exit 1。
 
 项目拆至少 3 个源文件：main.go、har.go、replayer.go。Go 标准库，flag 包。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

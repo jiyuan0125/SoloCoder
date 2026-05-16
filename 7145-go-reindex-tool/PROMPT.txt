@@ -5,3 +5,4 @@
 `backup --db app.db --output backup.sql --mode full`：full 模式做完整 SQL dump，`--mode incremental --since backup.sql` 做增量备份（对比上次备份后的变更）。`restore --input backup.sql --db restored.db --verify` 恢复并自动验证（对比原库和恢复库的表数量与行数）。`check` 子命令做 SQL 静态分析：未使用索引、SELECT *、缺失 WHERE。
 
 任务状态：registered → queued → executing → success / failed → retrying。每个状态变更输出一行日志 `[STATE] task_id=xxx old=xxx new=xxx`。备份文件写入失败（磁盘满）exit code=2，SQL 语法错误 exit code=3。支持 CSV 和 JSON 输入。go build 能过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

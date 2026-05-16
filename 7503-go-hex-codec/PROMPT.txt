@@ -7,3 +7,4 @@ check 和 convert 之间有联动——convert 执行前会先隐式调一遍 ch
 空文件要能正常处理，输出也是空。非标准格式（比如 mixed case 的 `aAbB`）在 check 时给警告但不报错，convert 时统一规范化。输入从文件或 stdin 读，输出到 stdout 或 `--output` 指定的文件。
 
 Go 标准库，`encoding/hex` 包是主力。纯 CLI 工具，`go build` 编译。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

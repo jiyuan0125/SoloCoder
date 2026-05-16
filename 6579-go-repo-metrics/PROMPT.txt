@@ -12,3 +12,4 @@ table 模式用 `|` 分隔列。json 模式输出 `{"period": "...", "total_comm
 不是 git 仓库时退出码 1 打印 "not a git repository"。日期格式无效退出码 1 打印 "invalid date: %s"。git log 含特殊字符不崩溃，跳过打印 warning。
 
 Go 纯标准库，`go build -o repo-metrics .`。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

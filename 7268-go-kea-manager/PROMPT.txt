@@ -9,3 +9,4 @@ TLS 配置文件生成：`kea gen-tls --cert server.pem --key server.key --min-v
 密钥状态：`generated`→`active`→`rotating`→`archived`→`destroyed`？TLS 配置里不管理密钥生命周期。加密需要密钥怎么导入？TLS 配置引用文件路径，不直接处理密钥。用 `encoding/json` 流式处理配置文件。
 
 `go build` 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

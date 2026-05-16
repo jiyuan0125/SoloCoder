@@ -25,3 +25,4 @@ tests:
 输出报告到 stdout：✓ GET /api/users - 200 (45ms)，✗ POST /api/users - 500 expected 201 (120ms)。最后汇总：Passed: 5/7, Failed: 2。退出码：0=全通过，1=有失败。用 `-o report.json` 输出 JSON 报告，含每个用例的请求/响应详情。
 
 路径参数安全处理，`../` 这种不跟随。Go 标准库，`go build` 编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

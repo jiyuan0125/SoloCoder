@@ -5,3 +5,4 @@
 `-update` 模式自动将每个 submodule 更新到最新 tag（执行 `git submodule update --remote {path}` 然后 `cd {path} && git checkout {latest-tag}`）。`-recursive` 同时更新嵌套 submodule。`-only "auth,cache"` 只更新指定 submodule（逗号分隔，支持路径部分匹配）。某个 submodule 远程不可达时跳过并在 stderr 输出 `warning: {path} remote unreachable`。没有 submodule 时输出 `No submodules found`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

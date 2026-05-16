@@ -3,3 +3,4 @@
 写个服务配置热加载工具，监控配置文件变更，变了就通知服务重新加载。关键是新配置得验证通过才应用，语法错误的配置不能让服务挂掉。配置文件 reload.json 定义 watch 列表，每项有 path（监控的文件路径）、validator（验证命令，如 `nginx -t -c {path}`，返回 0 视为合法）、reload_cmd（重载命令，如 `nginx -s reload`）、debounce（防抖秒数，默认 2）。CLI：`cfgreload -config reload.json` 启动监控。文件变化时先等 debounce 秒（避免编辑器保存中间态），然后执行 validator，输出 "validating: {path}"。验证失败输出 "validation failed: {path}, keeping current config" 不执行 reload。验证通过执行 reload_cmd，输出 "reloaded: {path}"。每次事件记录到 reload.log："{time} {path} {validated|failed|reloaded}"。`cfgreload -config reload.json -check` 一次性检查所有配置文件当前是否合法。文件可能很大，超过内存要能处理——用 fsnotify 机制而非轮询全文件内容。收到 SIGTERM 输出 "stopping config reloader" 后退出。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

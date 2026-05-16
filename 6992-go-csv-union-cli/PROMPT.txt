@@ -9,3 +9,4 @@ CLI：`csv-union -input "sales_*.csv" -output national.csv -dedup order_id`。`-
 合并完成 stdout 输出统计：`merged N files, M total rows (K duplicates removed)`。空文件（只有 header）跳过不报错，但如果所有文件都为空则输出只含 header 的文件。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

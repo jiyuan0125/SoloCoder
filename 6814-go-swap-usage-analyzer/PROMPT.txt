@@ -7,3 +7,4 @@ swap 占了 8G 机器卡得动不了。谁把内存吃了导致 swap 涨上去�
 `swapcheck monitor --interval 5s --threshold 70` 持续监控 swap 使用率，超过 70% 告警。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

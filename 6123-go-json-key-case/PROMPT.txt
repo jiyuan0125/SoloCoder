@@ -7,3 +7,4 @@
 自动检测：`keycase detect --input data.json` 输出 "camel"、"snake"、"pascal" 或 "mixed"。mixed 时输出 "mixed: camel=60%, snake=30%, pascal=10%"。检测逻辑：统计所有键名中各风格占比，最高占比超 80% 判定为该风格。
 
 退出码 0 成功，1 输入文件错误，2 不支持的格式参数。纯标准库，go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -5,3 +5,4 @@
 同步流程分阶段：准备（prepare）→扫描（scan）→传输（transfer）→验证（verify）→完成（done），验证失败从传输阶段重试，最多 3 次。状态文件 `.offsite-state.json` 记录当前阶段和进度：`{"phase": "transfer", "total_files": 300, "done_files": 150, "failed_files": [], "last_sync": "..."}`。catchup 根据 `.offsite-state.json` 的 last_sync 时间戳，只扫描该时间之后变更的文件。
 
 规则修改后（`.sync-rules.json`），已经按旧规则处理过的记录标记为 `needs_review`。空源目录输出 `SOURCE_EMPTY: <dir>`。`go run .` 能跑起来，标准库实现。退出码 0=成功，1=校验失败，2=IO 错误。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

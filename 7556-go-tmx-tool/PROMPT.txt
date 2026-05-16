@@ -7,3 +7,4 @@
 支持导出为标准格式方便导入 SDL Trados、memoQ 等专业翻译工具。大 TMX 文件（几 GB）要用 XML 的流式解析，不能 `ioutil.ReadAll`。
 
 Go 标准库，`go build` 通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

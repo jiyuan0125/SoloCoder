@@ -9,3 +9,4 @@
 密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}，查找时返回最新激活版本。用 archive/zip 的 Reader 和 Writer 处理 zip 包内的文本文件——解压后统计，结果可以打包输出。
 
 go build 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

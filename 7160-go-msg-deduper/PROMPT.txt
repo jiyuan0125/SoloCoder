@@ -5,3 +5,4 @@
 `sample --input msgs.jsonl --rate 0.1 --output sampled.jsonl`：按 10% 比例随机采样，或 `--interval 30s` 每 30 秒取一条。采样统计输出 `{"total": 50000, "sampled": 5000, "rate": "10%"}`。`--export-stats stats.json` 导出采样统计数据。
 
 规则校验需要规则组（`--rule-group dedup-rules`），规则组怎么来的不提——工具假定规则组已配置。审计日志按多层路径 `audits/{year}/{month}/{day}/{id}` 组织，去重操作自动记录审计条目。输入文件为空输出空文件不报错。超大文件流式读取。go build 能过就行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

@@ -7,3 +7,4 @@
 搜索 10000 行文本 1 秒内完成。完成 stderr 输出 "scanned: N lines, matched: M, time: Xs"。
 
 退出码 0 有匹配，1 无匹配，2 参数错误（如 threshold < 0 stderr 输出 "threshold must be >= 0"）。纯标准库，go build 能编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

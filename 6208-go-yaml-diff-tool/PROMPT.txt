@@ -3,3 +3,4 @@
 CLI 用法：`yaml-diff <old.yaml> <new.yaml>`，输出每个差异项的完整路径（用 `.` 连接键名，如 `spec.replicas`），格式为 `[路径] 旧值 → 新值`。加 `--output json` 切换为 JSON 数组输出，每项含 path、old_value、new_value 三个字段。如果两份 YAML 完全一致，退出码 0 并打印 `no differences`；有差异退出码 1。输入文件不存在或 YAML 语法错误时退出码 2，stderr 输出 `parse error: <文件名>: <具体原因>`。遇到 YAML anchor 和 alias 要正确展开后再比较，不要把引用关系当成差异。列表（数组）长度不一致时也要报告，标明 `array length diff at <路径>: old=N new=M`，然后逐项比较共同部分。空 YAML 文件之间比较输出 `both empty` 退出码 0。
 
 另外工具里要实现一个审批流程：提交→初审→复审→通过，初审被拒可以修改后重新提交。分组规则更新后，已经分好组的项目要自动重新分配。纯标准库实现，`go build` 编译通过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

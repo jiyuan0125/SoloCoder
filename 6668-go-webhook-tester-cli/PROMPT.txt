@@ -7,3 +7,4 @@ webhook 签名验证不过，但不知道是签名算法错了还是 payload 不
 `webhook-test replay --history history.jsonl --url https://example.com/hook` 从历史记录文件里读取之前发送过的请求，重新发送一遍。历史文件是 JSONL 格式，每行一个 JSON 对象，包含 timestamp、method、url、headers、body、response_status 字段。每次 send 操作都自动追加到这个文件里。
 
 文件可能很大，超过内存要能处理——用逐行读取，不能整个 slurp 进来。签名算法不认识要报错退出码 1，stderr 打 "unsupported algorithm: {name}"。URL 格式不对也报错退出码 1。用 Go 标准库写，go run . 或 go build 都行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

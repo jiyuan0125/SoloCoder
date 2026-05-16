@@ -7,3 +7,4 @@
 第三步 apimig check --old v2-schema.json --new v3-schema.json --mapping mapping.json 验证映射完整性——如果 new schema 里有字段没被映射覆盖，打印 WARNING: unmapped field 'email' in new schema。
 
 --output 指定输出文件，默认 stdout。Go 实现，只用标准库，交叉编译友好。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

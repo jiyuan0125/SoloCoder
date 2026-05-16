@@ -7,3 +7,4 @@
 对比：`iv-gen compare --baseline checksums.sha256 --input-dir ./dist/`。输出 matched/mismatched（含两个哈希）/missing。
 
 任务 `registered`→`queued`→`executing`→`success`/`failed`，失败不重试。`go build` 能过，命令行工具能正常运行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

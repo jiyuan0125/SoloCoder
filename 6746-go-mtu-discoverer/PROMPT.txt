@@ -7,3 +7,4 @@ mtudisc --target 10.0.0.1 --min 500 --max 1500 --step 100 从最大值开始发�
 如果 --target 不可达 exit code 1。整个范围都失败 exit code 2，打印 ERROR: unable to determine path MTU。超时 --timeout 2s 每个探测包。支持 --interface eth0 绑定源网卡。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

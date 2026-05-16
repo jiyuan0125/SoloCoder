@@ -16,3 +16,4 @@
 输出格式：每个问题一行，格式 "文件:行号: [SEVERITY] 描述"。SEVERITY 分 ERROR（必须修）和 WARN（建议修）。有 `--json` 标志时输出数组，字段：file、line、severity、message、suggestion。
 
 零外部依赖，`go run .` 能跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

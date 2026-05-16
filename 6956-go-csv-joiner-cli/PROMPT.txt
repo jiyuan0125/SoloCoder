@@ -7,3 +7,4 @@
 文件不存在输出 "file not found: XXX" 到 stderr 退出码 1。key 列不存在输出 "key column not found in XXX" 退出码 2。两个文件都无数据输出空 CSV 退出码 0。inner join 无匹配输出 "warning: no matching rows" 到 stderr 但正常输出空 CSV。
 
 Go 标准库，命令行参数用 flag 包解析。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

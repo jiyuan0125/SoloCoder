@@ -11,3 +11,4 @@
 配置文件不存在时如果所有字段都有 default 则用默认值（打印 "using defaults, no config file"），有 required 字段无默认值则报错退出码 1。环境变量格式不对 "invalid env value for <字段名>: <值>" 退出码 1。
 
 `go build` 能过，不依赖第三方库。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

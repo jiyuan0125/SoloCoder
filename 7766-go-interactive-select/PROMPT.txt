@@ -7,3 +7,4 @@ interactive-select 用 Go 标准库实现，`go build -o select-demo ./cmd/selec
 日志能力集成——选择过程的操作日志分级输出到 stderr（DEBUG/INFO/WARN/ERROR），支持结构化字段。文件输出支持轮转，当天写到 `select.log`，超过阈值触发轮转。不依赖第三方库。写入数据后自动触发校验——选择结果校验（是否在选项范围内、是否为空），校验也需要访问同一份选项数据。
 
 API：`sel := select.New("Choose:", options...)`、`choice, err := sel.Run()`。返回选中的值。`go test ./...` 跑测试。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

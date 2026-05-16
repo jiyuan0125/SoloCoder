@@ -3,3 +3,4 @@
 `mailext -file app.log [-out emails.txt] [-dedup]`。逐行扫描文件，用正则提取符合 RFC 5322 基本格式的邮箱地址。提取结果默认输出到 stdout，每行一个邮箱。`-dedup` 开启去重，去重后输出总数 `extracted: 234 emails (unique: 189)`。`-validate` 开启格式校验，过滤掉明显不合法的（缺域名、特殊字符不合规），校验失败的输出到 stderr `invalid: <email>`。
 
 任务状态管理：排队→运行→暂停→完成。文件较大时分批读取（每批 10000 行），每批之间可暂停，`-pause-after 50000` 在处理 5 万行后暂停等待用户按回车继续。暂停状态输出 `[PAUSED] 50000/230000 lines processed, press Enter to continue`。加 `-limit 1000` 限制最多提取多少个邮箱，达到上限停止并输出 `limit reached: 1000 emails extracted`。输入文件不存在报错退出码 1。空文件输出 `no emails found` 退出码 0。不用第三方包，go build 通过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

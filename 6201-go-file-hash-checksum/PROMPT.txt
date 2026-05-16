@@ -7,3 +7,4 @@
 步骤三：对比。`hashchk diff --old v1.sha256 --new v2.sha256` 对比两版差异，输出新增、删除、哈希变更的文件列表。
 
 校验文件格式不对（行里没有空格分隔 hash 和 filename）报 `invalid checksum format: line N` 退出码 1。纯标准库，go build 能编译通过。代码别堆 main.go 里，拆几个文件。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -9,3 +9,4 @@
 4. `--format table` 表格输出，`--format csv` 输出可再导入的 CSV。文件编码 UTF-8，首行表头。空文件报 `empty file` 退出码 1。
 
 不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

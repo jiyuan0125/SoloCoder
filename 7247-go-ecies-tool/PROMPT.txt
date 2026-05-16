@@ -9,3 +9,4 @@ Shamir 分片：`ecies split --input master.key --threshold 3 --shares 5`。GF(2
 认证通过后自动记录日志？本工具不做认证。但操作记录可以写到 `~/.ecies/audit.log`，每行记录时间戳、操作类型、分片索引（如果适用）。日志写入失败不影响主流程。输出格式默认 JSON。
 
 `go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

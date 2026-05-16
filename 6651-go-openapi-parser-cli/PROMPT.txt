@@ -7,3 +7,4 @@ OpenAPI 3.0 的 yaml 文件已经 8000 多行了，手动找某个接口的参�
 `oaparse diff -f v1.yaml -f v2.yaml` 对比两个版本差异，列出新增/删除/修改的接口。
 
 大文件用流式解析，内存不超过 50MB。不支持 OpenAPI 2.x，遇到 `swagger: "2.0"` 报 `[UNSUPPORTED] OpenAPI 2.x` 退出码 2。Go 标准库实现，`go build` 生成单二进制。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

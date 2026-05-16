@@ -7,3 +7,4 @@ dead-link-detect 用 Go 标准库实现，`go build -o dead-link-detect ./cmd/de
 工具自动扫描文档目录，新增文件自动纳入检测。多级标题在报告中按文档结构组织。每条死链记录来源文件、行号、链接文本、目标 URL、HTTP 状态码。结果按文件分组，每个文件内按行号排序。
 
 子命令：`detect <dir>` 批量扫描目录；`file <path>` 检查单文件；`report` 从缓存结果生成汇总报告；`history` 对比历史检测结果看趋势。检测结果缓存到 `.dead-links/results.json`，缓存有效期 7 天。输出格式终端表格，`--format json` 切换。`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

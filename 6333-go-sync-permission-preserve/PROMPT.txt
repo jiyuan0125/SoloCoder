@@ -3,3 +3,4 @@
 `syncperm -src /project/ -dst /backup/ [-map permissions.json]`。同步文件时保留源文件的 owner、group、permission bits（owner/group 在 Windows 上映射为只读/读写）。映射规则从配置文件读：`{"linux_to_windows": {"0755": "read_execute", "0644": "read_only"}, "windows_to_linux": {"read_execute": "0755", "read_only": "0644"}}`。不加 `-map` 则直接保留原始权限位（仅 Linux→Linux）。同步每个文件输出 `COPIED | src.txt -> dst.txt | perm: 0644`，权限映射后输出 `MAPPED | 0755 -> read_execute`。
 
 数据处理流程走录入→清洗→校验→发布四个阶段，校验不通过的退回清洗阶段重来。这个状态机管的是同步任务批次，存 `.syncperm_state.json`。源文件不存在报 `error: source not found` 退出码 1。映射规则找不到匹配项输出 `warning: no mapping for mode 0777, keeping original`。go build 一下就行，不用第三方包。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

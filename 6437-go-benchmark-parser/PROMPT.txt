@@ -5,3 +5,4 @@
 空输入文件报 "no benchmark results found" 退出码 1。格式不对的行跳过并输出 `WARN: skipping malformed line N`。对比时新旧文件没有同名 benchmark 的，分别列在 `ONLY_IN_OLD` 和 `ONLY_IN_NEW` 下面。
 
 标准库搞定，go run . 跑起来，代码分几个文件组织，别全写 main.go 里。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -5,3 +5,4 @@
 条件映射 `conditional-map --input data.csv --condition "region=='CN'" --true-config cn.json --false-config default.json --output result.csv`，condition 支持 ==、!=、>、<、contains(field,"text")。
 
 配置文件格式错误报 `error: invalid config: line N` 退出码 1。输入 CSV/JSON，输出同格式。空行跳过不报错。go build 能过，纯标准库。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 3. 校验：`validate --input data.csv --rules rules.json`，rules.json 格式 `[{"column":"email","type":"regex","pattern":"^[^@]+@[^@]+$"}]`，三阶段依次执行，第一阶段失败直接跳后续报 `error: format validation failed` 退出码 1。
 
 输入 TXT/CSV，输出同格式。乱码行 stderr `warning: malformed encoding at line N` 跳过。空行跳过。编码名不支持报 `error: unsupported encoding: xxx` 退出码 1。空文件输出空。go build 能过，纯标准库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

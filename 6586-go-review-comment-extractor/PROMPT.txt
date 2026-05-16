@@ -7,3 +7,4 @@ Gerrit 的 review 评论嵌在 commit message 里，格式还不统一。手动�
 输出格式：table 为 `| COMMIT | FILE | REVIEWER | COMMENT | SCORE |` 对齐表格；csv 表头 `commit,file,reviewer,comment,score`；json 为 `[{"commit":"abc123","file":"main.go","reviewer":"John","comment":"nit","score":"+1"}]`。
 
 无 review 评论退出码 0 打印 "no review comments found"。不是 git 仓库退出码 1。解析失败的单条跳过打 stderr warning。Go 标准库，`go build -o review-extractor .`。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

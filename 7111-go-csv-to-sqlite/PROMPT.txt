@@ -3,3 +3,4 @@
 这是个 Go CLI 工具，解决 CSV 到 SQLite 的自动导入。用法：`csv2sqlite import --file data.csv --db result.db --table orders --create-if-missing`。自动根据 CSV 表头推断列类型（整数、浮点、日期、文本），`--delimiter ,` 和 `--encoding utf-8` 可配置。碰到主键冲突时有三种策略：`--on-conflict skip|replace|abort`，默认 skip。导入过程实时打印进度条，格式 `[128/1024] 12.5%`。导入完输出统计：插入 N 行、跳过 M 行、耗时 T。空 CSV 文件或表头为空时输出 "empty input" 并以退出码 1 退出。文件不存在时输出 "file not found: xxx"。schema 迁移做版本化管理，`csv2sqlite migrate --db result.db --up` 执行迁移，`--down` 回滚上一步，碰到冲突输出 "migration conflict: version X already applied"。权限变更后用户会话权限信息要同步刷新。
 
 Go 标准库，go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

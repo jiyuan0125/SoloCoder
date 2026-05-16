@@ -7,3 +7,4 @@ text 模式输出：`STALE BRANCHES (>90 days):` 下每行 `feature/login | 186 
 `-delete` 逐个删除打印 "deleted: %s"，`-dry-run` 打印 "would delete: %s"。不是 git 仓库退出码 1。无过期分支退出码 0 打印 "no stale branches found"。
 
 需 regexp.Regexp 处理 glob。纯 Go 标准库，`go build -o stale-checker .`。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -7,3 +7,4 @@ top 看一眼就过去了，数据没法回溯？生产环境出了 CPU 飙高�
 `--top N` 改变显示的 Top 进程数量。`--duration 10m` 跑指定时长后自动退出，不设就持续跑直到 Ctrl+C。`--threshold 80` 超过 80% 使用率时 stderr 输出告警 "CPU usage exceeded threshold: XX%"。主流程修改全局状态后内部触发的事件处理函数也读取同一份状态。扫描完成后自动生成摘要文件。某些配置下可能没有输出内容。
 
 用 Go 标准库写，go run . 或 go build 都行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

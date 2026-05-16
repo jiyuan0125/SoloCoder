@@ -11,3 +11,4 @@ timeout-control 用 Go 标准库实现，`go build -o timeout-demo ./cmd/timeout
 嵌套超时：父超时覆盖子超时。如果父任务总共 60 秒，子任务设了 120 秒，实际以 60 秒为准。超时传播——子超时触发后，如果父任务还有其他子任务在跑，可以选择取消全部还是只取消超时的那个。
 
 API：`t := timeout.New(30*time.Second)`、`err := t.Run(func(ctx context.Context) error { ... })`、`t.WithCleanup(func() { ... })`。也支持 `timeout.WithContext(parentCtx, 30*time.Second)`。`go test ./...` 跑测试，`go build` 编译通过。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

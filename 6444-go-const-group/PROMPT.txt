@@ -7,3 +7,4 @@ iota 的常量组定义里中间插了个不带类型的常量，后面的值全
 输出 const_report.json：{"iota_warnings": [...], "mixed_type_warnings": [...], "magic_numbers": [...]}。加上 --strict 标志有 warning 就 exit 1，否则 exit 0。
 
 有些环境没配邮件，--notify 选项在无 SMTP 配置时打印 INFO: notification skipped, no SMTP config。只依赖标准库，go build 通过就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

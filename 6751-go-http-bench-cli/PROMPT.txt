@@ -5,3 +5,4 @@
 `-qps` 限速用令牌桶算法控制发送速率。URL 缺少 scheme 时自动补 http://。连接被拒或 DNS 失败打印错误到 stderr 并立即退出码 1。`-c` 或 `-n` 传 0 或负数报错 "invalid parameter: must be positive"。Ctrl+C 优雅退出，输出已完成的统计结果。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

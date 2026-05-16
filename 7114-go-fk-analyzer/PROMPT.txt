@@ -3,3 +3,4 @@
 这个 Go CLI 工具做 CSV 导入 SQLite 带完整的外键分析。`fk-analyze import --file data.csv --db target.db --table users` 导入时自动检测编码（UTF-8/GBK/GB18030），推断列类型（整数、浮点、日期、文本）。碰到主键冲突用 `--on-conflict skip|replace|abort`，默认 skip。进度显示 `[64/512] 12.5%`。外键分析：`fk-analyze check --db target.db` 扫描所有表的外键关系，输出 JSON 列出 orphan_rows（引用了不存在主键的行），没有外键的表也列出来标 "no foreign keys"。`fk-analyze graph --db target.db --format dot` 生成表关系图的 DOT 格式。表结构变更后依赖该表的查询自动标记为 stale 需要重新验证。导出数据前验证权限，权限检查操作本身也记录到导出审计日志。字段值格式异常时输出 "invalid value at row {N} col {M}: {value}"，不崩溃继续处理。CSV 文件不存在输出 "file not found: {path}" 退出码 1。空文件输出 "empty input" 退出码 1。
 
 Go 命令行工具，go build 能过就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

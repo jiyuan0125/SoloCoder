@@ -11,3 +11,4 @@ Context 模型：键值对存储，支持 string、int、bool、自定义类型�
 子命令：`dump` 输出当前上下文所有键值对；`tree` 以树形展示父子关系；`trace` 展示上下文在调用链中的传递路径。调试模式 `--verbose` 输出每个 key 的设置时间和调用栈。
 
 API：`c := ctx.New()`、`c.Set("key", "value")`、`v, ok := c.Get("key")`、`child := c.Child()`。`go test ./...` 跑测试，`go build` 编译通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

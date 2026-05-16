@@ -3,3 +3,4 @@
 CLI：`ptyrun -command "bash" -log session.log` 启动子进程并分配 PTY，交互式输入输出透传到当前终端。-log 将完整终端输出（含 ANSI 序列）写入日志文件。`ptyrun -command "mysql -u root" -input commands.txt` 从文件读取输入行，逐行发送到子进程 stdin，模拟交互。输出格式保持原始终端编码，不做任何过滤。子进程退出后 ptyrun 输出 "session ended: exit_code={n}, duration={ms}ms" 并以相同退出码退出。`ptyrun -command "top" -capture output.raw -timeout 10` 运行 10 秒后发 SIGTERM 终止，捕获的输出写入 output.raw（包含 ANSI 序列的原始字节）。并发运行多个 PTY 会话：`ptyrun -batch sessions.json`，sessions.json 是数组，每项有 command 和 log 字段，每个会话独立 PTY，汇总输出 "sessions: {n}, completed: {c}, failed: {f}"。PTY 分配失败（如 /dev/ptmx 不可用）输出 "pty allocation failed" 退出码 1。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

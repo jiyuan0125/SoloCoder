@@ -5,3 +5,4 @@
 启动失败时 stderr 输出 "process {name} failed to start: {reason}"，依赖它的后续进程标 blocked 不启动。配置文件里存在循环依赖时 stderr 报 "circular dependency detected"，退出码 2。配置文件不存在报 "config file not found: {path}" 退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

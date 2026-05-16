@@ -5,3 +5,4 @@
 密钥路径 `keys/{algorithm}/{key_id}/versions/{ver}`，algorithm 支持 AES/RSA/ECDSA，ver 整数版本号，列出时按 version 降序。批量校验并发执行 `--workers 4`（默认 runtime.NumCPU()），结果按输入文件顺序汇总，乱码行跳过不阻塞。
 
 输出 JSON：`{ "type_errors": [...], "anchor_errors": [...], "integrity": { "rows": N, "checksums": {...}, "changes": [...] } }`。退出码 0 通过 1 校验失败 2 配置错误。纯标准库实现，go build 能过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

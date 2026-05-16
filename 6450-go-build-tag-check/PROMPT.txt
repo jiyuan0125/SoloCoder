@@ -7,3 +7,4 @@ Go CLI `tagcheck` 检查 build tag 格式和逻辑。`tagcheck scan -d ./pkg/` �
 `tagcheck fix -d ./pkg/` 把旧格式 `// +build` 转为 `//go:build`，自动备份 `.orig`，完成后清理（`--keep-orig` 保留）。无临时文件时不报错。
 
 标准库，`go build` 通过。退出码 0 无问题，1 发现错误，2 参数错误。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

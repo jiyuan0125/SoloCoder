@@ -7,3 +7,4 @@
 key 不存在输出 `no matches found` 退出码 0。INI 格式不合法（section 声明残缺、等号缺失）在 stderr 记 `malformed ini: filename: line N` 跳过该文件继续处理。`--key` 未指定报 `no key specified` 退出码 1。目录不存在报 `directory not found: ...` 退出码 1。搜索结果为空输出空数组 `{"matches": []}`。
 
 go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

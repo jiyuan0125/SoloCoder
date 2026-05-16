@@ -5,3 +5,4 @@ Token 处理支持 JWT 格式的 Access Token 解码（提取 scope、exp、clie
 Scope 验证支持层级：read 包含在 read:write 里，admin 隐含 user。验证请求 scope 是否在 token 允许范围内，不在就拒绝。Scope 匹配要精确，前缀匹配不算。
 
 证书签发需要 CA，CA 怎么初始化不做限制。消息 topic 支持多层通配符 a.b.c.# 的匹配，可以路由深层路径。扫描多个目录时用 goroutine 并行处理。输出支持 JSON 格式。go build 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

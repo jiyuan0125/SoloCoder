@@ -7,3 +7,4 @@
 `--watch` 参数持续监控目录，文件变更自动触发同步（轮询间隔 2 秒）。`--backup` 同步前将旧文件备份到 `.sync_backup/` 目录。
 
 子命令：`config get <key>`、`config set <key> <value>`、`config list`、`config env switch <name>`。不用第三方包，`go build` 通过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

@@ -5,3 +5,4 @@
 配置文件可能很大——一个节点上几百个容器的情况，解析时用流式读取不全量加载。`--dry-run` 预览变更不实际执行。`reslimit export -o current.yaml` 导出当前所有容器的限制为配置文件。
 
 容器不存在 `error: container not found: <name>` exit 1。限制值非法 `error: invalid memory limit: <value>, expected format: <number><k|m|g>` exit 2。Go 标准库实现，不依赖第三方包，`go build` 能编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@
 history.json 的结构：每条记录包含 input、output、op、desc、schema_change、timestamp 六个字段。文件不存在时自动创建空数组。JSON 解析损坏时 stderr 报错 "error: corrupted lineage store" 并 exit 3。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

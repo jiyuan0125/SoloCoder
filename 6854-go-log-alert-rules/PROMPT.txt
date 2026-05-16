@@ -9,3 +9,4 @@
 文件轮转处理：监控的文件 inode 变化时（logrotate 场景），自动重新打开文件。规则热加载：watch 模式下收到 SIGHUP 重新读取 rules.yaml。
 
 纯 Go 标准库，编译后单二进制可以直接跑。go build -o log-alert。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

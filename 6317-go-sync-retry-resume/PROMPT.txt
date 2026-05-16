@@ -7,3 +7,4 @@ CLI 用法：`syncer --src <源目录> --dst <目标目录> --rules <分组规�
 分组规则文件不存在或 JSON 格式错误时，stderr 输出 `ERROR: invalid rules file: <路径>` 并退出码 2。源目录不存在时退出码 2，stderr 输出 `ERROR: source directory not found: <路径>`。
 
 代码分 sync.go、progress.go、rules.go、main.go 几个文件组织。Go 标准库，go run . 能跑。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

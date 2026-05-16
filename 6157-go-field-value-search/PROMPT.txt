@@ -6,3 +6,4 @@
 4. 没有匹配结果时退出码 1，打印 "no matches found"。目录不存在退出码 2。文件解析失败跳过并在 stderr 输出 "parse error: filename: reason"。
 
 go build 能编译通过，不依赖第三方库。代码分几个文件组织，别全写 main.go 里。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -7,3 +7,4 @@
 3. 百分位计算要对成功 RTT 排序后取对应位置，不要用估算法。丢包率保留一位小数，百分比形式（如 5.0 表示 5%）。host 参数不传或格式错误退出码 1，stderr 打 "usage: ping-stat --host <ip-or-hostname> [options]"。
 
 注意：用 ICMP 需要考虑跨平台问题，Linux 上用 raw socket，Windows 上如果权限不够要退化为 TCP ping 模式（连目标 host 的某个端口）。纯 Go 标准库，编译后单二进制可以直接跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

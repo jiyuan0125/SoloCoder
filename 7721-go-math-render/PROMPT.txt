@@ -7,3 +7,4 @@ math-render 就是干这个的。Go 标准库实现，`go build -o math-render .
 公式解析器手写递归下降，支持常见结构：上标下标、分数 `\frac{}{}`、根号 `\sqrt{}`、求和 `\sum`、积分 `\int`、矩阵 `\begin{pmatrix}`。解析失败的公式原样输出并标注错误位置。终端渲染模式用 Unicode 字符近似——上标用 Unicode 上标数字，分数用水平线分割，矩阵用方括号。
 
 标签系统：每条公式可以有多个标签，按标签聚合显示。标签支持父子层级关系，比如 `physics > relativity`。`tag list` 显示标签树。数据存本地 JSON 文件 `~/.math-render/formulas.json`，记录渲染过的公式和标签。`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

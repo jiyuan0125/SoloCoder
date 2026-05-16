@@ -3,3 +3,4 @@
 健康检查通过 HTTP GET 请求目标地址，响应状态码 200 视为健康，超时（默认 5 秒）或非 200 视为失败。CLI 启动：`failover -config failover.json`，配置包含 primary（主服务地址）、secondary（备用服务地址）、check_interval（检查间隔秒数，默认 10）、failure_threshold（连续失败次数触发切换，默认 3）、recovery_threshold（连续成功次数切回主，默认 3）。状态变化时输出事件到 stderr："[{时间}] {primary|secondary} → {HEALTHY|UNHEALTHY}"，切换时输出 "failover: switching to {target}"。`failover -config failover.json -status` 输出当前活跃服务地址和健康状态。`failover -config failover.json -switch` 手动切换到另一方。健康检查在独立 goroutine 中持续运行，配置文件 JSON 解析失败输出 "invalid config" 退出码 2。运行中收到 SIGTERM 输出 "shutdown, current active: {addr}" 后退出。
 
 Go 实现，只用标准库，交叉编译友好。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

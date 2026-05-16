@@ -5,3 +5,4 @@ go.sum 里三百多个依赖，你确定每个都在用？有些是两年前引�
 输出表格，列名：Module、Direct（yes/no）、Current、Latest、Status（up-to-date/outdated/unused）。-format json 输出结构化数据：direct 数组、indirect 数组、outdated 数组（每项含 module、current、latest）、unused 数组（模块名列表）。go.mod 文件不存在时输出 "go.mod not found" 退出码 1。网络不通时版本查询跳过，Latest 列显示 "unknown" 不阻塞执行。分析过程中忽略标准库和被 replace 指令替换的本地模块。
 
 合并完成后自动删除源文件，保留模式不删除。go build 能过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

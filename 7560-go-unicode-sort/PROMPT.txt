@@ -5,3 +5,4 @@ Unicode 排序比 ASCII 排序复杂得多——不同语言的排序规则不�
 遇到无法识别的字符编码，尝试 UTF-8 失败后按 Latin-1 或 Shift-JIS 解码（`--fallback-encoding` 指定）。输出保持原始换行结构（LF/CRLF 保留）。从文件读取内容，处理后输出到 stdout 或 `--output` 文件。
 
 Go 标准库。`go build`。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

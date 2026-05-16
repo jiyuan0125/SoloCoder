@@ -3,3 +3,4 @@
 CLI 启动方式：`logrotate -config rotate.json`，配置文件包含 watch_path（监控的日志路径）、max_size_mb（大小阈值，超过则轮转，默认 100）、rotate_interval（时间间隔，如 "24h"、"1h30m"，默认不启用）、max_backups（保留历史份数，默认 7）、compress（是否 gzip 压缩旧文件，默认 true）、signal_pid（轮转后发 SIGHUP 的目标 PID，0 表示不发送）。轮转动作：把当前日志重命名为 app.log.1（递增编号），旧编号顺延，超过 max_backups 的删除。压缩后的后缀为 .gz。守护进程每 5 秒检查一次文件大小，时间轮转到点也触发。运行时输出当前状态到 stderr："watching {path}, backups: {n}, next rotation: {reason}"。收到 SIGTERM 时完成当前轮转操作再退出，输出 "rotating daemon stopped"。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

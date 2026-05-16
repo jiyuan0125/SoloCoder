@@ -9,3 +9,4 @@ HMAC 签名：`ss-tool sign --key-file hmac.key --algo sha512 --input payload.bi
 批量签名几千文件用 4 goroutine 并发。错误分层：文件不存在 exit 1、密钥读不到 exit 2、算法不支持 exit 3。
 
 `go build` 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

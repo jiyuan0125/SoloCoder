@@ -11,3 +11,4 @@ log-rotate 用 Go 标准库实现，`go build -o log-rotate-demo ./cmd/log-rotat
 压缩：轮转后的历史文件可选 gzip 压缩，`--compress true`。压缩异步进行不阻塞主日志写入。压缩完成后原文件删除。
 
 API：`r := rotate.New("app.log", rotate.WithMaxSize(100*1024*1024), rotate.WithMaxFiles(10))`、`r.Write([]byte)`、`r.Close()`。并发安全。`go test ./...` 跑测试，`go build` 编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

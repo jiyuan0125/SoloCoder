@@ -5,3 +5,4 @@
 结果输出到 stdout，格式为表格：IP 地址、状态（alive/dead）、响应时间（ms）。用 `-o result.json` 输出 JSON 数组，每项 `{"ip":"...","alive":true,"latency_ms":12}`。同时自动生成 `scan_report.txt` 摘要文件，包含扫描起止时间、总 IP 数、存活数、平均/最大/最小响应时间。如果没扫到任何存活主机，报告里写 "0 hosts alive" 而不是空文件。
 
 空输入或非法 CIDR 打印 "invalid input: <reason>" 并 exit 1。`-timeout` 单个探测超时默认 1 秒。扫描进度实时显示 "scanning: 1024/65536 (1.6%), alive: 23"。Go 标准库实现，交叉编译友好，`go build -o scanner` 出单二进制。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

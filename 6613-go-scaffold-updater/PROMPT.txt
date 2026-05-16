@@ -5,3 +5,4 @@ CLI 命令 `scaffoldup check -template ./template -project ./myproject`。递归
 选择性更新用 `scaffoldup apply -template ./template -project ./myproject -files ".eslintrc,Dockerfile"`，只更新指定文件，其余不动。apply 前自动备份到 `.scaffold-backup/<timestamp>/`。`scaffoldup list` 列出所有有差异的文件路径，不输出详细 diff。
 
 模板目录或项目目录不存在报 "directory not found: <path>" exit 1。两个目录完全一致输出 "no differences found" exit 0。Go 标准库实现，go build 编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

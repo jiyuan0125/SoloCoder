@@ -7,3 +7,4 @@
 聚合模式：`--aggregate window=30s` 按时间窗口或 `--aggregate count=100` 按条数，先到先触发。处理完自动发 ACK，ACK 失败打 `ERROR ack failed: <reason>` 但不中断流程。文件可能好几 GB，流式读写，内存控制在 200MB 以内。退出码 0 表示全部处理完，1 表示有跳过但主流程完成，2 表示输入无法打开。
 
 Go CLI 工具，go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -7,3 +7,4 @@ API 超时设了 3 秒但客户端 10 秒才报错，这中间到底发生了什
 连接被拒记为 connection_refused，DNS 失败记为 dns_error，不在超时统计里。服务端慢响应（超过设置的超时值）计为 timeout。Ctrl+C 中途退出时输出已完成的部分结果。目标 URL 无效时报错 "invalid target URL" 退出码 1。
 
 Go 标准库，命令行参数用 flag 包解析。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -5,3 +5,4 @@
 实际进度可以逐日更新：`sprint update --day 5 --completed S003,S007`。工具对比计划燃尽线和实际燃尽线输出差异表，标明每天偏离了多少故事点。延期任务（超过计划完成日期仍未完成）标红显示，列出延期天数。Sprint 结束后自动归档到带时间戳的 JSON 文件，方便做回顾和速率统计。
 
 数据存 JSON，一个文件对应一个 Sprint。处理完成后自动归档。支持 `sprint init`、`sprint plan`、`sprint update`、`sprint report` 四个子命令。速率计算支持排除异常 Sprint（比如放假周）。Go 标准库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

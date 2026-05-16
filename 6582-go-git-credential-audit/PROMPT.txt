@@ -10,3 +10,4 @@
 text 模式按行输出 `[LEAK|RISK|WARN|OK] xxx`。json 模式：`{"findings": [{"severity":"leak","rule":"cred_in_url","message":"...","file":".git/config","line":5}]}`。
 
 退出码：0 = 无泄露，1 = 有 leak。路径不存在退出码 1。Go 标准库，`go build -o credential-audit .`。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

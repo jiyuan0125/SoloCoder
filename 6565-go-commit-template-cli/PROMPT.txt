@@ -5,3 +5,4 @@ commit message 质量参差不齐不是态度问题——有人不写 scope，�
 模板不存在时 `error: template "xxx" not found` 退出码 1。变量无法解析时保留原占位符不报错。`tpl delete -name old` 删除指定模板。
 
 Go 标准库实现，`go build` 编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -5,3 +5,4 @@
 如果指定 commit 不存在，输出 `error: commit xxx not found` 并退出码 1。仓库有未提交更改时提示 `error: uncommitted changes, please stash or commit first`。go test 本身失败时把测试输出透传到 stderr，退出码 2。支持 `-format json` 输出 JSON 格式结果，字段包括 `{"base_commit","head_commit","base_total","head_total","diff","uncovered_files":[{"path","lines"}],"top_changes":[{"file","before","after","delta"}]}`。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

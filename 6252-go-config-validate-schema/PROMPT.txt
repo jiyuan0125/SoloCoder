@@ -5,3 +5,4 @@
 输出格式：每个错误一行 `ERROR <路径> <规则> <详情>`，警告用 `WARN` 前缀。比如 `ERROR /database/port type expected integer, got string` 或 `ERROR /server/host required field missing`。退出码 0 全部通过，1 验证失败，2 Schema 文件语法错误，3 配置文件语法错误。
 
 加 `--strict` 模式把所有 WARN 升级为 ERROR。`--output json` 输出结构化结果 `{"valid": false, "errors": [...], "warnings": [...]}`。写验证结果同时更新索引，索引构建也读取已有结果数据。不用第三方包，`go build` 通过就行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -11,3 +11,4 @@ Go AST 遍历每种节点都写一遍 switch case，十几种节点各写一遍�
 types 文件不存在退出码 1。无 struct 定义 "no struct definitions in <文件>" 退出码 1。小写开头 struct 跳过但打印 "skipped unexported: <名>" 到 stderr。
 
 `go build` 能过，不依赖第三方库。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

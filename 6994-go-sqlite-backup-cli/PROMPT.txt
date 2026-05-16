@@ -9,3 +9,4 @@ full 模式完成后更新 meta 文件。`-list` 参数列出所有可用备份�
 数据库文件不存在 exit 1。备份输出目录磁盘空间不足时 stderr 报错 "error: insufficient disk space" 并 exit 4。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

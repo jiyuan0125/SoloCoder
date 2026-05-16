@@ -9,3 +9,4 @@
 — 空行（只有分隔符或空白）跳过不报错但计入总行数
 
 CLI 用多级命令设计，参考 `config get`、`config set`、`config list`、`config env switch` 这种层级。纯标准库实现，`go run .` 能跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

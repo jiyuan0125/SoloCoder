@@ -7,3 +7,4 @@
 没有匹配文件输出 `warning: no files matched patterns` 退出码 0。zip 创建失败退出码 2。目标不可写输出 `error: cannot write to {target}` 退出码 1。
 
 纯 Go 标准库，编译后单二进制直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

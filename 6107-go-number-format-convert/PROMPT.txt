@@ -5,3 +5,4 @@
 转换：1.23E+5 → plain: 123000, thousands: 123,000, chinese: 十二万三千。千分位 1,234,567 → plain: 1234567。中文大写「壹万贰仟叁佰」→ plain: 12300（支持零〇壹贰叁肆伍陆柒捌玖拾佰仟万亿）。千分位分隔符支持逗号和空格。percent：0.15 → "15%"。
 
 NaN/Infinity 原样保留标 special。转换失败原样保留标 failed，error_msg 记录 "invalid number: <值>"。report.json 含 total、converted、skipped、failed 计数。小数最多 6 位（第 7 位四舍五入）。子命令：numfmt convert、numfmt detect、numfmt batch（多列转换）。纯标准库，go run . 能跑。退出码 0 成功，1 参数错误。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

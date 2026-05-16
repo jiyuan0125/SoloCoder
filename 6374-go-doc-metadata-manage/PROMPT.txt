@@ -7,3 +7,4 @@ front matter 格式支持 YAML（--- 包围）和 TOML（+++ 包围）。文件�
 输出格式：list 默认输出表格（制表符分隔列），加 `-json` 输出 JSON 数组。set 和 delete 输出变更统计：`updated: <N> files, skipped: <M> files`。
 
 文件读取失败输出 `error: failed to read <file>: <原因>` 跳过继续处理下一个。go run . 能跑，不用第三方包。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@ Docker 容器启动要传 30 多个环境变量，手动 export 一个个写 Doc
 - `env-export preview config.yaml` — 预览将要导出的键值对表格，不实际导出，输出格式 KEY | VALUE 两列
 
 数组类型导出时用逗号连接：hosts: ["a","b","c"] 变成 HOSTS="a,b,c"。布尔值导出为小写 true/false。空配置文件导出为空（不输出任何内容），退出码 0。纯标准库实现，go run . 能跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

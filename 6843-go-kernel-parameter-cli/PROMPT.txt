@@ -7,3 +7,4 @@ DBA 要改 50 台机器的 vm.swappiness 和 vm.dirty_ratio，一台台 ssh 过�
 输出格式：默认表格，加 --json 输出 JSON 数组。错误场景：参数名不存在输出 "parameter not found: xxx" 到 stderr 并 exit 1；权限不足 exit 2；配置文件写入失败 exit 3。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

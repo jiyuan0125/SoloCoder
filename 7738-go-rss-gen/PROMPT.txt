@@ -9,3 +9,4 @@ rss-gen 用 Go 标准库实现，`go build -o rss-gen ./cmd/rss-gen` 编译。
 输出标准 RSS 2.0 XML 格式，包含 channel 元素（标题、描述、链接、语言）和 item 列表。验证 XML 格式正确性——标签闭合、特殊字符转义、日期格式 RFC 822。
 
 笔记支持标签和分类，RSS 条目也包含 category 字段。全文检索用标签过滤——`--tag go` 只输出标记为 Go 分类的文档。子命令：`gen <dir>` 生成 RSS；`validate <file>` 验证 XML 格式。配置文件 `.rss-gen.json` 设置基础 URL、条目数量、摘要长度。`go test ./...` 跑测试，`go build` 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

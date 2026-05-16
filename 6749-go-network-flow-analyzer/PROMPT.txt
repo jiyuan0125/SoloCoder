@@ -3,3 +3,4 @@
 写一个 CLI 工具 `flowanalyzer`，从 pcap 文件或实时抓包中按五元组（srcIP、dstIP、srcPort、dstPort、protocol）聚合成流。每个流统计包数、字节数、持续时间（首包到末包的时间差）、平均速率（bytes/s）。命令行用法：`flowanalyzer -i capture.pcap -top 20 -sort bytes`，`-sort` 支持 `bytes`、`packets`、`duration` 三种排序维度。输出格式为文本表格，列顺序：Flow（五元组）、Packets、Bytes、Duration、AvgRate。加上 `-json` flag 切换成 JSON 数组输出，每条记录包含这五个字段。
 
 实时捕获模式下用 `-interface eth0 -duration 30s` 指定网卡和采集时长，超时自动停止并输出统计。如果 pcap 文件不存在或格式无法解析，报错 "failed to parse pcap: <原因>" 并 exit 1。空 pcap（零包）输出 "no packets found" 然后 exit 0。Go 标准库实现，交叉编译友好，不依赖 libpcap 的 CGO 绑定。go build 编译通过即可。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

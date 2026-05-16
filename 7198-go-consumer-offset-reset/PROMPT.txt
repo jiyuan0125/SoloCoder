@@ -7,3 +7,4 @@ Kafka 的 offset 管理太粗糙——要么从头消费要么从最新，想从
 认证检查：`offsetr auth check --role admin`，角色检查前必须先验证认证状态（token 文件 `~/.offsetr-token`），未认证输出 `error: not authenticated` 退出码 1，角色不匹配输出 `error: role admin required` 退出码 2。
 
 扫描完自动提交报告到 `--report output.json`，提交失败只记录 warning 不中断。Go 命令行工具，`go build` 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

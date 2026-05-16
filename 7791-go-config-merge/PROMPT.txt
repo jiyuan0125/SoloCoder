@@ -11,3 +11,4 @@ config-merge 用 Go 标准库实现，`go build -o cfgmerge-demo ./cmd/cfgmerge`
 库支持嵌套子命令——每个子命令有独立的帮助信息和配置命名空间。未知子命令给出建议。
 
 API：`m := merge.New(base)`、`m.Layer(project)`、`m.Layer(user)`、`result := m.Merge()`。也支持增量合并 `m.Set("db.host", "localhost")`。`go test ./...` 跑测试，`go build` 编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

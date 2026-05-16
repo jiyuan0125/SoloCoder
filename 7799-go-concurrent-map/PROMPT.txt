@@ -9,3 +9,4 @@ concurrent-map 用 Go 标准库实现，`go build -o cmap-demo ./cmd/cmap` 编�
 操作 API：`Set(key, value)`、`Get(key) (value, ok)`、`Delete(key)`、`Has(key) bool`、`Len() int`、`Keys() []string`、`Range(fn)` 遍历。`Range` 遍历时快照数据，遍历期间 map 可以继续修改。`GetOrSet(key, defaultFn)` 原子性的获取或初始化。
 
 子命令：`put <key> <value>` 写入；`get <key>` 读取；`delete <key>` 删除；`list` 列出所有键值对；`dump` 导出为 JSON；`load <file>` 从文件加载。API 简洁。`go test ./...` 跑测试。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

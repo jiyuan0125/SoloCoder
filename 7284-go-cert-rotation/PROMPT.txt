@@ -9,3 +9,4 @@ PEM↔DER：`certrot pem-to-der --input cert.pem --output cert.der`。`certrot d
 加密完删除原文？转换后保留原文件，除非 `--replace` 标志。签名时验证证书状态？本工具不做签名。验证时检查签名链？不涉及。用 `encoding/json` 流式处理配置文件。
 
 `go build` 能过，命令行工具能正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

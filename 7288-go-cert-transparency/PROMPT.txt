@@ -9,3 +9,4 @@ TLS 配置文件生成：`ct-tool gen --cert server.pem --key server.key --min-v
 本工具不用数据库，纯内存操作。配置文件用 `encoding/json` 解析和生成。
 
 `go build` 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

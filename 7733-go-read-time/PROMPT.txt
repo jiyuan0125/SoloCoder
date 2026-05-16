@@ -9,3 +9,4 @@ read-time 用 Go 标准库实现，`go build -o read-time ./cmd/read-time` 编�
 引用了其他表的数据——如果文档有结构化元数据（frontmatter 里的 `reading_time` 字段），工具会校验元数据值和实际计算值是否一致，不一致发出 warning。
 
 子命令：`calc <file>` 计算单篇；`batch <dir>` 批量计算并输出报告；`inject <file>` 把阅读时间插入文档 frontmatter；`diff <old> <new>` 对比修改前后的阅读时间变化。支持多种注释格式。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

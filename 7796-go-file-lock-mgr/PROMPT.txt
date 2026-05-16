@@ -11,3 +11,4 @@ file-lock-mgr 用 Go 标准库实现，`go build -o flock-demo ./cmd/flock` 编�
 并发安全：内部状态用 mutex 保护。死锁检测——等待图检测循环依赖，发现死锁输出诊断信息。
 
 子命令：`lock <file>` 获取排他锁；`unlock <file>` 释放锁；`status <file>` 查看锁状态；`list` 列出所有活跃锁；`clean` 清理过期锁。API：`l := flock.New("file.lock")`、`l.Lock()`、`l.Unlock()`。`go test ./...` 跑测试。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

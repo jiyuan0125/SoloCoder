@@ -1,3 +1,4 @@
 金融报表对精度要求到小数点后两位，多余的全要处理掉。上次 trunc 和 round 搞混了，差了两分钱对不上账，财务部追着问了两天。Go 做个数据精度处理工具——round 四舍五入、trunc 直接截断、ceil 向上取整，三种模式都要有。
 
 用法：`dataround <input.csv> --mode round|trunc|ceil --precision 2 --columns amount,rate --output result.csv`。`--precision` 控制保留几位小数，默认 2。`--columns` 指定处理哪些列，逗号分隔，不指定则处理所有数值列。输入 CSV 第一行为表头，自动识别数值列（能被 strconv.ParseFloat 解析的）。非数值列原样保留不动，解析失败的数值单元格原样保留并在 stderr 打印 "warning: invalid number at row %d col %s: %s"。输出 CSV 保持和输入相同的列顺序和分隔符。输入文件不存在退出码 1 并 stderr 输出 "error: file not found: <path>"。空文件输出 "error: empty input" 退出码 1。表头行缺少指定列名时 stderr 输出 "error: column not found: <name>" 退出码 1。不用第三方包，go build 通过就行，代码分 main.go、rounding.go、csvhandler.go、validator.go 四个文件。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -5,3 +5,4 @@ Go 做配置展平还原工具。用法：`cfg-flat flatten --input config.yaml 
 展平规则：对象键用分隔符连接，数组用 `[N]` 索引（如 `servers[0].host`），布尔值小写 `true`/`false`，数字保持数字，字符串保持原值。值类型在还原时推断——纯数字还原为 number，`true`/`false` 还原为 boolean，其余为 string。加 `--typed` 输出带类型标注 `a.b.c=string:hello`。
 
 循环引用检测：展平时遇到嵌套超过 50 层报 "max depth at path: <路径>" 停止。空配置展平输出空文件，空文件还原输出空对象 `{}`。带审批流程管理，用户提交审批走已有流程，审批状态：pending→approved/rejected。不用第三方包，`go build` 通过就行。代码拆文件写。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

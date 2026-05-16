@@ -7,3 +7,4 @@
 输出格式：通过输出 `✓ config.yaml: 3 virtualservices, 2 destinationrules - all valid`，失败逐条列出 `✗ config.yaml: vs "my-svc" - route[1].subset "v3" not defined`。JSON 输出用 `--json`：`{file, errors: [{line, rule, message}], warnings: [...]}`。
 
 YAML 解析失败 `error: invalid yaml: <path>: <line>` exit 2。无 Istio 资源 `warning: no Istio resources found` exit 0。Go 标准库实现，`go build` 编译通过，交叉编译友好。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

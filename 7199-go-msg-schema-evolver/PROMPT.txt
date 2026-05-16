@@ -7,3 +7,4 @@
 3. 引用计数：搜索索引 `indexes/<name>/docs/<doc_id>/fields/<field>`，schema 变更时更新引用该字段的索引计数，更新时检查索引完整性。
 
 字段值容错：`--strict false` 时类型不匹配自动转成字符串，解析失败的 JSON 输出 `PARSE_WARN: line=<n>` 并跳过。闲着没事写的 Go CLI 工具，go build 能过就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

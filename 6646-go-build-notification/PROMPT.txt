@@ -5,3 +5,4 @@ CI 构建挂了半天没人发现，等到部署时才发现问题，白白浪�
 2. 配置示例：`channels: [{type: webhook, url: "https://...", success_template: "...", failure_template: "..."}]`。成功模板和失败模板可以分别定义。不加配置文件时只输出构建结果摘要到 stdout，格式 "BUILD <STATUS> | exit=<code> | duration=<time>"。
 
 3. 构建命令本身超时（`-timeout 10m`）也触发失败通知，status 标记为 "timeout"。webhook 请求失败不阻塞主流程，打印 warning 继续执行。配置文件不存在 exit 1，模板语法错误打印具体行号和原因。纯 Go 标准库，编译后单二进制。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

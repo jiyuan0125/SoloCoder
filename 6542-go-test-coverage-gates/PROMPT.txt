@@ -7,3 +7,4 @@
 `-diff baseline.json` 对比上次：`pkg/handler: 92.3% → 88.1% ↓4.2%`。`-json` 输出结构化报告。退出码：0 达标、1 参数错误、2 不达标。profile 为空输出 `error: empty coverage profile` 退出码 1。
 
 Go 标准库，flag 包解析。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

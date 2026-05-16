@@ -5,3 +5,4 @@
 结构变更传播用 `m10nsync propagate -source en -target zh ./docs`，在目标语言文件中插入缺失的章节骨架（保留原文标题，正文加 `<!-- TODO: translate -->` 标记），不覆盖已有翻译内容。传播后自动更新 `sync-report.json`。
 
 审批状态管理：文件级状态存在 `.m10n-state.json`，字段 `status`（draft/pending/approved/archived），通过后可撤回（`m10nsync revert --file zh/api.md`）重新编辑。目标目录不存在时自动创建。源目录不存在 exit 1 并打印路径。纯标准库，`go run .` 即可运行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

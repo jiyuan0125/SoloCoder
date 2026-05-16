@@ -9,3 +9,4 @@
 并发处理——多核机器上跑的时候开多个 goroutine 并行搜索。搜索任务按文件分片，每个 goroutine 负责一个文件。结果汇总通过 channel 收集，最终按文件名和行号排序输出。goroutine 数量默认等于 runtime.NumCPU()，通过 -workers 参数可调。
 
 go build 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

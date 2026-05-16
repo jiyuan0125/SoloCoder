@@ -8,3 +8,4 @@ TOML/YAML 有类型，.env 全是字符串，合在一起 "3306" 和 3306 对不
 - `typeinfer cast --file config.env --key "server.port" --type int` 强制类型，失败报 "cannot cast 'abc' to int"
 
 --infer-list 开关启用逗号分隔值推断为数组 "a,b,c"→["a","b","c"]。处理每条记录后触发统计更新。go build 编译通过，不依赖第三方库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

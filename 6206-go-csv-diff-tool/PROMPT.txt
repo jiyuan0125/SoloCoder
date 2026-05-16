@@ -9,3 +9,4 @@
 4. 两份 CSV 列名不一致报 `column mismatch: file_b missing columns: xxx` 退出码 1。文件编码 UTF-8 首行表头。空文件输出 `empty file: filename` 退出码 1。完全相同输出 `files are identical` 退出码 0。
 
 对比结果记到 `.csvdiff.log`（本地 JSON 文件），每次对比追加一条记录含时间戳和摘要。纯标准库实现，go run . 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

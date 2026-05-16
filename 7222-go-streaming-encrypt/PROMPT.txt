@@ -9,3 +9,4 @@
 任务排队：批量加密 FIFO 排队，最多 4 并发。任务 `registered`→`queued`→`executing`→`success`/`failed`，失败最多重试 2 次。状态输出到 stderr 不干扰 stdout。
 
 `go build` 能过，命令行工具能正常运行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

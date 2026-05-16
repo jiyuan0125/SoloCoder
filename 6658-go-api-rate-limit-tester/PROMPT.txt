@@ -5,3 +5,4 @@
 报告分三部分：一、限流阈值检测结果——第一个收到 429 的 QPS 值标记为 `detected_limit`，始终没触发则标记 `not_detected`；二、响应时间变化——按 QPS 区间统计平均、P50、P95、P99 响应时间，输出表格；三、状态码分布——每个状态码的计数和百分比。`--output report.json` 导出完整 JSON，每条请求一条记录包含时间戳和耗时。
 
 `--method POST --body '{"test":1}'` 支持自定义方法和请求体。`--header "Authorization: Bearer xxx"` 添加自定义头，可多次指定。目标 URL 不可达直接报错 "connection refused" 退出码 1。Go 实现，只用标准库，交叉编译友好。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

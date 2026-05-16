@@ -9,3 +9,4 @@
 测试结果输出：`{"total":1000,"matched":998,"unmatched":2,"errors":0,"rules_hit":{"rule_1":800,"rule_2":198}}`，unmatched 的消息 ID 列表输出到 `unmatched.txt`。用 `encoding/csv` 的 Reader 和 Writer 处理 CSV 格式。
 
 Go 命令行工具，go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

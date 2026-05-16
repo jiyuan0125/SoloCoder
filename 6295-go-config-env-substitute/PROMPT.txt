@@ -7,3 +7,4 @@ Docker 部署时 ${DB_HOST} 在本地没设，启动直接炸。但有些变量�
 - `envsubst preview --file config.template` 预览每行替换来源 "DB_HOST → localhost (from default)"
 
 ${VAR:-default}：VAR 存在用其值，不存在用 default。${VAR:+alt}：VAR 存在用 alt，否则空。VAR 名只允许字母数字下划线。每处理完一个变量更新进度，空模板跳过。go build 编译通过，不依赖第三方库。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

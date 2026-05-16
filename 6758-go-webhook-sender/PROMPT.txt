@@ -9,3 +9,4 @@
 批量：`whksend batch -f webhooks.yaml`，格式 `webhooks: [{url:"",payload_file:"",hmac_secret:""}]`。`--dry-run` 只打印不发。
 
 Go 标准库，交叉编译友好。退出码 0 成功(2xx)，1 非2xx，2 签名错误，3 重试耗尽。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

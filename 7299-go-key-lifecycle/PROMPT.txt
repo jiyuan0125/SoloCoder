@@ -11,3 +11,4 @@
 消息发送需要 topic？不适用。任务状态 `registered`→`queued`→`executing`→`success`/`failed`，失败最多重试 1 次。
 
 `go build` 能过，命令行工具能正常运行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

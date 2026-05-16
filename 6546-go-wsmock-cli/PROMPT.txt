@@ -7,3 +7,4 @@
 配置格式错误输出 `error: invalid config at line {n}: {msg}` 退出码 1。端口占用输出 `error: port {n} already in use` 退出码 2。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

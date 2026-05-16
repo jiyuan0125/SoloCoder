@@ -9,3 +9,4 @@ MySQL 慢查询日志格式：以 "# Time:" 开头，后面跟 "# User@Host:" �
 输出支持 --json 和 --csv。--min-time 1s 只输出耗时超过 1 秒的查询。--since "2024-01-15" 只分析指定日期之后的记录。空日志文件输出 "no slow queries found"。
 
 Go 标准库，命令行参数用 flag 包解析。go build -o slowquery。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

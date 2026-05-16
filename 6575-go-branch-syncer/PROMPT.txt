@@ -16,3 +16,4 @@
 配置文件不存在或 JSON 解析失败时退出码 1，打印 "invalid config: %s"。本地分支不存在时退出码 1，打印 "branch not found: %s"。
 
 Go 实现，纯标准库，交叉编译友好。`go build -o branch-syncer .`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -9,3 +9,4 @@
 CRL：`spki crl-init`、`spki crl-revoke --serial 0xABC --reason keyCompromise`。
 
 认证需要用户角色？纯本地工具。多层规则路径？不需要。用 `text/template` 自定义函数生成报告。`go build` 能过，命令行工具能正常运行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

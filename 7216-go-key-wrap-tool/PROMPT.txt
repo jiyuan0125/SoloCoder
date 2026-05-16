@@ -9,3 +9,4 @@
 流式读取 `io.CopyBuffer`，内存不超过 16MB。代码组织：`hasher.go`、`comparer.go`、`incremental.go`、`main.go`。规则校验需要规则组？不适用。
 
 `go build` 能过，命令行工具能正常运行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

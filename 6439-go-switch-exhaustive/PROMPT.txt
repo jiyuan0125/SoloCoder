@@ -13,3 +13,4 @@
 举个例子：`switchcheck scan ./internal/model --enum-type OrderStatus --strict --json`，检查 OrderStatus 相关的 switch 完整性，严格模式，输出 JSON。
 
 纯标准库，`go run .` 就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

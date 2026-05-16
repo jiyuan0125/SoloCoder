@@ -5,3 +5,4 @@
 空文件只输出空结果不报错。只有 header 行时输出只有 header 的空文件。字段值本身为空字符串则原样保留不处理。遇到 rules.json 里定义了但 CSV 中不存在的列名，stderr 输出警告 `warning: column "xxx" not found` 但继续处理其余列。JSON 输入支持嵌套字段用点号路径表示如 `user.phone`。
 
 全部用 Go 标准库实现，`go build` 编译为单二进制，退出码 0 成功 1 失败。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

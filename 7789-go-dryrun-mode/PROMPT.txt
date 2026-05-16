@@ -5,3 +5,4 @@ dryrun-mode 用 Go 标准库实现，`go build -o dryrun-demo ./cmd/dryrun` 编�
 拦截机制通过 `Action` 接口封装：`RealAction` 实际执行，`DryRunAction` 只记录日志，模式切换时替换接口实现。记录内容包括操作类型、目标、参数、预期效果。dry-run 结果包含预计影响的文件数、数据量等。dry-run 报告用表格展示——操作序号、类型、目标、状态（将执行/将跳过），表格支持多行单元格、合并单元格、条件格式化，将执行的操作绿色，将跳过的灰色。
 
 子命令：`run <command> --dry-run` 预演；`report` 查看上次 dry-run 的结果；`diff` 对比 dry-run 和上次实际执行的结果差异。API：`runner := dryrun.NewRunner()`、`runner.Register("write-file", writeFileAction)`、`runner.Execute("write-file", params)`。`go test ./...` 跑测试，`go build` 编译通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

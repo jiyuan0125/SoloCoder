@@ -14,3 +14,4 @@ URL 里的 path 参数（如 `/users/{id}`）保留花括号变量形式，query
 `--base-url http://localhost:8080` 可以覆盖 spec 里的 servers 字段，写到文件头作为 `@baseUrl` 变量定义。`--tag users` 只导出指定 tag 下的接口。`--pretty` 控制请求体是否格式化缩进（默认开启）。
 
 spec 里引用了外部文件的 `$ref`，工具要能解析同目录下的相对引用。循环引用要检测到并跳过，stderr 打 "skipping circular ref: {ref path}"。输出文件已经存在时覆盖，不提示。Go 标准库，命令行参数用 flag 包解析。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

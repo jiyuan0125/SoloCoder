@@ -5,3 +5,4 @@ snippet-mgr 管理代码片段，每条记录有标题、代码内容、语言�
 主记录依赖配置数据——配置文件在 `~/.snippet-mgr/config.json`，定义默认语言、存储路径、编辑器命令。片段数据存在 `~/.snippet-mgr/snippets/` 目录下，每条一个 JSON 文件。标签层级关系存在 `~/.snippet-mgr/tags.json`。
 
 操作上，`add` 新增片段，交互式输入标题和描述，代码内容从 stdin 读或 `--file` 指定文件。`search <keyword>` 搜标题、描述和代码内容。`tag <tag-name>` 按标签过滤，支持 `tag/subtag` 层级路径。`list` 默认按创建时间倒序，`--lang go` 按语言过滤。`export <id>` 输出指定片段为 Markdown 格式到 stdout，`--dir` 批量导出整个标签树。`--tags` 给片段打多个标签，一个条目可以属于多个分类。按标签聚合显示时，子标签缩进在父标签下面。零依赖纯 Go 标准库，`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

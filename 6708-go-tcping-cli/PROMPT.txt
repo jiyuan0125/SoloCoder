@@ -7,3 +7,4 @@
 `tcping --file targets.txt --count 10` 批量模式，targets.txt 每行一个 `host:port`，并发测试所有目标，最后每个目标各出一份统计。`--workers` 控制并发数（默认 10）。
 
 host 或 port 参数缺失退出码 1，stderr 打 "error: --host and --port are required"。targets.txt 里有格式错误的行跳过并在 stderr 打 "skipping invalid line {N}: {content}"。Go 实现，只用标准库，交叉编译友好。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

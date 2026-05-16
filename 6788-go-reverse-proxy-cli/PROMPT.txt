@@ -5,3 +5,4 @@
 不带配置文件时做纯透传代理，只记日志。`--listen` 默认 `:8080`，`--upstream` 必填，缺失时输出 `upstream URL is required` 并退出码 1。上游不可达时返回 502，响应体为 `{"error": "upstream unreachable"}`。请求超时 `--timeout 30s`，超时返回 504。
 
 支持 `--health-path /healthz` 注册一个健康检查端点，直接返回 200。Ctrl+C 优雅关闭，等待进行中的请求完成（最长 5 秒）。Go 标准库实现，`go build` 编译通过即可。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

@@ -7,3 +7,4 @@
 命令列表：`project add <name> --desc <text>`（名称唯一，重复创建报错）、`project list [--status active|archived]`、`project archive <name>`（归档后不能再加条目）、`entry add <project> --hours <n> --desc <text> [--date <yyyy-mm-dd>] [--who <name>]`（who 默认取系统用户名）、`entry list <project> [--who <name>]`、`summary <project>`（总工时、按人分组小计、本周累计）、`summary --all`（所有活跃项目的对比）。
 
 数据存在当前目录，每个项目一个 JSON 文件（<project-name>.json），条目按时间顺序存储。每次操作后立即写盘，崩了也不丢数据。Go 标准库实现，go build 编译通过即可。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

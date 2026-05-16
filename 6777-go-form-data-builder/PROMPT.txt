@@ -9,3 +9,4 @@
 也支持从配置文件：`-config form.yaml`，结构 `fields: [{name: "...", value: "..."}], files: [{name: "...", path: "..."}]`。
 
 项目拆至少 3 个源文件：main.go、builder.go、model.go。Go 标准库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

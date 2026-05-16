@@ -7,3 +7,4 @@
 目录不存在自动创建。源路径不存在报错 "source not found: {path}" 退出码 1。抽样结果为空时（比如 100 行文件抽 0.1% 可能 0 行）打印 warning "sample result is empty" 到 stderr 但正常退出。完成后输出统计："sampled {n} files, {lines} lines, {bytes} bytes"。
 
 不用第三方包，go build 通过就行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

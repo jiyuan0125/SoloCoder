@@ -5,3 +5,4 @@
 持续监控模式下按 Ctrl+C 退出时输出本次监控期间的汇总统计。输出支持 -json 格式，结构为 {"interfaces": [{"name": "eth0", "rx_bytes": 12345, "tx_bytes": 67890, ...}]}。网卡名称不存在时输出 "interface not found: xxx" 退出码 1。排序支持 -sort bytes 按流量排序、-sort errors 按错误数排序、-sort drops 按丢包数排序。数值超过 1024 的字节自动转换为 KB/MB/GB 显示，加 -raw 参数输出原始数值不做转换。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

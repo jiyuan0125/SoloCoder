@@ -5,3 +5,4 @@
 清单文件 `manifest.json` 存在目标目录根下。文件被修改但未更新清单时，status 变为 `stale`。空目录扫描输出 `EMPTY_DIR: <path> no files found` 并正常退出。找不到清单文件时 `manifest verify` 输出 `NO_MANIFEST: <dir>` 退出码 1。
 
 嵌套命令结构：`project create --name <name>` 初始化项目，`project build` 编译，`project test run` 跑测试，`project test coverage` 输出覆盖率。`go build` 编译过就行，全标准库。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

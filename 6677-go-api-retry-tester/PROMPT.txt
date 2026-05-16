@@ -7,3 +7,4 @@
 最后汇总 JSON：`{ "total_attempts": N, "success": bool, "attempts": [{ "sequence": 1, "timestamp": "...", "delay_ms": 0, "status_code": 503 }, ...], "total_duration_ms": 1234 }`。如果 max-retries 用完了还是失败，success=false。重试之间没有 delay 或 delay 不符合策略，在 stderr 打 "warning: unexpected delay pattern"。
 
 多个 worker 并发处理输入数据——如果指定了 `--requests-file requests.json`（包含 URL 数组），则并行测试多个 endpoint，并发度由 `--workers` 控制（默认 4）。Go 实现，只用标准库，交叉编译友好。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

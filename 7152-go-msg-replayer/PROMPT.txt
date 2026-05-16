@@ -3,3 +3,4 @@
 Go 标准库写 CLI 工具管死信队列。子命令 list 查看死信消息，--queue 指定队列名（必填），--limit 限制返回条数（默认 50，最大 500），--reason 按原因过滤（timeout/validation_error/unknown），输出表格含 ID/Queue/Reason/Retry Count/Created At 五列，按创建时间降序。子命令 resend 重发消息，--id 指定单条消息 ID，--all 重发当前队列全部消息，重发前打印 "resending: ID (reason: REASON)" 到 stderr 需要确认。自动重发策略用指数退避，初始 1 秒间隔，上限 60 秒，--max-retries 控制最大次数（默认 3），超限自动标记 discarded。子命令 discard 丢弃消息，--id 单条，--before 丢弃指定时间之前的所有消息（RFC3339 格式）。子命令 stats 做死信原因分类统计，输出 JSON {"reason": count}，按 count 降序。子命令 report 生成报告，--template 指定模板路径，模板不存在跳过渲染直接输出纯文本摘要。所有操作写操作日志到 stderr，格式 "TIMESTAMP ACTION ID RESULT"。
 
 go build 能过就行，纯标准库。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

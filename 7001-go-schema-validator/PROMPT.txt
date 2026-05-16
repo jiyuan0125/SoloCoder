@@ -5,3 +5,4 @@ CLI：schemaval --schema rules.json --data input.json --format json。XML 模式
 $ref 支持本地文件引用（"$ref": "defs.json#/Address"）和同文档引用（"$ref": "#/definitions/Address"），循环引用报错退出码 2。自定义关键字通过 --keywords 文件加载。值域检查：minimum/maximum 用于数值，format "date" 用于日期区间。跨字段关联支持 if-then、dependencies。
 
 报告：{"valid": false, "errors": [{"path": "$.order.items[2].price", "keyword": "minimum", "message": "value 0.5 is less than 1"}]}。空输入退出码 1，schema 格式错误退出码 2。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

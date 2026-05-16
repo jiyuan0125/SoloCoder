@@ -7,3 +7,4 @@
 标注文件不存在时输出 `error: annotations file not found` 并 exit 1。docs 目录为空时 exit 0 并输出 `no documents to annotate`。sources 目录不存在时 exit 1。
 
 同步流程：准备→扫描→传输→验证→完成，验证失败重试传输（最多 3 次）。go run . 能跑，标准库够用了。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

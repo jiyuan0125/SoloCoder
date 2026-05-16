@@ -9,3 +9,4 @@ HMAC 签名支持 SHA-256、SHA-384、SHA-512 三种算法。`chunk-enc sign --k
 索引状态 `initializing`→`building`→`ready`→`rebuilding`→`offline`？这是搜索引擎的概念。本工具没有索引，只有签名和验证两个同步操作。输出格式用标准的 JSON。
 
 `go build` 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -3,3 +3,4 @@
 第一步，CLI 命令设计为多级结构：`file check <path> [--output text|json]`。检查单个文件时输出该文件的扩展名、声明类型（从扩展名推断）、实际类型（从文件头魔数判断）、是否一致。JSON 输出每项含 filename、extension、declared_type、actual_type、match（布尔值）。第二步，`file check-dir <dir> [--recursive]` 批量扫描目录。第三步，`file convert <src> <dst> --format <type>` 和 `file merge <list.txt> <output>` 分别做格式转换和文件合并。
 
 退出码规则：0 全部一致 / 1 存在不一致 / 2 文件不存在 / 3 未知文件类型。覆盖的常见文件类型魔数至少包括：JPEG（`\xFF\xD8\xFF`）、PNG（`\x89PNG`）、GIF（`GIF8`）、PDF（`%PDF`）、ZIP（`PK\x03\x04`）、EXE（`MZ`）、ELF（`\x7FELF`）、BMP（`BM`）。空文件（0 字节）输出 `empty file, cannot determine type` 并退出码 2。go build 能编译通过，不依赖第三方库。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

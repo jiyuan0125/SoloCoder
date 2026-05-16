@@ -9,3 +9,4 @@
 命令包括：`sprint create <name> --start <date> --end <date>`、`sprint list`、`sprint close <id>`（关闭 Sprint，所有未完成任务标记为 carried-over）、`task add <sprint-id> --title <title> --points <n>`、`task assign <task-id> <member>`、`task move <task-id> <status>`、`report <sprint-id>`（输出成员负载分布、总完成率、未完成任务清单）。report 支持按成员过滤 `--member <name>`。
 
 Sprint 到期关闭时，自动检查有没有 doing 或 review 状态的任务，有的话给个提醒说这些任务将被标记为 carried-over，但仍然执行关闭。数据每次操作后立即写文件。Go 标准库实现，go build 能编译就行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -5,3 +5,4 @@ ETL 里最烦的坑——数字列混了文本 "NULL"，日期列全是字符串
 支持类型：int、float64（支持科学计数法）、bool（识别 true/false/yes/no/1/0/T/F/Y/N，统一转 true/false）、datetime（yyyy-MM-dd 或 yyyy-MM-dd HH:mm:ss，统一输出 yyyy-MM-dd 格式）、string。--on-error keep 原样保留（默认），--on-error mark 保留并新增 <列名>_error 列标记原因（如 "cannot convert 'abc' to int"）。
 
 输出 CSV 保持原列顺序。report.json 含 columns 数组，每列：name、inferred_type、success_count、fail_count、fail_examples（最多 5 个）。空 CSV 或只有表头退出码 0 输出 "no data rows"。退出码 0 成功，1 文件/参数错误，14 部分转换失败。纯标准库，go run . 能跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

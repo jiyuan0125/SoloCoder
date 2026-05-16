@@ -9,3 +9,4 @@
 空 XML 或无子元素输出空文件，stderr 输出 `no data rows generated`。XML 解析失败退出码 3。输出编码 UTF-8，换行符 `\n`，字段含逗号或换行时双引号转义。
 
 子命令：`project create --name x`、`project build`、`project test run`、`project test coverage`。`go build` 能编译通过，不依赖第三方库。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

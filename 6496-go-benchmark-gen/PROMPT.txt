@@ -3,3 +3,4 @@
 CLI 叫 `benchgen`，用法 `benchgen generate --func MySort --sizes 100,1000,10000 --output bench_test.go`。`--func` 指定被测函数名，`--sizes` 逗号分隔的输入规模列表，`--output` 输出文件路径，默认 stdout。生成的 benchmark 函数命名格式 `BenchmarkMySort_100`、`BenchmarkMySort_1000`，每个 case 里构造对应大小的输入然后调用目标函数。加上 `-alloc` flag 则额外生成 `b.ReportAllocs()` 调用统计内存分配。`benchgen run --count 5 --timeout 30s` 自动执行生成的 benchmark，`--count` 控制每个 case 运行次数，`--timeout` 是整体超时。run 完成后输出 JSON 汇总，格式为 `[{"func":"BenchmarkMySort_100","ns_per_op":1234,"allocs_per_op":3,"bytes_per_op":256}]`，exit 0 成功，超时 exit 2，编译失败 exit 1 输出 "compilation failed: <error>"。多级命令：`config get <key>`、`config set <key> <value>`、`config list` 查看/设置默认配置，`config env switch --name staging` 切换配置环境。
 
 go build 能过，纯标准库，不依赖第三方。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

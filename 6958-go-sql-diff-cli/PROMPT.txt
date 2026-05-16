@@ -7,3 +7,4 @@
 数据库不存在输出 "database not found: XXX" 退出码 1。完全相同输出 "schemas are identical" 退出码 0。不支持非 SQLite。
 
 需要用到 filepath.Walk 等标准库功能。Go 标准库实现，不依赖第三方包。go build 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

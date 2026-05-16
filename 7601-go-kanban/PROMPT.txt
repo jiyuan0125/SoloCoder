@@ -11,3 +11,4 @@ CSV 导入这块，支持 `import <file.csv>` 命令。CSV 格式是 title,prior
 命令列表大概这些：add、list、move <id> <status>、archive（归档所有 done 任务）、import <file>、delete <id>、show <id>（显示详情和依赖链）。list 支持 --status 过滤和 --assignee 过滤。
 
 还有一个细节——任务标题不能重复，创建时检查一下。数据持久化方面，每次操作完立刻写文件，不搞缓存，这样就算程序崩了数据也不会丢。Go 标准库实现，不引入第三方框架。go build 能编译就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

@@ -5,3 +5,4 @@
 `search --index-dir ./idx --query "user_id:12345" --deep`：在索引中搜索消息，支持深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`。搜索结果输出匹配文档列表含 doc_id、匹配字段、分数。
 
 空规则文件不做过滤直接输出原数据。字段不存在时黑名单视为不匹配、白名单视为匹配失败。过滤完输出汇总 JSON。用 crypto/rsa 做签名验证场景。go build 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

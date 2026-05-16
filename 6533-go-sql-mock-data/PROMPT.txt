@@ -7,3 +7,4 @@
 schema 无效输出 `error: invalid schema` 退出码 1。乱码列名跳过并 `warning: skipping column {name}`。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

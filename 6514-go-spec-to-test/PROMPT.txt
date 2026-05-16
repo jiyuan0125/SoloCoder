@@ -3,3 +3,4 @@
 工具叫 `spec2test`，`spec2test convert --input specs.txt --output user_test.go --func TestUser --package user`。输入文件每行一条规格，格式两种：`当<条件>时应该<期望>` 或英文 `when <condition> should <expectation>`。解析出条件部分和期望部分，生成 `[]struct{ name string; condition string; expected string }` 的 test table，每个条目的 name 用条件文本做驼峰化处理（"用户输入非法邮箱" → "UserInputIllegalEmail"）。生成的 test 函数包含 `t.Run(tc.name, func(t *testing.T))` 遍历 table，body 里留 `// TODO: implement test for: <condition>` 占位注释。输入文件包含乱码或非法 UTF-8 字符时跳过该行并输出 "[SKIP] line <N>: invalid UTF-8"。空输入文件输出 "no valid specifications found in <file>" exit 1。输出目录不存在自动创建。`--encoding utf-8|gbk` 指定输入编码，默认 UTF-8。输出文件已存在时覆盖并打印 "overwriting existing file: <path>"。
 
 纯 Go 标准库，编译后单二进制直接跑。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

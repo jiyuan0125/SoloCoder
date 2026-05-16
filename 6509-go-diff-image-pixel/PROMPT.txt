@@ -1,3 +1,4 @@
 Go 标准库 `image/png` 解码就能搞定，不需要任何第三方依赖。起因是有个客户反馈渲染结果不对，给了 50 张 1080p 的图让我对比，肉眼看不出来哪里不一样。逐像素对比、设颜色容差阈值、差异像素标红输出 diff 图、批量跑整个目录——从此再也不用手动找茬了。
 
 `pixdiff compare --base img1.png --target img2.png --threshold 10 --output diff.png`，逐像素读取两张 PNG 的 RGBA 值，对每个像素计算差异：`delta = |r1-r2| + |g1-g2| + |b1-b2| + |a1-a2|`，delta 超过 `--threshold`（默认 0，即完全一致）则视为差异像素，在输出图中该像素标为纯红 `(255,0,0,255)`，未差异像素保留原图。输出统计到 stdout：`DIFF_PIXELS: 1234/2073600 (0.06%)`。`--json` 则输出 `{"total_pixels":2073600,"diff_pixels":1234,"diff_percent":0.06}`。两张图尺寸不一致输出 "image size mismatch: 1920x1080 vs 1280x720" exit 1。文件不是 PNG 输出 "unsupported format: <filename> (only PNG supported)" exit 2。`pixdiff batch --dir ./screenshots --output-dir ./diffs` 批量对比，自动配对同文件名的图，配对不上跳过并输出 "[SKIP] <name>: no matching pair"。用 Go 标准库写，`go run .` 或 `go build` 都行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -15,3 +15,4 @@ HTTP 请求失败时 stderr `ERROR: request failed: <状态码或错误>`，不�
 Ctrl+C 优雅退出，输出总请求数和变更次数。
 
 用 Go 标准库写，go run . 或 go build 都行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

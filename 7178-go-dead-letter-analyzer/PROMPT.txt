@@ -5,3 +5,4 @@
 分析结果输出表格到终端，列包括：消息类型、数量、占比、建议操作（重试/丢弃/人工）。加 `--format json` 导出结构化结果，字段为 type、count、percentage、action。`--sort count|percentage` 控制排序方式，默认按 count 降序。如果输入文件为空或格式不对，退出码返回 1 并打印 "no valid messages found"。
 
 表结构变更后，依赖该表的查询和报告输出格式要跟着更新。数据库连接用 `--db-dsn` 传入，支持 PostgreSQL 和 SQLite，不传则纯文件模式。Go 命令行工具，go build 能过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

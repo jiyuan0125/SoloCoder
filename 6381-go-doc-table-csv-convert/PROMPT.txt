@@ -7,3 +7,4 @@
 3. 处理完成自动更新 `.convert-stats.json` 统计信息，字段：`{"total_conversions": 10, "md2csv": 6, "csv2md": 4, "last_run": "..."}`。首次运行没有历史统计文件时自动创建。
 
 4. 空 CSV（只有表头无数据）输出空 Markdown 表格（只有分隔行）。空 Markdown 表格输出 `EMPTY_TABLE: <file> line=<n>` 并跳过。编码统一 UTF-8。`go build` 通过就行，不用第三方包。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

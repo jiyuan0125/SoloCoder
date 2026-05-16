@@ -7,3 +7,4 @@ CLI：`dqcheck -input data.csv -rules quality_rules.json -output report.json -th
 最终汇总：pass 率低于整体 `-threshold` 时 exit 1，否则 exit 0。规则文件找不到 exit 2。CSV 列名和规则中的列名不匹配时 stderr 警告但仍检查匹配的列。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

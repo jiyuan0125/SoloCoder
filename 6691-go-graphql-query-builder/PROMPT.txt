@@ -7,3 +7,4 @@ GraphQL query 字符串太长手写容易拼错，嵌套一深就更容易少个
 `gql-builder fragment --schema schema.graphql --type User --fields id,name,email --name UserFields` 生成 fragment 定义：`fragment UserFields on User { id name email }`，后续 build 命令可以通过 `--use-fragment UserFields` 引用已有 fragment。
 
 schema 文件不存在或解析失败退出码 1。字段名在 schema 里找不到时 stderr 打 "field not found: {type}.{field}"。需要用到 regexp.Regexp 等标准库功能做 schema 解析。Go 实现，只用标准库，交叉编译友好。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

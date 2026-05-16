@@ -7,3 +7,4 @@ ADR 模型包含：编号、标题、状态（提议→已接受→已废弃/已
 模板引擎用 Go `text/template`，内置 Michael Nygard 风格和 Alexandrian 风格两套模板。用户可自定义模板放在 `~/.adr-tmpl/templates/` 目录。模板变量自动填充：编号、日期从系统获取，项目名从 `go.mod` 或 `package.json` 探测。
 
 核心操作：`new "选择数据库"` 创建新 ADR，自动打开编辑器填写内容和决策部分；`list` 按状态过滤，`--status proposed` 只看提议中的；`accept <id>` 接受决策；`supersede <old-id> <new-id>` 替代。比较两个版本时高亮差异——新增、删除、修改用颜色区分，并排对比格式输出。数据存在 `docs/adr/` 目录下，每条一个 Markdown 文件。`go test ./...` 跑测试，`go build` 编译通过。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

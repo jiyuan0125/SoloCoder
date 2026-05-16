@@ -7,3 +7,4 @@ changelog 文件格式乱了——有人写 `## [1.2.0]` 有人写 `## v1.2`，�
 text 模式逐行打印 `[ERROR] xxx` 或 `[WARN] xxx`；json 模式输出 `{"errors": [{"line": 5, "rule": "version_reg", "message": "..."}], "warnings": [...]}`。退出码 0 通过，1 有 error，`-strict` 下 warning 也返回 1。空文件或不存在时退出码 1 打印 "changelog file not found: %s"。
 
 Go 标准库，flag 包解析。`go build -o changelog-lint .`。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

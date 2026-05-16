@@ -9,3 +9,4 @@ CLI：`extract -input ./data/ -fields id,name,email -format csv -output result.c
 目录递归扫描用 `-recursive` 开启，默认只扫描一层。文件匹配模式默认 `*.json`，用 `-pattern` 可改。
 
 Go 实现，只用标准库，交叉编译友好。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

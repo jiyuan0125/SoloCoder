@@ -5,3 +5,4 @@
 固定宽度模式字段超长截断，stderr 输出 `truncated at row N col M: expected W bytes, got K`。字段不足右填充空格。空行跳过。
 
 处理完生成 `.summary`（JSON）：`{"total_rows": 1500, "total_cols": 8, "columns": [{"name": "col_0", "type": "numeric"}, {"name": "col_1", "type": "string"}]}`。类型推断：全数字→numeric，否则→string，混合→mixed。无数据不生成摘要，stdout 输出 `empty input, no summary generated`。`go build` 能编译通过，不依赖第三方库。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

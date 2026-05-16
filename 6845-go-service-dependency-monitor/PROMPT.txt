@@ -7,3 +7,4 @@
 探测细节：TCP 类型尝试建立连接然后立即关闭；HTTP 类型发 GET 请求并校验状态码；gRPC 类型做 health check（简化实现：TCP 连接成功即视为 healthy）。超时则标记为 down，错误信息包含 timeout 字样。并发探测所有依赖，不超过 20 个并发。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。退出码：0 全部 healthy，1 存在 degraded，2 存在 down，3 配置错误。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

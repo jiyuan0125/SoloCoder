@@ -9,3 +9,4 @@
 没有错误日志的时候不检查告警。回放结束打印统计：`total: X lines, duration: Y, actual_speed: Z lines/s`。TCP 目标不可达时退出码 1，提示 `connection refused: <address>`。
 
 Go 实现，只用标准库，交叉编译友好。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -15,3 +15,4 @@ Sprint 到期时（`sprint close <id>`），未完成的 done 以外的任务自
 - `task done <id> --actual <hours>`：记录实际工时并标记完成
 
 数据存当前目录 JSON 文件。Go 标准库实现。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

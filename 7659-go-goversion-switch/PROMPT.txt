@@ -16,3 +16,4 @@ GoVersion 实体有版本号、安装路径、GOROOT、状态（installed/availa
 - `switch <v>`：切换当前版本，输出变更的环境变量
 
 Go 标准库实现，go build 通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

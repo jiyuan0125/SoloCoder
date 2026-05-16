@@ -5,3 +5,4 @@ semver 的版本号计算说简单也简单，但到了发版那刻总有人搞�
 `-dry-run` 只输出计算结果不执行 `git tag`：`next version: v1.3.0 (bumped minor, found: 2 feat, 5 fix)`。`-rules custom.json` 支持自定义映射（`{"feat":"minor","fix":"patch","perf":"patch","chore":"skip"}`，type 映射为 skip 时忽略）。`-annotate` 创建 annotated tag 带自动生成的 tag message（包含版本号、日期、commit 统计）。没有已有 tag 时默认从 `v0.1.0` 开始，用 `-initial v1.0.0` 指定。不是 git 仓库时报错退出码 1。
 
 Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

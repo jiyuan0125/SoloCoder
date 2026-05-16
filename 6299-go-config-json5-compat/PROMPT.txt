@@ -9,3 +9,4 @@
 字符串内的 // 和 /* 不当注释处理（在引号内的）。尾逗号处理：{ "a": 1, } 末尾逗号去掉，[1, 2, ] 也一样。转换后用标准库 json.Unmarshal 再 json.Marshal 确保输出是合法 JSON。输入文件不存在退出码 1，解析失败退出码 2 报 "parse error at line 5: unterminated string"。
 
 CLI 命令分组：file convert / file check / file merge，每组下有具体操作。纯标准库实现，go run . 能跑。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

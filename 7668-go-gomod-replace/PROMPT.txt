@@ -17,3 +17,4 @@ ReplaceRule 实体有 ID、原始模块路径、替换目标路径/版本、来�
 - `inject --var <name> --from-env <ENV_VAR>`
 
 Go 标准库实现，go build 通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

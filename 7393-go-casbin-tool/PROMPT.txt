@@ -5,3 +5,4 @@ Token 处理支持 JWT 格式的 Access Token 解码——提取 scope、exp、c
 Scope 验证支持层级关系——read 包含在 read:write 里，admin 隐含 user 的全部权限。验证请求 scope 是否在 token 允许的范围内，不在就拒绝。Scope 匹配要精确，前缀匹配不算——"read" 不等于 "read:data"。
 
 证书有完整状态流转：申请→签发→生效→过期→续签。状态之间有合法转换路径，不能跳步。可能一次处理上万条 Token 记录，用 goroutine 并发处理，channel 收集结果。输出 JSON 格式。go build 能过，命令行工具能正常运行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

@@ -3,3 +3,4 @@
 CLI：`sigfwd -command "java -jar app.jar" -map "SIGTERM=SIGQUIT" -timeout 15`。-command 是要启动的子进程命令，-map 定义信号映射规则（可多条用逗号分隔，如 "SIGTERM=SIGQUIT,SIGINT=SIGTERM"），-timeout 是转发后等待子进程退出的超时秒数（默认 30）。启动后 sigfwd 成为信号中继，捕获所有终端信号并按映射规则转发给子进程组（使用 kill -pgid）。未映射的信号原样转发。每次转发输出到 stderr："forwarding {signal} → {mapped_signal} to pgid {n}"。子进程在 timeout 内未退出则发 SIGKILL 强杀，输出 "force killed: pgid {n}"。子进程正常退出则 sigfwd 以相同退出码退出。不支持映射的信号名输出 "unknown signal: {name}" 忽略。`sigfwd -list-maps` 列出所有支持的信号名称。子进程启动失败输出 "command failed: {error}" 退出码 127。
 
 Go 标准库，命令行参数用 flag 包解析。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

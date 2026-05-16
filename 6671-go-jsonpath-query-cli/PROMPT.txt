@@ -6,3 +6,4 @@
 
 文件读取失败 exit 1。输入不是合法 JSON `error: invalid json at line <N>` exit 2。`--pretty` 格式化输出，默认紧凑。纯 Go 标准库，编译后单二进制可以直接跑。
 `go build` 编译后单二进制可以直接跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

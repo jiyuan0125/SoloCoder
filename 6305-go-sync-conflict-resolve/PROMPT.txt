@@ -5,3 +5,4 @@
 文件处理有几个阶段：待处理（pending）、处理中（syncing）、校验中（verifying）、已完成（done），用 JSON 状态文件记录，字段包含 `{"file": "path", "status": "syncing", "mtime": 1700000000, "size": 1024, "checksum": "sha256hex"}`。校验失败（checksum 不匹配）回到处理中重试，最多重试 3 次，超过后标记为 `failed` 并输出错误信息 `VERIFY_FAILED: <filepath> checksum mismatch, retries=3`。空文件和 0 字节文件直接跳过，输出 `SKIP: <filepath> empty file`。
 
 `go run .` 能跑，纯标准库实现，子命令包括 `sync --source <dir> --target <dir>` 和 `status [--file <path>]`，status 输出当前各文件状态表格。退出码：0=全部成功，1=有错误，2=有未解决冲突。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

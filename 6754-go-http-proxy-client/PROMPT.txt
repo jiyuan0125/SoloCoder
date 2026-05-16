@@ -7,3 +7,4 @@
 请求体从 `-d '{"key":"val"}'` 或 `-d @file.json` 读取。超时 `-timeout 10s`。代理连接失败打印 "proxy connection failed: <error>"，目标不可达打印 "target unreachable: <error>"。响应状态码非 2xx 也正常输出，exit code 等于 HTTP 状态码首位（4xx→4，5xx→5），成功 exit 0。
 
 Go 标准库，`go build` 编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

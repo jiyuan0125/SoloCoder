@@ -11,3 +11,4 @@ doc-coverage 用 Go 标准库实现，`go build -o doc-coverage ./cmd/doc-covera
 报告包含：总覆盖率、各模块覆盖率、未覆盖实体列表（标红）、覆盖率趋势图（纯文本柱状图）。输出格式终端表格，`--format json` 切换。每个未覆盖的实体给出一行建议，比如"函数 `ParseConfig` 没有文档注释"。
 
 子命令：`scan <src-dir>` 扫描；`report` 输出覆盖率报告；`diff` 对比两次扫描的覆盖率变化。配置文件 `.doccoveragerc.json` 设置文档路径映射。`go test ./...` 跑测试。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

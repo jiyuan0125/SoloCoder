@@ -9,3 +9,4 @@
 模块路径格式校验——至少包含一个 `/`，如 github.com/user/project。不合法时 "invalid module path: <path>" 退出码 1。
 
 纯标准库，`go run .` 跑起来。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

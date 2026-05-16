@@ -7,3 +7,4 @@
 输入文件空输出 "empty input file" 到 stderr 退出码 1。`-table` 必填，缺失输出 usage 退出码 1。非法 batch 值输出 "batch size must be 1-50000" 退出码 2。生成的 SQL 文件编码 UTF-8，字符串值用单引号包裹，内部单引号双写转义。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

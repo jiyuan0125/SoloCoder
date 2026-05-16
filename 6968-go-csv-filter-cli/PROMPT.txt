@@ -7,3 +7,4 @@
 流式处理：逐行读取判断，不全部加载到内存。条件语法错误输出 "invalid filter: [expression]" 到 stderr 退出码 1。列名不存在输出 "column not found: XXX" 退出码 2。正则语法错误输出 "invalid regex: [pattern]" 退出码 3。输入文件不存在退出码 4。
 
 Go 实现，只用标准库，交叉编译友好。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

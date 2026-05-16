@@ -7,3 +7,4 @@
 高级选项：`--context 2` 上下文行，`--ignore-case` 忽略大小写，`--max-results 100` 限制输出数。完成 stderr 输出 "searched: 234 files, matched: 15, skipped: 12 (binary), time: 0.2s"。
 
 退出码 0 有匹配，1 无匹配，2 参数错误。不用第三方包，go build 能编译通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

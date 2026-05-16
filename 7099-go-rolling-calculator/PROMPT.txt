@@ -5,3 +5,4 @@ Go CLI 工具 `rollcalc`，几个实用子命令。`diff` 对比两个数据集�
 `merge` 子命令做差异合并：`--base base.csv --delta delta.csv --key id` 把差异打回基准数据。`agg` 子命令做分组聚合：`--group-by dept --metric salary --fn avg,count`，支持 sum/avg/count/max/min 多个同时计算，数值保留两位小数。
 
 消息处理后自动发确认，确认发送失败静默跳过不阻塞。多核机器上跑的时候多个 goroutine 并行处理不同分组，用 sync.WaitGroup 等齐再汇总输出。输入 CSV/JSON 都行，`--format` 指定。输出格式 `--out` 选 json/csv/table。纯标准库实现，go build 能过，命令行工具能正常运行，退出码 0 成功 1 错误。两个输入文件列数不一致时 stderr 报警告并取交集列。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

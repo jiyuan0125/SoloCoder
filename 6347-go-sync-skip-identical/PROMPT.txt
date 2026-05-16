@@ -5,3 +5,4 @@
 同步日志记录：每条记录有状态字段（draft/pending/approved/archived），同步完成后状态自动推进，通过后可撤回重编辑。日志默认写 `sync-log.json`，写失败（权限不足）则写到 `/tmp/syncskip-fallback.log`。
 
 源目录不存在报 "source directory not found" exit 1。目标目录不存在自动创建。标准库实现，`go run .` 就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

@@ -1,3 +1,4 @@
 Sprint 结束前分桶排名必须交付，后端排不动就只能自己上了。产品说做不完延期到下个 sprint，那不行。
 
 Go CLI 工具 `mergexform`，把分桶排名和滚动计算这两件事做完。子命令 `bucket`：`--column price --strategy equal-width --bins 10` 等宽分桶，输出每桶 `[min, max)` 范围和落入数量；`--strategy equal-freq --bins 5` 等频分桶，每桶大约相同行数；`--strategy custom --boundaries "0,50,100,500,1000"` 自定义边界。子命令 `rank`：`--column score --method dense` 密集排名并列不跳号，`--method sparse` 跳号排名，`--method percentile` 输出 0-100 的百分位，`--partition-by category` 支持分组内排名。子命令 `rolling`：`--window 7 --fn avg --column price` 七日滚动均值，不足窗口按实际数据算。消息 topic 支持多层通配符 `a.b.c.#` 的匹配。错误情况你自己定——但至少文件不存在返回退出码 1，格式错误返回 2，空输入输出空结果返回 0。go build 能过，命令行正常运行。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

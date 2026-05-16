@@ -5,3 +5,4 @@
 删除操作必须用户确认：列出待删除列表后提示 "delete N files/dirs? [y/N]: "，输入 y 才执行，否则跳过删除只做复制和更新。命令：`mirrorsync <源目录> <目标目录> --dry-run --exclude "*.tmp,.git" --delete-confirm`。--dry-run 只输出三类操作清单（ADD/UPDATE/DELETE），不实际执行。--exclude 逗号分隔排除模式，支持 * 通配符。
 
 输出格式：每行一种操作，`ADD <相对路径>`、`UPDATE <相对路径>`、`DELETE <相对路径>`。最后汇总 `summary: N added, M updated, K deleted`。源目录不存在退出码 1，stderr 输出 "error: source directory not found: <路径>"。目标不存在自动创建（权限 0755）。单个文件复制失败 stderr 输出 "copy failed: <文件>: <错误>" 并跳过。退出码 0 全部成功，6 部分失败。纯标准库实现，go run . 能跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

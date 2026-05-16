@@ -5,3 +5,4 @@ V2 上线倒计时两周，分桶计算还没实现，不赶就完了。Go 命�
 3. 滚动窗口：`rolling --input data.csv --column value --function mean --window 7 --output rolled.csv`，function 选 mean/sum/min/max/count。
 
 输入 CSV/JSON，输出同格式。`--column` 不存在报 `error: column not found` 退出码 1。分桶值全相同归入桶 1。百分位保留一位小数。滚动窗口不足 window 大小时输出已有数据计算结果。用 encoding/json 的 Decoder 流式处理大文件。空输入输出空。go build 能过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

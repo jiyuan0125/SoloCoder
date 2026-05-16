@@ -7,3 +7,4 @@ VoIP 通话质量投诉不断，平均延迟没问题——抖动才是元凶，
 输出 JSON：`{ "target":"...", "packets_sent":100, "packets_received":98, "loss_rate":0.02, "latency":{"avg_ms":12.5,"median_ms":11.2,"p99_ms":41.0}, "jitter_ms":3.2 }`。
 
 终端实时打印 `#<N> <延迟>ms (jitter: <当前>ms)`，结束打印摘要。不可达输出 `error: target unreachable: <addr>` 退出码 1。Go 标准库，go run . 或 go build 都行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

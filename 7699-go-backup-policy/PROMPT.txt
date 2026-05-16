@@ -15,3 +15,4 @@ BackupRecord 有 ID、Policy ID、执行时间、状态（success/partial/failed
 - `export --format md`
 
 Go 标准库实现。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

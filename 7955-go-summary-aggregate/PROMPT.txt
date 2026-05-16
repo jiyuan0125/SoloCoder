@@ -9,3 +9,4 @@
 输出：终端表格或 JSON。命令示例：`aggregate data.csv --group-by department,month --agg avg:salary,sum:headcount`。Go 标准库实现。go build 通过。
 
 聚合管道：支持多步聚合串联——先过滤、再分组、再排序、再取 Top-N。类似数据库的管道查询。支持自定义聚合函数（通过配置文件定义计算公式）。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

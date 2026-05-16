@@ -7,3 +7,4 @@
 语法错误输出 `parse error at position N: unexpected token` 退出码 1。JSON 解析失败输出 `invalid json: filename: reason` 退出码 1。零匹配输出空数组 `[]` 退出码 0。表达式里引用了不存在的路径返回 `null`，null 参与比较永远为 false。审批流程标记：结果里每条记录加 `_status` 字段，值 `submitted→reviewing→approved→rejected`，方便团队协作筛选。
 
 纯标准库实现，go run . 能跑。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

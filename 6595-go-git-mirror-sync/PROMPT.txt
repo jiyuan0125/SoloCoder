@@ -15,3 +15,4 @@ source URL 无效或不可达时退出码 1 打印 "source unreachable: %s"。ta
 大文件处理：不把整个仓库加载到内存，用 git 命令流式传输。
 
 纯 Go 标准库，编译后单二进制。`go build -o mirror-sync .`。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

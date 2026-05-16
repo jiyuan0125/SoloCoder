@@ -3,3 +3,4 @@ Jest 那个 snapshot testing 用着是真的爽，Go 这边找了一圈没找到
 你可能会问具体怎么用？`snap init --dir ./snapshots` 在指定目录下创建 `.snapshots/` 目录存放快照文件，每个快照以 `<testname>.snap` 命名。`snap check --dir ./snapshots` 遍历所有快照，对每个 `.snap` 文件重新运行对应的命令（命令存在快照文件的注释头里），把新输出和旧快照 diff。不一致时输出 diff 内容到 stderr，标记 `[MISMATCH] <testname>`，最后统计 "X passed, Y failed, Z new"。`snap update --dir ./snapshots --name login_test` 用新输出覆盖指定快照，不传 `--name` 则更新所有 mismatch 的。`snap list --dir ./snapshots` 列出快照名、大小、最后更新时间。大文件处理：超过 10MB 的快照不加载到内存，用流式逐行 diff，避免 OOM。快照文件不存在（check 时）标记 `[NEW]`。所有子命令成功 exit 0，有 mismatch exit 1，目录不存在 exit 2 输出 "snapshot directory not found"。
 
 Go 标准库实现，`go build` 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

@@ -9,3 +9,4 @@
 输出到终端时每条问题显示：调用链路径（函数A→函数B→函数C）、缺失位置、建议操作。加 `--json` 输出数组，每条含 chain、missing_at、recommendation。调用链中存在 context 取消但没检查 `ctx.Done()` 或 `ctx.Err()` 的也列为问题。
 
 标准库搞定，`go build` 通过就行。代码分几个文件组织，scanner.go、analyzer.go、reporter.go、main.go 各管各的，别全写 main.go 里。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

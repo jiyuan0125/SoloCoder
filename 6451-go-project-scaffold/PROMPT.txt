@@ -9,3 +9,4 @@
 还支持 `scaffold list` 列模板、`scaffold inspect <目录>` 检查缺什么文件。命令分组：file convert、file check、file merge 作为附加功能。
 
 `go build` 能过，不依赖第三方库。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

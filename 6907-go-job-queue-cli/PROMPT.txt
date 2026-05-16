@@ -7,3 +7,4 @@ CLI：`queue submit --command "python clean.py" --priority 5 --timeout 600` 提�
 持久化：每次状态变更刷写文件，重启 worker 后 running 恢复为 pending 重新执行。文件损坏报 "corrupted queue file" 退出码 1。`queue log --task 42` 查执行记录含 stdout/stderr 最后 500 字符。`queue clear --status completed` 清理。
 
 Go 实现，只用标准库，交叉编译友好。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

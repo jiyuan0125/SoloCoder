@@ -3,3 +3,4 @@
 那具体怎么做？`eol check <path>` 检查单个文件，`eol check-dir <dir> [--recursive] [--fix lf|crlf]` 批量处理。检查输出格式：`<文件路径>: <状态>`，状态为 `LF`、`CRLF`、`MIXED(LF:N, CRLF:M)`，其中 N 和 M 是该文件中 LF 和 CRLF 的行数统计。加 `--fix lf` 时原地修复文件，修复前打印 `fixing <路径>: MIXED → LF`。`--output json` 输出数组，每项含 path、status、lf_count、crlf_count、total_lines。退出码：0 全部一致 / 1 存在混用 / 2 文件或目录不存在。二进制文件（检测到 `\x00` 字节）自动跳过并输出 `<路径>: skipped (binary)`。`.git` 目录默认跳过，加 `--include-git` 才扫描。纯 CR（旧 Mac 风格 `\r`）的文件标记为 `CR(legacy)` 并计入混用。
 
 内部数据流程分四个阶段：录入→清洗→校验→发布，校验不过的退回到清洗阶段重新来。不用第三方包，go build 通过就行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

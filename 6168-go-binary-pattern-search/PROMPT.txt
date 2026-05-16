@@ -7,3 +7,4 @@
 目录递归搜索：`binsearch -d /firmware/ -p "4D5A"` 扫描目录下所有文件，跳过不可读文件并打印 `[SKIP] <file>: permission denied`。大文件（>1GB）用滑动窗口读取，内存占用不超过 64MB。模式长度超过文件大小时输出 `[SKIP] pattern longer than file: <file>`。
 
 合并完成后默认删除源文件（`-f` 指定的临时文件），`--keep` 保留。不用第三方包，`go build` 通过就行。退出码 0 找到匹配，1 没找到，2 参数错误，3 文件读取失败。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

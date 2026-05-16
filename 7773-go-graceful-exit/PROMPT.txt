@@ -11,3 +11,4 @@ graceful-exit 用 Go 标准库实现，`go build -o graceful-exit-demo ./cmd/gra
 状态记录：退出时把当前状态快照写入 `.graceful-state.json`——哪些任务完成、哪些未完成、正在处理的文件路径。下次启动时读取状态文件，可以选择恢复未完成的任务。
 
 API：`g := graceful.New()`、`g.Register("name", cleanupFn)`、`g.DependsOn("name", "other")`、`g.Wait()`。也支持无依赖的并行清理。`go test ./...` 跑测试。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

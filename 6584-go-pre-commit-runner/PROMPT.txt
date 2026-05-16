@@ -15,3 +15,4 @@
 hooks 目录不存在时退出码 1 打印 "hooks directory not found: %s"。没有可执行的 hook 文件时退出码 0 打印 "no hooks found"。hook 执行超时（默认 30 秒，`-timeout` 可调）时打印 `[TIMEOUT] %s (%ds)` 并视为失败。
 
 Go 标准库，flag 包解析参数。`go build -o pre-runner .`。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

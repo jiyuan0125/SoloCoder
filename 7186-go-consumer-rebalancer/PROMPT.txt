@@ -7,3 +7,4 @@
 导入完成自动更新索引文件 `index.json`，更新失败只打日志 `WARN index update failed`。令牌状态：created → active → refreshed → expired → revoked，`--token-file tokens.json` 存储。上次事故后这是第一个必须上线的工具，数据源是消费者组的 offset 日志。
 
 Go 重写个命令行工具，go build 能过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

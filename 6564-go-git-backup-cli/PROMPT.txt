@@ -5,3 +5,4 @@
 `git-backup list -config repos.yaml` 显示所有配置的仓库及备份状态（已备份/未备份/上次备份时间/仓库大小）。`git-backup verify -config repos.yaml` 检查每个备份仓库完整性（`git fsck`），损坏时 stderr 输出 `corrupt: {name} — {error}`。`git-backup restore -name project-a -target ./restored` 从备份恢复到指定目录。配置文件不存在时报错 `error: config file not found: xxx` 退出码 1。远程仓库不可达时跳过并输出 `warning: {name} unreachable, skipping`。
 
 用 Go 标准库写，`go run .` 或 `go build` 都行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

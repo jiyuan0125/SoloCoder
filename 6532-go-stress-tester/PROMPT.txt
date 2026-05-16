@@ -5,3 +5,4 @@
 JSON 结果写入 `-out`：`{"command":"","concurrency":50,"total":360,"results":[{"iteration":1,"exit_code":0,"duration_ms":450,"error":""}]}`。退出码非零记 error，单次超时（`-timeout 10s`）kill 子进程记 timeout。`-threshold-err-rate 0.05` 错误率超标退出码 3 并输出 `ABORT: error rate {pct}% exceeds threshold 5%`。
 
 用 Go 标准库写，go run . 或 go build 都行。退出码 0 成功、1 参数错误、3 阈值告警。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -5,3 +5,4 @@ Token 内省实现 RFC 7662 标准的 introspection——发送 token 到授权�
 吊销列表管理维护本地已吊销 Token 列表。Token 被吊销后加入列表，内省时先查吊销列表再查远程。列表持久化到文件，程序重启后自动加载恢复。列表条目有过期清理机制——Token 自然过期后对应条目自动清理。
 
 刷新 Token 轮换：每次刷新后旧 refresh_token 立即失效，颁发新的。如果检测到已失效的 refresh_token 被使用（疑似盗用），自动吊销关联的所有 token。搜索支持深层路径 indexes/{name}/docs/{doc_id}/fields/{field}。可能一次处理上万条记录，性能要扛住。go build 能过，命令行工具能正常运行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

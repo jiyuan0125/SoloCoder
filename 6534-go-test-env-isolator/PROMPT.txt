@@ -7,3 +7,4 @@
 fixtures 不存在时 `warning: no fixtures dir`。无测试文件输出 `no test packages found` 退出码 0。清理时锁定目录输出 `warning: {dir} still locked, skipping`。
 
 用 Go 标准库写，go run . 或 go build 都行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

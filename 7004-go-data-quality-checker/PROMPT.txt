@@ -7,3 +7,4 @@ Schema 验证：解析 XSD targetNamespace，校验元素名、属性名、子�
 ID/IDREF：收集全部 ID 属性到 set，检查 IDREF/IDREFS 是否存在，缺失报 "dangling IDREF 'xxx' at /path/@ref"。
 
 报告：{"schema":"order.xsd","valid":false,"errors":[{"line":42,"path":"...","message":"..."}],"checked_at":"2024-01-15T10:30:00Z"}。保存到 --history-dir（默认 ./history）。退出码：0=通过，1=失败，2=输入错误。大文件 xml.Decoder 流式处理。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -7,3 +7,4 @@
 `manifest -dir ./testdata` 生成 manifest.json：`{"files":[{"path":"","size":0,"sha256":"","modified":""}]}`。流式计算哈希不全部加载到内存。大文件输出 `packing large file: {name} ({size}MB)...`。
 
 Go 标准库实现。go build 编译通过。退出码 0 成功、1 参数错误、2 校验失败。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

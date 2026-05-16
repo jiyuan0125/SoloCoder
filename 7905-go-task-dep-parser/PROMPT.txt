@@ -5,3 +5,4 @@
 命令结构分三级：`taskdep parse <file>` 解析并输出分层视图，`taskdep graph <file>` 输出 DOT 格式的依赖图（可以用 Graphviz 渲染成可视化图形），`taskdep check <file> --task T003` 检查特定任务的所有上游依赖状态，看看有多少还没完成。
 
 支持管道输入和重定向输出。Go 标准库实现。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -9,3 +9,4 @@
 4. 同一变量多次出现合并成一行，文件路径用逗号分隔。加 `-check` flag 检查当前环境是否所有必需变量都已设置，未设置的标红输出 `MISSING: <VAR_NAME>`。
 
 扫描目录不存在输出 `error: directory not found: <path>` 退出码 1。没有找到任何 os.Getenv 输出 `no environment variables found` 退出码 0。Go 标准库实现，不依赖第三方包，go build 能编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

@@ -11,3 +11,4 @@ PKCS12：`interca to-p12 --cert client.pem --key client.key --ca ca.pem --output
 搜索索引时更新引用计数？本工具不做索引。输入格式自动检测。
 
 `go build` 能过，命令行工具能正常运行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

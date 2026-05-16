@@ -7,3 +7,4 @@ style-guide-check 用 Go 标准库实现，`go build -o style-guide-check ./cmd/
 处理 Markdown 文件时逐段落逐行检查。每个违规项记录规则 ID、位置、实际值、期望值。链接检查也同步执行——外部链接发 HEAD 请求验证，内部链接检查文件存在性。两种检查并行跑，结果合并输出。
 
 输出格式终端表格，按文件分组。`--strict` 模式下 warning 也视为错误返回非零退出码。`fix <file>` 自动修复能修的问题——统一术语、修复文件名、补代码块语言。不能自动修的只报告。配置支持层级——全局 `.style-guide.json` + 项目级 `.style-guide.local.json`，后者覆盖前者。`go test ./...` 跑测试。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

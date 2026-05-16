@@ -5,3 +5,4 @@
 输入文件可以是任意编码（自动检测 UTF-8/Latin-1），输出保持原始换行。Tab 字符按 `--tab-width`（默认 8）展开计算。控制字符（除了换行和 Tab）宽度为零。
 
 Go 标准库实现，`unicode` 包的 `RangeTable` 和 `EastAsianWidth` 属性。`go build` 通过。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

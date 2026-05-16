@@ -1,3 +1,4 @@
 镜像构建从 2 分钟涨到 8 分钟，排查发现 Dockerfile 有 20 多层，RUN 指令散落各处没法利用缓存。手动合并又怕改错指令顺序导致构建结果不一致。
 
 这个工具做两件事：分析现有 Dockerfile 给出优化建议，以及直接输出合并后的版本。命令行 `docker-opt analyze Dockerfile` 输出建议列表，每条包含：行号范围、问题类型（`scattered_run` 连续 RUN 未合并、`apt_cache` apt-get 未清理缓存、`copy_order` COPY 指令未按变更频率排列）、修复建议文字。`docker-opt fix Dockerfile --output Dockerfile.optimized` 输出优化后的文件。合并规则——连续的 RUN 指令合并为一条，用 `&&` 连接并在每行末尾加 `\`。apt-get install 后自动追加 `&& rm -rf /var/lib/apt/lists/*`。COPY 指令按变更频率重排：先复制 go.mod/go.sum 等依赖文件，再复制源码。遇到 `FROM` 指令时不跨 stage 合并。MULTI-STAGE Dockerfile 每个阶段独立优化。输出格式保持原有注释缩进。文件不存在时输出 `error: file not found` 到 stderr，退出码 1。纯 Go 标准库实现，`go build` 能编译通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

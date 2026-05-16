@@ -15,3 +15,4 @@ Vulnerability 有 ID、环境 ID、依赖名称、CVE 编号、严重级别（cr
 - `env export <name>`：导出环境配置为 JSON 文件
 
 Go 标准库实现。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

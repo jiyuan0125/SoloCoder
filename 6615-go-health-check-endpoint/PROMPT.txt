@@ -7,3 +7,4 @@ hcinject generate --dir ./mypkg --output health.patch 根据识别的框架生�
 如果已有 /health 或 /healthz 路由注册，打印 INFO: health endpoint already exists, skipping 并 exit 0。识别不到框架 exit code 2，打印 ERROR: unrecognized framework。
 
 --dry-run 标志只打印将要生成的代码不写文件。--format json 改输出为 JSON 结构包含框架类型和生成代码。Go 标准库写，go run . 或 go build 都行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

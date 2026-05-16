@@ -7,3 +7,4 @@ provider 和 injector 的依赖关系全靠脑子记，改一个忘了另一个�
 任务状态：排队 → 运行 → 暂停 → 完成。状态存在 `.wire-tasks.json` 里，`{"task-001":{"status":"running","providers":["A","B"]}}`。暂停的任务 `wiregen resume <task-id>` 可以继续。
 
 不用第三方包，go build 通过就行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

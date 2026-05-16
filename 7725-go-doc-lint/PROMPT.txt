@@ -9,3 +9,4 @@ doc-lint 用 Go 标准库实现，`go build -o doc-lint ./cmd/doc-lint` 编译�
 最后输出。比较两个版本的 lint 结果时高亮差异——新增问题红色标注，已修复问题绿色标注。输出格式终端彩色文本，`--format json` 切换。严重程度分级：error 必须修复，warning 建议修复，hint 可选优化。
 
 子命令：`lint <path>` 扫描文件或目录；`fix <file>` 自动修复可修复的问题（多余空格、中英文间距）；`diff <old> <new>` 对比两次 lint 结果。配置文件 `.doclintrc.json` 自定义规则开关和阈值。`go test ./...` 跑测试。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

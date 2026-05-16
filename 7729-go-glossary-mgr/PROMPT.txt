@@ -7,3 +7,4 @@ glossary-mgr 用 Go 标准库实现，`go build -o glossary-mgr ./cmd/glossary-m
 从代码注释中提取术语定义——扫描 Go 源码中 `// TERM: xxx - 定义...` 格式的注释，自动导入术语表。支持多种注释格式。代码变更时标记需要更新的术语定义。变更通知下游——术语修改后，所有使用该术语的文档被标记为需要审查。
 
 子命令：`add "缓存" --alias "Cache" --def "临时存储层"` 新增术语；`list` 按领域分组展示；`search <keyword>` 搜术语名和别名；`check <file>` 扫描文档找出用了非标准术语的地方；`export` 输出 Markdown 格式术语表；`import <file>` 从 CSV 或 JSON 批量导入。数据存在 `~/.glossary/terms.json`。并发安全读写。输出为 Markdown 格式。`go test ./...` 跑测试。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

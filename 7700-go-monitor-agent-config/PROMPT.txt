@@ -12,3 +12,4 @@ AgentConfig 实体有名称、采集间隔（秒，1-3600）、日志级别（de
 - `env export <name>` / `env import <file>`
 
 Go 标准库实现，go build 通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

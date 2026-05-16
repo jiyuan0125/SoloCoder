@@ -5,3 +5,4 @@
 3. 证书续签场景：`--cert-dir` 指定证书目录，续签后依赖该证书的 TLS 配置要同步更新（`--tls-config-file`）。证书快过期（`--warn-days 14`）自动发通知到 `--notify-url`，通知失败不中断续签。
 
 聚合过程中进程中断，已完成的批次不受影响（每批独立文件或追加写入）。用 encoding/xml 的 Marshal/Unmarshal 做 XML 格式批输出（`--format xml` 时）。路由规则文件语法错误 exit code=2。go build 能过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

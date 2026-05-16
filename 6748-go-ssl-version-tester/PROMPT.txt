@@ -7,3 +7,4 @@
 连不上打印 "connection failed: <host>: <error>"，证书过期单独提示 "certificate expired: notAfter=<date>"。退出码：0=全部安全，1=存在不安全配置，2=连接失败。配置文件中指定命令那种特性不用管。
 
 纯 Go 标准库，编译后单二进制直接跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

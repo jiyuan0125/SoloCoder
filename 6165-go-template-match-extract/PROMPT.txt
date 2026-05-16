@@ -5,3 +5,4 @@
 `tmplx extract --template '姓名：{{name}}，年龄：{{age}}' --file data.txt --output result.json`。多条模板：`--template-file templates.txt` 每行一个模板自动尝试直到命中，命中后停止。输出格式：`--format json`（默认 JSON 数组）、`--format csv`（列名即占位符名，含表头行）、`--format table`（终端对齐表格，用 | 和 - 绘制边框）。
 
 匹配失败的行 stderr 输出 "line 12: no match"。全部失败退出码 1，至少一条成功退出码 0。空文件输入 stderr 输出 "empty input file" 退出码 1。`--strict` 模式下任何一行匹配失败就退出码 1。不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

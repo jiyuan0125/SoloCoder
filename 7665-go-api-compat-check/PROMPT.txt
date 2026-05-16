@@ -15,3 +15,4 @@ API 定义实体有 ID、接口名称、HTTP 方法、路径、请求参数（JS
 - `inject --var <name> --from-env <ENV_VAR>`
 
 Go 标准库实现，go build 通过。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

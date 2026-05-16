@@ -3,3 +3,4 @@
 命令结构：`mdl check <文件或目录> [--recursive] [--rules <规则文件>]`。规则文件也是 Markdown 格式的配置，每行一条规则名，`#` 开头注释。内置规则至少包括：`heading-order`（标题层级不能跳级，如 `#` 后直接 `###`）、`empty-link`（链接地址为空 `[]()`）、`unclosed-code`（代码块反引号未配对）、`trailing-spaces`（行尾多余空格）、`missing-alt`（图片缺少 alt 文本 `![]()`）。输出格式 `[文件名:行号] <规则名>: <描述>`，加 `--output json` 输出结构化数组，每项含 file、line、rule、message。退出码：0 全部合规 / 1 存在问题 / 2 路径不存在。`--rules` 不指定时默认启用全部规则。
 
 每个子命令有自己的参数，比如 `sync local`、`sync remote`、`sync status` 这样。处理完主文件生成摘要，没内容的场景要优雅处理——不生成摘要文件。不用第三方包，go build 通过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

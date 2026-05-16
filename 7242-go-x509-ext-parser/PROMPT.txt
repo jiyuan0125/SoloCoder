@@ -9,3 +9,4 @@ RSA 密钥对生成：`x509ext keygen --bits 4096 --output-dir ./keys/`。私钥
 搜索深层路径 `indexes/{name}/docs/{doc_id}/fields/{field}`？这个工具用 `filepath.Walk` 递归扫描目录查找密钥文件（`.pem`、`.der` 后缀），按路径模式匹配。`x509ext find --dir ./certs/ --pattern "**/prod*.pem"` 列出所有匹配的密钥文件。导入完成后自动更新索引？维护一个内存中的文件路径缓存，新文件自动加入。
 
 `go build` 能过，命令行工具能正常运行。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

@@ -5,3 +5,4 @@
 命令：`addrclean <输入.csv> --output <输出.csv> --column address --report report.json --dict custom_dict.json`。--column 指定地址列默认 address。--dict 加载自定义省市区映射（JSON，key 原始写法 value 标准写法）。report.json 每条含 original、cleaned、changes 数组（如 ["fullwidth_to_halfwidth","traditional_to_simplified"]）、status（cleaned/unchanged/exception）。
 
 空行跳过保留占位。支持 GBK 和 UTF-8 自动检测（读前 4 字节判断 BOM 和编码特征）。退出码 0 成功，1 文件错误，11 部分异常。不用第三方包，go build 通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

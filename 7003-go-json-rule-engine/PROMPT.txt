@@ -7,3 +7,4 @@ CLI：ruleval --rules rules.json --data input.json --output report.json。每条
 报告：{"total_rules":10,"total_records":500,"passed":480,"failed":15,"warned":5,"conflicts":2,"details":[...]}。文本模式 passed 绿、failed 红、warned 黄。
 
 空规则报 "error: no rules defined" 退出码 1。数据格式错误退出码 2。规则语法错误跳过打 warning 继续。--dry-run 只检查语法。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

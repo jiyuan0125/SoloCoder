@@ -3,3 +3,4 @@
 Worker 结果文件放在指定目录，文件名格式 worker_{id}.json，内容 {"worker_id":"w1","tasks":[{"name":"t1","status":"success","exit_code":0,"duration_ms":100}]}。CLI：`result-collect -dir /tmp/results -timeout 60`。-timeout 等待所有结果文件就绪的最大秒数，默认 60。超时后收集已有结果继续处理，缺失的 worker 标记为 timeout。输出汇总 JSON 到 stdout：{"total_workers":10,"collected":8,"timed_out":2,"summary":{"success":75,"failed":3,"timeout":2}}。`-format table` 切换为文本表格输出。部分 worker 无结果文件时 stderr 输出 "missing workers: {id list}"。全部 success 退出码 0，有 failed 或 timeout 退出码 1，目录不存在输出 "results dir not found" 退出码 2。
 
 Go 标准库实现，不依赖第三方包。go build 能编译通过。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

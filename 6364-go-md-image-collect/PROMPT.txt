@@ -7,3 +7,4 @@
 子命令：`mdimg db migrate`、`mdimg db rollback`、`mdimg db status`、`mdimg db seed`。索引用 SQLite：`CREATE TABLE images (path TEXT PRIMARY KEY, source_file TEXT, hash TEXT, size INT)`。
 
 就一个 `go build` 的事，第三方库一个不碰。退出码 0 成功，1 有缺失图片，2 参数错误。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

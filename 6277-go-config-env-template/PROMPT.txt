@@ -3,3 +3,4 @@
 CLI 用子命令组织：`tpl render --template config.tpl --vars env-prod.vars --output config.yaml`，没指定 --output 就打印到 stdout。`tpl validate --template config.tpl --vars env-prod.vars` 只校验不生成，模板里用了变量文件里没定义的 key 直接报错退出码 1，错误信息格式 "undefined variable: {{.DB_PORT}} at line 12"。`tpl diff --vars env-dev.vars --vars env-prod.vars --template config.tpl` 对比两个环境生成的配置差异。
 
 变量文件格式是 KEY=VALUE 每行一条，# 开头是注释，值里用双引号包裹可以包含空格。模板用 Go 标准库 text/template 语法。分组规则：按文件名前缀自动分组（db- 开头归数据库组，app- 开头归应用组），`tpl list` 列出所有分组。纯标准库，go build 编译通过，代码分 template.go / vars.go / group.go / main.go 四个文件。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

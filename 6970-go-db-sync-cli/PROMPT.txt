@@ -7,3 +7,4 @@ SQL 文件头部注释标注统计：`-- sync plan: 5 inserts, 3 updates, 2 dele
 源或目标库不存在退出码 1。表无主键输出 "table XXX has no primary key, cannot sync" 退出码 2。同步 SQL 为空（完全一致）输出 "databases are in sync" 退出码 0。
 
 Go 标准库，命令行参数用 flag 包解析。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。

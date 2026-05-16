@@ -7,3 +7,4 @@
 多个行维度：`-row month,category` 用逗号分隔，输出按第一维度再按第二维度排列。值列非数值且指定 sum/avg 等运算，输出 "value column must be numeric for [agg]" 到 stderr 退出码 1。输入某行缺少 row 或 column 值，该行跳过并在 stderr 输出 "skipped row N: missing pivot key"。
 
 纯 Go 标准库，编译后单二进制可以直接跑。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

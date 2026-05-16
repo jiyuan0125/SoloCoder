@@ -3,3 +3,4 @@
 `tzconvert -time "2024-01-15 08:30:00" -from UTC -to Asia/Tokyo [-format "2006-01-02 15:04:05"]`。自动检测输入时间戳格式，支持 `2006-01-02 15:04:05`、`2006/01/02 15:04`、Unix 秒/毫秒整数。转换后输出原时间和目标时间：`2024-01-15 08:30:00 UTC -> 2024-01-15 17:30:00 JST (UTC+9)`。支持常见时区名称（UTC、Asia/Tokyo、America/New_York、Europe/London 等），用标准库 time.LoadLocation。自动处理夏令时——America/New_York 在夏天是 EDT（UTC-4）冬天是 EST（UTC-5），输出时标注。
 
 批量模式 `-file timestamps.csv -col created_at -from UTC -to Asia/Tokyo`，读取 CSV 指定列批量转换，结果追加到新列 `created_at_jst`。输入时间解析失败输出 `error: cannot parse time at row N: "xxx"`。时区名无效输出 `error: unknown timezone: xxx`。纯标准库实现，go run . 能跑，代码分几个文件组织别全写 main.go。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

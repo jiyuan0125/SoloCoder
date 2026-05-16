@@ -5,3 +5,4 @@ JWT 过期了应该返回 401 但返回了 500——这种认证 bug 不好测�
 输出 JSON：`{ "url": "...", "method": "jwt", "results": [{ "scenario": "expired_token", "expected_status": 401, "actual_status": 500, "pass": false }] }`。scenario 名称要具体：valid_token、expired_token、invalid_signature、missing_header。
 
 `auth-tester generate-jwt --secret mysecret --expire 1h --claims '{"sub":"user1"}'` 快速生成测试用 JWT。非法 UTF-8 的 token 文件不要 panic，stderr 打 warning 继续。Go 标准库实现，不依赖第三方包。go build 能编译通过。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

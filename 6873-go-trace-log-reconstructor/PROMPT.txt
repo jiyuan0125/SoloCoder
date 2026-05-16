@@ -9,3 +9,4 @@ CLI：`trace-recon reconstruct --trace-id abc123 --log-dir /var/log/ --output tr
 如果某个 trace ID 在所有文件中都没有匹配，输出空数组 `[]` 到对应文件，并在 stderr 打印 `trace <ID>: no matches found`。日志目录不存在时退出码 2，提示 `directory not found: <path>`。
 
 用 Go 标准库写，go run .或 go build 都行。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

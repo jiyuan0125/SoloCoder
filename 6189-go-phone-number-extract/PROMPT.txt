@@ -5,3 +5,4 @@
 地区识别根据手机号前三位查表归属省份，输出增加 `region` 字段。数据流分四阶段：录入→清洗→校验→发布，校验失败的号码标注原因（位数不对、号段不存在、区号非法）退回清洗阶段。`phone validate numbers.json` 单独校验，输出 `{valid: 128, invalid: 7, reasons: [...]}`。
 
 结果默认 JSON 格式 `{file, numbers: [{raw, formatted, type, region, valid}]}`。`--csv` 切换为 CSV 输出。空文件输出空数组不报错。STDERR 显示进度 `extracted 42 numbers from report_03.txt`。不用第三方包，`go build` 通过就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

@@ -1,3 +1,4 @@
 痛点很直接：防火墙规则改完之后，没人验证到底有没有生效。出了事才排查，发现端口其实一直开着或者该开的没开。运维想跑一遍自动化测试，确认规则和实际状态一致。
 
 做一个 ACL 验证工具 `acltest`。从配置文件读规则，格式是 JSON：`[{"target":"10.0.1.5:443","expect":"allow"},{"target":"10.0.1.5:22","expect":"deny"}]`。逐个尝试 TCP 连接（超时 3 秒），`expect=allow` 的规则连接成功为 PASS、失败为 FAIL，`expect=deny` 的连接失败为 PASS、成功为 FAIL。输出表格，列为规则编号、目标地址、预期结果、实际结果、状态（PASS/FAIL）。所有规则 PASS 退出码 0，任一 FAIL 退出码 1 并在末尾打印 `X rules failed, review output above`。配置文件不存在退出码 1 输出 `error: config file not found: <path>`。JSON 解析失败退出码 1 输出 `error: invalid config: <错误信息>`。支持 `--timeout 5s` 自定义连接超时，默认 3 秒。支持 `--output report.json` 输出 JSON 格式结果，结构为 `{"total":10,"passed":8,"failed":2,"results":[...]}`。纯 Go 标准库，编译后单二进制可以直接跑。
+代码分文件组织，解析器、处理器、输出器分开，main.go 只做参数解析和流程串联。

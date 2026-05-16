@@ -5,3 +5,4 @@
 切换时如果目标环境的 yaml 不存在，报 "environment not found: <name>" exit 1。`init` 时如果 `.envs/` 已存在，提示 "already initialized, use --force to overwrite" exit 1。配置文件格式错误（非合法 YAML）报 "invalid config in <file>" exit 1。
 
 切换完成后自动备份旧配置到 `.envs/.backup/<timestamp>.yaml`。纯 Go 标准库，编译后单二进制直接跑。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

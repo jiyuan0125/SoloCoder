@@ -7,3 +7,4 @@ doc-import-export 用 Go 标准库实现，`go build -o doc-import-export ./cmd/
 导出也支持多种目标格式。Markdown 是默认格式，JSON 导出包含完整元数据，HTML 导出带内置样式。代码片段管理功能集成——导入时识别代码块，每个片段有语言标签和描述，单独建索引支持搜索。
 
 子命令：`import <source-dir> --format html` 导入指定格式；`export <target-dir> --format json` 导出；`convert <input> <output>` 单文件格式转换；`batch <dir>` 批量处理。`go test ./...` 跑测试，`go build` 编译通过。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

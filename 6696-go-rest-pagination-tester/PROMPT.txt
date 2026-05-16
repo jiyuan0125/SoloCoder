@@ -1,3 +1,4 @@
 分页接口的坑太多了——总数第一页说 100 条，翻到第五页变成 98 条；offset 超出范围返回 200 而不是 404；空页有时返回空数组有时返回 null。每个 REST API 的分页行为都不一样，手动测根本覆盖不完。
 
 写个分页接口自动验证工具 `pagincheck`。用法：`pagincheck --url "https://api.example.com/items?offset={offset}&limit={limit}" --limit 20 --max-pages 50`。它从 offset=0 开始遍历，每次请求一页，检查：每页返回的总数字段是否一致（默认字段名 `total`，可用 `--total-field count` 指定）；offset 超出总数时 HTTP 状态码应为 404 或返回空数组；每页数据条数不超过 limit；空页响应体不为 null。不通过的项目在输出中标记 FAIL 并说明原因，如 `FAIL: page 5 total mismatch: expected 100 got 98`。全部通过打印 `all pagination checks passed` 退出码 0，有失败退出码 1。URL 无法访问退出码 1 输出 `error: request failed: <status>`。Go 实现，只用标准库，交叉编译友好。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

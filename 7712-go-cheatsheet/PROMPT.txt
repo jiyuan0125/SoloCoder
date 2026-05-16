@@ -7,3 +7,4 @@ cheatsheet 用 Go 标准库实现，`go build -o cheatsheet ./cmd/cheatsheet` �
 自动扫描方面，工具扫描 `~/.cheatsheet/sheets/` 目录下的所有 JSON 文件，解析成速查表数据。新增表会自动加入索引。支持多级标题结构——命令可以按 `section > subsection` 分组。输出格式用终端表格，命令列和说明列对齐，支持 ANSI 颜色高亮关键词。
 
 子命令：`new` 交互式创建新速查表；`add-cmd <sheet-id>` 给现有表加命令；`search <keyword>` 全文搜索命令和说明；`list` 展示所有已发布速查表摘要。配置文件 `~/.cheatsheet/config.json` 存默认编辑器和输出格式偏好。数据文件用原子写入，并发安全。`go test ./...` 跑单测。
+项目结构要分模块：主入口、核心处理逻辑、工具函数分文件组织，方便测试和维护。

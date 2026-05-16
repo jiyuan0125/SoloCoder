@@ -11,3 +11,4 @@ pipe-input 用 Go 标准库实现，`go build -o pipe-input-demo ./cmd/pipe-inpu
 编码处理：默认 UTF-8，遇到非 UTF-8 字节尝试 Latin-1 转换，转换失败跳过该行并报 warning。行尾符自动统一（CRLF/LF/CR 都支持）。
 
 API：`p := pipe.New()`、`p.Process(func(line string) error { ... })`、`p.Run()`。支持上下文取消。`go test ./...` 跑测试。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

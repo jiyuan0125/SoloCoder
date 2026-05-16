@@ -9,3 +9,4 @@ PEM↔DER：`cert-io pem-to-der --input cert.pem --output cert.der`。`cert-io d
 证书状态流转：`applied`→`issued`→`active`→`expired`→`renewed`。本工具不管理证书生命周期，只做格式转换。数据库多层路径？纯文件操作，不用数据库。`archive/zip` 的使用：如果输入是 zip 文件自动解压后处理。
 
 `go build` 能过，命令行工具能正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

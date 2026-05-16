@@ -7,3 +7,4 @@
 required 字段必须出现，非 required 有 50% 概率省略。pattern 处理不了就 fallback 成 minLength 到 maxLength 间随机字符串。嵌套递归处理，array items 为 object 按相同规则。不支持 $ref/allOf/anyOf/oneOf，遇到报 `error: unsupported keyword: <keyword>` 退出码 1。
 
 Go 标准库，不依赖第三方包，go build 能过。输出 JSON 缩进 2 空格。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

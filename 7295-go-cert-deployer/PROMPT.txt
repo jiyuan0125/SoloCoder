@@ -9,3 +9,4 @@ SAN 提取和显示：`deployer san --cert server.pem` 列出所有 SAN 条目�
 TLS 配置文件生成：`deployer gen-tls --cert server.pem --key server.key --output tls.json`。根据证书密钥类型推荐密码套件和最低 TLS 版本。
 
 `go build` 能过，命令行工具能正常运行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

@@ -9,3 +9,4 @@
 4. 自动更新 `.import-stats.json`，首次创建。`{"scan_time": "...", "total": 30, "stdlib": 15, "third_party": 10}`。
 
 无 Go 文件 `NO_SOURCES: <dir>`。不用第三方包，`go build` 过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

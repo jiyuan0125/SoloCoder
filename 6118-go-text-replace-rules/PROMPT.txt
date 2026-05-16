@@ -5,3 +5,4 @@
 三个子命令：`replace run --input file.txt --rules rules.txt --output result.txt` 执行替换，stdout 输出 "replaced: 47 matches in 12 rules"；`replace check --rules rules.txt` 校验所有规则，正则不合法报行号和错误到 stderr，格式 "line 3: invalid regex: 具体错误"；`replace preview --input file.txt --rules rules.txt` 输出将要替换的位置，格式 "line 15: 'old_text' → 'new_text'"，不修改文件。
 
 空规则文件不报错，输出与输入一致。规则文件不存在报错退出码 1 并 stderr 输出 "rules file not found: rules.txt"。正则语法错误退出码 2。输入输出同路径时原地替换（先写临时文件再 rename）。`--encoding utf-8` 指定编码，默认 UTF-8。纯标准库，go build 能编译通过。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

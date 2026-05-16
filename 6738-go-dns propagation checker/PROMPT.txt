@@ -9,3 +9,4 @@
 查询超时的服务器在表格里标记 `TIMEOUT`，不算入匹配统计。域名格式不合法时 stderr 输出 `ERROR: invalid domain: <域名>` 退出码 4。
 
 用 Go 标准库写，go run . 或 go build 都行。
+至少拆成两个包或三个文件以上，不要单文件一把梭。

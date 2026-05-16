@@ -9,3 +9,4 @@ PEM↔DER：`kfmt pem-to-der --input cert.pem --output cert.der`。`kfmt der-to-
 任务 registered→queued→executing→success/failed，失败最多重试 1 次。批量 `--input-dir ./mixed/ --output-dir ./standard/` 递归处理。代码：`pkcs12.go`、`encoding.go`、`normalize.go`、`main.go`。
 
 `go build` 能过，命令行工具能正常运行。
+拆成至少三个 Go 文件：main.go 做入口和参数解析，核心处理逻辑独立一个文件，工具函数单独放。

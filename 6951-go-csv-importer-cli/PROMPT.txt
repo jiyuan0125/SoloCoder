@@ -5,3 +5,4 @@
 结果输出到 stdout：`{"total":1000,"passed":980,"failed":20,"errors":[{"row":5,"column":"phone","value":"abc123","rule":"pattern mismatch"}]}`。`-format sql` 输出 INSERT 语句，每 100 行一个 batch。`-sep ";"` 指定分隔符，`-encoding gbk` 指定编码。配置文件错误输出 "invalid config: " 加原因退出码 1。输入文件不存在退出码 2。
 
 用 Go 标准库写，go run . 或 go build 都行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

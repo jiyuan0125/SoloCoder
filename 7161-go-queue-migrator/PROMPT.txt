@@ -5,3 +5,4 @@
 3. `queue-migrator import --input converted.jsonl --target kafka --brokers localhost:9092 --topic migrated-tasks --batch-size 100`：分批写入目标队列。
 
 输出格式用 JSON Lines。转换失败的消息写入 `errors.jsonl` 附带失败原因。导出时源队列不可达 exit code=1。go build 能过就行。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

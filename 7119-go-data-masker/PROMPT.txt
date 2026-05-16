@@ -7,3 +7,4 @@
 输入支持 JSON 数组和 JSONL，按扩展名判断。输出格式和输入一致。处理时打印 `masking: <当前行>/<总行数>`。认证通过后自动记日志到 mask.log，格式 `[<timestamp>] masked <count> records, <warnings> warnings`，日志写入失败不影响结果。
 
 Go CLI 工具，go build 能过就行。
+代码要模块化：主流程、具体功能实现、辅助函数分开存放，主文件只做调度。

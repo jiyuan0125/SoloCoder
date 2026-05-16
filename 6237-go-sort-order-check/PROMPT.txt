@@ -4,3 +4,4 @@
 第二步数据流程管理：录入→清洗→校验→发布四个阶段，校验不通过的退回清洗阶段。这个状态机管的是检查任务的状态。
 
 空文件输出 `no data to check` 退出码 0。全部有序退出码 0，有乱序行退出码 1。列名不存在输出 `error: column not found: <name>` 退出码 2。非数值列做数值排序时输出 `error: cannot compare non-numeric value at row N: "xxx"` 退出码 1。不用第三方包，go build 通过就行。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

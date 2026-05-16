@@ -5,3 +5,4 @@ CLI 命令 `schedgen init` 生成配置文件 `scheduler.yaml`，结构：`tasks
 任务执行超时发 SIGTERM，5 秒后还没退出发 SIGKILL。Cron 表达式非法报 "invalid cron expression: <expr> in task <name>" exit 1。配置文件不存在 exit 1。同一个 name 出现两次报 "duplicate task name: <name>" exit 1。
 
 代码分几个文件组织：config.go（配置解析）、scheduler.go（调度核心）、task.go（任务执行）、main.go，别全写 main.go 里。go build 能过，不依赖第三方库。
+代码组织要清晰：CLI 参数处理一个文件，核心业务逻辑一个文件，公共工具函数一个文件。

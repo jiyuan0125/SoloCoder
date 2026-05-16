@@ -5,3 +5,4 @@ CI 每次全量编译太慢了——其实 90% 的源文件根本没变过。问
 3. 输出格式：diff 结果按 JSON 数组输出，每项 `{"file": "路径", "status": "added|modified|deleted", "oldHash": "...", "newHash": "..."}`。退出码 0 正常，1 参数错误，2 索引文件损坏。
 
 空目录扫描生成空索引文件不报错。单文件超过 500MB 打警告 "large file: <path> (<size>)" 到 stderr 但继续处理。符号链接默认跳过，加 `--follow-symlinks` 才跟踪。加 `--ext .go,.java,.py` 只扫描指定扩展名，忽略其他文件。加 `--exclude vendor/,node_modules/,.git/` 排除指定目录（默认已排除 .git）。scan 完成后输出摘要行 "scanned N files, M new, K modified, L deleted"。不用第三方包，`go build` 通过就行。
+项目要用多文件结构，入口文件、业务逻辑、数据模型分开放，别揉在一个文件里。

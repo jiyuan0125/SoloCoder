@@ -3,3 +3,4 @@
 Go 写个 SQL 执行计划分析器，`qexplain analyze --db orders.db --sql "SELECT * FROM orders WHERE status='pending'"` 输出 EXPLAIN QUERY PLAN 的解析结果，用 JSON 格式：{plan: [{id, detail, parent, score}]}，score 是给每步的代价估算（全表扫描 +5、索引扫描 +1、临时表 +3）。`qexplain compare --db orders.db --sql1 "..." --sql2 "..."` 对比两条查询的计划差异，输出哪个更快以及原因。`qexplain dump --db orders.db --output backup.sql` 做 SQL dump 全量备份，`--incremental --since 2024-01-01` 增量备份只导出时间戳之后的记录，`qexplain restore --db orders.db --input backup.sql` 恢复并自动验证行数一致。备份恢复失败输出 "restore verification failed: expected N rows, got M"。密钥路径支持多层 keys/{algorithm}/{key_id}/versions/{ver}。
 
 用 encoding/xml 的 Marshal/Unmarshal 处理配置文件。Go 自建命令行工具，go build 能过就行。
+不要写成一个 main.go 搞定所有事情。按职责拆文件：入口、解析、处理、输出分开。

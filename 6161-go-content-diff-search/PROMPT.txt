@@ -9,3 +9,4 @@
 两个文件完全相同时，输出 `{"diffs": [], "summary": "identical"}` 到 stdout，exit 0。文件不存在时 stderr 输出 `error: file not found: {path}` 并 exit 1。空文件和正常文件对比，所有行标记为 `added` 或 `removed`。
 
 纯标准库实现，`go run .` 能跑。
+不要写单文件，核心逻辑、CLI 入口、辅助工具各放一个文件。

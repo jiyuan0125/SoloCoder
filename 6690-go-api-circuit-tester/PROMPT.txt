@@ -9,3 +9,4 @@
 最终输出汇总：`{"state_transitions":3,"time_to_open":"5.2s","time_to_recover":"8.1s","total_requests":15}`。threshold 不合理（≤0）时 exit 1。target 不可达时 exit 1 并输出连接错误。
 
 Go 标准库实现，`go build` 能编译通过。
+代码按模块拆分，不要把所有逻辑写在一个文件里。解析、转换、输出分开组织。
